@@ -1,0 +1,157 @@
+#!/bin/bash
+# 
+# Copyright (c) 2016, Search Solution Corporation. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# 
+#   * Redistributions of source code must retain the above copyright notice, 
+#     this list of conditions and the following disclaimer.
+# 
+#   * Redistributions in binary form must reproduce the above copyright 
+#     notice, this list of conditions and the following disclaimer in 
+#     the documentation and/or other materials provided with the distribution.
+# 
+#   * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
+#     derived from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+#
+
+build_home=
+buildId=
+category=
+from=
+user=
+passwd=
+host=
+to=
+lcov_data_name=
+allParams=$@
+
+usage()
+{
+    echo "Usage: `basename $0` -h=source directory;
+                               -n=build number;
+                               -c=test category;
+                               -user=username for target;
+                               -pwd=password for target;
+                               -host=target ip;
+                               -to=target directory;"
+    exit 1
+}
+
+if [ $# -eq 0 ]
+then
+	usage
+        exit
+fi
+
+while [ $# -ne 0 ];do
+        case $1 in
+                -h)
+                        shift
+                build_home=$1
+                ;;
+                -n)
+                        shift
+                buildId=$1
+                ;;
+                -c)
+                        shift
+                category=$1
+                ;;
+		-user)
+			shift
+		user="$1"
+		;;
+		-pwd)
+			shift
+		passwd="$1"
+		;;
+		-host)
+			shift
+		host="$1"
+		;;
+		-to)
+			shift
+		to="$1"
+		;;
+        esac
+        shift
+done
+
+function goToInstallationDirectory()
+{
+    if [ "$CUBRID" ]
+    then
+        cd $CUBRID
+        if [ $? -eq 0 ];then
+                cd ..
+        else
+                cd $HOME
+        fi
+    else
+        cd $HOME
+    fi
+}
+
+function collectCoverage()
+{
+      curDir=`pwd`
+      srcFolder="cubrid-${buildId}"
+      if [ !"$build_home" ]
+      then
+ 	   goToInstallationDirectory
+	   cd build/${srcFolder}
+      else
+      	   cd $build_home/${srcFolder}
+      fi
+
+      cc_dir=`which run_coverage_collect_and_upload`
+      gcov_dir=
+      if [ "$cc_dir" ]
+      then
+	   cubrid_common_dir=${cc_dir%/*}
+      	   gcov_dir=$cubrid_common_dir/gcov/gcov
+      else
+	   gcov_dir=`which gcov`
+      fi
+
+      rm -rf *.lcov
+      lcov --gcov-tool=${gcov_dir}  -d . -c -t "cubrid" -o cubrid_o.lcov
+      tStamp=`date '+%Y%m%d%H%M%s'`
+      host_name=`hostname -s`
+      lcov_data_name="cubrid_[${category}]_${USER}-${host_name}_${tStamp}.lcov"
+      mv cubrid_o.lcov ${lcov_data_name}
+
+      cd $curDir
+}
+
+function uploadResult()
+{
+   curDir=`pwd`
+   srcFolder="cubrid-${buildId}"
+   if [ !"$build_home" ]
+   then
+	goToInstallationDirectory
+        cd build/${srcFolder}
+   else
+  	cd $build_home/${srcFolder}
+   fi
+
+   run_upload -from ${lcov_data_name} -user "$user" -password "$passwd" -host "$host" -to "$to"
+   run_remote_script -from -user "$user" -password "$passwd" -host "$host" -c "cd ${to}; echo ${lcov_data_name} >${lcov_data_name}.info"
+   cd - $curDir
+   echo UPLOAD `date '+%Y%m%d%H%M%s'` ${allParams} >> $HOME/.qacoverage
+
+}
+
+collectCoverage
+uploadResult

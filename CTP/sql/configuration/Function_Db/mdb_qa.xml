@@ -1,0 +1,14 @@
+<DefaultTestDB>
+  <id>medium_qa</id>
+  <name>medium</name>
+  <dbaPwd></dbaPwd>
+  <pubPwd></pubPwd>
+  <dburl>jdbc:cubrid:localhost:33030:mdb:::</dburl>
+  <dbuser>dba</dbuser>
+  <dbpassword></dbpassword>
+  <connectionType>DriverManager</connectionType>
+  <charSet>UTF-8</charSet>
+  <version>Main</version>
+  <script>
+</script>
+</DefaultTestDB>

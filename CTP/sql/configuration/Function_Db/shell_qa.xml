@@ -1,0 +1,23 @@
+<DefaultTestDB>
+  <id>basic_for_Linux</id>
+  <name>basic</name>
+  <dbaPwd></dbaPwd>
+  <pubPwd></pubPwd>
+  <dburl>jdbc:cubrid:localhost:33030:shell_linux:::</dburl>
+  <dbuser>dba</dbuser>
+  <dbpassword></dbpassword>
+  <connectionType>DriverManager</connectionType>
+  <charSet>EUC-KR</charSet>
+  <version>Main</version>
+  <script>
+cubrid server stop shell_linux;
+cubrid deletedb shell_linux;
+cd $CUBRID_DATABASES
+rm -rf shell_linux;
+mkdir shell_linux;
+cd shell_linux;
+cubrid createdb shell_linux -p 100000;
+cubrid server start shell_linux;
+cubrid broker restart;
+</script>
+</DefaultTestDB>

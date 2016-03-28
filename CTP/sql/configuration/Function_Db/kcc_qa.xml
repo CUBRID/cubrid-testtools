@@ -1,0 +1,14 @@
+<DefaultTestDB>
+  <id>KCC_qa</id>
+  <name>KCC</name>
+  <dbaPwd></dbaPwd>
+  <pubPwd></pubPwd>
+  <dburl>jdbc:cubrid:localhost:33030:kcc:::</dburl>
+  <dbuser>dba</dbuser>
+  <dbpassword></dbpassword>
+  <connectionType>DriverManager</connectionType>
+  <charSet>EUC-KR</charSet>
+  <version>Main</version>
+  <script>
+</script>
+</DefaultTestDB>

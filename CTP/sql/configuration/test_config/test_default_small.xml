@@ -1,0 +1,18 @@
+<test>
+   <!-- run_mode will be set to decide which answer will be used -->
+   <!-- autocommit will be set to decide if you will set autocommit status before running each case file  -->  
+   <!-- the item of reset is in order to 
+        1. recovery test environment for each case file
+        2. set charset and collation for i18n test
+        3. set some system parameters to stable case or improve the performance of case
+    --> 
+    <!--<run_mode>iso88591</run_mode> -->
+    <!--<client_charset>utf8</client_charset> -->
+    <autocommit>true</autocommit>
+    <holdcas>off</holdcas>
+    <add_debug_hint>false</add_debug_hint>
+    <need_xml_summary>true</need_xml_summary>
+   <reset>
+       <!-- <item>SET NAMES utf8</item>-->
+   </reset>
+</test>

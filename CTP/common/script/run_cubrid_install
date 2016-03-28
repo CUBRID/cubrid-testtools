@@ -1,0 +1,280 @@
+#!/bin/bash
+# 
+# Copyright (c) 2016, Search Solution Corporation. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# 
+#   * Redistributions of source code must retain the above copyright notice, 
+#     this list of conditions and the following disclaimer.
+# 
+#   * Redistributions in binary form must reproduce the above copyright 
+#     notice, this list of conditions and the following disclaimer in 
+#     the documentation and/or other materials provided with the distribution.
+# 
+#   * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
+#     derived from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+#
+
+export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
+
+. util_file_param.sh
+set -x
+gUrl=
+sUrl=
+dUrl=
+cUrl=
+vUrl=
+pOs=
+tCat=
+buildType=
+
+
+usage()
+{
+    echo "Usage: `basename $0` [url] [-s|--role-compat-server url_1 url_2] [-d|--role-compat-driver url_1 url_2] 
+                                [-c|--role-coverage url_1 url_2 ]"
+    exit 1
+}
+
+if [ $# -eq 0 ]
+then
+	usage
+else
+	gUrl=$1
+	tCat="general"
+fi
+
+while [ $# -ge 1 ];do
+	case $1 in
+	    -s|--role-compat-server)
+		shift
+		sUrl=$1
+		dUrl=$2
+		tCat="compat"
+		;;
+	    -d|--role-compat-driver)
+		shift
+		dUrl=$1
+		sUrl=$2
+		tCat="compat"
+		;;
+	    -c|--role-coverage)
+		shift
+		vUrl=$1
+		cUrl=$2
+		tCat="coverage"
+		;;
+	    \?)
+		shift
+		usage
+		;;
+	esac
+	shift
+done
+
+function getDir()
+{
+        cd $(dirname ${0})
+        script_path=`pwd`
+}
+
+function parseURL()
+{
+    url=$1
+    if [ "$url" ]
+    then
+	buildType=${url/*.}
+    else
+	buildType="unknown"
+    fi
+}
+
+function goToInstallationDirectory()
+{
+    if [ "$CUBRID" ]
+    then
+        cd $CUBRID
+	if [ $? -eq 0 ];then
+        	cd ..
+	else
+		cd $HOME
+	fi
+    else
+        cd $HOME
+    fi
+}
+
+function InstallBuildBySh()
+{
+    build_url=$1
+    buildFile=${build_url##*/}
+    cub="CUBRID"
+    curDir=`pwd`
+    goToInstallationDirectory
+
+    echo ""
+    echo "=====install CUBRID $buildFile =========="
+    echo ""
+    rm $buildFile >/dev/null 2>&1
+    wget -t 3 -T 120 $build_url
+    if [ $? -eq 0 ]
+    then
+	chmod 777 $buildFile
+    fi
+    cubrid service stop >/dev/null 2>&1
+    #sleep 2
+    if [ -d $cub ]
+    then
+            rm -rf CUBRID
+    fi
+
+            sh $buildFile > /dev/null <<EOF
+yes
+
+
+EOF
+    . ~/.cubrid.sh
+
+    rm $buildFile
+    cd $curDir
+}
+
+function InstallBuildByPackage()
+{
+    command=$1
+    build_url=$2
+    buildFile=${build_url##*/}
+    cub="CUBRID"
+    curDir=`pwd`
+    goToInstallationDirectory
+
+    echo ""
+    echo "=====install CUBRID $buildFile =========="
+    echo ""
+    rm $buildFile >/dev/null 2>&1
+    cubrid service stop >/dev/null 2>&1
+    if [ -d $cub ]
+    then
+            rm -rf CUBRID
+    fi
+    wget -t 3 -T 120 $build_url
+    
+    `eval $command $buildFile -d ./CUBRID`
+    rm $buildFile
+    cd $curDir
+}
+
+function InstallBuildForGeneral()
+{
+    url=$1
+    parseURL $url
+    if [ "$buildType" == "sh" ]
+    then
+	InstallBuildBySh $url
+    elif [ "$buildType" == "zip" ]
+    then
+	InstallBuildByPackage "unzip " $url
+    elif [ "$buildType" == "gz" ]
+    then
+	InstallBuildByPackage "tar zvxf " $url
+    elif [ "$buildType" == "tar" ]
+    then
+        echo "TODO"
+    elif [ "$buildType" == "rpm" ]
+    then
+	echo "TODO"
+    else
+	 echo "Please confirm your build URL!"
+	 exit
+    fi
+
+}
+
+function InstallBuildForCompat()
+{
+    curDir=`pwd` 
+    getDir  
+    sh $COMMON_HOME/scripts/util_compat_test.sh -sl $1 -dl $2
+    cd $curDir
+}
+
+function checkEnvironmentVariable()
+{
+     curDir=`pwd`
+     isGCOVPREFIX_RELATED=`env|grep GCOV_PREFIX|wc -l`
+     if [ $isGCOVPREFIX_RELATED -ne 2 ]
+     then
+          sed -i '/GCOV_PREFIX/d' $HOME/.bash_profile
+          echo "export GCOV_PREFIX=$HOME" >> $HOME/.bash_profile
+          echo "export GCOV_PREFIX_STRIP=2" >> $HOME/.bash_profile
+          cd $HOME
+          source .bash_profile
+     fi
+
+     cd $curDir
+}
+
+function InstallBuildForCoverage()
+{
+    build_url=$1
+    source_url=$2
+    buildFile=${build_url##*/}
+    cub="CUBRID"
+    curDir=`pwd`
+    goToInstallationDirectory
+    echo ""
+    echo "=====install CUBRID $buildFile =========="
+    echo ""
+    srcFolder=`echo $buildFile|awk -F '-' '{print $2}'`
+    rm $buildFile >/dev/null 2>&1
+    cubrid service stop >/dev/null 2>&1
+    wget -t 3 -T 120 $build_url
+    if [ -d $cub ]
+    then
+            rm -rf CUBRID
+    fi
+
+    tar zvxfm $buildFile
+
+    mkdir -p build
+    cd build
+    sourceFile=${source_url##*/}
+    rm -rf "cubrid-${srcFolder}" >/dev/null 2>&1
+    rm $sourceFile >/dev/null 2>&1
+    wget -t 3 -T 120 $source_url
+    tar zvxfm $sourceFile
+    rm src
+    ln -s "cubrid-${srcFolder}/src"
+
+    rm $sourceFile
+    checkEnvironmentVariable
+    cd $curDir
+    echo INSTALL `date '+%Y%m%d%H%M%s'` $@ >> $HOME/.qacoverage
+}
+
+
+if [ "$tCat" == "general" ]
+then
+     InstallBuildForGeneral $gUrl  > $HOME/.buildinstall.log 2>&1
+elif [ "$tCat" == "compat" ]
+then
+     InstallBuildForCompat $sUrl $dUrl > $HOME/.buildinstall.log 2>&1
+elif [ "$tCat" == "coverage" ]
+then
+     InstallBuildForCoverage $vUrl $cUrl > $HOME/.qacoverage.log 2>&1
+else
+     echo "Please confirm your parameters!!"
+fi
+
+autoConfigCUBRIDByMKEY
+
+

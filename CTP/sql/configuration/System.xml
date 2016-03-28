@@ -1,0 +1,6 @@
+<system>
+<useMonitor>false</useMonitor>
+<jdbcPath>/data/home/bu1/CUBRID/jdbc/cubrid_jdbc.jar</jdbcPath>
+<queryPlan>false</queryPlan>
+<errorMessage>false</errorMessage>
+</system>

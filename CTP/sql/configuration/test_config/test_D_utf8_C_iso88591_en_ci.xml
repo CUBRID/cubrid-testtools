@@ -1,0 +1,50 @@
+<test>
+   <!-- run_mode will be set to decide which answer will be used -->
+   <!-- autocommit will be set to decide if you will set autocommit status before running each case file  -->  
+   <!-- the item of reset is in order to 
+        1. recovery test environment for each case file
+        2. set charset and collation for i18n test
+        3. set some system parameters to stable case or improve the performance of case
+    --> 
+    <run_mode>D_utf8_C_iso88591_en_ci</run_mode>
+    <client_charset>iso88591_en_ci</client_charset>
+    <autocommit>true</autocommit>
+    <holdcas>off</holdcas>
+    <check_server_status>true</check_server_status>
+    <add_debug_hint>false</add_debug_hint>
+    <need_xml_summary>true</need_xml_summary>
+   <reset>
+       <item>SET NAMES iso88591 collate iso88591_en_ci</item>
+       <item>SET SYSTEM PARAMETERS 'add_column_update_hard_default=default'</item>
+       <item>SET SYSTEM PARAMETERS 'alter_table_change_type_strict=default'</item>
+       <item>SET SYSTEM PARAMETERS 'ansi_quotes=default'</item>
+       <item>SET SYSTEM PARAMETERS 'compat_mode=default'</item>
+       <item>SET SYSTEM PARAMETERS 'default_week_format=default'</item>
+       <item>SET SYSTEM PARAMETERS 'dont_reuse_heap_file=default'</item>
+       <item>SET SYSTEM PARAMETERS 'er_btree_debug=default'</item>
+       <item>SET SYSTEM PARAMETERS 'error_log_level=default'</item>
+       <item>SET SYSTEM PARAMETERS 'error_log_warning=default'</item>
+       <item>SET SYSTEM PARAMETERS 'group_concat_max_len=default'</item>
+       <item>SET SYSTEM PARAMETERS 'insert_execution_mode=default'</item>
+       <item>SET SYSTEM PARAMETERS 'intl_collation=default'</item>
+       <item>SET SYSTEM PARAMETERS 'intl_date_lang=default'</item>
+       <item>SET SYSTEM PARAMETERS 'intl_number_lang=default'</item>
+       <item>SET SYSTEM PARAMETERS 'multi_range_optimization_limit=default'</item>
+       <item>SET SYSTEM PARAMETERS 'no_backslash_escapes=default'</item>
+       <item>SET SYSTEM PARAMETERS 'optimizer_enable_merge_join=default'</item>
+       <item>SET SYSTEM PARAMETERS 'pipes_as_concat=default'</item>
+       <item>SET SYSTEM PARAMETERS 'plus_as_concat=default'</item>
+       <item>SET SYSTEM PARAMETERS 'require_like_escape_character=default'</item>
+       <item>SET SYSTEM PARAMETERS 'return_null_on_function_errors=default'</item>
+       <item>SET SYSTEM PARAMETERS 'sort_buffer_size=default'</item>
+       <item>SET SYSTEM PARAMETERS 'sort_limit_max_count=default'</item>
+       <item>SET SYSTEM PARAMETERS 'string_max_size_bytes=default'</item>
+       <item>SET SYSTEM PARAMETERS 'unicode_input_normalization=default'</item>
+       <item>SET SYSTEM PARAMETERS 'unicode_output_normalization=default'</item>
+       <item>SET SYSTEM PARAMETERS 'update_use_attribute_references=default'</item>
+       <item>SET SYSTEM PARAMETERS 'use_orderby_sort_limit=default'</item>
+       <item>SET SYSTEM PARAMETERS 'xasl_debug_dump=default'</item>
+       <item>SET SYSTEM PARAMETERS 'tz_leap_second_support=default'</item>
+       <item>SET SYSTEM PARAMETERS 'timezone=default'</item>
+   </reset>
+</test>

@@ -1,0 +1,14 @@
+<DefaultTestDB>
+  <id>neis05_qa</id>
+  <name>neis05</name>
+  <dbaPwd></dbaPwd>
+  <pubPwd></pubPwd>
+  <dburl>jdbc:cubrid:localhost:33030:neis05:::</dburl>
+  <dbuser>dba</dbuser>
+  <dbpassword></dbpassword>
+  <connectionType>DriverManager</connectionType>
+  <charSet>EUC-KR</charSet>
+  <version>Main</version>
+  <script>
+</script>
+</DefaultTestDB>

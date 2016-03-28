@@ -1,0 +1,56 @@
+<project name="console" default="dist" basedir=".">
+	<description>
+        simple example build file
+    </description>
+	<!-- set global properties for this build -->
+	<property name="build" location="build" />
+
+	<path id="libs">
+		<fileset dir="common/lib">
+			<include name="*.jar" />
+			<exclude name="cubridqa-common.jar" />			
+		</fileset>
+		<fileset dir="common/lib/mail">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="sql/lib">
+			<include name="*.jar" />
+			<exclude name="cubridqa-cqt.jar" />
+		</fileset>
+	</path>
+
+	<target name="init">
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}" />
+	</target>
+
+	<target name="compile" depends="init" description="compile the source ">
+		<!-- Compile the java code from ${src} into ${build} -->
+		<javac srcdir="common/src" destdir="${build}">
+			
+			<classpath refid="libs" />
+		</javac>
+		<javac srcdir="sql/src" destdir="${build}">
+			
+			<classpath refid="libs" />
+		</javac>
+	</target>
+
+	<target name="clean">
+		<delete dir="${build}" />
+		<delete dir="common/lib/cubridqa-common.jar" />
+		<delete dir="sql/lib/cubridqa-cqt.jar" />		
+	</target>
+
+	<target name="dist" depends="clean,compile" description="generate the distribution">
+		<jar jarfile="sql/lib/cubridqa-cqt.jar" manifest="sql/MANIFEST.MF" basedir="${build}">			
+			<include name="com/navercorp/cubridqa/cqt/**/*.class" />
+			<include name="name/fraser/neil/plaintext/**/*.class" />
+		</jar>
+		<jar jarfile="common/lib/cubridqa-common.jar" manifest="common/MANIFEST.MF" basedir="${build}" >
+			<include name="com/navercorp/cubridqa/common/**/*.class" />
+			<include name="com/navercorp/cubridqa/ctp/**/*.class" />
+		</jar>
+		<!--delete dir="${build}" / -->
+	</target>
+</project>
