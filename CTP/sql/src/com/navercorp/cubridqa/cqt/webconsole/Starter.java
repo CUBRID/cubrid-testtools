@@ -24,8 +24,11 @@
  */
 package com.navercorp.cubridqa.cqt.webconsole;
 
+import java.io.BufferedReader;
 import java.io.File;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 
 import com.navercorp.cubridqa.common.CommonUtils;
@@ -73,16 +76,23 @@ public class Starter {
 		cmd[7] = scenarioRoot;
 
 		ShareMemory sm = new ShareMemory(webRoot + File.separator + "." + port + ".txt", 100);
+		boolean succ = true;
 
 		if (op.equals("START")) {
 			sm.write(Constants.SM_PLEASE_STOP);
 			Thread.sleep(2000);
 			
 			System.out.println("Begin to start ...");
-			ProcessBuilder process = new ProcessBuilder(cmd);
-			process.redirectErrorStream(true);			
-			process.start();
-			boolean succ = sm.wait(Constants.SM_STARTED, 1000);
+			ProcessBuilder process = new ProcessBuilder(cmd);			
+			process.redirectErrorStream(true);
+			Process p = process.start();
+			
+			StreamGobbler errorGobbler = new Starter().new StreamGobbler(p.getErrorStream(), "ERROR", false);
+			StreamGobbler outputGobbler = new Starter().new StreamGobbler(p.getInputStream(), "OUTPUT", false);
+			outputGobbler.start();
+			errorGobbler.start();
+			
+			succ = sm.wait(Constants.SM_STARTED, 1000);
 			System.out.println();
 			System.out.println(succ ? "Done" : "Fail");
 			
@@ -91,9 +101,38 @@ public class Starter {
 			}
 		} else if (op.equals("STOP")) {
 			sm.write(Constants.SM_PLEASE_STOP);
-			boolean succ = sm.wait(Constants.SM_STOPPED, 1000);
+			succ = sm.wait(Constants.SM_STOPPED, 1000);
 			System.out.println();
-			System.out.println(succ ? "Done" : "Fail");			
+			System.out.println(succ ? "Done" : "Fail");
 		}
+		
+		System.exit(succ ? 0: 1);
+	}
+	
+	class StreamGobbler extends Thread {
+	    InputStream is;
+	    String type;
+	    boolean echo;
+
+	    public StreamGobbler(InputStream is, String type, boolean echo) {
+	        this.is = is;
+	        this.type = type;
+	        this.echo = echo;
+	    }
+
+	    @Override
+	    public void run() {
+	        try {
+	            InputStreamReader isr = new InputStreamReader(is);
+	            BufferedReader br = new BufferedReader(isr);
+	            String line = null;
+	            while ((line = br.readLine()) != null) {
+	                if(echo) System.out.println(type + "> " + line);
+	            }
+	        }
+	        catch (IOException ioe) {
+	            ioe.printStackTrace();
+	        }
+	    }
 	}
 }
