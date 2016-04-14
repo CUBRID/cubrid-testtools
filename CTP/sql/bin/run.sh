@@ -407,8 +407,6 @@ function make_locale()
              fi
      fi
  
-     if
-
      if [ "$os_type" == "Windows" ]
      then
 	  if [ "$scenario_full_name" != "medium" -a "$scenario_full_name" != "site" ];then
