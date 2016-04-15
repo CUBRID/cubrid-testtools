@@ -213,6 +213,10 @@ public class SummaryModel {
 		for (String line : summaryList) {
 			firstColon = line.lastIndexOf(":");
 			key = line.substring(0, firstColon).trim();
+			if (key.equals("msg_id")) {
+				continue;
+			}
+				
 			value = line.substring(firstColon + 1).trim();
 
 			if (isSummaryItem) {

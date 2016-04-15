@@ -317,12 +317,14 @@ function config_cubrid_without_ha()
 
      cubrid_broker_conf_para=`ini -s "sql/cubrid_broker.conf/%BROKER1" --separator="||" ${config_file_main}`
      cubrid_broker_conf_queryeditor_para=`ini -s "sql/cubrid_broker.conf/%query_editor" --separator="||" ${config_file_main}`
+     is_valid_section_broker1=`cat $CUBRID/conf/cubrid_broker.conf|grep '\[\%BROKER1\]'|grep -v '#'|wc -l`
+     is_valid_section_queryeditor=`cat $CUBRID/conf/cubrid_broker.conf|grep '\[\%query_editor\]'|grep -v '#'|wc -l`
      
-     if [ "$cubrid_broker_conf_queryeditor_para" ];then
+     if [ "$cubrid_broker_conf_queryeditor_para" ] && [ $is_valid_section_queryeditor -ne 0 ];then
      	ini -s "%query_editor" -u "${cubrid_broker_conf_queryeditor_para}" $CUBRID/conf/cubrid_broker.conf
      fi
  
-     if [ "$cubrid_broker_conf_para" ];then	
+     if [ "$cubrid_broker_conf_para" ] && [ $is_valid_section_broker1 -ne 0 ];then	
      	ini -s "%BROKER1" -u "${cubrid_broker_conf_para}" $CUBRID/conf/cubrid_broker.conf
      fi
 
@@ -333,7 +335,7 @@ function config_cqt_tool()
      curDir=`pwd`
      build_ver_type=""
      qa_db_xml_path=${CTP_HOME}/sql/configuration/Function_Db/${db_name}_qa.xml
-     avaliable_broker_port=`awk '/SERVICE[[:space:]]*=[[:space:]]*ON/, /BROKER_PORT/' $CUBRID/conf/cubrid_broker.conf|grep BROKER_PORT|awk -F '=' '{print $2}'|head -1| tr -d ' '`
+     avaliable_broker_port=`awk '/SERVICE[[:space:]]*=[[:space:]]*ON/, /BROKER_PORT/' $CUBRID/conf/cubrid_broker.conf|grep BROKER_PORT|grep -v '#'|awk -F '=' '{print $2}'|head -1| tr -d ' '`
      db_url="<dburl>jdbc:cubrid:localhost:${avaliable_broker_port}:${db_name}:::</dburl>"
      sed -i "s#<dburl>.*</dburl>#$db_url#g" $qa_db_xml_path
      if [ "$cubrid_bits" == "32" ];then
@@ -405,14 +407,14 @@ function make_locale()
              fi
      fi
  
-     echo "make locale now"
-     mv $CUBRID/conf/cubrid_locales.txt $CUBRID/conf/cubrid_locales_bak.txt
-     cp $CUBRID/conf/cubrid_locales.all.txt $CUBRID/conf/cubrid_locales.txt
-     cd $CUBRID/bin
-
      if [ "$os_type" == "Windows" ]
      then
 	  if [ "$scenario_full_name" != "medium" -a "$scenario_full_name" != "site" ];then
+               echo "make locale now"
+               mv $CUBRID/conf/cubrid_locales.txt $CUBRID/conf/cubrid_locales_bak.txt
+               cp $CUBRID/conf/cubrid_locales.all.txt $CUBRID/conf/cubrid_locales.txt
+               cd $CUBRID/bin
+
                batPath=`cygpath $CUBRID`
                if [ $version_type -eq 0 ];then
                     $batPath/bin/make_locale.bat /release
@@ -422,6 +424,11 @@ function make_locale()
           fi
                        
      else
+          echo "make locale now"
+          mv $CUBRID/conf/cubrid_locales.txt $CUBRID/conf/cubrid_locales_bak.txt
+          cp $CUBRID/conf/cubrid_locales.all.txt $CUBRID/conf/cubrid_locales.txt
+          cd $CUBRID/bin
+
           if [ $version_type -eq 0 ]
  	  then
  	       sh make_locale.sh -t $cubrid_bits
@@ -718,7 +725,7 @@ function do_test()
      javaArgs="${scenario_repo_root}?db=${db_name}_qa"
      
         
-     "$JAVA_HOME/bin/java" -Xms1024m -Xmx2048m -XX:MaxPermSize=512m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $config_file_ext $javaArgs 2>&1 >> $log_filename 
+     "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $config_file_ext $javaArgs 2>&1 >> $log_filename 
      )
      cd $curDir
 }
