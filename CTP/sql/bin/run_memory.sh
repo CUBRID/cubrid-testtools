@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 # 
 # Copyright (c) 2016, Search Solution Corporation. All rights reserved.
 # 
@@ -105,8 +104,13 @@ function rename_process()
    fi
 
    cd $CUBRID/bin
-   mv cub_server server.exe
-   mv cub_cas cas.exe
+   if [ ! -f "server.exe" ];then
+      mv cub_server server.exe
+   fi
+   
+   if [ ! -f "cas.exe" ];then
+      mv cub_cas cas.exe
+   fi
    
    cd $curDir
 }
@@ -176,7 +180,11 @@ function format_results()
    testing_result=`cat $run_log|grep 'Test Result Directory:'|grep -v grep|awk -F ':' '{print $2}'|tr -d ' '`
 
    cp -rf $testing_result/* $CTP_HOME/result/$result_folder
-     
+   
+   echo "======================="
+   echo "Test Build:${build_no}"
+   echo "Memory Result:${CTP_HOME}/result/${result_folder}"
+   echo "======================="  
    cd $curDir
 }
 
