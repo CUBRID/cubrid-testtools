@@ -1,0 +1,3744 @@
+# This is a generated file, composed of the following suppression rules:
+#  exp-sgcheck.supp xfree-3.supp xfree-4.supp glibc-2.X-drd.supp glibc-2.34567-NPTL-helgrind.supp glibc-2.5.supp
+{
+   ld-2.X possibly applying relocations
+   exp-sgcheck:SorG
+   obj:*/*lib*/ld-2.*so*
+   obj:*/*lib*/ld-2.*so*
+}
+
+# I'm pretty sure this is a false positive caused by the sg_ stuff
+{
+   glibc realpath false positive
+   exp-sgcheck:SorG
+   fun:realpath
+   fun:*
+}
+
+{
+   I think this is glibc's ultra optimised getenv doing 2 byte reads
+   exp-sgcheck:SorG
+   fun:getenv
+}
+
+##----------------------------------------------------------------------##
+
+# Errors to suppress by default with XFree86 3.3.6)
+
+# Format of this file is:
+# {
+#     name_of_suppression
+#     tool_name:supp_kind
+#     (optional extra info for some suppression types)
+#     caller0 name, or /name/of/so/file.so
+#     caller1 name, or ditto
+#     (optionally: caller2 name)
+#     (optionally: caller3 name)
+#  }
+#
+# For Memcheck, the supp_kinds are:
+#
+#     Param Value1 Value2 Value4 Value8 Value16 Jump
+#     Free Addr1 Addr2 Addr4 Addr8 Addr16
+#     Cond (previously known as Value0)
+#
+# and the optional extra info is:
+#     if Param: name of system call param
+
+##----------------------------------------------------------------------##
+
+#Add by Nathan
+####BEGIN
+{
+   writev(vector[...])-syscall
+   Memcheck:Param
+   writev(vector[...])
+   obj:*
+}
+
+{
+   pwrite64(buf)-syscall
+   Memcheck:Param
+   pwrite64(buf)
+   obj:*
+}
+
+{
+   write(buf)-syscall
+   Memcheck:Param
+   write(buf)
+   obj:*
+}
+
+##################### ADD DATE ###################  20151113
+## CUBRIDSUS-16102, not a bug.
+{
+   socketcall_send_syscall_Nathan_1
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:send
+   fun:css_send_heartbeat_data
+   fun:css_master_thread
+   fun:css_init
+}
+
+## ## suppress memory leak 
+## CUBRIDSUS-9310, CUBRIDSUS-14464, not a bug.
+{
+   SuppressLeak_Nathan_1
+   Memcheck:Leak
+   fun:malloc
+   fun:er_malloc_helper.clone.0
+   fun:er_set_internal
+   fun:er_set
+}
+{
+   SuppressLeak_Nathan_1_1
+   Memcheck:Leak
+   fun:malloc
+   fun:er_malloc_helper
+   fun:er_vsprintf
+   fun:er_set_internal
+   fun:er_set
+}
+
+## CUBRIDSUS-17619, not a bug.
+{
+   SuppressLeak_Nathan_2
+   Memcheck:Leak
+   fun:malloc
+   fun:mspace_malloc
+   fun:hl_lea_alloc
+}
+
+{
+   SuppressLeak_Nathan_3_1
+   Memcheck:Leak
+   fun:malloc
+   obj:*/jre/lib/amd64/server/libjvm.so
+}
+
+{
+   SuppressLeak_Nathan_3_2
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib64/libpthread-2.5.so
+   obj:*/jre/lib/amd64/server/libjvm.so
+}
+
+{
+   SuppressLeak_Nathan_3_3
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib64/ld-2.5.so
+   obj:/lib64/libpthread-2.5.so
+}
+
+
+## CUBRIDSUS-17784, not a bug.
+{
+   SuppressLeak_Nathan_4_1
+   Memcheck:Leak
+   fun:calloc
+   fun:pt_add_lock_class.clone.1
+   fun:pt_find_lck_classes
+}
+{
+   SuppressLeak_Nathan_4_2
+   Memcheck:Leak
+   fun:malloc
+   fun:pt_class_pre_fetch
+   fun:sm_virtual_queries
+}
+{
+   SuppressLeak_Nathan_4_3
+   Memcheck:Leak
+   fun:calloc
+   fun:parser_create_parser
+   fun:mq_virtual_queries
+}
+##################### ADD DATE ###################  20151113
+###END
+{
+   X11-Cond-0
+   Memcheck:Cond
+   obj:*libXt.so.6.0
+   obj:*libXt.so.6.0
+   obj:*libXt.so.6.0
+}
+{
+   X11-Cond-1
+   Memcheck:Cond
+   fun:__rawmemchr
+   obj:*libXt.so.6.0
+   obj:*libXt.so.6.0
+}
+
+
+# Suppressions for XFree86-3.3.X
+
+{
+   X11-Addr4-1
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libX11.so.6.1
+   obj:/usr/X11R6/lib/libX11.so.6.1
+   obj:/usr/X11R6/lib/libX11.so.6.1
+}
+
+{
+   X11-Addr4-2
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libX11.so.6.1
+   obj:/usr/X11R6/lib/libX11.so.6.1
+   obj:/usr/X11R6/lib/libXt.so.6.0
+}
+
+{
+   X11-Addr4-3
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libXt.so.6.0
+   obj:/usr/X11R6/lib/libXt.so.6.0
+   obj:/usr/X11R6/lib/libXt.so.6.0
+}
+
+{
+   X11-Addr4-4
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libX11.so.6.1
+   obj:/usr/X11R6/lib/libXt.so.6.0
+   obj:/usr/X11R6/lib/libXt.so.6.0
+}
+
+{
+   X11-Addr4-5
+   Memcheck:Addr4
+   fun:__rawmemchr
+   obj:/usr/X11R6/lib/libXt.so.6.0
+   obj:/usr/X11R6/lib/libXt.so.6.0
+}
+
+{
+   X11-Addr4-6
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libXmu.so.6.0
+   obj:/usr/X11R6/lib/libXmu.so.6.0
+   obj:/usr/X11R6/lib/libXt.so.6.0
+}
+
+{
+   X11-Addr4-7
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libXt.so.6.0
+   obj:/usr/X11R6/lib/libXt.so.6.0
+   obj:/usr/X11R6/lib/libXawXpm_posing_as_Xaw.so.6.1
+}
+
+{
+   X11-Param-1
+   Memcheck:Param
+   write(buf)
+   fun:__libc_write
+   obj:/usr/X11R6/lib/libX11.so.6.1
+   obj:/usr/X11R6/lib/libX11.so.6.1
+}
+
+{
+   X11-Addr4-8
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libX11.so.6.1
+   obj:/usr/X11R6/lib/libXpm.so.4.11
+   obj:/usr/X11R6/lib/libXpm.so.4.11
+}
+
+{
+   X11-Addr4-8
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libXt.so.6.0
+   obj:/usr/X11R6/lib/libXawXpm_posing_as_Xaw.so.6.1
+   obj:/usr/X11R6/lib/libXt.so.6.0
+}
+
+{
+   X11-Addr4-9
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libXaw.so.6.1
+   obj:/usr/X11R6/lib/libXt.so.6.0
+   obj:/usr/X11R6/lib/libXt.so.6.0
+}
+
+{
+   X11-Addr4-10
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libXaw.so.6.1
+   obj:/usr/X11R6/lib/libXaw.so.6.1
+   obj:/usr/X11R6/lib/libXt.so.6.0
+}
+
+{
+   X11-Addr4-11
+   Memcheck:Addr4
+   obj:/usr/X11R6/lib/libXt.so.6.0
+   obj:/usr/X11R6/lib/libXt.so.6.0
+   obj:/usr/X11R6/lib/libXaw.so.6.1
+}
+
+
+
+##----------------------------------------------------------------------##
+
+##----------------------------------------------------------------------##
+
+# Errors to suppress by default with XFree86 4.1.0)
+
+# *** And a bunch of other stuff which is completely unrelated
+# to X.  The default suppressions are a bit of a mess and could do
+# with a good tidying up.
+
+# Format of this file is:
+# {
+#     name_of_suppression
+#     tool_name:supp_kind
+#     (optional extra info for some suppression types)
+#     caller0 name, or /name/of/so/file.so
+#     caller1 name, or ditto
+#     (optionally: caller2 name)
+#     (optionally: caller3 name)
+#  }
+#
+# For Memcheck, the supp_kinds are:
+#
+#     Param Value1 Value2 Value4 Value8 Value16 Jump
+#     Free Addr1 Addr2 Addr4 Addr8 Addr16
+#     Cond (previously known as Value0)
+#
+# and the optional extra info is:
+#     if Param: name of system call param
+
+# Resulting from R H 8.0
+{
+   *libc_write/libX11.so.6.2/*X11TransWrite(Param)
+   Memcheck:Param
+   write(buf)
+   fun:*libc_write
+   obj:/usr/*lib*/libX11.so*
+   fun:*X11TransWrite
+}
+
+{
+   libX11.so.6.2/libX11.so.6.2/libX11.so.6.2(Cond)
+   Memcheck:Cond
+   obj:/usr/*lib*/libX11.so*
+   obj:/usr/*lib*/libX11.so*
+   obj:/usr/*lib*/libX11.so*
+}
+
+{
+   libXt.so.6.2/libXt.so.6.2/libXt.so.6.2(Cond)
+   Memcheck:Cond
+   obj:/usr/*lib*/libXt.so*
+   obj:/usr/*lib*/libXt.so*
+   obj:/usr/*lib*/libXt.so*
+}
+
+
+{
+   libXaw.so.7.0/libXaw.so.7.0/libXaw.so.7.0(Cond)
+   Memcheck:Cond
+   obj:/usr/*lib*/libXaw.so*
+   obj:/usr/*lib*/libXaw.so*
+   obj:/usr/*lib*/libXaw.so*
+}
+
+{
+   libXmu.so.6.2/libXmu.so.6.2/libXmu.so.6.2(Cond)
+   Memcheck:Cond
+   obj:/usr/*lib*/libXmu.so*
+   obj:/usr/*lib*/libXmu.so*
+   obj:/usr/*lib*/libXmu.so*
+}
+
+{
+   libXt.so.6.0/libXt.so.6.0/libXaw.so.7.0(Cond)
+   Memcheck:Cond
+   obj:/usr/*lib*/libXt.so*
+   obj:/usr/*lib*/libXt.so*
+   obj:/usr/*lib*/libXaw.so*
+}
+
+{
+   libXaw.so.7.0/libXaw.so.7.0/libXt.so.6.0(Value4)
+   Memcheck:Value4
+   obj:/usr/*lib*/libXaw.so*
+   obj:/usr/*lib*/libXaw.so*
+   obj:/usr/*lib*/libXt.so*
+}
+
+{
+   libXaw.so.7.0/libXaw.so.7.0/libXt.so.6.0(Cond)
+   Memcheck:Cond
+   obj:/usr/*lib*/libXaw.so*
+   obj:/usr/*lib*/libXaw.so*
+   obj:/usr/*lib*/libXt.so*
+}
+
+{
+   libX11.so.6.2/libX11.so.6.2/libXaw.so.7.0(Cond)
+   Memcheck:Cond
+   obj:/usr/*lib*/libX11.so*
+   obj:/usr/*lib*/libX11.so*
+   obj:/usr/*lib*/libXaw.so*
+}
+
+{
+   libX11.so.6.2/libX11.so.6.2/libXaw.so.7.0(Addr4)
+   Memcheck:Addr4
+   obj:/usr/*lib*/libX11.so*
+   obj:/usr/*lib*/libX11.so*
+   obj:/usr/*lib*/libXaw.so*
+}
+
+{
+   libX11.so.6.2/libXaw.so.7.0/libXaw.so.7.0(Cond)
+   Memcheck:Cond
+   obj:/usr/*lib*/libX11.so*
+   obj:/usr/*lib*/libXaw.so*
+   obj:/usr/*lib*/libXaw.so*
+}
+
+{
+   libXpm.so.4.11/libXpm.so.4.11/libXpm.so.4.11
+   Memcheck:Cond
+   obj:/usr/*lib*/libXpm.so.4.11
+   obj:/usr/*lib*/libXpm.so.4.11
+   obj:/usr/*lib*/libXpm.so.4.11
+}
+
+{
+   struct with uninitialized paddings
+   Memcheck:Param
+   writev(vector[...])
+   fun:*_writev
+   fun:_X11TransSocketWritev
+   fun:_X11TransWritev
+   fun:*
+}
+
+{
+   struct with uninitialized paddings - libxcb
+   Memcheck:Param
+   writev(vector[...])
+   obj:/lib*/*.so
+   obj:/usr/lib*/libxcb.so.1.0.0
+   obj:/usr/lib*/libxcb.so.1.0.0
+   fun:xcb_send_request
+   fun:_X*
+}
+
+{
+   struct with uninitialized paddings - libxcb
+   Memcheck:Param
+   writev(vector[...])
+   obj:/lib*/*.so
+   obj:/usr/lib*/libxcb.so.1.0.0
+   obj:/usr/lib*/libxcb.so.1.0.0
+   obj:/usr/lib*/libxcb.so.1.0.0
+   fun:xcb_*
+   fun:_X*
+}
+
+{
+   another struct with uninitialized paddings
+   Memcheck:Param
+   write(buf)
+   obj:*
+   fun:_IceTransSocketWrite
+   fun:_IceTransWrite
+   fun:_IceWrite
+}
+
+{
+   Xorg 6.8.1 uninit _write* padding
+   Memcheck:Param
+   write(buf)
+   fun:*
+   fun:_X11TransWrite
+   obj:/usr/*lib*/libX11.so*
+}
+
+{
+   Xorg 6.8.1 uninit write padding
+   Memcheck:Param
+   write(buf)
+   fun:write
+   fun:_X11TransWrite
+   obj:/usr/*lib*/libX11.so*
+}
+
+{
+   Xorg 6.8.1 ICE uninit __write* padding
+   Memcheck:Param
+   write(buf)
+   obj:*
+   fun:_IceTransWrite
+   fun:_IceWrite
+   fun:IceFlush
+}
+
+{
+   Xorg 6.8.1 writev uninit padding
+   Memcheck:Param
+   writev(vector[...])
+   fun:writev
+   obj:/usr/*lib*/libX11.so*
+   fun:_X11TransWritev
+   fun:_XSend
+}
+
+{
+   Xorg 6.9.0 writev uninit padding
+   Memcheck:Param
+   writev(vector[...])
+   fun:do_writev
+   fun:writev
+   obj:/usr/*lib*/libX11.so*
+   fun:_X11TransWritev
+   fun:_XSend
+}
+
+{
+   X on SUSE11 writev uninit padding
+   Memcheck:Param
+   writev(vector[...])
+   fun:writev
+   obj:/usr/lib*/libxcb.so*
+   obj:/usr/lib*/libxcb.so*
+}
+{
+   X on SUSE11 writev uninit padding 2
+   Memcheck:Param
+   writev(vector[...])
+   obj:/lib*/ld-2.*.so*
+   obj:/usr/lib*/libxcb.so*
+   obj:/usr/lib*/libxcb.so*
+}
+{
+   X on SUSE11 writev uninit padding 3
+   Memcheck:Param
+   writev(vector[...])
+   obj:/lib*/ld-2.*.so*
+   obj:/usr/lib*/libORBit*.so*
+   obj:/usr/lib*/libORBit*.so*
+}
+{
+   X on SUSE11 writev uninit padding 4
+   Memcheck:Param
+   writev(vector[...])
+   obj:/lib*/libc-2.*.so*
+   obj:/usr/lib*/libORBit*.so*
+   obj:/usr/lib*/libORBit*.so*
+}
+ 
+
+# There's something strange about a % 127 in XftFontOpenInfo
+# (hashing) which gcc turns into a multiply by 33818641 and
+# some other guff instead.  I don't understand it enough to
+# know if libXft is broken or if memcheck's value tracking is
+# inadequate here.  Anyway, for the moment, suppress it.
+#
+# Use of uninitialised value of size 8
+#   at 0x71A59F8: XftFontOpenInfo (in /usr/X11R6/lib64/libXft.so.2.1.2)
+#   by 0x71A5F0D: XftFontOpenPattern (in /usr/X11R6/lib64/libXft.so.2.1.2)
+#   by 0x65F166E: loadFontConfigFont(QFontPrivate const*, QFontDef const&, 
+#                 QFont::Script) (qfontdatabase_x11.cpp:1942)
+#   by 0x65F5DE4: QFontDatabase::findFont(QFont::Script, QFontPrivate const*,
+#                 QFontDef const&, int) (qfontdatabase.cpp:996)
+{
+   XftFontOpenInfo-umod-127-strangeness
+   Memcheck:Value8
+   obj:/usr/X11*/lib*/libXft.so*
+   obj:/usr/X11*/lib*/libXft.so*
+}
+{
+   XftFontOpenInfo-umod-127-strangeness-a-la-xorg
+   Memcheck:Value8
+   obj:/usr/lib*/libXft.so*
+   obj:/usr/lib*/libXft.so*
+}
+
+{
+   More X padding stuff
+   Memcheck:Param
+   writev(vector[...])
+   fun:*writev*
+   obj:/usr/X11*/lib*/libX11.so*
+   obj:/usr/X11*/lib*/libX11.so*
+}
+
+# Inlined strlen in libX11 on Ubuntu 9.10 amd64, unfortunately.
+# Invalid read of size 4
+#    at 0x9B5CCE6: ??? (in /usr/lib/libX11.so.6.2.0)
+#    by 0x9B5D011: XGetAtomName (in /usr/lib/libX11.so.6.2.0)
+#    by 0x86407C3: gdk_x11_xatom_to_atom_for_display
+#                  (in /usr/lib/libgdk-x11-2.0.so.0.1800.3)
+#    by 0x8636817: ??? (in /usr/lib/libgdk-x11-2.0.so.0.1800.3)
+#  Address 0x1a558e1c is 28 bytes inside a block of size 30 alloc'd
+#    at 0x4C2552D: malloc (vg_replace_malloc.c:236)
+#    by 0x9B642C0: _XUpdateAtomCache (in /usr/lib/libX11.so.6.2.0)
+#    by 0x9B647F1: ??? (in /usr/lib/libX11.so.6.2.0)
+#    by 0x9B81818: ??? (in /usr/lib/libX11.so.6.2.0)
+{
+   libX11.so.6.2.0/libX11.so.6.2.0(Addr4)
+   Memcheck:Addr4
+   obj:/usr/*lib*/libX11.so*
+   obj:/usr/*lib*/libX11.so*
+}
+
+##----------------------------------------------------------------------##
+# Completely inappropriate place, but ...
+
+{
+   ifort-9.X-on-i686-1
+   Memcheck:Addr4
+   fun:unaligned_bigint
+   fun:hash
+   fun:for__add_to_lf_table
+}
+{
+   ifort-9.X-on-amd64-1
+   Memcheck:Addr8
+   fun:unaligned_bigint
+   fun:hash
+   fun:for__add_to_lf_table
+}
+
+
+# zlib-1.2.x uses uninitialised memory in some tricky way which
+# apparently is harmless (it must amount to a vectorised while-loop,
+# nothing else makes sense).  Fools Memcheck though.  See the mentioned
+# URL for details.
+{
+   zlib-1.2.x trickyness (1a): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Cond
+   obj:/*lib*/libz.so.1.2.*
+   ...
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+{
+   zlib-1.2.x trickyness (1b): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Cond
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+
+{
+   zlib-1.2.x trickyness (2a): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Value8
+   obj:/*lib*/libz.so.1.2.*
+   ...
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+{
+   zlib-1.2.x trickyness (2b): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Value8
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+
+{
+   zlib-1.2.x trickyness (3a): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Value4
+   obj:/*lib*/libz.so.1.2.*
+   ...
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+{
+   zlib-1.2.x trickyness (3b): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Value4
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+
+
+##----------------------------------------------------------------------##
+
+## More general versions of some of the old X suppressions above
+{
+   Ubuntu804 libXaw.so.7.0/libXaw.so.7.0/libXaw.so.7.0(Cond)
+   Memcheck:Cond
+   obj:/usr/*lib*/libXaw*so*
+   obj:/usr/*lib*/libXaw*so*
+   obj:/usr/*lib*/libXaw*so*
+}
+{
+   Ubuntu804 libXaw.so.7.0/libXaw.so.7.0/libXt(Cond)
+   Memcheck:Cond
+   obj:/usr/*lib*/libXaw*so*
+   obj:/usr/*lib*/libXaw*so*
+   obj:/usr/*lib*/libXt*so*
+}
+
+{
+   Ubuntu804-hack-1
+   Memcheck:Overlap
+   fun:mempcpy
+   fun:_IO_default_xsputn
+   obj:/lib*/libc-2.*so*
+}
+#
+# Suppression patterns for ld, the dynamic loader.
+#
+
+# Suppress all data races triggered by ld.
+{
+   drd-ld
+   drd:ConflictingAccess
+   obj:*/lib*/ld-*.so
+}
+
+#
+# Suppression patterns for libc.
+#
+
+# Suppress all data races where the topmost frame is inside libc.so. Although
+# this could hide some real data races, unfortunately this is the only way to
+# not report any false positives on stdio functions. The glibc functions
+# manipulating FILE objects use locking primitives that cannot be intercepted
+# easily. See also the definitions of _IO_lock_lock() etc. in the file
+# nptl/sysdeps/pthread/bits/stdio-lock.h in the glibc source tree.
+{
+   drd-libc-stdio
+   drd:ConflictingAccess
+   obj:*/lib*/libc-*
+}
+{
+   drd-libc-thread-cancellation-test
+   drd:ConflictingAccess
+   fun:write
+}
+{
+   drd-libc-random
+   drd:ConflictingAccess
+   fun:random_r
+   fun:random
+}
+
+#
+# Suppression patterns for libstdc++, the implementation of the standard C++
+# library included with the gcc compiler.
+#
+# Note: several versions of the libstdc++ library (4.2.2, 4.3.2, 4.4.0, 4.5.0
+# and their predecessors) contain an implementation of the std::string class
+# that triggers conflicting memory accesses. See also
+# http://gcc.gnu.org/bugzilla/show_bug.cgi?id=40518
+#
+
+# {
+#    drd-libstdc++-std::string::string()
+#    drd:ConflictingAccess
+#    fun:_ZNSsC1ERKSs
+# }
+
+{
+   drd-libstdc++-cxa_guard_release
+   drd:CondErr
+   fun:pthread_cond_broadcast@*
+   fun:__cxa_guard_release
+}
+
+
+#
+# Suppression patterns for libpthread.
+#
+
+{
+   drd-libpthread-pthread_create
+   drd:ConflictingAccess
+   ...
+   fun:pthread_create*
+}
+{
+   drd-libpthread-pthread_join
+   drd:ConflictingAccess
+   fun:pthread_join
+   fun:pthread_join
+}
+{
+   drd-libpthread-__deallocate_stack
+   drd:ConflictingAccess
+   ...
+   fun:__deallocate_stack
+}
+{
+   drd-libpthread-__free_stacks
+   drd:ConflictingAccess
+   fun:__free_stacks
+}
+{
+   drd-libpthread-__free_tcb
+   drd:ConflictingAccess
+   ...
+   fun:__free_tcb
+}
+{
+   drd-libpthread-__nptl_deallocate_tsd
+   drd:ConflictingAccess
+   fun:__nptl_deallocate_tsd
+}
+{
+   drd-libpthread-pthread_detach
+   drd:ConflictingAccess
+   fun:pthread_detach
+   fun:pthread_detach
+}
+{
+   drd-libpthread-pthread_once
+   drd:ConflictingAccess
+   fun:pthread_once
+}
+{
+   drd-libpthread-pthread_cancel_init
+   drd:ConflictingAccess
+   fun:pthread_cancel_init
+}
+{
+   drd-libpthread-_Unwind_ForcedUnwind
+   drd:ConflictingAccess
+   ...
+   fun:_Unwind_ForcedUnwind
+}
+{
+   drd-libpthread-_Unwind_GetCFA
+   drd:ConflictingAccess
+   fun:_Unwind_GetCFA
+}
+{
+   drd-libpthread-_Unwind_Resume
+   drd:ConflictingAccess
+   ...
+   fun:_Unwind_Resume
+}
+{
+   drd-libpthread-?
+   drd:ConflictingAccess
+   obj:*/lib/libgcc_s.so.1
+}
+{
+   drd-libpthread-nanosleep
+   drd:ConflictingAccess
+   fun:nanosleep
+}
+
+#
+# Suppression patterns for libgomp.
+#
+
+# Unfortunately many statements in libgomp trigger conflicting accesses. It is
+# not clear to me which of these are safe and which ones not. See also
+# http://gcc.gnu.org/bugzilla/show_bug.cgi?id=40362
+{
+   drd-libgomp
+   drd:ConflictingAccess
+   obj:/usr/lib*/libgomp.so*
+}
+
+#
+# Suppression patterns for libX11.
+#
+
+{
+   drd-libX11-XCreateFontSet
+   drd:CondErr
+   fun:pthread_cond_init*
+   fun:_XReply
+   fun:XListFontsWithInfo
+   obj:/usr/lib*/libX11.so*
+   fun:XCreateOC
+   fun:XCreateFontSet
+}
+
+#
+# Suppression patterns for libxcb.
+#
+
+{
+   drd-libxcb-xcb_wait_for_reply
+   drd:CondErr
+   ...
+   fun:pthread_cond_destroy*
+   fun:xcb_wait_for_reply
+}
+
+#
+# Suppression patterns for libglib.
+#
+
+{
+   drd-libglib-access-g_threads_got_initialized
+   drd:ConflictingAccess
+   ...
+   fun:g_slice_alloc
+   fun:g_ptr_array_sized_new
+}
+{
+   drd-libglib-access-g_threads_got_initialized
+   drd:ConflictingAccess
+   ...
+   fun:_ZN27QEventDispatcherGlibPrivateC1EP13_GMainContext
+   fun:_ZN20QEventDispatcherGlibC1EP7QObject
+   obj:/usr/lib*/libQtCore.so.4.*
+   obj:/usr/lib*/libQtCore.so.4.*
+}
+{
+   drd-libglib-access-g_mem_initialized
+   drd:ConflictingAccess
+   fun:g_malloc0
+}
+{
+   drd-libglib-g_private_get_posix_impl
+   drd:ConflictingAccess
+   fun:g_private_get_posix_impl
+}
+{
+   drd-libglib-g_private_set_posix_impl
+   drd:ConflictingAccess
+   fun:g_private_set_posix_impl
+}
+{
+   drd-libglib-g_get_language_names
+   drd:ConflictingAccess
+   fun:g_slice_free_chain_with_offset
+}
+{
+   drd-libglib-g_main_context_new
+   drd:ConflictingAccess
+   fun:fcntl
+   obj:/usr/lib*/libglib-*.so*
+   fun:g_main_context_new
+}
+
+#
+# Suppression patterns for libQtCore.
+#
+
+{
+   drd-libQtCore-deref-that-calls-QThreadData-destructor
+   drd:ConflictingAccess
+   fun:_ZN11QThreadDataD1Ev
+   obj:/usr/lib*/libQtCore.so.4.*
+}
+{
+   drd-libQtCore-4.0/4.1-Q_GLOBAL_STATIC-connectionList
+   drd:ConflictingAccess
+   obj:/usr/lib*/libQtCore.so.4.*
+   fun:_ZN11QMetaObject8activateEP7QObjectiiPPv
+   fun:_ZN11QMetaObject8activateEP7QObjectPKS_iPPv
+}
+{
+   drd-libQtCore-QObjectPrivate::clearGuards(QObject*)
+   drd:ConflictingAccess
+   fun:_ZN14QReadWriteLock12lockForWriteEv
+   fun:_ZN14QObjectPrivate11clearGuardsEP7QObject
+   fun:_ZN7QObjectD2Ev
+}
+{
+   drd-libQtCore-QObjectPrivate::clearGuards(QObject*)
+   drd:ConflictingAccess
+   fun:_ZN14QReadWriteLock12lockForWriteEv
+   fun:_ZN12QWriteLocker6relockEv
+   fun:_ZN12QWriteLockerC1EP14QReadWriteLock
+   fun:_ZN14QObjectPrivate11clearGuardsEP7QObject
+   fun:_ZN7QObjectD2Ev
+   fun:_ZN24QAbstractEventDispatcherD2Ev
+   fun:_ZN20QEventDispatcherGlibD0Ev
+}
+{
+   drd-libQtCore-QMutexPool::get(void const*)
+   drd:ConflictingAccess
+   fun:_ZN10QMutexPool3getEPKv
+}
+{
+   drd-libQtCore-qt_gettime_is_monotonic()
+   drd:ConflictingAccess
+   fun:_Z23qt_gettime_is_monotonicv
+}
+
+#
+# Suppression patterns for libboost.
+#
+
+# Suppress the races on boost::once_flag::epoch and on
+# boost::detail::this_thread_epoch. See also the source file
+# boost/thread/pthread/once.hpp in the Boost source tree
+# (https://svn.boost.org/trac/boost/browser/trunk/boost/thread/pthread/once.hpp).
+{
+   drd-libboost-boost::call_once<void (*)()>(boost::once_flag&, void (*)())
+   drd:ConflictingAccess
+   ...
+   fun:_ZN5boost9call_onceIPFvvEEEvRNS_9once_flagET_
+}
+{
+   drd-libboost-boost::detail::get_once_per_thread_epoch()
+   drd:ConflictingAccess
+   fun:_ZN5boost6detail25get_once_per_thread_epochEv
+}
+# Suppress the race reports on boost::detail::current_thread_tls_key. See also
+# https://svn.boost.org/trac/boost/ticket/3526 for more information about why
+# the access pattern of current_thread_tls_key is safe.
+{
+   drd-libboost-boost::detail::get_current_thread_data()
+   drd:ConflictingAccess
+   ...
+   fun:_ZN5boost6detail23get_current_thread_dataEv
+}
+{
+   drd-libboost-boost::detail::set_current_thread_data(boost::detail::thread_data_base*)
+   drd:ConflictingAccess
+   ...
+   fun:_ZN5boost6detail23set_current_thread_dataEPNS0_16thread_data_baseE
+}
+
+# FIXME 22 Jan 09: helgrind-glibc2X-005 overlaps with a lot of
+# other stuff.  They should be removed.
+
+##----------------------------------------------------------------------##
+# Suppressions for the Helgrind tool when using 
+# a glibc-2.{3,4,5,6,7,8,9} system
+
+####################################################
+# glibc-2.X specific
+# These are generic cover-alls which catch a lot of stuff
+# in various combinations of ld, libc and libpthread
+#
+# Note this is heavyhanded and not very clever:
+#
+# - suppress anything that has its top frame in ld.so
+#   That's fine, since it's mostly dynamic linking stuff,
+#   which has various deliberate (harmless) races
+#
+# - suppress anything that has its top frame in libc.so.
+#   This really isn't clever, since it could hide some 
+#   legitimate races.  But the problem is, if we don't do
+#   this, then loads of errors to do with stdio are reported, because
+#   H fails to see glibc's internal locking/unlocking of FILE*s
+#   as required by POSIX.  A better solution is needed.
+
+#{
+#   helgrind-glibc2X-001
+#   Helgrind:Race
+#   obj:*/lib*/ld-2.*so*
+#}
+
+# helgrind-glibc2X-002 was merged into helgrind-glibc2X-001
+
+# helgrind-glibc2X-003 was merged into helgrind-glibc2X-001
+
+{
+   helgrind-glibc2X-004
+   Helgrind:Race
+   obj:*/lib*/libc-2.*so*
+}
+
+{
+   helgrind-glibc2X-005
+   Helgrind:Race
+   obj:*/lib*/libpthread-2.*so*
+}
+
+# helgrind-glibc2X-006 was merged into helgrind-glibc2X-005
+
+# helgrind-glibc2X-007 was merged into helgrind-glibc2X-001
+
+# helgrind-glibc2X-008 was merged into helgrind-glibc2X-004
+
+# helgrind-glibc2X-009 was merged into helgrind-glibc2X-004
+
+# helgrind-glibc2X-010 was merged into helgrind-glibc2X-001
+
+# helgrind-glibc2X-011 was merged into helgrind-glibc2X-004
+
+# helgrind-glibc2X-012 was merged into helgrind-glibc2X-001
+
+# helgrind-glibc2X-013 was merged into helgrind-glibc2X-001
+
+# helgrind-glibc2X-014 was merged into helgrind-glibc2X-001
+
+# helgrind-glibc2X-015 was merged into helgrind-glibc2X-004
+
+# helgrind-glibc2X-016 was merged into helgrind-glibc2X-004
+
+# These are very ugly.  They are needed to suppress errors inside (eg)
+# NPTL's pthread_cond_signal.  Why only one stack frame -- at least we
+# should see the wrapper calling the real functions, right?
+# Unfortunately, no: the real functions are handwritten assembly (in
+# the glibc-2.5 sources) and does not create a proper stack frame.
+# Therefore it's only one level of unwinding before we're back out in
+# user code rather than the 2 levels you'd expect.
+{
+   helgrind-glibc2X-101
+   Helgrind:Race
+   obj:*/lib*/libpthread-2.*so*
+   fun:pthread_*
+}
+{
+   helgrind-glibc2X-102
+   Helgrind:Race
+   fun:mythread_wrapper
+   obj:*/lib*/libpthread-2.*so*
+}
+{
+   helgrind-glibc2X-103
+   Helgrind:Race
+   fun:pthread_cond_*@@GLIBC_2.*
+}
+{
+   helgrind-glibc2X-104
+   Helgrind:Race
+   fun:__lll_mutex_*
+}
+{
+   helgrind-glibc2X-105
+   Helgrind:Race
+   fun:pthread_rwlock_*lock*
+}
+{
+   helgrind-glibc2X-106
+   Helgrind:Race
+   fun:__lll_lock_wait
+}
+{
+   helgrind-glibc2X-107
+   Helgrind:Race
+   obj:*/lib*/libpthread-2.*so*
+   fun:sem_*
+}
+{
+   helgrind-glibc2X-108
+   Helgrind:Race
+   fun:clone
+}
+{
+   helgrind-glibc2X-109
+   Helgrind:Race
+   fun:start_thread
+}
+{
+   helgrind-glibc2X-110
+   Helgrind:Race
+   obj:*/lib*/libc-2.*so*
+   fun:pthread_*
+}
+{
+   helgrind-glibc2X-111
+   Helgrind:Race
+   fun:__lll_*lock_*
+}
+{
+   helgrind-glibc2X-113
+   Helgrind:Race
+   fun:pthread_barrier_wait*
+}
+
+
+####################################################
+# qt4 specific (GNU mangling)
+#
+{
+   helgrind-qt4---QMutex::lock()-QMutex::lock()
+   Helgrind:Race
+   ...
+   fun:_ZN6QMutex4lockEv
+   fun:_ZN6QMutex4lockEv
+}
+
+{                                                               
+   helgrind-qt4---QMutex::unlock()-QMutex::unlock()
+   Helgrind:Race                                                
+   ...
+   fun:_ZN6QMutex6unlockEv                                      
+   fun:_ZN6QMutex6unlockEv
+}
+
+{
+   helgrind-qt4---pthread_setspecific-QThreadPrivate::start(void*)
+   Helgrind:Race
+   fun:pthread_setspecific
+   fun:_ZN14QThreadPrivate5startEPv
+}
+
+
+####################################################
+# Other stuff.
+#
+# pthread_exit apparently calls some kind of unwind
+# mechanism - maybe to remove some number of frames
+# from the thread's stack, so as to get back to the 
+# outermost frame for the thread?  Anyway..
+
+{
+   helgrind---*Unwind*-...-pthread_exit
+   Helgrind:Race
+   fun:*Unwind*
+   ...
+   fun:pthread_exit
+}
+
+{
+   helgrind---...-*Unwind*-*pthread_unwind*
+   Helgrind:Race
+   ...
+   fun:*Unwind*
+   fun:*pthread_unwind*
+}
+
+{
+   helgrind---...-*Unwind*-*pthread_unwind*
+   Helgrind:Race
+   ...
+   fun:_Unwind*
+   ...
+   fun:_Unwind_Backtrace
+}
+
+
+
+
+####################################################
+# To do with thread stack allocation and deallocation?
+#
+{
+   helgrind---free_stacks-__deallocate_stack
+   Helgrind:Race
+   fun:free_stacks
+   fun:__deallocate_stack
+}
+
+{
+   helgrind---__deallocate_stack-start_thread-clone
+   Helgrind:Race
+   fun:__deallocate_stack
+   fun:start_thread
+   fun:clone
+}
+
+
+####################################################
+# To do with pthread_{set,get}specific
+#
+{
+   helgrind---pthread_setspecific
+   Helgrind:Race
+   fun:pthread_setspecific
+}
+
+{
+   helgrind---pthread_getspecific
+   Helgrind:Race
+   fun:pthread_getspecific
+}
+
+
+####################################################
+# To do with dynamic linking
+#
+# helgrind---ld.so-...-dlsym was merged into helgrind-glibc2X-001
+
+
+####################################################
+# To do with GNU libgomp
+#
+{
+   helgrind---libgomp43-1
+   Helgrind:Race
+   fun:gomp_ordered_sync
+}
+
+{
+   helgrind---libgomp43-1
+   Helgrind:Race
+   fun:gomp_ordered_next
+}
+
+{
+   helgrind---libgomp43-1
+   Helgrind:Race
+   fun:gomp_ordered_last
+}
+
+##----------------------------------------------------------------------##
+
+# Errors to suppress by default with glibc 2.4.x
+
+# Format of this file is:
+# {
+#     name_of_suppression
+#     tool_name:supp_kind
+#     (optional extra info for some suppression types)
+#     caller0 name, or /name/of/so/file.so
+#     caller1 name, or ditto
+#     (optionally: caller2 name)
+#     (optionally: caller3 name)
+#  }
+#
+# For Memcheck, the supp_kinds are:
+#
+#     Param Value1 Value2 Value4 Value8 Value16 Jump
+#     Free Addr1 Addr2 Addr4 Addr8 Addr16
+#     Cond (previously known as Value0)
+#
+# and the optional extra info is:
+#     if Param: name of system call param
+
+{
+   dl-hack1
+   Memcheck:Cond
+   fun:_dl_start
+   fun:_start
+}
+
+{
+   dl-hack2
+   Memcheck:Cond
+   obj:/lib*/ld-2.5*.so
+   obj:/lib*/ld-2.5*.so
+   obj:/lib*/ld-2.5*.so
+   obj:/lib*/ld-2.5*.so
+}
+
+{
+   dl-hack3
+   Memcheck:Cond
+   obj:/lib*/ld-2.5*so*
+   obj:/lib*/ld-2.5*so*
+   obj:/lib*/ld-2.5*so*
+}
+
+##----------------------------------------------------------------------##
+{
+   glibc-2.5.x-on-SUSE-10.2-(PPC)-1
+   Memcheck:Cond
+   fun:_dl_start_final
+   fun:_dl_start
+   fun:_start
+}
+{
+   glibc-2.5.x-on-SUSE-10.2-(PPC)-2a
+   Memcheck:Cond
+   fun:index
+   obj:*ld-2.5.*.so
+}
+{
+   glibc-2.5.x-on-SuSE-10.2-(PPC)-2b
+   Memcheck:Addr4
+   fun:index
+   fun:expand_dynamic_string_token
+}
+{
+   glibc-2.5.5-on-SuSE-10.2-(PPC)-2c
+   Memcheck:Addr4
+   fun:index
+   obj:*ld-2.5.*.so
+}
+{
+   glibc-2.3.5-on-SuSE-10.1-(PPC)-3
+   Memcheck:Addr4
+   fun:*wordcopy_fwd_dest_aligned*
+   fun:mem*cpy
+   obj:*lib*2.5.*.so
+}
+
+##----------------------------------------------------------------------##
+## Various structure padding things on SUSE 10.2
+##
+{
+   X11-64bit-padding-1a
+   Memcheck:Param
+   write(buf)
+   fun:__write_nocancel
+   obj:/usr/lib*/libX11.so*
+   obj:/usr/lib*/libX11.so*
+   fun:X*
+}
+{
+   X11-64bit-padding-1b
+   Memcheck:Param
+   write(buf)
+   fun:__write_nocancel
+   obj:/usr/lib*/libX11.so*
+   obj:/usr/lib*/libX11.so*
+   fun:_X*
+}
+{
+   X11-64bit-padding-1c
+   Memcheck:Param
+   write(buf)
+   fun:__write_nocancel
+   obj:/usr/lib*/libX11.so*
+   obj:/usr/lib*/libX11.so*
+   obj:/usr/lib*/libX11.so*
+}
+{
+   X11-64bit-padding-1d
+   Memcheck:Param
+   write(buf)
+   fun:__write_nocancel
+   obj:/usr/lib*/libICE.so*
+   obj:/usr/lib*/libICE.so*
+   obj:/usr/lib*/libICE.so*
+}
+{
+   X11-64bit-padding-2a
+   Memcheck:Param
+   writev(vector[...])
+   fun:do_writev
+   obj:/usr/lib*/libX11.so*
+   obj:/usr/lib*/libX11.so*
+   obj:/usr/lib*/libX11.so*
+}
+{
+   X11-64bit-padding-2b
+   Memcheck:Param
+   writev(vector[...])
+   fun:do_writev
+   fun:writev
+   obj:/usr/lib*/libX11.so*
+   obj:/usr/lib*/libX11.so*
+}
+
+{
+   glibc24-64bit-padding-1a
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:send
+   fun:get_mapping
+   fun:__nscd_get_map_ref
+   fun:nscd*
+}
+{
+   glibc24-64bit-padding-1b
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:__sendto_nocancel
+   obj:/*libc-2.5.so
+   obj:/*libc-2.5.so
+   obj:/*libc-2.5.so
+}
+{
+   glibc24-64bit-padding-1c
+   Memcheck:Param
+   socketcall.send(msg)
+   fun:send
+   fun:__nscd_get_map_ref
+   fun:nscd_get*_r
+   fun:*nscd*
+   obj:/*libc-2.5.so
+}
+
+
+{
+   X11-64bit-padding-3a
+   Memcheck:Param
+   write(buf)
+   obj:/*libpthread-2.4.so*
+   obj:/usr/lib*/libX11.so*
+   obj:/usr/lib*/libX11.so*
+   obj:/usr/lib*/libX11.so*
+}
+
+{
+   X11-64bit-padding-4a
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:send
+   obj:/*libc-2.5.so
+   obj:/*libc-2.5.so
+   obj:/*libc-2.5.so
+}
+
+{
+   X11-64bit-padding-4b
+   Memcheck:Param
+   socketcall.send(msg)
+   fun:send
+   obj:/*libc-2.5.so
+   obj:/*libc-2.5.so
+   obj:/*libc-2.5.so
+}
+
+##----------------------------------------------------------------------##
+# MontaVista Linux 4.0.1 on ppc32
+{
+    MVL-401-linuxthreads-pthread_create
+    Memcheck:Param
+    write(buf)
+    fun:pthread_create
+}
+
+{
+   MVL-401-linuxthreads-pthread_create
+   Memcheck:Param
+   write(buf)
+   obj:/lib/libpthread-0.10.so
+   fun:pthread_create
+}
+
+{
+   JavaCall001
+   Memcheck:Addr8
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN10Reflection6invokeE19instanceKlassHandle12methodHandle6Handleb14objArrayHandle9BasicTypeS3_bP6Thread
+   fun:_ZN10Reflection13invoke_methodEP7oopDesc6Handle14objArrayHandleP6Thread
+   fun:JVM_InvokeMethod
+   fun:Java_sun_reflect_NativeMethodAccessorImpl_invoke0
+   obj:*
+   obj:*
+}
+
+{
+   JavaCallCond001
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN20SafepointSynchronize5blockEP10JavaThread
+   fun:JVM_FillInStackTrace
+   fun:Java_java_lang_Throwable_fillInStackTrace
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN10Exceptions13new_exceptionEP6Thread12symbolHandleS2_P17JavaCallArguments6HandleS5_S5_
+
+}
+
+{
+   JavaCallcond002
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN8VMThread4loopEv
+   fun:_ZN8VMThread3runEv
+   fun:_Z10java_startP6Thread
+   fun:start_thread
+   fun:clone
+
+}
+
+{
+   JavaCallcond003
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN20SafepointSynchronize5blockEP10JavaThread
+   fun:_ZN15JavaCallWrapperC1E12methodHandle6HandleP9JavaValueP6Thread
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN10Exceptions13new_exceptionEP6Thread12symbolHandleS2_P17JavaCallArguments6HandleS5_S5_
+   fun:_ZN10Exceptions13new_exceptionEP6Thread12symbolHandlePKc6HandleS5_S5_NS_22ExceptionMsgToUtf8ModeE
+   fun:_ZN10Exceptions13new_exceptionEP6ThreadP13symbolOopDescPKcNS_22ExceptionMsgToUtf8ModeE
+   fun:_ZN18InterpreterRuntime16create_exceptionEP10JavaThreadPcS2_
+
+}
+
+{
+   JavaCallCond004
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5IWaitEP6Threadl
+   fun:_ZN7Monitor4waitEblb
+   fun:_ZN13GCTaskManager8get_taskEj
+   fun:_ZN12GCTaskThread3runEv
+   fun:_Z10java_startP6Thread
+   fun:start_thread
+   fun:clone
+
+}
+
+{
+   JavaCallCond005
+   Memcheck:Cond
+   fun:_ZN20LinearLeastSquareFit6updateEdd
+   fun:_ZN18AdaptiveSizePolicy20minor_collection_endEN7GCCause5CauseE
+   fun:_ZN10PSScavenge16invoke_no_policyEv
+   fun:_ZN10PSScavenge6invokeEv
+   fun:_ZN20ParallelScavengeHeap19failed_mem_allocateEmb
+   fun:_ZN29VM_ParallelGCFailedAllocation4doitEv
+   fun:_ZN12VM_Operation8evaluateEv
+   fun:_ZN8VMThread18evaluate_operationEP12VM_Operation
+   fun:_ZN8VMThread4loopEv
+   fun:_ZN8VMThread3runEv
+   fun:_Z10java_startP6Thread
+   fun:start_thread
+
+}
+
+
+{
+   JavaCallCond006
+   Memcheck:Cond
+   fun:_ZN20LinearLeastSquareFit6updateEdd
+   fun:_ZN20PSAdaptiveSizePolicy32update_minor_pause_old_estimatorEd
+   fun:_ZN18AdaptiveSizePolicy20minor_collection_endEN7GCCause5CauseE
+   fun:_ZN10PSScavenge16invoke_no_policyEv
+   fun:_ZN10PSScavenge6invokeEv
+   fun:_ZN20ParallelScavengeHeap19failed_mem_allocateEmb
+   fun:_ZN29VM_ParallelGCFailedAllocation4doitEv
+   fun:_ZN12VM_Operation8evaluateEv
+   fun:_ZN8VMThread18evaluate_operationEP12VM_Operation
+   fun:_ZN8VMThread4loopEv
+   fun:_ZN8VMThread3runEv
+   fun:_Z10java_startP6Thread
+
+}
+
+
+{
+   JavaCallCond007
+   Memcheck:Cond
+   fun:_ZN20LinearLeastSquareFit6updateEdd
+   fun:_ZN18AdaptiveSizePolicy20minor_collection_endEN7GCCause5CauseE
+   fun:_ZN10PSScavenge16invoke_no_policyEv
+   fun:_ZN10PSScavenge6invokeEv
+   fun:_ZN20ParallelScavengeHeap19failed_mem_allocateEmb
+   fun:_ZN29VM_ParallelGCFailedAllocation4doitEv
+   fun:_ZN12VM_Operation8evaluateEv
+   fun:_ZN8VMThread18evaluate_operationEP12VM_Operation
+   fun:_ZN8VMThread4loopEv
+   fun:_ZN8VMThread3runEv
+   fun:_Z10java_startP6Thread
+   fun:start_thread
+ 
+}
+
+
+{
+   JavaCallCond008
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5IWaitEP6Threadl
+   fun:_ZN7Monitor4waitEblb
+   fun:_ZN13BarrierGCTask14do_it_internalEP13GCTaskManagerj
+   fun:_ZN20WaitForBarrierGCTask5do_itEP13GCTaskManagerj
+   fun:_ZN12GCTaskThread3runEv
+   fun:_Z10java_startP6Thread
+   fun:start_thread
+   fun:clone
+
+}
+
+{
+   JavaCallCond009
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN13GCTaskManager15note_completionEj
+   fun:_ZN12GCTaskThread3runEv
+   fun:_Z10java_startP6Thread
+   fun:start_thread
+   fun:clone
+
+}
+
+{
+   JavaMem001
+   Memcheck:Addr4
+   obj:*
+   ...
+   obj:*
+
+}
+
+{
+   JavaCondA1
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN13GCTaskManager8get_taskEj
+   fun:_ZN12GCTaskThread3runEv
+   fun:_Z10java_startP6Thread
+   fun:start_thread
+   fun:clone
+
+}
+
+{
+   JavaCondA2
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN20SafepointSynchronize5blockEP10JavaThread
+   fun:_ZN2os5sleepEP6Threadlb
+   fun:JVM_Sleep
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls12call_virtualEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+
+}
+
+
+{
+   JavaCondA3
+   Memcheck:Addr4
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN10Exceptions13new_exceptionEP6Thread12symbolHandleS2_P17JavaCallArguments6HandleS5_S5_
+   fun:_ZN10Exceptions13new_exceptionEP6Thread12symbolHandlePKc6HandleS5_S5_NS_22ExceptionMsgToUtf8ModeE
+   fun:_ZN10Exceptions13new_exceptionEP6ThreadP13symbolOopDescPKcNS_22ExceptionMsgToUtf8ModeE
+   fun:_ZN18InterpreterRuntime16create_exceptionEP10JavaThreadPcS2_
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+
+}
+
+{
+   JavaCondA4
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN10Exceptions13new_exceptionEP6Thread12symbolHandleS2_P17JavaCallArguments6HandleS5_S5_
+   fun:_ZN10Exceptions13new_exceptionEP6Thread12symbolHandlePKc6HandleS5_S5_NS_22ExceptionMsgToUtf8ModeE
+   fun:_ZN10Exceptions13new_exceptionEP6ThreadP13symbolOopDescPKcNS_22ExceptionMsgToUtf8ModeE
+   fun:_ZN18InterpreterRuntime16create_exceptionEP10JavaThreadPcS2_
+
+}
+
+{
+   JavaCondA5
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN10Reflection6invokeE19instanceKlassHandle12methodHandle6Handleb14objArrayHandle9BasicTypeS3_bP6Thread
+   fun:_ZN10Reflection13invoke_methodEP7oopDesc6Handle14objArrayHandleP6Thread
+   fun:JVM_InvokeMethod
+   fun:Java_sun_reflect_NativeMethodAccessorImpl_invoke0
+   obj:*
+   obj:*
+   obj:*
+
+}
+
+{
+   JavaCondA6
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN10Reflection6invokeE19instanceKlassHandle12methodHandle6Handleb14objArrayHandle9BasicTypeS3_bP6Thread
+   fun:_ZN10Reflection13invoke_methodEP7oopDesc6Handle14objArrayHandleP6Thread
+   fun:JVM_InvokeMethod
+   fun:Java_sun_reflect_NativeMethodAccessorImpl_invoke0
+   obj:*
+   obj:*
+
+}
+
+{
+   JavaCondA7
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN8GraphKit9clone_mapEv
+   fun:_ZN8GraphKit13set_map_cloneEP13SafePointNode
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+   fun:_ZN13CompileBroker25invoke_compiler_on_methodEP11CompileTask
+   fun:_ZN13CompileBroker20compiler_thread_loopEv
+   fun:_Z21compiler_thread_entryP10JavaThreadP6Thread
+   fun:_ZN10JavaThread3runEv
+   fun:_Z10java_startP6Thread
+
+}
+
+{
+   JavaCondA8
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC1EP8GraphKitb
+   fun:_ZN5Parse5do_ifEN8BoolTest4maskEP4Node
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+   fun:_ZN13CompileBroker25invoke_compiler_on_methodEP11CompileTask
+   fun:_ZN13CompileBroker20compiler_thread_loopEv
+
+}
+
+{
+   JavaCondA9
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC2EP8GraphKitb
+   fun:_ZN11BuildCutoutC1EP8GraphKitP4Nodeff
+   fun:_ZN8GraphKit17null_check_commonEP4Node9BasicTypebPS1_
+   fun:_ZN5Parse16array_addressingE9BasicTypeiPPK4Type
+   fun:_ZN5Parse10array_loadE9BasicType
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+}
+
+{
+   JavaCondA10
+   Memcheck:Cond
+   fun:_ZNK8GraphKit9sync_jvmsEv
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN8GraphKit17make_runtime_callEiPK8TypeFuncPhPKcPK7TypePtrP4NodeSA_SA_SA_SA_SA_SA_SA_
+   fun:_ZN8GraphKit13uncommon_trapEiP7ciKlassPKcbb
+   fun:_ZN8GraphKit13builtin_throwEN14Deoptimization11DeoptReasonEP4Node
+   fun:_ZN8GraphKit17null_check_commonEP4Node9BasicTypebPS1_
+   fun:_ZN5Parse16array_addressingE9BasicTypeiPPK4Type
+   fun:_ZN5Parse10array_loadE9BasicType
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+
+}
+
+
+{
+   JavaCondA11
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZNK8JVMState10clone_deepEP7Compile
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN8GraphKit17make_runtime_callEiPK8TypeFuncPhPKcPK7TypePtrP4NodeSA_SA_SA_SA_SA_SA_SA_
+   fun:_ZN8GraphKit13uncommon_trapEiP7ciKlassPKcbb
+   fun:_ZN8GraphKit13builtin_throwEN14Deoptimization11DeoptReasonEP4Node
+   fun:_ZN8GraphKit17null_check_commonEP4Node9BasicTypebPS1_
+   fun:_ZN5Parse16array_addressingE9BasicTypeiPPK4Type
+   fun:_ZN5Parse10array_loadE9BasicType
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+
+}
+
+{
+   JavaCondA12 
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC2EP8GraphKitb
+   fun:_ZN11BuildCutoutC1EP8GraphKitP4Nodeff
+   fun:_ZN5Parse16array_addressingE9BasicTypeiPPK4Type
+   fun:_ZN5Parse10array_loadE9BasicType
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+}
+
+{
+   CUBRIDExternalAPI
+   Memcheck:Cond
+   fun:do_compress
+   fun:lzo1x_1_compress
+   fun:log_zip
+   fun:prior_lsa_alloc_and_copy_data
+   fun:log_append_undoredo_data2
+   fun:btree_insert
+   fun:locator_add_or_remove_index
+   fun:locator_insert_force
+   fun:xlocator_force
+   fun:slocator_force
+   fun:net_server_request
+   fun:css_internal_request_handler
+
+}
+
+{  
+   CUBRIDCompressAPI
+   Memcheck:Cond
+   fun:do_compress
+   fun:lzo1x_1_compress
+   fun:log_zip
+   fun:prior_lsa_alloc_and_copy_crumbs
+   fun:log_append_undoredo_crumbs
+   fun:log_append_undoredo_recdes2
+   fun:log_append_undoredo_recdes
+   fun:heap_update
+   fun:locator_update_force
+   fun:xlocator_force
+   fun:slocator_force
+   fun:net_server_request
+
+}
+
+{
+   CUBRIDExternalAPI01
+   Memcheck:Cond
+   fun:do_compress
+   fun:lzo1x_1_compress
+   fun:log_zip
+   fun:prior_lsa_alloc_and_copy_data
+   fun:log_append_undo_data2
+   fun:ehash_insert_to_bucket
+   fun:ehash_insert_helper
+   fun:locator_update_force
+   fun:xlocator_force
+   fun:slocator_force
+   fun:net_server_request
+   fun:css_internal_request_handler
+
+}
+
+{
+   CUBRIDExternalAPI02
+   Memcheck:Value8
+   fun:do_compress
+   fun:lzo1x_1_compress
+   fun:log_zip
+   fun:prior_lsa_alloc_and_copy_crumbs
+   fun:log_append_redo_crumbs
+   fun:log_append_redo_recdes2
+   fun:catalog_put_representation_item
+   fun:catalog_add_class_info
+   fun:catalog_insert
+   fun:locator_update_force
+   fun:xlocator_force
+   fun:slocator_force
+
+}
+
+{
+   CUBRIDExternalAPI03
+   Memcheck:Cond
+   fun:do_compress
+   fun:lzo1x_1_compress
+   fun:log_zip
+   fun:prior_lsa_alloc_and_copy_crumbs
+   fun:log_append_undoredo_crumbs
+   fun:log_append_undoredo_recdes2
+   fun:log_append_undoredo_recdes
+   fun:heap_update
+   fun:catcls_insert_instance
+   fun:catcls_insert_instance
+   fun:catcls_insert_instance
+   fun:catcls_insert_catalog_classes
+
+}
+{
+   CUBRIDExternalAPI04
+   Memcheck:Cond
+   fun:do_compress
+   fun:lzo1x_1_compress
+   fun:log_zip
+   fun:prior_lsa_alloc_and_copy_data
+   fun:log_append_redo_data2
+   fun:log_append_redo_data
+   fun:file_xcreate
+   fun:file_create
+   fun:xheap_create
+   fun:shf_create
+   fun:net_server_request
+   fun:css_internal_request_handler
+}
+
+{
+   CUBRIDExternalAPI05
+   Memcheck:Cond
+   fun:do_compress
+   fun:lzo1x_1_compress
+   fun:log_zip
+   fun:prior_lsa_alloc_and_copy_crumbs
+   fun:log_append_undoredo_crumbs
+   fun:log_append_undoredo_recdes2
+   fun:catalog_drop_representation_helper
+   fun:catalog_drop_representation_class_from_page
+   fun:catalog_delete
+   fun:locator_delete_force
+   fun:xlocator_force
+   fun:slocator_force
+
+}
+
+{
+   CUBRIDExternalAPI06
+   Memcheck:Cond
+   fun:do_compress
+   fun:lzo1x_1_compress
+   fun:log_zip
+   fun:prior_lsa_alloc_and_copy_crumbs
+   fun:log_append_undoredo_crumbs
+   fun:log_append_undoredo_recdes2
+   fun:catalog_put_record_into_page
+   fun:catalog_add_representation
+   fun:xstats_update_class_statistics
+   fun:log_commit_local
+   fun:log_commit
+   fun:xtran_server_commit
+
+}
+
+{
+   CUBRIDExternalAPI07
+   Memcheck:Value8                                                                                                  
+   fun:do_compress                                                                                                  
+   fun:lzo1x_1_compress                                                                                             
+   fun:log_zip                                                                                                      
+   fun:prior_lsa_alloc_and_copy_data                                                                                
+   fun:log_append_redo_data2                                                                                        
+   fun:log_append_redo_data                                                                                         
+   fun:file_xcreate                                                                                                 
+   fun:file_create                                                                                                  
+   fun:xbtree_add_index                                                                                             
+   fun:sbtree_add_index                                                                                             
+   fun:net_server_request                                                                                           
+   fun:css_internal_request_handler
+
+}
+{
+   JavaExternalAPI08
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN20WaitForBarrierGCTask5do_itEP13GCTaskManagerj
+   fun:_ZN12GCTaskThread3runEv
+   fun:_Z10java_startP6Thread
+   fun:start_thread
+   fun:clone
+
+}
+
+{
+   JavaExternalAPI09
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN20SafepointSynchronize5blockEP10JavaThread
+   fun:_ZN18InterpreterRuntime31exception_handler_for_exceptionEP10JavaThreadP7oopDesc
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN10Reflection6invokeE19instanceKlassHandle12methodHandle6Handleb14objArrayHandle9BasicTypeS3_bP6Thread
+}
+
+{
+   JavaExternalAPI10
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5IWaitEP6Threadl
+   fun:_ZN7Monitor4waitEblb
+   fun:_ZN12CompileQueue3getEv
+   fun:_ZN13CompileBroker20compiler_thread_loopEv
+   fun:_Z21compiler_thread_entryP10JavaThreadP6Thread
+   fun:_ZN10JavaThread3runEv
+   fun:_Z10java_startP6Thread
+   fun:start_thread
+   fun:clone
+
+}
+
+{
+   JavaExternalAPI111
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN13GCTaskManager8add_listEP11GCTaskQueue
+   fun:_ZN13GCTaskManager16execute_and_waitEP11GCTaskQueue
+   fun:_ZN10PSScavenge16invoke_no_policyEv
+   fun:_ZN10PSScavenge6invokeEv
+   fun:_ZN20ParallelScavengeHeap19failed_mem_allocateEmb
+   fun:_ZN29VM_ParallelGCFailedAllocation4doitEv
+   fun:_ZN12VM_Operation8evaluateEv
+   fun:_ZN8VMThread18evaluate_operationEP12VM_Operation
+   fun:_ZN8VMThread4loopEv
+}
+
+{
+   JavaExternalAPI112
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN20SafepointSynchronize5blockEP10JavaThread
+   fun:_ZN7Monitor4waitEblb
+   fun:_ZN8VMThread7executeEP12VM_Operation
+   fun:_ZN13BiasedLocking17revoke_and_rebiasE6HandlebP6Thread
+   fun:_ZN18ObjectSynchronizer10fast_enterE6HandleP9BasicLockbP6Thread
+   fun:_ZN18InterpreterRuntime12monitorenterEP10JavaThreadP15BasicObjectLock
+   obj:*
+   obj:*
+   obj:*
+
+}
+{
+   JavaExternalAPI113
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN8GraphKit9clone_mapEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+   fun:_ZN13CompileBroker25invoke_compiler_on_methodEP11CompileTask
+   fun:_ZN13CompileBroker20compiler_thread_loopEv
+   fun:_Z21compiler_thread_entryP10JavaThreadP6Thread
+   fun:_ZN10JavaThread3runEv
+   fun:_Z10java_startP6Thread
+
+}
+{
+   JavaExternalAPI114
+   Memcheck:Cond
+   fun:_ZNK8GraphKit9sync_jvmsEv
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN5Parse13add_safepointEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+   fun:_ZN13CompileBroker25invoke_compiler_on_methodEP11CompileTask
+   fun:_ZN13CompileBroker20compiler_thread_loopEv
+}
+
+{
+   JavaExternalAPI115
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZNK8JVMState10clone_deepEP7Compile
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN5Parse13add_safepointEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+   fun:_ZN13CompileBroker25invoke_compiler_on_methodEP11CompileTask
+
+}
+
+{
+   JavaExternalAPI116
+   Memcheck:Cond
+   fun:_ZNK8GraphKit9sync_jvmsEv
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+   fun:_ZN13CompileBroker25invoke_compiler_on_methodEP11CompileTask
+   fun:_ZN13CompileBroker20compiler_thread_loopEv
+   fun:_Z21compiler_thread_entryP10JavaThreadP6Thread
+
+}
+
+{
+   JavaExternalAPI117
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZNK8JVMState10clone_deepEP7Compile
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN8GraphKit23set_edges_for_java_callEP12CallJavaNodebb
+   fun:_ZN19DirectCallGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+
+}
+{
+   JavaExternalAPI118
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC1EP8GraphKitb
+   fun:_ZN8GraphKit17make_slow_call_exEP4NodeP15ciInstanceKlassb
+   fun:_ZN8GraphKit25set_results_for_java_callEP12CallJavaNodeb
+   fun:_ZN19DirectCallGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+
+}
+
+{
+   JavaExternalAPI119
+   Memcheck:Cond
+   fun:_ZN10InlineTreeC1EP7CompilePKS_P8ciMethodP8JVMStateif
+   fun:_ZN10InlineTree12ok_to_inlineEP8ciMethodP8JVMStateR13ciCallProfileP12WarmCallInfo
+   fun:_ZN7Compile14call_generatorEP8ciMethodibP8JVMStatebf
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+   fun:_ZN13CompileBroker25invoke_compiler_on_methodEP11CompileTask
+
+}
+
+
+{
+  JavaExternalAPI120
+  Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN8GraphKit9clone_mapEv
+   fun:_ZN5Parse11build_exitsEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+}
+
+{
+   JavaExternalAPI121
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC1EP8GraphKitb
+   fun:_ZN5Parse9do_ifnullEN8BoolTest4maskEP4Node
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+ 
+}
+
+
+{
+
+   JavaExternalAPI122
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZNK8JVMState10clone_deepEP7Compile
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN8GraphKit17make_runtime_callEiPK8TypeFuncPhPKcPK7TypePtrP4NodeSA_SA_SA_SA_SA_SA_SA_
+   fun:_ZN8GraphKit13uncommon_trapEiP7ciKlassPKcbb
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+
+}
+
+{
+   JavaExternalAPI123
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC1EP8GraphKitb
+   fun:_ZN14LibraryCallKit18generate_arraycopyEPK7TypePtr9BasicTypeP4NodeS5_S5_S5_S5_bbP10RegionNode
+   fun:_ZN14LibraryCallKit16inline_arraycopyEv
+   fun:_ZN14LibraryCallKit13try_to_inlineEv
+   fun:_ZN16LibraryIntrinsic8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+
+}
+
+## customized suppressions
+## JavaCalls
+
+{
+   JavaCalls001
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue6Handle11KlassHandle12symbolHandleS4_S2_S2_P6Thread
+   fun:_Z21create_initial_thread6HandleP10JavaThreadP6Thread
+   fun:_ZN7Threads9create_vmEP14JavaVMInitArgsPb
+   fun:JNI_CreateJavaVM
+}
+
+{
+   JavaCalls002
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue6Handle11KlassHandle12symbolHandleS4_S2_S2_P6Thread
+   fun:_Z21create_initial_thread6HandleP10JavaThreadP6Thread
+   fun:_ZN7Threads9create_vmEP14JavaVMInitArgsPb
+}
+
+{
+   JavaCalls003
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue6Handle11KlassHandle12symbolHandleS4_S2_S2_P6Thread
+   fun:_Z21create_initial_thread6HandleP10JavaThreadP6Thread
+   fun:_ZN7Threads9create_vmEP14JavaVMInitArgsPb
+   fun:JNI_CreateJavaVM
+}
+
+{
+   JavaCalls004
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue6Handle11KlassHandle12symbolHandleS4_S2_S2_P6Thread
+   fun:_Z21create_initial_thread6HandleP10JavaThreadP6Thread
+   fun:_ZN7Threads9create_vmEP14JavaVMInitArgsPb
+   fun:JNI_CreateJavaVM
+   fun:jsp_start_server
+}
+
+{
+   JavaCalls005
+   Memcheck:Cond
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass10link_classEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN18InterpreterRuntime4_newEP10JavaThreadP19constantPoolOopDesci
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+}
+
+{
+   JavaCalls006
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls11call_staticEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN9JavaCalls11call_staticEP9JavaValue11KlassHandle12symbolHandleS3_6HandleS4_P6Thread
+   fun:_ZN12NativeLookup12lookup_styleE12methodHandlePcPKcibRbP6Thread
+   fun:_ZN12NativeLookup12lookup_entryE12methodHandleRbP6Thread
+   fun:_ZN12NativeLookup11lookup_baseE12methodHandleRbP6Thread
+   fun:_ZN12NativeLookup6lookupE12methodHandleRbP6Thread
+   fun:_ZN18InterpreterRuntime19prepare_native_callEP10JavaThreadP13methodOopDesc
+}
+
+{
+   JavaCalls007
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:JVM_DoPrivileged
+   fun:Java_java_security_AccessController_doPrivileged__Ljava_security_PrivilegedAction_2
+   obj:*
+   obj:*
+   obj:*
+}
+
+{
+   JavaCalls008
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+}
+
+{
+   JavaCalls009
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+}
+
+{
+   JavaCalls010
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+}
+
+{
+   JavaCalls011
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+}
+
+{
+   JavaCalls012
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+}
+
+{
+   JavaCalls013
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_Z20jni_invoke_nonstaticP7JNIEnv_P9JavaValueP8_jobject11JNICallTypeP10_jmethodIDP18JNI_ArgumentPusherP6Thread
+   fun:jni_CallObjectMethod
+   fun:Java_java_lang_System_initProperties
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+}
+
+{
+   JavaCalls014
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_Z20jni_invoke_nonstaticP7JNIEnv_P9JavaValueP8_jobject11JNICallTypeP10_jmethodIDP18JNI_ArgumentPusherP6Thread
+   fun:jni_CallObjectMethod
+   fun:Java_java_lang_System_initProperties
+   obj:*
+   obj:*
+   obj:*
+}
+
+{
+   JavaCalls015
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_Z17jni_invoke_staticP7JNIEnv_P9JavaValueP8_jobject11JNICallTypeP10_jmethodIDP18JNI_ArgumentPusherP6Thread
+   fun:jni_CallStaticObjectMethodV
+   fun:JNU_CallStaticMethodByName
+   fun:initializeEncoding
+   fun:JNU_NewStringPlatform
+}
+
+{
+   JavaCalls016
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls12call_specialEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN10Exceptions13new_exceptionEP6Thread12symbolHandleS2_P17JavaCallArguments6HandleS5_
+   fun:_ZN10Exceptions13new_exceptionEP6Thread12symbolHandlePKc6HandleS5_NS_22ExceptionMsgToUtf8ModeE
+}
+
+{
+   JavaCalls017
+   Memcheck:Cond
+   fun:_ZN16BacktraceBuilder6expandEP6Thread
+   fun:_ZN19java_lang_Throwable19fill_in_stack_traceE6HandleP6Thread
+   fun:_ZN19java_lang_Throwable19fill_in_stack_traceE6Handle
+   fun:JVM_FillInStackTrace
+   fun:Java_java_lang_Throwable_fillInStackTrace
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+}
+
+{
+   JavaCalls018
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+}
+
+{
+   JavaCalls019
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+}
+
+{
+   JavaCalls020
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN18InterpreterRuntime4_newEP10JavaThreadP19constantPoolOopDesci
+}
+
+{
+   JavaCalls021
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_Z17jni_invoke_staticP7JNIEnv_P9JavaValueP8_jobject11JNICallTypeP10_jmethodIDP18JNI_ArgumentPusherP6Thread
+   fun:jni_CallStaticBooleanMethodV
+   fun:JNU_CallStaticMethodByName
+   fun:JNU_NewStringPlatform
+}
+
+{
+   JavaCalls022
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN12LinkResolver19resolve_static_callER8CallInfoR11KlassHandle12symbolHandleS4_S2_bbP6Thread
+   fun:_ZN12LinkResolver20resolve_invokestaticER8CallInfo18constantPoolHandleiP6Thread
+   fun:_ZN12LinkResolver14resolve_invokeER8CallInfo6Handle18constantPoolHandleiN9Bytecodes4CodeEP6Thread
+}
+
+{
+   JavaCalls023
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_Z20jni_invoke_nonstaticP7JNIEnv_P9JavaValueP8_jobject11JNICallTypeP10_jmethodIDP18JNI_ArgumentPusherP6Thread
+   fun:jni_NewObject
+   fun:JNU_NewStringPlatform
+}
+
+{
+   JavaCalls024
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls11call_staticEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN9JavaCalls11call_staticEP9JavaValue11KlassHandle12symbolHandleS3_P6Thread
+   fun:_ZN7Threads9create_vmEP14JavaVMInitArgsPb
+   fun:JNI_CreateJavaVM
+}
+
+{
+   JavaCalls025
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:JVM_DoPrivileged
+   fun:Java_java_security_AccessController_doPrivileged__Ljava_security_PrivilegedExceptionAction_2
+   obj:*
+   obj:*
+   obj:*
+}
+
+{
+   JavaCalls026
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:JVM_DoPrivileged
+   fun:Java_java_security_AccessController_doPrivileged__Ljava_security_PrivilegedExceptionAction_2
+   obj:*
+   obj:*
+}
+
+{
+   JavaCalls027
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls11call_staticEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN9JavaCalls11call_staticEP9JavaValue11KlassHandle12symbolHandleS3_6HandleP6Thread
+   fun:_ZN11StatSampler19get_system_propertyEPKcP6Thread
+   fun:_ZN11StatSampler38create_system_property_instrumentationEP6Thread
+   fun:_ZN11StatSampler20create_misc_perfdataEv
+   fun:_ZN11StatSampler6engageEv
+}
+
+{
+   JavaCalls028
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:JVM_DoPrivileged
+}
+
+{
+   JavaCalls029
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:JVM_DoPrivileged
+   fun:Java_java_security_AccessController_doPrivileged__Ljava_security_PrivilegedExceptionAction_2
+}
+
+
+{
+   JavaCalls030
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN7Threads9create_vmEP14JavaVMInitArgsPb
+   fun:JNI_CreateJavaVM
+}
+
+{
+   JavaCalls031
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN7Threads9create_vmEP14JavaVMInitArgsPb
+}
+
+{
+   JavaCalls032
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN7Threads9create_vmEP14JavaVMInitArgsPb
+   fun:JNI_CreateJavaVM
+}
+
+{
+   JavaCalls033
+   Memcheck:Cond
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass10link_classEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN18InterpreterRuntime4_newEP10JavaThreadP19constantPoolOopDesci
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+}
+
+{
+   JavaCalls034
+   Memcheck:Cond
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass10link_classEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN18InterpreterRuntime4_newEP10JavaThreadP19constantPoolOopDesci
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+}
+
+{
+   JavaCalls035
+   Memcheck:Cond
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass15link_class_implE19instanceKlassHandlebP6Thread
+   fun:_ZN13instanceKlass10link_classEP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN18InterpreterRuntime4_newEP10JavaThreadP19constantPoolOopDesci
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+}
+
+{
+   JavaCalls036
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls11call_staticEP9JavaValue11KlassHandle12symbolHandleS3_P17JavaCallArgumentsP6Thread
+   fun:_ZN9JavaCalls11call_staticEP9JavaValue11KlassHandle12symbolHandleS3_6HandleS4_P6Thread
+   fun:_ZN12NativeLookup12lookup_styleE12methodHandlePcPKcibRbP6Thread
+   fun:_ZN12NativeLookup12lookup_entryE12methodHandleRbP6Thread
+   fun:_ZN12NativeLookup11lookup_baseE12methodHandleRbP6Thread
+   fun:_ZN12NativeLookup6lookupE12methodHandleRbP6Thread
+   fun:_ZN18InterpreterRuntime19prepare_native_callEP10JavaThreadP13methodOopDesc
+   obj:*
+}
+
+{
+   JavaCalls037
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_Z17jni_invoke_staticP7JNIEnv_P9JavaValueP8_jobject11JNICallTypeP10_jmethodIDP18JNI_ArgumentPusherP6Thread
+   fun:jni_CallStaticObjectMethodV
+   fun:JNU_CallStaticMethodByName
+   fun:initializeEncoding
+}
+
+{
+   JavaCalls038
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN12LinkResolver19resolve_static_callER8CallInfoR11KlassHandle12symbolHandleS4_S2_bbP6Thread
+}
+
+{
+   JavaCalls039
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN18InterpreterRuntime4_newEP10JavaThreadP19constantPoolOopDesci
+   obj:*
+}
+
+{
+   JavaCalls040
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+}
+
+{
+   JavaCalls041
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN18InterpreterRuntime4_newEP10JavaThreadP19constantPoolOopDesci
+   obj:*
+   obj:*
+}
+
+{
+   JavaCalls042
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_Z28find_class_from_class_loaderP7JNIEnv_12symbolHandleh6HandleS2_hP6Thread
+   fun:jni_FindClass
+}
+
+{
+   JavaCalls043
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_Z28find_class_from_class_loaderP7JNIEnv_12symbolHandleh6HandleS2_hP6Thread
+}
+
+{
+   JavaCalls044
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_Z17jni_invoke_staticP7JNIEnv_P9JavaValueP8_jobject11JNICallTypeP10_jmethodIDP18JNI_ArgumentPusherP6Thread
+}
+
+{
+   JavaCalls045
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN13instanceKlass27call_class_initializer_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass15initialize_implE19instanceKlassHandleP6Thread
+   fun:_ZN13instanceKlass10initializeEP6Thread
+   fun:_ZN12LinkResolver19resolve_static_callER8CallInfoR11KlassHandle12symbolHandleS4_S2_bbP6Thread
+   fun:_ZN12LinkResolver20resolve_invokestaticER8CallInfo18constantPoolHandleiP6Thread
+}
+
+{
+   JavaCalls046
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+}
+
+{
+   JavaCalls047
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_Z17jni_invoke_staticP7JNIEnv_P9JavaValueP8_jobject11JNICallTypeP10_jmethodIDP18JNI_ArgumentPusherP6Thread
+}
+
+{
+   JavaCalls048
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+}
+
+{
+   JavaCalls049
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+}
+
+
+## suppress memory leak
+
+{
+   SuppressLeak1
+   Memcheck:Leak
+   fun:malloc
+   fun:er_malloc_helper
+   fun:er_vsprintf
+   fun:er_set_internal
+   fun:er_set
+   fun:css_transit_ha_server_state
+   fun:css_change_ha_server_state
+   fun:boot_restart_server
+   fun:net_server_start
+   fun:main
+}
+
+{
+   SuppressLeak2
+   Memcheck:Leak
+   fun:calloc
+   fun:_dl_allocate_tls
+   fun:pthread_create
+   fun:thread_start_workers
+   fun:css_setup_server_loop
+   fun:css_init
+   fun:net_server_start
+   fun:main
+}
+
+{
+   Uninitialised1
+   Memcheck:Value1
+   fun:writev
+   fun:css_send_io_vector
+   fun:css_net_send3
+   fun:css_send_request_with_data_buffer
+   fun:css_send_req_with_2_buffers
+   fun:css_send_req_to_server
+   fun:net_client_request_internal
+   fun:net_client_request
+   fun:locator_find_class_oid
+   fun:locator_find_class_by_name
+}
+
+{
+   Uninitialised2
+   Memcheck:Value1
+   fun:writev
+   fun:css_vector_send
+   fun:css_send_io_vector
+   fun:css_net_send5
+   fun:css_send_req_with_2_buffers
+   fun:css_send_req_to_server
+   fun:net_client_request2_no_malloc
+   fun:sysprm_obtain_server_parameters
+   fun:sysprm_tune_client_parameters
+   fun:boot_restart_client
+   fun:db_restart
+   fun:db_restart_ex
+}
+
+{
+   Lzo1xCompressAPI01
+   Memcheck:Cond
+   fun:do_compress
+   fun:lzo1x_1_compress
+   fun:log_zip
+   fun:prior_lsa_alloc_and_copy_data
+   fun:log_append_redo_data2
+   fun:log_append_redo_data
+   fun:file_xcreate
+   fun:file_create
+   fun:xbtree_add_index
+   fun:sbtree_add_index
+   fun:net_server_request
+   fun:css_internal_request_handler
+
+}
+
+{
+  Lzo1xCompressAPI02
+  Memcheck:Addr8
+   obj:*
+   ... 
+   obj:*
+
+}
+
+{
+   Lzo1xCompressAPI03
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN20SafepointSynchronize5blockEP10JavaThread
+   fun:_ZN20ThreadSafepointState29handle_polling_page_exceptionEv
+   fun:_ZN20SafepointSynchronize29handle_polling_page_exceptionEP10JavaThread
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN9JavaCalls11call_helperEP9JavaValueP12methodHandleP17JavaCallArgumentsP6Thread
+   fun:_ZN2os20os_exception_wrapperEPFvP9JavaValueP12methodHandleP17JavaCallArgumentsP6ThreadES1_S3_S5_S7_
+   fun:_ZN9JavaCalls4callEP9JavaValue12methodHandleP17JavaCallArgumentsP6Thread
+}
+
+{
+   Lzo1xCompressAPI04
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC2EP8GraphKitb
+   fun:_ZN11BuildCutoutC1EP8GraphKitP4Nodeff
+   fun:_ZN5Parse17array_store_checkEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+}
+
+{
+   Lzo1xCompressAPI05
+   Memcheck:Cond
+   fun:_ZN8GraphKit29transfer_exceptions_into_jvmsEv
+   fun:_ZN25UncommonTrapCallGenerator8generateEP8JVMState
+   fun:_ZN22PredictedCallGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+   fun:_ZN13CompileBroker25invoke_compiler_on_methodEP11CompileTask
+
+}
+
+
+{
+
+   JavaCall2001
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC1EP8GraphKitb
+   fun:_ZN22PredictedCallGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+   fun:_ZN13CompileBroker25invoke_compiler_on_methodEP11CompileTask
+}
+
+
+{
+   JavaCall2002
+   Memcheck:Cond
+   fun:_ZN10InlineTreeC1EP7CompilePKS_P8ciMethodP8JVMStateif
+   fun:_ZN10InlineTree12ok_to_inlineEP8ciMethodP8JVMStateR13ciCallProfileP12WarmCallInfo
+   fun:_ZN7Compile14call_generatorEP8ciMethodibP8JVMStatebf
+   fun:_ZN7Compile14call_generatorEP8ciMethodibP8JVMStatebf
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+}
+
+{
+   JavaCall2003
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC1EP8GraphKitb
+   fun:_ZN8GraphKit17make_slow_call_exEP4NodeP15ciInstanceKlassb
+   fun:_ZN14LibraryCallKit18generate_arraycopyEPK7TypePtr9BasicTypeP4NodeS5_S5_S5_S5_bbP10RegionNode
+   fun:_ZN14LibraryCallKit16inline_arraycopyEv
+   fun:_ZN14LibraryCallKit13try_to_inlineEv
+   fun:_ZN16LibraryIntrinsic8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+}
+
+{ 
+   JavaCall2004
+   Memcheck:Cond
+   fun:_ZNK8GraphKit9sync_jvmsEv
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN8GraphKit25set_output_for_allocationEP12AllocateNodePK10TypeOopPtrb
+   fun:_ZN8GraphKit9new_arrayEP4NodeS1_ibPS1_
+   fun:_ZN5Parse11do_newarrayE9BasicType
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+}
+
+{
+
+   JavaCall2005
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC1EP8GraphKitb
+   fun:_ZN8GraphKit17make_slow_call_exEP4NodeP15ciInstanceKlassb
+   fun:_ZN8GraphKit25set_output_for_allocationEP12AllocateNodePK10TypeOopPtrb
+   fun:_ZN8GraphKit12new_instanceEP4NodeS1_bPS1_
+   fun:_ZN5Parse6do_newEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+}
+
+{
+   JVM0011
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZNK8JVMState10clone_deepEP7Compile
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN8GraphKit25set_output_for_allocationEP12AllocateNodePK10TypeOopPtrb
+   fun:_ZN8GraphKit12new_instanceEP4NodeS1_bPS1_
+   fun:_ZN5Parse6do_newEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+
+}
+
+{
+   JVM0012
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN8GraphKit9clone_mapEv
+   fun:_ZN8GraphKit13set_map_cloneEP13SafePointNode
+   fun:_ZN5Parse13do_exceptionsEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+}
+
+{
+   JVM0013
+   Memcheck:Cond
+   fun:do_compress
+   fun:lzo1x_1_compress
+   ...
+}
+
+{
+   JVM0014
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZNK8JVMState10clone_deepEP7Compile
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN8GraphKit23set_edges_for_java_callEP12CallJavaNodebb
+   fun:_ZN19DirectCallGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+
+}
+
+{
+   JVM0015
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC1EP8GraphKitb
+   fun:_ZN5Parse21catch_call_exceptionsER24ciExceptionHandlerStream
+   fun:_ZN5Parse23catch_inline_exceptionsEP13SafePointNode
+   fun:_ZN5Parse13do_exceptionsEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+   fun:_ZN10C2Compiler14compile_methodEP5ciEnvP8ciMethodi
+   fun:_ZN13CompileBroker25invoke_compiler_on_methodEP11CompileTask
+}
+
+{
+   JVM0016
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN8GraphKit9clone_mapEv
+   fun:_ZN8GraphKit13set_map_cloneEP13SafePointNode
+   fun:_ZN5Parse13throw_to_exitEP13SafePointNode
+   fun:_ZN5Parse21catch_call_exceptionsER24ciExceptionHandlerStream
+   fun:_ZN5Parse23catch_inline_exceptionsEP13SafePointNode
+   fun:_ZN5Parse13do_exceptionsEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+}
+
+{
+   JVM0017
+   Memcheck:Cond
+   fun:_ZNK8GraphKit9sync_jvmsEv
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN8GraphKit25set_output_for_allocationEP12AllocateNodePK10TypeOopPtrb
+   fun:_ZN8GraphKit12new_instanceEP4NodeS1_bPS1_
+   fun:_ZN5Parse6do_newEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+}
+
+{
+   JVM0018
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZNK8JVMState10clone_deepEP7Compile
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN8GraphKit25set_output_for_allocationEP12AllocateNodePK10TypeOopPtrb
+   fun:_ZN8GraphKit12new_instanceEP4NodeS1_bPS1_
+   fun:_ZN5Parse6do_newEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+}
+
+{
+   JVM0019
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN20SafepointSynchronize5blockEP10JavaThread
+   fun:_ZN5ciEnv18get_klass_by_indexEP15ciInstanceKlassiRb
+   fun:_ZN16ciBytecodeStream25get_declared_field_holderEv
+   fun:_ZN5Parse15do_field_accessEbb
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+}
+{
+   JVM0020
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZNK8JVMState10clone_deepEP7Compile
+   fun:_ZN8GraphKit19add_safepoint_edgesEP13SafePointNodeb
+   fun:_ZN8GraphKit25set_output_for_allocationEP12AllocateNodePK10TypeOopPtrb
+   fun:_ZN8GraphKit9new_arrayEP4NodeS1_ibPS1_
+   fun:_ZN5Parse11do_newarrayE9BasicType
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+}
+{
+   JVM0021
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN16PreserveJVMStateC1EP8GraphKitb
+   fun:_ZN8GraphKit17make_slow_call_exEP4NodeP15ciInstanceKlassb
+   fun:_ZN8GraphKit25set_output_for_allocationEP12AllocateNodePK10TypeOopPtrb
+   fun:_ZN8GraphKit9new_arrayEP4NodeS1_ibPS1_
+   fun:_ZN5Parse11do_newarrayE9BasicType
+   fun:_ZN5Parse15do_one_bytecodeEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN7CompileC1EP5ciEnvP10C2CompilerP8ciMethodibb
+}
+
+{
+   JVM0022
+   Memcheck:Cond
+   fun:_ZNK8JVMState13clone_shallowEP7Compile
+   fun:_ZN8GraphKit9clone_mapEv
+   fun:_ZN8GraphKit13set_map_cloneEP13SafePointNode
+   fun:_ZN5Parse13throw_to_exitEP13SafePointNode
+   fun:_ZN5Parse23catch_inline_exceptionsEP13SafePointNode
+   fun:_ZN5Parse13do_exceptionsEv
+   fun:_ZN5Parse12do_one_blockEv
+   fun:_ZN5Parse13do_all_blocksEv
+   fun:_ZN5ParseC1EP8JVMStateP8ciMethodf
+   fun:_ZN14ParseGenerator8generateEP8JVMState
+   fun:_ZN5Parse7do_callEv
+   fun:_ZN5Parse15do_one_bytecodeEv
+}
+
+{
+   JVM0023
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN20SafepointSynchronize5blockEP10JavaThread
+   fun:_ZN13ObjectMonitor4waitElbP6Thread
+   fun:_ZN18ObjectSynchronizer4waitE6HandlelP6Thread
+   fun:JVM_MonitorWait
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+}
+
+{
+   JVM0024
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor4lockEP6Thread
+   fun:_ZN7Monitor4lockEv
+   fun:_ZN8VMThread7executeEP12VM_Operation
+   fun:_ZN20ParallelScavengeHeap12mem_allocateEmbbPb
+   fun:_ZN13CollectedHeap26common_mem_allocate_noinitEmbP6Thread
+   fun:_ZN14typeArrayKlass8allocateEiP6Thread
+   fun:_ZN10oopFactory13new_typeArrayE9BasicTypeiP6Thread
+   fun:_ZN11OptoRuntime11new_array_CEP12klassOopDesciP10JavaThread
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   JVM0025
+   Memcheck:Cond
+   fun:_ZN7Monitor7TrySpinEP6Thread
+   fun:_ZN7Monitor5ILockEP6Thread
+   fun:_ZN7Monitor28lock_without_safepoint_checkEv
+   fun:_ZN20SafepointSynchronize5blockEP10JavaThread
+   fun:_ZN11OptoRuntime11new_array_CEP12klassOopDesciP10JavaThread
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+}
+
+{
+   JVM0026
+   Memcheck:Value8
+   fun:do_compress
+   ...
+   fun:start_thread
+   fun:clone
+}
+
+{
+   lzo1x_01
+   Memcheck:Value8
+   fun:do_compress
+   ...
+   fun:net_*_request
+}
+
+{
+   lzo1x_02
+   Memcheck:Value8
+   fun:do_compress
+   ...
+   fun:xlocator_*force
+}
+
+{
+   lzo1x_03
+   Memcheck:Value8
+   fun:do_compress
+   ...
+   fun:catcls_*_instance
+}
+
+{
+   osclass_01
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN*Em
+   ...
+   fun:_ZN*Thread
+}
+
+{
+   osclass_02
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN*Em
+   ...
+   fun:*_*_*
+
+}
+
+{
+   osclass_03
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN*Em
+   ...
+   obj:*
+}
+
+{
+   slotta_01
+   Memcheck:Cond
+   fun:spage_is_*
+   ...
+   fun:*_server_*
+}
+
+{
+   lzox_1_cpr
+   Memcheck:Value8
+   fun:do_compress
+   fun:lzo1x_1_compress
+   ...
+   fun:qexec_*_*
+
+}
+{
+   lzo1x_11
+   Memcheck:Value8
+   fun:do_compress
+   ...
+   fun:*_create
+}
+
+{
+   lzo1x_12
+   Memcheck:Value8
+   fun:do_compress
+   fun:lzo1x_1_compress
+   ...
+   fun:locator_insert_force
+}
+{
+   lzo1x_13
+   Memcheck:Value8
+   fun:do_compress
+   fun:lzo1x_1_compress
+   ...
+   fun:sort_listfile
+}
+
+{
+   lzo1x_14
+   Memcheck:Value8
+   fun:do_compress
+   fun:lzo1x_1_compress
+   ...
+   fun:qexec_*_*
+}
+
+{
+   lota_001
+   Memcheck:Cond
+   fun:spage_is_unknown_slot
+   ...
+   fun:*_server_abort
+}
+
