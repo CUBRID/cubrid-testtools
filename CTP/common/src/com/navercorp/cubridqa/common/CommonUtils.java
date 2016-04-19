@@ -370,4 +370,11 @@ public class CommonUtils {
 		return timeStamp;
 	}
 	
+	public static boolean valueOfBoolean(String str) {
+		if(str == null) return false;
+		
+		str = str.toUpperCase().trim();
+		
+		return str.equals("TRUE") || str.equals("YES") || str.equals("1");
+	}	
 }
