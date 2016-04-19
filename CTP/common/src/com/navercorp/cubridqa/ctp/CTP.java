@@ -176,7 +176,11 @@ public class CTP {
 		// newfileName = CommonUtils.concatFile(newfileName, ".sql.conf");
 		// config.saveAs(newfileName, suite, "sql");
 		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
-		LocalInvoker.exec("sh ${CTP_HOME}/sql/bin/run.sh -s " + suite + " -f " + configFilePath, getShellType(false), true);
+		boolean enableMemoryLeak = CommonUtils.valueOfBoolean(config.get("sql", "enable_memory_leak"));
+				
+		String scriptFilename = enableMemoryLeak? "run_memory.sh" : "run.sh";
+		
+		LocalInvoker.exec("sh ${CTP_HOME}/sql/bin/" + scriptFilename + " -s " + suite + " -f " + configFilePath, getShellType(false), true);
 	}
 
 	private static void executeShell(IniData config, String suite) {
