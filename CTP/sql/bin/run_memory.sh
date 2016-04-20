@@ -166,7 +166,7 @@ function format_results()
    run_log=$1
    curDir=`pwd`
    cd $CTP_HOME/result
-   if [ "`ls -A ${CTP_HOME}/result/memory`"="" ];then
+   if [ "`ls -A ${CTP_HOME}/result/memory`" == "" ];then
       echo "Please check why your testing is not executed correctly!"
       exit 1
    fi
@@ -204,7 +204,7 @@ sh $CTP_HOME/sql/bin/run.sh -s ${scenario_category} -f $config_file_main 2>&1 > 
 stop_and_collect_memory_result
 
 #format results
-format_results
+format_results ${CTP_HOME}/result/${memory_log}
 
 
 
