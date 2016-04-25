@@ -154,6 +154,9 @@ public class CTP {
 				case NEIS08:
 					executeSQL(getConfigData(taskLabel, configFilename, "neis08"), "neis08");
 					break;
+				case SQL_BY_CCI:
+					executeSQL_By_CCI(getConfigData(taskLabel, configFilename, "sql_by_cci"), "sql_by_cci");
+					break;					
 				case SHELL:
 					executeShell(getConfigData(taskLabel, configFilename, "shell"), "shell");
 					break;
@@ -181,6 +184,11 @@ public class CTP {
 		String scriptFilename = enableMemoryLeak? "run_memory.sh" : "run.sh";
 		
 		LocalInvoker.exec("sh ${CTP_HOME}/sql/bin/" + scriptFilename + " -s " + suite + " -f " + configFilePath, getShellType(false), true);
+	}
+	
+	private static void executeSQL_By_CCI(IniData config, String suite) throws IOException {
+		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
+		LocalInvoker.exec("sh ${CTP_HOME}/sql_by_cci/bin/run.sh" + " -s " + suite + " -f " + configFilePath, getShellType(false), true);
 	}
 
 	private static void executeShell(IniData config, String suite) {
