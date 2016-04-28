@@ -124,7 +124,7 @@ public class SpTest3 {
 		 	return Timestamp.valueOf("5004-12-12 01:01:01.1111");
 	 }
 	 public static Timestamp typetesttimestamp3() {
-		 	return Timestamp.valueOf("2004-16-12 01:01:01.1111");
+		 	return Timestamp.valueOf("2005-04-12 01:01:01.1111");
 	 }
 	 public static Timestamp typetesttimestamp4() {
 		 	return Timestamp.valueOf("2004-12-30 01:01:01.1111");
