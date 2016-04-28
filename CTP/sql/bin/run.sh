@@ -786,7 +786,7 @@ function search_core_and_backup()
         coreDir=${HOME}/corebackup/${coreFolder}
         cd $coreFolder     
        
-        coreFiles=`find $CUBRID -type f -name "core*"` 
+        coreFiles=`find $CUBRID ${CTP_HOME} -type f -name "core*"` 
         for fcore in ${coreFiles};do
             echo "print backtrace with gdb and $fcore..."
             binary_file=`file ${fcore} | sed "s|.*from '\(.*\)'|\1|"|awk '{print $1}'`
