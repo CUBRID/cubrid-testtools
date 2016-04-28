@@ -797,7 +797,7 @@ function search_core_and_backup()
             coreName=`basename $fcore`
             coreTimeStamp=`date +'%y%m%d%H%M%S'`
             coreTxtName="${coreName}_${coreTimeStamp}.txt"
-            gdb $binary_cmd $fcore -ex bt -ex quit > "$coreTxtName" 2>&1
+            gdb $binary_cmd $fcore -ex bt -ex quit > "${resultDir}/$coreTxtName" 2>&1
             
             #capture main information of core
             if [ -s "${fcore}" ];then
