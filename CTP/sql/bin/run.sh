@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 # 
 # Copyright (c) 2016, Search Solution Corporation. All rights reserved.
 # 
