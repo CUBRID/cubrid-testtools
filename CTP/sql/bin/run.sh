@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 # 
 # Copyright (c) 2016, Search Solution Corporation. All rights reserved.
 # 
@@ -211,14 +210,8 @@ function uniteName()
 
 function clean_log_cores()
 {
-     rm -rf $CUBRID/logs/* 2>&1 > /dev/null
-     for x in `find $CUBRID/* ${CTP_HOME} -type f -name "core*"`
-     do
-          isCore=`file $x|grep 'core file'|grep -v grep|wc -l`
-          if [ $isCore -ne 0 ];then
-		rm $x
-          fi
-     done
+     rm -rf "$CUBRID/logs/*" 2>&1 > /dev/null
+     find "$CUBRID" "${CTP_HOME}" -type f -name "core*"|xargs -i rm {}
 }
 
 function do_clean()
@@ -782,25 +775,10 @@ function parse_command_from_core()
 
 }
 
-function check_core()
-{
-     curDir=`pwd`
-     for x in `find $CUBRID ${CTP_HOME} -type f -name "core*"`
-     do
-          isCore=`file $x|grep 'core file'|grep -v grep|wc -l`
-          if [ $isCore -ne 0 ];then
-                let "hasCore=hasCore+1"
-                coreList="$coreList  $x"
-          fi	 
-     done
-
-     cd $curDir
-
-}
-
 function do_summary_and_clean()
 {
      #get summary info
+     coreCount=0
      resultDirTemp=`cat ${log_filename}|grep "Result Root Dir"`
      resultDir=${resultDirTemp#*:}
      resultSummaryInfoFile=${resultDir}/main.info
@@ -810,9 +788,6 @@ function do_summary_and_clean()
      totalNum=`cat $resultSummaryInfoFile|grep 'total:'|awk -F ':' '{print $2}'`
      elapseTime=`cat $resultSummaryInfoFile|grep 'totalTime:'|awk -F ':' '{print $2}'`
      
-     #check core dump file
-     check_core
-
      echo ""
      echo "-----------------------"
      echo "Fail:$failNum"
@@ -820,26 +795,30 @@ function do_summary_and_clean()
      echo "Total:$totalNum"
      echo "Elapse Time:$elapseTime"
      echo "Test Log:$log_filename"
-
-     #print core file or cleanup
-     if [ $hasCore -ne 0 ];then
-	  for x in ${coreList}
-          do
-		echo "CORE: $x"
-	  done
-	
-	  echo "test_error=Y" >> ${resultDir}/summary_info
-     else
-	  do_clean
-     fi 
-     
      echo "Test Result Directory:$resultDir"
      echo "-----------------------"
      echo ""
+
+     #check core
+     find "$CUBRID" "${CTP_HOME}" -type f -name "core*"|while read -r file
+     do
+	 isCore=`file "$file"|grep 'core file'|grep -v grep|wc -l`
+         if [ $isCore -ne 0 ];then
+             echo "CORE_FILE:$file"
+             let "coreCount=coreCount+1"
+         fi
+     done
+     
+     #print core flag
+     if [ $coreCount -ne 0 ];then
+          echo "test_error=Y" >> ${resultDir}/summary_info
+     else
+	  do_clean
+     fi
+
      echo "-----------------------"
      echo "Testing End!"
      echo "-----------------------"
-     echo ""
 }
 
 
