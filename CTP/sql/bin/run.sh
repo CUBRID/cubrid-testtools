@@ -73,8 +73,6 @@ is_support_ha=""
 scenario_alias=""
 need_make_locale=""
 test_data_file=""
-hasCore=
-coreList=
 alias ini="sh ${CTP_HOME}/bin/ini.sh"
 
 
@@ -135,8 +133,6 @@ function do_init()
     db_charset=""
     ha_mode_yn="no"
     is_support_ha="no"
-    hasCore=0
-    coreDir="$HOME/corebackup"
 
     #check CUBRID environment
     [ ! -d "$CUBRID" ] && echo "please make sure your build is installed" && exit 1
