@@ -748,32 +748,6 @@ function do_test()
      cd $curDir
 }
 
-function parse_command_from_core()
-{
-      binary_cmd_full_name=$1
-      if [ `echo $binary_cmd_full_name|grep "cub_admin"|wc -l` -ge 1 ]
-      then
-              echo "cub_admin"
-      elif [ `echo $binary_cmd_full_name|grep "cubrid"|wc -l` -ge 1 ]
-      then
-              echo "cub_admin"
-      elif [ `echo $binary_cmd_full_name|grep "cub_server"|wc -l` -ge 1 ]
-      then
-              echo "cub_server"
-      elif [ `echo $binary_cmd_full_name|grep "cub_cas"|wc -l` -ge 1 ]
-      then
-              echo "cub_cas"
-      elif [ `echo $binary_cmd_full_name|grep "cub_master"|wc -l` -ge 1 ]
-      then
-              echo "cub_master"
-      elif [ `echo $binary_cmd_full_name|grep "csql"|wc -l` -ge 1 ]
-      then
-              echo "csql"
-      else
-              echo "cub_server"
-      fi
-
-}
 
 function do_summary_and_clean()
 {
@@ -800,14 +774,17 @@ function do_summary_and_clean()
      echo ""
 
      #check core
-     find "$CUBRID" "${CTP_HOME}" -type f -name "core*"|while read -r file
+     coreFiles=$(find "$CUBRID" "${CTP_HOME}" -type f -name "core*")
+     while read -r file;
      do
 	 isCore=`file "$file"|grep 'core file'|grep -v grep|wc -l`
          if [ $isCore -ne 0 ];then
              echo "CORE_FILE:$file"
              let "coreCount=coreCount+1"
          fi
-     done
+     done <<EOF
+$coreFiles
+EOF
      
      #print core flag
      if [ $coreCount -ne 0 ];then
