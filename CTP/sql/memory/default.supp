@@ -46,6 +46,33 @@
 #     if Param: name of system call param
 
 ##----------------------------------------------------------------------##
+##################### ADD DATE ###################  20160511
+## CBRD-20194, not a bug
+{
+   filter_out_manager_error
+   Memcheck:Leak
+   fun:malloc
+   fun:er_set_internal
+   fun:er_set
+   ...
+   fun:net_server_request
+   fun:css_internal_request_handler
+   fun:thread_worker
+   fun:start_thread
+   fun:clone
+}
+
+{
+   filter_out_possible_leak_compile
+   Memcheck:Leak
+   fun:calloc
+   fun:pt_add_lock_class
+   fun:pt_find_lck_classes
+   ...
+   fun:process_request
+   fun:cas_main
+   fun:main
+}
 
 #Add by Nathan
 ####BEGIN
