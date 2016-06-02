@@ -25,16 +25,15 @@
 #
 
 export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
+
 JAVA_CPS=$COMMON_HOME/lib/cubridqa-common.jar
 
-paramList="$@"
-hostIp=`/sbin/ifconfig| awk '/inet addr/{print substr($2,6)}'|grep -v "127.0.0.1"`
-hostUser=$USER
-paramList="$paramList -host ${hostIp} -user ${hostUser}"
+`grep -E "^grepo_service_url" $COMMON_HOME/conf/common.properties | xargs -i echo export {} `
 
 if [ "$OSTYPE" == "cygwin" ]
 then
-	"$JAVA_HOME/bin/java" -cp "`cygpath -wp $JAVA_CPS`" com.navercorp.cubridqa.common.CommitConfigFileIntoDB "$paramList"
-else
-	"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.CommitConfigFileIntoDB "$paramList"
+	JAVA_CPS=`cygpath -wpm $JAVA_CPS`
 fi
+
+"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.grepo.UpgradeMain "$@"
+

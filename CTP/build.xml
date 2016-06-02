@@ -8,7 +8,7 @@
 	<path id="libs">
 		<fileset dir="common/lib">
 			<include name="*.jar" />
-			<exclude name="cubridqa-common.jar" />			
+			<exclude name="cubridqa-common.jar" />
 		</fileset>
 		<fileset dir="common/lib/mail">
 			<include name="*.jar" />
@@ -26,12 +26,10 @@
 
 	<target name="compile" depends="init" description="compile the source ">
 		<!-- Compile the java code from ${src} into ${build} -->
-		<javac srcdir="common/src" destdir="${build}">
-			
+		<javac srcdir="common/src" destdir="${build}">			
 			<classpath refid="libs" />
 		</javac>
-		<javac srcdir="sql/src" destdir="${build}">
-			
+		<javac srcdir="sql/src" destdir="${build}">			
 			<classpath refid="libs" />
 		</javac>
 	</target>

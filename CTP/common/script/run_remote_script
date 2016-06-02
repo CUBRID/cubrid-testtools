@@ -29,7 +29,7 @@ JAVA_CPS=$COMMON_HOME/lib/cubridqa-common.jar
 
 if [ "$OSTYPE" == "cygwin" ]
 then
-	"$JAVA_HOME/bin/java" -cp "`cygpath -wp $JAVA_CPS`" com.navercorp.cubridqa.common.RunRemoteScript "$@"
-else
-	"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.RunRemoteScript "$@"
+	JAVA_CPS=`cygpath -wp $JAVA_CPS`
 fi
+
+"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.RunRemoteScript "$@"

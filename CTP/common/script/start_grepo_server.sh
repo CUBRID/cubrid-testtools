@@ -25,20 +25,12 @@
 #
 
 export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
-JAVA_CPS=$COMMON_HOME/lib/cubridqa-common.jar
 
-export KEY_OS_PWD_DEFAULT=`awk -F '=' '/os.pwd.default/ {print $2}' $COMMON_HOME/conf/common.properties|tr -d '\r'`
-export KEY_SSH_PORT_DEFAULT=`awk -F '=' '/ssh.port.default/ {print $2}' $COMMON_HOME/conf/common.properties|tr -d '\r'`
-export KEY_GIT_PWD_DEFAULT=`awk -F '=' '/git.pwd/ {print $2}' $COMMON_HOME/conf/common.properties|tr -d '\r'`
-
-export PATH=$JAVA_HOME/bin:$COMMON_HOME/script:$PATH
+JAVA_CPS=$COMMON_HOME/lib/cubridqa-common.jar:$COMMON_HOME/grepo/lib/org.eclipse.jgit-4.3.1.201605051710-r.jar:$COMMON_HOME/grepo/lib/org.osgi.core-4.3.0.jar:$COMMON_HOME/bin
 
 if [ "$OSTYPE" == "cygwin" ]
 then
-    JAVA_CPS=`cygpath -wp $JAVA_CPS`
+	JAVA_CPS="`cygpath -wpm $JAVA_CPS`"
 fi
-
-tmpfile=$COMMON_HOME/script/.run_action_file_`date '+%Y%m%d%H%M%s'`'.tmp'
-java -cp "$JAVA_CPS" com.navercorp.cubridqa.common.ParseActionFiles "$@" > $tmpfile
-sh $tmpfile 
-rm -rf $tmpfile >/dev/null 2>&1
+(cd $COMMON_HOME; mkdir bin >/dev/null 2>&1; find grepo/src -type f -name "*.java" | xargs -t javac -cp "$JAVA_CPS" -d bin)
+(cd $COMMON_HOME;"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.grepo.service.RepoServiceImpl "$@")

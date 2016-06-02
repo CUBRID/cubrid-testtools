@@ -152,6 +152,9 @@ public class CommonUtils {
 
 	public static ArrayList<String> getLineList(String filename) throws IOException {
 
+		if (filename == null)
+			return null;
+
 		File file = new File(filename);
 		if (!file.exists()) {
 			return null;
@@ -240,13 +243,13 @@ public class CommonUtils {
 
 	public static String getEnvInFile(String var) {
 		String value = System.getenv(var);
-		
+
 		if (value == null) {
 			return value;
 		}
-		
+
 		value = getFixedPath(value);
-		
+
 		File file = new File(value);
 		try {
 			return file.getCanonicalPath();
@@ -264,7 +267,7 @@ public class CommonUtils {
 		String term = System.getenv("TERM");
 		return term != null && term.toLowerCase().indexOf("cygwin") != -1;
 	}
-	
+
 	public static String getLinuxStylePath(String path) {
 		path = path.trim();
 		if (isCygwinPlatform()) {
@@ -282,7 +285,7 @@ public class CommonUtils {
 	}
 
 	public static String getWindowsStylePath(String path) {
-		path = path.trim();		
+		path = path.trim();
 		if (isCygwinPlatform()) {
 			String winStylePath;
 			while (true) {
@@ -296,24 +299,24 @@ public class CommonUtils {
 			return path;
 		}
 	}
-		
 
 	public static String getFixedPath(String path) {
-		if(path == null) return path;
-		
+		if (path == null)
+			return path;
+
 		path = path.trim();
-		
-		try{
+
+		try {
 			File file = new File(path);
 			if (file.exists())
 				return file.getCanonicalPath();
 			if (CommonUtils.isWindowsPlatform()) {
 				file = new File(getWindowsStylePath(path));
-				if(file.exists()) {
+				if (file.exists()) {
 					return file.getCanonicalPath();
 				}
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			throw new RuntimeException("fail to get fixed path: " + path);
 		}
 		return path;
@@ -324,7 +327,7 @@ public class CommonUtils {
 		System.out.println(getExactFilename("conf\\core.1234"));
 		System.out.println(getExactFilename("/core\\conf\\core.1234"));
 	}
-	
+
 	public static Properties getConfig(String configFile) {
 		FileInputStream fis = null;
 
@@ -344,6 +347,16 @@ public class CommonUtils {
 					throw new RuntimeException(e);
 				}
 			}
+		}
+	}
+
+	public static Properties getConfig(InputStream is) {
+		try {
+			Properties props = new Properties();
+			props.load(is);
+			return props;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -369,12 +382,38 @@ public class CommonUtils {
 		String timeStamp = f.format(new Date());
 		return timeStamp;
 	}
-	
-	public static boolean valueOfBoolean(String str) {
-		if(str == null) return false;
-		
-		str = str.toUpperCase().trim();
-		
-		return str.equals("TRUE") || str.equals("YES") || str.equals("1");
-	}	
+
+	public static boolean convertBoolean(String str) {
+		return convertBoolean(str, false);
+	}
+
+	public static boolean convertBoolean(String value, boolean defaultValue) {
+		if (value == null)
+			return defaultValue;
+
+		value = value.trim().toUpperCase();
+		return value.equals("1") || value.equals("TRUE") || value.equals("YES");
+	}
+
+	public static String getSystemProperty(String key, String defaultValue, Properties props) {
+		if (key == null) {
+			return null;
+		}
+		String value = System.getProperty(key);
+		if (value != null && value.trim().equals("") == false) {
+			return value.trim();
+		}
+		value = System.getenv(key);
+		if (value != null && value.trim().equals("") == false) {
+			return value.trim();
+		}
+
+		if (props != null) {
+			value = props.getProperty(key);
+			if (value != null && value.trim().equals("") == false) {
+				return value.trim();
+			}
+		}
+		return defaultValue;
+	}
 }

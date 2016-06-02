@@ -31,6 +31,7 @@ from=
 user=
 passwd=
 host=
+port=
 to=
 lcov_data_name=
 allParams=$@
@@ -43,13 +44,14 @@ usage()
                                -user=username for target;
                                -pwd=password for target;
                                -host=target ip;
+             -port=ssh port
                                -to=target directory;"
     exit 1
 }
 
 if [ $# -eq 0 ]
 then
-	usage
+  usage
         exit
 fi
 
@@ -67,22 +69,26 @@ while [ $# -ne 0 ];do
                         shift
                 category=$1
                 ;;
-		-user)
-			shift
-		user="$1"
-		;;
-		-pwd)
-			shift
-		passwd="$1"
-		;;
-		-host)
-			shift
-		host="$1"
-		;;
-		-to)
-			shift
-		to="$1"
-		;;
+    -user)
+      shift
+    user="$1"
+    ;;
+    -pwd)
+      shift
+    passwd="$1"
+    ;;
+    -host)
+      shift
+    host="$1"
+    ;;
+    -port)
+      shift
+    port="$1"
+    ;;
+    -to)
+      shift
+    to="$1"
+    ;;
         esac
         shift
 done
@@ -108,20 +114,20 @@ function collectCoverage()
       srcFolder="cubrid-${buildId}"
       if [ !"$build_home" ]
       then
- 	   goToInstallationDirectory
-	   cd build/${srcFolder}
+     goToInstallationDirectory
+     cd build/${srcFolder}
       else
-      	   cd $build_home/${srcFolder}
+           cd $build_home/${srcFolder}
       fi
 
       cc_dir=`which run_coverage_collect_and_upload`
       gcov_dir=
       if [ "$cc_dir" ]
       then
-	   cubrid_common_dir=${cc_dir%/*}
-      	   gcov_dir=$cubrid_common_dir/gcov/gcov
+     cubrid_common_dir=${cc_dir%/*}
+           gcov_dir=$cubrid_common_dir/gcov/gcov
       else
-	   gcov_dir=`which gcov`
+     gcov_dir=`which gcov`
       fi
 
       rm -rf *.lcov
@@ -140,14 +146,14 @@ function uploadResult()
    srcFolder="cubrid-${buildId}"
    if [ !"$build_home" ]
    then
-	goToInstallationDirectory
+  goToInstallationDirectory
         cd build/${srcFolder}
    else
-  	cd $build_home/${srcFolder}
+    cd $build_home/${srcFolder}
    fi
 
-   run_upload -from ${lcov_data_name} -user "$user" -password "$passwd" -host "$host" -to "$to"
-   run_remote_script -from -user "$user" -password "$passwd" -host "$host" -c "cd ${to}; echo ${lcov_data_name} >${lcov_data_name}.info"
+   run_upload -from ${lcov_data_name} -user "$user" -password "$passwd" -host "$host" -port "$port" -to "$to"
+   run_remote_script -from -user "$user" -password "$passwd" -host "$host" -port "$port" -c "cd ${to}; echo ${lcov_data_name} >${lcov_data_name}.info"
    cd - $curDir
    echo UPLOAD `date '+%Y%m%d%H%M%s'` ${allParams} >> $HOME/.qacoverage
 

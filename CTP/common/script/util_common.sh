@@ -124,6 +124,7 @@ function svn_execute {
   cd -
 }
 
+
 function svn_update_cubrid_common {
     if which run_remote_script >/dev/null 2>&1
     then
@@ -142,6 +143,14 @@ function svn_update_cubrid_common {
         fi
     fi
 }
+
+function git_update_cubrid_common {
+(cd $HOME/cubrid_common && sh upgrade.sh)
+ export PATH=$HOME/cubrid_common:$PATH
+}
+
+
+
 
 function clean_for_ha_repl()
 {
@@ -164,7 +173,7 @@ function get_current_ip {
 function check_disk_space {
     if [ $# -ne 3 ]
     then
-        echo "Usage: check_disk_space /dev/sda3 20G \"Nickname<your@mail.address>\""
+        echo "Usage: check_disk_space /dev/sda3 20G \"Fan<fanzq@nhn.com>\""
         exit 1
     fi
 
@@ -218,7 +227,7 @@ function check_disk_space {
            if [ $i -eq 1 ]
            then
                noteInfo="$@"
-               mail_send -to "$mailto" -cc "Team Name<team@mail.address>" -title "[CUBRID QA] Please Check Disk Space on $USER@`get_current_ip` Right Now" -content "Dear #TO#,<br>$USER@`get_current_ip` dose not have enough available disk space. Please handle with it right now. <br><br> (note: $noteInfo) <br><br>Best Regards,<br>CUBRID QA" 
+               mail_send -to "$mailto" -cc "CUBRIDQA_BJ_Internal<dl_cubridqa_bj_internal@navercorp.com>" -title "[CUBRID QA] Please Check Disk Space on $USER@`get_current_ip` Right Now" -content "Dear #TO#,<br>$USER@`get_current_ip` dose not have enough available disk space. Please handle with it right now. <br><br> (note: $noteInfo) <br><br>Best Regards,<br>CUBRID QA" 
            else
                sleep 15
            fi
@@ -252,3 +261,7 @@ function svn_update_core_analyzer {
     fi
 }
 
+function git_update_core_analyzer {
+(cd $HOME/core_analyzer && sh upgrade.sh)
+ export PATH=$HOME/core_analyzer:$PATH
+}
