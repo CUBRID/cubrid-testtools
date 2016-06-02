@@ -26,6 +26,7 @@
 
 package com.navercorp.cubridqa.common;
 
+import java.io.File;
 import java.io.FileInputStream;
 
 import java.io.IOException;
@@ -59,7 +60,10 @@ public class MailSender {
 		options.addOption("title", true, "the subject of mail");
 		options.addOption("content", true, "the content of mail");
 		options.addOption("help", false, "List help");
-		InternetAddress from = new InternetAddress("D0359@nhn.com", "CUBRID_QA");
+		
+		Properties props = CommonUtils.getConfig("conf" + File.separator + "common.properties");
+		
+		InternetAddress from = new InternetAddress(props.getProperty("mail.from.address"), props.getProperty("mail.from.nickname"));
 		String dearContent = "";
 
 		CommandLineParser parser = null;
@@ -150,19 +154,6 @@ public class MailSender {
 			instance = new MailSender();
 		}
 		return instance;
-	}
-
-	private MailSender() {
-//		try {
-//			Configuration config = Configuration.getInstance();
-//			config.setDeliveryAttemptCount(0);
-//			config.setDeliveryThreadsActiveMax(3);
-//			config.setDeliveryAttemptDelay(3);
-//			config.setDeliveryTimeout(30000);
-//			config.setDeliveryDebug(false);
-//		} catch (Exception e) {
-//			throw new RuntimeException(e);
-//		}
 	}
 
 	public void send(String from, String to, String title, String mailContent) throws Exception {

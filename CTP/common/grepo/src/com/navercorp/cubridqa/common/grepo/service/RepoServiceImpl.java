@@ -33,19 +33,19 @@ public class RepoServiceImpl extends UnicastRemoteObject implements RepoService 
 	protected RepoServiceImpl(Properties props) throws RemoteException {
 		super();
 		this.props = props;
-		this.dataRoot = props.getProperty("data_root", "");
-		this.repoRoot = props.getProperty("repo_root", "");
+		this.dataRoot = props.getProperty("grepo_srv_data_root", "");
+		this.repoRoot = props.getProperty("grepo_srv_repo_root", "");
 		String gitUser = props.getProperty("git.user", "");
 		String gitPwd = props.getProperty("git.pwd", "");
 
-		System.out.println("data_root: " + this.dataRoot);
-		System.out.println("repo_root: " + this.repoRoot);
-		System.out.println("grepo_port: " + props.getProperty("grepo_port"));
+		System.out.println("grepo_srv_data_root: " + this.dataRoot);
+		System.out.println("grepo_srv_repo_root: " + this.repoRoot);
+		System.out.println("grepo_srv_port: " + props.getProperty("grepo_srv_port"));
 		System.out.println("git.user: " + gitUser);
 		System.out.println("git.pwd: (" + gitPwd.length() + ")");
 
-		boolean enableFetchThread = CommonUtils.convertBoolean(props.getProperty("grepo_enable_fetch_thread"), false);
-		System.out.println("grepo_enable_fetch_thread: " + enableFetchThread);
+		boolean enableFetchThread = CommonUtils.convertBoolean(props.getProperty("grepo_srv_enable_fetch_thread"), false);
+		System.out.println("grepo_srv_enable_fetch_thread: " + enableFetchThread);
 		if (enableFetchThread) {
 			new UpdateRepoThread(this.repoRoot, gitUser, gitPwd).start();
 		}

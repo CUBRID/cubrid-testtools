@@ -32,4 +32,4 @@ then
 	JAVA_CPS=`cygpath -wp $JAVA_CPS`
 fi
 
-"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.MailSender "$@"
+(cd $COMMON_HOME; "$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.MailSender "$@" )

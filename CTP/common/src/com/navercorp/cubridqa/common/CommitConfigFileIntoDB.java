@@ -42,27 +42,19 @@ import org.apache.commons.cli.PosixParser;
 
 public class CommitConfigFileIntoDB {
 
-	public static final String LINE_SEPARATOR = System
-			.getProperty("line.separator");
 	java.sql.Connection dbConn;
 	Properties props;
 
 	public CommitConfigFileIntoDB() {
-		String commonHome = System.getenv("COMMON_HOME");
-		String confFile = "";
-		if (commonHome != null && commonHome.length() != 0) {
-			confFile = commonHome + File.separator + "conf"
-					+ File.separator + "db.conf";
-		} else {
-			confFile = "conf" + File.separator + "db.conf";
-		}
+		String commonHome = CommonUtils.getEnvInFile("COMMON_HOME");
+
+		String confFile = commonHome + File.separator + "conf" + File.separator + "common.properties";
 		props = CommonUtils.getConfig(confFile);
-		String driver = props.getProperty("driver");
+		String driver = props.getProperty("dailydb.driver");
 		try {
 			Class.forName(driver);
 		} catch (Exception e) {
-			System.out
-					.println("[ERROR] fail to load JDBC Driver, please refer to msg_repo.db.driver parameter in conf/common.properties file.");
+			System.out.println("[ERROR] fail to load JDBC Driver, please refer to dailydb.driver parameter in conf/common.properties file.");
 		}
 	}
 
@@ -93,12 +85,8 @@ public class CommitConfigFileIntoDB {
 			return;
 		}
 
-		if (!cmd.hasOption("host") || !cmd.hasOption("user")
-				|| !cmd.hasOption("title") || !cmd.hasOption("id")
-				|| !cmd.hasOption("table")) {
-			showHelp(
-					"Please input remote <host>, <user>, <table>, <id>, <title>.",
-					options);
+		if (!cmd.hasOption("host") || !cmd.hasOption("user") || !cmd.hasOption("title") || !cmd.hasOption("id") || !cmd.hasOption("table")) {
+			showHelp("Please input remote <host>, <user>, <table>, <id>, <title>.", options);
 			return;
 		}
 
@@ -113,16 +101,13 @@ public class CommitConfigFileIntoDB {
 		String title = cmd.getOptionValue("title");
 		String contentMessage = cmd.getOptionValue("content");
 		String sourceMainId = cmd.getOptionValue("id");
-		String content = (contentMessage == null || contentMessage.length() == 0) ? parseFileIntoString(cmd
-				.getOptionValue("configfile")) : contentMessage;
+		String content = (contentMessage == null || contentMessage.length() == 0) ? parseFileIntoString(cmd.getOptionValue("configfile")) : contentMessage;
 		CommitConfigFileIntoDB initJdbc = new CommitConfigFileIntoDB();
-		initJdbc.insertConfigurationToDB(sourceMainId, sourceMainTable, title, content,
-				localHost, localUser);
+		initJdbc.insertConfigurationToDB(sourceMainId, sourceMainTable, title, content, localHost, localUser);
 
 	}
 
-	private void insertConfigurationToDB(String sourceMainId, String sourceMainTable,
-			String title, String content, String host, String user) {
+	private void insertConfigurationToDB(String sourceMainId, String sourceMainTable, String title, String content, String host, String user) {
 		String sql = "insert into general_test_log(src_type, src_id, host_ip, host_user, log_title, log_content, create_time) values (?, ?, ?, ?, ?, ?, now())";
 		PreparedStatement stmt = null;
 		try {
@@ -150,11 +135,10 @@ public class CommitConfigFileIntoDB {
 
 	}
 
-	private java.sql.Connection createConnection() throws SQLException,
-			ClassNotFoundException {
-		String url = props.getProperty("url");
-		String user = props.getProperty("user");
-		String pwd = props.getProperty("pwd");
+	private java.sql.Connection createConnection() throws SQLException, ClassNotFoundException {
+		String url = props.getProperty("dailydb.url");
+		String user = props.getProperty("dailydb.user");
+		String pwd = props.getProperty("dailydb.pwd");
 		return DriverManager.getConnection(url, user, pwd);
 	}
 
@@ -181,8 +165,7 @@ public class CommitConfigFileIntoDB {
 		}
 	}
 
-	public static String parseFileIntoString(String filename)
-			throws IOException {
+	public static String parseFileIntoString(String filename) throws IOException {
 		File file = new File(filename);
 		if (!file.exists()) {
 			return null;
@@ -195,7 +178,7 @@ public class CommitConfigFileIntoDB {
 		String line;
 
 		while ((line = lineReader.readLine()) != null) {
-			result.append(line.trim()).append(LINE_SEPARATOR);
+			result.append(line.trim()).append(Constants.LINE_SEPARATOR);
 		}
 		lineReader.close();
 		reader.close();
@@ -207,10 +190,7 @@ public class CommitConfigFileIntoDB {
 		if (error != null)
 			System.out.println("Error: " + error);
 		HelpFormatter formatter = new HelpFormatter();
-		formatter
-				.printHelp(
-						"commit_config_file: upload configuration files to general_test_log",
-						options);
+		formatter.printHelp("commit_config_file: upload configuration files to general_test_log", options);
 		System.out.println();
 	}
 }

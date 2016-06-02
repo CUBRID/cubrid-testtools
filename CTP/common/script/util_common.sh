@@ -126,31 +126,14 @@ function svn_execute {
 
 
 function svn_update_cubrid_common {
-    if which run_remote_script >/dev/null 2>&1
-    then
-        cubcom_home=$(dirname `which run_remote_script`)
-        cd $cubcom_home
-        svn revert ${SVN_DEFAULT_PARAMS} upgrade.sh
-        svn up ${SVN_DEFAULT_PARAMS} upgrade.sh
-        sh upgrade.sh
-        cd -
-    else
-        (cd $HOME; rm -rf ~/cubrid_common; svn checkout ${SVN_DEFAULT_PARAMS} http://svn.bds.nhncorp.com/xdbms/qatools/trunk/cubrid_common; cd cubrid_common; sh upgrade.sh)
-        if [ ! `which run_remote_script >/dev/null 2>&1` ]
-        then
-            echo "export PATH=$HOME/cubrid_common:$PATH" >> ~/.bash_profile
-            export PATH=$HOME/cubrid_common:$PATH
-        fi
-    fi
+    (cd $HOME/cubrid_common && sh upgrade.sh)
+    export PATH=$HOME/cubrid_common:$PATH
 }
 
 function git_update_cubrid_common {
-(cd $HOME/cubrid_common && sh upgrade.sh)
- export PATH=$HOME/cubrid_common:$PATH
+    (cd $HOME/cubrid_common && sh upgrade.sh)
+    export PATH=$HOME/cubrid_common:$PATH
 }
-
-
-
 
 function clean_for_ha_repl()
 {
@@ -158,7 +141,6 @@ function clean_for_ha_repl()
     rm csql.err* CUBRID-* core.*
     find ~/build ~/ERROR_BACKUP -mtime +15 | xargs rm -rf
 }
-
 
 function mail_send {
     run_mail_send "$@" 

@@ -27,7 +27,7 @@
 export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
 JAVA_CPS=$COMMON_HOME/lib/cubridqa-common.jar
 
-export KEY_OS_PWD_DEFAULT=`awk -F '=' '/os.pwd.default/ {print $2}' $COMMON_HOME/conf/common.properties|tr -d '\r'`
+export KEY_SSH_PWD_DEFAULT=`awk -F '=' '/ssh.pwd.default/ {print $2}' $COMMON_HOME/conf/common.properties|tr -d '\r'`
 export KEY_SSH_PORT_DEFAULT=`awk -F '=' '/ssh.port.default/ {print $2}' $COMMON_HOME/conf/common.properties|tr -d '\r'`
 export KEY_GIT_PWD_DEFAULT=`awk -F '=' '/git.pwd/ {print $2}' $COMMON_HOME/conf/common.properties|tr -d '\r'`
 
