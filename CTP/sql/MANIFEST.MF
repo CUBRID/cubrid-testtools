@@ -1,4 +1,3 @@
 Manifest-Version: 2.0
 Main-Class: com.navercorp.cubridqa.cqt.console.ConsoleAgent
-Class-Path: ../../common/lib/cubridqa-common.jar avalon-framework-4.1.5.jar javax.el-2.2.0.v201108011116.jar javax.servlet.jsp-2.2.0.v201112011158.jar jaxen-1.1.6.jar
-jetty-webapp-8.1.9.v20130131.jar org.apache.jasper.glassfish-2.2.2.v201112011158.jar servlet-api-3.0.jar xstream-1.2.2.jar
+Class-Path: ../../common/lib/cubridqa-common.jar avalon-framework-4.1.5.jar javax.el-2.2.0.v201108011116.jar javax.servlet.jsp-2.2.0.v201112011158.jar jaxen-1.1.6.jar jetty-webapp-8.1.9.v20130131.jar org.apache.jasper.glassfish-2.2.2.v201112011158.jar servlet-api-3.0.jar xstream-1.2.2.jar
