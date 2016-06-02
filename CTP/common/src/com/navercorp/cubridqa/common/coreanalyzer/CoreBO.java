@@ -24,6 +24,7 @@
  */
 package com.navercorp.cubridqa.common.coreanalyzer;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.sql.Connection;
@@ -35,15 +36,18 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import com.navercorp.cubridqa.common.CommonUtils;
+
 public class CoreBO {
 
 	Properties props;
 
 	public CoreBO() throws IOException, ClassNotFoundException {
-		String coreHome = System.getenv("COMMON_HOME");
-		props = CommonUtil.getProperties(CommonUtil.concatFile(((coreHome == null) ? "" : coreHome + "/") + "conf", "db.conf"));
+		String commonHome = CommonUtils.getEnvInFile("COMMON_HOME");
+		String confFile = commonHome + File.separator + "conf" + File.separator + "common.properties";
+		props = CommonUtils.getConfig(confFile);
 
-		Class.forName(props.getProperty("jdbc.driver", "cubrid.jdbc.driver.CUBRIDDriver"));
+		Class.forName(props.getProperty("dailydb.driver"));
 	}
 
 	public void insertCoreIssue(IssueBean bean) throws SQLException {
@@ -204,9 +208,9 @@ public class CoreBO {
 	}
 
 	private Connection getConnection() throws SQLException {
-		String jdbcUrl = props.getProperty("url");
-		String jdbcUser = props.getProperty("user");
-		String jdbcPwd = props.getProperty("pwd");
+		String jdbcUrl = props.getProperty("dailydb.url");
+		String jdbcUser = props.getProperty("dailydb.user");
+		String jdbcPwd = props.getProperty("dailydb.pwd");
 		Connection conn = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPwd);
 		return conn;
 	}

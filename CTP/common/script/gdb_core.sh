@@ -44,6 +44,9 @@ then
 elif [ `echo $coreloc|grep "csql"|wc -l` -ge 1 ]
 then
     coreloc=csql
+elif [ `echo $coreloc|grep "cubrid "|wc -l` -ge 1 ]
+then
+    coreloc=cub_admin
 else
     echo "analyze file command failed"
     exit

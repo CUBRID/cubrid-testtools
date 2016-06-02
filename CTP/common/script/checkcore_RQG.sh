@@ -23,13 +23,15 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
+export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
+
 dir=$1
 for x in `find $dir -name "*core\.[0-9]*"|grep -v "known"`
 do
     file $x >temp
     if [ `cat temp |grep cub_server|wc -l` -gt 0 ]
     then
-    sh analyzer.sh $x >temp
+    sh $COMMON_HOME/script/analyzer.sh $x >temp
     if grep 'Please ignore this core file' temp >/dev/null
     then
         num=`grep "ISSUE RESULT" temp|sed 's/^.*CUBRIDSUS-//g'`
