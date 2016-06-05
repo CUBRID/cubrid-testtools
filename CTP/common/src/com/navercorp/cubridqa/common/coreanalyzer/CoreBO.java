@@ -43,9 +43,8 @@ public class CoreBO {
 	Properties props;
 
 	public CoreBO() throws IOException, ClassNotFoundException {
-		String commonHome = CommonUtils.getEnvInFile("COMMON_HOME");
-		String confFile = commonHome + File.separator + "conf" + File.separator + "common.properties";
-		props = CommonUtils.getConfig(confFile);
+		
+		props = com.navercorp.cubridqa.common.Constants.COMMON_DAILYQA_CONF;
 
 		Class.forName(props.getProperty("dailydb.driver"));
 	}

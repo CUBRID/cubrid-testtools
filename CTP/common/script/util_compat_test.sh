@@ -39,8 +39,8 @@ testver=''
 upscenario=''
 needrun=''
 usetar=''
-svnuser="BDS_CUBRID"
-svnpassword="zbqmflem1"
+svnuser=""
+svnpassword=""
 test_type=''
 testver=''
 test_case=''
@@ -61,7 +61,7 @@ s_url=""
 img_url=""
 target_test=""
 scenario_home="$HOME/dailyqa"
-k_url="http://10.98.133.104:8080/userContent/daily_build/RELEASED"
+k_url=""
 
 while [ $# -ne 0 ]; do
     case $1 in

@@ -24,16 +24,12 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
-
-JAVA_CPS=$COMMON_HOME/lib/cubridqa-common.jar
-
-`grep -E "^grepo_service_url" $COMMON_HOME/conf/common.properties | xargs -i echo export {} `
-
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+JAVA_CPS=${CTP_HOME}/common/lib/cubridqa-common.jar
 if [ "$OSTYPE" == "cygwin" ]
 then
-	JAVA_CPS=`cygpath -wpm $JAVA_CPS`
+    JAVA_CPS=`cygpath -wpm $JAVA_CPS`
 fi
 
-"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.grepo.UpgradeMain "$@"
-
+`grep -E "^grepo_service_url" $CTP_HOME/conf/dailyqa.conf | xargs -i echo export {} `
+"$JAVA_HOME/bin/java" -cp $JAVA_CPS com.navercorp.cubridqa.common.grepo.UpgradeMain "$@"

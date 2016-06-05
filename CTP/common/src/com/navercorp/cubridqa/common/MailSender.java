@@ -61,7 +61,7 @@ public class MailSender {
 		options.addOption("content", true, "the content of mail");
 		options.addOption("help", false, "List help");
 		
-		Properties props = CommonUtils.getConfig("conf" + File.separator + "common.properties");
+		Properties props = Constants.COMMON_DAILYQA_CONF;
 		
 		InternetAddress from = new InternetAddress(props.getProperty("mail.from.address"), props.getProperty("mail.from.nickname"));
 		String dearContent = "";

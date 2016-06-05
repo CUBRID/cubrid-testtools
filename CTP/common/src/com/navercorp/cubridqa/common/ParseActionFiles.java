@@ -40,7 +40,7 @@ public class ParseActionFiles {
 		}
 		
 		System.out.print("#!/bin/sh\n");
-		System.out.print("cd $COMMON_HOME/\n");		
+		System.out.print("cd ${CTP_HOME}/common/\n");		
 		System.out.print(getCommonEnv());
 		System.out.print("source ./script/util_common.sh\n");
 		System.out.print("\n");
@@ -84,6 +84,7 @@ public class ParseActionFiles {
 					result.append(getCommonEnv());
 					needEOF = true;
 				}
+				result.append("echo HOST: ").append(params).append("\n");
 			} else {
 				result.append(line).append("\n");
 			}

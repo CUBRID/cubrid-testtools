@@ -46,15 +46,12 @@ public class CommitConfigFileIntoDB {
 	Properties props;
 
 	public CommitConfigFileIntoDB() {
-		String commonHome = CommonUtils.getEnvInFile("COMMON_HOME");
-
-		String confFile = commonHome + File.separator + "conf" + File.separator + "common.properties";
-		props = CommonUtils.getConfig(confFile);
+		props = Constants.COMMON_DAILYQA_CONF;
 		String driver = props.getProperty("dailydb.driver");
 		try {
 			Class.forName(driver);
 		} catch (Exception e) {
-			System.out.println("[ERROR] fail to load JDBC Driver, please refer to dailydb.driver parameter in conf/common.properties file.");
+			System.out.println("[ERROR] fail to load JDBC Driver, please refer to dailydb.driver parameter in conf/dailyqa.conf file.");
 		}
 	}
 

@@ -24,9 +24,9 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
 
-baseHome=$COMMON_HOME
+baseHome=$CTP_HOME/common
 
 local_git_source_home=
 branch_name=
@@ -66,9 +66,9 @@ done
 [ -z "$branch_name" ] && echo "please branch_name parameter!" && exit 1
 
 
-gitUser=`awk -F '=' '/git.user/ {print $2}' ${baseHome}/conf/common.properties|tr -d '\r'`
-gitPwd=`awk -F '=' '/git.pwd/ {print $2}' ${baseHome}/conf/common.properties|tr -d '\r'`
-gitMail=`awk -F '=' '/git.email/ {print $2}' ${baseHome}/conf/common.properties|tr -d '\r'`
+gitUser=`awk -F '=' '/git.user/ {print $2}' ${CTP_HOME}/conf/dailyqa.conf|tr -d '\r'`
+gitPwd=`awk -F '=' '/git.pwd/ {print $2}' ${CTP_HOME}/conf/dailyqa.conf|tr -d '\r'`
+gitMail=`awk -F '=' '/git.email/ {print $2}' ${CTP_HOME}/conf/dailyqa.conf|tr -d '\r'`
 
 #init config
 git config --global user.name "${gitUser}"

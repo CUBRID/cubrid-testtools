@@ -24,9 +24,9 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+. ${CTP_HOME}/common/script/util_file_param.sh
 
-. $COMMON_HOME/util_file_param.sh
 set -x
 gUrl=
 sUrl=

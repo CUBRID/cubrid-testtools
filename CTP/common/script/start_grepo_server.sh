@@ -24,13 +24,13 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
-
-JAVA_CPS=$COMMON_HOME/lib/cubridqa-common.jar:$COMMON_HOME/grepo/lib/org.eclipse.jgit-4.3.1.201605051710-r.jar:$COMMON_HOME/grepo/lib/org.osgi.core-4.3.0.jar:$COMMON_HOME/bin
-
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+JAVA_CPS=${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/common/grepo/lib/org.eclipse.jgit-4.3.1.201605051710-r.jar:${CTP_HOME}/common/grepo/lib/org.osgi.core-4.3.0.jar:${CTP_HOME}/common/grepo/bin
 if [ "$OSTYPE" == "cygwin" ]
 then
-	JAVA_CPS="`cygpath -wpm $JAVA_CPS`"
+    JAVA_CPS=`cygpath -wpm $JAVA_CPS`
 fi
-(cd $COMMON_HOME; mkdir bin >/dev/null 2>&1; find grepo/src -type f -name "*.java" | xargs -t javac -cp "$JAVA_CPS" -d bin)
-(cd $COMMON_HOME;"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.grepo.service.RepoServiceImpl "$@")
+
+mkdir -p ${CTP_HOME}/common/grepo/bin >/dev/null 2>&1
+(cd $CTP_HOME/common; find grepo/src -type f -name "*.java" | xargs -t javac -cp "$JAVA_CPS" -d grepo/bin)
+"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.grepo.service.RepoServiceImpl "$@"
