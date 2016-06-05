@@ -26,10 +26,10 @@
 
 #set -x
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
-export CURRENT_TOOL_HOME=$CTP_HOME/common/sched
-export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$PATH
-chmod u+x $CTP_HOME/bin/*
-chmod u+x $CTP_HOME/common/script*
+export CURRENT_TOOL_HOME=${CTP_HOME}/common/sched
+export PATH=$CTP_HOME/bin:${CTP_HOME}/common/script:$PATH
+chmod u+x ${CTP_HOME}/bin/*
+chmod u+x ${CTP_HOME}/common/script*
 cd ${CURRENT_TOOL_HOME}
 
 ##variable for script
@@ -132,13 +132,6 @@ function consumerTimer()
 }
 
 
-function gotoHomeDir()
-{
-	cd $(dirname ${0})
-	script_path=`pwd`
-        echo $script_path
-}
-
 function updateCodes()
 { 
 	curDir=`pwd`
@@ -178,7 +171,7 @@ function startAgent()
 	rm -rf result
 	mkdir result	
 	queueName=$1
-	(cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $queueName $isDebug $onlyMax >./result/$fileName)
+	(cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $queueName $isDebug $onlyMax > ${CTP_HOME}/common/sched/result/$fileName)
     msgId=`cat ${CTP_HOME}/common/sched/result/$fileName |grep MSG_ID|awk -F ':' '{print $2}'`
 }
 
@@ -319,7 +312,7 @@ function analyzeMessageInfo()
 
 function hasTestBuild()
 {
-	analyzeMessageInfo ./result/$fileName
+	analyzeMessageInfo ${CTP_HOME}/common/sched/result/$fileName
   	if [ "$build_no" ] && [ "$scenario" ] && [ "$branch" ] 
 	then
 		hasBuild="true"
@@ -331,7 +324,7 @@ function hasTestBuild()
 ##Consumer MAIN##
 #get consumer script 
 echo "-------------------------- Start Test -----------------------------"
-gotoHomeDir
+cd ${CURRENT_TOOL_HOME}
 acceptParameters $queue $s_exec
 checkConsumerStarted
 
@@ -378,7 +371,7 @@ do
 		if [ "$isDebug" == "--debug" ]
 		then
 			echo "-------------------------- Debug Message Information -----------------------------"
-			cat ./result/$fileName
+			cat ${CTP_HOME}/common/sched/result/$fileName
 			echo "----------------------------------------------------------------------------------"
 			exit 0
 		elif [ "$hasBuild" == "true" ]
