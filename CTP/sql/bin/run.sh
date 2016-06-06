@@ -738,8 +738,22 @@ function do_test()
 
      javaArgs="${scenario_repo_root}?db=${db_name}_qa"
      
-        
-     "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $config_file_ext $javaArgs 2>&1 >> $log_filename 
+     if [ "$sql_interactive" == "yes" ];then
+        export CLASSPATH=${CLASSPATH}${separator}${CPCLASSES}
+        export log_file_in_interactive=$log_filename
+        export sceanrio_type_in_interactive=${scenario_category}
+        export scenario_alias_in_interactive=${scenario_alias}
+        export bits_in_interactive=${cubrid_bits}
+        export db_name_in_interactive=$db_name
+        export client_charset_in_interactive=$config_file_ext
+        (export PS1="sql>"; source ${CTP_HOME}/sql/bin/interactive.sh; help; bash)
+	
+        #do clean for interactive mode
+        do_clean
+     else   
+     	"$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $config_file_ext $javaArgs 2>&1 >> $log_filename 
+     fi
+
      )
      cd $curDir
 }
