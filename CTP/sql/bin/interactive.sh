@@ -28,7 +28,7 @@ function help()
    echo ""
    echo "Usage: <arg>
                    help         print the usage of interactive
-                   run <arg>    the path of case file to run
+                   run <arg>    <arg> is the path of case file to run
                    quit         quit interactive mode
            "
    echo ""
