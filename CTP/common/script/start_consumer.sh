@@ -168,8 +168,8 @@ function updateCodes()
 
 function startAgent()
 {	
-	rm -rf result
-	mkdir result	
+	rm -rf ${CTP_HOME}/common/sched/result
+	mkdir -p ${CTP_HOME}/common/sched/result	
 	queueName=$1
 	(cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $queueName $isDebug $onlyMax > ${CTP_HOME}/common/sched/result/$fileName)
     msgId=`cat ${CTP_HOME}/common/sched/result/$fileName |grep MSG_ID|awk -F ':' '{print $2}'`
