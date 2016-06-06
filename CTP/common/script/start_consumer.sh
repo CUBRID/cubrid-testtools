@@ -30,6 +30,8 @@ export CURRENT_TOOL_HOME=${CTP_HOME}/common/sched
 export PATH=$CTP_HOME/bin:${CTP_HOME}/common/script:$PATH
 chmod u+x ${CTP_HOME}/bin/*
 chmod u+x ${CTP_HOME}/common/script*
+mkdir -p ${CTP_HOME}/common/sched/result/ >/dev/null 2>&1
+mkdir -p ${CTP_HOME}/common/sched/statsu/ >/dev/null 2>&1
 cd ${CURRENT_TOOL_HOME}
 
 ##variable for script
@@ -56,7 +58,6 @@ isWin=""
 onlyMax=""
 withoutSync=0
 clspath="$CLASSPATH"
-schedule_dir="c:"
 msgId=""
 statFile="${CTP_HOME}/common/sched/status/STATUS.TXT"
 branchName=master
@@ -162,14 +163,12 @@ function updateCodes()
 		exit
 	fi
 
-    git remote rm auto_update_url 2>/dev/null
 	cd $curDir
 }
 
 function startAgent()
 {	
-	rm -rf ${CTP_HOME}/common/sched/result
-	mkdir -p ${CTP_HOME}/common/sched/result	
+	rm -rf ${CTP_HOME}/common/sched/result/*
 	queueName=$1
 	(cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $queueName $isDebug $onlyMax > ${CTP_HOME}/common/sched/result/$fileName)
     msgId=`cat ${CTP_HOME}/common/sched/result/$fileName |grep MSG_ID|awk -F ':' '{print $2}'`
@@ -342,7 +341,7 @@ do
  			updateCodes $branchName
 		fi
 	
-		existsMsgId=`cat ./status/${x} 2>&1 /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
+		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2>&1 /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
 		isStartByData=`echo $existsMsgId|grep "[^0-9]"|wc -l`
 		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
 		then
@@ -361,7 +360,7 @@ do
 				consumerTimer ${existsMsgId} "stop"
 				contimeENDTIME=`getTimeStamp`
 				echo "END_CONTINUE_TIME:${contimeENDTIME}"
-				echo '' > ./status/${x}
+				echo '' > ${CTP_HOME}/common/sched/status/${x}
 				echo
 			fi
 		fi
@@ -384,8 +383,8 @@ do
 				then
 					rm -f $statFile
 				else
-					mkdir -p "status"
-                                fi
+					mkdir -p ${CTP_HOME}/common/sched/status
+                fi
 					
 				touch $statFile
 				TestTime=`getTimeStamp`
@@ -394,8 +393,8 @@ do
 			
 				echo
 				echo "Log msg id into queue file!"
-				echo "MSG_ID:$msgId" > ./status/$x
-				echo "START_TIME:${TestTime}" >> ./status/$x
+				echo "MSG_ID:$msgId" > ${CTP_HOME}/common/sched/status/$x
+				echo "START_TIME:${TestTime}" >> ${CTP_HOME}/common/sched/status/$x
 				echo
 
 				consumerTimer $msgId "start"
@@ -407,7 +406,7 @@ do
 				ENDTIME=`getTimeStamp`
 				echo 
 				echo "Clean msg id from queue file"
-				echo '' > ./status/$x
+				echo '' > ${CTP_HOME}/common/sched/status/$x
 				echo "END_TIME:${ENDTIME}"
 				echo
 			else

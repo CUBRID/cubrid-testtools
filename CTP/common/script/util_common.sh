@@ -37,7 +37,7 @@ function releaseSharedmemory()
 
 function kill_process {
    all_pids=$(calc_pids "$$")
-   ps -u $USER -o pid | grep -v "PID" | grep -E -v "$all_pids" |xargs -i kill -9 {}
+   kill -9 `ps -u $USER -o pid | grep -v "PID" | grep -E -v "$all_pids" | grep -vw $$`
 }
 
 function find_ppid {
