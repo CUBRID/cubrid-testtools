@@ -166,9 +166,10 @@ public class CTP {
 
 				endDate = new java.util.Date();
 				elapseTime = (long) ((endDate.getTime() - startDate.getTime()) / 1000.0);
-				System.out.println("[" + taskLabel + "] TEST END (" + endDate + ")");
-
-				System.out.println("[" + taskLabel + "] ELAPSE TIME: " + elapseTime + " seconds");
+				if (!interactiveMode) {
+					System.out.println("[" + taskLabel + "] TEST END (" + endDate + ")");
+					System.out.println("[" + taskLabel + "] ELAPSE TIME: " + elapseTime + " seconds");
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.out.println("[" + taskLabel + "] ERROR: " + e.getMessage());
@@ -183,10 +184,14 @@ public class CTP {
 		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
 		boolean enableMemoryLeak = CommonUtils.valueOfBoolean(config.get("sql", "enable_memory_leak"));
 		
-		String interactiveStmt = interactiveMode ? "export sql_interactive=yes;" : "";
-		String scriptFilename = enableMemoryLeak? "run_memory.sh" : "run.sh";
+		String runStmt = "sh ${CTP_HOME}/sql/bin/" + (enableMemoryLeak ? "run_memory.sh" : "run.sh") + " -s " + suite + " -f " + configFilePath;
 		
-		LocalInvoker.exec(interactiveStmt + "sh ${CTP_HOME}/sql/bin/" + scriptFilename + " -s " + suite + " -f " + configFilePath, getShellType(false), true);
+		if(interactiveMode) {
+			addContScript("export sql_interactive=yes");
+			addContScript(runStmt);
+		} else {
+			LocalInvoker.exec(runStmt, getShellType(false), true);
+		}		
 	}
 	
 	private static void executeSQL_By_CCI(IniData config, String suite) throws IOException {
@@ -282,5 +287,12 @@ public class CTP {
 
 	private static void showVersion() {
 		System.out.println("CUBRID Test Program (CTP) " + Version.getVersion());
+	}
+	
+	private static void addContScript(String stmt) {
+		if (stmt == null || stmt.trim().equals("")) {
+			return;
+		}
+		System.out.print(stmt.trim() + "    #SCRIPTCONT\n");
 	}
 }

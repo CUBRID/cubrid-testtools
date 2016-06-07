@@ -26,6 +26,7 @@
 function help()
 {
    echo "
+======================================  Welcome to Interactive Mode ======================================  
 Usage: 
     help         print the usage of interactive
     run <arg>    the path of case file to run
