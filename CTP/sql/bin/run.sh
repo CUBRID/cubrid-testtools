@@ -729,10 +729,9 @@ function do_test()
           do_clean
      else   
      	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $config_file_ext $javaArgs 2>&1 >> $log_filename 
+          cd $curDir
      fi
-
-     )
-     cd $curDir
+    )
 }
 
 
