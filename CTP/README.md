@@ -63,6 +63,11 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
     ```
     $ bin/ctp.sh medium -c ./conf/medium.conf
     ```
+    
+* For **Interactive** mode test:
+    ```
+    $ bin/ctp.sh sql|medium [-c ./conf/sql.conf|./conf/medium.conf|./conf/sample.conf] --interactive
+    ```
 
 #### Examine the results
 * Once it completes, you will see a result message.
