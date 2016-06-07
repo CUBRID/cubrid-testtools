@@ -152,7 +152,7 @@ public class ConsoleAgent {
 
 			// Print Result Root Dir
 			System.out.println("Result Root Dir:" + test.getResult_dir());
-			LogUtil.log("Result Root Dir:", test.getResult_dir());
+			LogUtil.log(bo.logId, "Result Root Dir:" + test.getResult_dir());
 
 			bo.setPrintType(printResult ? Executor.PRINT_STDOUT
 					: Executor.PRINT_UI);

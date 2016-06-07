@@ -120,6 +120,13 @@ public class ConsoleBO extends Executor {
 		this.useMonitor = usemonitor;
 		this.saveEveryone = saveeveryone;
 		this.logId = "ConsoleBO";
+		initConsoleBoLog(this.logId);
+	}
+	
+	private void initConsoleBoLog(String logId){
+		LogUtil.clearLog(logId);
+		LogUtil.log(logId, "[time]clearLog:"
+				+ (System.currentTimeMillis() - startTime));
 	}
 
 	/**
@@ -1700,13 +1707,7 @@ public class ConsoleBO extends Executor {
 	 * 
 	 */
 	protected void init() {
-		this.logId = "ConsoleBO";
-
 		long startTime = System.currentTimeMillis();
-		LogUtil.clearLog(logId);
-		LogUtil.log(logId, "[time]clearLog:"
-				+ (System.currentTimeMillis() - startTime));
-
 		startTime = System.currentTimeMillis();
 		String dbVersion = configureUtil.getProperty("dbversion");
 		String dbBuild = configureUtil.getProperty("dbbuildnumber");

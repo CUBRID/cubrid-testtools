@@ -49,6 +49,7 @@ public class CTP {
 	private static Options OPTIONS = new Options();
 	static {
 		OPTIONS.addOption("c", "config", true, "provide a configuration file");
+		OPTIONS.addOption(null, "interactive", false, "interactive mode to run single test case or cases in a folder");
 		OPTIONS.addOption("h", "help", false, "show help");
 		OPTIONS.addOption("v", "version", false, "show version");
 	}
@@ -123,6 +124,7 @@ public class CTP {
 		String taskLabel;
 		long elapseTime;
 		Date startDate, endDate;
+		boolean interactiveMode = cmd.hasOption("interactive");
 		for (String task : taskList) {
 			taskLabel = task.toUpperCase();
 			startDate = new java.util.Date();
@@ -140,19 +142,19 @@ public class CTP {
 				System.out.println();
 				switch (component) {
 				case SQL:
-					executeSQL(getConfigData(taskLabel, configFilename, "sql"), "sql");
+					executeSQL(getConfigData(taskLabel, configFilename, "sql"), "sql", interactiveMode);
 					break;
 				case MEDIUM:
-					executeSQL(getConfigData(taskLabel, configFilename, "medium"), "medium");
+					executeSQL(getConfigData(taskLabel, configFilename, "medium"), "medium", interactiveMode);
 					break;
 				case KCC:
-					executeSQL(getConfigData(taskLabel, configFilename, "kcc"), "kcc");
+					executeSQL(getConfigData(taskLabel, configFilename, "kcc"), "kcc", interactiveMode);
 					break;
 				case NEIS05:
-					executeSQL(getConfigData(taskLabel, configFilename, "neis05"), "neis05");
+					executeSQL(getConfigData(taskLabel, configFilename, "neis05"), "neis05", interactiveMode);
 					break;
 				case NEIS08:
-					executeSQL(getConfigData(taskLabel, configFilename, "neis08"), "neis08");
+					executeSQL(getConfigData(taskLabel, configFilename, "neis08"), "neis08", interactiveMode);
 					break;
 				case SQL_BY_CCI:
 					executeSQL_By_CCI(getConfigData(taskLabel, configFilename, "sql_by_cci"), "sql_by_cci");
@@ -164,9 +166,10 @@ public class CTP {
 
 				endDate = new java.util.Date();
 				elapseTime = (long) ((endDate.getTime() - startDate.getTime()) / 1000.0);
-				System.out.println("[" + taskLabel + "] TEST END (" + endDate + ")");
-
-				System.out.println("[" + taskLabel + "] ELAPSE TIME: " + elapseTime + " seconds");
+				if (!interactiveMode) {
+					System.out.println("[" + taskLabel + "] TEST END (" + endDate + ")");
+					System.out.println("[" + taskLabel + "] ELAPSE TIME: " + elapseTime + " seconds");
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.out.println("[" + taskLabel + "] ERROR: " + e.getMessage());
@@ -174,16 +177,21 @@ public class CTP {
 		}
 	}
 
-	private static void executeSQL(IniData config, String suite) throws IOException {
+	private static void executeSQL(IniData config, String suite, boolean interactiveMode) throws IOException {
 		// String newfileName = CommonUtils.concatFile(ctpHome, "conf");
 		// newfileName = CommonUtils.concatFile(newfileName, ".sql.conf");
 		// config.saveAs(newfileName, suite, "sql");
 		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
 		boolean enableMemoryLeak = CommonUtils.valueOfBoolean(config.get("sql", "enable_memory_leak"));
-				
-		String scriptFilename = enableMemoryLeak? "run_memory.sh" : "run.sh";
 		
-		LocalInvoker.exec("sh ${CTP_HOME}/sql/bin/" + scriptFilename + " -s " + suite + " -f " + configFilePath, getShellType(false), true);
+		String runStmt = "sh ${CTP_HOME}/sql/bin/" + (enableMemoryLeak ? "run_memory.sh" : "run.sh") + " -s " + suite + " -f " + configFilePath;
+		
+		if(interactiveMode) {
+			addContScript("export sql_interactive=yes");
+			addContScript(runStmt);
+		} else {
+			LocalInvoker.exec(runStmt, getShellType(false), true);
+		}		
 	}
 	
 	private static void executeSQL_By_CCI(IniData config, String suite) throws IOException {
@@ -279,5 +287,12 @@ public class CTP {
 
 	private static void showVersion() {
 		System.out.println("CUBRID Test Program (CTP) " + Version.getVersion());
+	}
+	
+	private static void addContScript(String stmt) {
+		if (stmt == null || stmt.trim().equals("")) {
+			return;
+		}
+		System.out.print(stmt.trim() + "    #SCRIPTCONT\n");
 	}
 }
