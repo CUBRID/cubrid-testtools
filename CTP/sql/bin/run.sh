@@ -1,28 +1,5 @@
 #!/bin/bash
 # 
-# Copyright (c) 2016, Search Solution Corporation. All rights reserved.
-# 
-# Redistribution and use in source and binary forms, with or without 
-# modification, are permitted provided that the following conditions are met:
-# 
-#   * Redistributions of source code must retain the above copyright notice, 
-#     this list of conditions and the following disclaimer.
-# 
-#   * Redistributions in binary form must reproduce the above copyright 
-#     notice, this list of conditions and the following disclaimer in 
-#     the documentation and/or other materials provided with the distribution.
-# 
-#   * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
-#     derived from this software without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
-# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
-# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
-#
 #Copyright (c) 2016, Search Solution Corporation? All rights reserved.
 #
 #Redistribution and use in source and binary forms, with or without 
@@ -738,8 +715,22 @@ function do_test()
 
      javaArgs="${scenario_repo_root}?db=${db_name}_qa"
      
-        
-     "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $config_file_ext $javaArgs 2>&1 >> $log_filename 
+     if [ "$sql_interactive" == "yes" ];then
+         (export CLASSPATH=${CLASSPATH}${separator}${CPCLASSES}
+          export log_file_in_interactive=$log_filename
+          export sceanrio_type_in_interactive=${scenario_category}
+          export scenario_alias_in_interactive=${scenario_alias}
+          export bits_in_interactive=${cubrid_bits}
+          export db_name_in_interactive=$db_name
+          export client_charset_in_interactive=$config_file_ext
+          export PS1="sql> ";cd ${scenario_repo_root}; source ${CTP_HOME}/sql/bin/interactive.sh; help; bash)
+	
+          #do clean for interactive mode
+          do_clean
+     else   
+     	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $config_file_ext $javaArgs 2>&1 >> $log_filename 
+     fi
+
      )
      cd $curDir
 }
@@ -748,8 +739,9 @@ function do_test()
 function do_summary_and_clean()
 {
      #get summary info
+     [ "$sql_interactive" == "yes" ] && return
      coreCount=0
-     resultDirTemp=`cat ${log_filename}|grep "Result Root Dir"`
+     resultDirTemp=`cat ${log_filename}|grep "^Result Root Dir"|head -n 1`
      resultDir=${resultDirTemp#*:}
      resultSummaryInfoFile=${resultDir}/main.info
      [ ! -f $resultSummaryInfoFile ] && echo "No Results!! please confirm your scenario path include valid case script(the current scenairo path:$scenario_repo_root)" && exit 1
