@@ -4,7 +4,6 @@
 	<classpathentry kind="src" path="common/sched/src"/>
 	<classpathentry kind="src" path="common/grepo/src"/>
 	<classpathentry kind="src" path="common/src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="common/lib/commons-cli-1.2.jar"/>
 	<classpathentry kind="lib" path="common/lib/commons-collections-3.1.jar"/>
 	<classpathentry kind="lib" path="common/lib/commons-dbcp-1.2.2.jar"/>
@@ -36,11 +35,15 @@
 	<classpathentry kind="lib" path="sql/lib/xstream-1.2.2.jar"/>
 	<classpathentry kind="lib" path="common/grepo/lib/org.eclipse.jgit-4.3.1.201605051710-r.jar"/>
 	<classpathentry kind="lib" path="common/grepo/lib/org.osgi.core-4.3.0.jar"/>
-	<classpathentry kind="lib" path="common/sched/lib/activemq-all-5.8.0.jar"/>
-	<classpathentry kind="lib" path="common/sched/lib/activemq-pool-5.8.0.jar"/>
-	<classpathentry kind="lib" path="common/sched/lib/c3p0-0.9.1.1.jar"/>
 	<classpathentry kind="lib" path="common/sched/lib/cubridqa-scheduler.jar"/>
 	<classpathentry kind="lib" path="common/sched/lib/quartz-2.2.1.jar"/>
 	<classpathentry kind="lib" path="common/sched/lib/quartz-jobs-2.2.1.jar"/>
+	<classpathentry kind="lib" path="common/sched/lib/activemq-client-5.8.0.jar"/>
+	<classpathentry kind="lib" path="common/sched/lib/geronimo-jms_1.1_spec-1.1.1.jar"/>
+	<classpathentry kind="lib" path="common/sched/lib/activemq-pool-5.8.0.jar"/>
+	<classpathentry kind="lib" path="common/sched/lib/activemq-broker-5.8.0.jar"/>
+	<classpathentry kind="lib" path="common/sched/lib/geronimo-j2ee-management_1.1_spec-1.0.1.jar"/>
+	<classpathentry kind="lib" path="common/sched/lib/hawtbuf-1.9.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

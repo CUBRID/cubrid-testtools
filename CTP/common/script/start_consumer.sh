@@ -24,14 +24,14 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-#set -x
+set -x
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
 export CURRENT_TOOL_HOME=${CTP_HOME}/common/sched
 export PATH=$CTP_HOME/bin:${CTP_HOME}/common/script:$PATH
 chmod u+x ${CTP_HOME}/bin/*
 chmod u+x ${CTP_HOME}/common/script*
 mkdir -p ${CTP_HOME}/common/sched/result/ >/dev/null 2>&1
-mkdir -p ${CTP_HOME}/common/sched/statsu/ >/dev/null 2>&1
+mkdir -p ${CTP_HOME}/common/sched/status/ >/dev/null 2>&1
 cd ${CURRENT_TOOL_HOME}
 
 ##variable for script

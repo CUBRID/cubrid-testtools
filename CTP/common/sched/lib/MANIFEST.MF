@@ -1,3 +1,2 @@
 Manifest-Version: 2.0
-Main-Class: com.navercorp.cubridqa.cqt.console.ConsoleAgent
-Class-Path: ../../lib/cubridqa-common.jar activemq-all-5.8.0.jar activemq-pool-5.8.0.jar c3p0-0.9.1.1.jar quartz-2.2.1.jar quartz-jobs-2.2.1.jar
+Class-Path: ../../lib/cubridqa-common.jar activemq-broker-5.8.0.jar activemq-client-5.8.0.jar  activemq-pool-5.8.0.jar geronimo-j2ee-management_1.1_spec-1.0.1.jar geronimo-jms_1.1_spec-1.1.1.jar hawtbuf-1.9.jar quartz-2.2.1.jar quartz-jobs-2.2.1.jar

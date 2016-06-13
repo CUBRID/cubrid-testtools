@@ -50,6 +50,11 @@ Author: The Apache Software Foundation
 Website: https://commons.apache.org/proper/commons-pool/  
 License: [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
+#### Apache Geronimo j2ee 1.1
+Author: The Apache Software Foundation
+Website: http://geronimo.apache.org/  
+License: [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)  
+
 #### Apache HttpComponents 4.2.4/5
 Author: The Apache Software Foundation  
 Website: https://hc.apache.org/index.html
@@ -59,11 +64,6 @@ License: [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.
 Author: masukomi and other contributors  
 Website: https://github.com/masukomi/aspirin  
 License: [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt)
-
-#### c3p0 0.9.1.1
-Author: Steve Waldman
-Website: http://www.mchange.com/projects/c3p0/
-License: [LGPL Version 2.1 or EPL Version 1.0](http://www.gnu.org/licenses/lgpl-2.1.html, http://www.eclipse.org/legal/epl-v10.html)
 
 #### dnsjava 2.0.8
 Author: Brian Wellington  
@@ -83,7 +83,12 @@ License: [CDDL Version 1.1 + GPL Version 2](https://glassfish.dev.java.net/publi
 #### Google Diff Match Patch 20121119
 Author: Google Inc.  
 Website: https://code.google.com/archive/p/google-diff-match-patch/  
-License: [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)  
+License: [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
+#### HawtBuf 1.9
+Author: Progress Software Corporation and/or its subsidiaries or affiliates
+Website: http://hawtbuf.fusesource.org/
+License: [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 #### Ini4j 0.5.4
 Author: Ivan Szkiba  
@@ -116,7 +121,7 @@ Website: http://www.eclipse.org/jetty/about.php
 License: [Apache License, Version 2.0 + Eclipse Public License, Version 1.0](http://www.eclipse.org/jetty/licenses.php)
 
 #### JGit 
-Author: Member Companies contributors 
+Author: Member and Companies contributors 
 Website: https://eclipse.org/jgit/
 License: [Eclipse Distribution License, Version 1.0](http://www.eclipse.org/org/documents/edl-v10.php)
 

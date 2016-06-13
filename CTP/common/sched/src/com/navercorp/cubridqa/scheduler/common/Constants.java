@@ -30,7 +30,7 @@ import com.navercorp.cubridqa.common.CommonUtils;
 public class Constants {
 	public static final String LINE_SEPARATOR = System.getProperty("line.separator");
 	
-	public final static String CTP_HOME = CommonUtils.getEnvInFile("CTP_HOME");
+	public final static String CTP_HOME = "E:\\git_repo_fanzaiqiang\\cubrid-testtools\\CTP";
 	
 	public static final String MSG_ID_DATE_FM = "yyMMdd-HHmmss-SSS";
 	
