@@ -192,7 +192,7 @@ public class TestUtil {
 		String version = PropertiesUtil.getValue("dbversion");
 		ret.append("_" + version);
 
-		ret.append("_" + (PropertiesUtil.getValue("dbbuildnumber")));
+		ret.append("." + (PropertiesUtil.getValue("dbbuildnumber")));
 
 		return ret.toString();
 	}
