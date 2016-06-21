@@ -441,6 +441,7 @@ function do_create_db()
 {
      echo "MAKE $db_name DATABASE (default size)..."
      curDir=`pwd`
+     mkdir -p ${cubrid_root_dir}/databases
      cd $cubrid_root_dir/databases
      if [ ! -d $db_name ]
      then
@@ -449,8 +450,8 @@ function do_create_db()
      else
   	rm -rf $db_name/* 2>&1 > /dev/null
           cd $db_name
-     fi
-  
+     fi 
+ 
    
      if [ $cubrid_ver_p1 -ge 9 -a $cubrid_ver_p2 -gt 1 ] || [ $cubrid_ver_p1 -ge 10 ]
      then
