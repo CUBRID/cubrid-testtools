@@ -441,22 +441,17 @@ function do_create_db()
 {
      echo "MAKE $db_name DATABASE (default size)..."
      curDir=`pwd`
-     cd $cubrid_root_dir
-     if [ -d "databases" ]
+     mkdir -p ${cubrid_root_dir}/databases
+     cd $cubrid_root_dir/databases
+     if [ ! -d $db_name ]
      then
-          cd databases
-          if [ ! -d $db_name ]
-          then
-               mkdir -p $db_name
-          else
-               rm -rf $db_name/* 2>&1 > /dev/null
-          fi
-          cd $db_name
+  	mkdir -p $db_name
+  	cd $db_name
      else
-          mkdir -p ${cubrid_root_dir}/databases/${db_name}
-          cd ${cubrid_root_dir}/databases/${db_name}
-     fi
-  
+  	rm -rf $db_name/* 2>&1 > /dev/null
+          cd $db_name
+     fi 
+ 
    
      if [ $cubrid_ver_p1 -ge 9 -a $cubrid_ver_p2 -gt 1 ] || [ $cubrid_ver_p1 -ge 10 ]
      then
