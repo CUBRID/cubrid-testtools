@@ -40,20 +40,6 @@ For example:
    echo ""
 }
 
-function get_os()
-{
-    osname=`uname`
-    case "$osname" in
-    	"Linux")
-		echo "Linux";;
-	"AIX")
-		echo "AIX";;
-	*)
-		echo "Windows_NT";;
-    esac
-}
-
-
 function run()
 {
    case_file=`readlink -f $1`
@@ -63,7 +49,7 @@ function run()
 	client_charset=$client_charset_in_interactive
    fi
 
-   os_type=`get_os|grep Windows|wc -l`
+   os_type=`uname|grep -i CYGWIN|wc -l`
    if [ $os_type -ne 0 ];then
 	case_file=`cygpath -wp $case_file`
    fi
