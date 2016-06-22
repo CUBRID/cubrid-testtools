@@ -40,6 +40,20 @@ For example:
    echo ""
 }
 
+function get_os()
+{
+    osname=`uname`
+    case "$osname" in
+    	"Linux")
+		echo "Linux";;
+	"AIX")
+		echo "AIX";;
+	*)
+		echo "Windows_NT";;
+    esac
+}
+
+
 function run()
 {
    case_file=`readlink -f $1`
@@ -47,6 +61,11 @@ function run()
    
    if [ !"$client_charset" ];then
 	client_charset=$client_charset_in_interactive
+   fi
+
+   os_type=`get_os|grep Windows|wc -l`
+   if [ $os_type -ne 0 ];then
+	case_file=`cygpath -wp $case_file`
    fi
   
    javaArgs="$case_file?db=${db_name_in_interactive}_qa"
@@ -96,4 +115,5 @@ function quit()
 export -f run
 export -f quit
 export -f help
+export -f get_os
 export -f print_summary
