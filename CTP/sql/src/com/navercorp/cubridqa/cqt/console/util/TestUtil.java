@@ -36,6 +36,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
@@ -183,11 +184,12 @@ public class TestUtil {
 //		long s = System.currentTimeMillis();
 //		date = Long.toString(s);
 		SimpleDateFormat sdf = new SimpleDateFormat("ddHHmmss");
+		Random rand = new Random();
 		try {
 			date = sdf.format(new Date());
 		} catch (Exception e) {
 		}
-		ret.append("_" + date);
+		ret.append("_" + date + rand.nextInt(99));
 
 		String version = PropertiesUtil.getValue("dbversion");
 		ret.append("_" + version);
