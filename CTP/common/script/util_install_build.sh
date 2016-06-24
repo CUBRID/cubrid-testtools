@@ -167,6 +167,14 @@ function installBuildOnWin()
 	rm -rf CUBRID-Windows*
 	wget $build_url
 	unzip $buildFile -d ./CUBRID
+
+	cd $CUBRID
+	if [ `ls -l | grep CUBRID |wc -l` -gt 0 ]
+	then
+ 		mv ./CUBRID/* ./
+		rm -rf CUBRID
+	fi
+	cd ..
 	echo "=====finish CUBRID Installation====="
 }
 

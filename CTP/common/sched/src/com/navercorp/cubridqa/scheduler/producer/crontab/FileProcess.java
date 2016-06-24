@@ -59,11 +59,10 @@ public class FileProcess {
 
 	String extConfig;
 	String extKeys;
-
+	
 	Properties msgProps;
 
-	public FileProcess(Configure conf, File exactFile, File[] exactMoreFiles, String pkgPattern, String pkgBits, String pkgType, String queue, String scenario, long delay, String extConfig,
-			String extKeys, Properties msgProps) {
+	public FileProcess(Configure conf, File exactFile, File[] exactMoreFiles, String pkgPattern, String pkgBits, String pkgType, String queue, String scenario, long delay, String extConfig, String extKeys, Properties msgProps) {
 		this.conf = conf;
 		this.pkgPattern = pkgPattern;
 		this.pkgBits = pkgBits;
@@ -80,12 +79,12 @@ public class FileProcess {
 		this.buildAbsolutePath = exactFile.getParentFile().getAbsolutePath();
 
 		this.extConfig = extConfig;
-		this.extKeys = extKeys;
+		this.extKeys = extKeys;		
 		this.msgProps = msgProps;
 	}
 
 	public void process() throws JMSException, NoSuchAlgorithmException, IOException {
-
+		
 		if (extConfig == null || extKeys == null) {
 			sendMessage(queue, scenario, 4, null, this.msgProps);
 		} else {
@@ -132,10 +131,10 @@ public class FileProcess {
 		String urls_kr_reop1 = null;
 		long maxCreateTime = 0;
 
-		urls = convToURL(conf, exactFile, storeId, buildId, false);
-		urls_kr = convToURL(conf, exactFile, storeId, buildId, true);
-		urls_kr_reop1 = convToKrRepo1Url(conf, exactFile, buildId);
-
+		urls = convToURL(conf, exactFile, storeId, false);
+		urls_kr = convToURL(conf, exactFile, storeId, true);
+		urls_kr_reop1 = convToKrRepo1Url(conf, exactFile);
+		
 		if (exactFile.lastModified() > maxCreateTime) {
 			maxCreateTime = exactFile.lastModified();
 		}
@@ -148,9 +147,9 @@ public class FileProcess {
 
 		if (this.exactMoreFiles != null) {
 			for (int i = 0; i < this.exactMoreFiles.length; i++) {
-				urls = convToURL(conf, exactMoreFiles[i], storeId, buildId, false);
-				urls_kr = convToURL(conf, exactMoreFiles[i], storeId, buildId, true);
-				urls_kr_reop1 = convToKrRepo1Url(conf, exactMoreFiles[i], buildId);
+				urls = convToURL(conf, exactMoreFiles[i], storeId, false);
+				urls_kr = convToURL(conf, exactMoreFiles[i], storeId, true);
+				urls_kr_reop1 = convToKrRepo1Url(conf, exactMoreFiles[i]);
 				message.setProperty(Constants.MSG_BUILD_URLS + "_" + (i + 1), urls);
 				message.setProperty(Constants.MSG_BUILD_URLS_KR + "_" + (i + 1), urls_kr);
 				if (urls_kr_reop1 != null) {
@@ -158,9 +157,9 @@ public class FileProcess {
 				}
 			}
 		}
-
+		
 		String isBuildFromGit = Integer.parseInt(CommonUtils.getFirstVersion(buildId)) >= 10 ? "1" : "0";
-
+		
 		message.setProperty(Constants.MSG_BUILD_URLS_CNT, "0");
 		message.setProperty(Constants.MSG_BUILD_ID, buildId);
 		message.setProperty(Constants.MSG_BUILD_STORE_ID, storeId);
@@ -184,12 +183,13 @@ public class FileProcess {
 			message.setProperty(Constants.MSG_BUILD_SCENARIO_BRANCH_GIT, scenarioBranchForCurrBuild);
 		}
 		message.setProperty(Constants.MSG_BUILD_GENERATE_MSG_WAY, "AUTO");
+		
 
 		if (extProps != null) {
 			message.putAll(extProps);
 		}
-
-		if (msgProps != null) {
+		
+		if ( msgProps != null ) {
 			message.putAll(msgProps);
 		}
 
@@ -200,25 +200,24 @@ public class FileProcess {
 		System.out.println("queue: " + queue);
 		System.out.println("send date: " + new java.util.Date());
 		System.out.println("delay: " + this.delay + " millisecond(s)");
-		System.out.println(message);
+		System.out.println(message);		
 
 		if (conf.isGenerateMessage()) {
 			sendMsg.addMessage(message);
 		}
 	}
-
-	private static String convToURL(Configure conf, File f, String storeId, String buildId, boolean isKorean) {
-		if (isKorean) {
-			return conf.getWebBaseUrl_Kr() + "/" + buildId + "/drop/" + f.getName();
+	
+	private static String convToURL(Configure conf, File f, String storeId, boolean isKorean) {
+		if(isKorean) {
+			return conf.getWebBaseUrl_Kr() + "/" + f.getParentFile().getParentFile().getName() + "/drop/" + f.getName();
 		} else {
-			return conf.getWebBaseUrl() + "/" + storeId + "/" + buildId + "/drop/" + f.getName();
+			return conf.getWebBaseUrl() + "/" + storeId + "/" + f.getParentFile().getParentFile().getName() + "/drop/" + f.getName();
 		}
 	}
-
-	private static String convToKrRepo1Url(Configure conf, File f, String buildId) {
-		if (conf.getWebBaseUrl_KrRepo1() == null || conf.getWebBaseUrl_KrRepo1().trim().equals("")) {
+	
+	private static String convToKrRepo1Url(Configure conf, File f) {
+		if(conf.getWebBaseUrl_KrRepo1() == null || conf.getWebBaseUrl_KrRepo1().trim().equals("")) {
 			return null;
 		}
-		return conf.getWebBaseUrl_KrRepo1() + "/" + buildId + "/drop/" + f.getName();
-	}
-}
+		return conf.getWebBaseUrl_KrRepo1() + "/" + f.getParentFile().getParentFile().getName() + "/drop/" + f.getName();
+	}}

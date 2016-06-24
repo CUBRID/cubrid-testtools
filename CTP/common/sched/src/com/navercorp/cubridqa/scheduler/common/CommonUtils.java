@@ -390,4 +390,57 @@ public class CommonUtils {
 		}
 		return sequenceValue++;
 	}
+	
+	public static String toSimplifiedBuildId(String buildId) {
+		if (buildId == null)
+			return null;
+		int pos = buildId.indexOf("-");
+		if (pos != -1) {
+			buildId = buildId.substring(0, pos);
+		}
+		return buildId.trim();
+	}
+	
+	public static boolean isNewBuildNumberSystem(String simplifiedBuildId) {
+		if(simplifiedBuildId == null) {
+			return false;
+		}		
+		String curValue = convertNumberSystemToFixedLength(simplifiedBuildId);
+		String stdValue = convertNumberSystemToFixedLength("10.1.0.6858");
+		return curValue.compareTo(stdValue) >= 0;
+	}
+	
+	public static String convertNumberSystemToFixedLength (String simplifiedBuildId) {
+		if(simplifiedBuildId == null) {
+			return simplifiedBuildId;
+		}
+		
+		String[] items = simplifiedBuildId.split("\\.");
+		return toFixedLength(items[0], 3, '0') + toFixedLength(items[1], 3, '0') + toFixedLength(items[2], 3, '0') + toFixedLength(items[3], 10, '0');
+		
+	}
+	
+	public static String toFixedLength(String str, int len, char fillChar) {
+		if (str == null)
+			return null;
+		String result = str;
+		for (int i = 0; i < len; i++) {
+			result = fillChar + result;
+		}
+		return result.substring(result.length() - len);
+	}
+	
+	public static String fixListenFilename(String listenFilename, String buildId, boolean toRegular) {
+		boolean isNewNumberSystem = isNewBuildNumberSystem(toSimplifiedBuildId(buildId));
+		if (isNewNumberSystem) {
+			
+			if(toRegular) {
+				listenFilename = CommonUtils.replace(listenFilename, "Linux", "linux");	
+			} else {
+				//Exact
+				listenFilename = CommonUtils.replace(listenFilename, "linux", "Linux");
+			}			
+		}
+		return listenFilename;
+	}
 }

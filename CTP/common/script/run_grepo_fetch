@@ -31,5 +31,5 @@ then
     JAVA_CPS=`cygpath -wpm $JAVA_CPS`
 fi
 
-`grep -E "^grepo_service_url" $CTP_HOME/conf/dailyqa.conf | xargs -i echo export {} `
+export `grep -E "^grepo_service_url" $CTP_HOME/conf/dailyqa.conf | tr -d '\r'`
 "$JAVA_HOME/bin/java" -cp $JAVA_CPS com.navercorp.cubridqa.common.grepo.UpgradeMain "$@"

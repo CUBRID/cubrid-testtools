@@ -95,10 +95,8 @@ public class GeneralExtendedSuite extends AbstractExtendedSuite {
 				if (compatBuildUrls != null) {
 					String urls = null;
 					String urls_kr = null;
-					if(exactInfo[2] != null && !exactInfo[2].equals("")) {
-						compatBuildUrls = CommonUtils.replace(compatBuildUrls, "{max}", exactInfo[2]);
-						compatBuildUrls = CommonUtils.replace(compatBuildUrls, "{dmax}", exactInfo[2]);
-					}
+					compatBuildUrls = CommonUtils.replace(compatBuildUrls, "{BUILD_ID}", compatBuildId);
+					
 					urls = conf.getWebBaseUrl() + "/" + storeId + "/" + compatBuildId + "/drop/" + compatBuildUrls;
 					urls_kr = conf.getWebBaseUrl_Kr() + "/" + compatBuildId + "/drop/" + compatBuildUrls;
 					props.put(ext_KEY_FOR_FIX_MAX_FOLLOW, urls);
@@ -107,7 +105,6 @@ public class GeneralExtendedSuite extends AbstractExtendedSuite {
 					}
 				}
 			}
-
 		}
 
 		if (ext_KEY_FOR_TEST_CATAGORY != null) {

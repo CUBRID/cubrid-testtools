@@ -122,6 +122,7 @@ public abstract class AbstractExtendedSuite {
 		
 		int searchIndexForMax = buildId.indexOf("{max}");
 		String maxSubId = "0";
+		String suffixInBuildId = "";
 		if (searchIndexForMax == -1 ) {
 			searchIndexForMax = buildId.indexOf("{dmax}");
 			maxSubId = "0.0";
@@ -135,13 +136,18 @@ public abstract class AbstractExtendedSuite {
 			maxSubId = "0.0.0.0";
 		}
 		String searchPrefix = null;
-		if(searchIndexForMax!=-1) {
+		if (searchIndexForMax != -1) {
 			searchPrefix = buildId.substring(0, searchIndexForMax);
+		} else {
+			searchPrefix = buildId;
 		}
 		
 		String curBuildId;
+		String curSimplifiedBuildId;
+		String curSuffixInBuildId = null;
+		boolean hitOne = false;
 		
-		for(File storeFile: storeArray){			
+		for(File storeFile: storeArray){
 			if (searchIndexForMax == -1 && justFile != null) break;			
 			if(storeFile.isDirectory() == false) continue;
 			
@@ -150,22 +156,38 @@ public abstract class AbstractExtendedSuite {
 				if(buildFile.isDirectory() == false) continue;
 				
 				curBuildId = buildFile.getName();
+				curSimplifiedBuildId = CommonUtils.toSimplifiedBuildId(curBuildId);
+				hitOne = false;
 				
-				if (searchIndexForMax != -1) {
-					if (conf.isAcceptableBuildInRepository(curBuildId) && curBuildId.startsWith(searchPrefix)) {
-						String newMaxSubId = getMaxSubId(maxSubId, curBuildId);
-						if(newMaxSubId!=null&& newMaxSubId.equals(maxSubId)== false) {
-							maxSubId = newMaxSubId;
-							justFile = buildFile;
+				
+				if (conf.isAcceptableBuildInRepository(curSimplifiedBuildId) && curBuildId.startsWith(searchPrefix)) {	
+					curSuffixInBuildId = getSuffixInBuildId(curBuildId);
+					
+					if (searchIndexForMax == -1) {
+						hitOne = curSuffixInBuildId.length() >= suffixInBuildId.length();
+					} else {
+						String curMaxSubId = getMaxSubId(maxSubId, curSimplifiedBuildId);
+						
+						if (curMaxSubId != null) {
+							if (curMaxSubId.equals(maxSubId)) {
+								if (curSimplifiedBuildId.endsWith(maxSubId)) {
+									hitOne = curSuffixInBuildId.length() >= suffixInBuildId.length();
+								}
+							} else {
+								hitOne = true;
+							}
+						}
+						if (hitOne) {
+							maxSubId = curMaxSubId;
 						}
 					}
-				} else {
-					if(curBuildId.equals(buildId)) {
+
+					if (hitOne) {						
+						suffixInBuildId = curSuffixInBuildId;
 						justFile = buildFile;
-						break;
 					}
-				}
-			}			
+				}				
+			}
 		}
 		
 		if(justFile == null) return null;
@@ -173,12 +195,12 @@ public abstract class AbstractExtendedSuite {
 		String[] result = new String[3];
 		result[0] = justFile.getName();
 		result[1] = justFile.getParentFile().getName();
+		
 		if(searchIndexForMax!=-1) {
 			result[2] = maxSubId;	
 		} else {
 			result[2] = null;
 		}		
-		
 		return result;
 	}
 
@@ -214,6 +236,15 @@ public abstract class AbstractExtendedSuite {
 		}
 		
 		return sub;
+	}
+	
+	private static String getSuffixInBuildId(String buildId) {
+		String suffix = "";
+		int pos = buildId.indexOf("-");
+		if (pos != -1) {
+			suffix = buildId.substring(pos);
+		}
+		return suffix;
 	}
 	
 	public static void main(String[] args) {

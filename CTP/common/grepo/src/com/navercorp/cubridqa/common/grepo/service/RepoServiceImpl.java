@@ -305,7 +305,7 @@ class UpdateRepoThread extends Thread {
 			for (File f : repoList) {
 				try {
 					git = Git.open(f);
-					git.fetch().setTimeout(30 * 1000).setCredentialsProvider(credentialsProvider).call();
+					git.fetch().setTimeout(30).setCredentialsProvider(credentialsProvider).call();
 					System.out.println("[REPO_UPDATE] fetch done " + f + " (" + new java.util.Date() + ")");
 				} catch (Exception e) {
 					e.printStackTrace();
