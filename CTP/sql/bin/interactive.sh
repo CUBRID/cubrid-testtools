@@ -101,5 +101,4 @@ function quit()
 export -f run
 export -f quit
 export -f help
-export -f get_os
 export -f print_summary
