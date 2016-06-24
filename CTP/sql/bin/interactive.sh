@@ -48,6 +48,11 @@ function run()
    if [ !"$client_charset" ];then
 	client_charset=$client_charset_in_interactive
    fi
+
+   os_type=`uname|grep -i CYGWIN|wc -l`
+   if [ $os_type -ne 0 ];then
+	case_file=`cygpath -wp $case_file`
+   fi
   
    javaArgs="$case_file?db=${db_name_in_interactive}_qa"
   
@@ -96,4 +101,5 @@ function quit()
 export -f run
 export -f quit
 export -f help
+export -f get_os
 export -f print_summary
