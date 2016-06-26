@@ -24,8 +24,16 @@
  */
 package com.navercorp.cubridqa.common;
 
+import java.io.File;
+import java.util.Properties;
+
 public class Constants {
 
 	public final static String LINE_SEPARATOR = System.getProperty("line.separator");
+	
+	public final static Properties COMMON_DAILYQA_CONF;
+	static {
+		COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile("CTP_HOME") + File.separator + "conf" + File.separator + "dailyqa.conf");
+	}
 
 }

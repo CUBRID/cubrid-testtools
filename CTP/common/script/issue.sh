@@ -23,7 +23,10 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
-export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
-JAVA_CPS=$COMMON_HOME/lib/cubridqa-common.jar
-
-"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.coreanalyzer.IssueMain "$@"
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+JAVA_CPS=${CTP_HOME}/common/lib/cubridqa-common.jar
+if [ "$OSTYPE" == "cygwin" ]
+then
+    JAVA_CPS=`cygpath -wpm $JAVA_CPS`
+fi
+"$JAVA_HOME/bin/java" -cp "${JAVA_CPS}" com.navercorp.cubridqa.common.coreanalyzer.IssueMain "$@"

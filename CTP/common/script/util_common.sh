@@ -23,9 +23,6 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
-export SVN_DEFAULT_USER="please_set_username"
-export SVN_DEFAULT_PWD="please_set_password"
-export SVN_DEFAULT_PARAMS="--username ${SVN_DEFAULT_USER} --password ${SVN_DEFAULT_PWD} --non-interactive --no-auth-cache"
 
 function cleanCUBRID()
 {
@@ -40,7 +37,7 @@ function releaseSharedmemory()
 
 function kill_process {
    all_pids=$(calc_pids "$$")
-   ps -u $USER -o pid | grep -v "PID" | grep -E -v "$all_pids" |xargs -i kill -9 {}
+   kill -9 `ps -u $USER -o pid | grep -v "PID" | grep -E -v "$all_pids" | grep -vw $$`
 }
 
 function find_ppid {
@@ -85,64 +82,6 @@ function clean_processes {
   kill_process
 }
 
-########## svn up ###########
-function svn_update {
-  if [ $# -eq 0 ]
-  then
-      echo "Please input the file directory"
-      exit 1
-  else
-      echo "==========Start upgrade $@ ==========="
-      tool_home=$@
-      for i in ${tool_home}
-      do
-         if [ ! -f $i ]
-         then
-             echo "${i}:The file does not exist!"
-         else
-             svn revert ${SVN_DEFAULT_PARAMS} ${i}
-             svn up ${SVN_DEFAULT_PARAMS} ${i}
-         fi
-      done
-      echo "==========End upgrade $@ ==========="
-   fi
-}
-
-
-function svn_execute {
-  if [ $# -eq 0 ]
-  then
-      echo "Please input the file directory"
-      exit 1
-  fi
-  fn_full=$1
-  svn_update $fn_full
-  fn_path=$(cd `dirname $fn_full`;pwd)
-  fn_name=$(basename $fn_full)
-  cd $fn_path
-  sh $fn_name
-  cd -
-}
-
-function svn_update_cubrid_common {
-    if which run_remote_script >/dev/null 2>&1
-    then
-        cubcom_home=$(dirname `which run_remote_script`)
-        cd $cubcom_home
-        svn revert ${SVN_DEFAULT_PARAMS} upgrade.sh
-        svn up ${SVN_DEFAULT_PARAMS} upgrade.sh
-        sh upgrade.sh
-        cd -
-    else
-        (cd $HOME; rm -rf ~/cubrid_common; svn checkout ${SVN_DEFAULT_PARAMS} http://svn.bds.nhncorp.com/xdbms/qatools/trunk/cubrid_common; cd cubrid_common; sh upgrade.sh)
-        if [ ! `which run_remote_script >/dev/null 2>&1` ]
-        then
-            echo "export PATH=$HOME/cubrid_common:$PATH" >> ~/.bash_profile
-            export PATH=$HOME/cubrid_common:$PATH
-        fi
-    fi
-}
-
 function clean_for_ha_repl()
 {
     cd ~
@@ -150,9 +89,9 @@ function clean_for_ha_repl()
     find ~/build ~/ERROR_BACKUP -mtime +15 | xargs rm -rf
 }
 
-
 function mail_send {
-    run_mail_send "$@" 
+    PATH=$HOME/CTP/common/script:$HOME/cubrid_common:$PATH
+    run_mail_send "$@"
 }
 
 function get_current_ip {
@@ -218,7 +157,7 @@ function check_disk_space {
            if [ $i -eq 1 ]
            then
                noteInfo="$@"
-               mail_send -to "$mailto" -cc "Team Name<team@mail.address>" -title "[CUBRID QA] Please Check Disk Space on $USER@`get_current_ip` Right Now" -content "Dear #TO#,<br>$USER@`get_current_ip` dose not have enough available disk space. Please handle with it right now. <br><br> (note: $noteInfo) <br><br>Best Regards,<br>CUBRID QA" 
+               mail_send -to "$mailto" -cc "${KEY_MAIL_FROM_NICKNAME}<${KEY_MAIL_FROM_ADDRESS}>" -title "[CUBRID QA] Please Check Disk Space on $USER@`get_current_ip` Right Now" -content "Dear #TO#,<br>$USER@`get_current_ip` dose not have enough available disk space. Please handle with it right now. <br><br> (note: $noteInfo) <br><br>Best Regards,<br>CUBRID QA" 
            else
                sleep 15
            fi
@@ -233,22 +172,6 @@ function check_disk_space {
 
 }
 
-function svn_update_core_analyzer {
-    if which analyzer.sh >/dev/null 2>&1
-    then
-        analyzer_home=$(dirname `which analyzer.sh`)
-        cd $analyzer_home
-        svn revert ${SVN_DEFAULT_PARAMS} upgrade.sh
-        svn up ${SVN_DEFAULT_PARAMS} upgrade.sh
-        sh upgrade.sh
-        cd -
-    else
-        (cd $HOME; rm -rf ~/core_analyzer; svn checkout ${SVN_DEFAULT_PARAMS} http://svn.bds.nhncorp.com/xdbms/qatools/trunk/core_analyzer; cd core_analyzer; sh upgrade.sh)
-        if [ ! `which analyzer.sh >/dev/null 2>&1` ]
-        then
-            echo "export PATH=$HOME/core_analyzer:$PATH" >> ~/.bash_profile
-            export PATH=$HOME/core_analyzer:$PATH
-        fi
-    fi
+function upgrade_ctp {
+    (cd $HOME/CTP/scheduler && sh upgrade.sh)
 }
-

@@ -39,8 +39,8 @@ testver=''
 upscenario=''
 needrun=''
 usetar=''
-svnuser="please_set_username"
-svnpassword="please_set_password"
+svnuser=""
+svnpassword=""
 test_type=''
 testver=''
 test_case=''
@@ -61,7 +61,7 @@ s_url=""
 img_url=""
 target_test=""
 scenario_home="$HOME/dailyqa"
-k_url="http://10.98.133.104:8080/userContent/daily_build/RELEASED"
+k_url=""
 
 while [ $# -ne 0 ]; do
 	case $1 in
@@ -129,57 +129,6 @@ function parse_build_version()
    cubrid_sub_minor=`echo $build_ver|awk -F '.' '{print $3}'`
 }
 
-
-function installScript()
-{
-        curDir=`pwd`
-	url=''
-	num=''
-	if [ $# -ne 0 ]
-	then
-		url=$1	
-		cub="CUBRID"
-		cd ~
-		echo ""
-		echo "=====install CUBRID ($url)=========="
-		echo ""
-		
-		wget $url
-		
-		if [ $? -ne 0 ]
-		then
-			f=${url##*build}
-			n=${k_url}${f}
-			wget $n
-			if [ $? -ne 0 ]
-			then
-				echo "********* Please make sure your url is correct *********"
-				exit 1
-			fi
-		fi		
-
-		cubrid service stop >/dev/null 2>&1
-		#sleep 2
-		if [ -d $cub ]
-		then
-			rm -rf CUBRID
-		fi
-                
-                num=${url##*/}
-		sh $num > /dev/null <<EOF
-yes
-
-
-EOF
-		. ./.cubrid.sh
-
-	else
-		usage
-	fi
-	rm $num
-	cd $curDir	
-}
-
 function installDriverBuild()
 {
    curDir=`pwd`
@@ -234,22 +183,49 @@ function config_cci_test_environment()
         #parse driver build
         the1st=${num%.*}
         the2nd=${num%%.*}       
-
+        main_v=`echo $the1st |awk -F '.' '{print $1}'`
+        miner_v=`echo $the1st |awk -F '.' '{print $2}'`
+        the3st=${main_v}"."${miner_v}
 
         #config file in lib folder
         cd $CUBRID/lib
         rm libcascci.*
-        cp ~/CUBRID_${dirver_bk}/lib/libcascci.* .
-        rm libcascci.so libcascci.so.${the2nd} 
-        ln -s libcascci.so.${the1st} libcascci.so
-        ln -s libcascci.so.${the1st} libcascci.so.${the2nd} 
-
+        cp -d ~/CUBRID_${dirver_bk}/lib/libcascci.* .
+        exactfile=`find . -type f -name "libcascci.so.*" |uniq|sort -r| head -n 1`
+        if [ ! -e libcascci.so ]
+        then
+          ln -s $exactfile libcascci.so
+        fi  
+        
+        if [ ! -e libcascci.so.${the1st} ]
+        then
+          ln -s $exactfile libcascci.so.${the1st}
+        fi
+        
+        if [ ! -e libcascci.so.${the2nd} ]
+        then
+          ln -s $exactfile libcascci.so.${the2nd}
+        fi
+        
+        if [ ! -e libcascci.so.${the3st} ]
+        then
+          ln -s $exactfile libcascci.so.${the3st}
+        fi
+        
         #config include file
         cd $CUBRID/include
         rm -f cas_cci.h cas_error.h
         cp ~/CUBRID_${dirver_bk}/include/cas_cci.h .
         cp ~/CUBRID_${dirver_bk}/include/cas_error.h .
-	cd $curDir
+	
+        #save driver and server info
+        echo "CCI_Version=${the1st}" >$CUBRID/qa.conf
+        s=$s_url
+        sname=${s##*/}
+        sno=`echo $sname|awk -F '-' '{print $2}'`
+        s_prefix=${sno%.*}        
+        echo "Server_Version=${s_prefix}" >>$CUBRID/qa.conf         
+        cd $curDir
 }
 
 function config_jdbc_test_environment()
@@ -268,12 +244,14 @@ function config_jdbc_test_environment()
 	
 		#copy test driver and create link
                 goToInstallationDirectory
-		cp ./CUBRID_${dirver_bk}/jdbc/JDBC-"${num}"-cubrid.jar .
-	        if [ $? -ne 0 ]
+		cp ./CUBRID_${dirver_bk}/jdbc/JDBC-"${num}"-cubrid.jar $CUBRID/jdbc
+                if [ $? -ne 0 ]
 	        then
-	            cp ./CUBRID_${dirver_bk}/jdbc/JDBC-"${num}".jar .
-	            ln -s JDBC-"${num}".jar cubrid_jdbc.jar
+	            cp ./CUBRID_${dirver_bk}/jdbc/JDBC-"${num}".jar $CUBRID/jdbc
+	            cd $CUBRID/jdbc
+                    ln -s JDBC-"${num}".jar cubrid_jdbc.jar
 	        else
+                    cd $CUBRID/jdbc 
 	            ln -s JDBC-"${num}"-cubrid.jar cubrid_jdbc.jar
 	        fi
     else
@@ -465,11 +443,88 @@ function goToInstallationDirectory()
     if [ "$CUBRID" ]
     then
         cd $CUBRID
-        cd ..
+        if [ $? -eq 0 ];then
+        	cd ..
+	else
+		cd $HOME
+	fi
     else
         cd $HOME
     fi
 }
+
+function IsGitExtensionBuild()
+{
+   buildFile=$1
+
+   buildNumber=`echo $buildFile|grep -Pom 1 '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,7}'`
+   startNumber="0100010000006858"
+   f1=`echo $buildNumber|awk -F '.' '{print $1}'`
+   f2=`echo $buildNumber|awk -F '.' '{print $2}'`
+   f3=`echo $buildNumber|awk -F '.' '{print $3}'`
+   f4=`echo $buildNumber|awk -F '.' '{print $4}'`
+   f11=`echo $f1|awk '{printf("%03d", $0)}'`
+   f22=`echo $f2|awk '{printf("%03d", $0)}'`
+   f33=`echo $f3|awk '{printf("%03d", $0)}'`
+   f44=`echo $f4|awk '{printf("%07d", $0)}'` 
+ 
+   curNumber="${f11}${f22}${f33}${f44}"
+   if [ $curNumber -ge $startNumber ];
+   then
+        echo true
+   else
+        echo false
+   fi
+}
+
+function installScript()
+{
+    build_url=$1
+    buildFile=${build_url##*/}
+    cub="CUBRID"
+    curDir=`pwd`
+    goToInstallationDirectory
+
+    echo ""
+    echo "=====install CUBRID $buildFile =========="
+    echo ""
+    rm $buildFile >/dev/null 2>&1
+    wget -t 3 -T 120 $build_url
+    if [ $? -eq 0 ]
+    then
+	chmod 777 $buildFile
+    fi
+    cubrid service stop >/dev/null 2>&1
+    #sleep 2
+    if [ -d $cub ]
+    then
+            rm -rf CUBRID
+    fi
+
+    if [ "`IsGitExtensionBuild $buildFile`" == "true" ];then
+	   mkdir -p CUBRID
+           cp $buildFile CUBRID
+	   cd CUBRID
+
+           sh  $buildFile >/dev/null <<EOF
+y
+n
+
+EOF
+	   rm $buildFile
+	   cd ..
+    else
+            sh $buildFile > /dev/null <<EOF
+yes
+
+
+EOF
+    fi
+    . ~/.cubrid.sh
+    rm $buildFile
+    cd $curDir
+}
+
 
 function close_shard_service()
 {

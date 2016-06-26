@@ -198,7 +198,7 @@ public class CommonUtil {
 
 		int len = cont.length();
 
-		Stack stack = new Stack();
+		Stack<Character> stack = new Stack<Character>();
 
 		char c;
 		for (int i = 0; i < len; i++) {

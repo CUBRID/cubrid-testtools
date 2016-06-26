@@ -1,0 +1,106 @@
+#!/bin/sh
+# 
+# Copyright (c) 2016, Search Solution Corporation. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# 
+#   * Redistributions of source code must retain the above copyright notice, 
+#     this list of conditions and the following disclaimer.
+# 
+#   * Redistributions in binary form must reproduce the above copyright 
+#     notice, this list of conditions and the following disclaimer in 
+#     the documentation and/or other materials provided with the distribution.
+# 
+#   * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
+#     derived from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+#
+
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+
+baseHome=$CTP_HOME/common
+
+local_git_source_home=
+branch_name=
+curDir=`pwd`
+
+
+function usage()
+{
+    echo ""
+    echo "Usage: $0 -f <from source path>
+          -b <branch name>"
+    echo ""
+}
+
+
+if [ $# -eq 0 ];then
+    usage
+    exit 1
+fi
+
+while getopts "f:b:t:h:" opt; do
+      case $opt in
+      f)
+         local_git_source_home="$OPTARG"
+         ;;
+      b)
+         branch_name="$OPTARG"
+         ;;
+      \?)
+         usage
+         exit 1
+         ;;
+      esac
+done
+
+[ ! -d "$local_git_source_home" ] && echo "please confirm your local_git_source_home parameter!" && exit 1
+[ -z "$branch_name" ] && echo "please branch_name parameter!" && exit 1
+
+
+gitUser=`awk -F '=' '/git.user/ {print $2}' ${CTP_HOME}/conf/dailyqa.conf|tr -d '\r'`
+gitPwd=`awk -F '=' '/git.pwd/ {print $2}' ${CTP_HOME}/conf/dailyqa.conf|tr -d '\r'`
+gitMail=`awk -F '=' '/git.email/ {print $2}' ${CTP_HOME}/conf/dailyqa.conf|tr -d '\r'`
+
+#init config
+git config --global user.name "${gitUser}"
+git config --global user.email "$gitMail"
+
+cd $local_git_source_home
+originalUrl=`git remote -v|egrep "^origin[[:blank:]]" |awk '{print $2}'|head -n 1|tr -d ' '`
+urlSuffer=${originalUrl#*github.com}
+urlWithAuthen="https://${gitUser}:${gitPwd}@github.com${urlSuffer}"
+
+echo "====Start to do update!===="
+git remote rm auto_update_url 2>/dev/null
+git remote add auto_update_url ${urlWithAuthen}
+
+temp_branch_name=temp_branch_`date '+%Y%m%d%H%M%s'`
+git branch ${temp_branch_name}
+git checkout -f ${temp_branch_name}
+git clean -df
+
+git branch -D $branch_name
+git fetch auto_update_url
+git checkout -b $branch_name -t auto_update_url/$branch_name
+
+git branch | grep  temp_branch | xargs -i git branch -D {}
+
+echo "GIT REPO STATUS:"
+git branch
+git status -s
+echo "====End to do update!===="
+
+git remote rm auto_update_url 2>/dev/null
+cd $curDir
+
+
+

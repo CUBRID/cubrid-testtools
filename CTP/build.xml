@@ -8,7 +8,7 @@
 	<path id="libs">
 		<fileset dir="common/lib">
 			<include name="*.jar" />
-			<exclude name="cubridqa-common.jar" />			
+			<exclude name="cubridqa-common.jar" />
 		</fileset>
 		<fileset dir="common/lib/mail">
 			<include name="*.jar" />
@@ -16,6 +16,10 @@
 		<fileset dir="sql/lib">
 			<include name="*.jar" />
 			<exclude name="cubridqa-cqt.jar" />
+		</fileset>
+		<fileset dir="common/sched/lib">
+			<include name="*.jar" />
+			<exclude name="cubridqa-scheduler.jar" />
 		</fileset>
 	</path>
 
@@ -26,12 +30,16 @@
 
 	<target name="compile" depends="init" description="compile the source ">
 		<!-- Compile the java code from ${src} into ${build} -->
-		<javac srcdir="common/src" destdir="${build}">
-			
+		<javac srcdir="common/src" destdir="${build}">			
+			<!--<compilerarg value="-Xlint:unchecked"/>-->
 			<classpath refid="libs" />
 		</javac>
 		<javac srcdir="sql/src" destdir="${build}">
-			
+			<!--<compilerarg value="-Xlint:unchecked"/>-->
+			<classpath refid="libs" />
+		</javac>
+		<javac srcdir="common/sched/src" destdir="${build}">
+			<!--<compilerarg value="-Xlint:unchecked"/>-->
 			<classpath refid="libs" />
 		</javac>
 	</target>
@@ -40,16 +48,21 @@
 		<delete dir="${build}" />
 		<delete dir="common/lib/cubridqa-common.jar" />
 		<delete dir="sql/lib/cubridqa-cqt.jar" />		
+		<delete dir="common/lib/cubridqa-scheduler.jar" />
 	</target>
 
 	<target name="dist" depends="clean,compile" description="generate the distribution">
-		<jar jarfile="sql/lib/cubridqa-cqt.jar" manifest="sql/MANIFEST.MF" basedir="${build}">			
+		<jar jarfile="sql/lib/cubridqa-cqt.jar" manifest="sql/lib/MANIFEST.MF" basedir="${build}">			
 			<include name="com/navercorp/cubridqa/cqt/**/*.class" />
 			<include name="name/fraser/neil/plaintext/**/*.class" />
 		</jar>
-		<jar jarfile="common/lib/cubridqa-common.jar" manifest="common/MANIFEST.MF" basedir="${build}" >
+		<jar jarfile="common/lib/cubridqa-common.jar" manifest="common/lib/MANIFEST.MF" basedir="${build}" >
 			<include name="com/navercorp/cubridqa/common/**/*.class" />
 			<include name="com/navercorp/cubridqa/ctp/**/*.class" />
+			<include name="com/nhncorp/cubrid/common/grepo/*.class" />
+		</jar>
+		<jar jarfile="common/sched/lib/cubridqa-scheduler.jar" manifest="common/sched/lib/MANIFEST.MF" basedir="${build}" >
+			<include name="com/navercorp/cubridqa/scheduler/**/*.class" />
 		</jar>
 		<!--delete dir="${build}" / -->
 	</target>

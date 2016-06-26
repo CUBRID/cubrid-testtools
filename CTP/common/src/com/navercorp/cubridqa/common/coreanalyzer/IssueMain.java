@@ -63,7 +63,7 @@ public class IssueMain {
 
 		String issueKey = args1[0];
 		if (issueKey == null || issueKey.trim().equals("")) {
-			showHelp("Please input issue key such as CUBRIDSUS-13800", options);
+			showHelp("Please input issue key such as CUBRIDSUS-13800 or CBRD-1234", options);
 			return;
 		}
 

@@ -26,7 +26,7 @@ package com.navercorp.cubridqa.common;
 
 public class JschLogger implements com.jcraft.jsch.Logger {
 	
-	static java.util.Hashtable name=new java.util.Hashtable();
+	static java.util.Hashtable<Integer, String> name=new java.util.Hashtable<Integer, String>();
     static{
       name.put(new Integer(DEBUG), "DEBUG: ");
       name.put(new Integer(INFO), "INFO: ");

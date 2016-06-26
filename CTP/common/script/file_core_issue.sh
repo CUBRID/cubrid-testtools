@@ -24,36 +24,12 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+
 # Absolute path to this script, e.g. /home/user/bin/foo.sh
 SCRIPT=$(readlink -f "$0")
 # Absolute path this script is in, thus /home/user/bin
 scriptPath=$(dirname "$SCRIPT")
-
-svnuser="please_set_username"
-svnpassword="please_set_password"
-svn st --username $svnuser --password $svnpassword -u ${scriptPath}/file_core_issue.sh >temp.log
-sed -i "/Status against revision/d" temp.log
-
-svn st --username $svnuser --password $svnpassword -u ${scriptPath}/gdb_core.sh >temp1.log
-sed -i "/Status against revision/d" temp1.log
-
-if [ `cat temp.log|wc -l` -ne 0 ] || [ `cat temp1.log|wc -l` -ne 0 ]
-then
-    svn diff --username $svnuser --password $svnpassword ${scriptPath}/file_core_issue.sh
-    svn diff --username $svnuser --password $svnpassword ${scriptPath}/gdb_core.sh
-    rm -rf temp.log temp1.log
-    echo "file_core_issue.sh or gdb_core.sh are not the newest, do you want to continue?"
-    echo "please input yes or no"
-    read answer
-    case $answer in
-       [nN]) exit;;
-         no) exit;;
-       [yY]) echo "continue ...";;
-        yes) echo "continue ...";;
-        *) exit;;
-    esac
-fi
-rm -rf temp.log temp1.log
 
 corepath=""
 allinfo=""
@@ -90,8 +66,9 @@ then
 else
     ip=`ipconfig|grep "IPv4 Address"|awk -F: '{print $2}'|head -1`
 fi
+
 testserver="`whoami`@$ip"
-password="please_set_password"
+password="<please use general password>"
 
 function usage
 {
@@ -103,7 +80,7 @@ function usage
     [-e error-log]   : optional, eg: /home/xdbms/CUBRID/log, if not given, get it from $CUBRID/log
     [-m]             : optional, it is used for master information
     [-s]             : optional, it is used for slave information
-    [-l CUBRIDSUS-XXX]: exclusive, add CUBRIDSUS-XXX to readme.txt and register it to database, the registering info comes from template.txt
+    [-l CBRD-XXX]: exclusive, add CBRD-XXX to readme.txt and register it to database, the registering info comes from template.txt
     [-v]             : optional, move the related files to archive file, the default operation is copy
     [-f f1 f2 ...]   : optional, move other related files to archive file, eg: -f path/file1 path/core.*
 CCQQTT
@@ -200,9 +177,9 @@ while [ $# -ne 0 ]; do
                     isf=0
                     shift
                     issuenum="$1"
-                    if [ `echo ${issuenum}|grep "CUBRIDSUS-[0-9][0-9][0-9][0-9][0-9][0-9]*"|wc -l` -eq 0 ]
+                    if [ `echo ${issuenum}|grep "CBRD-[0-9][0-9][0-9][0-9][0-9][0-9]*"|wc -l` -eq 0 ]
                     then
-                        echo "issue number isn't right, it should be like CUBRIDSUS-16212"
+                        echo "issue number isn't right, it should be like CBRD-16212"
                         exit
                     else
                         echo "Are you sure to register information from template.txt as the following?"
@@ -342,7 +319,7 @@ log "*Description:*"
 log "" 
 log "*Repro Steps:*" 
 log "1. sh XXX.sh" 
-log "2. case svn address" 
+log "2. case directory" 
 log "3. write the code where the core is thrown if possible" 
 
 log "*Core Files:*"
@@ -429,13 +406,13 @@ sh move.sh
 cd ${HOME}/do_not_delete_core
 echo "tar -zcvf ${filename}.tar.gz ${filename}"
 tar -zcvf ${filename}.tar.gz ${filename} >/dev/null
-#echo "${filename}.tar.gz | CUBRIDSUS-XXXXX" >>$HOME/do_not_delete_core/readme.txt
+#echo "${filename}.tar.gz | CBRD-XXXXX" >>$HOME/do_not_delete_core/readme.txt
 
 colorecho "Notice: please read information from template.txt to file bug"
 colorecho "Notice: db-volumn/core/log are archived in $HOME/do_not_delete_core/${filename}.tar.gz"
-colorecho "Notice: Please save core status by sh file_core_issue.sh -l CUBRIDSUS-XXX"
-#colorecho "Notice: Please register core (sh analyzer.sh -s ${filename}/${corename} CUBRIDSUS-XXX)"
+colorecho "Notice: Please save core status by sh file_core_issue.sh -l CBRD-XXX"
+#colorecho "Notice: Please register core (sh analyzer.sh -s ${filename}/${corename} CBRD-XXX)"
 #colorecho "Notice: After registering core file, please remove ${filename}"
-#colorecho "Notice: Please modify CUBRIDSUS-XXXXX to actual issue number in $HOME/do_not_delete_core/readme.txt"
+#colorecho "Notice: Please modify CBRD-XXXXX to actual issue number in $HOME/do_not_delete_core/readme.txt"
 
 rm -rf temp tmp error.tmp 

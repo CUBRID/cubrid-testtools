@@ -24,17 +24,27 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
-JAVA_CPS=$COMMON_HOME/lib/cubridqa-common.jar
-
-export PATH=$JAVA_HOME/bin:$COMMON_HOME/script:$PATH
-
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+JAVA_CPS=${CTP_HOME}/common/lib/cubridqa-common.jar
 if [ "$OSTYPE" == "cygwin" ]
 then
-    JAVA_CPS=`cygpath -wp $JAVA_CPS`
+    JAVA_CPS=`cygpath -wpm $JAVA_CPS`
 fi
 
-tmpfile=$COMMON_HOME/script/.run_action_file_`date '+%Y%m%d%H%M%s'`'.tmp'
-java -cp "$JAVA_CPS" com.navercorp.cubridqa.common.ParseActionFiles "$@" > $tmpfile
+function read_property {
+	awk -F '=' "/$1/ {print \$2}" $CTP_HOME/conf/dailyqa.conf|tr -d '\r'
+}
+
+export KEY_SSH_PWD_DEFAULT=`read_property 'ssh.pwd.default'`
+export KEY_SSH_PORT_DEFAULT=`read_property 'ssh.port.default'`
+export KEY_GIT_PWD_DEFAULT=`read_property 'git.pwd'`
+export KEY_MAIL_FROM_NICKNAME=`read_property 'mail.from.nickname'`
+export KEY_MAIL_FROM_ADDRESS=`read_property 'mail.from.address'`
+
+export PATH=$JAVA_HOME/bin:${CTP_HOME}/common/script:$PATH
+chmod u+x ${CTP_HOME}/common/script/*
+
+tmpfile=$CTP_HOME/common/script/.run_action_file_`date '+%Y%m%d%H%M%s'`'.tmp'
+"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.ParseActionFiles "$@" > $tmpfile
 sh $tmpfile 
 rm -rf $tmpfile >/dev/null 2>&1
