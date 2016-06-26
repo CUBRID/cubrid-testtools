@@ -24,9 +24,9 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+. ${CTP_HOME}/common/script/util_file_param.sh
 
-. util_file_param.sh
 set -x
 gUrl=
 sUrl=
@@ -47,38 +47,38 @@ usage()
 
 if [ $# -eq 0 ]
 then
-	usage
+    usage
 else
-	gUrl=$1
-	tCat="general"
+    gUrl=$1
+    tCat="general"
 fi
 
 while [ $# -ge 1 ];do
-	case $1 in
-	    -s|--role-compat-server)
-		shift
-		sUrl=$1
-		dUrl=$2
-		tCat="compat"
-		;;
-	    -d|--role-compat-driver)
-		shift
-		dUrl=$1
-		sUrl=$2
-		tCat="compat"
-		;;
-	    -c|--role-coverage)
-		shift
-		vUrl=$1
-		cUrl=$2
-		tCat="coverage"
-		;;
-	    \?)
-		shift
-		usage
-		;;
-	esac
-	shift
+    case $1 in
+        -s|--role-compat-server)
+        shift
+        sUrl=$1
+        dUrl=$2
+        tCat="compat"
+        ;;
+        -d|--role-compat-driver)
+        shift
+        dUrl=$1
+        sUrl=$2
+        tCat="compat"
+        ;;
+        -c|--role-coverage)
+        shift
+        vUrl=$1
+        cUrl=$2
+        tCat="coverage"
+        ;;
+        \?)
+        shift
+        usage
+        ;;
+    esac
+    shift
 done
 
 function getDir()
@@ -92,9 +92,9 @@ function parseURL()
     url=$1
     if [ "$url" ]
     then
-	buildType=${url/*.}
+    buildType=${url/*.}
     else
-	buildType="unknown"
+    buildType="unknown"
     fi
 }
 
@@ -103,11 +103,11 @@ function goToInstallationDirectory()
     if [ "$CUBRID" ]
     then
         cd $CUBRID
-	if [ $? -eq 0 ];then
-        	cd ..
-	else
-		cd $HOME
-	fi
+    if [ $? -eq 0 ];then
+            cd ..
+    else
+        cd $HOME
+    fi
     else
         cd $HOME
     fi
@@ -128,7 +128,7 @@ function InstallBuildBySh()
     wget -t 3 -T 120 $build_url
     if [ $? -eq 0 ]
     then
-	chmod 777 $buildFile
+    chmod 777 $buildFile
     fi
     cubrid service stop >/dev/null 2>&1
     #sleep 2
@@ -179,22 +179,22 @@ function InstallBuildForGeneral()
     parseURL $url
     if [ "$buildType" == "sh" ]
     then
-	InstallBuildBySh $url
+    InstallBuildBySh $url
     elif [ "$buildType" == "zip" ]
     then
-	InstallBuildByPackage "unzip " $url
+    InstallBuildByPackage "unzip " $url
     elif [ "$buildType" == "gz" ]
     then
-	InstallBuildByPackage "tar zvxf " $url
+    InstallBuildByPackage "tar zvxf " $url
     elif [ "$buildType" == "tar" ]
     then
         echo "TODO"
     elif [ "$buildType" == "rpm" ]
     then
-	echo "TODO"
+    echo "TODO"
     else
-	 echo "Please confirm your build URL!"
-	 exit
+     echo "Please confirm your build URL!"
+     exit
     fi
 
 }
@@ -203,7 +203,7 @@ function InstallBuildForCompat()
 {
     curDir=`pwd` 
     getDir  
-    sh $COMMON_HOME/scripts/util_compat_test.sh -sl $1 -dl $2
+    sh scripts/util_compat_test.sh -sl $1 -dl $2
     cd $curDir
 }
 

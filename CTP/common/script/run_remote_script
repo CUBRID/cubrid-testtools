@@ -24,12 +24,11 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-export COMMON_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
-JAVA_CPS=$COMMON_HOME/lib/cubridqa-common.jar
-
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+JAVA_CPS=${CTP_HOME}/common/lib/cubridqa-common.jar
 if [ "$OSTYPE" == "cygwin" ]
 then
-	"$JAVA_HOME/bin/java" -cp "`cygpath -wp $JAVA_CPS`" com.navercorp.cubridqa.common.RunRemoteScript "$@"
-else
-	"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.RunRemoteScript "$@"
+    JAVA_CPS=`cygpath -wpm $JAVA_CPS`
 fi
+
+"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.RunRemoteScript "$@"

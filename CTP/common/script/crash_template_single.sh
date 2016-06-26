@@ -24,6 +24,8 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+
 corepath=""
 allinfo=""
 
@@ -88,7 +90,7 @@ echo '#please write your description in the next line, if there is not descripti
 echo ""
 echo "Repro Steps:"
 echo "1. sh XXX.sh"
-echo "2. case svn address"
+echo "2. case address"
 echo "3. write the code where the core is thrown if possible"
 
 echo ""
@@ -132,7 +134,7 @@ function format()
     sed -i -e "s/^Repro Steps:/*Repro Steps:*/" -e "s/^Call Stack Info:/*Call Stack Info:*/" template.txt
     corepath=`grep '^core file path:' template.txt|awk -F: '{print $2}'`
     echo "{noformat}" >tmp
-    sh ~/core_analyzer/analyzer.sh ${corepath} >>tmp
+    sh ${CTP_HOME}/common/script/analyzer.sh ${corepath} >>tmp
     sed -i "/CORE ANALYZER/d" tmp
     sed -i "/HOME/d" tmp
     sed -i -e "/STACK DIGEST/,$ d" -e "/^ *$/ d" tmp

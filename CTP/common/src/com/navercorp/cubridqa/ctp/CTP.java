@@ -182,7 +182,7 @@ public class CTP {
 		// newfileName = CommonUtils.concatFile(newfileName, ".sql.conf");
 		// config.saveAs(newfileName, suite, "sql");
 		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
-		boolean enableMemoryLeak = CommonUtils.valueOfBoolean(config.get("sql", "enable_memory_leak"));
+		boolean enableMemoryLeak = CommonUtils.convertBoolean(config.get("sql", "enable_memory_leak"));
 		
 		String runStmt = "sh ${CTP_HOME}/sql/bin/" + (enableMemoryLeak ? "run_memory.sh" : "run.sh") + " -s " + suite + " -f " + configFilePath;
 		

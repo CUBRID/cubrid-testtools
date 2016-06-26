@@ -23,6 +23,8 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+
 corepath=$1
 command=$2
 output=$3
@@ -44,6 +46,9 @@ then
 elif [ `echo $coreloc|grep "csql"|wc -l` -ge 1 ]
 then
     coreloc=csql
+elif [ `echo $coreloc|grep "cubrid "|wc -l` -ge 1 ]
+then
+    coreloc=cub_admin
 else
     echo "analyze file command failed"
     exit

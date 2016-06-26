@@ -1,2 +1,0 @@
-Manifest-Version: 2.0
-Class-Path: commons-cli-1.2.jar commons-logging-1.1.1.jar commons-logging-api-1.0.4.jar commons-pool-1.6.jar cubrid_jdbc.jar ini4j-0.5.4-jdk14.jar jsch-0.1.49.jar slf4j-api-1.7.19.jar slf4j-log4j12-1.7.19.jar ./mail/activation-1.1.1.jar  ./mail/aspirin-0.11.01.jar  ./mail/dnsjava-2.0.8.jar  ./mail/javax.mail-1.5.5.jar
