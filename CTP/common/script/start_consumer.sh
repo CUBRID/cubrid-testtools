@@ -422,7 +422,7 @@ do
 				echo '' > ${CTP_HOME}/common/sched/status/$x
 				echo "END_TIME:${ENDTIME}"
 				echo
-			elif [ -n "$(type -t ${q_exec[$count]})" ] && [ "$(type -t ${q_exec[$count]})" = "function" ]
+			elif [ -n "$(type -t ${q_exec[$count]})" ] && [ "$(type -t ${q_exec[$count]})" = "function" ];then
 				echo "Action: $x , ${q_exec[$count]}() function, GENERAL"
 
                                 if [ -f $statFile ]
