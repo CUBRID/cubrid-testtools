@@ -363,7 +363,7 @@ do
 				echo '' > ${CTP_HOME}/common/sched/status/${x}
 				echo
 			fi
-		else [ -n "$(type -t ${q_exec[$count]}_continue)" ] && [ "$(type -t ${q_exec[$count]}_continue)" = "function" ];then
+		elif [ -n "$(type -t ${q_exec[$count]}_continue)" ] && [ "$(type -t ${q_exec[$count]}_continue)" = "function" ];then
 			if [ "$existsMsgId" -a ${isStartByData} -gt 0 ];then
 				echo "Action: $x, ${q_exec[$count]}_continue(), CONTINUE"
 				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh; ${q_exec[$count]}_continue $ser_site)
