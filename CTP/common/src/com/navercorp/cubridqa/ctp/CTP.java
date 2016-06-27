@@ -200,7 +200,22 @@ public class CTP {
 	}
 
 	private static void executeShell(IniData config, String suite) {
-		System.out.println("execute shell test");
+		String jar = ctpHome + File.separator + "shell" + File.separator + "lib" + File.separator + "cubridqa-shell.jar";
+		try {
+			URL url = new URL("file:" + jar);
+			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
+			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.shell.main.Main");
+			Method m = clz.getDeclaredMethod("exec", String.class);
+			String configFilename;
+			if (CommonUtils.isWindowsPlatform()) {
+				configFilename = CommonUtils.getWindowsStylePath(config.getFilename());
+			} else {
+				configFilename = config.getFilename();
+			}			
+			m.invoke(clz, configFilename);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static IniData getConfigData(String taskLable, String configFilename, String suite) throws Exception {
@@ -257,7 +272,7 @@ public class CTP {
 			System.out.println();
 			return;
 		}
-		String jar = ctpHome + File.separator + "sql" + File.separator + "lib" + File.separator + "cubridqa-cqt.jar";		
+		String jar = ctpHome + File.separator + "sql" + File.separator + "lib" + File.separator + "cubridqa-cqt.jar";
 		try {
 			URL url = new URL("file:" + jar);
 			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
@@ -266,7 +281,7 @@ public class CTP {
 			String webRoot = ctpHome + File.separator + "sql" + File.separator + "webconsole";
 			String webconsoleConf = ctpHome + File.separator + "conf" + File.separator + "webconsole.conf";
 			m.invoke(clz, webconsoleConf, webRoot, cmds.get(1));
-		} catch (Exception e) {			
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

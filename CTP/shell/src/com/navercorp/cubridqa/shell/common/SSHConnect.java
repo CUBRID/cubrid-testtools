@@ -31,21 +31,6 @@ public class SSHConnect {
 		}
 	}
 	
-	public static void main(String[] args)  throws Exception {
-		
-		SSHConnect ssh = new SSHConnect("10.99.209.188", "1099", "qa", "cubridqa135!#%");
-
-		WinShellInput script = new WinShellInput();
-
-		for(int i=0;i<1;i++) {
-		String result = ssh.execute("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%com.nhncorp.cubrid.service.Server%' ) get Name,CommandLine", true);
-		System.out.println(result);
-		Thread.sleep(1000);
-		}
-		ssh.close();
-	
-	}
-	
 	public SSHConnect(String host, String port, String user, String pwd) throws JSchException {
 		this(host, Integer.parseInt(port), user, pwd);
 	}

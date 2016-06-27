@@ -10,37 +10,19 @@ import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 
-
 public class Main {
 	
-	public static void main(String[] args) throws Exception {
+	public static void exec(String configFilename) throws Exception {
 		
 		Properties system = System.getProperties();
 		system.setProperty("sun.rmi.transport.connectionTimeout", "10000000");
 		//system.setProperty("sun.rmi.transport.tcp.responseTimeout", "0");
 
-		Context context = new Context(CommonUtils.concatFile(Constants.DIR_CONF, "main.properties"));
-		boolean isContinueMode;
-		String value = context.getProperty("main.mode.continue");
-		if (value == null) {
-			isContinueMode = false;
-		} else {
-			value = value.trim();
-			isContinueMode = value.equalsIgnoreCase("TRUE") || value.equalsIgnoreCase("1");
-		}
+		Context context = new Context(configFilename);
 
-		String cubridPackageUrl = null;
-		if (args.length == 0) {
-			throw new Exception("java Main <url_for_cubrid> [continue:true|false]");
-		} else if (args.length >= 2) {
-			isContinueMode = Boolean.valueOf(args[1]);
-		}
+		String cubridPackageUrl = context.getCubridPackageUrl();
 		
-		//TODO: check test case root exists or not
-		//TODO: check CUBRID filename
-
-		cubridPackageUrl = args[0];
-		System.out.println("Continue Mode: " + isContinueMode);
+		System.out.println("Continue Mode: " + context.isContinueMode());
 		System.out.println("Test Build: " + cubridPackageUrl);
 		
 		//get test build number
@@ -89,9 +71,6 @@ public class Main {
 		ArrayList<String> envList = context.getEnvList();
 		System.out.println("Available Env: " + envList);
 
-		context.setContinueMode(isContinueMode);
-		context.setCubridPackageUrl(cubridPackageUrl);
-		
 		if (context.getEnvList().size() == 0) {
 			throw new Exception("Not found any environment instance to test on it.");
 		}
@@ -106,7 +85,6 @@ public class Main {
 		contextSnapshot.println("AUTO_TEST_BITS=" + context.getVersion() );
 		contextSnapshot.close();
 
-		
 		TestFactory factory = new TestFactory(context);
 		factory.execute();
 	}

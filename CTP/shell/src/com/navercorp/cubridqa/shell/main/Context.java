@@ -48,13 +48,13 @@ public class Context {
 	
 	int maxRetryCount;
           
-        String defaultDbCharset;
+	String defaultDbCharset;
 
-        boolean enableCheckDiskSpace = false;
-  
-        String mailNoticeTo;
-    
-        boolean enableSaveNormalErrorLog = false;
+	boolean enableCheckDiskSpace = false;
+
+	String mailNoticeTo;
+
+	boolean enableSaveNormalErrorLog = false;
 
 
     
@@ -84,13 +84,14 @@ public class Context {
 		this.isSaveCorefile = getProperty("main.testing.savecorefile", "FALSE").trim().toUpperCase().equals("TRUE");
 		this.bigSpaceDir = getProperty("main.testing.bigspace_dir", "").trim();
 		this.maxRetryCount = Integer.parseInt(getProperty("max.retry.count", "0").trim());
-                this.defaultDbCharset = getProperty("main.testing.default_charset", "en_US").trim();
+        this.defaultDbCharset = getProperty("main.testing.default_charset", "en_US").trim();
        
-                this.enableCheckDiskSpace = getProperty("main.testing.enable_check_disk_space", "FALSE").trim().toUpperCase().equals("TRUE");
-                this.mailNoticeTo = getProperty("main.testing.bigspace_dir", "fanzq@nhn.com").trim();      
-                this.enableSaveNormalErrorLog = getProperty("main.testing.do_save_normal_error_log", "FALSE").trim().toUpperCase().equals("TRUE");
-        
+		this.enableCheckDiskSpace = getProperty("main.testing.enable_check_disk_space", "FALSE").trim().toUpperCase().equals("TRUE");
+		this.mailNoticeTo = getProperty("main.testing.bigspace_dir", "fanzq@nhn.com").trim();
+		this.enableSaveNormalErrorLog = getProperty("main.testing.do_save_normal_error_log", "FALSE").trim().toUpperCase().equals("TRUE");        
       
+		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.mode.continue", "false"), false);
+		this.cubridPackageUrl = getProperty("main.testbuild.url");
 
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
