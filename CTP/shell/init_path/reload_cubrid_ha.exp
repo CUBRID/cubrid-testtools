@@ -1,0 +1,19 @@
+#!/usr/bin/expect
+#get OS, hostname and $CUBRID information from server
+#argv 0 - server IP
+#argv 1 - password
+
+set HOST [lindex $argv 0]
+set PASSWORD [lindex $argv 1]
+
+spawn ssh $HOST
+expect {
+"(yes/no)?" {send "yes\r";exp_continue}
+"password:" {send "$PASSWORD\r"}
+}
+expect "$"
+send "cubrid-ha reload\r"
+expect "$"
+send "cubrid-ha status\r"
+send "exit\r"
+expect eof
