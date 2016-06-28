@@ -348,12 +348,12 @@ do
 			consumerTimer ${existsMsgId} "interrupted"
 		fi
 		
-		if [ -f ${CTP_HOME}/common/dailyqa/${q_exec[$count]}_continue.sh ]
+		if [ -f ${CTP_HOME}/common/ext/${q_exec[$count]}_continue.sh ]
 		then
 			if [ "$existsMsgId" -a ${isStartByData} -gt 0 ];then
 				echo "Action: $x , ${q_exec[$count]}_continue.sh, CONTINUE"
 			
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/dailyqa/${q_exec[$count]}_continue.sh )
+				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/${q_exec[$count]}_continue.sh )
 			
 				echo
 				echo "End continue mode test!"
@@ -388,7 +388,7 @@ do
 			exit 0
 		elif [ "$hasBuild" == "true" ]
 		then
-			if [ -f ${CTP_HOME}/common/dailyqa/${q_exec[$count]}.sh ] 
+			if [ -f ${CTP_HOME}/common/ext/${q_exec[$count]}.sh ] 
 			then
 				echo "Action: $x , ${q_exec[$count]}.sh, GENERAL"
 			
@@ -412,7 +412,7 @@ do
 
 				consumerTimer $msgId "start"
 			
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/dailyqa/${q_exec[$count]}.sh)
+				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/${q_exec[$count]}.sh)
 			
 				consumerTimer $msgId "stop"
 

@@ -99,6 +99,7 @@ public class SFTPUpload {
 			pkgName = ".UP_" + fromFile.getName().trim() + "_" + System.currentTimeMillis() + ".tar.gz";
 		}
 		try {
+			System.out.println("[INFO] START TO UPDATE: " + from);
 			ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword, needLog);
 			if (isFolder) {				
 				StringBuffer scriptLocal = new StringBuffer();
@@ -129,6 +130,7 @@ public class SFTPUpload {
 				LocalInvoker.exec(scriptLocal.toString(), shellType, true);
 				System.out.println("[INFO] clean temporary files in local and remote");
 			}
+			System.out.println("DONE");
 		} finally {
 			if (ssh != null)
 				ssh.close();
