@@ -1,0 +1,13 @@
+#!/bin/bash
+source $init_path/shell_utils.sh  
+
+cub_util=$(echo $1|tr "[A-Z]" "[a-z]") >/dev/null 2>&1
+
+if [ $OS != "Windows_NT" -a "$cub_util" == "deletedb" ]; then
+    do_check_more_errors "`pwd`"
+fi >/dev/null 2>&1 
+export PATH=$CUBRID/bin:$PATH >/dev/null
+if [ -f $CUBRID/bin/cub_server ]
+then
+    cubrid "$@"
+fi

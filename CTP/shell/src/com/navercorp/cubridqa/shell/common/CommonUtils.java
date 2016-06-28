@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2016, Search Solution Corporation. All rights reserved.
+
  * 
  * Redistribution and use in source and binary forms, with or without 
  * modification, are permitted provided that the following conditions are met:
@@ -22,23 +23,16 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
-package com.navercorp.cubridqa.common;
+
+package com.navercorp.cubridqa.shell.common;
 
 import java.io.File;
-
-
-import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,8 +41,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.navercorp.cubridqa.common.CommonUtils;
 
 public class CommonUtils {
 	public static String replace(String strSource, String strFrom, String strTo) {
@@ -74,7 +66,8 @@ public class CommonUtils {
 
 		int count = 0;
 		for (int i = len - 1; i >= 0; i--) {
-			if (str.charAt(i) == ' ' || str.charAt(i) == '\n' || str.charAt(i) == '\r' || str.charAt(i) == '\t') {
+			if (str.charAt(i) == ' ' || str.charAt(i) == '\n'
+					|| str.charAt(i) == '\r' || str.charAt(i) == '\t') {
 				count++;
 			} else {
 				break;
@@ -83,29 +76,28 @@ public class CommonUtils {
 		return str.substring(0, len - count);
 
 	}
-
+	
 	public static ArrayList<String[]> extractTableToBeVerified(String input, String flag) {
-
+		
 		ArrayList<String[]> list = new ArrayList<String[]>();
-		if (input == null)
-			return list;
-
-		Pattern pattern = Pattern.compile("'" + flag + "'\\s*'(.*?)'\\s*([0-9]*)");
+		if(input == null) return list;
+		
+		Pattern pattern = Pattern.compile("'"+flag+"'\\s*'(.*?)'\\s*([0-9]*)");
 		Matcher matcher = pattern.matcher(input);
-
+		
 		String[] item;
-
+		
 		while (matcher.find()) {
 			item = new String[2];
 			item[0] = matcher.group(1);
 			item[1] = matcher.group(2);
-
+			
 			list.add(item);
 		}
 		return list;
-
+		
 	}
-
+	
 	public static String concatFile(String p1, String p2) {
 		String p;
 		if (p1 == null)
@@ -127,49 +119,52 @@ public class CommonUtils {
 		}
 		return p.replace('/', File.separatorChar);
 	}
+	
+	public static String getFileNameForDispatchAll(){
+		return CommonUtils.concatFile(Constants.DIR_CONF, "dispatch_tc_ALL.txt");
+	}
 
+	public static String getFileNameForDispatchFin(String envId){
+		return CommonUtils.concatFile(Constants.DIR_CONF,"dispatch_tc_FIN_" + envId + ".txt");
+	}
+	
 	public static String getFileContent(String filename) throws IOException {
 		File file = new File(filename);
-		if (!file.exists()) {
+		if(!file.exists()) {
 			return null;
 		}
 		StringBuffer result = new StringBuffer();
 		FileInputStream fis = new FileInputStream(file);
 		InputStreamReader reader = new InputStreamReader(fis, "UTF-8");
-
+		
 		LineNumberReader lineReader = new LineNumberReader(reader);
 		String line;
-
-		while ((line = lineReader.readLine()) != null) {
-			if (line.trim().equals(""))
-				continue;
-			result.append(line.trim()).append('\n');
+		
+		while((line = lineReader.readLine()) != null) {
+			if(line.trim().equals("")) continue;
+			result.append(line.trim()).append(Constants.LINE_SEPARATOR);
 		}
 		lineReader.close();
 		reader.close();
 		fis.close();
 		return result.toString();
 	}
-
+	
 	public static ArrayList<String> getLineList(String filename) throws IOException {
-
-		if (filename == null)
-			return null;
-
+		
 		File file = new File(filename);
-		if (!file.exists()) {
+		if(!file.exists()) {
 			return null;
 		}
 		ArrayList<String> resultList = new ArrayList<String>();
 		FileInputStream fis = new FileInputStream(file);
 		InputStreamReader reader = new InputStreamReader(fis, "UTF-8");
-
+		
 		LineNumberReader lineReader = new LineNumberReader(reader);
 		String line;
-
-		while ((line = lineReader.readLine()) != null) {
-			if (line.trim().equals(""))
-				continue;
+		
+		while((line = lineReader.readLine()) != null) {
+			if(line.trim().equals("")) continue;
 			resultList.add(line.trim());
 		}
 		lineReader.close();
@@ -177,53 +172,66 @@ public class CommonUtils {
 		fis.close();
 		return resultList;
 	}
-
+	
 	public static Properties getProperties(String filename) throws IOException {
 		FileInputStream fis = new FileInputStream(filename);
 		Properties props = new Properties();
 		props.load(fis);
 		fis.close();
-		return props;
+		return  props;
 	}
-
+	
 	public static Properties getPropertiesWithPriority(String filename) throws IOException {
 		Properties props = getProperties(filename);
 		props.putAll(System.getProperties());
 		return props;
 	}
-
-	public static void writeProperties(String filename, Properties props) throws IOException {
-		File f = new File(filename);
-		OutputStream out = new FileOutputStream(f);
-		props.store(out, "");
+	
+	public static void writeProperties(String filename,Properties props) throws IOException {
+        File f = new File(filename);
+        OutputStream out = new FileOutputStream( f );
+        props.store(out,"");
 	}
-
-	public static void sleep(int sec) {
+	
+	public static void sleep(int sec){
 		try {
-			Thread.sleep(sec * 1000);
-		} catch (InterruptedException e) {
+			Thread.sleep(sec*1000);
+		} catch (InterruptedException e) {				
 		}
 	}
-
+	
+	public static String resetProcess(SSHConnect ssh, boolean isWindows) {
+		ShellInput scripts;
+		try {			
+			if(isWindows) {
+				return ssh.execute(Constants.WIN_KILL_PROCESS) + ssh.execute(Constants.WIN_KILL_PROCESS_NATIVE, true);
+			} else {
+				return ssh.execute(Constants.LIN_KILL_PROCESS);
+			}
+		} catch (Exception e) {
+			return "fail to reset processes: " + e.getMessage();
+		}
+	}
+	
 	public static String dateToString(Date date, String fm) {
 		SimpleDateFormat dateFormat = new SimpleDateFormat(fm);
-		return dateFormat.format(date);
+		return dateFormat.format( date );
 	}
-
+	
 	public static String getExactFilename(String fullFilename) {
 		if (fullFilename == null) {
 			return null;
 		}
-
+		
 		String exactName = fullFilename.replace('\\', '/');
 		int p = exactName.lastIndexOf('/');
 		if (p == -1) {
 			return fullFilename;
 		}
-
+		
 		return exactName.substring(p + 1);
 	}
-
+	
 	public static String getExportsOfMEKYParams() {
 		Map<String, String> map = System.getenv();
 
@@ -242,193 +250,40 @@ public class CommonUtils {
 		return result.toString();
 	}
 
-	public static String getEnvInFile(String var) {
-		String value = System.getenv(var);
+	public static boolean isNewBuildNumberSystem(String simplifiedBuildId) {
+		if (simplifiedBuildId == null) {
+			return false;
+		}
+		String curValue = convertNumberSystemToFixedLength(simplifiedBuildId);
+		String stdValue = convertNumberSystemToFixedLength("10.1.0.6858");
+		return curValue.compareTo(stdValue) >= 0;
+	}
 
-		if (value == null) {
-			return value;
+	public static String convertNumberSystemToFixedLength(String simplifiedBuildId) {
+		if (simplifiedBuildId == null) {
+			return simplifiedBuildId;
 		}
 
-		value = getFixedPath(value);
+		String[] items = simplifiedBuildId.split("\\.");
+		return toFixedLength(items[0], 3, '0') + toFixedLength(items[1], 3, '0') + toFixedLength(items[2], 3, '0') + toFixedLength(items[3], 10, '0');
 
-		File file = new File(value);
-		try {
-			return file.getCanonicalPath();
-		} catch (Exception e) {
-			return file.getAbsolutePath();
+	}
+
+	public static String toFixedLength(String str, int len, char fillChar) {
+
+		if (str == null)
+			return null;
+		String result = str;
+		for (int i = 0; i < len; i++) {
+			result = fillChar + result;
 		}
+		return result.substring(result.length() - len);
 	}
-
-	public final static boolean isWindowsPlatform() {
-		String osName = System.getProperty("os.name");
-		return osName != null && osName.toLowerCase().indexOf("windows") != -1;
-	}
-
-	public final static boolean isCygwinPlatform() {
-		String term = System.getenv("TERM");
-		return term != null && term.toLowerCase().indexOf("cygwin") != -1;
-	}
-
-	public static String getLinuxStylePath(String path) {
-		path = path.trim();
-		if (isCygwinPlatform()) {
-			String linStylePath;
-			while (true) {
-				linStylePath = LocalInvoker.execCommands("cygpath " + path, false);
-				if (linStylePath != null && linStylePath.trim().length() > 0) {
-					break;
-				}
-			}
-			return linStylePath.trim();
-		} else {
-			return path;
-		}
-	}
-
-	public static String getWindowsStylePath(String path) {
-		path = path.trim();
-		if (isCygwinPlatform()) {
-			String winStylePath;
-			while (true) {
-				winStylePath = LocalInvoker.execCommands("cygpath -m " + path, false);
-				if (winStylePath != null && winStylePath.trim().length() > 0) {
-					break;
-				}
-			}
-			return winStylePath.trim();
-		} else {
-			return path;
-		}
-	}
-
-	public static String getFixedPath(String path) {
-		if (path == null)
-			return path;
-
-		path = path.trim();
-
-		try {
-			File file = new File(path);
-			if (file.exists())
-				return file.getCanonicalPath();
-			if (CommonUtils.isWindowsPlatform()) {
-				file = new File(getWindowsStylePath(path));
-				if (file.exists()) {
-					return file.getCanonicalPath();
-				}
-			}
-		} catch (Exception e) {
-			throw new RuntimeException("fail to get fixed path: " + path);
-		}
-		return path;
-	}
-
+	
 	public static void main(String[] args) throws IOException {
 		System.out.println(getExactFilename("conf/core.1234"));
 		System.out.println(getExactFilename("conf\\core.1234"));
 		System.out.println(getExactFilename("/core\\conf\\core.1234"));
 	}
-
-	public static Properties getConfig(String configFile) {
-		FileInputStream fis = null;
-
-		try {
-			fis = new FileInputStream(configFile);
-			InputStream is = new BufferedInputStream(fis);
-			Properties props = new Properties();
-			props.load(is);
-			return props;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		} finally {
-			if (fis != null) {
-				try {
-					fis.close();
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-			}
-		}
-	}
-
-	public static Properties getConfig(InputStream is) {
-		try {
-			Properties props = new Properties();
-			props.load(is);
-			return props;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public static Timestamp getCurrentTimestamp() {
-		return new Timestamp(System.currentTimeMillis());
-	}
-
-	public static Reader readFile(String file) {
-		try {
-			return new FileReader(file);
-		} catch (FileNotFoundException e) {
-			return null;
-		}
-	}
-
-	public static int getRadomNum(int max) {
-		return (int) Math.floor(Math.random() * max);
-
-	}
-
-	public static String getCurrentTimeStamp(String format) {
-		SimpleDateFormat f = new SimpleDateFormat(format);
-		String timeStamp = f.format(new Date());
-		return timeStamp;
-	}
-
-	public static boolean convertBoolean(String str) {
-		return convertBoolean(str, false);
-	}
-
-	public static boolean convertBoolean(String value, boolean defaultValue) {
-		if (value == null)
-			return defaultValue;
-
-		value = value.trim().toUpperCase();
-		return value.equals("1") || value.equals("TRUE") || value.equals("YES");
-	}
-
-	public static String getSystemProperty(String key, String defaultValue, Properties props) {
-		if (key == null) {
-			return null;
-		}
-		String value = System.getProperty(key);
-		if (value != null && value.trim().equals("") == false) {
-			return value.trim();
-		}
-		value = System.getenv(key);
-		if (value != null && value.trim().equals("") == false) {
-			return value.trim();
-		}
-
-		if (props != null) {
-			value = props.getProperty(key);
-			if (value != null && value.trim().equals("") == false) {
-				return value.trim();
-			}
-		}
-		return defaultValue;
-	}
 	
-	public static int getShellType(boolean supportPureWindows) {
-		int shellType;
-		if (CommonUtils.isWindowsPlatform()) {
-			if (supportPureWindows) {
-				shellType = LocalInvoker.SHELL_TYPE_WINDOWS;
-			} else {
-				shellType = LocalInvoker.SHELL_TYPE_CYGWIN;
-			}
-		} else {
-			shellType = LocalInvoker.SHELL_TYPE_LINUX;
-		}
-		return shellType;
-	}
 }
