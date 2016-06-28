@@ -417,4 +417,18 @@ public class CommonUtils {
 		}
 		return defaultValue;
 	}
+	
+	public static int getShellType(boolean supportPureWindows) {
+		int shellType;
+		if (CommonUtils.isWindowsPlatform()) {
+			if (supportPureWindows) {
+				shellType = LocalInvoker.SHELL_TYPE_WINDOWS;
+			} else {
+				shellType = LocalInvoker.SHELL_TYPE_CYGWIN;
+			}
+		} else {
+			shellType = LocalInvoker.SHELL_TYPE_LINUX;
+		}
+		return shellType;
+	}
 }

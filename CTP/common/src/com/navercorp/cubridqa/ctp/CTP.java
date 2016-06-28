@@ -190,13 +190,13 @@ public class CTP {
 			addContScript("export sql_interactive=yes");
 			addContScript(runStmt);
 		} else {
-			LocalInvoker.exec(runStmt, getShellType(false), true);
+			LocalInvoker.exec(runStmt, CommonUtils.getShellType(false), true);
 		}		
 	}
 	
 	private static void executeSQL_By_CCI(IniData config, String suite) throws IOException {
 		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
-		LocalInvoker.exec("sh ${CTP_HOME}/sql_by_cci/bin/run.sh" + " -s " + suite + " -f " + configFilePath, getShellType(false), true);
+		LocalInvoker.exec("sh ${CTP_HOME}/sql_by_cci/bin/run.sh" + " -s " + suite + " -f " + configFilePath, CommonUtils.getShellType(false), true);
 	}
 
 	private static void executeShell(IniData config, String suite) {
@@ -286,19 +286,7 @@ public class CTP {
 		}
 	}
 
-	private static int getShellType(boolean supportPureWindows) {
-		int shellType;
-		if (CommonUtils.isWindowsPlatform()) {
-			if (supportPureWindows) {
-				shellType = LocalInvoker.SHELL_TYPE_WINDOWS;
-			} else {
-				shellType = LocalInvoker.SHELL_TYPE_CYGWIN;
-			}
-		} else {
-			shellType = LocalInvoker.SHELL_TYPE_LINUX;
-		}
-		return shellType;
-	}
+
 
 	private static void showVersion() {
 		System.out.println("CUBRID Test Program (CTP) " + Version.getVersion());
