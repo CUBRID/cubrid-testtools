@@ -55,6 +55,7 @@ function analyzeMessageInfo() {
 	    fi
     fi
 
+    export url com_url com_img_url src_url
     fn=${url##*/}
     fexe=${fn##*.}
     if [ "$fexe" == 'zip' ]
