@@ -353,7 +353,7 @@ do
 			if [ "$existsMsgId" -a ${isStartByData} -gt 0 ];then
 				echo "Action: $x , ${q_exec[$count]}_continue.sh, CONTINUE"
 			
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh conf/${q_exec[$count]}_continue.sh )
+				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/dailyqa/${q_exec[$count]}_continue.sh )
 			
 				echo
 				echo "End continue mode test!"
@@ -412,7 +412,7 @@ do
 
 				consumerTimer $msgId "start"
 			
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh conf/${q_exec[$count]}.sh)
+				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/dailyqa/${q_exec[$count]}.sh)
 			
 				consumerTimer $msgId "stop"
 
