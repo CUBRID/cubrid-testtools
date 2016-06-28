@@ -348,7 +348,7 @@ do
 			consumerTimer ${existsMsgId} "interrupted"
 		fi
 		
-		if [ -f ${CTP_HOME}/conf/${q_exec[$count]}_continue.sh ]
+		if [ -f ${CTP_HOME}/common/dailyqa/${q_exec[$count]}_continue.sh ]
 		then
 			if [ "$existsMsgId" -a ${isStartByData} -gt 0 ];then
 				echo "Action: $x , ${q_exec[$count]}_continue.sh, CONTINUE"
@@ -388,7 +388,7 @@ do
 			exit 0
 		elif [ "$hasBuild" == "true" ]
 		then
-			if [ -f ${CTP_HOME}/conf/${q_exec[$count]}.sh ] 
+			if [ -f ${CTP_HOME}/common/dailyqa/${q_exec[$count]}.sh ] 
 			then
 				echo "Action: $x , ${q_exec[$count]}.sh, GENERAL"
 			
