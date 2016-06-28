@@ -52,7 +52,7 @@ function upload_core_info ()
 
     if [ `cat $coreInfoDir/$coreInfoFile | grep "CORE FILE   :" | wc -l` -gt 0 ]
     then
-        upload_to_dailysrv $coreInfoDir "/home/fanzq/qaresult_en/web/test_error"
+        upload_to_dailysrv $coreInfoDir "./qaresult_en/web/test_error"
     fi
 }
 
