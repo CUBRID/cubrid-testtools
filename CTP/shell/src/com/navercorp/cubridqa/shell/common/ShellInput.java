@@ -84,12 +84,7 @@ public class ShellInput {
 		
 		String result = (shouldExportUser ? "export USER=" + user + LINE_SEPARATOR : "") + cmds.toString() + "echo "+ COMP_FLAG_MOCK + LINE_SEPARATOR;
 		
-		if(!isWindows) {
-			return result;
-		} else {
-			result = CommonUtils.replace(result, "\"", "\\\"");
-			return "bash -c \"" + result + "\"";
-		} 
+		return result;
 	}
 
 	@Override
