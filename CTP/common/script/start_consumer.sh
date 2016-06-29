@@ -152,7 +152,7 @@ function updateCodes()
 	    echo "then " >> $HOME/.autoUpdate.sh
 	    echo "	  . ~/.bash_profile " >> $HOME/.autoUpdate.sh
 	    echo "fi " >> $HOME/.autoUpdate.sh
-	    echo "cd ${CURRENT_TOOL_HOME} ">> $HOME/.autoUpdate.sh
+	    echo "cd ${CURRENT_TOOL_HOME}/../script ">> $HOME/.autoUpdate.sh
        	echo "sh stop_consumer.sh" >>$HOME/.autoUpdate.sh
         echo "sh upgrade.sh" >>$HOME/.autoUpdate.sh
         echo "nohup ${commands} 2>&1 >> nohup.out &">>$HOME/.autoUpdate.sh
