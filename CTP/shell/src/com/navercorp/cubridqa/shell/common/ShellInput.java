@@ -86,14 +86,10 @@ public class ShellInput {
 		
 		if(!isWindows) {
 			return result;
-		} else if(SSHConnect.SERVICE_PROTOCOL.equals("ssh")){
+		} else {
 			result = CommonUtils.replace(result, "\"", "\\\"");
 			return "bash -c \"" + result + "\"";
-		} else if(SSHConnect.SERVICE_PROTOCOL.equals("rmi")){
-			return result;
-		} else {
-			return result;				
-		}
+		} 
 	}
 
 	@Override

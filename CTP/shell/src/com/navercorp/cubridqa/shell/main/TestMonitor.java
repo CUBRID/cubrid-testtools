@@ -59,7 +59,7 @@ public class TestMonitor {
 		String user = context.getProperty("env." + currEnvId + ".ssh.user");
 		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
 
-		this.ssh = new SSHConnect(host, port, user, pwd);		
+		this.ssh = new SSHConnect(host, port, user, pwd, this.context.getServiceProtocolType());		
 		this.initRelatedSSH();
 
 		try {
@@ -99,7 +99,7 @@ public class TestMonitor {
 			SSHConnect s;
 			for (String host : relatedHosts) {
 				try {
-					s = new SSHConnect(host, test.sshPort, test.sshUser, test.sshPwd);
+					s = new SSHConnect(host, test.sshPort, test.sshUser, test.sshPwd,  context.getServiceProtocolType());
 					this.sshRelateds.add(s);
 				} catch (Exception e) {
 					e.printStackTrace();
