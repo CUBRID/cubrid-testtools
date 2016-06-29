@@ -82,9 +82,9 @@ public class Context {
 
 	boolean enableSaveNormalErrorLog = false;
 
-
+	String serviceProtocolType;
     
-    String msgId;
+	String msgId;
     
     Map<String, String> envMap = null;
 
@@ -118,6 +118,8 @@ public class Context {
       
 		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.mode.continue", "false"), false);
 		this.cubridPackageUrl = getProperty("main.testbuild.url");
+		
+		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
 
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
@@ -357,6 +359,14 @@ public class Context {
     
         public boolean getEnableSaveNormalErrorLog() {
 		return enableSaveNormalErrorLog ;
+	}
+        
+	public String getServiceProtocolType() {
+		return serviceProtocolType;
+	}
+
+	public void setServiceProtocolType(String serviceProtocolType) {
+		this.serviceProtocolType = serviceProtocolType;
 	}
 
 }

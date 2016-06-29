@@ -50,7 +50,7 @@ public class TestCaseSVN {
 		
 		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "]";
 
-		this.ssh = new SSHConnect(host, port, user, pwd);
+		this.ssh = new SSHConnect(host, port, user, pwd, this.context.getServiceProtocolType());
 		
 		
 		if(context.isWindows()) {

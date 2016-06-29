@@ -158,7 +158,7 @@ public class FeedbackFile implements Feedback {
 		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
 		String envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
 		try {
-			ssh = new SSHConnect(host, port, user, pwd);
+			ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
 
 			ShellInput scripts = new ShellInput();
 			scripts.addCommand("run_coverage_collect_and_upload " + covParams);

@@ -172,7 +172,7 @@ public class Dispatch {
 		String user = context.getProperty("env." + envId + ".ssh.user");
 		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
 
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
 		ShellInput script;
 		String result;
 		
@@ -216,7 +216,7 @@ public class Dispatch {
 		String user = context.getProperty("env." + envId + ".ssh.user");
 		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
 
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh = new SSHConnect(host, port, user, pwd, this.context.getServiceProtocolType());
 		ShellInput script;
 		String result;
 
@@ -268,7 +268,7 @@ public class Dispatch {
 		String user = context.getProperty("env." + envId + ".ssh.user");
 		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
 
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
 		ShellInput script;
 		String result;
 		

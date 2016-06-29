@@ -48,25 +48,19 @@ public class SSHConnect {
 	
 	final int MAX_TRY_TIME = 10;
 	
-	public static String SERVICE_PROTOCOL;
-	static {
-		try {
-			Properties props = CommonUtils.getProperties(CommonUtils.concatFile(Constants.DIR_CONF, "main.properties"));
-			SERVICE_PROTOCOL = props.getProperty("main.service.protocol", "ssh").trim().toLowerCase();
-		} catch (Exception e) {
-		}
-	}
+	public String serviceProtocol;
 	
-	public SSHConnect(String host, String port, String user, String pwd) throws JSchException {
-		this(host, Integer.parseInt(port), user, pwd);
+	public SSHConnect(String host, String port, String user, String pwd, String serviceProtocol) throws JSchException {
+		this(host, Integer.parseInt(port), user, pwd, serviceProtocol);
 	}
 
-	public SSHConnect(String host, int port, String user, String pwd) throws JSchException {
+	public SSHConnect(String host, int port, String user, String pwd, String serviceProtocol) throws JSchException {
 
 		this.host = host;
 		this.port = port;
 		this.user = user;
 		this.pwd = pwd;
+		this.serviceProtocol = serviceProtocol;
 	}
 
 	public String toString() {
@@ -101,7 +95,7 @@ public class SSHConnect {
 
 	public String execute(String scripts, boolean pureWindows) throws Exception {
 		//System.out.println(scripts);
-		if (SERVICE_PROTOCOL.equals("rmi")) {
+		if (serviceProtocol.equals("rmi")) {
 			ShellService srv = null;
 			String url = "rmi://" + host + ":" + port + "/shellService";
 			while(true) {

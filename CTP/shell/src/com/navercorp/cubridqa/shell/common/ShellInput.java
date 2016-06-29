@@ -84,16 +84,7 @@ public class ShellInput {
 		
 		String result = (shouldExportUser ? "export USER=" + user + LINE_SEPARATOR : "") + cmds.toString() + "echo "+ COMP_FLAG_MOCK + LINE_SEPARATOR;
 		
-		if(!isWindows) {
-			return result;
-		} else if(SSHConnect.SERVICE_PROTOCOL.equals("ssh")){
-			result = CommonUtils.replace(result, "\"", "\\\"");
-			return "bash -c \"" + result + "\"";
-		} else if(SSHConnect.SERVICE_PROTOCOL.equals("rmi")){
-			return result;
-		} else {
-			return result;				
-		}
+		return result;
 	}
 
 	@Override

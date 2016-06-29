@@ -26,6 +26,8 @@
 
 package com.navercorp.cubridqa.shell.deploy;
 
+import java.util.Properties;
+
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -39,6 +41,7 @@ public class TestCaseGithub {
 	SSHConnect ssh;
 	String currEnvId;
 	String envIdentify;
+	String serviceProtocol;
 
 	public TestCaseGithub(Context context, String currEnvId) throws Exception {
 		this.context = context;
@@ -47,10 +50,11 @@ public class TestCaseGithub {
 		String port = context.getProperty("env." + currEnvId + ".ssh.port");
 		String user = context.getProperty("env." + currEnvId + ".ssh.user");
 		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		serviceProtocol = context.getServiceProtocolType();
 		
 		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "]";
 
-		this.ssh = new SSHConnect(host, port, user, pwd);
+		this.ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
 		
 		
 		if(context.isWindows()) {

@@ -52,7 +52,7 @@ public class DeployOneNode {
 		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
 		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "]";
 
-		this.ssh = new SSHConnect(host, port, user, pwd);
+		this.ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
 		this.isNewBuildNumberSystem= context.getIsNewBuildNumberSystem();
