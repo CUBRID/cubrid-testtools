@@ -48,7 +48,7 @@ public class SSHConnect {
 	
 	final int MAX_TRY_TIME = 10;
 	
-	public String SERVICE_PROTOCOL;
+	public String serviceProtocol;
 	
 	public SSHConnect(String host, String port, String user, String pwd, String serviceProtocol) throws JSchException {
 		this(host, Integer.parseInt(port), user, pwd, serviceProtocol);
@@ -60,7 +60,7 @@ public class SSHConnect {
 		this.port = port;
 		this.user = user;
 		this.pwd = pwd;
-		this.SERVICE_PROTOCOL = serviceProtocol;
+		this.serviceProtocol = serviceProtocol;
 	}
 
 	public String toString() {
@@ -95,7 +95,7 @@ public class SSHConnect {
 
 	public String execute(String scripts, boolean pureWindows) throws Exception {
 		//System.out.println(scripts);
-		if (SERVICE_PROTOCOL.equals("rmi")) {
+		if (serviceProtocol.equals("rmi")) {
 			ShellService srv = null;
 			String url = "rmi://" + host + ":" + port + "/shellService";
 			while(true) {
