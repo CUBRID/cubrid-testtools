@@ -47,7 +47,7 @@ public class Compatibility {
 	private Compatibility(Configure conf) {
 		this.conf = conf;
 		try{
-			this.compatConfig = CommonUtils.getProperties(Constants.CTP_HOME + File.separator + "conf" + File.separator + "compat.properties");
+			this.compatConfig = CommonUtils.getProperties(Constants.CTP_HOME + File.separator + "conf" + File.separator + "compat.conf");
 		}catch(Exception e) {
 			this.compatConfig = new Properties();
 		}

@@ -204,7 +204,7 @@ public class ManualSender {
 			sendMsg.addMessage(message);
 		} else {
 			if (isI18N) {
-				GeneralExtendedSuite instance = GeneralExtendedSuite.getInstance(conf, "i18n.properties", false);
+				GeneralExtendedSuite instance = GeneralExtendedSuite.getInstance(conf, "i18n.conf", false);
 				if (confFilename.trim().equalsIgnoreCase("-i18nAll")) {
 
 					ArrayList<Properties> list = instance.getMsgProperties(getI18NKey(queue, mainVersion));
@@ -234,7 +234,7 @@ public class ManualSender {
 					content = message.toString();
 				}
 			} else if (isDBIMG) {
-				GeneralExtendedSuite instance = GeneralExtendedSuite.getInstance(conf, "compat_dbimg.properties", false);
+				GeneralExtendedSuite instance = GeneralExtendedSuite.getInstance(conf, "compat_dbimg.conf", false);
 				if (confFilename.trim().equalsIgnoreCase("-dbimgAll")) {
 
 					ArrayList<Properties> list = instance.getMsgProperties(getCompatDBIMGKey(queue, mainVersion));
@@ -262,7 +262,7 @@ public class ManualSender {
 					content = message.toString();
 				}
 			} else {
-				GeneralExtendedSuite instance = GeneralExtendedSuite.getInstance(conf, "compat.properties", false);
+				GeneralExtendedSuite instance = GeneralExtendedSuite.getInstance(conf, "compat.conf", false);
 				
 				if (confFilename.trim().equalsIgnoreCase("-compatAll")) {
 					ArrayList<Properties> list = instance.getMsgProperties(getCompatKey(queue, mainVersion));
@@ -316,7 +316,7 @@ public class ManualSender {
 	}
 
 	private static void showHelp() {
-		System.out.println("Usage: java com.nhncorp.cubrid.scheduler.producer.ManualSender <queue> <url1,url2,...> <scenario> <priority> [compat_file|-i18nAll|-dbimgAll|-compatAll] [PROPS:MKEY_TEST1=v1;MKEY_TEST2=v2]");
+		System.out.println("Usage: java com.navercorp.cubridqa.scheduler.producer.ManualSender <queue> <url1,url2,...> <scenario> <priority> [compat_file|-i18nAll|-dbimgAll|-compatAll] [PROPS:MKEY_TEST1=v1;MKEY_TEST2=v2]");
 		System.out.println();
 	}
 	

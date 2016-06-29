@@ -44,7 +44,7 @@ private static I18N instance;
 	private I18N(Configure conf) {
 		this.conf = conf;
 		try{
-			this.in18nConfig = CommonUtils.getProperties(Constants.CTP_HOME + File.separator + "conf" + File.separator + "i18n.properties");
+			this.in18nConfig = CommonUtils.getProperties(Constants.CTP_HOME + File.separator + "conf" + File.separator + "i18n.conf");
 		}catch(Exception e) {
 			this.in18nConfig = new Properties();
 		}
