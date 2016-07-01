@@ -284,6 +284,7 @@ public class CommonUtils {
 	}
 	
 	public static void generateFailBackupPackage(Context context){
+		if(context.isWindows()) return;
 		String backupFileName = "";
 		Calendar cal = Calendar.getInstance();
 		int year = cal.get(Calendar.YEAR);  
@@ -298,8 +299,7 @@ public class CommonUtils {
         Integer tastId = context.getTaskId();
         
         backupFileName = "shell_result_" + build + "_" + bit + "_" + tastId + "_" + curTimestamp + "tar.gz";
-        GZIPUtil gp = new GZIPUtil();
-        gp.CreateTarGZ(Constants.BACK_DIR, Constants.DIR_WORKS_ROOT + backupFileName);
+        LocalInvoker.exec("tar zvcf " + Constants.DIR_WORKS_ROOT + "/" + backupFileName + " conf log run.log " , false, false);
 	}
 	
 	public static void main(String[] args) throws IOException {
