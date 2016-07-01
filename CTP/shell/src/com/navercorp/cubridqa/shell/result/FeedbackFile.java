@@ -67,6 +67,7 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onTaskStopEvent() {
 		long taskStopTime = System.currentTimeMillis();
+		CommonUtils.generateFailBackupPackage(this.context);
 		println("[TEST STOP] Current Time is " + new Date(), "Elapse Time:" + ((taskStopTime - this.taskStartTime)));
 		feedbackLog.close();
 	}

@@ -35,12 +35,15 @@ import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.navercorp.cubridqa.shell.main.Context;
 
 public class CommonUtils {
 	public static String replace(String strSource, String strFrom, String strTo) {
@@ -278,6 +281,25 @@ public class CommonUtils {
 			result = fillChar + result;
 		}
 		return result.substring(result.length() - len);
+	}
+	
+	public static void generateFailBackupPackage(Context context){
+		String backupFileName = "";
+		Calendar cal = Calendar.getInstance();
+		int year = cal.get(Calendar.YEAR);  
+        int month = cal.get(Calendar.MONTH) + 1;
+        int day = cal.get(Calendar.DAY_OF_MONTH);  
+        int hour = cal.get(Calendar.HOUR);  
+        int minute = cal.get(Calendar.MINUTE);  
+        int second = cal.get(Calendar.SECOND);
+        String curTimestamp = year + "." + month + "." + day + "_" + hour + "." + minute + "." + second;
+        String build = context.getTestBuild();
+        String bit = context.getVersion();
+        Integer tastId = context.getTaskId();
+        
+        backupFileName = "shell_result_" + build + "_" + bit + "_" + tastId + "_" + curTimestamp + "tar.gz";
+        GZIPUtil gp = new GZIPUtil();
+        gp.CreateTarGZ(Constants.BACK_DIR, Constants.DIR_WORKS_ROOT + backupFileName);
 	}
 	
 	public static void main(String[] args) throws IOException {

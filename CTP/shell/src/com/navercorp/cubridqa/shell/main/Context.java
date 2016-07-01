@@ -60,6 +60,8 @@ public class Context {
 	
 	String version;
 	
+	Integer taskId;
+
 	boolean isNewBuildNumberSystem = true;
 	
 	int total_scenario;
@@ -351,12 +353,20 @@ public class Context {
 		return this.enableCheckDiskSpace;
 	}
     
-        public String getMailNoticeTo() {
+	public String getMailNoticeTo() {
 		return mailNoticeTo;
 	}
-    
-        public boolean getEnableSaveNormalErrorLog() {
-		return enableSaveNormalErrorLog ;
+
+	public boolean getEnableSaveNormalErrorLog() {
+		return enableSaveNormalErrorLog;
+	}
+
+	public Integer getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(Integer taskId) {
+		this.taskId = taskId;
 	}
 
 }

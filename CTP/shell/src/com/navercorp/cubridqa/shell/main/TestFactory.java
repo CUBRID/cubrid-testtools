@@ -91,7 +91,7 @@ public class TestFactory {
 
 	public void execute() throws Exception {
 		
-		if (context.isContinueMode && isNeedContinue()) {
+		if (context.isContinueMode) {
 			feedback.onTaskContinueEvent();
 		} else {
 			feedback.onTaskStartEvent(context.getCubridPackageUrl());
@@ -105,8 +105,12 @@ public class TestFactory {
 		
 		System.out.println("============= FETCH TEST CASES ==================");
 		Dispatch.init(context);
-		if(Dispatch.getInstance().getTotalTbdSize() == 0 ) {
-			System.out.println("NO TEST CASE TO TEST");			
+		if (Dispatch.getInstance().getTotalTbdSize() == 0) {
+			if (context.isContinueMode) {
+				System.out.println("Not found any test cases to execute with CONTINUE mode!");
+			} else {
+				System.out.println("NO TEST CASE TO TEST!");
+			}
 			return;
 		}
 		
@@ -322,135 +326,5 @@ public class TestFactory {
 			}
 		}
 		return true;
-	}
-	
-	private boolean isNeedContinue(){
-		boolean needContinue = false;
-		String confPath = Constants.DIR_CONF;
-		int finCount = 0;
-		int totalCount = 0;
-		File file = new File(confPath);
-		if(!file.exists())
-			return false;
-		
-		String currentBuildFile = CommonUtils.concatFile(Constants.DIR_CONF,
-				"current_build");
-		if (currentBuildFile != null) {
-			File buildFile = new File(currentBuildFile);
-			if (!buildFile.exists() || buildFile.length() == 0) {
-				return false;
-			}
-		}else{
-			return false;
-		}
-		
-		String taskIdFile = CommonUtils.concatFile(Constants.DIR_CONF,
-				"current_task_id");
-		if (taskIdFile != null) {
-			File taskFile = new File(taskIdFile);
-			if (!taskFile.exists() || taskFile.length() == 0) {
-				return false;
-			}
-		}else{
-			return false;
-		}
-		
-		String dispathTCALLFile = CommonUtils.concatFile(Constants.DIR_CONF,
-				"dispatch_tc_ALL.txt");
-		if (dispathTCALLFile != null) {
-			File dispathAllFile = new File(dispathTCALLFile);
-			if (dispathAllFile.exists()) {
-				FileInputStream fis = null;
-				InputStreamReader reader = null;
-				LineNumberReader lineReader = null;
-				try {
-					fis = new FileInputStream(dispathAllFile);
-					reader = new InputStreamReader(fis, "UTF-8");
-					;
-					lineReader = new LineNumberReader(reader);
-					String line;
-
-					while ((line = lineReader.readLine()) != null) {
-						if (line.trim().equals(""))
-							continue;
-						totalCount++;
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				} finally {
-					try {
-						lineReader.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					try {
-						reader.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					try {
-						fis.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-		
-		File[] finFileList = file.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				if (pathname.isFile()
-						&& pathname.getName().startsWith("dispatch_tc_FIN")
-						&& pathname.getName().endsWith(".txt")) {
-					return true;
-				}
-				return false;
-			}
-		});
-		
-		if(finFileList!=null){
-			for (int i = 0; i < finFileList.length; i++) {
-				FileInputStream fis = null;
-				InputStreamReader reader = null;
-				LineNumberReader lineReader = null;
-				try {
-					fis = new FileInputStream(finFileList[i]);
-					reader = new InputStreamReader(fis, "UTF-8");;
-					lineReader = new LineNumberReader(reader);
-					String line;
-
-					while ((line = lineReader.readLine()) != null) {
-						if (line.trim().equals(""))
-							continue;
-						finCount++;
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				} finally {
-					try {
-						lineReader.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					try {
-						reader.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					try {
-						fis.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-		
-		if(totalCount > finCount){
-			needContinue = true;
-		}
-		
-		return needContinue;
 	}
 }

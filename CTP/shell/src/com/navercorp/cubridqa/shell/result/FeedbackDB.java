@@ -31,6 +31,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import javax.sql.DataSource;
 
@@ -38,6 +40,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
+import com.navercorp.cubridqa.shell.common.GZIPUtil;
 import com.navercorp.cubridqa.shell.common.HttpUtil;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.main.Context;
@@ -113,6 +116,7 @@ public class FeedbackDB implements Feedback {
 
 		Log log = new Log(CommonUtils.concatFile(Constants.DIR_CONF, "current_task_id"), false, false);
 		log.println(String.valueOf(task_id));
+		context.setTaskId(task_id);
 		log.close();
 	}
 
@@ -123,6 +127,7 @@ public class FeedbackDB implements Feedback {
 		try {
 			cont = CommonUtils.getFileContent(CommonUtils.concatFile(Constants.DIR_CONF, "current_task_id"));
 			this.task_id = Integer.parseInt(cont.trim());
+			context.setTaskId(task_id);
 		} catch (Exception e) {
 			this.task_id = -1;
 			e.printStackTrace();
@@ -136,6 +141,8 @@ public class FeedbackDB implements Feedback {
 
 		shutdownDataSource();
 
+		CommonUtils.generateFailBackupPackage(this.context);
+		
 		String noticeUrl = context.getProperty("feedback.qahome.notice_load");
 		if (noticeUrl != null && noticeUrl.trim().length() > 0) {
 			try {
@@ -147,6 +154,8 @@ public class FeedbackDB implements Feedback {
 				System.out.println("Notice QA homepage to load: FAIL. Url=" + noticeUrl);
 			}
 		}
+		
+		
 	}
 
 	public void notifyUpdateMain() {
@@ -506,7 +515,7 @@ public class FeedbackDB implements Feedback {
 			e.printStackTrace();
 		}
 	}
-
+	
 	@Override
 	public int getTestId() {
 		return this.task_id;
