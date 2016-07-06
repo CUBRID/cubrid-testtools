@@ -37,6 +37,7 @@ public class Constants {
 	
 	public static final String DIR_CONF = "./conf";
 	public static final String DIR_LOG_ROOT = "./log";
+	public static final String DIR_WORKS_ROOT = "./works";
 	
 	public static final String TC_RESULT_OK = "OK";
 	public static final String TC_RESULT_NOK = "NOK";
