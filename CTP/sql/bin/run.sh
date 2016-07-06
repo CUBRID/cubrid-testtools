@@ -648,6 +648,7 @@ function do_configure()
      export LC_ALL=en_US.UTF-8
      export CUBRID_CHARSET=$db_charset
      export CUBRID_LANG=en_US
+     export PATH=$JAVA_HOME/jre/bin/server:$JAVA_HOME/jre/bin/client:$PATH
   
      #set cubrid conf
      config_cubrid_without_ha
