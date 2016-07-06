@@ -111,7 +111,7 @@ public class FeedbackDB implements Feedback {
 			close(conn);
 		}
 
-		Log log = new Log(CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "current_task_id"), false, false);
+		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
 		log.println(String.valueOf(task_id));
 		context.setTaskId(task_id);
 		log.close();

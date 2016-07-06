@@ -97,10 +97,10 @@ public class Dispatch {
 	private void load() throws Exception {
 
 		if (context.isContinueMode()) {
-			this.tbdList = CommonUtils.getLineList(CommonUtils.getFileNameForDispatchAll(context));
+			this.tbdList = CommonUtils.getLineList(getFileNameForDispatchAll());
 			ArrayList<String> finList;
 			
-			File[] subList = new File(Constants.CURRENT_LOG_DIR).listFiles(new FilenameFilter() {
+			File[] subList = new File(context.getCurrentLogDir()).listFiles(new FilenameFilter() {
 				public boolean accept(File dir, String name) {
 					return name.startsWith("dispatch_tc_FIN") && name.endsWith(".txt");
 				}
@@ -149,7 +149,7 @@ public class Dispatch {
 				}
 			}
 			
-			this.all = new Log(CommonUtils.getFileNameForDispatchAll(context), false);
+			this.all = new Log(getFileNameForDispatchAll(), false);
 			for (String line : tbdList) {
 				all.println(line);
 			}
@@ -323,6 +323,14 @@ public class Dispatch {
 		}
 		return testCaseList;
 	}
+	
+	private String getFileNameForDispatchAll(){
+		return CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_ALL.txt");
+	}
+
+	private String getFileNameForDispatchFin(String envId){
+		return CommonUtils.concatFile(context.getCurrentLogDir(),"dispatch_tc_FIN_" + envId + ".txt");
+	}
 
 	private void clean() throws IOException {
 		File allFile;
@@ -337,12 +345,12 @@ public class Dispatch {
 			file.delete();
 		}
 
-		allFile = new File(CommonUtils.getFileNameForDispatchAll(context));
+		allFile = new File(getFileNameForDispatchAll());
 		allFile.createNewFile();
 
 		ArrayList<String> envList = context.getEnvList();
 		for (String envId : envList) {
-			finishedFile = new File(CommonUtils.getFileNameForDispatchFin(envId, context));
+			finishedFile = new File(getFileNameForDispatchFin(envId));
 			finishedFile.createNewFile();
 		}
 	}

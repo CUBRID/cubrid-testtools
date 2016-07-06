@@ -46,6 +46,5 @@
 	<classpathentry kind="lib" path="common/sched/lib/geronimo-j2ee-management_1.1_spec-1.0.1.jar"/>
 	<classpathentry kind="lib" path="common/sched/lib/hawtbuf-1.9.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="common/lib/cubridqa-common.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

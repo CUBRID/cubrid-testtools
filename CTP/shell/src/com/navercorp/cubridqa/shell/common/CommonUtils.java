@@ -124,20 +124,8 @@ public class CommonUtils {
 		return p.replace('/', File.separatorChar);
 	}
 	
-	public static String getFileNameForDispatchAll(Context context){
-		return CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "dispatch_tc_ALL.txt");
-	}
-
-	public static String getFileNameForDispatchFin(String envId, Context context){
-		return CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR,"dispatch_tc_FIN_" + envId + ".txt");
-	}
-	
-	public static String getEnvInMemory(String key){
-		return com.navercorp.cubridqa.common.CommonUtils.getEnvInFile(key);
-	}
-	
 	public static boolean isWindowsPlatformForController(){
-		return com.navercorp.cubridqa.common.CommonUtils.isCygwinPlatform();
+		return com.navercorp.cubridqa.common.CommonUtils.isWindowsPlatform();
 	}
 	
 	public static String getFileContent(String filename) throws IOException {
@@ -293,7 +281,7 @@ public class CommonUtils {
 	}
 	
 	public static void generateFailBackupPackage(Context context){
-		if(!isWindowsPlatformForController()) return;
+		if(isWindowsPlatformForController()) return;
 		
 		String backupFileName = "";
 		Calendar cal = Calendar.getInstance();
@@ -312,8 +300,8 @@ public class CommonUtils {
 		backupFileName = "shell_result_" + build + "_" + bit + "_" + taskId
 				+ "_" + curTimestamp + "tar.gz";
 		LocalInvoker.exec(
-				"cd $CTP_HOME; tar zvcf " + Constants.RUNTIME_LOG_DIR_HOME + "/"
-						+ backupFileName + " " + Constants.CURRENT_LOG_DIR, false, false);
+				"cd $CTP_HOME; tar zvcf " + context.getRootLogDir() + "/"
+						+ backupFileName + " " + context.getCurrentLogDir(), false, false);
 	}
 	
 	public static void main(String[] args) throws IOException {

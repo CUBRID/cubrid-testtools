@@ -40,8 +40,9 @@ public class Constants {
 	
 	public static final String RETRY_FLAG = "Retry_Count";
 	
-	public static final String RUNTIME_LOG_DIR_HOME = "result/shell";
-	public static final String CURRENT_LOG_DIR = RUNTIME_LOG_DIR_HOME + "/" + "current_runtime_logs";
+	public static final String RUNTIME_ROOT_LOG_DIR = "result/shell";
+	public static final String CURRENT_LOG_DIR = RUNTIME_ROOT_LOG_DIR + "/" + "current_runtime_logs";
+	public static final String ENV_CTP_HOME_KEY="CTP_HOME";
 	
 	public static final String SKIP_TYPE_NO = "0";
 	public static final String SKIP_TYPE_BY_MACRO = "1";

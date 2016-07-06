@@ -108,8 +108,7 @@ public class Main {
 		Set set = props.keySet();
 		Log contextSnapshot = new Log(
 				CommonUtils
-						.concatFile(context.getToolHome() + "/"
-								+ Constants.CURRENT_LOG_DIR,
+						.concatFile(context.getCurrentLogDir(),
 								"main_snapshot.properties"),
 				true, false);
 		for (Object key : set) {

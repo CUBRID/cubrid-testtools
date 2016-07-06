@@ -72,8 +72,8 @@ public class Test {
 		this.context = context;
 		this.currEnvId = currEnvId;
 		this.startTime = 0;
-		this.dispatchLog = new Log(CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "dispatch_tc_FIN_" + currEnvId + ".txt"), false, laterJoined ? true : context.isContinueMode());
-		this.workerLog = new Log(CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "test_" + currEnvId + ".log"), false, true);
+		this.dispatchLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + currEnvId + ".txt"), false, laterJoined ? true : context.isContinueMode());
+		this.workerLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, true);
 
 		sshHost = context.getProperty("env." + currEnvId + ".ssh.host");
 		sshPort = context.getProperty("env." + currEnvId + ".ssh.port");

@@ -36,8 +36,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import com.navercorp.cubridqa.common.Constants;
-import com.navercorp.cubridqa.shell.common.CommonUtils;;
+import com.navercorp.cubridqa.shell.common.CommonUtils;
+import com.navercorp.cubridqa.shell.common.Constants;
 
 public class Context {
 
@@ -90,8 +90,8 @@ public class Context {
     String serviceProtocolType;
     
 	String msgId;
-    
-    Map<String, String> envMap = null;
+	
+	Map<String, String> envMap = null;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -103,7 +103,7 @@ public class Context {
 	public void reload() throws IOException{
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
 		this.envList = initEnvList(config);
-		this.toolHome = CommonUtils.getEnvInMemory(Constants.TOOL_HOME_NAME);
+		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (Constants.ENV_CTP_HOME_KEY);
 		
 		this.cleanTestCase = getProperty("main.testcase.clean", "false").equalsIgnoreCase("true");
 		this.isWindows = getProperty("main.testing.platform", "linux").equalsIgnoreCase("windows");
@@ -268,6 +268,14 @@ public class Context {
 	
 	public Feedback getFeedback() {
 		return this.feedback;
+	}
+	
+	public String getCurrentLogDir(){
+		return getToolHome() + "/" + Constants.CURRENT_LOG_DIR;
+	}
+	
+	public String getRootLogDir(){
+		return getToolHome() + "/" + Constants.RUNTIME_ROOT_LOG_DIR;
 	}
 	
 	public String getFeedbackDbUrl(){
