@@ -23,7 +23,7 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
-
+set -x
 function run_sql {
     # CONSTANTS
     tmplog=${CTP_HOME}/tmp.log   
@@ -32,11 +32,9 @@ function run_sql {
     ctp_test_conf=${CTP_HOME}/conf/sql_runtime.conf
 
     # VARIABLES
-    git_repo_root="" 
+    git_repo_name="" 
     ctp_type=""
     ctp_scenario=""
-    ctp_category_alias=""
-    ctp_data_file=""
 
     #STEP 1: CLEAN
     runAction sql_medium_git.act 			#clean processes and check disk space
@@ -54,26 +52,26 @@ function run_sql {
     cp conf/sql_local.conf ${ctp_test_conf}
     if [ "$BUILD_SCENARIOS" == "medium" -o "$BUILD_SCENARIOS" == "medium_debug" ]; then
     	ctp_type="medium"
-    	git_repo_root=$HOME/cubrid-testcases
-    	ctp_scenario=$git_repo_root/medium
+    	git_repo_name=cubrid-testcases
+    	ctp_scenario=medium
     elif [ "$BUILD_SCENARIOS" == "sql" -o "$BUILD_SCENARIOS" == "sql_debug" ]; then
     	ctp_type="sql"
-        git_repo_root=$HOME/cubrid-testcases
-        ctp_scenario=$git_repo_root/sql
+        git_repo_name=cubrid-testcases
+        ctp_scenario=sql
     elif [ "$BUILD_SCENARIOS" == "sql_ext" -o "$BUILD_SCENARIOS" == "sql_ext_debug" ]; then
         ctp_type="sql"
-        git_repo_root=$HOME/cubrid-testcases-private
-        ctp_scenario=$git_repo_root/sql
+        git_repo_name=cubrid-testcases-private
+        ctp_scenario=sql
     else
         echo "Unknown scenario type, stop test."
         echo "Please check and re-send message."
         exit
     fi
 
-    run_git_update -f ${git_repo_root} -b ${BUILD_SCENARIO_BRANCH_GIT}
+    run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT}
 
-    ini.sh -s sql ${ctp_test_conf} scenario $ctp_scenario
-    ini.sh -s sql ${ctp_test_conf} data_file $ctp_scenario/files
+    ini.sh -s sql ${ctp_test_conf} scenario '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario
+    ini.sh -s sql ${ctp_test_conf} data_file '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario/files
     ini.sh -s sql ${ctp_test_conf} category_alias $BUILD_SCENARIOS
 
     #set supported param
@@ -92,7 +90,7 @@ function run_sql {
     then
         testResultPath=`cat $tmplog|grep "^Test Result Directory"|awk -F ':' '{print $NF}'|tr -d " "`
         testResultName="`basename ${testResultPath}`"
-        upload_to_dailysrv "$testResultPath" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$testResultName"
+        (cd $testResultPath/..; upload_to_dailysrv "./$testResultName" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$testResultName")
 
         if [ `cat $tmplog |grep '^CORE_FILE:' | wc -l` -gt 0 ]; then
             core_dirname=${BUILD_SCENARIOS}_`date '+%Y%m%d%H%M%S'`
@@ -100,7 +98,7 @@ function run_sql {
             mkdir -p ${core_path}
             
             cat $tmplog |grep '^CORE_FILE:'|awk -F ':' '{print $NF}'|tr -d " " | xargs -i analyzer.sh {} > ${core_path}/${core_dirname}_corestacks.txt
-            upload_to_dailysrv ${core_path} "./qaresult_en/web/test_error/function/${core_dirname}"
+            (cd ${core_path}/..; upload_to_dailysrv ${core_dirname} "./qaresult_en/web/test_error/function/${core_dirname}")
 
             cat $tmplog |grep '^CORE_FILE:'|awk -F ':' '{print $NF}'|tr -d " " | xargs -i mv {} ${core_path}/..
             cp -rf $CUBRID ${core_path}/..
@@ -169,13 +167,13 @@ function run_sql_legacy {
 
 function close_shard_service {
     shard_service=`ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE` 
-    if [ "$shard_service" -eq "ON" ]
+    if [ "$shard_service" = "ON" ]
     then
         ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE OFF 
     fi
 }
-
-if [ ${BUILD_IS_FROM_GIT} == "1" ]; then
+echo BUILD_IS_FROM_GIT=$BUILD_IS_FROM_GIT
+if [ "${BUILD_IS_FROM_GIT}" == "1" ]; then
     run_sql
 else
     run_sql_legacy
