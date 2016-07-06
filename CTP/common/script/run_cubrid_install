@@ -206,6 +206,14 @@ function InstallBuildByPackage()
     wget -t 3 -T 120 $build_url
     
     `eval $command $buildFile -d ./CUBRID`
+    if [ -d ./CUBRID/CUBRID ]; then
+		mv ./CUBRID/CUBRID/* ./CUBRID
+		rm -rf ./CUBRID/CUBRID
+    fi
+    if [ ! -d ./CUBRID/databases ]; then
+	    mkdir ./CUBRID/databases
+    fi
+	
     rm $buildFile
     cd $curDir
 }

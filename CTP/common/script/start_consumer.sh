@@ -138,7 +138,7 @@ function updateCodes()
 	curDir=`pwd`
     branchName=$1
 
-    changedCount=`run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" --check-only ${CTP_HOME} | grep "fetch" | grep CHANGED | wc -l`
+    changedCount=`cd ${CTP_HOME}; run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" --check-only . | grep "fetch" | grep CHANGED | wc -l`
         
     if [ "$changedCount" -gt "0" ]
     then
