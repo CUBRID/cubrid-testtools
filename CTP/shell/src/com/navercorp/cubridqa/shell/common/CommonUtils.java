@@ -44,6 +44,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.navercorp.cubridqa.shell.main.Context;
+import com.navercorp.cubridqa.common.*;
 
 public class CommonUtils {
 	public static String replace(String strSource, String strFrom, String strTo) {
@@ -123,12 +124,20 @@ public class CommonUtils {
 		return p.replace('/', File.separatorChar);
 	}
 	
-	public static String getFileNameForDispatchAll(){
-		return CommonUtils.concatFile(Constants.DIR_CONF, "dispatch_tc_ALL.txt");
+	public static String getFileNameForDispatchAll(Context context){
+		return CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "dispatch_tc_ALL.txt");
 	}
 
-	public static String getFileNameForDispatchFin(String envId){
-		return CommonUtils.concatFile(Constants.DIR_CONF,"dispatch_tc_FIN_" + envId + ".txt");
+	public static String getFileNameForDispatchFin(String envId, Context context){
+		return CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR,"dispatch_tc_FIN_" + envId + ".txt");
+	}
+	
+	public static String getEnvInMemory(String key){
+		return com.navercorp.cubridqa.common.CommonUtils.getEnvInFile(key);
+	}
+	
+	public static boolean isWindowsPlatformForController(){
+		return com.navercorp.cubridqa.common.CommonUtils.isCygwinPlatform();
 	}
 	
 	public static String getFileContent(String filename) throws IOException {
@@ -284,22 +293,27 @@ public class CommonUtils {
 	}
 	
 	public static void generateFailBackupPackage(Context context){
-		if(context.isWindows()) return;
+		if(!isWindowsPlatformForController()) return;
+		
 		String backupFileName = "";
 		Calendar cal = Calendar.getInstance();
-		int year = cal.get(Calendar.YEAR);  
-        int month = cal.get(Calendar.MONTH) + 1;
-        int day = cal.get(Calendar.DAY_OF_MONTH);  
-        int hour = cal.get(Calendar.HOUR);  
-        int minute = cal.get(Calendar.MINUTE);  
-        int second = cal.get(Calendar.SECOND);
-        String curTimestamp = year + "." + month + "." + day + "_" + hour + "." + minute + "." + second;
-        String build = context.getTestBuild();
-        String bit = context.getVersion();
-        Integer tastId = context.getTaskId();
-        
-        backupFileName = "shell_result_" + build + "_" + bit + "_" + tastId + "_" + curTimestamp + "tar.gz";
-        LocalInvoker.exec("tar zvcf " + Constants.DIR_WORKS_ROOT + "/" + backupFileName + " conf log run.log " , false, false);
+		int year = cal.get(Calendar.YEAR);
+		int month = cal.get(Calendar.MONTH) + 1;
+		int day = cal.get(Calendar.DAY_OF_MONTH);
+		int hour = cal.get(Calendar.HOUR);
+		int minute = cal.get(Calendar.MINUTE);
+		int second = cal.get(Calendar.SECOND);
+		String curTimestamp = year + "." + month + "." + day + "_" + hour + "."
+				+ minute + "." + second;
+		String build = context.getTestBuild();
+		String bit = context.getVersion();
+		Integer taskId = context.getTaskId();
+
+		backupFileName = "shell_result_" + build + "_" + bit + "_" + taskId
+				+ "_" + curTimestamp + "tar.gz";
+		LocalInvoker.exec(
+				"cd $CTP_HOME; tar zvcf " + Constants.RUNTIME_LOG_DIR_HOME + "/"
+						+ backupFileName + " " + Constants.CURRENT_LOG_DIR, false, false);
 	}
 	
 	public static void main(String[] args) throws IOException {

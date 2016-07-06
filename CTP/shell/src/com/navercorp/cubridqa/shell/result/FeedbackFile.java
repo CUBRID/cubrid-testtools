@@ -47,7 +47,7 @@ public class FeedbackFile implements Feedback {
 	Context context;
 	
 	public FeedbackFile(Context context){
-		logName = CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "feedback.log");
+		logName = CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "feedback.log");
 		this.context = context;
 	}
 	
@@ -156,9 +156,10 @@ public class FeedbackFile implements Feedback {
 		String port = context.getProperty("env." + currEnvId + ".ssh.port");
 		String user = context.getProperty("env." + currEnvId + ".ssh.user");
 		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
-		String envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
+		String serviceProtocol = context.getServiceProtocolType();
+		String envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "] with " + serviceProtocol + " protocol!";
 		try {
-			ssh = new SSHConnect(host, port, user, pwd);
+			ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
 
 			ShellInput scripts = new ShellInput();
 			scripts.addCommand("run_coverage_collect_and_upload " + covParams);

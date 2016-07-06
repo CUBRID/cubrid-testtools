@@ -36,7 +36,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import com.navercorp.cubridqa.shell.common.CommonUtils;
+import com.navercorp.cubridqa.common.Constants;
+import com.navercorp.cubridqa.shell.common.CommonUtils;;
 
 public class Context {
 
@@ -84,9 +85,11 @@ public class Context {
 
 	boolean enableSaveNormalErrorLog = false;
 
-
+    String toolHome;
     
-    String msgId;
+    String serviceProtocolType;
+    
+	String msgId;
     
     Map<String, String> envMap = null;
 
@@ -100,6 +103,7 @@ public class Context {
 	public void reload() throws IOException{
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
 		this.envList = initEnvList(config);
+		this.toolHome = CommonUtils.getEnvInMemory(Constants.TOOL_HOME_NAME);
 		
 		this.cleanTestCase = getProperty("main.testcase.clean", "false").equalsIgnoreCase("true");
 		this.isWindows = getProperty("main.testing.platform", "linux").equalsIgnoreCase("windows");
@@ -121,6 +125,8 @@ public class Context {
 		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.mode.continue", "false"), false);
 		this.cubridPackageUrl = getProperty("main.testbuild.url");
 
+		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
+		
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
       }
@@ -368,5 +374,20 @@ public class Context {
 	public void setTaskId(Integer taskId) {
 		this.taskId = taskId;
 	}
+	
+	public String getServiceProtocolType() {
+		return serviceProtocolType;
+	}
 
+	public void setServiceProtocolType(String serviceProtocolType) {
+		this.serviceProtocolType = serviceProtocolType;
+	}
+	
+    public String getToolHome() {
+		return toolHome;
+	}
+
+	public void setToolHome(String toolHome) {
+		this.toolHome = toolHome;
+	}
 }

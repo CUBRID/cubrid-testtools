@@ -58,6 +58,8 @@ public class Dispatch {
 	private Log all;
 	
 	private boolean isFinished;
+	
+	private String toolHome = "";
 
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
@@ -95,10 +97,10 @@ public class Dispatch {
 	private void load() throws Exception {
 
 		if (context.isContinueMode()) {
-			this.tbdList = CommonUtils.getLineList(CommonUtils.getFileNameForDispatchAll());
+			this.tbdList = CommonUtils.getLineList(CommonUtils.getFileNameForDispatchAll(context));
 			ArrayList<String> finList;
 			
-			File[] subList = new File(Constants.DIR_CONF).listFiles(new FilenameFilter() {
+			File[] subList = new File(Constants.CURRENT_LOG_DIR).listFiles(new FilenameFilter() {
 				public boolean accept(File dir, String name) {
 					return name.startsWith("dispatch_tc_FIN") && name.endsWith(".txt");
 				}
@@ -147,7 +149,7 @@ public class Dispatch {
 				}
 			}
 			
-			this.all = new Log(CommonUtils.getFileNameForDispatchAll(), false);
+			this.all = new Log(CommonUtils.getFileNameForDispatchAll(context), false);
 			for (String line : tbdList) {
 				all.println(line);
 			}
@@ -171,8 +173,9 @@ public class Dispatch {
 		String port = context.getProperty("env." + envId + ".ssh.port");
 		String user = context.getProperty("env." + envId + ".ssh.user");
 		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
+		String serviceProtocol = context.getServiceProtocolType();
 
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
 		ShellInput script;
 		String result;
 		
@@ -215,8 +218,9 @@ public class Dispatch {
 		String port = context.getProperty("env." + envId + ".ssh.port");
 		String user = context.getProperty("env." + envId + ".ssh.user");
 		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
+		String serviceProtocol = context.getServiceProtocolType();
 
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
 		ShellInput script;
 		String result;
 
@@ -267,8 +271,9 @@ public class Dispatch {
 		String port = context.getProperty("env." + envId + ".ssh.port");
 		String user = context.getProperty("env." + envId + ".ssh.user");
 		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
+		String serviceProtocol = context.getServiceProtocolType();
 
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
 		ShellInput script;
 		String result;
 		
@@ -323,7 +328,7 @@ public class Dispatch {
 		File allFile;
 		File finishedFile;
 
-		File[] subList = new File(Constants.DIR_CONF).listFiles(new FilenameFilter() {
+		File[] subList = new File(Constants.CURRENT_LOG_DIR).listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return name.startsWith("dispatch_tc_");
 			}
@@ -332,12 +337,12 @@ public class Dispatch {
 			file.delete();
 		}
 
-		allFile = new File(CommonUtils.getFileNameForDispatchAll());
+		allFile = new File(CommonUtils.getFileNameForDispatchAll(context));
 		allFile.createNewFile();
 
 		ArrayList<String> envList = context.getEnvList();
 		for (String envId : envList) {
-			finishedFile = new File(CommonUtils.getFileNameForDispatchFin(envId));
+			finishedFile = new File(CommonUtils.getFileNameForDispatchFin(envId, context));
 			finishedFile.createNewFile();
 		}
 	}
@@ -364,5 +369,9 @@ public class Dispatch {
 	
 	public ArrayList<String> getTempSkippedList() {
 		return this.tempSkippedList;
+	}
+	
+	public String getToolHome() {
+		return toolHome;
 	}
 }

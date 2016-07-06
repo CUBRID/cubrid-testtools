@@ -51,15 +51,16 @@ public class TestMonitor {
 		this.context = context;
 		this.test = test;
 		
-		this.log = new Log(CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "monitor_" + test.getCurrentEnvId() + ".log"), false, context.isContinueMode);
+		this.log = new Log(CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "monitor_" + test.getCurrentEnvId() + ".log"), false, context.isContinueMode);
 		
 		String currEnvId = test.getCurrentEnvId();
 		String host = context.getProperty("env." + currEnvId + ".ssh.host");
 		String port = context.getProperty("env." + currEnvId + ".ssh.port");
 		String user = context.getProperty("env." + currEnvId + ".ssh.user");
 		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		String serviceProtocol = context.getServiceProtocolType();
 
-		this.ssh = new SSHConnect(host, port, user, pwd);		
+		this.ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);		
 		this.initRelatedSSH();
 
 		try {
@@ -76,7 +77,7 @@ public class TestMonitor {
 		}
 		
 		if (enableTracing && sshRelateds != null && sshRelateds.size() > 0) {
-			this.logRelated = new Log(CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "monitor_" + test.getCurrentEnvId() + "_related.log"), false, context.isContinueMode);
+			this.logRelated = new Log(CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "monitor_" + test.getCurrentEnvId() + "_related.log"), false, context.isContinueMode);
 		}
 	}
 	
@@ -95,11 +96,12 @@ public class TestMonitor {
 		}
 		
 		ArrayList<String> relatedHosts = context.getRelatedHosts(test.getCurrentEnvId());
+		String serviceProtocol = context.getServiceProtocolType();
 		if (relatedHosts != null && relatedHosts.size() > 0) {			
 			SSHConnect s;
 			for (String host : relatedHosts) {
 				try {
-					s = new SSHConnect(host, test.sshPort, test.sshUser, test.sshPwd);
+					s = new SSHConnect(host, test.sshPort, test.sshUser, test.sshPwd, serviceProtocol);
 					this.sshRelateds.add(s);
 				} catch (Exception e) {
 					e.printStackTrace();

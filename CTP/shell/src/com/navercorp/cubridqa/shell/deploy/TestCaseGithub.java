@@ -48,9 +48,9 @@ public class TestCaseGithub {
 		String user = context.getProperty("env." + currEnvId + ".ssh.user");
 		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
 		
-		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "]";
+		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "] with " + context.getServiceProtocolType() + " protocol!";
 
-		this.ssh = new SSHConnect(host, port, user, pwd);
+		this.ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
 		
 		
 		if(context.isWindows()) {

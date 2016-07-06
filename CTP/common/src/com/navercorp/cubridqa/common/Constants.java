@@ -32,6 +32,9 @@ public class Constants {
 	public final static String LINE_SEPARATOR = System.getProperty("line.separator");
 	
 	public final static Properties COMMON_DAILYQA_CONF;
+	
+	public static final String TOOL_HOME_NAME="CTP_HOME";
+	
 	static {
 		COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile("CTP_HOME") + File.separator + "conf" + File.separator + "dailyqa.conf");
 	}

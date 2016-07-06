@@ -26,14 +26,6 @@
 
 package com.navercorp.cubridqa.shell.main;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -93,9 +85,10 @@ public class TestFactory {
 		ArrayList<String> stableEnvList = (ArrayList<String>) context.getEnvList().clone();
 		if (context.isContinueMode) {
 			feedback.onTaskContinueEvent();
+			System.out.println("============= FETCH TEST CASES ==================");
 			Dispatch.init(context);
 			if(Dispatch.getInstance().getTotalTbdSize() == 0){
-				System.out.println("Not found any test cases to execute with CONTINUE mode!");
+				System.out.println("NO TEST CASE TO TEST WITH CONTINUE MODE!");
 				return;
 			}
 			
