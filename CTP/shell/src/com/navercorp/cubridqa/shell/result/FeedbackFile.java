@@ -47,7 +47,7 @@ public class FeedbackFile implements Feedback {
 	Context context;
 	
 	public FeedbackFile(Context context){
-		logName = CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "feedback.log");
+		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
 		this.context = context;
 	}
 	

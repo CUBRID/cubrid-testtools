@@ -336,7 +336,7 @@ public class Dispatch {
 		File allFile;
 		File finishedFile;
 
-		File[] subList = new File(Constants.CURRENT_LOG_DIR).listFiles(new FilenameFilter() {
+		File[] subList = new File(context.getCurrentLogDir()).listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return name.startsWith("dispatch_tc_");
 			}

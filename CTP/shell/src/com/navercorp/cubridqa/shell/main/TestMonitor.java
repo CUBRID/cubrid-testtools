@@ -51,7 +51,7 @@ public class TestMonitor {
 		this.context = context;
 		this.test = test;
 		
-		this.log = new Log(CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "monitor_" + test.getCurrentEnvId() + ".log"), false, context.isContinueMode);
+		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "monitor_" + test.getCurrentEnvId() + ".log"), false, context.isContinueMode);
 		
 		String currEnvId = test.getCurrentEnvId();
 		String host = context.getProperty("env." + currEnvId + ".ssh.host");
@@ -77,7 +77,7 @@ public class TestMonitor {
 		}
 		
 		if (enableTracing && sshRelateds != null && sshRelateds.size() > 0) {
-			this.logRelated = new Log(CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "monitor_" + test.getCurrentEnvId() + "_related.log"), false, context.isContinueMode);
+			this.logRelated = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "monitor_" + test.getCurrentEnvId() + "_related.log"), false, context.isContinueMode);
 		}
 	}
 	

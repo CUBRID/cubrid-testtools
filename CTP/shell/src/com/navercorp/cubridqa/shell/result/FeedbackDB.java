@@ -122,7 +122,7 @@ public class FeedbackDB implements Feedback {
 
 		String cont = null;
 		try {
-			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getToolHome() + "/" + Constants.CURRENT_LOG_DIR, "current_task_id"));
+			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"));
 			this.task_id = Integer.parseInt(cont.trim());
 			context.setTaskId(task_id);
 		} catch (Exception e) {
