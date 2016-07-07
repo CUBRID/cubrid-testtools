@@ -59,8 +59,6 @@ public class Dispatch {
 	
 	private boolean isFinished;
 	
-	private String toolHome = "";
-
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
 		this.tbdList = new ArrayList<String>();
@@ -377,9 +375,5 @@ public class Dispatch {
 	
 	public ArrayList<String> getTempSkippedList() {
 		return this.tempSkippedList;
-	}
-	
-	public String getToolHome() {
-		return toolHome;
 	}
 }
