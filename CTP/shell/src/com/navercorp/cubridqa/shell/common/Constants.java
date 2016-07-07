@@ -35,14 +35,15 @@ public class Constants {
 	
 	public final static String FM_DATE_COREDIR="yyyyMMdd";
 	
-	public static final String DIR_CONF = "./conf";
-	public static final String DIR_LOG_ROOT = "./log";
-	
 	public static final String TC_RESULT_OK = "OK";
 	public static final String TC_RESULT_NOK = "NOK";
 	
 	public static final String RETRY_FLAG = "Retry_Count";
-
+	
+	public static final String RUNTIME_ROOT_LOG_DIR = "result/shell";
+	public static final String CURRENT_LOG_DIR = RUNTIME_ROOT_LOG_DIR + "/" + "current_runtime_logs";
+	public static final String ENV_CTP_HOME_KEY="CTP_HOME";
+	
 	public static final String SKIP_TYPE_NO = "0";
 	public static final String SKIP_TYPE_BY_MACRO = "1";
 	public static final String SKIP_TYPE_BY_TEMP = "2";

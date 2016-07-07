@@ -45,10 +45,10 @@ public class SSHConnect {
 	String user;
 	String pwd;
 	String title;
+	String serviceProtocol;
 	
 	final int MAX_TRY_TIME = 10;
 	
-	public String serviceProtocol;
 	
 	public SSHConnect(String host, String port, String user, String pwd, String serviceProtocol) throws JSchException {
 		this(host, Integer.parseInt(port), user, pwd, serviceProtocol);
