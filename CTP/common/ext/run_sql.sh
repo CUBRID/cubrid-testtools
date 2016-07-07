@@ -24,6 +24,9 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 set -x
+
+is_continue_mode=$1
+
 function run_sql {
     # CONSTANTS
     tmplog=${CTP_HOME}/tmp.log   
@@ -172,9 +175,14 @@ function close_shard_service {
         ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE OFF 
     fi
 }
-echo BUILD_IS_FROM_GIT=$BUILD_IS_FROM_GIT
-if [ "${BUILD_IS_FROM_GIT}" == "1" ]; then
-    run_sql
+
+
+if [ "${is_continue_mode}" == "YES" ]; then
+	echo SQL test does not support CONTINUE mode
 else
-    run_sql_legacy
+	if [ "${BUILD_IS_FROM_GIT}" == "1" ]; then
+	    run_sql
+	else
+	    run_sql_legacy
+	fi
 fi
