@@ -36,11 +36,9 @@ function killtree() {
 
 #killtree $@
 
-consumer_pid=`ps -u $USER -f | grep start_consumer | grep -v grep | awk '{print $2}'`
+consumer_pids=`ps -u $USER -f | grep start_consumer.sh | grep -v grep | awk '{print $2}'`
 
-cnt=`echo $consumer_pid| wc -l`
+for i in $consumer_pids
 
-if [ $cnt -eq 1 ] 
-then
-  killtree $consumer_pid 9
+  killtree $i 9
 fi
