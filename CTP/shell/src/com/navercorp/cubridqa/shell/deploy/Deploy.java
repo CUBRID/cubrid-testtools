@@ -55,7 +55,7 @@ public class Deploy {
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
 
-		this.log = new Log(CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "test_" + currEnvId + ".log"), false, laterJoined ? true : context.isContinueMode());
+		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, laterJoined ? true : context.isContinueMode());
 	}
 	
 	public void deploy() throws Exception {

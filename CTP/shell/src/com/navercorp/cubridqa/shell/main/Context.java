@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
+import com.navercorp.cubridqa.shell.common.Constants;
 
 public class Context {
 
@@ -60,6 +61,8 @@ public class Context {
 	
 	String version;
 	
+	Integer taskId;
+
 	boolean isNewBuildNumberSystem = true;
 	
 	int total_scenario;
@@ -82,11 +85,13 @@ public class Context {
 
 	boolean enableSaveNormalErrorLog = false;
 
-	String serviceProtocolType;
+    String toolHome;
+    
+    String serviceProtocolType;
     
 	String msgId;
-    
-    Map<String, String> envMap = null;
+	
+	Map<String, String> envMap = null;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -98,6 +103,7 @@ public class Context {
 	public void reload() throws IOException{
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
 		this.envList = initEnvList(config);
+		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (Constants.ENV_CTP_HOME_KEY);
 		
 		this.cleanTestCase = getProperty("main.testcase.clean", "false").equalsIgnoreCase("true");
 		this.isWindows = getProperty("main.testing.platform", "linux").equalsIgnoreCase("windows");
@@ -118,9 +124,9 @@ public class Context {
       
 		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.mode.continue", "false"), false);
 		this.cubridPackageUrl = getProperty("main.testbuild.url");
-		
-		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
 
+		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
+		
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
       }
@@ -264,6 +270,14 @@ public class Context {
 		return this.feedback;
 	}
 	
+	public String getCurrentLogDir(){
+		return getToolHome() + "/" + Constants.CURRENT_LOG_DIR;
+	}
+	
+	public String getRootLogDir(){
+		return getToolHome() + "/" + Constants.RUNTIME_ROOT_LOG_DIR;
+	}
+	
 	public String getFeedbackDbUrl(){
 		String host = getProperty("feedback.db.host", "");
 		String port = getProperty("feedback.db.port", "");
@@ -353,14 +367,22 @@ public class Context {
 		return this.enableCheckDiskSpace;
 	}
     
-        public String getMailNoticeTo() {
+	public String getMailNoticeTo() {
 		return mailNoticeTo;
 	}
-    
-        public boolean getEnableSaveNormalErrorLog() {
-		return enableSaveNormalErrorLog ;
+
+	public boolean getEnableSaveNormalErrorLog() {
+		return enableSaveNormalErrorLog;
 	}
-        
+
+	public Integer getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(Integer taskId) {
+		this.taskId = taskId;
+	}
+	
 	public String getServiceProtocolType() {
 		return serviceProtocolType;
 	}
@@ -368,5 +390,12 @@ public class Context {
 	public void setServiceProtocolType(String serviceProtocolType) {
 		this.serviceProtocolType = serviceProtocolType;
 	}
+	
+    public String getToolHome() {
+		return toolHome;
+	}
 
+	public void setToolHome(String toolHome) {
+		this.toolHome = toolHome;
+	}
 }

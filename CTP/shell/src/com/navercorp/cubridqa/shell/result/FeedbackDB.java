@@ -111,8 +111,9 @@ public class FeedbackDB implements Feedback {
 			close(conn);
 		}
 
-		Log log = new Log(CommonUtils.concatFile(Constants.DIR_CONF, "current_task_id"), false, false);
+		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
 		log.println(String.valueOf(task_id));
+		context.setTaskId(task_id);
 		log.close();
 	}
 
@@ -121,8 +122,9 @@ public class FeedbackDB implements Feedback {
 
 		String cont = null;
 		try {
-			cont = CommonUtils.getFileContent(CommonUtils.concatFile(Constants.DIR_CONF, "current_task_id"));
+			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"));
 			this.task_id = Integer.parseInt(cont.trim());
+			context.setTaskId(task_id);
 		} catch (Exception e) {
 			this.task_id = -1;
 			e.printStackTrace();
@@ -506,7 +508,7 @@ public class FeedbackDB implements Feedback {
 			e.printStackTrace();
 		}
 	}
-
+	
 	@Override
 	public int getTestId() {
 		return this.task_id;

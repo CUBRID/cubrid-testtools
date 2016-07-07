@@ -82,24 +82,32 @@ public class TestFactory {
 	}
 
 	public void execute() throws Exception {
-		
+		ArrayList<String> stableEnvList = (ArrayList<String>) context.getEnvList().clone();
 		if (context.isContinueMode) {
 			feedback.onTaskContinueEvent();
+			System.out.println("============= FETCH TEST CASES ==================");
+			Dispatch.init(context);
+			if(Dispatch.getInstance().getTotalTbdSize() == 0){
+				System.out.println("NO TEST CASE TO TEST WITH CONTINUE MODE!");
+				return;
+			}
+			
+			System.out.println("============= SVN UPDATE ==================");
+			concurrentSVNUpdate(stableEnvList);
+			System.out.println("DONE");
+			
 		} else {
 			feedback.onTaskStartEvent(context.getCubridPackageUrl());
-		}
-		
-		ArrayList<String> stableEnvList = (ArrayList<String>) context.getEnvList().clone();
-		
-		System.out.println("============= SVN UPDATE ==================");
-		concurrentSVNUpdate(stableEnvList);
-		System.out.println("DONE");
-		
-		System.out.println("============= FETCH TEST CASES ==================");
-		Dispatch.init(context);
-		if(Dispatch.getInstance().getTotalTbdSize() == 0 ) {
-			System.out.println("NO TEST CASE TO TEST");			
-			return;
+			System.out.println("============= SVN UPDATE ==================");
+			concurrentSVNUpdate(stableEnvList);
+			System.out.println("DONE");
+			
+			System.out.println("============= FETCH TEST CASES ==================");
+			Dispatch.init(context);
+			if (Dispatch.getInstance().getTotalTbdSize() == 0) {
+				System.out.println("NO TEST CASE TO TEST!");
+				return;
+			}
 		}
 		
 		feedback.setTotalTestCase(Dispatch.getInstance().getTotalTbdSize(), Dispatch.getInstance().getMacroSkippedSize(), Dispatch.getInstance().getTempSkippedSize());
@@ -109,7 +117,6 @@ public class TestFactory {
 		}
 		
 		System.out.println("The Number of Test Case : " + Dispatch.getInstance().getTotalTbdSize());
-		
 		System.out.println("============= DEPLOY ==================");
 		concurrentDeploy(stableEnvList, false);
 		System.out.println("DONE");
@@ -128,7 +135,10 @@ public class TestFactory {
 		
 		feedback.onTaskStopEvent();
 		
+		CommonUtils.generateFailBackupPackage(context);
 		System.out.println("TEST COMPLETE");
+		
+		
 	}
 
 	private void joinTest(ArrayList<String> envList) throws Exception {
@@ -285,6 +295,7 @@ public class TestFactory {
 							svn.update();
 						}
 					} catch (Exception e) {
+						e.printStackTrace();
 						return false;
 					} finally{
 						if(git!=null) git.close();

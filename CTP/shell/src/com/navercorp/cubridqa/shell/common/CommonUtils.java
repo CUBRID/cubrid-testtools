@@ -35,12 +35,16 @@ import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.navercorp.cubridqa.shell.main.Context;
+import com.navercorp.cubridqa.common.*;
 
 public class CommonUtils {
 	public static String replace(String strSource, String strFrom, String strTo) {
@@ -120,12 +124,8 @@ public class CommonUtils {
 		return p.replace('/', File.separatorChar);
 	}
 	
-	public static String getFileNameForDispatchAll(){
-		return CommonUtils.concatFile(Constants.DIR_CONF, "dispatch_tc_ALL.txt");
-	}
-
-	public static String getFileNameForDispatchFin(String envId){
-		return CommonUtils.concatFile(Constants.DIR_CONF,"dispatch_tc_FIN_" + envId + ".txt");
+	public static boolean isWindowsPlatformForController(){
+		return com.navercorp.cubridqa.common.CommonUtils.isWindowsPlatform();
 	}
 	
 	public static String getFileContent(String filename) throws IOException {
@@ -278,6 +278,30 @@ public class CommonUtils {
 			result = fillChar + result;
 		}
 		return result.substring(result.length() - len);
+	}
+	
+	public static void generateFailBackupPackage(Context context){
+		if(isWindowsPlatformForController()) return;
+		
+		String backupFileName = "";
+		Calendar cal = Calendar.getInstance();
+		int year = cal.get(Calendar.YEAR);
+		int month = cal.get(Calendar.MONTH) + 1;
+		int day = cal.get(Calendar.DAY_OF_MONTH);
+		int hour = cal.get(Calendar.HOUR);
+		int minute = cal.get(Calendar.MINUTE);
+		int second = cal.get(Calendar.SECOND);
+		String curTimestamp = year + "." + month + "." + day + "_" + hour + "."
+				+ minute + "." + second;
+		String build = context.getTestBuild();
+		String bit = context.getVersion();
+		Integer taskId = context.getTaskId();
+
+		backupFileName = "shell_result_" + build + "_" + bit + "_" + taskId
+				+ "_" + curTimestamp + "tar.gz";
+		LocalInvoker.exec(
+				"cd $CTP_HOME; tar zvcf " + context.getRootLogDir() + "/"
+						+ backupFileName + " " + context.getCurrentLogDir(), false, false);
 	}
 	
 	public static void main(String[] args) throws IOException {
