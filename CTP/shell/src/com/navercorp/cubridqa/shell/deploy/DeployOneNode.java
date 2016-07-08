@@ -206,7 +206,9 @@ public class DeployOneNode {
 		scripts.addCommand("export SKIP_UPGRADE=" + enableSkipUpgrade);
 		scripts.addCommand("export CTP_BRANCH_NAME=" + branchName);
 		scripts.addCommand("cd $HOME/CTP");
+		scripts.addCommand("chmod u+x ./common/script/upgrade.sh");
 		scripts.addCommand("./common/script/upgrade.sh 2>&1");
+		scripts.addCommand("cd -");
 		
 		String result;
 		try {
