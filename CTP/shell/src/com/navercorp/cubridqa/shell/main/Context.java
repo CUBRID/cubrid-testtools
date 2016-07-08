@@ -91,6 +91,10 @@ public class Context {
     
 	String msgId;
 	
+	String enableSkipUpgrade;
+	
+	String ctpBranchName;
+	
 	Map<String, String> envMap = null;
 
 	public Context(String filename) throws IOException {
@@ -126,6 +130,8 @@ public class Context {
 		this.cubridPackageUrl = getProperty("main.testbuild.url");
 
 		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
+		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "1");
+		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
 		
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
@@ -148,6 +154,14 @@ public class Context {
 	
 	public String getProperty(String key, String defaultValue) {
 		return this.config.getProperty(key, defaultValue);
+	}
+	
+	public String getPropertyFromEnv(String key, String defaultValue){
+		if(key == null || key.length() <= 0)
+			return defaultValue;
+		
+		String val = System.getenv(key);
+		return (val == null || defaultValue.length() <=0) ? defaultValue : val;
 	}
 	
 	public ArrayList<String> getRelatedHosts(String envId) {
@@ -251,7 +265,7 @@ public class Context {
 	private void putEnvVriableIntoMapByKey(String key)
 	{
 		if(key == null || key.length() <= 0)
-			return ;
+			return;
 		
 		String val = System.getenv(key);
 		envMap.put(key, val);
@@ -398,4 +412,21 @@ public class Context {
 	public void setToolHome(String toolHome) {
 		this.toolHome = toolHome;
 	}
+	
+	public String getCtpBranchName() {
+		return ctpBranchName;
+	}
+
+	public void setCtpBranchName(String ctpBranchName) {
+		this.ctpBranchName = ctpBranchName;
+	}
+	
+	public String getEnableSkipUpgrade() {
+		return enableSkipUpgrade;
+	}
+
+	public void setEnableSkipUpgrade(String enableSkipUpgrade) {
+		this.enableSkipUpgrade = enableSkipUpgrade;
+	}
+
 }

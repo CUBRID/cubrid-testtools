@@ -61,12 +61,11 @@ public class DeployOneNode {
 	}
 	
 	public void deploy() {
-		deploy_cubrid_common();
-		deploy_cqt();
+		deploy_ctp();
 
 		if(context.isWindows()) {
 			String ret="";
-			deploy_windows();
+			deploy_build_on_windows();
 			while(true)
 			{
 				ret = backup_windows();
@@ -77,13 +76,12 @@ public class DeployOneNode {
 				}
 			}
 		} else {
-			deploy_core_analyzer();
-			deploy_linux_by_cubrid_common();
+			deploy_build_on_linux();
 			backup_linux();
 		}
 	}
 
-	private void deploy_windows() {
+	private void deploy_build_on_windows() {
 		cleanProcess();
 
 		String cubridInstallName = cubridPackageUrl.substring(cubridPackageUrl.indexOf("CUBRID-"));
@@ -133,7 +131,7 @@ public class DeployOneNode {
 		}
 	}
 	
-	private void deploy_linux() {
+	private void deploy_linux_old() {
 		cleanProcess();
 
 		String cubridInstallName = cubridPackageUrl.substring(cubridPackageUrl.indexOf("CUBRID-"));
@@ -172,7 +170,7 @@ public class DeployOneNode {
 		}
 	}
 	
-	private void deploy_linux_by_cubrid_common() {
+	private void deploy_build_on_linux() {
 		cleanProcess();
 		
 		String role = context.getProperty("main.testing.role", "").trim();
@@ -199,44 +197,18 @@ public class DeployOneNode {
 		}
 	}
 		
-	private void deploy_cubrid_common() {
-	
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("echo 'BEGIN TO UPGRADE cubrid_common'");
-		scripts.addCommand("cd $HOME/cubrid_common");
-		scripts.addCommand("sh upgrade.sh 2>&1");
-		
-		String result;
-		try {
-			result = ssh.execute(scripts);
-			log.println(result);
-		} catch (Exception e) {
-			log.print("[ERROR] " + e.getMessage());
-		}
-	}
-	
-	private void deploy_core_analyzer() {
+	private void deploy_ctp() {
+		String enableSkipUpgrade = context.getEnableSkipUpgrade();
+		String branchName = context.getCtpBranchName();
 		
 		ShellInput scripts = new ShellInput();
-		scripts.addCommand("echo 'BEGIN TO UPGRADE core_analyzer'");
-		scripts.addCommand("cd $HOME/core_analyzer");
-		scripts.addCommand("sh upgrade.sh 2>&1");
-		
-		String result;
-		try {
-			result = ssh.execute(scripts);
-			log.println(result);
-		} catch (Exception e) {
-			log.print("[ERROR] " + e.getMessage());
-		}
-	}
-	
-	private void deploy_cqt() {
-		
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("echo 'BEGIN TO UPGRADE CQT'");
-		scripts.addCommand("cd $HOME/CQT");
-		scripts.addCommand("sh upgrade.sh 2>&1");
+		scripts.addCommand("echo 'BEGIN TO UPGRADE CTP'");
+		scripts.addCommand("export SKIP_UPGRADE=" + enableSkipUpgrade);
+		scripts.addCommand("export CTP_BRANCH_NAME=" + branchName);
+		scripts.addCommand("cd $HOME/CTP");
+		scripts.addCommand("chmod u+x ./common/script/upgrade.sh");
+		scripts.addCommand("./common/script/upgrade.sh 2>&1");
+		scripts.addCommand("cd -");
 		
 		String result;
 		try {
