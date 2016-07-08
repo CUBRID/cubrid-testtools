@@ -40,8 +40,8 @@ function run_sql {
     ctp_scenario=""
 
     #STEP 1: CLEAN
-    runAction sql_medium_git.act 			#clean processes and check disk space
-    rm -f $tmplog >/dev/null 2>&1			#clean log
+    runAction sql_medium_git.act            #clean processes and check disk space
+    rm -f $tmplog >/dev/null 2>&1           #clean log
     rm -f $tmptxt >/dev/null 2>&1 
 
     #STEP 2: INSTALL CUBRID
@@ -54,11 +54,11 @@ function run_sql {
     # STEP 3: CONFIGURE CTP
     cp conf/sql_local.conf ${ctp_test_conf}
     if [ "$BUILD_SCENARIOS" == "medium" -o "$BUILD_SCENARIOS" == "medium_debug" ]; then
-    	ctp_type="medium"
-    	git_repo_name=cubrid-testcases
-    	ctp_scenario=medium
+        ctp_type="medium"
+        git_repo_name=cubrid-testcases
+        ctp_scenario=medium
     elif [ "$BUILD_SCENARIOS" == "sql" -o "$BUILD_SCENARIOS" == "sql_debug" ]; then
-    	ctp_type="sql"
+        ctp_type="sql"
         git_repo_name=cubrid-testcases
         ctp_scenario=sql
     elif [ "$BUILD_SCENARIOS" == "sql_ext" -o "$BUILD_SCENARIOS" == "sql_ext_debug" ]; then
@@ -108,7 +108,7 @@ function run_sql {
             (cd ${core_backup_root}; tar -czvf ${testResultName}.tar.gz ${testResultName}; rm -rf ${testResultName})
         fi
     else
-        run_coverage_collect_and_upload -h "$HOME/build" -n "$BUILD_ID" -c "$BUILD_SCENARIOS" -user "$MKEY_COVERAGE_UPLOAD_USER" -pwd "$MKEY_COVERAGE_UPLOAD_PWD" -host "$MKEY_COVERAGE_UPLOAD_IP" -to "${MKEY_COVERAGE_UPLOAD_DIR}/${BUILD_ID}/new" -port "${DAILYQA_SSH_PORT_DEFAULT}"
+        run_coverage_collect_and_upload -h "${CTP_HOME}/../build" -n "$BUILD_ID" -c "$BUILD_SCENARIOS" -user "$MKEY_COVERAGE_UPLOAD_USER" -pwd "$MKEY_COVERAGE_UPLOAD_PWD" -host "$MKEY_COVERAGE_UPLOAD_IP" -to "${MKEY_COVERAGE_UPLOAD_DIR}/${BUILD_ID}/new" -port "${DAILYQA_SSH_PORT_DEFAULT}"
     fi
 
     #STEP 6: final clean
@@ -121,10 +121,8 @@ function run_sql_legacy {
     #STEP 1: CLEAN
     echo "start to update CQT tools"
     runAction sql_medium_site.act
-    if [ -f $QA_REPOSITORY/temp/tmp.log ]
-    then
-        rm -f $QA_REPOSITORY/temp/tmp.log
-    fi
+
+    (cd $QA_REPOSITORY; sh upgrade.sh)
 
     #STEP 2: INSTALL CUBRID
     echo "Install Test Build"   
@@ -133,39 +131,48 @@ function run_sql_legacy {
     fi
     run_cubrid_install $role $url $src_url
     close_shard_service
+    broker_port=`ini.sh -s "%BROKER1" $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
+    sed -i "s/:[0-9]*:/:$broker_port:/" $QA_REPOSITORY/configuration/Function_Db/*.xml
+    if [ "$OS" == "Windows_NT" ]; then
+        sed -i "s@<cubridHome>.*</cubridHome>@<cubridHome>${CUBRID/\\/\\\\}</cubridHome>@g" $QA_REPOSITORY/configuration/System.xml
+        sed -i "s@<jdbcPath>.*</jdbcPath>@<jdbcPath>${CUBRID/\\/\\\\}\\\\jdbc\\\\cubrid_jdbc.jar</jdbcPath>@g" $QA_REPOSITORY/configuration/System.xml
+    else
+        sed -i "s@<cubridHome>.*</cubridHome>@<cubridHome>${CUBRID}</cubridHome>@g" $QA_REPOSITORY/configuration/System.xml
+        sed -i "s@<jdbcPath>.*</jdbcPath>@<jdbcPath>${CUBRID}/jdbc/cubrid_jdbc.jar</jdbcPath>@g" $QA_REPOSITORY/configuration/System.xml
+    fi
     echo "Finish Test Build Installation"
-    sleep 2
 
     #STEP 3: EXECUTE TEST
+    exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh"
+    if [ "$OS" == "Windows_NT" ]; then
+        exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/runWinTest.sh -config_file test_win.xml "
+    fi
+    
     echo "Start SQL Test On Linux"   
+    export PROPERTIES_PATH=$QA_REPOSITORY/qatool_bin/qamanager
     if [ "$BUILD_SCENARIOS" == "site" ]
     then
         export _JAVA_OPTIONS=-Dfile.encoding=euckr
-        if [ "$BUILD_TYPE" != "coverage" ]
-        then
-            sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh -h $CUBRID -v ${BUILD_SVN_BRANCH_NEW} -s $BUILD_SCENARIOS -t $BUILD_BIT -x -y -random_port
-        else
-            sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh -h $CUBRID -v ${BUILD_SVN_BRANCH_NEW} -s $BUILD_SCENARIOS -t $BUILD_BIT -x -random_port
-            run_coverage_collect_and_upload -h "$HOME/build" -n "$BUILD_ID" -c "$BUILD_SCENARIOS" -user "$MKEY_COVERAGE_UPLOAD_USER" -pwd "$MKEY_COVERAGE_UPLOAD_PWD" -host "$MKEY_COVERAGE_UPLOAD_IP" -to "${MKEY_COVERAGE_UPLOAD_DIR}/${BUILD_ID}/new" -port "${DAILYQA_SSH_PORT_DEFAULT}"
-        fi
     else
         export _JAVA_OPTIONS=-Dfile.encoding=utf8
-        sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh -h $CUBRID -v ${BUILD_SVN_BRANCH_NEW} -s $BUILD_SCENARIOS -t $BUILD_BIT -x -random_port|tee $QA_REPOSITORY/temp/tmp.log
-        
-        echo "Finish SQL Test On Linux"
-        if [ "$BUILD_TYPE" != "coverage" ]
-        then
-            cqt_log=`cat $QA_REPOSITORY/temp/tmp.log|grep RESULT_DIR|awk -F ':' '{print $NF}'|tr -d " "`
-            testResultPath=`cat $cqt_log|grep "Result Root Dir:"|awk -F ':' '{print $NF}'|tr -d " "`
-            testResultName="`basename ${testResultPath}`"
-            upload_to_dailysrv "$testResultPath" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$testResultName"
-        else
-            run_coverage_collect_and_upload -h "$HOME/build" -n "$BUILD_ID" -c "$BUILD_SCENARIOS" -user "$MKEY_COVERAGE_UPLOAD_USER" -pwd "$MKEY_COVERAGE_UPLOAD_PWD" -host "$MKEY_COVERAGE_UPLOAD_IP" -to "${MKEY_COVERAGE_UPLOAD_DIR}/${BUILD_ID}/new" -port "${DAILYQA_SSH_PORT_DEFAULT}"
-        fi        
     fi
+            
+    ${exec_script_file} -h $CUBRID -v ${BUILD_SVN_BRANCH_NEW} -s $BUILD_SCENARIOS -t $BUILD_BIT -x -random_port
+        
+    echo "Finish SQL Test On Linux"
+    if [ "$BUILD_TYPE" != "coverage" ]
+    then
+        for testResultPath in `cat $HOME/dailyqa/win_cqt_test.log|grep "Result Root Dir"|awk -F 'Dir:' '{print $NF}'|tr -d " "`
+        do
+            testResultName="`basename ${testResultPath}`"
+            (cd $testResultPath/..; upload_to_dailysrv "$testResultName" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$testResultName")
+        done
+    else
+        run_coverage_collect_and_upload -h "${HOME}/build" -n "$BUILD_ID" -c "$BUILD_SCENARIOS" -user "$MKEY_COVERAGE_UPLOAD_USER" -pwd "$MKEY_COVERAGE_UPLOAD_PWD" -host "$MKEY_COVERAGE_UPLOAD_IP" -to "${MKEY_COVERAGE_UPLOAD_DIR}/${BUILD_ID}/new" -port "${DAILYQA_SSH_PORT_DEFAULT}"
+    fi        
 
     #STEP 4: FINAL CLEAN
-    rm -rf $HOME/dailyqa/${BUILD_SVN_BRANCH_NEW}/result/logs
+    rm -rf ${CTP_HOME}/../dailyqa/${BUILD_SVN_BRANCH_NEW}/result/logs/*
 }
 
 function close_shard_service {
@@ -176,13 +183,12 @@ function close_shard_service {
     fi
 }
 
-
 if [ "${is_continue_mode}" == "YES" ]; then
-	echo SQL test does not support CONTINUE mode
+    echo SQL test does not support CONTINUE mode
 else
-	if [ "${BUILD_IS_FROM_GIT}" == "1" ]; then
-	    run_sql
-	else
-	    run_sql_legacy
-	fi
+    if [ "${BUILD_IS_FROM_GIT}" == "1" ]; then
+        run_sql
+    else
+        run_sql_legacy
+    fi
 fi
