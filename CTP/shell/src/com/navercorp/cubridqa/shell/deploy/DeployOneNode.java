@@ -200,13 +200,12 @@ public class DeployOneNode {
 	private void deploy_ctp() {
 		String enableSkipUpgrade = context.getEnableSkipUpgrade();
 		String branchName = context.getCtpBranchName();
-		String ctpHome = context.getToolHome();
 		
 		ShellInput scripts = new ShellInput();
 		scripts.addCommand("echo 'BEGIN TO UPGRADE CTP'");
 		scripts.addCommand("export SKIP_UPGRADE=" + enableSkipUpgrade);
 		scripts.addCommand("export CTP_BRANCH_NAME=" + branchName);
-		scripts.addCommand("cd " + ctpHome);
+		scripts.addCommand("cd $HOME/CTP");
 		scripts.addCommand("./common/script/upgrade.sh 2>&1");
 		
 		String result;

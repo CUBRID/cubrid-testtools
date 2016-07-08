@@ -130,7 +130,7 @@ public class Context {
 		this.cubridPackageUrl = getProperty("main.testbuild.url");
 
 		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
-		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "0");
+		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "1");
 		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
 		
 		// to get msg id from environment variable
