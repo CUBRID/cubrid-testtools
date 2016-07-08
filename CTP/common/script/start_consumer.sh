@@ -51,7 +51,6 @@ s_exec=""
 q_exec=""
 scenario=""
 store_branch=""
-script_path=""
 queue=""
 qlist=""
 isWin=""
@@ -331,7 +330,6 @@ checkConsumerStarted
 #loop to consume task messages
 while [ 1 ]
 do
-	cd $script_path
         count=0
 	#loop queue list
 	for x in ${qlist[@]}
@@ -346,37 +344,16 @@ do
 		isStartByData=`echo $existsMsgId|grep "[^0-9]"|wc -l`
 		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
 		then
-			consumerTimer ${existsMsgId} "interrupted"
-		fi
-		
-		if [ -f ${CTP_HOME}/common/ext/${q_exec[$count]}_continue.sh ]
-		then
-			if [ "$existsMsgId" -a ${isStartByData} -gt 0 ];then
-				echo "Action: $x , ${q_exec[$count]}_continue.sh, CONTINUE"
+			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
+			(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site;sh ${q_exec[$count]}.sh YES)
 			
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/${q_exec[$count]}_continue.sh )
-			
-				echo
-				echo "End continue mode test!"
-				consumerTimer ${existsMsgId} "stop"
-				contimeENDTIME=`getTimeStamp`
-				echo "END_CONTINUE_TIME:${contimeENDTIME}"
-				echo '' > ${CTP_HOME}/common/sched/status/${x}
-				echo
-			fi
-		elif [ -n "$(type -t ${q_exec[$count]}_continue)" ] && [ "$(type -t ${q_exec[$count]}_continue)" = "function" ];then
-			if [ "$existsMsgId" -a ${isStartByData} -gt 0 ];then
-				echo "Action: $x, ${q_exec[$count]}_continue(), CONTINUE"
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; ${q_exec[$count]}_continue)
-				
-				echo
-                                echo "End continue mode test!"
-				consumerTimer ${existsMsgId} "stop"
-				contimeENDTIME=`getTimeStamp`
-				echo "END_CONTINUE_TIME:${contimeENDTIME}"
-				echo '' > ${CTP_HOME}/common/sched/status/${x}
-				echo
-			fi
+			echo
+                        echo "End continue mode test!"
+			consumerTimer ${existsMsgId} "stop"
+			contimeENDTIME=`getTimeStamp`
+			echo "END_CONTINUE_TIME:${contimeENDTIME}"
+			echo '' > ${CTP_HOME}/common/sched/status/${x}
+			echo
 		fi
 
 		startAgent $x 
@@ -423,41 +400,6 @@ do
 				echo '' > ${CTP_HOME}/common/sched/status/$x
 				echo "END_TIME:${ENDTIME}"
 				echo
-			elif [ -n "$(type -t ${q_exec[$count]})" ] && [ "$(type -t ${q_exec[$count]})" = "function" ];then
-				echo "Action: $x , ${q_exec[$count]}() function, GENERAL"
-
-                                if [ -f $statFile ]
-                                then
-                                        rm -f $statFile
-                                else
-                                        mkdir -p ${CTP_HOME}/common/sched/status
-                                fi
-	
-				
-                                touch $statFile
-                                TestTime=`getTimeStamp`
-                                echo "QUEUE:${x}" > $statFile
-                                echo "EXEC FUNCTION:${q_exec[$count]}()" > $statFile
-                                echo "START_TIME:${TestTime}" >> $statFile
-
-                                echo
-                                echo "Log msg id into queue file!"
-                                echo "MSG_ID:$msgId" > ${CTP_HOME}/common/sched/status/$x
-                                echo "START_TIME:${TestTime}" >> ${CTP_HOME}/common/sched/status/$x
-                                echo
-
-                                consumerTimer $msgId "start"
-
-                                (cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; ${q_exec[$count]})
-
-                                consumerTimer $msgId "stop"
-
-                                ENDTIME=`getTimeStamp`
-                                echo 
-                                echo "Clean msg id from queue file"
-                                echo '' > ${CTP_HOME}/common/sched/status/$x
-                                echo "END_TIME:${ENDTIME}"
-                                echo
 				
 			else
 				echo "Please check if your script exists!"
