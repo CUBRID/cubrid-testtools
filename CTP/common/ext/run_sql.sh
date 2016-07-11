@@ -131,9 +131,9 @@ function run_sql_legacy {
     fi
     run_cubrid_install $role $url $src_url
     close_shard_service
-    broker_port=`ini.sh -s "%BROKER1" $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
-    sed -i "s/:[0-9]*:/:$broker_port:/" $QA_REPOSITORY/configuration/Function_Db/*.xml
     if [ "$OS" == "Windows_NT" ]; then
+        broker_port=`ini.sh -s "%BROKER1" $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
+        sed -i "s/:[0-9]*:/:$broker_port:/" $QA_REPOSITORY/configuration/Function_Db/*.xml
         sed -i "s@<cubridHome>.*</cubridHome>@<cubridHome>${CUBRID/\\/\\\\}</cubridHome>@g" $QA_REPOSITORY/configuration/System.xml
         sed -i "s@<jdbcPath>.*</jdbcPath>@<jdbcPath>${CUBRID/\\/\\\\}\\\\jdbc\\\\cubrid_jdbc.jar</jdbcPath>@g" $QA_REPOSITORY/configuration/System.xml
     else
@@ -145,7 +145,7 @@ function run_sql_legacy {
     #STEP 3: EXECUTE TEST
     exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh"
     if [ "$OS" == "Windows_NT" ]; then
-        exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/runWinTest.sh -config_file test_win.xml "
+        exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/runWinTest.sh -config_file test_win.xml"
     fi
     
     echo "Start SQL Test On Linux"   
