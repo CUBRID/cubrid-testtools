@@ -39,6 +39,6 @@ function killtree() {
 consumer_pids=`ps -u $USER -f | grep start_consumer.sh | grep -v grep | awk '{print $2}'`
 
 for i in $consumer_pids
-
+do
   killtree $i 9
-fi
+done
