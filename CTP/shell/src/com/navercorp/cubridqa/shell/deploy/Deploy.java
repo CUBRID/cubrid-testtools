@@ -60,15 +60,18 @@ public class Deploy {
 	
 	public void deploy() throws Exception {
 		context.getFeedback().onDeployStart(envIdentify);
+		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
+		if(relatedHosts !=null && !relatedHosts.isEmpty()){
+			context.setHAMode(true);
+		}
 		
 		DeployOneNode d = new DeployOneNode(context, currEnvId, host, log);
-		d.deploy();
+		d.deploy(Constants.MASTERNODENAME);
 		d.close();
 		
-		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
 		for(String h: relatedHosts) {
 			d = new DeployOneNode(context, currEnvId, h, log);
-			d.deploy();
+			d.deploy(Constants.SLAVERNODENAME);
 			d.close();
 		}
 		

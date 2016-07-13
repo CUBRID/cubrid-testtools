@@ -95,6 +95,8 @@ public class Context {
 	
 	String ctpBranchName;
 	
+	boolean isHAMode = false;
+	
 	Map<String, String> envMap = null;
 
 	public Context(String filename) throws IOException {
@@ -427,6 +429,14 @@ public class Context {
 
 	public void setEnableSkipUpgrade(String enableSkipUpgrade) {
 		this.enableSkipUpgrade = enableSkipUpgrade;
+	}
+	
+	public boolean isHAMode() {
+		return isHAMode;
+	}
+
+	public void setHAMode(boolean isHAMode) {
+		this.isHAMode = isHAMode;
 	}
 
 }
