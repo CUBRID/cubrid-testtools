@@ -48,7 +48,7 @@ public class DeployOneNode {
 
 	public DeployOneNode(Context context, String currEnvId, String host, Log log) throws Exception {
 		this.context = context;
-		this.currentEnvId = currEnvId;
+		this.currentEnvId =currEnvId;
 
 		port = context.getProperty("env." + currEnvId + ".ssh.port");
 		user = context.getProperty("env." + currEnvId + ".ssh.user");
@@ -63,7 +63,7 @@ public class DeployOneNode {
 		this.log = log;
 	}
 	
-	public void deploy(String nodeName) {
+	public void deploy() {
 		deploy_ctp();
 
 		if(context.isWindows()) {
@@ -85,11 +85,6 @@ public class DeployOneNode {
 			deploy_build_on_linux();
 			//update CUBRID ports
 			updateCUBRIDConfigurations();
-			
-			if(context.isHAMode()){
-				configureForHAMode(nodeName);
-			}
-			
 			backup_linux();
 		}
 		
@@ -221,6 +216,7 @@ public class DeployOneNode {
 		scripts.addCommand("export CTP_BRANCH_NAME=" + branchName);
 		scripts.addCommand("cd $HOME/CTP");
 		scripts.addCommand("chmod u+x ./common/script/upgrade.sh");
+		scripts.addCommand("chmod u+x ./bin/ini.sh");
 		scripts.addCommand("./common/script/upgrade.sh 2>&1");
 		scripts.addCommand("cd -");
 		
@@ -252,22 +248,22 @@ public class DeployOneNode {
 		
 		ShellInput scripts = new ShellInput();
 		if(cubridPortId!=null){
-			scripts.addCommand("ini -s common -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
-			scripts.addCommand("ini -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s common -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
+			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
 		}
 		
 		if(brokerFirstPort!=null){
-			scripts.addCommand("ini -s '%query_editor' -u BROKER_PORT=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
-			scripts.addCommand("ini -s '%query_editor' -u APPL_SERVER_SHM_ID=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s '%query_editor' -u BROKER_PORT=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s '%query_editor' -u APPL_SERVER_SHM_ID=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
 		}
 		
 		if(brokerSecondPort!=null){
-			scripts.addCommand("ini -s '%query_editor' -u BROKER_PORT=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
-			scripts.addCommand("ini -s '%BROKER1' -u APPL_SERVER_SHM_ID=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s '%BROKER1' -u BROKER_PORT=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s '%BROKER1' -u APPL_SERVER_SHM_ID=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
 		}
 		
 		if(cubridHAPortId!=null && context.isHAMode()){
-			scripts.addCommand("ini -s 'common' -u ha_port_id=" + cubridHAPortId + " $CUBRID/conf/cubrid_ha.conf");
+			scripts.addCommand("ini.sh -s 'common' -u ha_port_id=" + cubridHAPortId + " $CUBRID/conf/cubrid_ha.conf");
 		}
 		
 		String result="";
@@ -281,27 +277,32 @@ public class DeployOneNode {
 		}
 	}
 	
-	private void configureForHAMode(String nodeName){
+	public void configureForHAMode(String masterHostIP, String slaveHostIP){
 		ShellInput scripts = new ShellInput();
-		scripts.addCommand("ini -u " + nodeName + "_SERVER_IP=" + this.currentEnvId + " $init_path/HA.properties");
-		scripts.addCommand("ini -u " + nodeName + "_SERVER_USER=" + this.user + " $init_path/HA.properties");
-		scripts.addCommand("ini -u " + nodeName + "_SERVER_PW=" + this.pwd + " $init_path/HA.properties");
-		scripts.addCommand("ini -u " + nodeName + "_SERVER_PORT=" + this.port + " $init_path/HA.properties");
+		scripts.addCommand("ini.sh -u MASTER_SERVER_IP=" + masterHostIP + " $init_path/HA.properties");
+		scripts.addCommand("ini.sh -u MASTER_SERVER_USER=" + this.user + " $init_path/HA.properties");
+		scripts.addCommand("ini.sh -u MASTER_SERVER_PW=" + this.pwd + " $init_path/HA.properties ");
+		scripts.addCommand("ini.sh -u MASTER_SERVER_PORT=" + this.port + " $init_path/HA.properties");
 		
-		scripts.addCommand("cubrid_port_id_value=`ini -s 'common' $CUBRID/conf/cubrid.conf cubrid_port_id`");
-		scripts.addCommand("ini -u CUBRID_PORT_ID=$cubrid_port_id_value $init_path/HA.properties");
-		scripts.addCommand("cubrid_master_shm_id_value=`ini -s 'broker' $CUBRID/conf/cubrid_broker.conf MASTER_SHM_ID`");
-		scripts.addCommand("ini -u MASTER_SHM_ID=$cubrid_master_shm_id_value $init_path/HA.properties");
-		scripts.addCommand("cubrid_broker1_port_value=`ini -s '%query_editor' $CUBRID/conf/cubrid_broker.conf BROKER_PORT`");
-		scripts.addCommand("ini -u BROKER_PORT1=$cubrid_broker1_port_value $init_path/HA.properties");
-		scripts.addCommand("cubrid_broker1_app_server_shm_value=`ini -s '%query_editor' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID`");
-		scripts.addCommand("ini -u APPL_SERVER_SHM_ID1=$cubrid_broker1_app_server_shm_value $init_path/HA.properties");
-		scripts.addCommand("cubrid_broker2_port_value=`ini -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf BROKER_PORT`");
-		scripts.addCommand("ini -u BROKER_PORT2=$cubrid_broker2_port_value $init_path/HA.properties");
-		scripts.addCommand("cubrid_broker2_app_server_shm_value=`ini -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID`");
-		scripts.addCommand("ini -u APPL_SERVER_SHM_ID2=$cubrid_broker2_app_server_shm_value $init_path/HA.properties");
-		scripts.addCommand("cubrid_ha_port_id_value=`ini -s 'common' $CUBRID/conf/cubrid_ha.conf ha_port_id`");
-		scripts.addCommand("ini -u ha_port_id=$cubrid_ha_port_id_value $init_path/HA.properties");
+		scripts.addCommand("ini.sh -u SLAVE_SERVER_IP=" + slaveHostIP + " $init_path/HA.properties");
+		scripts.addCommand("ini.sh -u SLAVE_SERVER_USER=" + this.user + " $init_path/HA.properties");
+		scripts.addCommand("ini.sh -u SLAVE_SERVER_PW=" + this.pwd + " $init_path/HA.properties ");
+		scripts.addCommand("ini.sh -u SLAVE_SERVER_PORT=" + this.port + " $init_path/HA.properties");
+		
+		scripts.addCommand("cubrid_port_id_value=`ini.sh -s 'common' $CUBRID/conf/cubrid.conf cubrid_port_id`");
+		scripts.addCommand("ini.sh -u CUBRID_PORT_ID=$cubrid_port_id_value $init_path/HA.properties");
+		scripts.addCommand("cubrid_master_shm_id_value=`ini.sh -s 'broker' $CUBRID/conf/cubrid_broker.conf MASTER_SHM_ID`");
+		scripts.addCommand("ini.sh -u MASTER_SHM_ID=$cubrid_master_shm_id_value $init_path/HA.properties");
+		scripts.addCommand("cubrid_broker1_port_value=`ini.sh -s '%query_editor' $CUBRID/conf/cubrid_broker.conf BROKER_PORT` ");
+		scripts.addCommand("ini.sh -u BROKER_PORT1=$cubrid_broker1_port_value $init_path/HA.properties ");
+		scripts.addCommand("cubrid_broker1_app_server_shm_value=`ini.sh -s '%query_editor' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID`");
+		scripts.addCommand("ini.sh -u APPL_SERVER_SHM_ID1=$cubrid_broker1_app_server_shm_value $init_path/HA.properties ");
+		scripts.addCommand("cubrid_broker2_port_value=`ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf BROKER_PORT` ");
+		scripts.addCommand("ini.sh -u BROKER_PORT2=$cubrid_broker2_port_value $init_path/HA.properties ");
+		scripts.addCommand("cubrid_broker2_app_server_shm_value=`ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID`");
+		scripts.addCommand("ini.sh -u APPL_SERVER_SHM_ID2=$cubrid_broker2_app_server_shm_value $init_path/HA.properties");
+		scripts.addCommand("cubrid_ha_port_id_value=`ini.sh -s 'common' $CUBRID/conf/cubrid_ha.conf ha_port_id`");
+		scripts.addCommand("ini.sh -u ha_port_id=$cubrid_ha_port_id_value $init_path/HA.properties");
 		
 		String result="";
 		try {

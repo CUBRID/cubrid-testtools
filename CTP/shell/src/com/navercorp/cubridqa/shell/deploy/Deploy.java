@@ -66,12 +66,16 @@ public class Deploy {
 		}
 		
 		DeployOneNode d = new DeployOneNode(context, currEnvId, host, log);
-		d.deploy(Constants.MASTERNODENAME);
+		d.deploy();
 		d.close();
 		
 		for(String h: relatedHosts) {
 			d = new DeployOneNode(context, currEnvId, h, log);
-			d.deploy(Constants.SLAVERNODENAME);
+			d.deploy();
+			d.close();
+			//udpate HA.properties for ha testing
+			d = new DeployOneNode(context, currEnvId, host, log);
+			d.configureForHAMode(host, h);
 			d.close();
 		}
 		

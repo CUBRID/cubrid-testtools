@@ -48,9 +48,6 @@ public class Constants {
 	public static final String SKIP_TYPE_BY_MACRO = "1";
 	public static final String SKIP_TYPE_BY_TEMP = "2";
 	
-	public static final String MASTERNODENAME = "MASTER";
-	public static final String SLAVERNODENAME = "SLAVE";
-	
 	public static final String WIN_KILL_PROCESS_NATIVE = createWinKillNativeScripts();
 	public static final ShellInput WIN_KILL_PROCESS = createWinKillScripts();
 	public static final ShellInput LIN_KILL_PROCESS = createLinKillScripts();
