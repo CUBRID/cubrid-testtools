@@ -288,8 +288,6 @@ public class Test {
 		script.addCommand("        export JAVA_HOME=$JAVA_HOME_" + (context.getVersion().trim().toUpperCase()));
 		script.addCommand("fi");
 		script.addCommand("export PATH=$JAVA_HOME/bin:$PATH");
-		script.addCommand("export init_path=$CTP_HOME/shell/init_path");
-		script.addCommand("export SHELL_CONFIG_PATH=$init_path");
 		script.addCommand("export CLASSPATH=$CUBRID/jdbc/cubrid_jdbc.jar:$init_path/commonforjdbc.jar:.");
 		script.addCommand("export LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH");
 

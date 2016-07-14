@@ -214,7 +214,7 @@ public class DeployOneNode {
 		scripts.addCommand("echo 'BEGIN TO UPGRADE CTP'");
 		scripts.addCommand("export SKIP_UPGRADE=" + enableSkipUpgrade);
 		scripts.addCommand("export CTP_BRANCH_NAME=" + branchName);
-		scripts.addCommand("cd $HOME/CTP");
+		scripts.addCommand("cd ${init_path}/../../");
 		scripts.addCommand("chmod u+x ./common/script/upgrade.sh");
 		scripts.addCommand("chmod u+x ./bin/ini.sh");
 		scripts.addCommand("./common/script/upgrade.sh 2>&1");
