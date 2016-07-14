@@ -230,25 +230,18 @@ public class DeployOneNode {
 	}
 	
 	private void updateCUBRIDConfigurations(){
-		String cubridPortId, brokerFirstPort, brokerSecondPort, cubridHAPortId;
-		
-		cubridPortId = context.getProperty("env." + this.currentEnvId + ".cubrid.cubrid_port_id");
-		brokerFirstPort = context.getProperty("env." + this.currentEnvId + ".broker1.BROKER_PORT");
-		brokerSecondPort = context.getProperty("env." + this.currentEnvId + ".broker2.BROKER_PORT");
-		cubridHAPortId = context.getProperty("env." + this.currentEnvId + ".ha.ha_port_id");
-		
-		cubridPortId = cubridPortId == null ?  context.getProperty("default.cubrid.cubrid_port_id") : cubridPortId;
-		brokerFirstPort = brokerFirstPort == null ?  context.getProperty("default.broker1.BROKER_PORT") : brokerFirstPort;
-		brokerSecondPort = brokerSecondPort == null ?  context.getProperty("default.broker2.BROKER_PORT") : brokerSecondPort;
-		cubridHAPortId = cubridHAPortId == null ?  context.getProperty("default.ha.ha_port_id") : cubridHAPortId;
+		String cubridPortId, brokerFirstPort, brokerSecondPort;
+		cubridPortId = context.getInstanceProperty(this.currentEnvId, "cubrid.cubrid_port_id");
+		brokerFirstPort = context.getInstanceProperty(this.currentEnvId, "broker1.BROKER_PORT");
+		brokerSecondPort = context.getInstanceProperty(this.currentEnvId, "broker2.BROKER_PORT");
 		
 		if (cubridPortId == null && brokerFirstPort == null
-				&& brokerSecondPort == null && cubridHAPortId == null)
+				&& brokerSecondPort == null)
 			return;
 		
 		ShellInput scripts = new ShellInput();
 		if(cubridPortId!=null){
-			scripts.addCommand("ini.sh -s common -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
+			scripts.addCommand("ini.sh -s 'common' -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
 			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
 		}
 		
@@ -262,10 +255,6 @@ public class DeployOneNode {
 			scripts.addCommand("ini.sh -s '%BROKER1' -u APPL_SERVER_SHM_ID=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
 		}
 		
-		if(cubridHAPortId!=null && context.isHAMode()){
-			scripts.addCommand("ini.sh -s 'common' -u ha_port_id=" + cubridHAPortId + " $CUBRID/conf/cubrid_ha.conf");
-		}
-		
 		String result="";
 		
 		try {
@@ -275,44 +264,6 @@ public class DeployOneNode {
 			e.printStackTrace();
 			log.print("[ERROR] " + e.getMessage());
 		}
-	}
-	
-	public void configureForHAMode(String masterHostIP, String slaveHostIP){
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("ini.sh -u MASTER_SERVER_IP=" + masterHostIP + " $init_path/HA.properties");
-		scripts.addCommand("ini.sh -u MASTER_SERVER_USER=" + this.user + " $init_path/HA.properties");
-		scripts.addCommand("ini.sh -u MASTER_SERVER_PW=" + this.pwd + " $init_path/HA.properties ");
-		scripts.addCommand("ini.sh -u MASTER_SERVER_PORT=" + this.port + " $init_path/HA.properties");
-		
-		scripts.addCommand("ini.sh -u SLAVE_SERVER_IP=" + slaveHostIP + " $init_path/HA.properties");
-		scripts.addCommand("ini.sh -u SLAVE_SERVER_USER=" + this.user + " $init_path/HA.properties");
-		scripts.addCommand("ini.sh -u SLAVE_SERVER_PW=" + this.pwd + " $init_path/HA.properties ");
-		scripts.addCommand("ini.sh -u SLAVE_SERVER_PORT=" + this.port + " $init_path/HA.properties");
-		
-		scripts.addCommand("cubrid_port_id_value=`ini.sh -s 'common' $CUBRID/conf/cubrid.conf cubrid_port_id`");
-		scripts.addCommand("ini.sh -u CUBRID_PORT_ID=$cubrid_port_id_value $init_path/HA.properties");
-		scripts.addCommand("cubrid_master_shm_id_value=`ini.sh -s 'broker' $CUBRID/conf/cubrid_broker.conf MASTER_SHM_ID`");
-		scripts.addCommand("ini.sh -u MASTER_SHM_ID=$cubrid_master_shm_id_value $init_path/HA.properties");
-		scripts.addCommand("cubrid_broker1_port_value=`ini.sh -s '%query_editor' $CUBRID/conf/cubrid_broker.conf BROKER_PORT` ");
-		scripts.addCommand("ini.sh -u BROKER_PORT1=$cubrid_broker1_port_value $init_path/HA.properties ");
-		scripts.addCommand("cubrid_broker1_app_server_shm_value=`ini.sh -s '%query_editor' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID`");
-		scripts.addCommand("ini.sh -u APPL_SERVER_SHM_ID1=$cubrid_broker1_app_server_shm_value $init_path/HA.properties ");
-		scripts.addCommand("cubrid_broker2_port_value=`ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf BROKER_PORT` ");
-		scripts.addCommand("ini.sh -u BROKER_PORT2=$cubrid_broker2_port_value $init_path/HA.properties ");
-		scripts.addCommand("cubrid_broker2_app_server_shm_value=`ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID`");
-		scripts.addCommand("ini.sh -u APPL_SERVER_SHM_ID2=$cubrid_broker2_app_server_shm_value $init_path/HA.properties");
-		scripts.addCommand("cubrid_ha_port_id_value=`ini.sh -s 'common' $CUBRID/conf/cubrid_ha.conf ha_port_id`");
-		scripts.addCommand("ini.sh -u ha_port_id=$cubrid_ha_port_id_value $init_path/HA.properties");
-		
-		String result="";
-		try {
-			result = ssh.execute(scripts);
-			log.println(result);
-		} catch (Exception e) {
-			e.printStackTrace();
-			log.print("[ERROR] " + e.getMessage());
-		}
-		
 	}
 	
 	public String backup_windows() {

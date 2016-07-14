@@ -284,13 +284,14 @@ public class Test {
 
 		script = new ShellInput("cd " + testCaseDir);
 		script.addCommand("ulimit -c unlimited");
-		script.addCommand("export JAVA_HOME=$JAVA_HOME_" + (context.getVersion().trim().toUpperCase()));
+		script.addCommand("if [ \"$JAVA_HOME_" + context.getVersion().trim().toUpperCase() + "\" ]; then");
+		script.addCommand("        export JAVA_HOME=$JAVA_HOME_" + (context.getVersion().trim().toUpperCase()));
+		script.addCommand("fi");
 		script.addCommand("export PATH=$JAVA_HOME/bin:$PATH");
-		script.addCommand("export QA_REPOSITORY=$HOME/CQT");
-		script.addCommand("export init_path=$QA_REPOSITORY/lib/shell/common");
-		script.addCommand("export SHELL_CONFIG_PATH=$QA_REPOSITORY/lib/shell/common");
-		script.addCommand("export CLASSPATH=$HOME/CUBRID/jdbc/cubrid_jdbc.jar:$HOME/CQT/lib/shell/common/commonforjdbc.jar:.");
-		script.addCommand("export LD_LIBRARY_PATH=$QA_REPOSITORY/lib/shell/common/commonforc/lib:$LD_LIBRARY_PATH");
+		script.addCommand("export init_path=$CTP_HOME/shell/init_path");
+		script.addCommand("export SHELL_CONFIG_PATH=$init_path");
+		script.addCommand("export CLASSPATH=$CUBRID/jdbc/cubrid_jdbc.jar:$init_path/commonforjdbc.jar:.");
+		script.addCommand("export LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH");
 
 		script.addCommand("export TEST_BIG_SPACE=$(echo $TEST_BIG_SPACE)");
 		script.addCommand("export TEST_BIG_SPACE=`if [ \"$TEST_BIG_SPACE\" = '' ]; then echo " + context.getBigSpaceDir() + " ; else echo $TEST_BIG_SPACE; fi`");

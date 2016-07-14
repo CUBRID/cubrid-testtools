@@ -60,23 +60,22 @@ public class Deploy {
 	
 	public void deploy() throws Exception {
 		context.getFeedback().onDeployStart(envIdentify);
-		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
-		if(relatedHosts !=null && !relatedHosts.isEmpty()){
-			context.setHAMode(true);
-		}
-		
 		DeployOneNode d = new DeployOneNode(context, currEnvId, host, log);
 		d.deploy();
 		d.close();
 		
+		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
 		for(String h: relatedHosts) {
 			d = new DeployOneNode(context, currEnvId, h, log);
 			d.deploy();
 			d.close();
-			//udpate HA.properties for ha testing
-			d = new DeployOneNode(context, currEnvId, host, log);
-			d.configureForHAMode(host, h);
-			d.close();
+		}
+		
+		if(relatedHosts!=null && relatedHosts.size() >0)
+		{
+			DeployHA  dHa = new DeployHA (context, currEnvId, relatedHosts.get(0), log);
+			dHa.deploy();
+		    dHa.close();
 		}
 		
 		context.getFeedback().onDeployStop(envIdentify);

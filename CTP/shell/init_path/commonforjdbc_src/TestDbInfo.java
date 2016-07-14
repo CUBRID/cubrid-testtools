@@ -46,13 +46,16 @@ public class TestDbInfo {
 		System.out.println("ip="  + testDbInfo.ip);
 		System.out.println("broker port="  + testDbInfo.port);
 	}
+	
+	public static TestDbInfo call(){
+		call("shell_config.xml");
+	}
 
 	public static TestDbInfo call(String shellConfig) {
 		TestDbInfo testDbInfo = new TestDbInfo();
 		try {
-			String cqtPath = System.getenv("QA_REPOSITORY");
-			String configName = cqtPath
-					+ "/configuration/Function_Db/" + shellConfig;
+			String cqtPath = System.getenv("init_path");
+			String configName = cqtPath + File.separator + shellConfig;
 			File file = new File(configName);
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance()
 					.newDocumentBuilder();

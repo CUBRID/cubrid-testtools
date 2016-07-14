@@ -95,8 +95,6 @@ public class Context {
 	
 	String ctpBranchName;
 	
-	boolean isHAMode = false;
-	
 	Map<String, String> envMap = null;
 
 	public Context(String filename) throws IOException {
@@ -153,6 +151,10 @@ public class Context {
 		return resultList;
 	}
 
+	public String getInstanceProperty(String envId, String key){
+		String value = getProperty("env." + envId + "." + key);
+		return value == null ? getProperty("default." + key) : value;
+	}
 	
 	public String getProperty(String key, String defaultValue) {
 		return this.config.getProperty(key, defaultValue);
@@ -430,13 +432,4 @@ public class Context {
 	public void setEnableSkipUpgrade(String enableSkipUpgrade) {
 		this.enableSkipUpgrade = enableSkipUpgrade;
 	}
-	
-	public boolean isHAMode() {
-		return isHAMode;
-	}
-
-	public void setHAMode(boolean isHAMode) {
-		this.isHAMode = isHAMode;
-	}
-
 }
