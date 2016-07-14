@@ -19,7 +19,7 @@ int get_ip_port(char *host, int *port)
       }
 
       char *filename;
-      filename=strcat(cqtPath,"/shell_config.xml");
+      filename=strcat(init_path,"/shell_config.xml");
  
       FILE *fp;
       
