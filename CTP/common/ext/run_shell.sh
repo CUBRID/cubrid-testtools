@@ -24,35 +24,15 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-#init conf for shell
-branch=""
-category=""
-db_charset=""
-testcase_root=""
-testcase_timeout=""
-excluded_list=""
-fail_case_retry_count=""
-feedback_type="database"
+
+role=""
 tmplog=""
-is_continue_mode=$1
-
-svn_user=""
-svn_pwd=""
-cubrid_common_url=""
-
-coverage_controller_ip=""
-coverage_controller_user=""
-coverage_controller_pwd=""
-coverage_controller_port=""
+feedback_type="database"
 coverage_controller_target_dir=""
 coverage_collaborate_url=""
-
-ctp_test_conf=${CTP_HOME}/conf/shell_runtime.conf
-ctp_common_conf=${CTP_HOME}/conf/dailyqa.conf
-
-svn_user=`ini.sh $ctp_common_conf "svn.user"`
-svn_pwd=`ini.sh $ctp_common_conf "svn.pwd"`
-cubrid_common_url=`ini.sh $ctp_common_conf "cubrid.commom.url"`
+is_continue_mode=$1
+shell_config_template=""
+shell_fm_test_conf="${CTP_HOME}/conf/shell_runtime.conf"
 
 coverage_controller_ip=$MKEY_COVERAGE_UPLOAD_IP
 coverage_controller_user=$MKEY_COVERAGE_UPLOAD_USER
@@ -62,6 +42,7 @@ testcase_timeout=`getMsgValue $MKEY_TESTCASE_TIMEOUT 7200`
 fail_case_retry_count=`getMsgValue $MKEY_MAX_RETRY_COUNT 0`
 db_charset=`getMsgValue $MKEY_TESTING_DEFAULT_CHARSET en_US`
 
+
 if [  "$BUILD_TYPE" == "coverage" ];then
         role="--role-coverage"
         coverage_controller_target_dir=${MKEY_COVERAGE_UPLOAD_DIR}/${BUILD_ID}/new
@@ -70,64 +51,100 @@ if [  "$BUILD_TYPE" == "coverage" ];then
 fi
 
 
-if [ $BUILD_IS_FROM_GIT -eq 1 ];then
-	branch=$BUILD_SCENARIO_BRANCH_GIT
-	category=$BUILD_SCENARIOS
-	testcase_root=cubrid-testcases-private-ex/shell	
-	excluded_list=cubrid-testcases-private-ex/shell/config/daily_regression_test_excluded_list_linux.conf	
-	cd $CTP_HOME
+function run_shell()
+{
+   if [ -f ${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf ]; then
+      shell_config_template= ${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf
+   else if [ -f ${CTP_HOME}/conf/shell_template.conf ]; then
+      shell_config_template= ${CTP_HOME}/conf/shell_template.conf
+   fi
 
-	#init and clean log
-	tmplog=$CTP_HOME/runtime.log
-	rm $tmplog >/dev/null 2>&1 
+   cp -f ${shell_config_template} ${shell_fm_test_conf}
+   branch=$BUILD_SCENARIO_BRANCH_GIT
+   category=$BUILD_SCENARIOS
+  
+   #init and clean log
+   tmplog=$CTP_HOME/runtime.log
+   rm $tmplog >/dev/null 2>&1 
+   
+   cd $CTP_HOME
+   #update configuration file
+   ini.sh -u "main.testcase.branch_git=$branch" $shell_fm_test_conf
+   ini.sh -u "main.testing.category=$category" $shell_fm_test_conf
+   ini.sh -u "main.testing.role=$role" $shell_fm_test_conf
+   ini.sh -u "main.collaborate.url=$coverage_collaborate_url" $shell_fm_test_conf
+   ini.sh -u "main.coverage.controller.ip=$coverage_controller_ip" $shell_fm_test_conf
+   ini.sh -u "main.coverage.controller.user=$coverage_controller_user" $shell_fm_test_conf 
+   ini.sh -u "main.coverage.controller.pwd=$coverage_controller_pwd" $shell_fm_test_conf 
+   ini.sh -u "main.coverage.controller.port=$coverage_controller_port" $shell_fm_test_conf 
+   ini.sh -u "main.coverage.controller.result=$coverage_controller_target_dir" $shell_fm_test_conf 
+   ini.sh -u "main.feedback.type=$feedback_type" $shell_fm_test_conf 
+   ini.sh -u "main.testcase.timeout=$testcase_timeout" $shell_fm_test_conf 
+   ini.sh -u "max.retry.count=$fail_case_retry_count" $shell_fm_test_conf 
+   ini.sh -u "main.testing.default_charset=$db_charset" $shell_fm_test_conf 
+   ini.sh -u "main.testbuild.url=$url" $shell_fm_test_conf
 
-	cp conf/shell.conf $ctp_test_conf
-	
-	#update configuration file
-	ini.sh -u "main.testcase.root=$testcase_root" $ctp_test_conf
-	ini.sh -u "main.testcase.branch_git=$branch" $ctp_test_conf
-	ini.sh -u "main.testcase.excluded=$excluded_list" $ctp_test_conf
-	ini.sh -u "main.testing.category=$category" $ctp_test_conf
-	ini.sh -u "main.testing.role=$role" $ctp_test_conf
-	ini.sh -u "main.collaborate.url=$coverage_collaborate_url" $ctp_test_conf
-	ini.sh -u "main.coverage.controller.ip=$coverage_controller_ip" $ctp_test_conf
-	ini.sh -u "main.coverage.controller.user=$coverage_controller_user" $ctp_test_conf 
-	ini.sh -u "main.coverage.controller.pwd=$coverage_controller_pwd" $ctp_test_conf 
-	ini.sh -u "main.coverage.controller.port=$coverage_controller_port" $ctp_test_conf 
-	ini.sh -u "main.coverage.controller.result=$coverage_controller_target_dir" $ctp_test_conf 
-	ini.sh -u "main.feedback.type=$feedback_type" $ctp_test_conf 
-	ini.sh -u "main.testcase.timeout=$testcase_timeout" $ctp_test_conf 
-	ini.sh -u "max.retry.count=$fail_case_retry_count" $ctp_test_conf 
-	ini.sh -u "main.testing.default_charset=$db_charset" $ctp_test_conf 
-	ini.sh -u "main.testbuild.url=$url" $ctp_test_conf
-	if [ "$is_continue_mode" == "YES" ];then 
-		ini.sh -u "main.mode.continue=true" $ctp_test_conf
-	fi	
+   #execute testing
+   ctp.sh shell -c $shell_fm_test_conf | tee $tmplog
+}
 
-	#execute testing
-	ctp.sh shell -c $ctp_test_conf | tee $tmplog
+function run_shell_continue()
+{
+   #init and clean log
+   tmplog=$CTP_HOME/runtime.log
+   rm $tmplog >/dev/null 2>&1
+   
+   ini.sh -u "main.mode.continue=true" ${shell_fm_test_conf}   
+   
+   $CTP_HOME/bin/ctp.sh shell -c ${shell_fm_test_conf} | tee $tmplog
+}
+
+
+function run_shell_legacy()
+{
+    category=$BUILD_SCENARIOS
+    
+    svn_user=`ini.sh $ctp_common_conf "svn.user"`
+    svn_pwd=`ini.sh $ctp_common_conf "svn.pwd"`
+    cubrid_common_url=`ini.sh $ctp_common_conf "cubrid.commom.url"`
+
+    #init and clean log
+    tmplog=$HOME/cubrid_shell_fm/runtime.log
+    rm $tmplog >/dev/null 2>&
+    cd $HOME/cubrid_shell_fm
+
+    svnup upgrade.sh
+    sh upgrade.sh
+
+    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir -Dmain.feedback.type=$feedback_type -Dmain.testcase.timeout=$testcase_timeout -Dmax.retry.count=$fail_case_retry_count -Dmain.testing.default_charset=$db_charset $url false | tee $tmplog
+
+}
+
+
+function run_shell_lagacy_continue()
+{
+    cd $HOME/cubrid_shell_fm
+    
+    #execute testing
+    svnup upgrade.sh
+    sh upgrade.sh
+    exec_j=`cat conf/current_build | sed 's/false$/true/'`
+    `$exec_j >> run.log 2>&1`
+
+}
+
+if [ "$is_continue_mode" == "YES" ];then
+   if [ "${BUILD_IS_FROM_GIT}" == "1" ];then
+	run_shell_continue
+   else
+	run_shell_lagacy_continue
+   fi
 else
-	testcase_root=dailyqa/$BUILD_SVN_BRANCH_NEW/scenario/shell
-	excluded_list=dailyqa/$BUILD_SVN_BRANCH_NEW/config/linux_shell_excluded_list
-	category=$BUILD_SCENARIOS
+   if [ "${BUILD_IS_FROM_GIT}" == "1" ]; then
+        run_shell
+   else
+        run_shell_legacy
+   fi 
 
-	#init and clean log
-	tmplog=$HOME/cubrid_shell_fm/runtime.log
-	rm $tmplog >/dev/null 2>&
-	cd $HOME/cubrid_shell_fm
-	continue_mode=false
-	if [ "$is_continue_mode" == "YES" ];then	
-		continue_mode=true
-	fi
-
-	#execute testing
-	svnup upgrade.sh
-	sh upgrade.sh
-	sh run.sh -Dmain.testcase.root=$testcase_root -Dmain.testcase.branch_git="" -Dmain.testcase.excluded=$excluded_list -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.mode.continue=$continue_mode -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir -Dmain.feedback.type=$feedback_type -Dmain.testcase.timeout=$testcase_timeout -Dmax.retry.count=$fail_case_retry_count -Dmain.testing.default_charset=$db_charset -Dmain.svn.user=$svn_user -Dmain.svn.pwd=$svn_pwd -Dcubrid.common.url=$cubrid_common_url $url false | tee $tmplog	
 fi
-
-
-
-
-
 
