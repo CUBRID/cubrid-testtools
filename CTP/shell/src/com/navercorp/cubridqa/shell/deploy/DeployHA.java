@@ -21,10 +21,10 @@ public class DeployHA {
 		this.masterEnvId = masterEnvId;
 		this.slaveIp = slaveEnvIP;
 		
-		port = context.getProperty("env." + masterEnvId + ".ssh.port");
-		user = context.getProperty("env." + masterEnvId + ".ssh.user");
-		pwd = context.getProperty("env." + masterEnvId + ".ssh.pwd");
-		masterHost = context.getProperty("env." + masterEnvId + ".ssh.host");
+		port = context.getInstanceProperty(masterEnvId, "ssh.port");
+		user = context.getInstanceProperty(masterEnvId, "ssh.user");
+		pwd = context.getInstanceProperty(masterEnvId, "ssh.pwd");
+		masterHost = context.getInstanceProperty(masterEnvId, "ssh.host");
 		
 		envIdentify = "MasterEnvId=" + masterEnvId + "[" + user+"@"+ masterHost +":" + port + "] - SlaveEnvId:" + slaveIp;
 		this.ssh = new SSHConnect(masterHost, port, user, pwd, context.getServiceProtocolType());
@@ -63,6 +63,8 @@ public class DeployHA {
 		String haPortId = context.getInstanceProperty(this.masterEnvId, "ha.ha_port_id"); 
 		if(haPortId != null && haPortId.length()>0){
 			scripts.addCommand("ini.sh -u ha_port_id=" + haPortId + " $init_path/HA.properties");
+		}else{
+			scripts.addCommand("ini.sh -u ha_port_id=59901 $init_path/HA.properties");
 		}
 		
 		String result="";

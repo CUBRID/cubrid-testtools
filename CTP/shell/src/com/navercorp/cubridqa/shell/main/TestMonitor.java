@@ -54,10 +54,10 @@ public class TestMonitor {
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "monitor_" + test.getCurrentEnvId() + ".log"), false, context.isContinueMode);
 		
 		String currEnvId = test.getCurrentEnvId();
-		String host = context.getProperty("env." + currEnvId + ".ssh.host");
-		String port = context.getProperty("env." + currEnvId + ".ssh.port");
-		String user = context.getProperty("env." + currEnvId + ".ssh.user");
-		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		String host = context.getInstanceProperty(currEnvId, "ssh.host");
+		String port = context.getInstanceProperty(currEnvId, "ssh.port");
+		String user = context.getInstanceProperty(currEnvId, "ssh.user");
+		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 		String serviceProtocol = context.getServiceProtocolType();
 
 		this.ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);		

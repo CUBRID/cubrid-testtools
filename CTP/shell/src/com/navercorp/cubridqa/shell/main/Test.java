@@ -75,10 +75,10 @@ public class Test {
 		this.dispatchLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + currEnvId + ".txt"), false, laterJoined ? true : context.isContinueMode());
 		this.workerLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, true);
 
-		sshHost = context.getProperty("env." + currEnvId + ".ssh.host");
-		sshPort = context.getProperty("env." + currEnvId + ".ssh.port");
-		sshUser = context.getProperty("env." + currEnvId + ".ssh.user");
-		sshPwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		sshHost = context.getInstanceProperty(currEnvId, "ssh.host");
+		sshPort = context.getInstanceProperty(currEnvId, "ssh.port");
+		sshUser = context.getInstanceProperty(currEnvId, "ssh.user");
+		sshPwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 		
 		this.needDropTestCase = context.getProperty("main.testing.delete_test_case_after_execution", "false").trim().toLowerCase().equals("true");
 
@@ -288,9 +288,6 @@ public class Test {
 		script.addCommand("        export JAVA_HOME=$JAVA_HOME_" + (context.getVersion().trim().toUpperCase()));
 		script.addCommand("fi");
 		script.addCommand("export PATH=$JAVA_HOME/bin:$PATH");
-		script.addCommand("export CLASSPATH=$CUBRID/jdbc/cubrid_jdbc.jar:$init_path/commonforjdbc.jar:.");
-		script.addCommand("export LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH");
-
 		script.addCommand("export TEST_BIG_SPACE=$(echo $TEST_BIG_SPACE)");
 		script.addCommand("export TEST_BIG_SPACE=`if [ \"$TEST_BIG_SPACE\" = '' ]; then echo " + context.getBigSpaceDir() + " ; else echo $TEST_BIG_SPACE; fi`");
 		script.addCommand("if [ \"$TEST_BIG_SPACE\" != '' ]; then mkdir -p $TEST_BIG_SPACE; rm -rf $TEST_BIG_SPACE/*; fi");

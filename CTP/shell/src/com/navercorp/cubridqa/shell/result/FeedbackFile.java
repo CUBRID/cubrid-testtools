@@ -153,9 +153,9 @@ public class FeedbackFile implements Feedback {
 		String category = context.getProperty("main.testing.category");//flag will mark category as a new for slave node 
 		String covParams = "-n " + context.getTestBuild() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
 		
-		String port = context.getProperty("env." + currEnvId + ".ssh.port");
-		String user = context.getProperty("env." + currEnvId + ".ssh.user");
-		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		String port = context.getInstanceProperty(currEnvId, "ssh.port");
+		String user = context.getInstanceProperty(currEnvId, "ssh.user");
+		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 		String serviceProtocol = context.getServiceProtocolType();
 		String envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "] with " + serviceProtocol + " protocol!";
 		try {
@@ -185,7 +185,7 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onStopEnvEvent(String envIdentify) {
 		String role = context.getProperty("main.testing.role", "").trim();
-		String host = context.getProperty("env." + envIdentify + ".ssh.host");
+		String host = context.getInstanceProperty(envIdentify, "ssh.host");
 		
 		if (role.indexOf("coverage") != -1) {
 			collectCoverageOnOneNode(this.context, envIdentify, host);

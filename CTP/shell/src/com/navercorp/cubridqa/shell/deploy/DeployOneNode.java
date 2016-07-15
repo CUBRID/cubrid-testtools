@@ -50,9 +50,9 @@ public class DeployOneNode {
 		this.context = context;
 		this.currentEnvId =currEnvId;
 
-		port = context.getProperty("env." + currEnvId + ".ssh.port");
-		user = context.getProperty("env." + currEnvId + ".ssh.user");
-		pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		this.port = context.getInstanceProperty(currEnvId, "ssh.port");
+		this.user = context.getInstanceProperty(currEnvId, "ssh.user");
+		this.pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "] with " + context.getServiceProtocolType() + " protocol!";
 
 		this.ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());

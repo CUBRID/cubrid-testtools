@@ -153,7 +153,7 @@ public class Context {
 
 	public String getInstanceProperty(String envId, String key){
 		String value = getProperty("env." + envId + "." + key);
-		return value == null ? getProperty("default." + key) : value;
+		return value == null ? getProperty("default." + key, "") : value;
 	}
 	
 	public String getProperty(String key, String defaultValue) {
