@@ -620,6 +620,7 @@ function init
     export webuser=qahome
     export CLASSPATH=.:$CLASSPATH:$CUBRID/java/cubrid_jdbc.jar:$init_path/commonforjdbc.jar
     export SHELL_CONFIG_PATH=$init_path 
+    export LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
     cubrid service stop
     pkill cub >/dev/null 2>&1

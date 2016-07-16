@@ -38,9 +38,6 @@ coverage_controller_ip=$MKEY_COVERAGE_UPLOAD_IP
 coverage_controller_user=$MKEY_COVERAGE_UPLOAD_USER
 coverage_controller_pwd=$MKEY_COVERAGE_UPLOAD_PWD
 coverage_controller_port=$MKEY_COVERAGE_UPLOAD_PORT
-testcase_timeout=`getMsgValue $MKEY_TESTCASE_TIMEOUT 7200`
-fail_case_retry_count=`getMsgValue $MKEY_MAX_RETRY_COUNT 0`
-db_charset=`getMsgValue $MKEY_TESTING_DEFAULT_CHARSET en_US`
 
 
 if [  "$BUILD_TYPE" == "coverage" ];then
@@ -79,13 +76,11 @@ function run_shell()
    ini.sh -u "main.coverage.controller.port=$coverage_controller_port" $shell_fm_test_conf 
    ini.sh -u "main.coverage.controller.result=$coverage_controller_target_dir" $shell_fm_test_conf 
    ini.sh -u "main.feedback.type=$feedback_type" $shell_fm_test_conf 
-   ini.sh -u "main.testcase.timeout=$testcase_timeout" $shell_fm_test_conf 
-   ini.sh -u "max.retry.count=$fail_case_retry_count" $shell_fm_test_conf 
-   ini.sh -u "main.testing.default_charset=$db_charset" $shell_fm_test_conf 
    ini.sh -u "main.testbuild.url=$url" $shell_fm_test_conf
 
    #execute testing
    ctp.sh shell -c $shell_fm_test_conf | tee $tmplog
+   cd -
 }
 
 function run_shell_continue()
@@ -104,10 +99,6 @@ function run_shell_legacy()
 {
     category=$BUILD_SCENARIOS
     
-    svn_user=`ini.sh $ctp_common_conf "svn.user"`
-    svn_pwd=`ini.sh $ctp_common_conf "svn.pwd"`
-    cubrid_common_url=`ini.sh $ctp_common_conf "cubrid.commom.url"`
-
     #init and clean log
     tmplog=$HOME/cubrid_shell_fm/runtime.log
     rm $tmplog >/dev/null 2>&
@@ -116,8 +107,8 @@ function run_shell_legacy()
     svnup upgrade.sh
     sh upgrade.sh
 
-    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir -Dmain.feedback.type=$feedback_type -Dmain.testcase.timeout=$testcase_timeout -Dmax.retry.count=$fail_case_retry_count -Dmain.testing.default_charset=$db_charset $url false | tee $tmplog
-
+    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir -Dmain.feedback.type=$feedback_type $url false | tee $tmplog
+    cd -
 }
 
 
@@ -128,9 +119,8 @@ function run_shell_lagacy_continue()
     #execute testing
     svnup upgrade.sh
     sh upgrade.sh
-    exec_j=`cat conf/current_build | sed 's/false$/true/'`
-    `$exec_j >> run.log 2>&1`
-
+    she run_continue.sh
+    cd - 
 }
 
 if [ "$is_continue_mode" == "YES" ];then
