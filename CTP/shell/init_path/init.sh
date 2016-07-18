@@ -47,21 +47,10 @@ then
    CUBRID_CHARSET=en_US
 fi
 
-
-
-#reset cubrid.conf cubrid_broker.conf for running shell cases
-function set_conf()
-{
-	echo "reset and modify cubrid conf..."
-	sh $QA_REPOSITORY/qatool_bin/console/scripts/cubrid_setup/reset_cubrid_conf.sh
-	sh $QA_REPOSITORY/qatool_bin/console/scripts/cubrid_setup/modify_cubrid_conf.sh
-}
-
-
 # get broker port from shell_config.xml
 function get_broker_port_from_shell_config
 {
-  port=`awk '/<port>/' $QA_REPOSITORY/configuration/Function_Db/shell_config.xml`
+  port=`awk '/<port>/' $init_path/shell_config.xml`
   port=${port#*>}
   port=${port%<*}
   echo $port
@@ -587,7 +576,6 @@ function init
   fi
   
   cur_path=`pwd`
-  set_conf
   cd $cur_path
   case_no=1
   full_name=$0
@@ -615,12 +603,14 @@ function init
     trgext="_trigger"
     export webuser=qahome
 
+  export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
 
   if [ $OS = "Windows_NT" ]
   then
     export webuser=qahome
-    export CLASSPATH=".;$CLASSPATH;$QA_REPOSITORY\lib\shell\common\commonforjdbc.jar;$CUBRID\jdbc\cubrid_jdbc.jar" 
-    export SHELL_CONFIG_PATH=$QA_REPOSITORY/lib/shell/common 
+    export CLASSPATH=".;$CLASSPATH;$init_path\commonforjdbc.jar;$CUBRID\jdbc\cubrid_jdbc.jar" 
+    export SHELL_CONFIG_PATH=$init_path 
+    export LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH
     cubrid service stop
     taskkill /F /FI "imagename eq cub*"
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
@@ -629,8 +619,9 @@ function init
 
   else
     export webuser=qahome
-    export CLASSPATH=.:$CLASSPATH:$CUBRID/java/cubrid_jdbc.jar:$QA_REPOSITORY/lib/shell/common/commonforjdbc.jar
-    export SHELL_CONFIG_PATH=$QA_REPOSITORY/lib/shell/common 
+    export CLASSPATH=.:$CLASSPATH:$CUBRID/java/cubrid_jdbc.jar:$init_path/commonforjdbc.jar
+    export SHELL_CONFIG_PATH=$init_path 
+    export LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
     cubrid service stop
     pkill cub >/dev/null 2>&1
