@@ -566,8 +566,6 @@ function get_language()
 function init 
 {
   echo "[INFO] TEST START (`date`)"
-  chmod u+x $init_path/cubrid >/dev/null 2>&1
-
   if [ $need_count_time -eq 1 ]; then
   	begin_time=`get_curr_second`
   	date_str=`date +"%Y-%m-%d"`
@@ -586,9 +584,20 @@ function init
   then
       OS="Windows_NT"
   fi
-
-  #rm $CUBRID/log/server/*.err > /dev/null 2>&1
-  #to remove all fatal error relative log to avoid checking repeatedly.
+  
+  if [ $OS = "Windows_NT" ]; then
+  	export init_path=`cygpath "${init_path}"`
+  	export MINGW_PATH=`cygpath "${MINGW_PATH}"`
+  fi
+    
+  is_cubrid_32bits=`cubrid_rel | grep 32bit | wc -l`
+  if [ "${is_cubrid_32bits}" == "1" ]; then
+    CUBRID_BITS="32"
+  else
+    CUBRID_BITS="64"
+  fi
+  export CUBRID_BITS
+  
   rm $CUBRID/log/* > /dev/null 2>&1
 
   if [ $OS = "AIX" ];then
@@ -597,37 +606,51 @@ function init
   	cp $init_path/commonforc/lib32/libcommfun_aix.so $init_path/commonforc/lib32/libcommfun.so
   fi
 
-    objext="_objects"
-    schext="_schema"
-    idxext="_indexes"
-    trgext="_trigger"
-    export webuser=qahome
+  objext="_objects"
+  schext="_schema"
+  idxext="_indexes"
+  trgext="_trigger"
 
-  export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
-
+  PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
+   
   if [ $OS = "Windows_NT" ]
   then
-    export webuser=qahome
-    export CLASSPATH=".;$CLASSPATH;$init_path\commonforjdbc.jar;$CUBRID\jdbc\cubrid_jdbc.jar" 
-    export SHELL_CONFIG_PATH=$init_path 
-    export LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH
+    PATH=${MINGW_PATH}/bin:${MINGW_PATH}/lib:`cygpath "${JAVA_HOME}"`/bin:$PATH
+    if [ "${CUBRID_BITS}" == "32" ]; then
+      PATH=${MINGW_PATH}/mingw32/lib:${MINGW_PATH}/libexec/gcc/mingw32/4.6.2:$PATH
+      LIBRARY_PATH=`cygpath -w "$MINGW_PATH\bin"`\;`cygpath -w "$MINGW_PATH\lib"`\;`cygpath -w "$MINGW_PATH\mingw32\lib"`\;`cygpath -w "$MINGW_PATH\libexec\gcc\mingw32\4.6.2"`\;.
+    else
+      PATH=${MINGW_PATH}/x86_64-w64-mingw32/lib:${MINGW_PATH}/libexec/gcc/x86_64-w64-mingw32/4.7.3:$PATH
+      LIBRARY_PATH=`cygpath -w "$MINGW_PATH\bin"`\;`cygpath -w "$MINGW_PATH\lib"`\;`cygpath -w "$MINGW_PATH\x86_64-w64-mingw32\lib"`\;`cygpath -w "$MINGW_PATH\libexec\gcc\x86_64-w64-mingw32\4.7.3"`\;.
+    fi
+    
+    CLASSPATH=`cygpath -w "$CUBRID/jdbc/cubrid_jdbc.jar"`\;`cygpath -w "${init_path}/commonforjdbc.jar"`\;.
+    LD_LIBRARY_PATH=`cygpath -w $init_path/commonforc/lib`    
     cubrid service stop
     taskkill /F /FI "imagename eq cub*"
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
     cubrid service stop
     wmic PROCESS WHERE \( name = \'java.exe\' AND NOT CommandLine LIKE \'%com.nhncorp.cubrid.service.Server%\' \) DELETE
-
   else
-    export webuser=qahome
-    export CLASSPATH=.:$CLASSPATH:$CUBRID/java/cubrid_jdbc.jar:$init_path/commonforjdbc.jar
-    export SHELL_CONFIG_PATH=$init_path 
-    export LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH
+    CLASSPATH=$CUBRID/java/cubrid_jdbc.jar:$init_path/commonforjdbc.jar:.     
+    LD_LIBRARY_PATH=$init_path/commonforc/lib
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
     cubrid service stop
     pkill cub >/dev/null 2>&1
-    export PATH=$init_path:$PATH
+    
+    chmod u+x ${init_path}/cubrid >/dev/null 2>&1  
+	PATH=${init_path}:$PATH
   fi
 
+  export SHELL_CONFIG_PATH=$init_path  
+  export PATH
+  export CLASSPATH
+  export LD_LIBRARY_PATH
+  export LIBRARY_PATH
+  
+  broker_port=`ini.sh -s "%BROKER1" $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
+  sed -i "s@<port>[0-9]*</port>@<port>${broker_port}</port>@g" ${init_path}/shell_config.xml 
+  
   if [ "$mode" = "test" ]
   then
      run_mode=1
