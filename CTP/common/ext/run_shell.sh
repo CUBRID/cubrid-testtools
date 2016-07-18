@@ -102,7 +102,7 @@ function run_shell_legacy()
     
     #init and clean log
     tmplog=$HOME/cubrid_shell_fm/runtime.log
-    rm $tmplog >/dev/null 2>&
+    rm $tmplog >/dev/null 2>&1
     cd $HOME/cubrid_shell_fm
 
     svnup upgrade.sh
