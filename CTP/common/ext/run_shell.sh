@@ -51,9 +51,9 @@ fi
 function run_shell()
 {
    if [ -f ${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf ]; then
-      shell_config_template= ${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf
-   else if [ -f ${CTP_HOME}/conf/shell_template.conf ]; then
-      shell_config_template= ${CTP_HOME}/conf/shell_template.conf
+      shell_config_template=${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf
+   elif [ -f ${CTP_HOME}/conf/shell_template.conf ]; then
+      shell_config_template=${CTP_HOME}/conf/shell_template.conf
    fi
 
    cp -f ${shell_config_template} ${shell_fm_test_conf}
@@ -77,6 +77,7 @@ function run_shell()
    ini.sh -u "main.coverage.controller.result=$coverage_controller_target_dir" $shell_fm_test_conf 
    ini.sh -u "main.feedback.type=$feedback_type" $shell_fm_test_conf 
    ini.sh -u "main.testbuild.url=$url" $shell_fm_test_conf
+   ini.sh -u "main.mode.continue=false" $shell_fm_test_conf
 
    #execute testing
    ctp.sh shell -c $shell_fm_test_conf | tee $tmplog
