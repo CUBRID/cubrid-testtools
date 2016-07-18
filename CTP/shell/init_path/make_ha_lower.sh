@@ -32,32 +32,7 @@
 #(3) the current script file 'make_ha.sh' and other related expect files 
 #    including 'hostname.exp', 'rm_db_info.exp', 'scp.exp' and 'start_cubrid_ha.exp' must be put in $init_path directory.
 
-#===========================================================user configuration begin==========================================================================
-
-#MASTER_SERVER_IP=59.108.93.74
-#MASTER_SERVER_USER=xdbms
-#MASTER_SERVER_PW=xdbms_qa!#%
-
-#SLAVE_SERVER_IP=59.108.93.82
-#SLAVE_SERVER_USER=xdbms
-#SLAVE_SERVER_PW=xdbms_qa!#%
-
-#set port numbers according to different users
-#CUBRID_PORT_ID=1523
-#ha_port_id=11539
-#MASTER_SHM_ID=30001
-#BROKER_PORT1=30000
-#APPL_SERVER_SHM_ID1=30000
-#BROKER_PORT2=33000
-#APPL_SERVER_SHM_ID2=33000
-#cm_port=8001
-
-#masterHostName=$HOSTNAME
-#slaveHostName=""
-#===========================================================user configuration end==============================================================================
-
 #set -x
-
 
 #variable definition
 dbPath=$CUBRID/databases

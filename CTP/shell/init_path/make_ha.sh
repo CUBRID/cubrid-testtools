@@ -33,7 +33,7 @@
 #    including 'hostname.exp', 'rm_db_info.exp', 'scp.exp' and 'start_cubrid_ha.exp' must be put in $init_path directory.
 
 #===========================================================user configuration begin==========================================================================
-configPath=$QA_REPOSITORY/qatool_bin/qamanager/properties
+configPath=${init_path}
 master=`grep MASTER_SERVER_IP $configPath/HA.properties`
 master_user=`grep MASTER_SERVER_USER $configPath/HA.properties`
 master_pw=`grep MASTER_SERVER_PW $configPath/HA.properties`
@@ -97,9 +97,14 @@ alias run_download_on_slave='${init_path}/../../common/script/run_download -host
 dbPath=$CUBRID/databases
 dbname=hatestdb
 currentPath=`pwd`
-version_str=`$CUBRID/bin/cubrid_rel`
-is_R40=`echo $version_str | grep -E '8.4|9.|10.' | wc -l`
-
+build_id=`cubrid_rel | grep CUBRID | awk -F '(' '{print $2}' | awk -F ")" '{print $1}'`
+p1=`echo $build_id | awk -F "." '{print $1}'`
+p2=`echo $build_id | awk -F "." '{print $2}'`
+if [ $p1 -le 8 -a $p2 -lt 4 ] ; then
+	is_R40=0
+else
+    is_R40=1
+fi
 #=================================================================function definition begin========================================================================
 
 export MASTER_SERVER_IP
