@@ -84,9 +84,9 @@ slaveHostName=""
 
 #=========================================================
 
-alias run_on_slave='$HOME/cubrid_common/run_remote_script -host $SLAVE_SERVER_IP -user $MASTER_SERVER_USER -password "$MASTER_SERVER_PW"'
-alias run_upload_on_slave='$HOME/cubrid_common/run_upload -host $SLAVE_SERVER_IP -user $MASTER_SERVER_USER -password "$MASTER_SERVER_PW"'
-alias run_download_on_slave='$HOME/cubrid_common/run_download -host $SLAVE_SERVER_IP -user $MASTER_SERVER_USER -password "$MASTER_SERVER_PW"'
+alias run_on_slave='${init_path}/../../common/script/run_remote_script -host $SLAVE_SERVER_IP -user $MASTER_SERVER_USER -password "$MASTER_SERVER_PW"'
+alias run_upload_on_slave='${init_path}/../../common/script/run_upload -host $SLAVE_SERVER_IP -user $MASTER_SERVER_USER -password "$MASTER_SERVER_PW"'
+alias run_download_on_slave='${init_path}/../../common/script/run_download -host $SLAVE_SERVER_IP -user $MASTER_SERVER_USER -password "$MASTER_SERVER_PW"'
 
 #===========================================================user configuration end==============================================================================
 

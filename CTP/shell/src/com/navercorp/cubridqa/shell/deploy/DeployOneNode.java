@@ -38,18 +38,21 @@ public class DeployOneNode {
 
 	Context context;
 	SSHConnect ssh;
+	String port, user, pwd;
 	String cubridPackageUrl;
 	boolean isNewBuildNumberSystem;
 
 	String envIdentify;
+	String currentEnvId;
 	Log log;
 
 	public DeployOneNode(Context context, String currEnvId, String host, Log log) throws Exception {
 		this.context = context;
+		this.currentEnvId =currEnvId;
 
-		String port = context.getProperty("env." + currEnvId + ".ssh.port");
-		String user = context.getProperty("env." + currEnvId + ".ssh.user");
-		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		this.port = context.getInstanceProperty(currEnvId, "ssh.port");
+		this.user = context.getInstanceProperty(currEnvId, "ssh.user");
+		this.pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "] with " + context.getServiceProtocolType() + " protocol!";
 
 		this.ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
@@ -66,6 +69,9 @@ public class DeployOneNode {
 		if(context.isWindows()) {
 			String ret="";
 			deploy_build_on_windows();
+			//update CUBRID ports
+			updateCUBRIDConfigurations();
+			
 			while(true)
 			{
 				ret = backup_windows();
@@ -77,8 +83,11 @@ public class DeployOneNode {
 			}
 		} else {
 			deploy_build_on_linux();
+			//update CUBRID ports
+			updateCUBRIDConfigurations();
 			backup_linux();
 		}
+		
 	}
 
 	private void deploy_build_on_windows() {
@@ -205,8 +214,9 @@ public class DeployOneNode {
 		scripts.addCommand("echo 'BEGIN TO UPGRADE CTP'");
 		scripts.addCommand("export SKIP_UPGRADE=" + enableSkipUpgrade);
 		scripts.addCommand("export CTP_BRANCH_NAME=" + branchName);
-		scripts.addCommand("cd $HOME/CTP");
+		scripts.addCommand("cd ${init_path}/../../");
 		scripts.addCommand("chmod u+x ./common/script/upgrade.sh");
+		scripts.addCommand("chmod u+x ./bin/ini.sh");
 		scripts.addCommand("./common/script/upgrade.sh 2>&1");
 		scripts.addCommand("cd -");
 		
@@ -215,6 +225,43 @@ public class DeployOneNode {
 			result = ssh.execute(scripts);
 			log.println(result);
 		} catch (Exception e) {
+			log.print("[ERROR] " + e.getMessage());
+		}
+	}
+	
+	private void updateCUBRIDConfigurations(){
+		String cubridPortId, brokerFirstPort, brokerSecondPort;
+		cubridPortId = context.getInstanceProperty(this.currentEnvId, "cubrid.cubrid_port_id");
+		brokerFirstPort = context.getInstanceProperty(this.currentEnvId, "broker1.BROKER_PORT");
+		brokerSecondPort = context.getInstanceProperty(this.currentEnvId, "broker2.BROKER_PORT");
+		
+		if (cubridPortId == null && brokerFirstPort == null
+				&& brokerSecondPort == null)
+			return;
+		
+		ShellInput scripts = new ShellInput();
+		if(cubridPortId!=null){
+			scripts.addCommand("ini.sh -s 'common' -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
+			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
+		}
+		
+		if(brokerFirstPort!=null){
+			scripts.addCommand("ini.sh -s '%query_editor' -u BROKER_PORT=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s '%query_editor' -u APPL_SERVER_SHM_ID=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
+		}
+		
+		if(brokerSecondPort!=null){
+			scripts.addCommand("ini.sh -s '%BROKER1' -u BROKER_PORT=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s '%BROKER1' -u APPL_SERVER_SHM_ID=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
+		}
+		
+		String result="";
+		
+		try {
+			result=ssh.execute(scripts);
+			log.println(result);
+		} catch (Exception e) {
+			e.printStackTrace();
 			log.print("[ERROR] " + e.getMessage());
 		}
 	}

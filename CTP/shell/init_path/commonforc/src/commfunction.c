@@ -8,18 +8,18 @@ int get_ip_port(char *host, int *port)
       char strBuff[100]={0};
       char *pBegin,*pEnd;
       char portBuff[20]={0};
-      char *cqtPath;
+      char *initPath;
 
-      cqtPath=getenv("QA_REPOSITORY");     
+      initPath=getenv("init_path");     
    
-      if ((NULL == cqtPath)||(0 == strlen(cqtPath)))
+      if ((NULL == initPath)||(0 == strlen(initPath)))
       {
             printf("environment varible init_path is not set \n");
             return -1;
       }
 
       char *filename;
-      filename=strcat(cqtPath,"/configuration/Function_Db/shell_config.xml");
+      filename=strcat(initPath,"/shell_config.xml");
  
       FILE *fp;
       

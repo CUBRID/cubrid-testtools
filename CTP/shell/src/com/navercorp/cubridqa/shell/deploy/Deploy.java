@@ -48,19 +48,17 @@ public class Deploy {
 		this.context = context;
 		this.currEnvId = currEnvId;
 
-		this.host = context.getProperty("env." + currEnvId + ".ssh.host");
-		this.port = context.getProperty("env." + currEnvId + ".ssh.port");
-		this.user = context.getProperty("env." + currEnvId + ".ssh.user");
+		this.host = context.getInstanceProperty(currEnvId, "ssh.host");
+		this.port = context.getInstanceProperty(currEnvId, "ssh.port");
+		this.user = context.getInstanceProperty(currEnvId, "ssh.user");
 		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "]";
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
-
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, laterJoined ? true : context.isContinueMode());
 	}
 	
 	public void deploy() throws Exception {
 		context.getFeedback().onDeployStart(envIdentify);
-		
 		DeployOneNode d = new DeployOneNode(context, currEnvId, host, log);
 		d.deploy();
 		d.close();
@@ -70,6 +68,13 @@ public class Deploy {
 			d = new DeployOneNode(context, currEnvId, h, log);
 			d.deploy();
 			d.close();
+		}
+		
+		if(relatedHosts!=null && relatedHosts.size() >0)
+		{
+			DeployHA  dHa = new DeployHA (context, currEnvId, relatedHosts.get(0), log);
+			dHa.deploy();
+		    dHa.close();
 		}
 		
 		context.getFeedback().onDeployStop(envIdentify);

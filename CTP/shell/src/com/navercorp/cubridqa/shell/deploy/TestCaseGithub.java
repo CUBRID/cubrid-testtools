@@ -43,15 +43,13 @@ public class TestCaseGithub {
 	public TestCaseGithub(Context context, String currEnvId) throws Exception {
 		this.context = context;
 		this.currEnvId =currEnvId;
-		String host = context.getProperty("env." + currEnvId + ".ssh.host");
-		String port = context.getProperty("env." + currEnvId + ".ssh.port");
-		String user = context.getProperty("env." + currEnvId + ".ssh.user");
-		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		String host = context.getInstanceProperty(currEnvId, "ssh.host");
+		String port = context.getInstanceProperty(currEnvId, "ssh.port");
+		String user = context.getInstanceProperty(currEnvId, "ssh.user");
+		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 		
 		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "] with " + context.getServiceProtocolType() + " protocol!";
-
 		this.ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
-		
 		
 		if(context.isWindows()) {
 			initWindows();

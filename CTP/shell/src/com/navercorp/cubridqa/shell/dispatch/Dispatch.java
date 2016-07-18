@@ -167,10 +167,10 @@ public class Dispatch {
 	private ArrayList<String> findAllTestCase() throws Exception {
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getProperty("env." + envId + ".ssh.host");
-		String port = context.getProperty("env." + envId + ".ssh.port");
-		String user = context.getProperty("env." + envId + ".ssh.user");
-		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
+		String host = context.getInstanceProperty(envId, "ssh.host");
+		String port = context.getInstanceProperty(envId, "ssh.port");
+		String user = context.getInstanceProperty(envId, "ssh.user");
+		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
 		String serviceProtocol = context.getServiceProtocolType();
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
@@ -212,10 +212,10 @@ public class Dispatch {
 
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getProperty("env." + envId + ".ssh.host");
-		String port = context.getProperty("env." + envId + ".ssh.port");
-		String user = context.getProperty("env." + envId + ".ssh.user");
-		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
+		String host = context.getInstanceProperty(envId, "ssh.host");
+		String port = context.getInstanceProperty(envId, "ssh.port");
+		String user = context.getInstanceProperty(envId, "ssh.user");
+		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
 		String serviceProtocol = context.getServiceProtocolType();
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
@@ -265,10 +265,10 @@ public class Dispatch {
 		
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getProperty("env." + envId + ".ssh.host");
-		String port = context.getProperty("env." + envId + ".ssh.port");
-		String user = context.getProperty("env." + envId + ".ssh.user");
-		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
+		String host = context.getInstanceProperty(envId, "ssh.host");
+		String port = context.getInstanceProperty(envId, "ssh.port");
+		String user = context.getInstanceProperty(envId, "ssh.user");
+		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
 		String serviceProtocol = context.getServiceProtocolType();
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
