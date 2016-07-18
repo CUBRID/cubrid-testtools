@@ -612,6 +612,7 @@ function init
   trgext="_trigger"
 
   PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
+   
   if [ $OS = "Windows_NT" ]
   then
     PATH=${MINGW_PATH}/bin:${MINGW_PATH}/lib:`cygpath "${JAVA_HOME}"`/bin:$PATH
@@ -646,6 +647,9 @@ function init
   export CLASSPATH
   export LD_LIBRARY_PATH
   export LIBRARY_PATH
+  
+  broker_port=`ini.sh -s "%BROKER1" $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
+  sed -i "s@<port>[0-9]*</port>@<port>${broker_port}</port>@g" ${init_path}/shell_config.xml 
   
   if [ "$mode" = "test" ]
   then
