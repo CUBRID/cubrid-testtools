@@ -625,24 +625,24 @@ function init
     fi
     
     CLASSPATH=`cygpath -w "$CUBRID/jdbc/cubrid_jdbc.jar"`\;`cygpath -w "${init_path}/commonforjdbc.jar"`\;.
-    LD_LIBRARY_PATH=`cygpath -w $init_path/commonforc/lib`:$LD_LIBRARY_PATH    
+    LD_LIBRARY_PATH=`cygpath -w $init_path/commonforc/lib`:$LD_LIBRARY_PATH
     cubrid service stop
     taskkill /F /FI "imagename eq cub*"
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
     cubrid service stop
     wmic PROCESS WHERE \( name = \'java.exe\' AND NOT CommandLine LIKE \'%com.nhncorp.cubrid.service.Server%\' \) DELETE
   else
-    CLASSPATH=$CUBRID/jdbc/cubrid_jdbc.jar:$init_path/commonforjdbc.jar:.     
+    CLASSPATH=$CUBRID/jdbc/cubrid_jdbc.jar:$init_path/commonforjdbc.jar:.
     LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
     cubrid service stop
     pkill cub >/dev/null 2>&1
     
-    chmod u+x ${init_path}/cubrid >/dev/null 2>&1  
-	PATH=${init_path}:$PATH
+    chmod u+x ${init_path}/cubrid >/dev/null 2>&1
+	  PATH=${init_path}:${JAVA_HOME}/bin:$PATH
   fi
 
-  export SHELL_CONFIG_PATH=$init_path  
+  export SHELL_CONFIG_PATH=$init_path
   export PATH
   export CLASSPATH
   export LD_LIBRARY_PATH
