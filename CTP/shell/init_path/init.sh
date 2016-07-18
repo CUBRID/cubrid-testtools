@@ -1347,7 +1347,7 @@ function create_ccidb
 	else
 		cubrid createdb ccidb --db-volume-size=20m --log-volume-size=20m
 	fi
-        csql ccidb -S -i $init_path/ccidb.sql
+        #csql ccidb -S -i $init_path/ccidb.sql
         rm -rf $CUBRID/databases/ccidbbak
         cp -r $CUBRID/databases/ccidb $CUBRID/databases/ccidbbak
         grep ccidb $CUBRID/databases/databases.txt >$CUBRID/databases/ccidb.txt
