@@ -37,11 +37,12 @@ configPath=${init_path}
 master=`grep MASTER_SERVER_IP $configPath/HA.properties`
 master_user=`grep MASTER_SERVER_USER $configPath/HA.properties`
 master_pw=`grep MASTER_SERVER_PW $configPath/HA.properties`
+master_port=`grep MASTER_SERVER_SSH_PORT $configPath/HA.properties`
 
 slave=`grep SLAVE_SERVER_IP $configPath/HA.properties`
 slave_user=`grep SLAVE_SERVER_USER $configPath/HA.properties`
 slave_pw=`grep SLAVE_SERVER_PW $configPath/HA.properties`
-
+slave_port=`grep SLAVE_SERVER_SSH_PORT $configPath/HA.properties`
 
 #set port numbers according to different users
 
@@ -61,11 +62,12 @@ SHARD_PROXY_SHM_ID=`grep SHARD_PROXY_SHM_ID $configPath/HA.properties`
 MASTER_SERVER_IP=${master#*=}
 MASTER_SERVER_USER=${master_user#*=}
 MASTER_SERVER_PW=${master_pw#*=}
+MASTER_SERVER_SSH_PORT=${master_port#*=}
 
 SLAVE_SERVER_IP=${slave#*=}
 SLAVE_SERVER_USER=${slave_user#*=}
 SLAVE_SERVER_PW=${slave_pw#*=}
-
+SLAVE_SERVER_SSH_PORT=${slave_port#*=}
 
 CUBRID_PORT_ID=${CUBRID_PORT_ID#*=}
 ha_port_id=${ha_port_id#*=}
@@ -84,14 +86,12 @@ slaveHostName=""
 
 #=========================================================
 
-alias run_on_slave='${init_path}/../../common/script/run_remote_script -host $SLAVE_SERVER_IP -user $MASTER_SERVER_USER -password "$MASTER_SERVER_PW"'
-alias run_upload_on_slave='${init_path}/../../common/script/run_upload -host $SLAVE_SERVER_IP -user $MASTER_SERVER_USER -password "$MASTER_SERVER_PW"'
-alias run_download_on_slave='${init_path}/../../common/script/run_download -host $SLAVE_SERVER_IP -user $MASTER_SERVER_USER -password "$MASTER_SERVER_PW"'
+alias run_on_slave='${init_path}/../../common/script/run_remote_script -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
+alias run_upload_on_slave='${init_path}/../../common/script/run_upload -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
+alias run_download_on_slave='${init_path}/../../common/script/run_download -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
 
 #===========================================================user configuration end==============================================================================
-
 #set -x
-
 
 #variable definition
 dbPath=$CUBRID/databases
