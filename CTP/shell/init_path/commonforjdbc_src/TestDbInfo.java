@@ -48,7 +48,7 @@ public class TestDbInfo {
 	}
 	
 	public static TestDbInfo call(){
-		call("shell_config.xml");
+		return call("shell_config.xml");
 	}
 
 	public static TestDbInfo call(String shellConfig) {
