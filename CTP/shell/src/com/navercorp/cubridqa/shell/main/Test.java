@@ -250,22 +250,15 @@ public class Test {
 		String result;
 
 		script = new WinShellInput("cd ");
-		if (context.getVersion().trim().toUpperCase().equals("32BITS")) {
-			script.addCommand("source $init_path/env_win32.sh");
-		} else if (context.getVersion().trim().toUpperCase().equals("64BITS")) {
-			script.addCommand("source $init_path/env_win64.sh");
-		}
 		script.addCommand("cd " + testCaseDir);
 
 		script.addCommand("export TEST_BIG_SPACE=$(echo $TEST_BIG_SPACE)");
 		script.addCommand("export TEST_BIG_SPACE=`if [ \"$TEST_BIG_SPACE\" = '' ]; then echo " + context.getBigSpaceDir() + " ; else echo $TEST_BIG_SPACE; fi`");
 		script.addCommand("if [ \"$TEST_BIG_SPACE\" != '' ]; then mkdir -p $TEST_BIG_SPACE; rm -rf $TEST_BIG_SPACE/*; fi");
 
-                if (context.getDefaultDbcharset()!=null && context.getDefaultDbcharset().trim().equals("")==false) {
-                script.addCommand("export CUBRID_CHARSET=" + context.getDefaultDbcharset());
-                }
-
-
+		if (context.getDefaultDbcharset() != null && context.getDefaultDbcharset().trim().equals("") == false) {
+			script.addCommand("export CUBRID_CHARSET=" + context.getDefaultDbcharset());
+		}
 
 		script.addCommand("sh " + testCaseName + " 2>&1");
 		result = ssh.execute(script);
@@ -287,7 +280,6 @@ public class Test {
 		script.addCommand("if [ \"$JAVA_HOME_" + context.getVersion().trim().toUpperCase() + "\" ]; then");
 		script.addCommand("        export JAVA_HOME=$JAVA_HOME_" + (context.getVersion().trim().toUpperCase()));
 		script.addCommand("fi");
-		script.addCommand("export PATH=$JAVA_HOME/bin:$PATH");
 		script.addCommand("export TEST_BIG_SPACE=$(echo $TEST_BIG_SPACE)");
 		script.addCommand("export TEST_BIG_SPACE=`if [ \"$TEST_BIG_SPACE\" = '' ]; then echo " + context.getBigSpaceDir() + " ; else echo $TEST_BIG_SPACE; fi`");
 		script.addCommand("if [ \"$TEST_BIG_SPACE\" != '' ]; then mkdir -p $TEST_BIG_SPACE; rm -rf $TEST_BIG_SPACE/*; fi");
