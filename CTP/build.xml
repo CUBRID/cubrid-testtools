@@ -46,6 +46,8 @@
 			<!--<compilerarg value="-Xlint:unchecked"/>-->
 			<classpath refid="libs" />
 		</javac>
+		<javac srcdir="shell/init_path/commonforjdbc_src" destdir="${build}">
+		</javac>
 	</target>
 
 	<target name="clean">
@@ -71,6 +73,9 @@
 		</jar>
 		<jar jarfile="shell/lib/cubridqa-shell.jar" manifest="shell/lib/MANIFEST.MF" basedir="${build}">			
 			<include name="com/navercorp/cubridqa/shell/**/*.class" />
+		</jar>
+		<jar jarfile="shell/init_path/commonforjdbc.jar" basedir="${build}">			
+			<include name="common/*.class" />
 		</jar>
 		<!--delete dir="${build}" / -->
 	</target>
