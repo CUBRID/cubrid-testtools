@@ -625,7 +625,7 @@ function init
     fi
     
     CLASSPATH=`cygpath -w "$CUBRID/jdbc/cubrid_jdbc.jar"`\;`cygpath -w "${init_path}/commonforjdbc.jar"`\;.
-    LD_LIBRARY_PATH=`cygpath -w $init_path/commonforc/lib`    
+    LD_LIBRARY_PATH=`cygpath -w $init_path/commonforc/lib`:$LD_LIBRARY_PATH    
     cubrid service stop
     taskkill /F /FI "imagename eq cub*"
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
@@ -633,7 +633,7 @@ function init
     wmic PROCESS WHERE \( name = \'java.exe\' AND NOT CommandLine LIKE \'%com.nhncorp.cubrid.service.Server%\' \) DELETE
   else
     CLASSPATH=$CUBRID/java/cubrid_jdbc.jar:$init_path/commonforjdbc.jar:.     
-    LD_LIBRARY_PATH=$init_path/commonforc/lib
+    LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
     cubrid service stop
     pkill cub >/dev/null 2>&1
