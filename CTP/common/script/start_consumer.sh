@@ -60,6 +60,7 @@ clspath="$CLASSPATH"
 msgId=""
 branchName=master
 build_is_from_git
+statFile="${CTP_HOME}/common/sched/status/STATUS.TXT"
 
 while [ $# -ne 0 ];do
 	case $1 in
@@ -371,6 +372,18 @@ do
 			if [ -f ${CTP_HOME}/common/ext/${q_exec[$count]}.sh ] 
 			then
 				echo "Action: $x , ${q_exec[$count]}.sh, GENERAL"
+				
+				if [ -f $statFile ]		
+ 				then		
+ 					rm -f $statFile		
+ 				else		
+ 					mkdir -p ${CTP_HOME}/common/sched/status		
+                fi		
+ 							
+ 				touch $statFile		
+ 				TestTime=`getTimeStamp`		
+ 				echo "QUEUE:${x}" > $statFile		
+ 				echo "START_TIME:${TestTime}" >> $statFile
 			
 				echo
 				echo "Log msg id into queue file!"
@@ -399,7 +412,11 @@ do
 			echo "No build"
 		fi	
  	        let "count=count+1"	
-		
+ 	        
+		if [ -f $statFile ]		
+ 		then		
+ 			rm -f $statFile		
+ 		fi
 	done
 	sleep 5 
 done

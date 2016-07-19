@@ -26,6 +26,7 @@
 
 SVR_SITE="china"
 result="${CTP_HOME}/common/sched/result/consumerMsg.info"
+statusFile="${CTP_HOME}/common/sched/status/STATUS.TXT"
 
 function analyzeMessageInfo() {
 	SVR_SITE=$1
@@ -62,6 +63,11 @@ function analyzeMessageInfo() {
         isWin='yes'
     fi
 	
+	if [ -f $statusFile ]		
+ 	then		
+ 		echo "TEST_TYPE:$BUILD_SCENARIOS" >> $statusFile		
+ 		echo "TEST_BUILD:$BUILD_ID" >> $statusFile		
+ 	fi 
 }
 
 function getMsgValue() {
