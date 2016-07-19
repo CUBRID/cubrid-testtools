@@ -58,8 +58,8 @@ onlyMax=""
 withoutSync=0
 clspath="$CLASSPATH"
 msgId=""
-statFile="${CTP_HOME}/common/sched/status/STATUS.TXT"
 branchName=master
+build_is_from_git
 
 while [ $# -ne 0 ];do
 	case $1 in
@@ -288,6 +288,7 @@ function analyzeMessageInfo()
         branch=`cat $result|awk '/BUILD_SVN_BRANCH/'|cut -d ":" -f2|tr -d " "`
         bit=`cat $result|awk '/BUILD_BIT/'|cut -d ":" -f2|tr -d " "`
         scenario=`cat $result|awk '/BUILD_SCENARIOS/'|cut -d ":" -f2|tr -d " "`
+        build_is_from_git=`cat $result|awk '/BUILD_IS_FROM_GIT/'|cut -d ":" -f2|tr -d " "`
         url_cn=`cat $result|grep "BUILD_URLS:"`
         url_kr=`cat $result|grep "BUILD_URLS_KR:"`
         url_cn_1=${url_cn#*:}
@@ -340,15 +341,16 @@ do
  			updateCodes $branchName
 		fi
 	
-		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2>&1 /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
+		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2>&1 > /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
+		isFromGit=`cat ${CTP_HOME}/common/sched/status/${x} 2>&1 > /dev/null | grep BUILD_IS_FROM_GIT|awk -F ':' '{print $2}'`
 		isStartByData=`echo $existsMsgId|grep "[^0-9]"|wc -l`
 		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
 		then
 			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
-			(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
+			(cd ${CTP_HOME}; if [ -n "$isFromGit" ] && [ "$isFromGit" == "1" ];then export BUILD_IS_FROM_GIT=$is_from_git ;fi;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
 			
 			echo
-                        echo "End continue mode test!"
+            echo "End continue mode test!"
 			consumerTimer ${existsMsgId} "stop"
 			contimeENDTIME=`getTimeStamp`
 			echo "END_CONTINUE_TIME:${contimeENDTIME}"
@@ -370,21 +372,10 @@ do
 			then
 				echo "Action: $x , ${q_exec[$count]}.sh, GENERAL"
 			
-				if [ -f $statFile ]
-				then
-					rm -f $statFile
-				else
-					mkdir -p ${CTP_HOME}/common/sched/status
-                		fi
-					
-				touch $statFile
-				TestTime=`getTimeStamp`
-				echo "QUEUE:${x}" > $statFile
-				echo "START_TIME:${TestTime}" >> $statFile
-			
 				echo
 				echo "Log msg id into queue file!"
 				echo "MSG_ID:$msgId" > ${CTP_HOME}/common/sched/status/$x
+				echo "BUILD_IS_FROM_GIT=$build_is_from_git" >> ${CTP_HOME}/common/sched/status/$x
 				echo "START_TIME:${TestTime}" >> ${CTP_HOME}/common/sched/status/$x
 				echo
 
@@ -409,10 +400,6 @@ do
 		fi	
  	        let "count=count+1"	
 		
-		if [ -f $statFile ]
-		then
-			rm -f $statFile
-		fi
 	done
 	sleep 5 
 done

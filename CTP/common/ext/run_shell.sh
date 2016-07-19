@@ -120,7 +120,7 @@ function run_shell_lagacy_continue()
     #execute testing
     svnup upgrade.sh
     sh upgrade.sh
-    she run_continue.sh
+    sh run_continue.sh
     cd - 
 }
 
