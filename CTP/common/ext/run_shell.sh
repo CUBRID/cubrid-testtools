@@ -105,7 +105,6 @@ function run_shell_legacy()
     rm $tmplog >/dev/null 2>&1
     cd $HOME/cubrid_shell_fm
 
-    svnup upgrade.sh
     sh upgrade.sh
    
     sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false | tee $tmplog
@@ -118,9 +117,8 @@ function run_shell_lagacy_continue()
     cd $HOME/cubrid_shell_fm
     
     #execute testing
-    svnup upgrade.sh
     sh upgrade.sh
-    she run_continue.sh
+    sh run_continue.sh
     cd - 
 }
 

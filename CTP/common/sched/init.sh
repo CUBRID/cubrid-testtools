@@ -63,11 +63,11 @@ function analyzeMessageInfo() {
         isWin='yes'
     fi
 	
-	if [ -f $statusFile ]
-	then
-		echo "TEST_TYPE:$BUILD_SCENARIOS" >> $statusFile
-		echo "TEST_BUILD:$BUILD_ID" >> $statusFile
-	fi 
+	if [ -f $statusFile ]		
+ 	then		
+ 		echo "TEST_TYPE:$BUILD_SCENARIOS" >> $statusFile		
+ 		echo "TEST_BUILD:$BUILD_ID" >> $statusFile		
+ 	fi 
 }
 
 function getMsgValue() {
