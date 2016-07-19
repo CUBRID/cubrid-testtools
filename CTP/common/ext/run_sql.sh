@@ -163,9 +163,14 @@ function run_sql_legacy {
     
     if [ "$BUILD_TYPE" != "coverage" ]
     then
-        log_path=`cat $tmplog|grep RESULT_DIR|awk -F ':' '{print $NF}'|tr -d " "`
-        log_dir=`dirname $log_path`
-        for testResultPath in `cat ${log_dir}/*.log|grep "Result Root Dir"|awk -F 'Dir:' '{print $NF}'|tr -d " "`
+	if [ "$OS" == "Windows_NT" ]; then
+            cat_cmd="cat ${CTP_HOME}/../dailyqa/win_cqt_test.log"
+        else
+            log_path=`cat $tmplog|grep RESULT_DIR|awk -F ':' '{print $NF}'|tr -d " "`
+            log_dir=`dirname $log_path`
+            cat_cmd="cat ${log_dir}/*.log"
+        fi
+        for testResultPath in `${cat_cmd}|grep "Result Root Dir"|awk -F 'Dir:' '{print $NF}'|tr -d " "`
         do
             testResultName="`basename ${testResultPath}`"
             (cd $testResultPath/..; upload_to_dailysrv "$testResultName" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$testResultName")
