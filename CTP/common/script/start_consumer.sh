@@ -345,7 +345,7 @@ do
 		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
 		then
 			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
-			(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site;sh ${q_exec[$count]}.sh YES)
+			(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
 			
 			echo
                         echo "End continue mode test!"
