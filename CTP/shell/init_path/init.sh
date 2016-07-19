@@ -610,6 +610,7 @@ function init
     export webuser=qahome
     export CLASSPATH=".;$CLASSPATH;$init_path\commonforjdbc.jar;$CUBRID\jdbc\cubrid_jdbc.jar" 
     export SHELL_CONFIG_PATH=$init_path 
+    export LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH
     cubrid service stop
     taskkill /F /FI "imagename eq cub*"
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
