@@ -40,7 +40,7 @@ function run_sql {
     ctp_scenario=""
 
     #STEP 1: CLEAN
-    runAction sql_medium_git.act            #clean processes and check disk space
+    runAction sql_medium_site.act           #clean processes and check disk space
     rm -f $tmplog >/dev/null 2>&1           #clean log
     rm -f $tmptxt >/dev/null 2>&1 
 
@@ -117,11 +117,11 @@ function run_sql {
 }
 
 function run_sql_legacy {
+    # CONSTANTS
+    tmplog=$QA_REPOSITORY/temp/tmp.log
 
     #STEP 1: CLEAN
-    echo "start to update CQT tools"
     runAction sql_medium_site.act
-
     (cd $QA_REPOSITORY; sh upgrade.sh)
 
     #STEP 2: INSTALL CUBRID
@@ -148,7 +148,6 @@ function run_sql_legacy {
         exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/runWinTest.sh -config_file test_win.xml"
     fi
     
-    echo "Start SQL Test On Linux"   
     export PROPERTIES_PATH=$QA_REPOSITORY/qatool_bin/qamanager
     if [ "$BUILD_SCENARIOS" == "site" ]
     then
@@ -157,12 +156,13 @@ function run_sql_legacy {
         export _JAVA_OPTIONS=-Dfile.encoding=utf8
     fi
             
-    ${exec_script_file} -h $CUBRID -v ${BUILD_SVN_BRANCH_NEW} -s $BUILD_SCENARIOS -t $BUILD_BIT -x -random_port
-        
-    echo "Finish SQL Test On Linux"
+    ${exec_script_file} -h $CUBRID -v ${BUILD_SVN_BRANCH_NEW} -s $BUILD_SCENARIOS -t $BUILD_BIT -x -random_port|tee $tmplog
+    
     if [ "$BUILD_TYPE" != "coverage" ]
     then
-        for testResultPath in `cat $HOME/dailyqa/win_cqt_test.log|grep "Result Root Dir"|awk -F 'Dir:' '{print $NF}'|tr -d " "`
+        log_path=`cat $tmplog|grep RESULT_DIR|awk -F ':' '{print $NF}'|tr -d " "`
+        log_dir=`dirname $log_path`
+        for testResultPath in `cat ${log_dir}/*.log|grep "Result Root Dir"|awk -F 'Dir:' '{print $NF}'|tr -d " "`
         do
             testResultName="`basename ${testResultPath}`"
             (cd $testResultPath/..; upload_to_dailysrv "$testResultName" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$testResultName")
