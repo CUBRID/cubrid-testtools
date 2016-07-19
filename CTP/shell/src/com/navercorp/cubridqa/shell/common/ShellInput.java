@@ -55,17 +55,9 @@ public class ShellInput {
 	protected ShellInput(String cmd, String scriptToRun, boolean isWindows){
 		this.isWindows = isWindows;
 		cmds= new StringBuilder();
-		if(scriptToRun==null && !isWindows){
-			scriptToRun = ". ~/.bash_profile";
-			addCommand(scriptToRun);
-		} else {			
-			addCommand("export HOME=`cd $QA_REPOSITORY/..;pwd`");
-			addCommand("export CUBRID_CHARSET=en_US");
-			addCommand("export CUBRID_LANG=en_US");
-			addCommand("export CUBRID_MSG_LANG=en_US");
-		}
-		
-		addCommand("echo " + START_FLAG_MOCK);
+	    addCommand("cd");
+	    addCommand(scriptToRun==null ? ". ~/.bash_profile" : ". " + scriptToRun);
+        addCommand("echo " + START_FLAG_MOCK);
 		if(cmd!=null) {
 			addCommand(cmd);
 		}

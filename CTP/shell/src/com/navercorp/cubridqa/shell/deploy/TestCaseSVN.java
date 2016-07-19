@@ -123,7 +123,7 @@ public class TestCaseSVN {
 			System.out.print("[ERROR] " + e.getMessage());
 			throw e;
 		}
-		System.out.println("SVN UPDATE COMPLETE");
+		System.out.println("UPDATE TEST CASES COMPLETE");
 		
 		context.getFeedback().onSvnUpdateStop(envIdentify);
  	}

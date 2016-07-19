@@ -92,13 +92,13 @@ public class TestFactory {
 				return;
 			}
 			
-			System.out.println("============= SVN UPDATE ==================");
+			System.out.println("============= UPDATE TEST CASES ==================");
 			concurrentSVNUpdate(stableEnvList);
 			System.out.println("DONE");
 			
 		} else {
 			feedback.onTaskStartEvent(context.getCubridPackageUrl());
-			System.out.println("============= SVN UPDATE ==================");
+			System.out.println("============= UPDATE TEST CASES ==================");
 			concurrentSVNUpdate(stableEnvList);
 			System.out.println("DONE");
 			
