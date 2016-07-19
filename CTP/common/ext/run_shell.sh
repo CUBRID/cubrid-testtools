@@ -27,7 +27,6 @@
 
 role=""
 tmplog=""
-feedback_type="database"
 coverage_controller_target_dir=""
 coverage_collaborate_url=""
 is_continue_mode=$1
@@ -43,8 +42,7 @@ coverage_controller_port=$MKEY_COVERAGE_UPLOAD_PORT
 if [  "$BUILD_TYPE" == "coverage" ];then
         role="--role-coverage"
         coverage_controller_target_dir=${MKEY_COVERAGE_UPLOAD_DIR}/${BUILD_ID}/new
-        feedback_type="file"
-	coverage_collaborate_url=$src_url
+    	coverage_collaborate_url=$src_url
 fi
 
 
@@ -75,7 +73,9 @@ function run_shell()
    ini.sh -u "main.coverage.controller.pwd=$coverage_controller_pwd" $shell_fm_test_conf 
    ini.sh -u "main.coverage.controller.port=$coverage_controller_port" $shell_fm_test_conf 
    ini.sh -u "main.coverage.controller.result=$coverage_controller_target_dir" $shell_fm_test_conf 
-   ini.sh -u "main.feedback.type=$feedback_type" $shell_fm_test_conf 
+   if [ "$BUILD_TYPE" == "coverage" ];then
+   		ini.sh -u "main.feedback.type=file" $shell_fm_test_conf
+   fi 
    ini.sh -u "main.testbuild.url=$url" $shell_fm_test_conf
    ini.sh -u "main.mode.continue=false" $shell_fm_test_conf
 
@@ -107,8 +107,8 @@ function run_shell_legacy()
 
     svnup upgrade.sh
     sh upgrade.sh
-
-    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir -Dmain.feedback.type=$feedback_type $url false | tee $tmplog
+   
+    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false | tee $tmplog
     cd -
 }
 

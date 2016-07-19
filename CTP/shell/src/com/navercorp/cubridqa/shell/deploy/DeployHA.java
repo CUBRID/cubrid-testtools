@@ -58,7 +58,6 @@ public class DeployHA {
 		scripts.addCommand("ini.sh -u BROKER_PORT2=$cubrid_broker2_port_value $init_path/HA.properties ");
 		scripts.addCommand("cubrid_broker2_app_server_shm_value=`ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID`");
 		scripts.addCommand("ini.sh -u APPL_SERVER_SHM_ID2=$cubrid_broker2_app_server_shm_value $init_path/HA.properties");
-		scripts.addCommand("ini.sh -u configPath=$init_path $init_path/make_ha.sh ");
 		
 		String haPortId = context.getInstanceProperty(this.masterEnvId, "ha.ha_port_id"); 
 		if(haPortId != null && haPortId.length()>0){
