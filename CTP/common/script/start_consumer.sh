@@ -348,7 +348,7 @@ do
 		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
 		then
 			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
-			(cd ${CTP_HOME}; if [ -n "$isFromGit" ] && [ "$isFromGit" == "1" ];then export BUILD_IS_FROM_GIT=$isFromGit ;fi;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
+			(cd ${CTP_HOME}; export BUILD_IS_FROM_GIT=$isFromGit ;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
 			
 			echo
             echo "End continue mode test!"
