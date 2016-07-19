@@ -450,13 +450,13 @@ public class FeedbackDB implements Feedback {
 
 	@Override
 	public void onSvnUpdateStart(String envIdentify) {
-		System.out.println("SVN UPDATE START: " + envIdentify);
+		System.out.println("UPDATE TEST CASES START: " + envIdentify);
 
 	}
 
 	@Override
 	public void onSvnUpdateStop(String envIdentify) {
-		System.out.println("SVN UPDATE STOP: " + envIdentify);
+		System.out.println("UPDATE TEST CASES STOP: " + envIdentify);
 
 	}
 
