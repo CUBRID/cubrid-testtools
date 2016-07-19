@@ -59,7 +59,7 @@ withoutSync=0
 clspath="$CLASSPATH"
 msgId=""
 branchName=master
-build_is_from_git
+build_is_from_git=""
 statFile="${CTP_HOME}/common/sched/status/STATUS.TXT"
 
 while [ $# -ne 0 ];do
@@ -342,13 +342,13 @@ do
  			updateCodes $branchName
 		fi
 	
-		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2>&1 > /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
-		isFromGit=`cat ${CTP_HOME}/common/sched/status/${x} 2>&1 > /dev/null | grep BUILD_IS_FROM_GIT|awk -F ':' '{print $2}'`
+		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
+		isFromGit=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep BUILD_IS_FROM_GIT|awk -F ':' '{print $2}'`
 		isStartByData=`echo $existsMsgId|grep "[^0-9]"|wc -l`
 		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
 		then
 			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
-			(cd ${CTP_HOME}; if [ -n "$isFromGit" ] && [ "$isFromGit" == "1" ];then export BUILD_IS_FROM_GIT=$is_from_git ;fi;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
+			(cd ${CTP_HOME}; if [ -n "$isFromGit" ] && [ "$isFromGit" == "1" ];then export BUILD_IS_FROM_GIT=$isFromGit ;fi;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
 			
 			echo
             echo "End continue mode test!"
@@ -388,7 +388,7 @@ do
 				echo
 				echo "Log msg id into queue file!"
 				echo "MSG_ID:$msgId" > ${CTP_HOME}/common/sched/status/$x
-				echo "BUILD_IS_FROM_GIT=$build_is_from_git" >> ${CTP_HOME}/common/sched/status/$x
+				echo "BUILD_IS_FROM_GIT:$build_is_from_git" >> ${CTP_HOME}/common/sched/status/$x
 				echo "START_TIME:${TestTime}" >> ${CTP_HOME}/common/sched/status/$x
 				echo
 
