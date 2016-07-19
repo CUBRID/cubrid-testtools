@@ -145,7 +145,7 @@ function updateCodes()
 		default_lc_all=`echo $LC_ALL`
 		export LC_ALL=en_us
 		echo "Update status: CHANGED " `date`
-		commands=`ps -u $USER -o cmd | grep start_consumer.sh | grep -v grep|head -1`
+		commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
 	    echo "#!/bin/bash " > $HOME/.autoUpdate.sh
 	    echo "if [ -f ~/.bash_profile ]; " >> $HOME/.autoUpdate.sh
 	    echo "then " >> $HOME/.autoUpdate.sh
