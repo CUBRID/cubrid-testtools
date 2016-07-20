@@ -85,7 +85,7 @@ function run_shell()
    ini.sh -u "main.mode.continue=false" $shell_fm_test_conf
 
    #execute testing
-   ctp.sh shell -c $shell_fm_test_conf > $tmplog 2>&1
+   ctp.sh shell -c $shell_fm_test_conf 2>&1 | tee $tmplog
    cd -
 }
 
@@ -98,7 +98,7 @@ function run_shell_continue()
    fi
    
    ini.sh -u "main.mode.continue=true" ${shell_fm_test_conf}
-   $CTP_HOME/bin/ctp.sh shell -c ${shell_fm_test_conf} >> $tmplog 2>&1
+   $CTP_HOME/bin/ctp.sh shell -c ${shell_fm_test_conf} 2>&1 | tee -a $tmplog
 }
 
 
