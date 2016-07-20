@@ -298,9 +298,9 @@ public class CommonUtils {
 		Integer taskId = context.getTaskId();
 
 		backupFileName = "shell_result_" + build + "_" + bit + "_" + taskId
-				+ "_" + curTimestamp + "tar.gz";
+				+ "_" + curTimestamp + ".tar.gz";
 		LocalInvoker.exec(
-				"cd $CTP_HOME; tar zvcf " + context.getRootLogDir() + "/"
+				"cd " + context.getRootLogDir() + "; tar zvcf "
 						+ backupFileName + " " + context.getCurrentLogDir(), false, false);
 	}
 	

@@ -59,8 +59,13 @@ function run_shell()
    category=$BUILD_SCENARIOS
   
    #init and clean log
-   tmplog=$CTP_HOME/runtime.log
-   rm $tmplog >/dev/null 2>&1 
+   tmplog=$CTP_HOME/result/shell/current_runtime_logs/runtime.log
+   if [ -d "$CTP_HOME/result/shell/current_runtime_logs" ];then
+      rm $CTP_HOME/result/shell/current_runtime_logs/* >/dev/null 2>&1 
+   else
+      mkdir -p $CTP_HOME/result/shell/current_runtime_logs
+   fi
+   
    
    cd $CTP_HOME
    #update configuration file
@@ -80,34 +85,29 @@ function run_shell()
    ini.sh -u "main.mode.continue=false" $shell_fm_test_conf
 
    #execute testing
-   ctp.sh shell -c $shell_fm_test_conf | tee $tmplog
+   ctp.sh shell -c $shell_fm_test_conf 2>&1 | tee $tmplog
    cd -
 }
 
 function run_shell_continue()
 {
    #init and clean log
-   tmplog=$CTP_HOME/runtime.log
-   rm $tmplog >/dev/null 2>&1
+   tmplog=$CTP_HOME/result/shell/current_runtime_logs/runtime.log
+   if [ ! -f $tmplog ];then
+       mkdir -p $CTP_HOME/result/shell/current_runtime_logs
+   fi
    
-   ini.sh -u "main.mode.continue=true" ${shell_fm_test_conf}   
-   
-   $CTP_HOME/bin/ctp.sh shell -c ${shell_fm_test_conf} | tee $tmplog
+   ini.sh -u "main.mode.continue=true" ${shell_fm_test_conf}
+   $CTP_HOME/bin/ctp.sh shell -c ${shell_fm_test_conf} 2>&1 | tee -a $tmplog
 }
 
 
 function run_shell_legacy()
 {
     category=$BUILD_SCENARIOS
-    
-    #init and clean log
-    tmplog=$HOME/cubrid_shell_fm/runtime.log
-    rm $tmplog >/dev/null 2>&1
     cd $HOME/cubrid_shell_fm
-
     sh upgrade.sh
-   
-    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false | tee $tmplog
+    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false
     cd -
 }
 
@@ -115,7 +115,6 @@ function run_shell_legacy()
 function run_shell_lagacy_continue()
 {
     cd $HOME/cubrid_shell_fm
-    
     #execute testing
     sh upgrade.sh
     sh run_continue.sh
