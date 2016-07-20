@@ -70,7 +70,7 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 		System.out.println("host: " + clientHost + ", user:" + user + "(" + new java.util.Date() + ")");
 		System.out.println(scripts);
 		if (requiredUser.equals(user) && requiredPwd.equals(pwd) && requiredHosts.indexOf( "," + clientHost + ",") != -1) {
-			String result = LocalInvoker.exec(scripts, pureWindows, isDebug);
+			String result = LocalInvoker.exec(scripts, pureWindows, false);
 			System.out.println("WELCOME");
 			return result;
 		} else {
