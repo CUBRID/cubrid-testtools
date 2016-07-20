@@ -963,6 +963,12 @@ function format_instance_oid_output()
     sed -i 's/[[:space:]]\+[0-9]*|[[:space:]]\+[0-9]*|[[:space:]]\+[0-9]*//g' $1
 }
 
+#format tran index number of lockdb output
+function format_tran_index_lockdb_output()
+{
+    sed -i 's/Tran_index =.*Granted_mode/Tran_index =    , Granted_mode/g' $1
+}
+
 function set_CUBRID_CHARSET
 {
     parse_build_version

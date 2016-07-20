@@ -60,8 +60,8 @@ function run_shell()
   
    #init and clean log
    tmplog=$CTP_HOME/result/shell/current_runtime_logs/runtime.log
-   if [ -f $tmplog ];then
-      rm $tmplog >/dev/null 2>&1 
+   if [ -d "$CTP_HOME/result/shell/current_runtime_logs" ];then
+      rm $CTP_HOME/result/shell/current_runtime_logs/* >/dev/null 2>&1 
    else
       mkdir -p $CTP_HOME/result/shell/current_runtime_logs
    fi
@@ -105,18 +105,9 @@ function run_shell_continue()
 function run_shell_legacy()
 {
     category=$BUILD_SCENARIOS
-    
-    #init and clean log
-    tmplog=$CTP_HOME/result/shell/current_runtime_logs/runtime.log
-    if [ -f $tmplog ];then
-       rm $tmplog >/dev/null 2>&1 
-    else
-       mkdir -p $CTP_HOME/result/shell/current_runtime_logs
-    fi
-    
     cd $HOME/cubrid_shell_fm
     sh upgrade.sh
-    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false | tee $tmplog
+    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false
     cd -
 }
 
@@ -124,16 +115,9 @@ function run_shell_legacy()
 function run_shell_lagacy_continue()
 {
     cd $HOME/cubrid_shell_fm
-    
-    #init and clean log
-    tmplog=$CTP_HOME/result/shell/current_runtime_logs/runtime.log
-    if [ ! -f $tmplog ];then
-       mkdir -p $CTP_HOME/result/shell/current_runtime_logs
-    fi
-    
     #execute testing
-    sh upgrade.sh >> $tmplog 2>&1
-    sh run_continue.sh >> $tmplog 2>&1
+    sh upgrade.sh
+    sh run_continue.sh
     cd - 
 }
 
