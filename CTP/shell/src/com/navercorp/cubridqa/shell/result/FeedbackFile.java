@@ -60,7 +60,7 @@ public class FeedbackFile implements Feedback {
 		log.println(String.valueOf(task_id));
 		context.setTaskId(task_id);
 		log.close();
-		
+		taskStartTime = System.currentTimeMillis();
 		println("[Task Id] is " + this.task_id);
 		println("[TASK START] Current Time is " + new Date() + ", start MSG Id is " + this.context.getMsgId());
 	}
