@@ -55,16 +55,12 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onTaskStartEvent(String buildFilename) {
 		feedbackLog = new Log(logName, false, false);
-		taskStartTime = System.currentTimeMillis();
-		String cont = null;
-		try {
-			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"));
-			this.task_id = Integer.parseInt(cont.trim());
-			context.setTaskId(task_id);
-		} catch (Exception e) {
-			this.task_id = -1;
-			e.printStackTrace();
-		}
+		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
+		this.task_id = 0;
+		log.println(String.valueOf(task_id));
+		context.setTaskId(task_id);
+		log.close();
+		
 		println("[Task Id] is " + this.task_id);
 		println("[TASK START] Current Time is " + new Date() + ", start MSG Id is " + this.context.getMsgId());
 	}
