@@ -45,6 +45,7 @@ public class FeedbackFile implements Feedback {
 	Log feedbackLog;
 	long taskStartTime;
 	Context context;
+	int task_id;
 	
 	public FeedbackFile(Context context){
 		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
@@ -55,12 +56,32 @@ public class FeedbackFile implements Feedback {
 	public void onTaskStartEvent(String buildFilename) {
 		feedbackLog = new Log(logName, false, false);
 		taskStartTime = System.currentTimeMillis();
+		String cont = null;
+		try {
+			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"));
+			this.task_id = Integer.parseInt(cont.trim());
+			context.setTaskId(task_id);
+		} catch (Exception e) {
+			this.task_id = -1;
+			e.printStackTrace();
+		}
+		println("[Task Id] is " + this.task_id);
 		println("[TASK START] Current Time is " + new Date() + ", start MSG Id is " + this.context.getMsgId());
 	}
 
 	@Override
 	public void onTaskContinueEvent() {
 		feedbackLog = new Log(logName, false, true);
+		String cont = null;
+		try {
+			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"));
+			this.task_id = Integer.parseInt(cont.trim());
+			context.setTaskId(task_id);
+		} catch (Exception e) {
+			this.task_id = -1;
+			e.printStackTrace();
+		}
+		println("[Task Id] is " + this.task_id);
 		println("[TASK CONTINUE] Current Time is " + new Date());
 	}
 
