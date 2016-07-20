@@ -301,7 +301,7 @@ public class CommonUtils {
 				+ "_" + curTimestamp + ".tar.gz";
 		LocalInvoker.exec(
 				"cd " + context.getRootLogDir() + "; tar zvcf "
-						+ backupFileName + " " + context.getCurrentLogDir() + " ../../runtime.log", false, false);
+						+ backupFileName + " " + context.getCurrentLogDir(), false, false);
 	}
 	
 	public static void main(String[] args) throws IOException {
