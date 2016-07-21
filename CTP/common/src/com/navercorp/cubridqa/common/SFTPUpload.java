@@ -97,6 +97,8 @@ public class SFTPUpload {
 		String pkgName = null;
 		if(isFolder) {
 			pkgName = ".UP_" + fromFile.getName().trim() + "_" + System.currentTimeMillis() + ".tar.gz";
+		}else{
+			pkgName = fromFile.getName().trim();
 		}
 		try {
 			System.out.println("[INFO] START TO UPDATE: " + from);

@@ -34,30 +34,30 @@
 
 #===========================================================user configuration begin==========================================================================
 configPath=${init_path}
-master=`grep MASTER_SERVER_IP $configPath/HA.properties`
-master_user=`grep MASTER_SERVER_USER $configPath/HA.properties`
-master_pw=`grep MASTER_SERVER_PW $configPath/HA.properties`
-master_port=`grep MASTER_SERVER_SSH_PORT $configPath/HA.properties`
+master=`grep MASTER_SERVER_IP $configPath/HA.properties|tr -d [:space:]`
+master_user=`grep MASTER_SERVER_USER $configPath/HA.properties|tr -d [:space:]`
+master_pw=`grep MASTER_SERVER_PW $configPath/HA.properties|tr -d [:space:]`
+master_port=`grep MASTER_SERVER_SSH_PORT $configPath/HA.properties|tr -d [:space:]`
 
-slave=`grep SLAVE_SERVER_IP $configPath/HA.properties`
-slave_user=`grep SLAVE_SERVER_USER $configPath/HA.properties`
-slave_pw=`grep SLAVE_SERVER_PW $configPath/HA.properties`
-slave_port=`grep SLAVE_SERVER_SSH_PORT $configPath/HA.properties`
+slave=`grep SLAVE_SERVER_IP $configPath/HA.properties|tr -d [:space:]`
+slave_user=`grep SLAVE_SERVER_USER $configPath/HA.properties|tr -d [:space:]`
+slave_pw=`grep SLAVE_SERVER_PW $configPath/HA.properties|tr -d [:space:]`
+slave_port=`grep SLAVE_SERVER_SSH_PORT $configPath/HA.properties|tr -d [:space:]`
 
 #set port numbers according to different users
 
-CUBRID_PORT_ID=`grep CUBRID_PORT_ID $configPath/HA.properties`
-ha_port_id=`grep ha_port_id $configPath/HA.properties`
-MASTER_SHM_ID=`grep MASTER_SHM_ID $configPath/HA.properties`
-BROKER_PORT1=`grep BROKER_PORT1 $configPath/HA.properties`
-APPL_SERVER_SHM_ID1=`grep APPL_SERVER_SHM_ID1 $configPath/HA.properties`
-BROKER_PORT2=`grep BROKER_PORT2 $configPath/HA.properties`
-APPL_SERVER_SHM_ID2=`grep APPL_SERVER_SHM_ID2 $configPath/HA.properties`
-cm_port=`grep cm_port $configPath/HA.properties`
+CUBRID_PORT_ID=`grep CUBRID_PORT_ID $configPath/HA.properties|tr -d [:space:]`
+ha_port_id=`grep ha_port_id $configPath/HA.properties|tr -d [:space:]`
+MASTER_SHM_ID=`grep MASTER_SHM_ID $configPath/HA.properties|tr -d [:space:]`
+BROKER_PORT1=`grep BROKER_PORT1 $configPath/HA.properties|tr -d [:space:]`
+APPL_SERVER_SHM_ID1=`grep APPL_SERVER_SHM_ID1 $configPath/HA.properties|tr -d [:space:]`
+BROKER_PORT2=`grep BROKER_PORT2 $configPath/HA.properties|tr -d [:space:]`
+APPL_SERVER_SHM_ID2=`grep APPL_SERVER_SHM_ID2 $configPath/HA.properties|tr -d [:space:]`
+cm_port=`grep cm_port $configPath/HA.properties|tr -d [:space:]`
 
-BROKER_PORT3=`grep BROKER_PORT3 $configPath/HA.properties`
-APPL_SERVER_SHM_ID3=`grep APPL_SERVER_SHM_ID3 $configPath/HA.properties`
-SHARD_PROXY_SHM_ID=`grep SHARD_PROXY_SHM_ID $configPath/HA.properties`
+BROKER_PORT3=`grep BROKER_PORT3 $configPath/HA.properties|tr -d [:space:]`
+APPL_SERVER_SHM_ID3=`grep APPL_SERVER_SHM_ID3 $configPath/HA.properties|tr -d [:space:]`
+SHARD_PROXY_SHM_ID=`grep SHARD_PROXY_SHM_ID $configPath/HA.properties|tr -d [:space:]`
 
 MASTER_SERVER_IP=${master#*=}
 MASTER_SERVER_USER=${master_user#*=}
