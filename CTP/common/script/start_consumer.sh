@@ -152,11 +152,12 @@ function updateCodes()
 	    echo "then " >> $HOME/.autoUpdate.sh
 	    echo "	  . ~/.bash_profile " >> $HOME/.autoUpdate.sh
 	    echo "fi " >> $HOME/.autoUpdate.sh
+	    echo "set -x " >> $HOME/.autoUpdate.sh
 	    echo "cd ${CURRENT_TOOL_HOME}/../script ">> $HOME/.autoUpdate.sh
 	    echo "chmod u+x *">> $HOME/.autoUpdate.sh
        	echo "./stop_consumer.sh" >>$HOME/.autoUpdate.sh
         echo "./upgrade.sh" >>$HOME/.autoUpdate.sh
-        echo "nohup ${commands} 2>&1 >> nohup.out &">>$HOME/.autoUpdate.sh
+        echo "nohup ${commands} 2>&1 >> $HOME/nohup.out &">>$HOME/.autoUpdate.sh
         echo "cd -" >>$HOME/.autoUpdate.sh
 		at -f $HOME/.autoUpdate.sh now+1 minutes 2>&1 | xargs -i echo \#{} >> $HOME/.autoUpdate.sh
 		export LC_ALL=$default_lc_all
