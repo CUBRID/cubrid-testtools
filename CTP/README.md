@@ -52,6 +52,12 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
     * Set ``data_file`` of ``[sql]`` section to the directory path of initial data files for **Medium** test.
     * ``test_mode=yes`` parameter is required.
     * Please see ``conf/medium.conf`` for details about other parameters.
+  * For **Shell** test, you can prepare one configuration file for your testing which is named as shell_template_for_[category_name], and can tune parameters of your configuration file. 
+    * Set ``port`` for broker, cubrid_port_id and ha, you can choose to configure default common port for all instance or configure port for each instance node.
+    * Set instance node for testing environment, it should cover ``host``, ``sshd port``, ``username`` and ``password``, and start with ``env.``, end with ``host, port, user, pwd`` keywords.
+    * Set ``main.testcase.root`` for case root directory.
+    * Set ``main.testcase.branch_git`` for the branch you will used.
+    * Configure ``init_path`` environment variable to ``CTP/shell/init_path`` for case required.
 
 #### Run Tests
 * For **SQL** test:
@@ -62,6 +68,11 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * For **Medium** test:
     ```
     $ bin/ctp.sh medium -c ./conf/medium.conf
+    ```
+    
+* For **Shell** test:
+    ```
+    $ bin/ctp.sh shell -c ./conf/shell_template_for_[category_name].conf
     ```
     
 * For **Interactive** mode test:
