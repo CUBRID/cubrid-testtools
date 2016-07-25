@@ -32,54 +32,53 @@
 #(3) the current script file 'make_ha.sh' and other related expect files 
 #    including 'hostname.exp', 'rm_db_info.exp', 'scp.exp' and 'start_cubrid_ha.exp' must be put in $init_path directory.
 
+
+#=============================================================== function area ===============================================================================
+function trim()
+{
+	# Determine if 'extglob' is currently on.
+    local extglobWasOff=1
+    shopt extglob >/dev/null && extglobWasOff=0
+    (( extglobWasOff )) && shopt -s extglob # Turn 'extglob' on, if currently turned off.
+    # Trim leading and trailing whitespace
+    local var=$1
+    var=${var##+([[:space:]])}
+    var=${var%%+([[:space:]])}
+    (( extglobWasOff )) && shopt -u extglob # If 'extglob' was off before, turn it back off.
+    echo -n "$var"  # Output trimmed string.
+}
+
+function read_property()
+{
+    key=$1
+    [ ! "$key" ] && echo  $key && exit 0
+    val=`cat $configPath/HA.properties|grep "$key"`
+    val=${val#*=}
+    val=$(trim "$val")
+    echo $val
+}
+
 #===========================================================user configuration begin==========================================================================
 configPath=${init_path}
-master=`grep MASTER_SERVER_IP $configPath/HA.properties|tr -d [:space:]`
-master_user=`grep MASTER_SERVER_USER $configPath/HA.properties|tr -d [:space:]`
-master_pw=`grep MASTER_SERVER_PW $configPath/HA.properties|tr -d [:space:]`
-master_port=`grep MASTER_SERVER_SSH_PORT $configPath/HA.properties|tr -d [:space:]`
 
-slave=`grep SLAVE_SERVER_IP $configPath/HA.properties|tr -d [:space:]`
-slave_user=`grep SLAVE_SERVER_USER $configPath/HA.properties|tr -d [:space:]`
-slave_pw=`grep SLAVE_SERVER_PW $configPath/HA.properties|tr -d [:space:]`
-slave_port=`grep SLAVE_SERVER_SSH_PORT $configPath/HA.properties|tr -d [:space:]`
+MASTER_SERVER_IP=`read_property "MASTER_SERVER_IP"`
+MASTER_SERVER_USER=`read_property "MASTER_SERVER_USER"`
+MASTER_SERVER_PW=`read_property "MASTER_SERVER_PW"`
+MASTER_SERVER_SSH_PORT=`read_property "MASTER_SERVER_SSH_PORT"`
 
-#set port numbers according to different users
+SLAVE_SERVER_IP=`read_property "SLAVE_SERVER_IP"`
+SLAVE_SERVER_USER=`read_property "SLAVE_SERVER_USER"`
+SLAVE_SERVER_PW=`read_property "SLAVE_SERVER_PW"`
+SLAVE_SERVER_SSH_PORT=`read_property "SLAVE_SERVER_SSH_PORT"`
 
-CUBRID_PORT_ID=`grep CUBRID_PORT_ID $configPath/HA.properties|tr -d [:space:]`
-ha_port_id=`grep ha_port_id $configPath/HA.properties|tr -d [:space:]`
-MASTER_SHM_ID=`grep MASTER_SHM_ID $configPath/HA.properties|tr -d [:space:]`
-BROKER_PORT1=`grep BROKER_PORT1 $configPath/HA.properties|tr -d [:space:]`
-APPL_SERVER_SHM_ID1=`grep APPL_SERVER_SHM_ID1 $configPath/HA.properties|tr -d [:space:]`
-BROKER_PORT2=`grep BROKER_PORT2 $configPath/HA.properties|tr -d [:space:]`
-APPL_SERVER_SHM_ID2=`grep APPL_SERVER_SHM_ID2 $configPath/HA.properties|tr -d [:space:]`
-cm_port=`grep cm_port $configPath/HA.properties|tr -d [:space:]`
-
-BROKER_PORT3=`grep BROKER_PORT3 $configPath/HA.properties|tr -d [:space:]`
-APPL_SERVER_SHM_ID3=`grep APPL_SERVER_SHM_ID3 $configPath/HA.properties|tr -d [:space:]`
-SHARD_PROXY_SHM_ID=`grep SHARD_PROXY_SHM_ID $configPath/HA.properties|tr -d [:space:]`
-
-MASTER_SERVER_IP=${master#*=}
-MASTER_SERVER_USER=${master_user#*=}
-MASTER_SERVER_PW=${master_pw#*=}
-MASTER_SERVER_SSH_PORT=${master_port#*=}
-
-SLAVE_SERVER_IP=${slave#*=}
-SLAVE_SERVER_USER=${slave_user#*=}
-SLAVE_SERVER_PW=${slave_pw#*=}
-SLAVE_SERVER_SSH_PORT=${slave_port#*=}
-
-CUBRID_PORT_ID=${CUBRID_PORT_ID#*=}
-ha_port_id=${ha_port_id#*=}
-MASTER_SHM_ID=${MASTER_SHM_ID#*=}
-BROKER_PORT1=${BROKER_PORT1#*=}
-APPL_SERVER_SHM_ID1=${APPL_SERVER_SHM_ID1#*=}
-BROKER_PORT2=${BROKER_PORT2#*=}
-APPL_SERVER_SHM_ID2=${APPL_SERVER_SHM_ID2#*=}
-cm_port=${cm_port#*=}
-BROKER_PORT3=${BROKER_PORT3#*=}
-APPL_SERVER_SHM_ID3=${APPL_SERVER_SHM_ID3#*=}
-SHARD_PROXY_SHM_ID=${SHARD_PROXY_SHM_ID#*=}
+CUBRID_PORT_ID=`read_property "CUBRID_PORT_ID"`
+HA_PORT_ID=`read_property "HA_PORT_ID"`
+MASTER_SHM_ID=`read_property "MASTER_SHM_ID"`
+BROKER_PORT1=`read_property "BROKER_PORT1"`
+APPL_SERVER_SHM_ID1=`read_property "APPL_SERVER_SHM_ID1"`
+BROKER_PORT2=`read_property "BROKER_PORT2"`
+APPL_SERVER_SHM_ID2=`read_property "APPL_SERVER_SHM_ID2"`
+CM_PORT=`read_property "CM_PORT"`
 
 masterHostName=$HOSTNAME
 slaveHostName=""
@@ -116,13 +115,13 @@ export SLAVE_SERVER_USER
 export SLAVE_SERVER_PW
 
 export CUBRID_PORT_ID
-export ha_port_id
+export HA_PORT_ID
 export MASTER_SHM_ID
 export BROKER_PORT1
 export APPL_SERVER_SHM_ID1
 export BROKER_PORT2
 export APPL_SERVER_SHM_ID2
-export cm_port
+export CM_PORT
 export BROKER_PORT3
 export APPL_SERVER_SHM_ID3
 export SHARD_PROXY_SHM_ID

@@ -61,9 +61,9 @@ public class DeployHA {
 		
 		String haPortId = context.getInstanceProperty(this.masterEnvId, "ha.ha_port_id"); 
 		if(haPortId != null && haPortId.length()>0){
-			scripts.addCommand("ini.sh -u ha_port_id=" + haPortId + " $init_path/HA.properties");
+			scripts.addCommand("ini.sh -u HA_PORT_ID=" + haPortId + " $init_path/HA.properties");
 		}else{
-			scripts.addCommand("ini.sh -u ha_port_id=59901 $init_path/HA.properties");
+			scripts.addCommand("ini.sh -u HA_PORT_ID=59901 $init_path/HA.properties");
 		}
 		
 		String result="";
