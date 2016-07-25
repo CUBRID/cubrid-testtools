@@ -59,7 +59,7 @@ function modify_cubrid_conf
 
   echo "ha_mode=yes" >> $1
   echo "ha_node_list=$MASTER_SERVER_USER@$masterHostName:$slaveHostName" >> $1
-  echo "ha_port_id=$ha_port_id" >> $1
+  echo "ha_port_id=$HA_PORT_ID" >> $1
   echo "cubrid_port_id=$CUBRID_PORT_ID" >> $1
 }
 
@@ -143,7 +143,7 @@ function modify_cm_conf
   fi
   sed -i 's/cm_port/#cm_port/' $1
   #echo "cm_port 8401" >> $1
-  echo "cm_port $cm_port"  >> $1
+  echo "cm_port $CM_PORT"  >> $1
 }
 
 # revert cm.conf

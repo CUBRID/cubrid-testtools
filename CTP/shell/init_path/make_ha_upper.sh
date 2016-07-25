@@ -208,7 +208,7 @@ function modify_cubrid_ha
   sed -i '/ha_node_list/'d $1
   sed -i '/ha_db_list/'d $1    
 
-  echo "ha_port_id=$ha_port_id" >> $1
+  echo "ha_port_id=$HA_PORT_ID" >> $1
   echo "ha_node_list=$MASTER_SERVER_USER@$masterHostName:$slaveHostName" >> $1  
   echo "ha_db_list=$dbname" >> $1
 }
@@ -239,9 +239,9 @@ function modify_cubrid_broker_conf
   sed -i 's/^MASTER_SHM_ID.*$/MASTER_SHM_ID           ='$MASTER_SHM_ID'/' $1
   sed -i '1,34 s/^APPL_SERVER_SHM_ID.*$/APPL_SERVER_SHM_ID      ='$APPL_SERVER_SHM_ID1'/' $1
   sed -i '34,80 s/^APPL_SERVER_SHM_ID.*$/APPL_SERVER_SHM_ID      ='$APPL_SERVER_SHM_ID2'/' $1
-  sed -i '/\[%shard1\]/,/BROKER_PORT/ s/BROKER_PORT.*$/BROKER_PORT             ='$BROKER_PORT3'/' $1
-  sed -i '/\[%shard1\]/,/APPL_SERVER_SHM_ID/ s/^APPL_SERVER_SHM_ID.*$/APPL_SERVER_SHM_ID      ='$APPL_SERVER_SHM_ID3'/' $1
-  sed -i '/\[%shard1\]/,/SHARD_PROXY_SHM_ID/ s/^SHARD_PROXY_SHM_ID .*$/SHARD_PROXY_SHM_ID       ='$SHARD_PROXY_SHM_ID'/' $1
+  #sed -i '/\[%shard1\]/,/BROKER_PORT/ s/BROKER_PORT.*$/BROKER_PORT             ='$BROKER_PORT3'/' $1
+  #sed -i '/\[%shard1\]/,/APPL_SERVER_SHM_ID/ s/^APPL_SERVER_SHM_ID.*$/APPL_SERVER_SHM_ID      ='$APPL_SERVER_SHM_ID3'/' $1
+  #sed -i '/\[%shard1\]/,/SHARD_PROXY_SHM_ID/ s/^SHARD_PROXY_SHM_ID .*$/SHARD_PROXY_SHM_ID       ='$SHARD_PROXY_SHM_ID'/' $1
 }
 
 
@@ -267,7 +267,7 @@ function modify_cm_conf
   fi
   sed -i 's/cm_port/#cm_port/' $1
   #echo "cm_port 8401" >> $1
-  echo "cm_port $cm_port"  >> $1
+  echo "cm_port $CM_PORT"  >> $1
 }
 
 # revert cm.conf
