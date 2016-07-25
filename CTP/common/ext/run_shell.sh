@@ -43,6 +43,10 @@ if [  "$BUILD_TYPE" == "coverage" ];then
         role="--role-coverage"
         coverage_controller_target_dir=${MKEY_COVERAGE_UPLOAD_DIR}/${BUILD_ID}/new
     	coverage_collaborate_url=$src_url
+elif [ "$BUILD_SCENARIOS" == "unittest_debug" ];then
+		role="--role-unittest-debug"
+elif [ "$BUILD_SCENARIOS" == "unittest" ];then
+		role="--role-unittest-release"
 fi
 
 
