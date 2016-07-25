@@ -32,9 +32,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 
-import com.navercorp.cubridqa.common.coreanalyzer.CommonUtil;
-
-
 public class SFTPUpload {
 
 	public static void main(String[] args) throws Exception {
@@ -83,55 +80,59 @@ public class SFTPUpload {
 
 		String from = cmd.getOptionValue("from");
 		String to = cmd.hasOption("to") ? cmd.getOptionValue("to") : ".";
-		
+
 		boolean needLog = Boolean.parseBoolean(System.getProperty("main.need.debug.info", "false"));
 
 		SSHConnect ssh = null;
-		
+
 		File fromFile = new File(CommonUtils.getFixedPath(from));
 		boolean isFolder = fromFile.exists() && fromFile.isDirectory();
-		
-		int shellType = CommonUtils.getShellType(false);
-		
 		SFTP sftp = null;
-		String pkgName = null;
-		if(isFolder) {
-			pkgName = ".UP_" + fromFile.getName().trim() + "_" + System.currentTimeMillis() + ".tar.gz";
-		}else{
-			pkgName = fromFile.getName().trim();
-		}
+
 		try {
 			System.out.println("[INFO] START TO UPDATE: " + from);
 			ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword, needLog);
-			if (isFolder) {				
-				StringBuffer scriptLocal = new StringBuffer();
+			sftp = ssh.createSFTP();
+
+			if (isFolder == false) {
+				sftp.upload(fromFile.getCanonicalPath(), to);
+				System.out.println("[INFO] upload done");
+			} else {
+				String pkgName = null;
+				StringBuffer scriptLocal;
+				ShellInput scriptRemote;
+				int shellType = CommonUtils.getShellType(false);
+
+				pkgName = ".UP_" + fromFile.getName().trim() + "_" + System.currentTimeMillis() + ".tar.gz";
+
+				scriptLocal = new StringBuffer();
 				scriptLocal.append("cd " + from).append(";");
 				scriptLocal.append("tar czvf " + "../" + pkgName + " .").append(";");
 				LocalInvoker.exec(scriptLocal.toString(), shellType, true);
 				System.out.println("[INFO] package done in local: " + pkgName);
 
-				ShellInput scriptRemote = new ShellInput();
+				scriptRemote = new ShellInput();
 				scriptRemote.addCommand("mkdir -p " + to);
 				ssh.execute(scriptRemote);
 				System.out.println("[INFO] create dest name done in remote: " + to);
-			}
-			sftp = ssh.createSFTP();			
-			sftp.upload(fromFile.getParentFile().getCanonicalPath() + "/" + pkgName, to);
-			System.out.println("[INFO] upload done");
-			if (isFolder) {
-				ShellInput scriptRemote = new ShellInput();
+
+				sftp.upload(fromFile.getParentFile().getCanonicalPath() + "/" + pkgName, to);
+				System.out.println("[INFO] upload done");
+
+				scriptRemote = new ShellInput();
 				scriptRemote.addCommand("cd " + to);
 				scriptRemote.addCommand("tar xzvf " + pkgName);
 				scriptRemote.addCommand("rm -rf " + pkgName);
 				ssh.execute(scriptRemote);
 				System.out.println("[INFO] expand package done");
 
-				StringBuffer scriptLocal = new StringBuffer();
+				scriptLocal = new StringBuffer();
 				scriptLocal.append("cd " + from).append(";");
 				scriptLocal.append("rm -rf ../" + pkgName).append(";");
 				LocalInvoker.exec(scriptLocal.toString(), shellType, true);
 				System.out.println("[INFO] clean temporary files in local and remote");
 			}
+
 			System.out.println("DONE");
 		} finally {
 			if (ssh != null)
@@ -146,4 +147,4 @@ public class SFTPUpload {
 		formatter.printHelp("run_upload: upload files to remote host by SFTP protocol", options);
 		System.out.println();
 	}
-}  
+}
