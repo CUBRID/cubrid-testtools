@@ -40,8 +40,11 @@ buildType=
 
 usage()
 {
-    echo "Usage: `basename $0` [url] [-s|--role-compat-server url_1 url_2] [-d|--role-compat-driver url_1 url_2] 
-                                [-c|--role-coverage url_1 url_2 ]"
+    echo "Usage: `basename $0` [url] [-s|--role-compat-server url_1 url_2] 
+								[-d|--role-compat-driver url_1 url_2] 
+								[-c|--role-coverage url_1 url_2 ]
+								[-ur|--role-unittest-release url]
+								[-ud|--role-unittest-debug url]"
     exit 1
 }
 
@@ -72,6 +75,16 @@ while [ $# -ge 1 ];do
 		vUrl=$1
 		cUrl=$2
 		tCat="coverage"
+		;;
+		-ur|--role-unittest-release)
+		shift
+		gUrl=$1
+		tCat="unit-release"
+		;;
+	    -ud|--role-unittest-debug)
+		shift
+		gUrl=$1
+		tCat="unit-debug"
 		;;
 	    \?)
 		shift
@@ -306,6 +319,47 @@ function InstallBuildForCoverage()
     echo INSTALL `date '+%Y%m%d%H%M%s'` $@ >> $HOME/.qacoverage
 }
 
+function BuildAndInstallForUnitTest()
+{
+    build_url=$1
+    buildFile=${build_url##*/}
+    buildName=${buildFile%%.tar*}
+    cub="cubrid"
+    curDir=`pwd`
+    cd $HOME
+    echo ""
+    echo "=====install Unit Test Build With $buildFile =========="
+    echo ""
+
+    cmake >/dev/null 2>&1
+    [ $? -ne 0 ] && echo "Please make sure CMAKE is installed!" && exit 0    
+
+    rm $buildFile >/dev/null 2>&1
+    wget -t 3 -T 120 $build_url
+    if [ -d $cub ]
+    then
+            rm -rf $cub
+    fi
+    
+    mkdir -p $cub
+    tar -zvxf $buildFile 
+    cp -rf ${buildName}/* $cub/  
+    cd $cub
+    
+    if [ "$tCat" == "unit-release" ];then
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo 
+        make -j
+    else
+	cmake -DCMAKE_BUILD_TYPE=Debug
+        make -j
+    fi
+    
+    cd $HOME   
+    rm $buildFile
+    rm -rf ${buildName}
+    echo "INSTALL `date '+%Y%m%d%H%M%s'` $@" >> $HOME/.unitTestInstall.log
+    cd $curDir
+}
 
 if [ "$tCat" == "general" ]
 then
@@ -316,6 +370,8 @@ then
 elif [ "$tCat" == "coverage" ]
 then
      InstallBuildForCoverage $vUrl $cUrl > $HOME/.qacoverage.log 2>&1
+elif [ "$tCat" == "unit-release" ] || [ "$tCat" == "unit-debug" ];then
+     BuildAndInstallForUnitTest $gUrl > $HOME/.unitTestInstall.log 2>&1
 else
      echo "Please confirm your parameters!!"
 fi
