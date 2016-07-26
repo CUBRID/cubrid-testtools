@@ -49,7 +49,6 @@ public class SSHConnect {
 	
 	final int MAX_TRY_TIME = 10;
 	
-	
 	public SSHConnect(String host, String port, String user, String pwd, String serviceProtocol) throws JSchException {
 		this(host, Integer.parseInt(port), user, pwd, serviceProtocol);
 	}
@@ -86,7 +85,7 @@ public class SSHConnect {
 	}
 	
 	public String execute(ShellInput scripts) throws Exception {
-		return execute(scripts.getCommands(user));
+		return execute(scripts.getCommands(), scripts.isPureWindows);
 	}
 	
 	public String execute(String scripts) throws Exception {
@@ -108,7 +107,7 @@ public class SSHConnect {
 					continue;
 				}				
 			}			
-			return pureWindows ? srv.exec(user, pwd, scripts, true): srv.exec(user, pwd, scripts);
+			return srv.exec(user, pwd, scripts, pureWindows);
 		}
 
 		if (session == null || !session.isConnected())

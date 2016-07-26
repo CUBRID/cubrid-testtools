@@ -27,10 +27,10 @@
 package com.navercorp.cubridqa.shell.deploy;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
+
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellInput;
-import com.navercorp.cubridqa.shell.common.WinShellInput;
 import com.navercorp.cubridqa.shell.main.Context;
 
 public class TestCaseGithub {
@@ -63,12 +63,7 @@ public class TestCaseGithub {
 		
 		//TODO if test case doesn't exist
 		
-		ShellInput scripts;
-		if(context.isWindows()) {
-			scripts = new WinShellInput();
-		} else {
-			scripts = new ShellInput();
-		}
+		ShellInput scripts = new ShellInput();
 		
 		String sedCmds;
 		if(context.isWindows()) {
@@ -119,7 +114,7 @@ public class TestCaseGithub {
 	
 	
 	private void initWindows() {
-		WinShellInput scripts = new WinShellInput();
+		ShellInput scripts = new ShellInput();
 
 		scripts.addCommand("REG DELETE \"HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Session Manager\\Environment\" /v CUBRID_LANG /f");
 		scripts.addCommand("REG DELETE \"HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Session Manager\\Environment\" /v CUBRID_CHARSET /f");

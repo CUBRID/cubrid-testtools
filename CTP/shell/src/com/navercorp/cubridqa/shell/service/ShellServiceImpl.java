@@ -26,6 +26,7 @@
 
 package com.navercorp.cubridqa.shell.service;
 
+import java.io.File;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
@@ -39,40 +40,81 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 	String requiredUser;
 	String requiredPwd;
 	String requiredHosts;
-	boolean isDebug;
+	String userHomePureWin;
+	String userHome;
 
-	protected ShellServiceImpl(Properties props) throws RemoteException {
+	protected ShellServiceImpl(Properties props) throws Exception {
 		super();
 		this.props = props;
-		
-		String value = props.getProperty("main.service.acceptedhosts", "").trim();
-		value = "," + CommonUtils.replace(value, " ", "") + ",";		
-		this.requiredHosts  = value;
-		
-		value = props.getProperty("main.service.user", "").trim();
-		this.requiredUser  = value;
-		
-		value = props.getProperty("main.service.pwd", "").trim();
-		this.requiredPwd  = value;
 
-		value = props.getProperty("main.service.mode", "").trim();
-		this.isDebug  = value.equalsIgnoreCase("debug");
+		String value = props.getProperty("main.service.acceptedhosts", "").trim();
+		value = "," + CommonUtils.replace(value, " ", "") + ",";
+		this.requiredHosts = value;
+
+		value = props.getProperty("main.service.user", "").trim();
+		this.requiredUser = value;
+
+		value = props.getProperty("main.service.pwd", "").trim();
+		this.requiredPwd = value;
+
+		userHome = props.getProperty("main.service.userhome");
+//		if (userHome == null || userHome.trim().equals("")) {
+//			userHome = System.getenv("HOME");
+//		}		
+		if (userHome == null || userHome.trim().equals("") || userHome.toUpperCase().equals("NULL")) {
+			userHome = new File(System.getenv("init_path")).getParentFile().getParentFile().getParentFile().getAbsolutePath();
+		}
+		
+		File userHomeFile = new File(userHome);
+		if (userHomeFile.exists() == false) {
+			throw new Exception("Not found " + userHomeFile.getAbsolutePath() + ". Please check 'main.service.userhome' property");
+		}
+
+		userHomePureWin = userHome;
+
+		if (com.navercorp.cubridqa.common.CommonUtils.isWindowsPlatform()) {
+			userHome = com.navercorp.cubridqa.common.CommonUtils.getLinuxStylePath(userHome, true);
+		}
 	}
 
 	public String exec(String user, String pwd, String scripts) throws Exception {
 		return exec(user, pwd, scripts, false);
 	}
-	
+
 	public String exec(String user, String pwd, String scripts, boolean pureWindows) throws Exception {
 		String clientHost = super.getClientHost();
 		System.out.println();
 		System.out.println("=========================================================================================");
 		System.out.println("host: " + clientHost + ", user:" + user + "(" + new java.util.Date() + ")");
-		System.out.println(scripts);
-		if (requiredUser.equals(user) && requiredPwd.equals(pwd) && requiredHosts.indexOf( "," + clientHost + ",") != -1) {
+		String preScript;
+
+		if (requiredUser.equals(user) && requiredPwd.equals(pwd) && requiredHosts.indexOf("," + clientHost + ",") != -1) {
+			if (pureWindows) {
+				preScript = "set HOME=" + userHomePureWin + "\n\r";
+				preScript = preScript + "set USER=" + user + "\n\r";
+				preScript = preScript + "cd %HOME%" + "\n\r";
+
+			} else {
+				preScript = "export HOME=" + userHome + ";";
+				preScript = preScript + "export USER=" + user + ";";
+				preScript = preScript + "cd $HOME;";
+				preScript = preScript + ". ~/.bash_profile;";
+			}
+
+			scripts = preScript + scripts;
+			System.out.println(scripts);
 			String result = LocalInvoker.exec(scripts, pureWindows, false);
+			int pos;
+			pos = result.lastIndexOf(com.navercorp.cubridqa.shell.common.ShellInput.START_FLAG);
+			if (pos != -1) {
+				result = result.substring(pos + com.navercorp.cubridqa.shell.common.ShellInput.START_FLAG.length());
+			}
+			pos = result.indexOf(com.navercorp.cubridqa.shell.common.ShellInput.COMP_FLAG);
+			if (pos != -1) {
+				result = result.substring(0, pos);
+			}
 			System.out.println("WELCOME");
-			return result;
+			return result.trim();
 		} else {
 			System.out.println("DENY");
 			return null;

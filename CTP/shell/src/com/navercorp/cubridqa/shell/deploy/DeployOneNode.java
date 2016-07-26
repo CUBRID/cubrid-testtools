@@ -27,11 +27,11 @@
 package com.navercorp.cubridqa.shell.deploy;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
+
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellInput;
-import com.navercorp.cubridqa.shell.common.WinShellInput;
 import com.navercorp.cubridqa.shell.main.Context;
 
 public class DeployOneNode {
@@ -97,7 +97,7 @@ public class DeployOneNode {
 
 		// TODO: check cubridInstallName
 
-		WinShellInput scripts = new WinShellInput();
+		ShellInput scripts = new ShellInput();
 		scripts.addCommand("cd $CUBRID/..");
 		scripts.addCommand("rm -rf CUBRID 2>&1");
 		scripts.addCommand("ls -l CUBRID");
@@ -267,7 +267,7 @@ public class DeployOneNode {
 	}
 	
 	public String backup_windows() {
-		WinShellInput scripts = new WinShellInput();
+		ShellInput scripts = new ShellInput();
 		scripts.addCommand("cd $CUBRID/..");
 		scripts.addCommand("rm -rf .CUBRID_SHELL_FM > /dev/null 2>&1");
 		scripts.addCommand("cp -r CUBRID .CUBRID_SHELL_FM");

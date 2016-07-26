@@ -28,12 +28,12 @@ package com.navercorp.cubridqa.shell.main;
 
 import java.util.ArrayList;
 
+
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellInput;
-import com.navercorp.cubridqa.shell.common.WinShellInput;
 
 public class TestMonitor {
 
@@ -138,7 +138,7 @@ public class TestMonitor {
 	}
 	
 	private ShellInput initTraceScript() {
-		ShellInput scripts = context.isWindows ? new WinShellInput() : new ShellInput();
+		ShellInput scripts = new ShellInput();
 	
 		scripts.addCommand("date");
 			

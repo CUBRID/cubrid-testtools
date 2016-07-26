@@ -270,10 +270,15 @@ public class CommonUtils {
 	}
 
 	public static String getLinuxStylePath(String path) {
+		return getLinuxStylePath(path, isCygwinPlatform());
+	}
+	
+	public static String getLinuxStylePath(String path, boolean useCygPath) {
 		path = path.trim();
-		if (isCygwinPlatform()) {
-			String linStylePath;
-			while (true) {
+		if (useCygPath) {
+			String linStylePath = "";
+			int max = 20;
+			while (max-- > 0) {
 				linStylePath = LocalInvoker.execCommands("cygpath " + path, false);
 				if (linStylePath != null && linStylePath.trim().length() > 0) {
 					break;
