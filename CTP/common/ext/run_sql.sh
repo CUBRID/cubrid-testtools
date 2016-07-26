@@ -126,7 +126,9 @@ function run_sql_legacy {
     #STEP 1: CLEAN
     runAction sql_medium_site.act
     (cd $QA_REPOSITORY; sh upgrade.sh)
-
+    cd $QA_REPOSITORY/../dailyqa/${BUILD_SVN_BRANCH_NEW}/config/win_excluded_files
+    sh win_excluded_list.sh ${BUILD_SVN_BRANCH_NEW}
+    
     #STEP 2: INSTALL CUBRID
     echo "Install Test Build"   
     if [ "$BUILD_TYPE" != 'general' -a "$BUILD_TYPE" != 'debug' ]; then
