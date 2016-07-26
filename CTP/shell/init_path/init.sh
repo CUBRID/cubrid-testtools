@@ -630,7 +630,7 @@ function init
     taskkill /F /FI "imagename eq cub*"
     rm $CUBRID/log/server/*.err > /dev/null 2>&1
     cubrid service stop
-    wmic PROCESS WHERE \( name = \'java.exe\' AND NOT CommandLine LIKE \'%com.nhncorp.cubrid.service.Server%\' \) DELETE
+    wmic PROCESS WHERE \( name = \'java.exe\' AND NOT CommandLine LIKE \'%service.Server%\' \) DELETE
   else
     CLASSPATH=$CUBRID/jdbc/cubrid_jdbc.jar:$init_path/commonforjdbc.jar:.
     LD_LIBRARY_PATH=$init_path/commonforc/lib:$LD_LIBRARY_PATH
@@ -639,7 +639,7 @@ function init
     pkill cub >/dev/null 2>&1
     
     chmod u+x ${init_path}/cubrid >/dev/null 2>&1
-	  PATH=${init_path}:${JAVA_HOME}/bin:$PATH
+	PATH=${init_path}:${JAVA_HOME}/bin:$PATH
   fi
 
   export SHELL_CONFIG_PATH=$init_path
@@ -909,9 +909,15 @@ function xkill
        win_svr_pid=`get_win_service_pid`
        for pid in `ps -W | grep "${strkill}" | awk '{print $1}'`
        do
-          if [ "$pid" != "${win_svr_pid}" ]
-          then 
-             /bin/kill -9 -f $pid
+          is_in_white_list=0
+          for svr_id in "${win_svr_pid}"
+          do
+	          if [ "${pid}" == "${svr_id}" ]; then
+	          	is_in_white_list=1
+	          fi
+          done
+          if [ "${is_in_white_list}" == "0" ]; then
+             /bin/kill -9 -f ${pid}
           fi
        done
    else
@@ -944,12 +950,8 @@ function xkill_java_windows {
 
 
 function get_win_service_pid {
-    wmic PROCESS WHERE \( Name != \'wmic.exe\' and CommandLine LIKE \'%com.nhncorp.cubrid.service.Server%\' \)  get processid | grep -v ProcessId | sed 's/ //g'
+    wmic PROCESS WHERE \( Name != \'wmic.exe\' and CommandLine LIKE \'%service.Server%\' \)  get processid | grep -v ProcessId | sed 's/ //g'
 }
-
-
-
-
 
 #format number like 0|123|456
 function format_number_output
