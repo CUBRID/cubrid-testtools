@@ -36,6 +36,7 @@ public class DeployHA {
 	{
 		log.print("===== Start to update HA.properties =====");
 		ShellInput scripts = new ShellInput();
+		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
 		scripts.addCommand("ini.sh -u MASTER_SERVER_IP=" + masterHost + " $init_path/HA.properties");
 		scripts.addCommand("ini.sh -u MASTER_SERVER_USER=" + this.user + " $init_path/HA.properties");
 		scripts.addCommand("ini.sh -u MASTER_SERVER_PW=" + this.pwd + " $init_path/HA.properties ");
