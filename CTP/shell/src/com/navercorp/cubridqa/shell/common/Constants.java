@@ -55,9 +55,8 @@ public class Constants {
 	
 	private static ShellInput createWinKillScripts (){
 		ShellInput scripts = new ShellInput();
-		scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%com.nhncorp.cubrid.service.Server%\\' \\) DELETE");
+		scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%com.nhncorp.cubrid.service.Server%\\' AND NOT CommandLine LIKE \\'%com.navercorp.cubridqa.shell.service.Server%\\' \\) DELETE");
 		scripts.addCommand("$CUBRID/bin/cubrid.exe service stop ");
-		scripts.addCommand("cubrid service stop");
 		scripts.addCommand("tasklist |  grep cubridservice | awk '{print $2}' | xargs -i taskkill '/T' '/F' '/PID' {} ");
 		scripts.addCommand("tasklist |  grep cub_master | awk '{print $2}' | xargs -i taskkill '/T' '/F' '/PID' {} ");
 		scripts.addCommand("tasklist |  grep cub_server | awk '{print $2}' | xargs -i taskkill '/T' '/F' '/PID' {} ");
@@ -78,7 +77,7 @@ public class Constants {
 		scripts.addCommand("taskkill /F /IM cub_server.exe");
 		scripts.addCommand("taskkill /F /IM cub_cas.exe");
 		scripts.addCommand("taskkill /F /IM cub_broker.exe");
-		scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%com.nhncorp.cubrid.service.Server%\\' \\) DELETE");
+		scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%com.nhncorp.cubrid.service.Server%\\' AND NOT CommandLine LIKE \\'%com.navercorp.cubridqa.shell.service.Server%\\' \\) DELETE");
 		scripts.addCommand("taskkill /F /IM cat.exe");
 		scripts.addCommand("taskkill /F /IM ps.exe");
 		scripts.addCommand("taskkill /F /IM sed.exe");
@@ -88,8 +87,8 @@ public class Constants {
 	
 	private static String createWinKillNativeScripts() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%com.nhncorp.cubrid.service.Server%%' ) DELETE").append(LINE_SEPARATOR);		
-		sb.append("cubrid service stop").append(LINE_SEPARATOR);		
+		sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%com.nhncorp.cubrid.service.Server%%' AND NOT CommandLine LIKE '%%com.navercorp.cubridqa.shell.service.Server%%') DELETE").append(LINE_SEPARATOR);		
+		sb.append("%CUBRID%/bin/cubrid service stop").append(LINE_SEPARATOR);		
 		sb.append("taskkill /T /F /IM broker_changer.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM broker_log_converter.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM broker_log_runner.exe").append(LINE_SEPARATOR);
@@ -127,7 +126,7 @@ public class Constants {
 		sb.append("taskkill /T /F /IM make_locale.bat").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM bash.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM sh.exe").append(LINE_SEPARATOR);
-		sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%com.nhncorp.cubrid.service.Server%%' ) DELETE").append(LINE_SEPARATOR);
+		sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%com.nhncorp.cubrid.service.Server%%' AND NOT CommandLine LIKE '%%com.navercorp.cubridqa.shell.service.Server%%') DELETE").append(LINE_SEPARATOR);
 		sb.append("tasklist").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM cat.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM ps.exe").append(LINE_SEPARATOR);
