@@ -585,9 +585,12 @@ function init
       OS="Windows_NT"
   fi
   
-  if [ $OS = "Windows_NT" ]; then
+  if [ "$OS" = "Windows_NT" ]; then
   	export init_path=`cygpath "${init_path}"`
+    export REAL_INIT_PATH=`cygpath -w "${init_path}"`
   	export MINGW_PATH=`cygpath "${MINGW_PATH}"`
+  else 
+    export REAL_INIT_PATH=${init_path}
   fi
     
   is_cubrid_32bits=`cubrid_rel | grep 32bit | wc -l`
@@ -642,7 +645,6 @@ function init
 	PATH=${init_path}:${JAVA_HOME}/bin:$PATH
   fi
 
-  export SHELL_CONFIG_PATH=$init_path
   export PATH
   export CLASSPATH
   export LD_LIBRARY_PATH
