@@ -27,6 +27,7 @@
 package com.navercorp.cubridqa.shell.dispatch;
 
 import java.io.File;
+
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,7 +37,6 @@ import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellInput;
-import com.navercorp.cubridqa.shell.common.WinShellInput;
 import com.navercorp.cubridqa.shell.main.Context;
 
 public class Dispatch {
@@ -178,12 +178,7 @@ public class Dispatch {
 		String result;
 		
 		try {
-			
-			if(context.isWindows()) {
-				script = new WinShellInput();
-			} else {
-				script = new ShellInput();
-			}
+			script = new ShellInput();			
 			script.addCommand("cd ");
 			script.addCommand(getAllTestCaseScripts(context.getTestCaseWorkspace()));
 			result = ssh.execute(script);
@@ -223,12 +218,7 @@ public class Dispatch {
 		String result;
 
 		try {
-
-			if (context.isWindows()) {
-				script = new WinShellInput();
-			} else {
-				script = new ShellInput();
-			}
+			script = new ShellInput();
 			script.addCommand("cd ");
 			script.addCommand("grep \"" + context.getTestCaseSkipKey() + "\" ` " + getAllTestCaseScripts(context.getTestCaseWorkspace()) + " `");
 			result = ssh.execute(script);
@@ -276,12 +266,7 @@ public class Dispatch {
 		String result;
 		
 		try {			
-			if(context.isWindows()) {
-				script = new WinShellInput();
-			} else {
-				script = new ShellInput();
-			}
-			
+			script = new ShellInput();
 			String dir, filename;
 			excludedFilename = excludedFilename.replace('\\', '/');
 			int p0 = excludedFilename.lastIndexOf("/");

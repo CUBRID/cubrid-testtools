@@ -27,6 +27,7 @@
 package com.navercorp.cubridqa.shell.main;
 
 import java.util.ArrayList;
+
 import java.util.Date;
 
 import com.jcraft.jsch.JSchException;
@@ -35,7 +36,6 @@ import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellInput;
-import com.navercorp.cubridqa.shell.common.WinShellInput;
 import com.navercorp.cubridqa.shell.dispatch.Dispatch;
 
 public class Test {
@@ -100,7 +100,7 @@ public class Test {
 		while (!shouldStop && !Dispatch.getInstance().isFinished()) {
 
 			if (this.context.getServiceProtocolType()!=null && this.context.getServiceProtocolType().equals("rmi") && context.isWindows()) {
-				WinShellInput aliveScript = new WinShellInput("echo HELLO");
+				ShellInput aliveScript = new ShellInput("echo HELLO");
 				try {
 					String aliveResult = ssh.execute(aliveScript);
 					if (!aliveResult.trim().equals("HELLO")) {
@@ -246,10 +246,10 @@ public class Test {
 
 	public String runTestCase_windows() throws Exception {
 
-		WinShellInput script;
+		ShellInput script;
 		String result;
 
-		script = new WinShellInput("cd ");
+		script = new ShellInput("cd ");
 		script.addCommand("cd " + testCaseDir);
 
 		script.addCommand("export TEST_BIG_SPACE=$(echo $TEST_BIG_SPACE)");
@@ -310,7 +310,7 @@ public class Test {
 		long currentTime;
 		long len;
 
-		WinShellInput script = new WinShellInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':3000|:33000|:1523|:59901|:8001' | wc -l");
+		ShellInput script = new ShellInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':3000|:33000|:1523|:59901|:8001' | wc -l");
 		while (true) {
 			currentTime = System.currentTimeMillis();
 			len = (currentTime - startTime) / 1000;
@@ -379,7 +379,7 @@ public class Test {
 	}
 
 	public String resetCUBRID_windows() {
-		WinShellInput scripts = new WinShellInput();
+		ShellInput scripts = new ShellInput();
 		scripts.addCommand("cd $CUBRID/..");
 		scripts.addCommand("rm -rf CUBRID/conf/*");
 		scripts.addCommand("cp -rf .CUBRID_SHELL_FM/conf/* CUBRID/conf/");
@@ -489,12 +489,7 @@ public class Test {
 		String result = "";		
 		ShellInput scripts;
 		
-		if (context.isWindows) {
-			scripts = new WinShellInput();
-		} else {
-			scripts = new ShellInput();
-		}
-
+		scripts = new ShellInput();
 		scripts.addCommand("cd ");
 		scripts.addCommand("cd " + testCaseDir);
 		scripts.addCommand("cat " + testCaseResultName);
@@ -535,11 +530,7 @@ public class Test {
 		
 		String result;
 		ShellInput scripts;
-		if (context.isWindows) {
-			scripts = new WinShellInput();
-		} else {
-			scripts = new ShellInput();
-		}
+		scripts = new ShellInput();
 		scripts.addCommand("rm -rf " + testCaseDir.trim() + "/*");
 		try {
 			result = ssh.execute(scripts);

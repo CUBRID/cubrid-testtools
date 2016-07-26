@@ -26,61 +26,54 @@
 
 package com.navercorp.cubridqa.shell.common;
 
-
 public class ShellInput {
-	
+
 	StringBuilder cmds;
-	boolean isWindows;
-	boolean userExperted = false;
-	
+	boolean isPureWindows = false;
+
 	public static final String LINE_SEPARATOR = "\n";
+	public static final String LINE_SEPARATOR_WIN = "\n\r";
+
+	public static final String START_FLAG_MOCK = "ALL_${NOTEXIST}STARTED";
+	public static final String COMP_FLAG_MOCK = "ALL_${NOTEXIST}COMPLETED";
 	
-	public static final String START_FLAG_MOCK ="ALL_${NOTEXIST}STARTED";
-	public static final String COMP_FLAG_MOCK ="ALL_${NOTEXIST}COMPLETED";
-	public static final String START_FLAG="ALL_STARTED";
-	public static final String COMP_FLAG="ALL_COMPLETED";
+	public static final String START_FLAG_MOCK_WIN = "ALL_%NOTEXIST%STARTED";
+	public static final String COMP_FLAG_MOCK_WIN = "ALL_%NOTEXIST%COMPLETED";
 	
+	public static final String START_FLAG = "ALL_STARTED";
+	public static final String COMP_FLAG = "ALL_COMPLETED";
+
 	public ShellInput() {
-		this(null, null, false);
-	}
-	
-	public ShellInput(String cmd) {
-		this(cmd, null, false);
+		this(null);
 	}
 
-	public ShellInput(String cmd, boolean isWindows) {
-		this(cmd, null, isWindows);
+	public ShellInput(String cmd) {
+		this(cmd, false);
 	}
-	
-	protected ShellInput(String cmd, String scriptToRun, boolean isWindows){
-		this.isWindows = isWindows;
-		cmds= new StringBuilder();
-	    addCommand("cd");
-	    addCommand(scriptToRun==null ? ". ~/.bash_profile" : ". " + scriptToRun);
-        addCommand("echo " + START_FLAG_MOCK);
-		if(cmd!=null) {
+
+	public ShellInput(String cmd, boolean isPureWindows) {
+		this.isPureWindows = isPureWindows;
+		this.cmds = new StringBuilder();
+
+		if (cmd != null) {
 			addCommand(cmd);
 		}
 	}
 
-	public void addCommand(String cmd){
-		cmds.append(cmd).append(LINE_SEPARATOR);
+	public void addCommand(String cmd) {
+		cmds.append(cmd).append(isPureWindows ? LINE_SEPARATOR_WIN : LINE_SEPARATOR);
 	}
-	
-	public String getCommands(String user) {
-		boolean shouldExportUser = false;
-		if(isWindows && user != null && userExperted == false) {
-			shouldExportUser = true;
-			userExperted = true;
+
+	public String getCommands() {
+		if (isPureWindows) {
+			return "echo " + START_FLAG_MOCK_WIN + LINE_SEPARATOR_WIN + cmds.toString() + "@ECHO OFF" + LINE_SEPARATOR_WIN + "echo " + COMP_FLAG_MOCK_WIN + LINE_SEPARATOR_WIN;
+		} else {
+			return "echo " + START_FLAG_MOCK + LINE_SEPARATOR + cmds.toString() + "echo " + COMP_FLAG_MOCK + LINE_SEPARATOR;
 		}
-		
-		String result = (shouldExportUser ? "export USER=" + user + LINE_SEPARATOR : "") + cmds.toString() + "echo "+ COMP_FLAG_MOCK + LINE_SEPARATOR;
-		
-		return result;
 	}
 
 	@Override
 	public String toString() {
-		return getCommands(null);
-	}	
+		return getCommands();
+	}
 }

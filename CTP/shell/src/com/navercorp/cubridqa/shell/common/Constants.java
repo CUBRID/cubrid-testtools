@@ -54,7 +54,7 @@ public class Constants {
 
 	
 	private static ShellInput createWinKillScripts (){
-		WinShellInput scripts = new WinShellInput();
+		ShellInput scripts = new ShellInput();
 		scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%com.nhncorp.cubrid.service.Server%\\' \\) DELETE");
 		scripts.addCommand("$CUBRID/bin/cubrid.exe service stop ");
 		scripts.addCommand("cubrid service stop");
@@ -79,10 +79,10 @@ public class Constants {
 		scripts.addCommand("taskkill /F /IM cub_cas.exe");
 		scripts.addCommand("taskkill /F /IM cub_broker.exe");
 		scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%com.nhncorp.cubrid.service.Server%\\' \\) DELETE");
-                scripts.addCommand("taskkill /F /IM cat.exe");
-                scripts.addCommand("taskkill /F /IM ps.exe");
-                scripts.addCommand("taskkill /F /IM sed.exe");
-                scripts.addCommand("taskkill /F /IM awk.exe");
+		scripts.addCommand("taskkill /F /IM cat.exe");
+		scripts.addCommand("taskkill /F /IM ps.exe");
+		scripts.addCommand("taskkill /F /IM sed.exe");
+		scripts.addCommand("taskkill /F /IM awk.exe");
 		return scripts;
 	}
 	
@@ -129,10 +129,10 @@ public class Constants {
 		sb.append("taskkill /T /F /IM sh.exe").append(LINE_SEPARATOR);
 		sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%com.nhncorp.cubrid.service.Server%%' ) DELETE").append(LINE_SEPARATOR);
 		sb.append("tasklist").append(LINE_SEPARATOR);
-               sb.append("taskkill /T /F /IM cat.exe").append(LINE_SEPARATOR);
-               sb.append("taskkill /T /F /IM ps.exe").append(LINE_SEPARATOR);
-               sb.append("taskkill /T /F /IM sed.exe").append(LINE_SEPARATOR);
-               sb.append("taskkill /T /F /IM awk.exe").append(LINE_SEPARATOR);
+		sb.append("taskkill /T /F /IM cat.exe").append(LINE_SEPARATOR);
+		sb.append("taskkill /T /F /IM ps.exe").append(LINE_SEPARATOR);
+		sb.append("taskkill /T /F /IM sed.exe").append(LINE_SEPARATOR);
+		sb.append("taskkill /T /F /IM awk.exe").append(LINE_SEPARATOR);
 		return sb.toString();
 	}
 	
