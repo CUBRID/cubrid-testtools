@@ -98,7 +98,7 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 				preScript = "export HOME=" + userHome + ";";
 				preScript = preScript + "export USER=" + user + ";";
 				preScript = preScript + "cd $HOME;";
-				preScript = preScript + ". ~/.bash_profile;";
+				preScript = preScript + "if  [ -f ~/.bash_profile ]; then . ~/.bash_profile; fi; ";
 			}
 
 			scripts = preScript + scripts;

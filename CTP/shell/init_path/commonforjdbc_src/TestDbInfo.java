@@ -54,7 +54,7 @@ public class TestDbInfo {
 	public static TestDbInfo call(String shellConfig) {
 		TestDbInfo testDbInfo = new TestDbInfo();
 		try {
-			String cqtPath = System.getenv("init_path");
+			String cqtPath = System.getenv("REAL_INIT_PATH");
 			String configName = cqtPath + File.separator + shellConfig;
 			File file = new File(configName);
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance()
