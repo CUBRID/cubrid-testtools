@@ -1396,7 +1396,7 @@ function create_ccidb
 	fi
 	    init_sql_file_ccidb=${init_path}/ccidb.sql
 	    if [ ! -f ${init_sql_file_ccidb} ]; then
-	    	init_sql_file_ccidb=`search_in_upper_path "${cur_path}" config/ccidb.sql`
+	    	init_sql_file_ccidb=`search_in_upper_path "${cur_path}" files/ccidb.sql`
 	    fi	
 	      
 	    if [ -f "${init_sql_file_ccidb}" ]; then
