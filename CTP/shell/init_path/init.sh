@@ -1354,6 +1354,20 @@ function cubrid_createdb()
     fi 
 }
 
+function search_in_upper_path {
+   curr_path=$1
+   dest_file=$2
+   if [ -f ${curr_path}/${dest_file} ]; then
+       echo $(cd ${curr_path}; pwd)/${dest_file}
+   else
+       if [ "$(cd ${curr_path}/..; pwd)" == "/" ]; then
+           return 
+       else
+           search_in_upper_path ${curr_path}/.. ${dest_file}
+       fi
+   fi
+}
+
 # create ccidb
 function create_ccidb
 {
@@ -1380,7 +1394,15 @@ function create_ccidb
 	else
 		cubrid createdb ccidb --db-volume-size=20m --log-volume-size=20m
 	fi
-        #csql ccidb -S -i $init_path/ccidb.sql
+	    init_sql_file_ccidb=${init_path}/ccidb.sql
+	    if [ ! -f ${init_sql_file_ccidb} ]; then
+	    	init_sql_file_ccidb=`search_in_upper_path "${cur_path}" config/ccidb.sql`
+	    fi	
+	      
+	    if [ -f "${init_sql_file_ccidb}" ]; then
+        	csql ccidb -S -i ${init_sql_file_ccidb}
+        fi
+        
         rm -rf $CUBRID/databases/ccidbbak
         cp -r $CUBRID/databases/ccidb $CUBRID/databases/ccidbbak
         grep ccidb $CUBRID/databases/databases.txt >$CUBRID/databases/ccidb.txt
