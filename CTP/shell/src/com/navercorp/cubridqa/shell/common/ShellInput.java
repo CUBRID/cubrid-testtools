@@ -68,7 +68,7 @@ public class ShellInput {
 		if (isPureWindows) {
 			return "echo " + START_FLAG_MOCK_WIN + LINE_SEPARATOR_WIN + cmds.toString() + "@ECHO OFF" + LINE_SEPARATOR_WIN + "echo " + COMP_FLAG_MOCK_WIN + LINE_SEPARATOR_WIN;
 		} else {
-			return "echo " + START_FLAG_MOCK + LINE_SEPARATOR + cmds.toString() + "echo " + COMP_FLAG_MOCK + LINE_SEPARATOR;
+			return "if  [ -f ~/.bash_profile ]; then . ~/.bash_profile; fi; " + LINE_SEPARATOR + "echo " + START_FLAG_MOCK + LINE_SEPARATOR + cmds.toString() + "echo " + COMP_FLAG_MOCK + LINE_SEPARATOR;
 		}
 	}
 
