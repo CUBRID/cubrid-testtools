@@ -82,12 +82,14 @@ public class Main {
 
 		// get version (64bit or 32bit)
 		String version = null;
+		String role = context.getProperty("main.testing.role", "").trim();
 		int idx1 = cubridPackageUrl.indexOf("_64");
 		int idx2 = cubridPackageUrl.indexOf("x64");
 		int idx3 = cubridPackageUrl.indexOf("ppc64"); // AIX BUILD.
 														// CUBRID-8.4.4.0136-AIX-ppc64.sh
 
-		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0) {
+		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0
+				|| (role != null && role.length() > 0)) {
 			version = "64bits";
 			System.out.println("Test Version: " + version);
 		} else {
