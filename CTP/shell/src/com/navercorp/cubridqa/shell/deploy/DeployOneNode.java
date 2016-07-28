@@ -241,6 +241,7 @@ public class DeployOneNode {
 			return;
 		
 		ShellInput scripts = new ShellInput();
+		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
 		if(cubridPortId!=null){
 			scripts.addCommand("ini.sh -s 'common' -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
 			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
