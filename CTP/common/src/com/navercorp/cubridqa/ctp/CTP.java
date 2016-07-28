@@ -162,6 +162,9 @@ public class CTP {
 				case SHELL:
 					executeShell(getConfigData(taskLabel, configFilename, "shell"), "shell");
 					break;
+				case UNITTEST:
+					executeUnitTest(getConfigData(taskLabel, configFilename, "unittest"), "unittest");
+					break;
 				}
 
 				endDate = new java.util.Date();
@@ -205,6 +208,25 @@ public class CTP {
 			URL url = new URL("file:" + jar);
 			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
 			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.shell.main.Main");
+			Method m = clz.getDeclaredMethod("exec", String.class);
+			String configFilename;
+			if (CommonUtils.isWindowsPlatform()) {
+				configFilename = CommonUtils.getWindowsStylePath(config.getFilename());
+			} else {
+				configFilename = config.getFilename();
+			}			
+			m.invoke(clz, configFilename);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void executeUnitTest(IniData config, String suite) {
+		String jar = ctpHome + File.separator + "shell" + File.separator + "lib" + File.separator + "cubridqa-shell.jar";
+		try {
+			URL url = new URL("file:" + jar);
+			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
+			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.shell.main.GeneralLocalTest");
 			Method m = clz.getDeclaredMethod("exec", String.class);
 			String configFilename;
 			if (CommonUtils.isWindowsPlatform()) {

@@ -96,6 +96,9 @@ public class Context {
 	String ctpBranchName;
 	
 	Map<String, String> envMap = null;
+	
+	String currentLogDir;
+	String rootLogDir;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -133,9 +136,16 @@ public class Context {
 		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "1");
 		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
 		
+		setLogDir("shell");
+		
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
-      }
+    }
+	
+	public void setLogDir(String category) {
+		this.rootLogDir = getToolHome() + "/result/" + category;
+		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";		
+	}
 
 	public static ArrayList<String> initEnvList(Properties config) {
 		ArrayList<String> resultList = new ArrayList<String>();
@@ -262,8 +272,7 @@ public class Context {
 		    {
 		    	envMap.put(entry.getKey().toString(), entry.getValue().toString());
 		    }
-		} 
-		
+		}		
 	}
 	
 	private void putEnvVriableIntoMapByKey(String key)
@@ -289,11 +298,11 @@ public class Context {
 	}
 	
 	public String getCurrentLogDir(){
-		return getToolHome() + "/" + Constants.CURRENT_LOG_DIR;
+		return currentLogDir;		
 	}
 	
-	public String getRootLogDir(){
-		return getToolHome() + "/" + Constants.RUNTIME_ROOT_LOG_DIR;
+	public String getRootLogDir(){		
+		return rootLogDir;
 	}
 	
 	public String getFeedbackDbUrl(){
