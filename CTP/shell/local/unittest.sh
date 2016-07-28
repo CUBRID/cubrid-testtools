@@ -5,15 +5,15 @@ function init {
 }
 
 function list {
-    find $CUBRID -name unittests*
+    find $CUBRID/util -name unittests* | grep -v CMake
 }
 
 function execute {
 	unittestlog=".unittest.log"
 	
-    sh $1 2>&1 | tee ${unittestlog}
+    $1 2>&1 | tee ${unittestlog}
     
-    if [ `cat ${unittestlog} | grep -i 'fail' | wc -l ` -eq 0 ]; then
+    if [ `cat ${unittestlog} | grep -i 'fail\|Unit tests failed' | wc -l ` -eq 0 -a `cat ${unittestlog} | grep -i 'OK' | wc -l ` -ne 0 ]; then
     	IS_SUCC=true
     else
     	IS_SUCC=false
