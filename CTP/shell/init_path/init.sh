@@ -912,7 +912,7 @@ function xkill
        for pid in `ps -W | grep "${strkill}" | awk '{print $1}'`
        do
           is_in_white_list=0
-          for svr_id in "${win_svr_pid}"
+          for svr_id in ${win_svr_pid}
           do
 	          if [ "${pid}" == "${svr_id}" ]; then
 	          	is_in_white_list=1
