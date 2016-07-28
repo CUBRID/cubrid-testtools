@@ -55,11 +55,11 @@ function run_unittest()
    category=$BUILD_SCENARIOS
   
    #init and clean log
-   tmplog=$CTP_HOME/result/shell/current_runtime_logs/runtime.log
-   if [ -d "$CTP_HOME/result/shell/current_runtime_logs" ];then
-      rm $CTP_HOME/result/shell/current_runtime_logs/* >/dev/null 2>&1 
+   tmplog=$CTP_HOME/result/${category}/current_runtime_logs/runtime.log
+   if [ -d "$CTP_HOME/result/${category}/current_runtime_logs" ];then
+      rm $CTP_HOME/result/${category}/current_runtime_logs/* >/dev/null 2>&1 
    else
-      mkdir -p $CTP_HOME/result/shell/current_runtime_logs
+      mkdir -p $CTP_HOME/result/${category}/current_runtime_logs
    fi
    
    
