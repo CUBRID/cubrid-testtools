@@ -160,6 +160,15 @@ public class Context {
 		}
 		return resultList;
 	}
+	
+	public String getInstanceProperty(String envId, String key, String defaultValue) {
+		String value = getInstanceProperty(envId, key);
+		if (value == null || value.trim().equals("")) {
+			return defaultValue;
+		} else {
+			return value;
+		}
+	}
 
 	public String getInstanceProperty(String envId, String key){
 		String value = getProperty("env." + envId + "." + key);

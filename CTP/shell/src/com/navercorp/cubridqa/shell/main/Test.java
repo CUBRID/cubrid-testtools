@@ -309,8 +309,15 @@ public class Test {
 		long startTime = System.currentTimeMillis();
 		long currentTime;
 		long len;
+		
+		String cubridPortId = context.getInstanceProperty(this.currEnvId, "cubrid.cubrid_port_id", "1523");
+		String brokerFirstPort = context.getInstanceProperty(this.currEnvId, "broker1.BROKER_PORT", "30000");
+		String brokerSecondPort = context.getInstanceProperty(this.currEnvId, "broker2.BROKER_PORT", "33000");
+		String haPortId = context.getInstanceProperty(this.currEnvId, "ha.ha_port_id", "59901");
+		String cmPortId = context.getInstanceProperty(this.currEnvId, "cm.cm_port", "8001");
 
-		ShellInput script = new ShellInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':3000|:33000|:1523|:59901|:8001' | wc -l");
+		ShellInput script = new ShellInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':" + brokerFirstPort + "|:" + brokerSecondPort + "|:" + cubridPortId + "|:"
+				+ haPortId + "|:" + cmPortId + "' | wc -l");
 		while (true) {
 			currentTime = System.currentTimeMillis();
 			len = (currentTime - startTime) / 1000;
