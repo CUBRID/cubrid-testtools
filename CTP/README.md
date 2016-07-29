@@ -44,16 +44,11 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
  - Prepare
 	* Checkout test cases from our GitHub projects or make your own test cases.
 	* Install CUBRID and make sure your environment variable of ``CUBRID`` is correctly set.
-	* Check configuration files
-	  * For **SQL** test, you can modify parameters of ``conf/sql.conf``. 
-	    * Set ``scenario`` of ``[sql]`` section to the test cases directory.
-	    * ``test_mode=yes`` and ``java_stored_procedure=yes`` parameters must be set for **SQL** test.
-	    * Please see ``conf/sql.conf`` for details about other parameters.
-	  * For **Medium** test, you can tune parameters of ``conf/medium.conf``. 
-	    * Set ``scenario`` of ``[sql]`` section to the test cases directory.
-	    * Set ``data_file`` of ``[sql]`` section to the directory path of initial data files for **Medium** test.
-	    * ``test_mode=yes`` parameter is required.
-	    * Please see ``conf/medium.conf`` for details about other parameters.
+	* Check configuration files, for **SQL/Medium** test, you can modify parameters of ``conf/sql.conf`` or ``conf/medium.conf``. 
+	* Set ``scenario`` of ``[sql]`` section to the test cases directory.
+	* Set ``data_file`` of ``[sql]`` section to the directory path of initial data files for **Medium** test.
+	* ``test_mode=yes`` and ``java_stored_procedure=yes`` parameters must be set for **SQL/Medium** test.
+	* Please see ``conf/sql.conf`` or  ``conf/medium.conf`` for details about other parameters.
 
   - Run Tests
 	* For **SQL/Medium** test:
@@ -104,19 +99,18 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* Use one server as controller to checkout CTP
 	* Checkout test case from our GitHun project or make your own test cases on testing node, and the current CTP does not support controller is same server machine with testing node.
 	* Checkout CTP on testing node for ``SHELL`` case .
-	* Config configuration files
-	  * For **Shell** test, you can prepare one configuration file for your testing which is named as ``shell_template_for_[category_name].conf`` or ``shell_template.conf``, and can tune parameters of your configuration file. 
-		    * Set ``port`` for broker, cubrid_port_id and ha, you can choose to configure default common port for all instance or configure port for each instance node.
-		    * Set instance node for testing environment, it should cover ``host``, ``sshd port``, ``username`` and ``password``, and start with ``env.``, end with ``host, port, user, pwd`` keywords.
-		    * Set ``main.testcase.root`` for case root directory.
-		    * Set ``main.testcase.branch_git`` for the branch you will used.
-		    * Configure ``init_path`` environment variable on testing node to ``CTP/shell/init_path`` for case required.
+	* Config configuration files, for **Shell** test, you can prepare one configuration file for your testing which is named as ``shell_template_for_[category_name].conf`` or ``shell_template.conf``, and can tune parameters of your configuration file. 
+	* Set ``port`` for broker, cubrid_port_id and ha, you can choose to configure default common port for all instance or configure port for each instance node.
+	* Set instance node for testing environment, it should cover ``host``, ``sshd port``, ``username`` and ``password``, and start with ``env.``, end with ``host, port, user, pwd`` keywords.
+	* Set ``main.testcase.root`` for case root directory.
+	* Set ``main.testcase.branch_git`` for the branch you will used.
+	* Configure ``init_path`` environment variable on testing node to ``CTP/shell/init_path`` for case required.
 
  - Run Tests 
 	* For **Shell** test:
-	    ```
-	    $ bin/ctp.sh shell -c ./conf/shell_template_for_[category_name].conf
-	    ```   
+	  ```
+	  $ bin/ctp.sh shell -c ./conf/shell_template_for_[category_name].conf
+	  ```   
     
  - Examine the results
 	* Once it completes, you can find the results/logs from ``CTP/shell/result/current_runtime_logs``
