@@ -59,7 +59,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	    ```
 	    $ bin/ctp.sh medium -c ./conf/medium.conf
 	    ```
-	* Use interactive mode to debug your SQL/Medium case.
+	* Use interactive mode to debug your **SQL/Medium** case.
 
 	    ```
             $ bin/ctp.sh sql --interactive
@@ -99,12 +99,31 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 - **SHELL**
   - Prepare
 	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node, controller and test node can not be deployed on one server machine.
-	* Checkout CTP on testing node for ``SHELL`` case .
-	* Set ``port`` for broker, cubrid_port_id and ha, you can choose to configure default common port for all instance or configure port for each instance node.
-	* Set instance node for testing environment, it should cover ``host``, ``sshd port``, ``username`` and ``password``, and start with ``env.``, end with ``host, port, user, pwd`` keywords.
-	* Set ``main.testcase.root`` for case root directory.
-	* Set ``main.testcase.branch_git`` for the branch you will used.
-	* Configure ``init_path`` environment variable on testing node to ``CTP/shell/init_path`` for case required.
+	* Controller Node:
+	
+	  ```
+	    Test nodes were configured in CTP/conf/shell.conf as below:
+		env.instance1.ssh.host=192.168.1.10
+		env.instance1.ssh.port=22
+		env.instance1.ssh.user=<user>
+		env.instance1.ssh.pwd=<pwd>
+		env.instance1.cubrid.cubrid_port_id=11523
+		env.instance1.broker1.BROKER_PORT=35000
+		env.instance1.broker2.BROKER_PORT=35500
+		
+		env.instance2.ssh.host=192.168.1.11
+		env.instance2.ssh.port=22
+		env.instance2.ssh.user=<user>
+		env.instance2.ssh.pwd=<pwd>
+		env.instance2.cubrid.cubrid_port_id=11523
+		env.instance2.broker1.BROKER_PORT=35000
+		env.instance2.broker2.BROKER_PORT=35500
+		
+	  ```
+	  
+	  Please refer to [CTP/conf/shell.conf](CTP/conf/shell.conf)
+
+	* Configure ``init_path`` environment variable on testing node to ``CTP/shell/init_path`` since case required.
 
  - Run Tests 
 	* For **Shell** test:
@@ -159,17 +178,11 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
    * You can add "autocommit off;", "autocommit on;" to change autocommit mode. 
 
 - **SHELL**
-   * Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory.
-   * Case content will start with the script as below
-     ```
-     . $init_path/init.sh
-     init test
-      ```
-     The scripts above will initialize the environment variables which are required by case, and they also will make some functions will be available for your case. such as ``write_ok/write_nok``, ``cubrid_createdb`` and ``compare_result_between_files``, and more functions please refer to ``CTP/shell/init_path/init.sh`` file.
-   * Case content will end with ``finish`` to clean up your environment and logs.
+   * Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory, naming rule: ``/path/to/test_name/cases/test_name.sh``.
    * Sample for reference
      ```
      #!/bin/sh
+     # to initialize the environment variables which are required by case
 	. $init_path/init.sh
 	init test
 	dbname=tmpdb
@@ -181,6 +194,7 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
 	
 	if [condition]
 	then
+	        #print testing result according to the condition, PASS means ok, otherwise nok
 	        write_ok
 	else
 	        write_nok
@@ -190,7 +204,7 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
 	cubrid broker stop
 	
 	cubrid deletedb $dbname
-	
+	#clean environment
 	finish
 	```
 
