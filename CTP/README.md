@@ -130,7 +130,7 @@ You are not required to build CTP from source codes, unless you make some change
   ```
     $ ant clean dist
   ```
-You can find generated jar files ``common/lib/cubridqa-common.jar`` and ``sql/lib/cubridqa-cqt.jar``.
+You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar`` and ``shell/lib/cubridqa-shell.jar``.
 
 ## How To Write Testcase
 ###SQL
