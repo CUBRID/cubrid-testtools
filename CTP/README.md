@@ -36,6 +36,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
     ```
 	
 * Please open the URL with your browser.
+  (CTP supports more categories testing than readme mentioned, such as ``CCI``, ``Isolation``, ``HA Shell`` and so on. Regarding more information please refer to the related sections)
 
 
 ## How To Execute
