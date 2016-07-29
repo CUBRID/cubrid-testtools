@@ -185,10 +185,11 @@ public class DeployOneNode {
 		String role = context.getProperty("main.testing.role", "").trim();
 		log.print("Start Install Build");
 		ShellInput scripts = new ShellInput();
+		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
 		scripts.addCommand("echo 'ulimit -c unlimited' >> ~/.bash_profile");
 		scripts.addCommand("cat ~/.bash_profile | uniq >  ~/.bash_profile_tmp; cp ~/.bash_profile_tmp ~/.bash_profile");
 		scripts.addCommand(CommonUtils.getExportsOfMEKYParams());
-		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim());
+		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
 		scripts.addCommand("sh ~/.change_cubrid_ports.sh > /dev/null 2>&1");
 		String buildId = context.getTestBuild();
 		String[] arr = buildId.split("\\.");
