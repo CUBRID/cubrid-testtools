@@ -254,6 +254,7 @@ public class Test {
 
 		script.addCommand("export TEST_BIG_SPACE=$(echo $TEST_BIG_SPACE)");
 		script.addCommand("export TEST_BIG_SPACE=`if [ \"$TEST_BIG_SPACE\" = '' ]; then echo " + context.getBigSpaceDir() + " ; else echo $TEST_BIG_SPACE; fi`");
+		script.addCommand("if [ \"${TEST_BIG_SPACE}\" != '' ]; then export TEST_BIG_SPACE=`cygpath ${TEST_BIG_SPACE}`; fi");
 		script.addCommand("if [ \"$TEST_BIG_SPACE\" != '' ]; then mkdir -p $TEST_BIG_SPACE; rm -rf $TEST_BIG_SPACE/*; fi");
 
 		if (context.getDefaultDbcharset() != null && context.getDefaultDbcharset().trim().equals("") == false) {
@@ -441,8 +442,6 @@ public class Test {
 			}
 		}
 
-        scripts.addCommand("find ~/CQT/lib/shell/common -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
-        scripts.addCommand("find ~/CQT/lib/shell/common -name \"core\" | xargs -i rm -rf {} ");
         scripts.addCommand("find " + this.testCaseDir + " -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
         scripts.addCommand("find " + this.testCaseDir + " -name \"core\" | xargs -i rm -rf {} ");
 
@@ -618,7 +617,8 @@ public class Test {
 	
 	public void checkDiskSpace() throws JSchException {
 		ShellInput scripts = new ShellInput();
-		scripts.addCommand("source ~/cubrid_common/util_common.sh");
+		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
+		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
 		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
 		String result;
 		try {
