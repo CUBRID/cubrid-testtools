@@ -51,7 +51,6 @@ s_exec=""
 q_exec=""
 scenario=""
 store_branch=""
-script_path=""
 queue=""
 qlist=""
 isWin=""
@@ -59,8 +58,9 @@ onlyMax=""
 withoutSync=0
 clspath="$CLASSPATH"
 msgId=""
-statFile="${CTP_HOME}/common/sched/status/STATUS.TXT"
 branchName=master
+build_is_from_git=""
+statFile="${CTP_HOME}/common/sched/status/STATUS.TXT"
 
 while [ $# -ne 0 ];do
 	case $1 in
@@ -97,8 +97,8 @@ else
         separator=";"
 fi
 
-if [ "$DEFAULT_BRANCH_NAME" ];then
-   branchName=$DEFAULT_BRANCH_NAME
+if [ "$CTP_BRANCH_NAME" ];then
+   branchName=$CTP_BRANCH_NAME
 fi
 
 function usage()
@@ -138,7 +138,7 @@ function updateCodes()
 	curDir=`pwd`
     branchName=$1
 
-    changedCount=`run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" --check-only ${CTP_HOME} | grep "fetch" | grep CHANGED | wc -l`
+    changedCount=`cd ${CTP_HOME}; run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" --check-only . | grep "fetch" | grep CHANGED | wc -l`
         
     if [ "$changedCount" -gt "0" ]
     then
@@ -146,16 +146,18 @@ function updateCodes()
 		default_lc_all=`echo $LC_ALL`
 		export LC_ALL=en_us
 		echo "Update status: CHANGED " `date`
-		commands=`ps -u $USER -o cmd | grep start_consumer.sh | grep -v grep|head -1`
+		commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
 	    echo "#!/bin/bash " > $HOME/.autoUpdate.sh
 	    echo "if [ -f ~/.bash_profile ]; " >> $HOME/.autoUpdate.sh
 	    echo "then " >> $HOME/.autoUpdate.sh
 	    echo "	  . ~/.bash_profile " >> $HOME/.autoUpdate.sh
 	    echo "fi " >> $HOME/.autoUpdate.sh
-	    echo "cd ${CURRENT_TOOL_HOME} ">> $HOME/.autoUpdate.sh
-       	echo "sh stop_consumer.sh" >>$HOME/.autoUpdate.sh
-        echo "sh upgrade.sh" >>$HOME/.autoUpdate.sh
-        echo "nohup ${commands} 2>&1 >> nohup.out &">>$HOME/.autoUpdate.sh
+	    echo "set -x " >> $HOME/.autoUpdate.sh
+	    echo "cd ${CURRENT_TOOL_HOME}/../script ">> $HOME/.autoUpdate.sh
+	    echo "chmod u+x *">> $HOME/.autoUpdate.sh
+       	echo "./stop_consumer.sh" >>$HOME/.autoUpdate.sh
+        echo "./upgrade.sh" >>$HOME/.autoUpdate.sh
+        echo "nohup ${commands} 2>&1 >> $HOME/nohup.out &">>$HOME/.autoUpdate.sh
         echo "cd -" >>$HOME/.autoUpdate.sh
 		at -f $HOME/.autoUpdate.sh now+1 minutes 2>&1 | xargs -i echo \#{} >> $HOME/.autoUpdate.sh
 		export LC_ALL=$default_lc_all
@@ -288,6 +290,7 @@ function analyzeMessageInfo()
         branch=`cat $result|awk '/BUILD_SVN_BRANCH/'|cut -d ":" -f2|tr -d " "`
         bit=`cat $result|awk '/BUILD_BIT/'|cut -d ":" -f2|tr -d " "`
         scenario=`cat $result|awk '/BUILD_SCENARIOS/'|cut -d ":" -f2|tr -d " "`
+        build_is_from_git=`cat $result|awk '/BUILD_IS_FROM_GIT/'|cut -d ":" -f2|tr -d " "`
         url_cn=`cat $result|grep "BUILD_URLS:"`
         url_kr=`cat $result|grep "BUILD_URLS_KR:"`
         url_cn_1=${url_cn#*:}
@@ -330,7 +333,6 @@ checkConsumerStarted
 #loop to consume task messages
 while [ 1 ]
 do
-	cd $script_path
         count=0
 	#loop queue list
 	for x in ${qlist[@]}
@@ -341,41 +343,21 @@ do
  			updateCodes $branchName
 		fi
 	
-		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2>&1 /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
+		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
+		isFromGit=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep BUILD_IS_FROM_GIT|awk -F ':' '{print $2}'`
 		isStartByData=`echo $existsMsgId|grep "[^0-9]"|wc -l`
 		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
 		then
-			consumerTimer ${existsMsgId} "interrupted"
-		fi
-		
-		if [ -f ${CTP_HOME}/conf/${q_exec[$count]}_continue.sh ]
-		then
-			if [ "$existsMsgId" -a ${isStartByData} -gt 0 ];then
-				echo "Action: $x , ${q_exec[$count]}_continue.sh, CONTINUE"
+			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
+			(cd ${CTP_HOME}; export BUILD_IS_FROM_GIT=$isFromGit ;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
 			
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh conf/${q_exec[$count]}_continue.sh )
-			
-				echo
-				echo "End continue mode test!"
-				consumerTimer ${existsMsgId} "stop"
-				contimeENDTIME=`getTimeStamp`
-				echo "END_CONTINUE_TIME:${contimeENDTIME}"
-				echo '' > ${CTP_HOME}/common/sched/status/${x}
-				echo
-			fi
-		elif [ -n "$(type -t ${q_exec[$count]}_continue)" ] && [ "$(type -t ${q_exec[$count]}_continue)" = "function" ];then
-			if [ "$existsMsgId" -a ${isStartByData} -gt 0 ];then
-				echo "Action: $x, ${q_exec[$count]}_continue(), CONTINUE"
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; ${q_exec[$count]}_continue)
-				
-				echo
-                                echo "End continue mode test!"
-				consumerTimer ${existsMsgId} "stop"
-				contimeENDTIME=`getTimeStamp`
-				echo "END_CONTINUE_TIME:${contimeENDTIME}"
-				echo '' > ${CTP_HOME}/common/sched/status/${x}
-				echo
-			fi
+			echo
+            echo "End continue mode test!"
+			consumerTimer ${existsMsgId} "stop"
+			contimeENDTIME=`getTimeStamp`
+			echo "END_CONTINUE_TIME:${contimeENDTIME}"
+			echo '' > ${CTP_HOME}/common/sched/status/${x}
+			echo
 		fi
 
 		startAgent $x 
@@ -388,31 +370,32 @@ do
 			exit 0
 		elif [ "$hasBuild" == "true" ]
 		then
-			if [ -f ${CTP_HOME}/conf/${q_exec[$count]}.sh ] 
+			if [ -f ${CTP_HOME}/common/ext/${q_exec[$count]}.sh ] 
 			then
 				echo "Action: $x , ${q_exec[$count]}.sh, GENERAL"
-			
-				if [ -f $statFile ]
-				then
-					rm -f $statFile
-				else
-					mkdir -p ${CTP_HOME}/common/sched/status
-                		fi
-					
-				touch $statFile
-				TestTime=`getTimeStamp`
-				echo "QUEUE:${x}" > $statFile
-				echo "START_TIME:${TestTime}" >> $statFile
+				
+				if [ -f $statFile ]		
+ 				then		
+ 					rm -f $statFile		
+ 				else		
+ 					mkdir -p ${CTP_HOME}/common/sched/status		
+                fi		
+ 							
+ 				touch $statFile		
+ 				TestTime=`getTimeStamp`		
+ 				echo "QUEUE:${x}" > $statFile		
+ 				echo "START_TIME:${TestTime}" >> $statFile
 			
 				echo
 				echo "Log msg id into queue file!"
 				echo "MSG_ID:$msgId" > ${CTP_HOME}/common/sched/status/$x
+				echo "BUILD_IS_FROM_GIT:$build_is_from_git" >> ${CTP_HOME}/common/sched/status/$x
 				echo "START_TIME:${TestTime}" >> ${CTP_HOME}/common/sched/status/$x
 				echo
 
 				consumerTimer $msgId "start"
 			
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh conf/${q_exec[$count]}.sh)
+				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/${q_exec[$count]}.sh)
 			
 				consumerTimer $msgId "stop"
 
@@ -422,41 +405,6 @@ do
 				echo '' > ${CTP_HOME}/common/sched/status/$x
 				echo "END_TIME:${ENDTIME}"
 				echo
-			elif [ -n "$(type -t ${q_exec[$count]})" ] && [ "$(type -t ${q_exec[$count]})" = "function" ];then
-				echo "Action: $x , ${q_exec[$count]}() function, GENERAL"
-
-                                if [ -f $statFile ]
-                                then
-                                        rm -f $statFile
-                                else
-                                        mkdir -p ${CTP_HOME}/common/sched/status
-                                fi
-	
-				
-                                touch $statFile
-                                TestTime=`getTimeStamp`
-                                echo "QUEUE:${x}" > $statFile
-                                echo "EXEC FUNCTION:${q_exec[$count]}()" > $statFile
-                                echo "START_TIME:${TestTime}" >> $statFile
-
-                                echo
-                                echo "Log msg id into queue file!"
-                                echo "MSG_ID:$msgId" > ${CTP_HOME}/common/sched/status/$x
-                                echo "START_TIME:${TestTime}" >> ${CTP_HOME}/common/sched/status/$x
-                                echo
-
-                                consumerTimer $msgId "start"
-
-                                (cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; ${q_exec[$count]})
-
-                                consumerTimer $msgId "stop"
-
-                                ENDTIME=`getTimeStamp`
-                                echo 
-                                echo "Clean msg id from queue file"
-                                echo '' > ${CTP_HOME}/common/sched/status/$x
-                                echo "END_TIME:${ENDTIME}"
-                                echo
 				
 			else
 				echo "Please check if your script exists!"
@@ -465,11 +413,11 @@ do
 			echo "No build"
 		fi	
  	        let "count=count+1"	
-		
-		if [ -f $statFile ]
-		then
-			rm -f $statFile
-		fi
+ 	        
+		if [ -f $statFile ]		
+ 		then		
+ 			rm -f $statFile		
+ 		fi
 	done
 	sleep 5 
 done

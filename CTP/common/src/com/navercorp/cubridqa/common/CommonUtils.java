@@ -270,10 +270,15 @@ public class CommonUtils {
 	}
 
 	public static String getLinuxStylePath(String path) {
+		return getLinuxStylePath(path, isCygwinPlatform());
+	}
+	
+	public static String getLinuxStylePath(String path, boolean useCygPath) {
 		path = path.trim();
-		if (isCygwinPlatform()) {
-			String linStylePath;
-			while (true) {
+		if (useCygPath) {
+			String linStylePath = "";
+			int max = 20;
+			while (max-- > 0) {
 				linStylePath = LocalInvoker.execCommands("cygpath " + path, false);
 				if (linStylePath != null && linStylePath.trim().length() > 0) {
 					break;
@@ -416,5 +421,19 @@ public class CommonUtils {
 			}
 		}
 		return defaultValue;
+	}
+	
+	public static int getShellType(boolean supportPureWindows) {
+		int shellType;
+		if (CommonUtils.isWindowsPlatform()) {
+			if (supportPureWindows) {
+				shellType = LocalInvoker.SHELL_TYPE_WINDOWS;
+			} else {
+				shellType = LocalInvoker.SHELL_TYPE_CYGWIN;
+			}
+		} else {
+			shellType = LocalInvoker.SHELL_TYPE_LINUX;
+		}
+		return shellType;
 	}
 }

@@ -40,45 +40,58 @@ buildType=
 
 usage()
 {
-    echo "Usage: `basename $0` [url] [-s|--role-compat-server url_1 url_2] [-d|--role-compat-driver url_1 url_2] 
-                                [-c|--role-coverage url_1 url_2 ]"
+    echo "Usage: `basename $0` [url] [-s|--role-compat-server url_1 url_2] 
+								[-d|--role-compat-driver url_1 url_2] 
+								[-c|--role-coverage url_1 url_2 ]
+								[-ur|--role-unittest-release url]
+								[-ud|--role-unittest-debug url]"
     exit 1
 }
 
 if [ $# -eq 0 ]
 then
-    usage
+	usage
 else
-    gUrl=$1
-    tCat="general"
+	gUrl=$1
+	tCat="general"
 fi
 
 while [ $# -ge 1 ];do
-    case $1 in
-        -s|--role-compat-server)
-        shift
-        sUrl=$1
-        dUrl=$2
-        tCat="compat"
-        ;;
-        -d|--role-compat-driver)
-        shift
-        dUrl=$1
-        sUrl=$2
-        tCat="compat"
-        ;;
-        -c|--role-coverage)
-        shift
-        vUrl=$1
-        cUrl=$2
-        tCat="coverage"
-        ;;
-        \?)
-        shift
-        usage
-        ;;
-    esac
-    shift
+	case $1 in
+	    -s|--role-compat-server)
+		shift
+		sUrl=$1
+		dUrl=$2
+		tCat="compat"
+		;;
+	    -d|--role-compat-driver)
+		shift
+		dUrl=$1
+		sUrl=$2
+		tCat="compat"
+		;;
+	    -c|--role-coverage)
+		shift
+		vUrl=$1
+		cUrl=$2
+		tCat="coverage"
+		;;
+		-ur|--role-unittest-release)
+		shift
+		gUrl=$1
+		tCat="unit-release"
+		;;
+	    -ud|--role-unittest-debug)
+		shift
+		gUrl=$1
+		tCat="unit-debug"
+		;;
+	    \?)
+		shift
+		usage
+		;;
+	esac
+	shift
 done
 
 function getDir()
@@ -92,9 +105,9 @@ function parseURL()
     url=$1
     if [ "$url" ]
     then
-    buildType=${url/*.}
+	buildType=${url/*.}
     else
-    buildType="unknown"
+	buildType="unknown"
     fi
 }
 
@@ -103,14 +116,38 @@ function goToInstallationDirectory()
     if [ "$CUBRID" ]
     then
         cd $CUBRID
-    if [ $? -eq 0 ];then
-            cd ..
+	if [ $? -eq 0 ];then
+        	cd ..
+	else
+		cd $HOME
+	fi
     else
         cd $HOME
     fi
-    else
-        cd $HOME
-    fi
+}
+
+function IsGitExtensionBuild()
+{
+   buildFile=$1
+
+   buildNumber=`echo $buildFile|grep -Pom 1 '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,7}'`
+   startNumber="0100010000006858"
+   f1=`echo $buildNumber|awk -F '.' '{print $1}'`
+   f2=`echo $buildNumber|awk -F '.' '{print $2}'`
+   f3=`echo $buildNumber|awk -F '.' '{print $3}'`
+   f4=`echo $buildNumber|awk -F '.' '{print $4}'`
+   f11=`echo $f1|awk '{printf("%03d", $0)}'`
+   f22=`echo $f2|awk '{printf("%03d", $0)}'`
+   f33=`echo $f3|awk '{printf("%03d", $0)}'`
+   f44=`echo $f4|awk '{printf("%07d", $0)}'` 
+ 
+   curNumber="${f11}${f22}${f33}${f44}"
+   if [ $curNumber -ge $startNumber ];
+   then
+        echo true
+   else
+        echo false
+   fi
 }
 
 function InstallBuildBySh()
@@ -128,7 +165,7 @@ function InstallBuildBySh()
     wget -t 3 -T 120 $build_url
     if [ $? -eq 0 ]
     then
-    chmod 777 $buildFile
+	chmod 777 $buildFile
     fi
     cubrid service stop >/dev/null 2>&1
     #sleep 2
@@ -137,13 +174,26 @@ function InstallBuildBySh()
             rm -rf CUBRID
     fi
 
+    if [ "`IsGitExtensionBuild $buildFile`" == "true" ];then
+	   mkdir -p CUBRID
+           cp $buildFile CUBRID
+	   cd CUBRID
+
+           sh  $buildFile >/dev/null <<EOF
+y
+n
+
+EOF
+	   rm $buildFile
+	   cd ..
+    else
             sh $buildFile > /dev/null <<EOF
 yes
 
 
 EOF
     . ~/.cubrid.sh
-
+    fi
     rm $buildFile
     cd $curDir
 }
@@ -169,6 +219,14 @@ function InstallBuildByPackage()
     wget -t 3 -T 120 $build_url
     
     `eval $command $buildFile -d ./CUBRID`
+    if [ -d ./CUBRID/CUBRID ]; then
+		mv ./CUBRID/CUBRID/* ./CUBRID
+		rm -rf ./CUBRID/CUBRID
+    fi
+    if [ ! -d ./CUBRID/databases ]; then
+	    mkdir ./CUBRID/databases
+    fi
+	
     rm $buildFile
     cd $curDir
 }
@@ -179,22 +237,22 @@ function InstallBuildForGeneral()
     parseURL $url
     if [ "$buildType" == "sh" ]
     then
-    InstallBuildBySh $url
+	InstallBuildBySh $url
     elif [ "$buildType" == "zip" ]
     then
-    InstallBuildByPackage "unzip " $url
+	InstallBuildByPackage "unzip " $url
     elif [ "$buildType" == "gz" ]
     then
-    InstallBuildByPackage "tar zvxf " $url
+	InstallBuildByPackage "tar zvxf " $url
     elif [ "$buildType" == "tar" ]
     then
         echo "TODO"
     elif [ "$buildType" == "rpm" ]
     then
-    echo "TODO"
+	echo "TODO"
     else
-     echo "Please confirm your build URL!"
-     exit
+	 echo "Please confirm your build URL!"
+	 exit
     fi
 
 }
@@ -261,6 +319,47 @@ function InstallBuildForCoverage()
     echo INSTALL `date '+%Y%m%d%H%M%s'` $@ >> $HOME/.qacoverage
 }
 
+function BuildAndInstallForUnitTest()
+{
+    build_url=$1
+    buildFile=${build_url##*/}
+    buildName=${buildFile%%.tar*}
+    cub="cubrid"
+    curDir=`pwd`
+    cd $HOME
+    echo ""
+    echo "=====install Unit Test Build With $buildFile =========="
+    echo ""
+
+    cmake >/dev/null 2>&1
+    [ $? -ne 0 ] && echo "Please make sure CMAKE is installed!" && exit 0    
+
+    rm $buildFile >/dev/null 2>&1
+    wget -t 3 -T 120 $build_url
+    if [ -d $cub ]
+    then
+            rm -rf $cub
+    fi
+    
+    mkdir -p $cub
+    tar -zvxf $buildFile 
+    cp -rf ${buildName}/* $cub/  
+    cd $cub
+    
+    if [ "$tCat" == "unit-release" ];then
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo 
+        make -j
+    else
+	cmake -DCMAKE_BUILD_TYPE=Debug
+        make -j
+    fi
+    
+    cd $HOME   
+    rm $buildFile
+    rm -rf ${buildName}
+    echo "INSTALL `date '+%Y%m%d%H%M%s'` $@" >> $HOME/.unitTestInstall.log
+    cd $curDir
+}
 
 if [ "$tCat" == "general" ]
 then
@@ -271,6 +370,8 @@ then
 elif [ "$tCat" == "coverage" ]
 then
      InstallBuildForCoverage $vUrl $cUrl > $HOME/.qacoverage.log 2>&1
+elif [ "$tCat" == "unit-release" ] || [ "$tCat" == "unit-debug" ];then
+     BuildAndInstallForUnitTest $gUrl > $HOME/.unitTestInstall.log 2>&1
 else
      echo "Please confirm your parameters!!"
 fi

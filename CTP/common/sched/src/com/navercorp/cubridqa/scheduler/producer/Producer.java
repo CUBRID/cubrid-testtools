@@ -96,7 +96,7 @@ public class Producer {
 		
 		Compatibility.init(conf);
 		I18N.init(conf);
-		CompatDatabaseImage.init(conf, "compat_dbimg.properties");
+		CompatDatabaseImage.init(conf, "compat_dbimg.conf");
 		
 		FileProcessCaller task;		
 		

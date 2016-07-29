@@ -42,13 +42,20 @@
 			<!--<compilerarg value="-Xlint:unchecked"/>-->
 			<classpath refid="libs" />
 		</javac>
+		<javac srcdir="shell/src" destdir="${build}">
+			<!--<compilerarg value="-Xlint:unchecked"/>-->
+			<classpath refid="libs" />
+		</javac>
+		<javac srcdir="shell/init_path/commonforjdbc_src" destdir="${build}">
+		</javac>
 	</target>
 
 	<target name="clean">
 		<delete dir="${build}" />
 		<delete dir="common/lib/cubridqa-common.jar" />
+		<delete dir="common/lib/cubridqa-scheduler.jar" />		
 		<delete dir="sql/lib/cubridqa-cqt.jar" />		
-		<delete dir="common/lib/cubridqa-scheduler.jar" />
+		<delete dir="shell/lib/cubridqa-shell.jar" />
 	</target>
 
 	<target name="dist" depends="clean,compile" description="generate the distribution">
@@ -63,6 +70,12 @@
 		</jar>
 		<jar jarfile="common/sched/lib/cubridqa-scheduler.jar" manifest="common/sched/lib/MANIFEST.MF" basedir="${build}" >
 			<include name="com/navercorp/cubridqa/scheduler/**/*.class" />
+		</jar>
+		<jar jarfile="shell/lib/cubridqa-shell.jar" manifest="shell/lib/MANIFEST.MF" basedir="${build}">			
+			<include name="com/navercorp/cubridqa/shell/**/*.class" />
+		</jar>
+		<jar jarfile="shell/init_path/commonforjdbc.jar" basedir="${build}">			
+			<include name="common/*.class" />
 		</jar>
 		<!--delete dir="${build}" / -->
 	</target>

@@ -42,7 +42,7 @@ public class LocalInvoker {
 
 	public static final String LINE_SEPARATOR = "\n";
 
-	public static final String COMP_FLAG = "ALL_COMPLETED";
+	public static final String COMP_FLAG = "ALL_LOCAL_COMPLETED";
 
 	public static String exec(String cmds, int shellType, boolean showInConsole) {
 		//System.out.println("commands: " + cmds + ", " + shellType + "," + showInConsole);
@@ -79,7 +79,11 @@ public class LocalInvoker {
 		String invokedCmd;
 		switch (shellType) {
 		case SHELL_TYPE_LINUX: {
-			invokedCmd = "sh " + tmpFile.getAbsolutePath() + " 2>&1";
+			if (CommonUtils.isWindowsPlatform()) {
+				invokedCmd = "sh.exe " + tmpFile.getAbsolutePath() + " 2>&1";
+			} else {
+				invokedCmd = "sh " + tmpFile.getAbsolutePath() + " 2>&1";
+			}
 			break;
 		}
 		case SHELL_TYPE_WINDOWS: {
