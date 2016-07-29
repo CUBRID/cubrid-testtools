@@ -40,8 +40,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 * Please open the URL with your browser.
   
 ## How To Execute
-#### SQL 
-######Prepare
+### SQL 
+####Prepare
 * Checkout test cases from our GitHub projects or make your own test cases.
 * Install CUBRID and make sure your environment variable of ``CUBRID`` is correctly set.
 * Check configuration files
@@ -55,7 +55,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     * ``test_mode=yes`` parameter is required.
     * Please see ``conf/medium.conf`` for details about other parameters.
 
-######Run Tests
+####Run Tests
 * For **SQL/Medium** test:
     ```
     $ bin/ctp.sh sql -c ./conf/sql.conf
@@ -63,17 +63,13 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     ```
     $ bin/ctp.sh medium -c ./conf/medium.conf
     ```
-    ** Use interactive mode to debug your SQL/Medium case.
+* Use interactive mode to debug your SQL/Medium case.
     ```
     $ bin/ctp.sh sql --interactive
     ```
 
-* For **Medium** test:
-    ```
-    $ bin/ctp.sh medium -c ./conf/medium.conf
-    ```
     
-######Examine the results
+####Examine the results
 
 * Once it completes, you will see a result message.
     ```
@@ -103,8 +99,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     ```
   * Please open the ``URL`` with your browser.
   
-#### SHELL
-######Prepare
+### SHELL
+####Prepare
 * Use one server as controller to checkout CTP
 * Checkout test case from our GitHun project or make your own test cases on testing node, and the current CTP does not support controller is same server machine with testing node.
 * Checkout CTP on testing node for ``SHELL`` case .
@@ -116,13 +112,13 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     * Set ``main.testcase.branch_git`` for the branch you will used.
     * Configure ``init_path`` environment variable on testing node to ``CTP/shell/init_path`` for case required.
 
-######Run Tests 
+####Run Tests 
 * For **Shell** test:
     ```
     $ bin/ctp.sh shell -c ./conf/shell_template_for_[category_name].conf
     ```   
     
-######Examine the results
+####Examine the results
 * Once it completes, you can find the results/logs from ``CTP/shell/result/current_runtime_logs``
 * ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this server node.
 * ``main_snapshot.properties`` will save the configurations for your current testing.
@@ -137,7 +133,7 @@ You are not required to build CTP from source codes, unless you make some change
 You can find generated jar files ``common/lib/cubridqa-common.jar`` and ``sql/lib/cubridqa-cqt.jar``.
 
 ## How To Write Testcase
-####SQL
+###SQL
 When you want to write your own test case, please follow the following rules.
 * Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory. 
 * Expected results: The file extension is ``.answer`` and it is located in ``answers`` subdirectory. 
@@ -167,7 +163,7 @@ When you want to write your own test case, please follow the following rules.
 
 * You can add "autocommit off;", "autocommit on;" to change autocommit mode. 
 
-####SHELL
+###SHELL
 * Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory.
 * Case content will start with the script as below
   ```
