@@ -98,6 +98,14 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 				preScript = "export HOME=" + userHome + ";";
 				preScript = preScript + "export USER=" + user + ";";
 				preScript = preScript + "cd $HOME;";
+				
+				String initPathforShell = System.getenv("init_path");
+				if (initPathforShell != null && initPathforShell.trim().equals("") == false) {
+					if (com.navercorp.cubridqa.common.CommonUtils.isWindowsPlatform()) {
+						initPathforShell = com.navercorp.cubridqa.common.CommonUtils.getLinuxStylePath(initPathforShell, true);
+						preScript = preScript + "export init_path=" + initPathforShell + "; ";
+					}
+				}
 				//preScript = preScript + "if  [ -f ~/.bash_profile ]; then . ~/.bash_profile; fi; ";
 			}
 
