@@ -46,6 +46,9 @@
 			<!--<compilerarg value="-Xlint:unchecked"/>-->
 			<classpath refid="libs" />
 		</javac>
+		<javac srcdir="isolation/src" destdir="${build}">
+			<classpath refid="libs" />
+		</javac>
 		<javac srcdir="shell/init_path/commonforjdbc_src" destdir="${build}">
 		</javac>
 	</target>
@@ -56,6 +59,7 @@
 		<delete dir="common/lib/cubridqa-scheduler.jar" />		
 		<delete dir="sql/lib/cubridqa-cqt.jar" />		
 		<delete dir="shell/lib/cubridqa-shell.jar" />
+		<delete dir="shell/lib/cubridqa-isolation.jar" />
 	</target>
 
 	<target name="dist" depends="clean,compile" description="generate the distribution">
@@ -76,6 +80,9 @@
 		</jar>
 		<jar jarfile="shell/init_path/commonforjdbc.jar" basedir="${build}">			
 			<include name="common/*.class" />
+		</jar>
+		<jar jarfile="isolation/lib/cubridqa-isolation.jar" manifest="isolation/lib/MANIFEST.MF" basedir="${build}">			
+			<include name="com/navercorp/cubridqa/isolation/**/*.class" />
 		</jar>
 		<!--delete dir="${build}" / -->
 	</target>
