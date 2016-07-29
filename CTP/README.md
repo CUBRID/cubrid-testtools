@@ -10,6 +10,12 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configurations.
 * CUBRID QA executes testing for SQL and Medium on linux is based on ha mode, so you must make sure ports in cubrid.conf, cubrid_broker.conf and cubrid_ha.conf will
   not conflict with another instance exists. Otherwise, start server or broker will be fail.
+* For ``Shell`` testing, two environment variables must be added
+  
+  ```
+     JAVA_HOME and init_path=CTP/shell/init_path
+  ```
+* 
 
 
 ## Quick Start
@@ -98,11 +104,11 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
   
 - **SHELL**
   - Prepare
-	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node, controller and test node can not be deployed on one server machine.
+	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
 	* Controller Node:
 	
 	  ```
-	    Test nodes were configured in CTP/conf/shell.conf as below:
+	    Test nodes are configured in CTP/conf/shell.conf as below:
 		env.instance1.ssh.host=192.168.1.10
 		env.instance1.ssh.port=22
 		env.instance1.ssh.user=<user>
@@ -121,7 +127,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 		
 	  ```
 	  
-	  Please refer to [CTP/conf/shell.conf](CTP/conf/shell.conf)
+	  Regarding more parameters for shell testing, please refer to [CTP/conf/shell.conf](CTP/conf/shell.conf)
 
 	* Configure ``init_path`` environment variable on testing node to ``CTP/shell/init_path`` since case required.
 
@@ -133,7 +139,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  ```   
     
  - Examine the results
-	* Once it completes, you can find the results/logs from ``CTP/shell/result/current_runtime_logs``
+	* Once it completes, you can find the results/logs from ``CTP/result/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this server node.
 	* ``main_snapshot.properties`` will save the configurations for your current testing.
 	* ``test_${Node_Name}.log`` will show the logs of testing based on this server node.
