@@ -40,7 +40,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 * Please open the URL with your browser.
   
 ## How To Execute
-### SQL 
+###(1) SQL 
 ####Prepare
 * Checkout test cases from our GitHub projects or make your own test cases.
 * Install CUBRID and make sure your environment variable of ``CUBRID`` is correctly set.
@@ -99,7 +99,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     ```
   * Please open the ``URL`` with your browser.
   
-### SHELL
+###(2) SHELL
 ####Prepare
 * Use one server as controller to checkout CTP
 * Checkout test case from our GitHun project or make your own test cases on testing node, and the current CTP does not support controller is same server machine with testing node.
@@ -133,7 +133,7 @@ You are not required to build CTP from source codes, unless you make some change
 You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar`` and ``shell/lib/cubridqa-shell.jar``.
 
 ## How To Write Testcase
-###SQL
+###(1) SQL
 When you want to write your own test case, please follow the following rules.
 * Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory. 
 * Expected results: The file extension is ``.answer`` and it is located in ``answers`` subdirectory. 
@@ -163,7 +163,7 @@ When you want to write your own test case, please follow the following rules.
 
 * You can add "autocommit off;", "autocommit on;" to change autocommit mode. 
 
-###SHELL
+###(2) SHELL
 * Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory.
 * Case content will start with the script as below
   ```
