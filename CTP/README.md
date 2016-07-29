@@ -169,7 +169,7 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
    * Case content will end with ``finish`` to clean up your environment and logs.
    * Sample for reference
      ```
-     	#!/bin/sh
+     #!/bin/sh
 	. $init_path/init.sh
 	init test
 	dbname=tmpdb
