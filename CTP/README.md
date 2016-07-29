@@ -120,7 +120,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 		
 	  ```
 	  
-	  Regarding more parameters for shell testing, please refer to [CTP/conf/shell.conf](CTP/conf/shell.conf)
+	  Regarding more parameters for shell testing, please refer to [CTP/conf/shell.conf](conf/shell.conf)
 	* Test Node:
 	  
 	  ```
