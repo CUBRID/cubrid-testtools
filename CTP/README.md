@@ -13,6 +13,8 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 
 
 ## Quick Start
+This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``CCI``, ``Isolation``, ``HA Shell`` and so on. Regarding more information please refer to the related sections.
+
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly.
 * Execute a sample test as follows:
     ``` 
@@ -36,11 +38,10 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
     ```
 	
 * Please open the URL with your browser.
-  (CTP supports more categories testing than readme mentioned, such as ``CCI``, ``Isolation``, ``HA Shell`` and so on. Regarding more information please refer to the related sections)
-
-
+  
 ## How To Execute
-#### Prepare
+#### SQL 
+######Prepare
 * Checkout test cases from our GitHub projects or make your own test cases.
 * Install CUBRID and make sure your environment variable of ``CUBRID`` is correctly set.
 * Check configuration files
@@ -53,17 +54,18 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
     * Set ``data_file`` of ``[sql]`` section to the directory path of initial data files for **Medium** test.
     * ``test_mode=yes`` parameter is required.
     * Please see ``conf/medium.conf`` for details about other parameters.
-  * For **Shell** test, you can prepare one configuration file for your testing which is named as shell_template_for_[category_name], and can tune parameters of your configuration file. 
-    * Set ``port`` for broker, cubrid_port_id and ha, you can choose to configure default common port for all instance or configure port for each instance node.
-    * Set instance node for testing environment, it should cover ``host``, ``sshd port``, ``username`` and ``password``, and start with ``env.``, end with ``host, port, user, pwd`` keywords.
-    * Set ``main.testcase.root`` for case root directory.
-    * Set ``main.testcase.branch_git`` for the branch you will used.
-    * Configure ``init_path`` environment variable to ``CTP/shell/init_path`` for case required.
 
-#### Run Tests
-* For **SQL** test:
+######Run Tests
+* For **SQL/Medium** test:
     ```
     $ bin/ctp.sh sql -c ./conf/sql.conf
+    ```
+    ```
+    $ bin/ctp.sh medium -c ./conf/medium.conf
+    ```
+    ** Use interactive mode to debug your SQL/Medium case.
+    ```
+    $ bin/ctp.sh sql --interactive
     ```
 
 * For **Medium** test:
@@ -71,17 +73,8 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
     $ bin/ctp.sh medium -c ./conf/medium.conf
     ```
     
-* For **Shell** test:
-    ```
-    $ bin/ctp.sh shell -c ./conf/shell_template_for_[category_name].conf
-    ```
-    
-* For **Interactive** mode test:
-    ```
-    $ bin/ctp.sh sql --interactive
-    ```
-    
-#### Examine the results
+######Examine the results
+
 * Once it completes, you will see a result message.
     ```
     -----------------------
@@ -110,7 +103,32 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
     ```
   * Please open the ``URL`` with your browser.
   
-        
+#### SHELL
+######Prepare
+* Use one server as controller to checkout CTP
+* Checkout test case from our GitHun project or make your own test cases on testing node, and the current CTP does not support controller is same server machine with testing node.
+* Checkout CTP on testing node for ``SHELL`` case .
+* Config configuration files
+  * For **Shell** test, you can prepare one configuration file for your testing which is named as ``shell_template_for_[category_name].conf`` or ``shell_template.conf``, and can tune parameters of your configuration file. 
+    * Set ``port`` for broker, cubrid_port_id and ha, you can choose to configure default common port for all instance or configure port for each instance node.
+    * Set instance node for testing environment, it should cover ``host``, ``sshd port``, ``username`` and ``password``, and start with ``env.``, end with ``host, port, user, pwd`` keywords.
+    * Set ``main.testcase.root`` for case root directory.
+    * Set ``main.testcase.branch_git`` for the branch you will used.
+    * Configure ``init_path`` environment variable on testing node to ``CTP/shell/init_path`` for case required.
+
+######Run Tests 
+* For **Shell** test:
+    ```
+    $ bin/ctp.sh shell -c ./conf/shell_template_for_[category_name].conf
+    ```   
+    
+######Examine the results
+* Once it completes, you can find the results/logs from ``CTP/shell/result/current_runtime_logs``
+* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this server node.
+* ``main_snapshot.properties`` will save the configurations for your current testing.
+* ``runtime.log`` will show all running log 
+* ``test_${Node_Name}.log`` will show the logs of testing based on this server node.
+
 ## How To Build CTP
 You are not required to build CTP from source codes, unless you make some changes. To make your own build, please install ant and make a build as follows: 
   ```
@@ -119,6 +137,7 @@ You are not required to build CTP from source codes, unless you make some change
 You can find generated jar files ``common/lib/cubridqa-common.jar`` and ``sql/lib/cubridqa-cqt.jar``.
 
 ## How To Write Testcase
+####SQL
 When you want to write your own test case, please follow the following rules.
 * Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory. 
 * Expected results: The file extension is ``.answer`` and it is located in ``answers`` subdirectory. 
@@ -148,6 +167,15 @@ When you want to write your own test case, please follow the following rules.
 
 * You can add "autocommit off;", "autocommit on;" to change autocommit mode. 
 
+####SHELL
+* Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory.
+* Case content will start with the script as below
+  ```
+  . $init_path/init.sh
+  init test
+  ```
+  The scripts above will initialize the environment variables which are required by case, and they also will make some functions will be available for your case. such as ``write_ok/write_nok``, ``cubrid_createdb`` and ``compare_result_between_files``, and more functions please refer to ``CTP/shell/init_path/init.sh`` file.
+* Case content will end with ``finish`` to clean up your environment and logs.
 
 ## License
 CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details.
