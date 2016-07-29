@@ -120,8 +120,6 @@ public class Test {
 
 			consoleOutput = "";
 			this.testCaseFullName = testCase;
-			workerLog.println("[TESTCASE] " + this.testCaseFullName);
-			System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId);
 			p = testCase.lastIndexOf("cases");
 			this.testCaseDir = testCase.substring(0, p + 5);
 			this.testCaseName = testCase.substring(p + 6);
@@ -130,7 +128,6 @@ public class Test {
 			context.getFeedback().onTestCaseStartEvent(this.testCaseFullName, envIdentify);
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
-			System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId);
 
 			boolean needRetry = true;
 			int retryCount = 0;
@@ -155,8 +152,6 @@ public class Test {
 				this.hasCore = false;
 
 				try {
-					System.out.println("[Retry] " + retryCount);
-					workerLog.println("[Retry] " + retryCount);
 					consoleOutput = runTestCase();
 					doFinalCheck();					
 					collectGeneralResult();
@@ -216,7 +211,8 @@ public class Test {
 					} else {
 						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
 								Constants.SKIP_TYPE_NO, retryCount);
-					}
+						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " " + (testCaseSuccess ? "[OK]" : "[NOK]"));
+					}					
 					
 					workerLog.println("");
 					retryCount++;
