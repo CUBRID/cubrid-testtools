@@ -83,16 +83,16 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	    ```
 	* You can find the details of the test result from ``Test Result Directory``.
 	* You can also use your web browser to examine the result with webconsole service of CTP.
-	  * ``bin/ctp.sh webconsole start`` will show you the URL of the result as follows:
-	    ```
-	    Config: /home/user/CTP/conf/webconsole.conf
-	    Web Root: /home/user/CTP/sql/webconsole
-	    Begin to start ...
-	          
-	    Done
-	    URL:  http://127.0.0.1:8888
-	    ```
-	  * Please open the ``URL`` with your browser.
+	* ``bin/ctp.sh webconsole start`` will show you the URL of the result as follows:
+	  ```
+	  Config: /home/user/CTP/conf/webconsole.conf
+	  Web Root: /home/user/CTP/sql/webconsole
+	  Begin to start ...
+	         
+	  Done
+	  URL:  http://127.0.0.1:8888
+	  ```
+	* Please open the ``URL`` with your browser.
   
 - SHELL
   - Prepare
@@ -130,9 +130,9 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
  - SQL
     
    When you want to write your own test case, please follow the following rules.
-	* Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory. 
-	* Expected results: The file extension is ``.answer`` and it is located in ``answers`` subdirectory. 
-	  - An example for a case is:
+   * Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory. 
+   * Expected results: The file extension is ``.answer`` and it is located in ``answers`` subdirectory. 
+     - An example for a case is:
 	  ```
 	   _08_primary_foreign_key
 	                       /cases
@@ -140,8 +140,8 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
 	                       /answers
 	                             /int_primary_key_test.answer
 	  ```
-	* When you also want to examine query plan of a case, you have two options:
-	  - Create an empty ``case_name.queryPlan`` file in the test case directory, its query plan will be printed with the results of queries. 
+   * When you also want to examine query plan of a case, you have two options:
+     - Create an empty ``case_name.queryPlan`` file in the test case directory, its query plan will be printed with the results of queries. 
 	  ```
 	  _08_primary_foreign_key
 	                       /cases
@@ -156,17 +156,17 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
 	  SELECT /*+ recompile */ median(a) FROM x;
 	  ```
 
-	* You can add "autocommit off;", "autocommit on;" to change autocommit mode. 
+   * You can add "autocommit off;", "autocommit on;" to change autocommit mode. 
 
 - SHELL
-	* Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory.
-	* Case content will start with the script as below
-	  ```
-	  . $init_path/init.sh
-	  init test
-	  ```
-	  The scripts above will initialize the environment variables which are required by case, and they also will make some functions will be available for your case. such as ``write_ok/write_nok``, ``cubrid_createdb`` and ``compare_result_between_files``, and more functions please refer to ``CTP/shell/init_path/init.sh`` file.
-	* Case content will end with ``finish`` to clean up your environment and logs.
+   * Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory.
+   * Case content will start with the script as below
+     ```
+     . $init_path/init.sh
+     init test
+      ```
+     The scripts above will initialize the environment variables which are required by case, and they also will make some functions will be available for your case. such as ``write_ok/write_nok``, ``cubrid_createdb`` and ``compare_result_between_files``, and more functions please refer to ``CTP/shell/init_path/init.sh`` file.
+   * Case content will end with ``finish`` to clean up your environment and logs.
 
 ## License
 CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details.
