@@ -13,7 +13,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 
 
 ## Quick Start
-This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``CCI``, ``Isolation``, ``HA Shell`` and so on. Regarding more information please refer to the related sections.
+This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell`` and so on. Regarding more information please refer to the related sections.
 
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly.
 * Execute a sample test as follows:
@@ -40,7 +40,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 * Please open the URL with your browser.
   
 ## How To Execute
-- SQL 
+- **SQL** 
  - Prepare
 	* Checkout test cases from our GitHub projects or make your own test cases.
 	* Install CUBRID and make sure your environment variable of ``CUBRID`` is correctly set.
@@ -55,10 +55,12 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	    ```
 	    $ bin/ctp.sh sql -c ./conf/sql.conf
 	    ```
+
 	    ```
 	    $ bin/ctp.sh medium -c ./conf/medium.conf
 	    ```
 	* Use interactive mode to debug your SQL/Medium case.
+
 	    ```
             $ bin/ctp.sh sql --interactive
 	    ```
@@ -94,12 +96,10 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  ```
 	* Please open the ``URL`` with your browser.
   
-- SHELL
+- **SHELL**
   - Prepare
-	* Use one server as controller to checkout CTP
-	* Checkout test case from our GitHun project or make your own test cases on testing node, and the current CTP does not support controller is same server machine with testing node.
+	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node, controller and test node can not be deployed on one server machine.
 	* Checkout CTP on testing node for ``SHELL`` case .
-	* Config configuration files, for **Shell** test, you can prepare one configuration file for your testing which is named as ``shell_template_for_[category_name].conf`` or ``shell_template.conf``, and can tune parameters of your configuration file. 
 	* Set ``port`` for broker, cubrid_port_id and ha, you can choose to configure default common port for all instance or configure port for each instance node.
 	* Set instance node for testing environment, it should cover ``host``, ``sshd port``, ``username`` and ``password``, and start with ``env.``, end with ``host, port, user, pwd`` keywords.
 	* Set ``main.testcase.root`` for case root directory.
@@ -108,15 +108,15 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 
  - Run Tests 
 	* For **Shell** test:
+	
 	  ```
-	  $ bin/ctp.sh shell -c ./conf/shell_template_for_[category_name].conf
+	  $ bin/ctp.sh shell -c ./conf/shell.conf
 	  ```   
     
  - Examine the results
 	* Once it completes, you can find the results/logs from ``CTP/shell/result/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this server node.
 	* ``main_snapshot.properties`` will save the configurations for your current testing.
-	* ``runtime.log`` will show all running log 
 	* ``test_${Node_Name}.log`` will show the logs of testing based on this server node.
 
 ## How To Build CTP
@@ -127,7 +127,7 @@ You are not required to build CTP from source codes, unless you make some change
 You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar`` and ``shell/lib/cubridqa-shell.jar``.
 
 ## How To Write Testcase
- - SQL
+ - **SQL**
     
    When you want to write your own test case, please follow the following rules.
    * Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory. 
@@ -158,7 +158,7 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
 
    * You can add "autocommit off;", "autocommit on;" to change autocommit mode. 
 
-- SHELL
+- **SHELL**
    * Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory.
    * Case content will start with the script as below
      ```
@@ -167,6 +167,32 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
       ```
      The scripts above will initialize the environment variables which are required by case, and they also will make some functions will be available for your case. such as ``write_ok/write_nok``, ``cubrid_createdb`` and ``compare_result_between_files``, and more functions please refer to ``CTP/shell/init_path/init.sh`` file.
    * Case content will end with ``finish`` to clean up your environment and logs.
+   * Sample for reference
+     ```
+     	#!/bin/sh
+	. $init_path/init.sh
+	init test
+	dbname=tmpdb
+
+	cubrid_createdb $dbname
+	
+	dosomethings
+	...
+	
+	if [condition]
+	then
+	        write_ok
+	else
+	        write_nok
+	fi
+	
+	cubrid server stop $dbname
+	cubrid broker stop
+	
+	cubrid deletedb $dbname
+	
+	finish
+	```
 
 ## License
 CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details.
