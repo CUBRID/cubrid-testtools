@@ -237,23 +237,23 @@ public class DeployOneNode {
 		brokerFirstPort = context.getInstanceProperty(this.currentEnvId, "broker1.BROKER_PORT");
 		brokerSecondPort = context.getInstanceProperty(this.currentEnvId, "broker2.BROKER_PORT");
 		
-		if (cubridPortId == null && brokerFirstPort == null
-				&& brokerSecondPort == null)
+		if (CommonUtils.isEmpty(cubridPortId) && CommonUtils.isEmpty(brokerFirstPort) && CommonUtils.isEmpty(brokerSecondPort)) {
 			return;
+		}
 		
 		ShellInput scripts = new ShellInput();
 		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
-		if(cubridPortId!=null){
+		if (!CommonUtils.isEmpty(cubridPortId)) {
 			scripts.addCommand("ini.sh -s 'common' -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
 			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
 		}
 		
-		if(brokerFirstPort!=null){
+		if (!CommonUtils.isEmpty(brokerFirstPort)) {
 			scripts.addCommand("ini.sh -s '%query_editor' -u BROKER_PORT=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
 			scripts.addCommand("ini.sh -s '%query_editor' -u APPL_SERVER_SHM_ID=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
 		}
 		
-		if(brokerSecondPort!=null){
+		if (!CommonUtils.isEmpty(brokerSecondPort)) {
 			scripts.addCommand("ini.sh -s '%BROKER1' -u BROKER_PORT=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
 			scripts.addCommand("ini.sh -s '%BROKER1' -u APPL_SERVER_SHM_ID=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
 		}

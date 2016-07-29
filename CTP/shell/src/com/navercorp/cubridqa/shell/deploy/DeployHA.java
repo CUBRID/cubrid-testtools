@@ -27,6 +27,7 @@
 package com.navercorp.cubridqa.shell.deploy;
 
 import com.jcraft.jsch.JSchException;
+import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellInput;
@@ -86,12 +87,11 @@ public class DeployHA {
 		scripts.addCommand("cubrid_broker2_app_server_shm_value=`ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID`");
 		scripts.addCommand("ini.sh -u APPL_SERVER_SHM_ID2=$cubrid_broker2_app_server_shm_value $init_path/HA.properties");
 		
-		String haPortId = context.getInstanceProperty(this.masterEnvId, "ha.ha_port_id"); 
-		if(haPortId != null && haPortId.length()>0){
-			scripts.addCommand("ini.sh -u HA_PORT_ID=" + haPortId + " $init_path/HA.properties");
-		}else{
-			scripts.addCommand("ini.sh -u HA_PORT_ID=59901 $init_path/HA.properties");
-		}
+		String haPortId = context.getInstanceProperty(this.masterEnvId, "ha.ha_port_id");
+		if(CommonUtils.isEmpty(haPortId)) {
+			haPortId = "59901";
+		}		
+		scripts.addCommand("ini.sh -u HA_PORT_ID=" + haPortId + " $init_path/HA.properties");
 		
 		String result="";
 		try {

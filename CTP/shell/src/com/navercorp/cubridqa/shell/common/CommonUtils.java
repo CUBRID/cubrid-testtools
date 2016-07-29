@@ -304,6 +304,13 @@ public class CommonUtils {
 						+ backupFileName + " " + context.getCurrentLogDir(), false, false);
 	}
 	
+	public static boolean isEmpty(String s) {
+		if (s == null) {
+			return true;
+		}
+		return s.trim().equals("");
+	}
+	
 	public static void main(String[] args) throws IOException {
 		System.out.println(getExactFilename("conf/core.1234"));
 		System.out.println(getExactFilename("conf\\core.1234"));
