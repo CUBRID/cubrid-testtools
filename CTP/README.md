@@ -10,11 +10,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configurations.
 * CUBRID QA executes testing for SQL and Medium on linux is based on ha mode, so you must make sure ports in cubrid.conf, cubrid_broker.conf and cubrid_ha.conf will
   not conflict with another instance exists. Otherwise, start server or broker will be fail.
-* For ``Shell`` testing, two environment variables must be added
-  
-  ```
-     JAVA_HOME and init_path=CTP/shell/init_path
-  ```
+* For ``Shell`` testing, two environment variables must be added ``JAVA_HOME`` and ``init_path=CTP/shell/init_path``
 
 ## Quick Start
 This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell`` and so on. Regarding more information please refer to the related sections.
