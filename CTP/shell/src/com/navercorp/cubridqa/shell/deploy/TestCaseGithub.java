@@ -64,7 +64,7 @@ public class TestCaseGithub {
 		//TODO if test case doesn't exist
 		
 		ShellInput scripts = new ShellInput();
-		
+		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
 		String sedCmds;
 		if(context.isWindows()) {
 			sedCmds = "sed 's;\\\\;/;g'|";
@@ -73,7 +73,7 @@ public class TestCaseGithub {
 		}
 		
 		if(context.getCleanTestCase()) {
-			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
+			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch() + "  2>&1");
 		}
 		
 		//scripts.addCommand("cd ");
