@@ -33,9 +33,6 @@ public class Constants {
 	public static final int TYPE_SLAVE = 2;
 	public static final int TYPE_REPLICA = 3;
 
-	public static final String DIR_CONF = "./conf";
-	public static final String DIR_LOG_ROOT = "./log";
-
 	public static String FM_DATE_SNAPSHOT = "yyyyMMdd_hhmmss";
 
 	public static final String HAVE_CHARSET_10 = "10.0.0.0074";

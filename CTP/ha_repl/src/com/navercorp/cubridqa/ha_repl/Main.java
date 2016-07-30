@@ -27,6 +27,7 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import java.io.File;
+
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
@@ -36,8 +37,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.deploy.Deploy;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
@@ -45,11 +46,12 @@ import com.navercorp.cubridqa.ha_repl.impl.FeedbackDB;
 import com.navercorp.cubridqa.ha_repl.impl.FeedbackFile;
 import com.navercorp.cubridqa.ha_repl.impl.FeedbackNull;
 import com.navercorp.cubridqa.ha_repl.migrate.Convert;
+import com.navercorp.cubridqa.ha_repl.Context;
 
 public class Main {
-	public static void main(String[] args1) throws Exception {
+	public static void exec(String configFilename) throws Exception {
 
-		Context context = new Context(CommonUtils.concatFile(Constants.DIR_CONF, "main.properties"));
+		Context context = new Context(configFilename);
 
 		/*
 		 * read test root
@@ -73,77 +75,35 @@ public class Main {
 		String cubridPackageUrl = context.getProperty("main.testbuild.url", "").trim();
 		String differMode = context.getProperty("main.differ.mode", "diff_1");
 
-		String versionId = null;
-		Pattern pattern = Pattern.compile("\\d+\\.\\d+\\.\\d+\\.\\d+");
-		Matcher matcher = pattern.matcher(cubridPackageUrl);
-		while (matcher.find()) {
-			versionId = matcher.group();
-		}
-		if (CommonUtils.isNewBuildNumberSystem(versionId)) {
-			String extensionversionId;
+		context.setBuildId(CommonUtils.getBuildId(cubridPackageUrl));
+		context.setBuildBits(CommonUtils.getBuildBits(cubridPackageUrl));
 
-			int p1 = cubridPackageUrl.lastIndexOf(versionId);
-			int p2 = cubridPackageUrl.indexOf("-", p1 + versionId.length() + 1);
+		System.out.println("BUILD URL: " + cubridPackageUrl);
+		System.out.println("BUILD D: " + context.getBuildId());
+		System.out.println("BUILD BITS: " + context.getBuildBits());		
+		System.out.println("Test Mode: " + context.isContinueMode());
 
-			if (p2 == -1) {
-				p2 = cubridPackageUrl.indexOf(".", p1 + versionId.length() + 1);
-			}
-
-			extensionversionId = p2 == -1 ? cubridPackageUrl.substring(p1) : cubridPackageUrl.substring(p1, p2);
-			context.setVersionId(extensionversionId);
-		} else {
-			context.setVersionId(versionId);
-		}
-		System.out.println("Version Id: " + context.getVersionId());
-
-		// get version (64bit or 32bit)
-		String bits = null;
-		int idx1 = cubridPackageUrl.indexOf("_64");
-		int idx2 = cubridPackageUrl.indexOf("x64");
-		int idx3 = cubridPackageUrl.indexOf("ppc64"); // AIX BUILD.
-														// CUBRID-8.4.4.0136-AIX-ppc64.sh
-
-		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0) {
-			bits = "64bits";
-		} else {
-			bits = "32bits";
-		}
-		context.setBits(bits);
-		System.out.println("Test Version: " + bits);
-
-		System.out.println("Test MODE: " + context.isContinueMode());
-		System.out.println("Test Build: " + cubridPackageUrl);
-
-		ArrayList<String> envList = getIntanceList();
+		ArrayList<String> envList = getIntanceList(context);
 		System.out.println("Available Env: " + envList);
 
 		if (envList.size() == 0) {
 			throw new Exception("Not found any HA instance to test. (ha_instance_<EnvId>_<ON|OFF>.properties)");
 		}
 
-		Feedback feedback;
-		String feedbackType = context.getProperty("main.feedback.type", "").trim();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			feedback = new FeedbackFile(context);
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			feedback = new FeedbackDB(context);
-		} else {
-			feedback = new FeedbackNull(context);
-		}
-		context.setFeedback(feedback);
+
 
 		Properties props = context.getProperties();
 		Set set = props.keySet();
-		Log contextSnapshot = new Log(CommonUtils.concatFile(Constants.DIR_CONF, "main_snapshot.properties"), true, false);
+		Log contextSnapshot = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "main_snapshot.properties"), true, false);
 		for (Object key : set) {
 			contextSnapshot.println(key + "=" + props.getProperty((String) key));
 		}
-		contextSnapshot.println("AUTO_TEST_VERSION=" + context.getVersionId());
-		contextSnapshot.println("AUTO_TEST_BITS=" + context.getBits());
+		contextSnapshot.println("AUTO_TEST_BUILD_ID=" + context.getBuildId());
+		contextSnapshot.println("AUTO_TEST_BUILD_BITS=" + context.getBuildBits());
 		contextSnapshot.close();
 
 		if (!context.isContinueMode()) {
-			feedback.onTaskStartEvent(cubridPackageUrl);
+			context.getFeedback().onTaskStartEvent(cubridPackageUrl);
 			//
 			// /*
 			// * SVN UP for SQL
@@ -156,12 +116,12 @@ public class Main {
 			// /*
 			// * convert phase
 			// */
-			feedback.onConvertEventStart();
+			context.getFeedback().onConvertEventStart();
 			Convert c = new Convert(testRoot);
 			c.convert();
-			feedback.onConvertEventStop();
+			context.getFeedback().onConvertEventStop();
 		} else {
-			feedback.onTaskContinueEvent();
+			context.getFeedback().onTaskContinueEvent();
 		}
 
 		String rebuildEnv = context.getProperty("main.deploy.rebuild", "true");
@@ -179,10 +139,10 @@ public class Main {
 		 */
 		System.out.println("============= DISPATCH STEP ==================");
 		Dispatch.init(context, envList, context.isContinueMode(), testRoot);
-		feedback.setTotalTestCase(Dispatch.getInstance().getTbdSize(), Dispatch.getInstance().getMacroSkippedSize(), Dispatch.getInstance().getTempSkippedSize());
+		context.getFeedback().setTotalTestCase(Dispatch.getInstance().getTbdSize(), Dispatch.getInstance().getMacroSkippedSize(), Dispatch.getInstance().getTempSkippedSize());
 		if (context.isContinueMode() == false) {
-			addSkippedTestCases(feedback, Dispatch.getInstance().getMacroSkippedList(), Constants.SKIP_TYPE_BY_MACRO);
-			addSkippedTestCases(feedback, Dispatch.getInstance().getTempSkippedList(), Constants.SKIP_TYPE_BY_TEMP);
+			addSkippedTestCases(context.getFeedback(), Dispatch.getInstance().getMacroSkippedList(), Constants.SKIP_TYPE_BY_MACRO);
+			addSkippedTestCases(context.getFeedback(), Dispatch.getInstance().getTempSkippedList(), Constants.SKIP_TYPE_BY_TEMP);
 		}
 
 		// System.out.println("============= DISPATCH STEP ==================");
@@ -193,15 +153,15 @@ public class Main {
 		 */
 		System.out.println("============= TEST STEP ==================");
 		concurrentTest(context, envList, context.isContinueMode(), differMode);
-		feedback.onTaskStopEvent();
+		context.getFeedback().onTaskStopEvent();
 
 		System.out.println("DONE.");
 
 	}
 
-	public static ArrayList<String> getIntanceList() {
+	public static ArrayList<String> getIntanceList(Context context) {
 		ArrayList<String> resultList = new ArrayList<String>();
-		String[] subList = new File(Constants.DIR_CONF).list();
+		String[] subList = new File(context.getCurrentLogDir()).list();
 		String reg = "ha_instance_(.*)_(.*?).properties";
 		Pattern pattern = Pattern.compile(reg);
 		Matcher matcher;
@@ -229,7 +189,7 @@ public class Main {
 		pool = Executors.newFixedThreadPool(envList.size() * 2);
 
 		for (final String envId : envList) {
-			String envConfigFilename = CommonUtils.concatFile(Constants.DIR_CONF, "ha_instance_" + envId + "_ON.properties");
+			String envConfigFilename = CommonUtils.concatFile(context.getCurrentLogDir(), "ha_instance_" + envId + "_ON.properties");
 			final Test test = new Test(context, envId, envConfigFilename, isContinueMode, differMode);
 			final TestMonitor monitor = new TestMonitor(context, test);
 			pool.execute(new Runnable() {
@@ -272,7 +232,7 @@ public class Main {
 
 				@Override
 				public void run() {
-					envConfigFilename = CommonUtils.concatFile(Constants.DIR_CONF, "ha_instance_" + envId + "_ON.properties");
+					envConfigFilename = CommonUtils.concatFile(context.getCurrentLogDir(), "ha_instance_" + envId + "_ON.properties");
 					try {
 						// context.getFeedback().onDeployStart(envId);
 						deploy = new Deploy(envId, envConfigFilename, cubridPackageUrl, context);

@@ -29,9 +29,13 @@ package com.navercorp.cubridqa.ha_repl;
 
 import java.io.IOException;
 
+
 import java.util.Properties;
 
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.ha_repl.impl.FeedbackDB;
+import com.navercorp.cubridqa.ha_repl.impl.FeedbackFile;
+import com.navercorp.cubridqa.ha_repl.impl.FeedbackNull;
 
 public class Context {
 
@@ -40,9 +44,13 @@ public class Context {
 	String filename;
 
 	Feedback feedback;
+	
+	private String ctpHome;
+	private String rootLogDir;
+	private String currentLogDir;
 
-	private String versionId;
-	private String bits;
+	private String buildBits;
+	private String buildId;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -51,6 +59,20 @@ public class Context {
 
 	public void reload() throws IOException {
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
+		
+		this.ctpHome = CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
+		setLogDir("ha_repl");
+		
+		Feedback feedback;
+		String feedbackType = getProperty("main.feedback.type", "").trim();
+		if (feedbackType.equalsIgnoreCase("file")) {
+			feedback = new FeedbackFile(this);
+		} else if (feedbackType.equalsIgnoreCase("database")) {
+			feedback = new FeedbackDB(this);
+		} else {
+			feedback = new FeedbackNull(this);
+		}
+		setFeedback(feedback);
 	}
 
 	public void setFeedback(Feedback feedback) {
@@ -67,22 +89,6 @@ public class Context {
 
 	public String getProperty(String key) {
 		return getProperty(key, null);
-	}
-
-	public String getVersionId() {
-		return versionId;
-	}
-
-	public void setVersionId(String versionId) {
-		this.versionId = versionId;
-	}
-
-	public String getBits() {
-		return bits;
-	}
-
-	public void setBits(String bits) {
-		this.bits = bits;
 	}
 
 	public boolean isContinueMode() {
@@ -148,5 +154,37 @@ public class Context {
 	public boolean isFailureBackup() {
 		return getProperty("main.testing.failure.backup", "false").toUpperCase().trim().equals("TRUE");
 	}
+	
+	public void setLogDir(String category) {
+		this.rootLogDir = ctpHome + "/result/" + category;
+		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
+	}
+	
+	public String getCurrentLogDir() {
+		return this.currentLogDir;
+	}
+	
+	public String getLogRootDir() {
+		return this.rootLogDir;
+	}
+	
+	public String getCtpHome() {
+		return this.ctpHome;
+	}
+	
+	public void setBuildId(String buildId) {
+		this.buildId = buildId;
+	}
 
+	public String getBuildId() {
+		return this.buildId;
+	}
+
+	public void setBuildBits(String bits) {
+		this.buildBits = bits;
+	}
+
+	public String getBuildBits() {
+		return this.buildBits;
+	}
 }

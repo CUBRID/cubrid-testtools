@@ -27,20 +27,16 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-
-
-
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Set;
-
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
+import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.GeneralShellInput;
 
-public class CUBRID_HA_Util {
+public class HAUtils {
 
 	private static int MAX_TRY_WAIT_STATUS = 180;
 
@@ -86,7 +82,7 @@ public class CUBRID_HA_Util {
 			}
 		}
 
-		if (CommonUtils.haveCharsetToCreateDB(context.getVersionId())) {
+		if (haveCharsetToCreateDB(context.getBuildId())) {
 			// use different DBcharset to run test
 			String dbCharset = context.getProperty("main.db.charset", "").trim();
 			if (dbCharset.equals("")) {
@@ -160,5 +156,56 @@ public class CUBRID_HA_Util {
 		slaveAndReplicaList.addAll(hostManager.getAllHost("slave"));
 		slaveAndReplicaList.addAll(hostManager.getAllHost("replica"));
 		return slaveAndReplicaList;
+	}
+	
+	public static ArrayList<String[]> extractTableToBeVerified(String input, String flag) {
+
+		ArrayList<String[]> list = new ArrayList<String[]>();
+		if (input == null)
+			return list;
+
+		Pattern pattern = Pattern.compile("'" + flag + "'\\s*'(.*?)'\\s*([0-9]*)");
+		Matcher matcher = pattern.matcher(input);
+
+		String[] item;
+
+		while (matcher.find()) {
+			item = new String[2];
+			item[0] = matcher.group(1);
+			item[1] = matcher.group(2);
+
+			list.add(item);
+		}
+		return list;
+
+	}
+
+	public static int greaterThanVersion(String v1, String v2) {
+		String[] a1 = v1.split("\\.");
+		String[] a2 = v2.split("\\.");
+		int p1, p2;
+		for (int i = 0; i < 4; i++) {
+			p1 = Integer.parseInt(a1[i]);
+			p2 = Integer.parseInt(a2[i]);
+			if (p1 == p2)
+				continue;
+			return (p1 > p2) ? 1 : -1;
+		}
+		return 0;
+	}
+
+	public static int getVersionNum(String versionId, int pos) {
+		String[] arr = versionId.split("\\.");
+		return Integer.parseInt(arr[pos - 1]);
+	}
+
+	public static boolean haveCharsetToCreateDB(String versionId) {
+		if (greaterThanVersion(versionId, Constants.HAVE_CHARSET_10) >= 0) {
+			return true;
+		} else if (getVersionNum(versionId, 1) == 9 && greaterThanVersion(versionId, Constants.HAVE_CHARSET_9) >= 0) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

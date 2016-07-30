@@ -27,12 +27,13 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import java.io.File;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 
 public class TestReader {

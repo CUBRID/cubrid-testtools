@@ -28,10 +28,8 @@ package com.navercorp.cubridqa.ha_repl;
 
 import java.util.ArrayList;
 
-
-
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.GeneralShellInput;
@@ -49,7 +47,7 @@ public class TestMonitor {
 
 		this.context = context;
 		this.test = test;
-		this.log = new Log(CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "monitor_" + test.envId + ".log"), false, test.isContinueMode);
+		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(),  "monitor_" + test.envId + ".log"), false, test.isContinueMode);
 
 		hostManager = new HostManager(test.props);
 		this.master = hostManager.getHost("master");

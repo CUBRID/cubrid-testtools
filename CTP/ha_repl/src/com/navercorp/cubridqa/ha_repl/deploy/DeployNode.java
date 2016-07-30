@@ -29,12 +29,12 @@ package com.navercorp.cubridqa.ha_repl.deploy;
 import java.util.ArrayList;
 
 
+
 import java.util.Properties;
 import java.util.Set;
 
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.HostManager;
-import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.GeneralShellInput;
@@ -68,7 +68,7 @@ public class DeployNode {
 		this.type = type;
 		this.hostManager = hostManager;
 		this.context = context;
-		this.deploylog = new Log(Constants.DIR_LOG_ROOT + "/deploy_" + envId + ".log", true, true);
+		this.deploylog = new Log(context.getCurrentLogDir() + "/deploy_" + envId + ".log", true, true);
 	}
 
 	public void deploy() throws Exception {
@@ -268,7 +268,7 @@ public class DeployNode {
 	private boolean is_above_banana_vesion() throws Exception {
 		boolean flag = false;
 
-		String buildId = context.getVersionId();
+		String buildId = context.getBuildId();
 		String arr[] = buildId.split("\\.");
 
 		deploylog.log("Version number:" + buildId);

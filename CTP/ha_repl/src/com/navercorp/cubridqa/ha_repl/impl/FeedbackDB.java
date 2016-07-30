@@ -28,6 +28,7 @@ package com.navercorp.cubridqa.ha_repl.impl;
 
 import java.sql.Connection;
 
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -42,9 +43,9 @@ import org.apache.commons.dbcp.BasicDataSource;
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.Feedback;
 import com.navercorp.cubridqa.ha_repl.HostManager;
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.shell.common.HttpUtil;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 
 public class FeedbackDB implements Feedback {
@@ -73,12 +74,8 @@ public class FeedbackDB implements Feedback {
 
 		Timestamp d = new Timestamp(System.currentTimeMillis());
 
-		String versionId = context.getVersionId();
-
 		String category = context.getProperty("main.testing.category");
 		String os = context.getProperty("main.testing.os");
-
-		String bits = context.getBits();
 
 		sql = "insert into ha_repl_main(test_build, category, start_time, os, version) values(?, ?, ?, ?, ?)";
 
@@ -87,11 +84,11 @@ public class FeedbackDB implements Feedback {
 		try {
 			conn = createConnection();
 			stmt = conn.prepareStatement(sql);
-			stmt.setString(1, versionId);
+			stmt.setString(1, context.getBuildId());
 			stmt.setString(2, category);
 			stmt.setTimestamp(3, d);
 			stmt.setString(4, os);
-			stmt.setString(5, bits);
+			stmt.setString(5, context.getBuildBits());
 			stmt.executeUpdate();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -115,7 +112,7 @@ public class FeedbackDB implements Feedback {
 			close(conn);
 		}
 
-		Log log = new Log(CommonUtils.concatFile(Constants.DIR_CONF, "current_task_id"), false, false);
+		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
 		log.println(String.valueOf(task_id));
 		log.close();
 	}
@@ -127,7 +124,7 @@ public class FeedbackDB implements Feedback {
 
 		String cont = null;
 		try {
-			cont = CommonUtils.getFileContent(CommonUtils.concatFile(Constants.DIR_CONF, "current_task_id"));
+			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"));
 			this.task_id = Integer.parseInt(cont.trim());
 		} catch (Exception e) {
 			this.task_id = -1;

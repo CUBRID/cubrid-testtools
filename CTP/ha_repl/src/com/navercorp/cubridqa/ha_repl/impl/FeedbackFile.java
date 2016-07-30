@@ -29,14 +29,15 @@ package com.navercorp.cubridqa.ha_repl.impl;
 import java.util.ArrayList;
 
 
+
 import java.util.Date;
 
-import com.navercorp.cubridqa.ha_repl.CUBRID_HA_Util;
+import com.navercorp.cubridqa.ha_repl.HAUtils;
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.Feedback;
 import com.navercorp.cubridqa.ha_repl.HostManager;
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.GeneralShellInput;
@@ -49,7 +50,7 @@ public class FeedbackFile implements Feedback {
 	Context context;
 
 	public FeedbackFile(Context context) {
-		logName = CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "feedback.log");
+		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
 		this.context = context;
 	}
 
@@ -142,7 +143,7 @@ public class FeedbackFile implements Feedback {
 		String role = context.getProperty("main.testing.role", "").trim();
 
 		if (role.indexOf("coverage") != -1) {
-			String build_id = context.getVersionId();
+			String build_id = context.getBuildId();
 			String category = context.getProperty("main.testing.category", "").trim();
 			String c_user = context.getProperty("main.coverage.user", "").trim();
 			String c_pwd = context.getProperty("main.coverage.pwd", "").trim();
@@ -152,7 +153,7 @@ public class FeedbackFile implements Feedback {
 
 			String svnParams = " --username " + context.getProperty("main.svn.user", "").trim() + " --password " + context.getProperty("main.svn.pwd", "").trim()
 					+ " --non-interactive --no-auth-cache ";
-			ArrayList<SSHConnect> list = CUBRID_HA_Util.getAllNodeList(hostManager);
+			ArrayList<SSHConnect> list = HAUtils.getAllNodeList(hostManager);
 			for (SSHConnect ssh : list) {
 				try {
 

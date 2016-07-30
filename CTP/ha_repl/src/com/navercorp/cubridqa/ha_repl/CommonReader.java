@@ -29,13 +29,14 @@ package com.navercorp.cubridqa.ha_repl;
 
 import java.io.File;
 
+
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.Properties;
 
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
-import com.navercorp.cubridqa.ha_repl.common.Constants;
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Constants;
 
 public class CommonReader {
 
