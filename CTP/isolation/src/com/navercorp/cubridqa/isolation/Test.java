@@ -73,7 +73,7 @@ public class Test {
 
 		String host = context.getInstanceProperty(currEnvId, "ssh.host");
 		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty( currEnvId, "sh.user");
+		String user = context.getInstanceProperty( currEnvId, "ssh.user");
 		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
 
 		resetSSH();
@@ -176,12 +176,11 @@ public class Test {
 	public boolean runTestCase() throws Exception {
 
 		String result;
-		IsolationShellInput script = new IsolationShellInput("cd ");		
-		script.addCommand("cd ${ctlpath}");
+		IsolationShellInput script = new IsolationShellInput("cd;pwd ");		
 		script.addCommand("ulimit -c unlimited");
 		script.addCommand("export TEST_ID=" + this.context.getFeedback().getTaskId());
-		script.addCommand("sh runone.sh -r " + context.getProperty("main.testcase.retry") + " $HOME/" + testCaseFullName + " " + context.getProperty("main.testcase.timeout") + " "
-				+ context.getTestingDatabase());
+		script.addCommand("sh $ctlpath/runone.sh -r " + context.getProperty("main.testcase.retry") + " " + testCaseFullName + " " + context.getProperty("main.testcase.timeout") + " "
+				+ context.getTestingDatabase() + " 2>&1");
 		result = ssh.execute(script);
 		workerLog.println(result);
 
@@ -257,7 +256,7 @@ public class Test {
 
 		String host = context.getInstanceProperty(currEnvId, "ssh.host");
 		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "sh.user");
+		String user = context.getInstanceProperty(currEnvId, "ssh.user");
 		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 
 		this.ssh = new SSHConnect(host, port, user, pwd);

@@ -24,63 +24,59 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
+package com.navercorp.cubridqa.ha_repl.migrate;
 
-package com.navercorp.cubridqa.isolation.deploy;
+import java.io.File;
 
-import com.navercorp.cubridqa.isolation.Context;
+public class Convert {
 
-import com.navercorp.cubridqa.common.CommonUtils;
-import com.navercorp.cubridqa.common.Log;
+	String rootFilename;
+	int count = 0;
 
-public class Deploy {
-
-	Context context;
-	String currEnvId;
-	String cubridPackageUrl;
-
-	String host, port, user, pwd;
-	String[] relatedHosts;
-	String envIdentify;
-
-	Log log;
-
-	public Deploy(Context context, String currEnvId) throws Exception {
-		this.context = context;
-		this.currEnvId = currEnvId;
-
-		this.host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
-
-		this.cubridPackageUrl = context.getCubridPackageUrl();
-
-		this.relatedHosts = context.getInstanceProperty(currEnvId, "host.related", "").split(",");
-
-		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, context.isContinueMode());
+	public Convert(String rootFilename) {
+		this.rootFilename = rootFilename;
 	}
 
-	public void deploy() throws Exception {
-		context.getFeedback().onDeployStart(envIdentify);
+	public static void main(String[] args) throws Exception {
+		// Convert c = new Convert("D:\\_20_apricot_qa");
+		Convert c = new Convert("./1016.sql");
+		// Convert c = new Convert("./update_order_by_001.sql");
+		// Convert c = new Convert("./test/sql");
+		c.convert();
+	}
 
-		DeployOneNode d = new DeployOneNode(context, currEnvId, host, log);
-		d.deploy();
-		d.close();
+	public void convert() throws Exception {
+		travel(new File(rootFilename));
+		System.out.println("Finished covert files: " + count);
+	}
 
-		for (String h : relatedHosts) {
-			if (h == null || h.trim().equals(""))
-				continue;
-
-			d = new DeployOneNode(context, currEnvId, h, log);
-			d.deploy();
-			d.close();
+	private void travel(File testCaseFile) throws Exception {
+		if (testCaseFile.isDirectory()) {
+			File[] subList = testCaseFile.listFiles();
+			for (File subFile : subList) {
+				travel(subFile);
+			}
+		} else {
+			if (testCaseFile.getName().toUpperCase().endsWith(".SQL")) {
+				convert(testCaseFile);
+			}
 		}
-
-		context.getFeedback().onDeployStop(envIdentify);
 	}
 
-	public void close() {
-		this.log.close();
-	}
+	private void convert(File f) throws Exception {
 
+		// Print the convert number.
+		// added by cn15209 2012.09.11
+		if (count % 100 == 0) {
+			System.out.println(count);
+		}
+		count++;
+		// System.out.println(count + ". " + f.getAbsolutePath());
+		SQLFileReader r = new SQLFileReader(f);
+		try {
+			r.convert();
+		} finally {
+			r.close();
+		}
+	}
 }

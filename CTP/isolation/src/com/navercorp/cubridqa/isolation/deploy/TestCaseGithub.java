@@ -46,11 +46,10 @@ public class TestCaseGithub {
 		this.currEnvId = currEnvId;
 		String host = context.getInstanceProperty(currEnvId, "ssh.host");
 		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "sh.user");
+		String user = context.getInstanceProperty(currEnvId, "ssh.user");
 		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 
 		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
-
 		this.ssh = new SSHConnect(host, port, user, pwd);
 
 	}

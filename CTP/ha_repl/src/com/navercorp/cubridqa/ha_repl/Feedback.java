@@ -24,63 +24,36 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
+package com.navercorp.cubridqa.ha_repl;
 
-package com.navercorp.cubridqa.isolation.deploy;
-
-import com.navercorp.cubridqa.isolation.Context;
-
-import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 
-public class Deploy {
+public interface Feedback {
 
-	Context context;
-	String currEnvId;
-	String cubridPackageUrl;
+	public void onTaskStartEvent(String buildFilename);
 
-	String host, port, user, pwd;
-	String[] relatedHosts;
-	String envIdentify;
+	public void onTaskContinueEvent();
 
-	Log log;
+	public void onTaskStopEvent();
 
-	public Deploy(Context context, String currEnvId) throws Exception {
-		this.context = context;
-		this.currEnvId = currEnvId;
+	public void setTotalTestCase(int tbdNum, int macroSkippedNum, int tempSkippedNum);
 
-		this.host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
+	public void onTestCaseStartEvent(String testCase, String envIdentify);
 
-		this.cubridPackageUrl = context.getCubridPackageUrl();
+	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedKind);
 
-		this.relatedHosts = context.getInstanceProperty(currEnvId, "host.related", "").split(",");
+	public void onTestCaseMonitor(String testCase, String action, String envIdentify);
 
-		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, context.isContinueMode());
-	}
+	public void onDeployStart(String envIdentify);
 
-	public void deploy() throws Exception {
-		context.getFeedback().onDeployStart(envIdentify);
+	public void onDeployStop(String envIdentify);
 
-		DeployOneNode d = new DeployOneNode(context, currEnvId, host, log);
-		d.deploy();
-		d.close();
+	public void onConvertEventStart();
 
-		for (String h : relatedHosts) {
-			if (h == null || h.trim().equals(""))
-				continue;
+	public void onConvertEventStop();
 
-			d = new DeployOneNode(context, currEnvId, h, log);
-			d.deploy();
-			d.close();
-		}
+	public int getTaskId();
 
-		context.getFeedback().onDeployStop(envIdentify);
-	}
-
-	public void close() {
-		this.log.close();
-	}
+	public void onStopEnvEvent(HostManager hostManager, Log log);
 
 }
