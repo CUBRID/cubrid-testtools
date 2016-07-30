@@ -161,7 +161,7 @@ public class Dispatch {
 
 		String host = context.getInstanceProperty(envId, "ssh.host");
 		String port = context.getInstanceProperty(envId, "ssh.port");
-		String user = context.getInstanceProperty(envId, "sh.user");
+		String user = context.getInstanceProperty(envId, "ssh.user");
 		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
@@ -200,7 +200,7 @@ public class Dispatch {
 
 		String host = context.getInstanceProperty(envId, "ssh.host");
 		String port = context.getInstanceProperty(envId, "ssh.port");
-		String user = context.getInstanceProperty(envId, "sh.user");
+		String user = context.getInstanceProperty(envId, "ssh.user");
 		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd);

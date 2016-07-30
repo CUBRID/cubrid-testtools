@@ -51,10 +51,10 @@ public class DeployOneNode {
 		this.currEnvId = currEnvId;
 
 		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "sh.user");
+		String user = context.getInstanceProperty(currEnvId, "ssh.user");
 		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
-
+		System.out.println(envIdentify);
 		this.ssh = new SSHConnect(host, port, user, pwd);
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
@@ -68,7 +68,7 @@ public class DeployOneNode {
 		String role = context.getProperty("main.testing.role", "").trim();
 		log.print("Start Install Build");
 		IsolationShellInput scripts = new IsolationShellInput();
-		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim());
+		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
 		String buildId = context.getBuildId();
 		String[] arr = buildId.split("\\.");
 		if (Integer.parseInt(arr[0]) >= 10) {
@@ -81,7 +81,7 @@ public class DeployOneNode {
 			result = ssh.execute(scripts);
 			log.println(result);
 		} catch (Exception e) {
-			log.print("[ERROR] " + e.getMessage());
+			log.println("[ERROR] " + e.getMessage());
 		}
 		
 		updateCUBRIDConfigurations();

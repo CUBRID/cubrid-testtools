@@ -24,19 +24,21 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
+package com.navercorp.cubridqa.ha_repl.impl;
 
-package com.navercorp.cubridqa.isolation.impl;
+import java.util.ArrayList;
 
 import java.util.Date;
 
-import com.jcraft.jsch.JSchException;
-import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.ha_repl.CUBRID_HA_Util;
+import com.navercorp.cubridqa.ha_repl.Context;
+import com.navercorp.cubridqa.ha_repl.Feedback;
+import com.navercorp.cubridqa.ha_repl.HostManager;
+import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
+import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.isolation.Constants;
-import com.navercorp.cubridqa.isolation.Context;
-import com.navercorp.cubridqa.isolation.Feedback;
-import com.navercorp.cubridqa.isolation.IsolationShellInput;
-import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.ha_repl.common.SSHConnect;
+import com.navercorp.cubridqa.ha_repl.common.ShellInput;
 
 public class FeedbackFile implements Feedback {
 
@@ -46,7 +48,7 @@ public class FeedbackFile implements Feedback {
 	Context context;
 
 	public FeedbackFile(Context context) {
-		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
+		logName = CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "feedback.log");
 		this.context = context;
 	}
 
@@ -66,13 +68,13 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onTaskStopEvent() {
 		long taskStopTime = System.currentTimeMillis();
-		println("[TEST STOP] Current Time is " + new Date(), "Elapse Time:" + ((taskStopTime - this.taskStartTime)));
+		println("[TASK STOP] Current Time is " + new Date(), "Elapse Time:" + ((taskStopTime - this.taskStartTime)));
 		feedbackLog.close();
 	}
 
 	@Override
 	public void setTotalTestCase(int tbdNum, int macroSkippedNum, int tempSkippedNum) {
-		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
+		println("Total: " + (tbdNum + macroSkippedNum + tempSkippedNum) + ", tbd: " + tbdNum + ", skipped: " + (tempSkippedNum + macroSkippedNum));
 	}
 
 	@Override
@@ -88,15 +90,15 @@ public class FeedbackFile implements Feedback {
 			head = "[UNKNOWN]";
 		}
 
-		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
+		println(head + " " + testCase + " " + elapseTime + " " + envIdentify + " " + (hasCore ? "FOUND CORE" : "") + " " + (isTimeOut ? "TIMEOUT" : ""), resultCont, "");
 	}
 
 	@Override
 	public void onTestCaseStartEvent(String testCase, String envIdentify) {
-		// TODO Auto-generated method stub
+		println("[TEST CASE] START " + testCase + " " + envIdentify);
 	}
 
-	private synchronized void println(String... conts) {
+	protected synchronized void println(String... conts) {
 		for (String cont : conts) {
 			feedbackLog.println(cont);
 		}
@@ -104,79 +106,71 @@ public class FeedbackFile implements Feedback {
 
 	@Override
 	public void onTestCaseMonitor(String testCase, String action, String envIdentify) {
-		println(action + " " + testCase + " " + envIdentify);
+		println("[MONITOR]" + action + " " + testCase + " " + envIdentify);
 	}
 
 	@Override
 	public void onDeployStart(String envIdentify) {
-		// TODO Auto-generated method stub
+		println("[DEPLOY] START " + envIdentify);
 
 	}
 
 	@Override
 	public void onDeployStop(String envIdentify) {
-		// TODO Auto-generated method stub
+		println("[DEPLOY] STOP " + envIdentify);
 
 	}
 
 	@Override
-	public void onTestCaseUpdateStart(String envIdentify) {
-		// TODO Auto-generated method stub
+	public void onConvertEventStart() {
+		println("[CONVERT] START");
 
 	}
 
 	@Override
-	public void onTestCaseUpdateStop(String envIdentify) {
-		// TODO Auto-generated method stub
+	public void onConvertEventStop() {
+		println("[CONVERT] STOP");
 	}
 
-	public String getTaskId() {
-		return "0";
+	public int getTaskId() {
+		return -1;
 	}
 
 	@Override
-	public void onStopEnvEvent(String envIdentify) {
+	public void onStopEnvEvent(HostManager hostManager, Log log) {
 		String role = context.getProperty("main.testing.role", "").trim();
-		SSHConnect ssh = null;
+
 		if (role.indexOf("coverage") != -1) {
-			println("[Code Coverage] Current Time is " + new Date());
-			feedbackLog.print("[Code Coverage] start code coverage data collection!");
-			String covHost = context.getProperty("main.coverage.controller.ip", "").trim();
-			String covUser = context.getProperty("main.coverage.controller.user", "").trim();
-			String covPwd = context.getProperty("main.coverage.controller.pwd", "").trim();
-			String covPort = context.getProperty("main.coverage.controller.port", "").trim();
-			String covTargetDir = context.getProperty("main.coverage.controller.result", "").trim();
-			String category = context.getProperty("main.testing.category");
-			String covParams = "-n " + context.getBuildId() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
-			String host = context.getInstanceProperty(envIdentify, "ssh.host");
-			String port = context.getInstanceProperty(envIdentify, "ssh.port");
-			String user = context.getInstanceProperty(envIdentify, "ssh.user");
-			String pwd = context.getInstanceProperty(envIdentify, "ssh.pwd");
-			envIdentify = "EnvId=" + envIdentify + "[" + user + "@" + host + ":" + port + "]";
-			try {
-				ssh = new SSHConnect(host, port, user, pwd);
+			String build_id = context.getVersionId();
+			String category = context.getProperty("main.testing.category", "").trim();
+			String c_user = context.getProperty("main.coverage.user", "").trim();
+			String c_pwd = context.getProperty("main.coverage.pwd", "").trim();
+			String c_ip = context.getProperty("main.coverage.ip", "").trim();
+			String c_port = context.getProperty("main.coverage.port", "").trim();
+			String c_dir = context.getProperty("main.coverage.dir", "").trim();
 
-				IsolationShellInput scripts = new IsolationShellInput();
-				scripts.addCommand("run_coverage_collect_and_upload " + covParams);
-				String result;
+			String svnParams = " --username " + context.getProperty("main.svn.user", "").trim() + " --password " + context.getProperty("main.svn.pwd", "").trim()
+					+ " --non-interactive --no-auth-cache ";
+			ArrayList<SSHConnect> list = CUBRID_HA_Util.getAllNodeList(hostManager);
+			for (SSHConnect ssh : list) {
 				try {
-					result = ssh.execute(scripts);
-					feedbackLog.println(result);
+
+					ShellInput scripts = new ShellInput();
+
+					scripts.addCommand("   cd ~/cubrid_common");
+					scripts.addCommand("   svn revert upgrade.sh; svn up " + svnParams + " upgrade.sh ");
+					scripts.addCommand("  sh upgrade.sh 2>&1");
+					scripts.addCommand(
+							"  run_coverage_collect_and_upload -n " + build_id + " -c " + category + " -user " + c_user + " -pwd " + c_pwd + " -host " + c_ip + " -to " + c_dir + " -port " + c_port);
+					scripts.addCommand(" ");
+
+					String result = ssh.execute(scripts);
+					log.println(scripts.toString());
+					log.println(result);
 				} catch (Exception e) {
-					feedbackLog.print("[ERROR] " + e.getMessage());
+					log.println("ip:" + ssh.getHost() + "  user:" + ssh.getUser() + " exception:" + e.getMessage());
 				}
-			} catch (JSchException jschE) {
-				jschE.printStackTrace();
-			} finally {
-				if (ssh != null) {
-					ssh.close();
-				}
-
-				println("[Code Coverage] end code coverage collection on " + envIdentify);
-				feedbackLog.print("[Code Coverage] end code coverage collection on " + envIdentify);
 			}
-
 		}
-
 	}
 }

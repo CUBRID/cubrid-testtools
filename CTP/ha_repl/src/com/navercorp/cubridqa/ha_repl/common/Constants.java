@@ -24,63 +24,29 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
+package com.navercorp.cubridqa.ha_repl.common;
 
-package com.navercorp.cubridqa.isolation.deploy;
+public class Constants {
+	public static final String LINE_SEPARATOR = System.getProperty("line.separator");;
 
-import com.navercorp.cubridqa.isolation.Context;
+	public static final int TYPE_MASTER = 1;
+	public static final int TYPE_SLAVE = 2;
+	public static final int TYPE_REPLICA = 3;
 
-import com.navercorp.cubridqa.common.CommonUtils;
-import com.navercorp.cubridqa.common.Log;
+	public static final String DIR_CONF = "./conf";
+	public static final String DIR_LOG_ROOT = "./log";
 
-public class Deploy {
+	public static String FM_DATE_SNAPSHOT = "yyyyMMdd_hhmmss";
 
-	Context context;
-	String currEnvId;
-	String cubridPackageUrl;
+	public static final String HAVE_CHARSET_10 = "10.0.0.0074";
+	public static final String HAVE_CHARSET_9 = "9.2.0.0067";
 
-	String host, port, user, pwd;
-	String[] relatedHosts;
-	String envIdentify;
+	public static final String SKIP_TYPE_NO = "0";
+	public static final String SKIP_TYPE_BY_MACRO = "1"; // Not implement.
+															// Please ignore. By
+															// Fan
+	public static final String SKIP_TYPE_BY_TEMP = "2";
 
-	Log log;
-
-	public Deploy(Context context, String currEnvId) throws Exception {
-		this.context = context;
-		this.currEnvId = currEnvId;
-
-		this.host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
-
-		this.cubridPackageUrl = context.getCubridPackageUrl();
-
-		this.relatedHosts = context.getInstanceProperty(currEnvId, "host.related", "").split(",");
-
-		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, context.isContinueMode());
-	}
-
-	public void deploy() throws Exception {
-		context.getFeedback().onDeployStart(envIdentify);
-
-		DeployOneNode d = new DeployOneNode(context, currEnvId, host, log);
-		d.deploy();
-		d.close();
-
-		for (String h : relatedHosts) {
-			if (h == null || h.trim().equals(""))
-				continue;
-
-			d = new DeployOneNode(context, currEnvId, h, log);
-			d.deploy();
-			d.close();
-		}
-
-		context.getFeedback().onDeployStop(envIdentify);
-	}
-
-	public void close() {
-		this.log.close();
-	}
+	public static final String DIR_ERROR_BACKUP = "~/ERROR_BACKUP";
 
 }

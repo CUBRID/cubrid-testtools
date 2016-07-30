@@ -72,11 +72,11 @@ public class Context {
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
 		this.envList = initEnvList(config);
 		this.ctpHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
-
+		setLogDir("isolation");
+		
 		this.shouldUpdateTestCase = getProperty("main.testcase.update_yn", "false").equalsIgnoreCase("true");
 		this.isWindows = getProperty("main.testing.platform", "linux").equalsIgnoreCase("windows");
 		this.isContinueMode = getProperty("main.mode.continue", "false").equalsIgnoreCase("true");
-		
 		String feedbackType = getProperty("main.feedback.type", "").trim();
 		if (feedbackType.equalsIgnoreCase("file")) {
 			this.feedback = new FeedbackFile(this);
@@ -85,8 +85,6 @@ public class Context {
 		} else {
 			this.feedback = new FeedbackNull();
 		}
-		
-		setLogDir("isolation");
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {

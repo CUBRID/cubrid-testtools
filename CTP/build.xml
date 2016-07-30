@@ -49,6 +49,9 @@
 		<javac srcdir="isolation/src" destdir="${build}">
 			<classpath refid="libs" />
 		</javac>
+		<javac srcdir="ha_repl/src" destdir="${build}">
+			<classpath refid="libs" />
+		</javac>
 		<javac srcdir="shell/init_path/commonforjdbc_src" destdir="${build}">
 		</javac>
 	</target>
@@ -60,6 +63,7 @@
 		<delete dir="sql/lib/cubridqa-cqt.jar" />		
 		<delete dir="shell/lib/cubridqa-shell.jar" />
 		<delete dir="shell/lib/cubridqa-isolation.jar" />
+		<delete dir="shell/lib/cubridqa-ha_repl.jar" />
 	</target>
 
 	<target name="dist" depends="clean,compile" description="generate the distribution">
@@ -83,6 +87,9 @@
 		</jar>
 		<jar jarfile="isolation/lib/cubridqa-isolation.jar" manifest="isolation/lib/MANIFEST.MF" basedir="${build}">			
 			<include name="com/navercorp/cubridqa/isolation/**/*.class" />
+		</jar>
+		<jar jarfile="ha_repl/lib/cubridqa-ha_repl.jar" manifest="ha_repl/lib/MANIFEST.MF" basedir="${build}">			
+			<include name="com/navercorp/cubridqa/ha_repl/**/*.class" />
 		</jar>
 		<!--delete dir="${build}" / -->
 	</target>
