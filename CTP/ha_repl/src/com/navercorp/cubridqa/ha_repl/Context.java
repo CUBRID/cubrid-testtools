@@ -28,6 +28,7 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import java.io.IOException;
+
 import java.util.Properties;
 
 import com.navercorp.cubridqa.ha_repl.common.CommonUtils;

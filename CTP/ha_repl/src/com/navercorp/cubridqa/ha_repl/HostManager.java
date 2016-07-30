@@ -27,13 +27,14 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import java.util.ArrayList;
+
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 
-import com.navercorp.cubridqa.ha_repl.common.SSHConnect;
-import com.navercorp.cubridqa.ha_repl.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.GeneralShellInput;
 
 public class HostManager {
 
@@ -77,7 +78,7 @@ public class HostManager {
 		if (this.hostTable.contains(hostId)) {
 			throw new Exception("host already existed");
 		}
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh = new SSHConnect(host, String.valueOf(port), user, pwd);
 		ssh.setTitle(hostId);
 		System.out.println("  success");
 		this.hostTable.put(hostId, ssh);
@@ -88,7 +89,7 @@ public class HostManager {
 		Set set = hostTable.keySet();
 		Iterator it = set.iterator();
 		SSHConnect ssh;
-		ShellInput script = new ShellInput("echo HELLO");
+		GeneralShellInput script = new GeneralShellInput("echo HELLO");
 		String result;
 		while (it.hasNext()) {
 			ssh = hostTable.get(it.next());

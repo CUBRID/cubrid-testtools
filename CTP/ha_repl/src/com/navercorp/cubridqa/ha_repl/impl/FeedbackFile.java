@@ -28,6 +28,7 @@ package com.navercorp.cubridqa.ha_repl.impl;
 
 import java.util.ArrayList;
 
+
 import java.util.Date;
 
 import com.navercorp.cubridqa.ha_repl.CUBRID_HA_Util;
@@ -37,8 +38,8 @@ import com.navercorp.cubridqa.ha_repl.HostManager;
 import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.ha_repl.common.SSHConnect;
-import com.navercorp.cubridqa.ha_repl.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.GeneralShellInput;
 
 public class FeedbackFile implements Feedback {
 
@@ -155,7 +156,7 @@ public class FeedbackFile implements Feedback {
 			for (SSHConnect ssh : list) {
 				try {
 
-					ShellInput scripts = new ShellInput();
+					GeneralShellInput scripts = new GeneralShellInput();
 
 					scripts.addCommand("   cd ~/cubrid_common");
 					scripts.addCommand("   svn revert upgrade.sh; svn up " + svnParams + " upgrade.sh ");

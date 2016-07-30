@@ -28,14 +28,17 @@ package com.navercorp.cubridqa.ha_repl;
 
 import java.util.ArrayList;
 
+
+
+
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Set;
 
 import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.ha_repl.common.SSHConnect;
-import com.navercorp.cubridqa.ha_repl.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.GeneralShellInput;
 
 public class CUBRID_HA_Util {
 
@@ -65,7 +68,7 @@ public class CUBRID_HA_Util {
 		s.append("rm -rf ").append(dbName.trim() + "*").append(";");
 		s.append("cd ~;");
 
-		ShellInput script = new ShellInput(s.toString());
+		GeneralShellInput script = new GeneralShellInput(s.toString());
 		for (SSHConnect ssh : allHosts) {
 			ssh.execute(script);
 		}
@@ -98,7 +101,7 @@ public class CUBRID_HA_Util {
 		s.append("cubrid broker start").append(";");
 		s.append("cd ~;");
 
-		script = new ShellInput(s.toString());
+		script = new GeneralShellInput(s.toString());
 
 		SSHConnect master = hostManager.getHost("master");
 		log.println("------------ MASTER : CREATE DATABASE -----------------");
@@ -132,7 +135,7 @@ public class CUBRID_HA_Util {
 	}
 
 	private static boolean waitDatabaseReady(SSHConnect ssh, String dbName, String expectedStatus, Log log, int maxTry) throws Exception {
-		ShellInput script = new ShellInput("cubrid changemode " + dbName);
+		GeneralShellInput script = new GeneralShellInput("cubrid changemode " + dbName);
 		String result;
 		while (maxTry-- > 0) {
 			result = ssh.execute(script);

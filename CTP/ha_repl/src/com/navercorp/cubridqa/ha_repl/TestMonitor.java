@@ -29,11 +29,12 @@ package com.navercorp.cubridqa.ha_repl;
 import java.util.ArrayList;
 
 
+
 import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.ha_repl.common.SSHConnect;
-import com.navercorp.cubridqa.ha_repl.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.GeneralShellInput;
 
 public class TestMonitor {
 
@@ -98,19 +99,19 @@ public class TestMonitor {
 			CommonUtils.sleep(1);
 		}
 
-		ShellInput script;
+		GeneralShellInput script;
 
 		// resolve standby in master: stop slave to ensure fail over
 		context.getFeedback().onTestCaseMonitor(test.currentTestFile, "[RESOLVE-01] stop heartbeat in slave", test.envId);
 		log.print("[RESOLVE-1] stop heartbeat in slave (file: " + test.currentTestFile + ") ... ");
 
-		script = new ShellInput("cubrid hb stop");
+		script = new GeneralShellInput("cubrid hb stop");
 		for (SSHConnect ssh : slaveList) {
 			ssh.execute(script);
 		}
 		CommonUtils.sleep(30);
 
-		script = new ShellInput("cubrid hb start");
+		script = new GeneralShellInput("cubrid hb start");
 		for (SSHConnect ssh : slaveList) {
 			ssh.execute(script);
 		}
@@ -134,17 +135,17 @@ public class TestMonitor {
 		if (!hasActive)
 			return;
 
-		ShellInput script;
+		GeneralShellInput script;
 
 		// resolve active in slave: stop slave to ensure fail over
 		context.getFeedback().onTestCaseMonitor(test.currentTestFile, "[RESOLVE-02] stop heartbeat in slave", test.envId);
 		log.print("[RESOLVE-2] stop heartbeat in slave (file: " + test.currentTestFile + ") ... ");
-		script = new ShellInput("cubrid hb stop");
+		script = new GeneralShellInput("cubrid hb stop");
 		activeSlave.execute(script);
 
 		CommonUtils.sleep(30);
 
-		script = new ShellInput("cubrid hb start");
+		script = new GeneralShellInput("cubrid hb start");
 		activeSlave.execute(script);
 		log.println("DONE");
 
@@ -152,7 +153,7 @@ public class TestMonitor {
 	}
 
 	public String getCurrentChangeMode(SSHConnect ssh) throws Exception {
-		ShellInput scriptMode = new ShellInput("cubrid changemode " + test.getTestDb());
+		GeneralShellInput scriptMode = new GeneralShellInput("cubrid changemode " + test.getTestDb());
 		return ssh.execute(scriptMode);
 	}
 
@@ -160,8 +161,8 @@ public class TestMonitor {
 		String result;
 		String currPID, lastPID = null;
 
-		ShellInput script = new ShellInput("cubrid killtran -d " + test.getTestDb() + "| grep sql | awk '{print $4}'");
-		ShellInput resolveScript = new ShellInput("csql -u  dba " + test.getTestDb() + " -c \"drop table qa_system_tb_flag\"");
+		GeneralShellInput script = new GeneralShellInput("cubrid killtran -d " + test.getTestDb() + "| grep sql | awk '{print $4}'");
+		GeneralShellInput resolveScript = new GeneralShellInput("csql -u  dba " + test.getTestDb() + " -c \"drop table qa_system_tb_flag\"");
 
 		boolean needResolve;
 		for (SSHConnect ssh : slaveList) {

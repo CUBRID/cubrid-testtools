@@ -27,8 +27,6 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import java.io.File;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
@@ -38,14 +36,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
-import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.ha_repl.common.SSHConnect;
-import com.navercorp.cubridqa.ha_repl.common.ShellInput;
 import com.navercorp.cubridqa.ha_repl.deploy.Deploy;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
-import com.navercorp.cubridqa.ha_repl.impl.*;
+import com.navercorp.cubridqa.ha_repl.impl.FeedbackDB;
+import com.navercorp.cubridqa.ha_repl.impl.FeedbackFile;
+import com.navercorp.cubridqa.ha_repl.impl.FeedbackNull;
 import com.navercorp.cubridqa.ha_repl.migrate.Convert;
 
 public class Main {
