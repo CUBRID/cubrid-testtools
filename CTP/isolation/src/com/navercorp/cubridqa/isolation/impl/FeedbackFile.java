@@ -30,13 +30,13 @@ package com.navercorp.cubridqa.isolation.impl;
 import java.util.Date;
 
 import com.jcraft.jsch.JSchException;
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.Feedback;
-import com.navercorp.cubridqa.shell.common.CommonUtils;
-import com.navercorp.cubridqa.shell.common.Log;
+import com.navercorp.cubridqa.isolation.IsolationShellInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
 
 public class FeedbackFile implements Feedback {
 
@@ -46,7 +46,7 @@ public class FeedbackFile implements Feedback {
 	Context context;
 
 	public FeedbackFile(Context context) {
-		logName = CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "feedback.log");
+		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
 		this.context = context;
 	}
 
@@ -120,18 +120,18 @@ public class FeedbackFile implements Feedback {
 	}
 
 	@Override
-	public void onSvnUpdateStart(String envIdentify) {
+	public void onTestCaseUpdateStart(String envIdentify) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void onSvnUpdateStop(String envIdentify) {
+	public void onTestCaseUpdateStop(String envIdentify) {
 		// TODO Auto-generated method stub
 	}
 
 	public String getTaskId() {
-		return "NONE";
+		return "0";
 	}
 
 	@Override
@@ -147,16 +147,16 @@ public class FeedbackFile implements Feedback {
 			String covPort = context.getProperty("main.coverage.controller.port", "").trim();
 			String covTargetDir = context.getProperty("main.coverage.controller.result", "").trim();
 			String category = context.getProperty("main.testing.category");
-			String covParams = "-n " + context.getTestBuild() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
-			String host = context.getProperty("env." + envIdentify + ".ssh.host");
-			String port = context.getProperty("env." + envIdentify + ".ssh.port");
-			String user = context.getProperty("env." + envIdentify + ".ssh.user");
-			String pwd = context.getProperty("env." + envIdentify + ".ssh.pwd");
+			String covParams = "-n " + context.getBuildId() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
+			String host = context.getInstanceProperty(envIdentify, "ssh.host");
+			String port = context.getInstanceProperty(envIdentify, "ssh.port");
+			String user = context.getInstanceProperty(envIdentify, "sh.user");
+			String pwd = context.getInstanceProperty(envIdentify, "ssh.pwd");
 			envIdentify = "EnvId=" + envIdentify + "[" + user + "@" + host + ":" + port + "]";
 			try {
 				ssh = new SSHConnect(host, port, user, pwd);
 
-				ShellInput scripts = new ShellInput();
+				IsolationShellInput scripts = new IsolationShellInput();
 				scripts.addCommand("run_coverage_collect_and_upload " + covParams);
 				String result;
 				try {

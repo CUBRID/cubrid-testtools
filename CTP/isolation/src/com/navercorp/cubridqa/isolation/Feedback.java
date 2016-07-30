@@ -48,9 +48,9 @@ public interface Feedback {
 
 	public void onDeployStop(String envIdentify);
 
-	public void onSvnUpdateStart(String envIdentify);
+	public void onTestCaseUpdateStart(String envIdentify);
 
-	public void onSvnUpdateStop(String envIdentify);
+	public void onTestCaseUpdateStop(String envIdentify);
 
 	public String getTaskId();
 

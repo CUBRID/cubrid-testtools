@@ -27,10 +27,10 @@
 
 package com.navercorp.cubridqa.isolation.deploy;
 
-import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
-import com.navercorp.cubridqa.shell.common.CommonUtils;
-import com.navercorp.cubridqa.shell.common.Log;
+
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Log;
 
 public class Deploy {
 
@@ -48,16 +48,16 @@ public class Deploy {
 		this.context = context;
 		this.currEnvId = currEnvId;
 
-		this.host = context.getProperty("env." + currEnvId + ".ssh.host");
-		this.port = context.getProperty("env." + currEnvId + ".ssh.port");
-		this.user = context.getProperty("env." + currEnvId + ".ssh.user");
+		String host = context.getInstanceProperty(currEnvId, "ssh.host");
+		String port = context.getInstanceProperty(currEnvId, "ssh.port");
+		String user = context.getInstanceProperty(currEnvId, "sh.user");
 		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
 
-		this.relatedHosts = context.getProperty("env." + currEnvId + ".ssh.host.related", "").split(",");
+		this.relatedHosts = context.getInstanceProperty(currEnvId, "host.related", "").split(",");
 
-		this.log = new Log(CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "test_" + currEnvId + ".log"), false, context.isContinueMode());
+		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, context.isContinueMode());
 	}
 
 	public void deploy() throws Exception {

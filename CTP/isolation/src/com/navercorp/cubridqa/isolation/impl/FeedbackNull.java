@@ -93,19 +93,19 @@ public class FeedbackNull implements Feedback {
 	}
 
 	@Override
-	public void onSvnUpdateStart(String envIdentify) {
+	public void onTestCaseUpdateStart(String envIdentify) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void onSvnUpdateStop(String envIdentify) {
+	public void onTestCaseUpdateStop(String envIdentify) {
 		// TODO Auto-generated method stub
 
 	}
 
 	public String getTaskId() {
-		return "NONE";
+		return "0";
 	}
 
 	@Override

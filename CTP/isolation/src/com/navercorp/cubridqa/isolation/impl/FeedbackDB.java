@@ -28,6 +28,8 @@
 package com.navercorp.cubridqa.isolation.impl;
 
 import java.sql.Connection;
+
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -40,9 +42,9 @@ import org.apache.commons.dbcp.BasicDataSource;
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.Feedback;
-import com.navercorp.cubridqa.shell.common.CommonUtils;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.HttpUtil;
-import com.navercorp.cubridqa.shell.common.Log;
+import com.navercorp.cubridqa.common.Log;
 
 public class FeedbackDB implements Feedback {
 
@@ -68,23 +70,19 @@ public class FeedbackDB implements Feedback {
 
 		Timestamp d = new Timestamp(System.currentTimeMillis());
 
-		String build = context.getTestBuild();
-
 		String category = context.getProperty("main.testing.category");
 		String os = context.getProperty("main.testing.os");
-
-		String version = context.getVersion();
 
 		sql = "insert into shell_main(test_build, category, start_time, os, version) values(?, ?, ?, ?, ?)";
 
 		try {
 			conn = ds.getConnection();
 			stmt = conn.prepareStatement(sql);
-			stmt.setString(1, build);
+			stmt.setString(1, context.getBuildId());
 			stmt.setString(2, category);
 			stmt.setTimestamp(3, d);
 			stmt.setString(4, os);
-			stmt.setString(5, version);
+			stmt.setString(5, context.getBuildBits());
 			stmt.executeUpdate();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -109,7 +107,7 @@ public class FeedbackDB implements Feedback {
 			close(conn);
 		}
 
-		Log log = new Log(CommonUtils.concatFile(Constants.DIR_CONF, "current_task_id"), false, false);
+		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
 		log.println(String.valueOf(task_id));
 		log.close();
 	}
@@ -119,7 +117,7 @@ public class FeedbackDB implements Feedback {
 
 		String cont = null;
 		try {
-			cont = CommonUtils.getFileContent(CommonUtils.concatFile(Constants.DIR_CONF, "current_task_id"));
+			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"));
 			this.task_id = Integer.parseInt(cont.trim());
 		} catch (Exception e) {
 			this.task_id = -1;
@@ -376,14 +374,14 @@ public class FeedbackDB implements Feedback {
 	}
 
 	@Override
-	public void onSvnUpdateStart(String envIdentify) {
-		System.out.println("SVN UPDATE START: " + envIdentify);
+	public void onTestCaseUpdateStart(String envIdentify) {
+		System.out.println("TEST CASES UPDATE START: " + envIdentify);
 
 	}
 
 	@Override
-	public void onSvnUpdateStop(String envIdentify) {
-		System.out.println("SVN UPDATE STOP: " + envIdentify);
+	public void onTestCaseUpdateStop(String envIdentify) {
+		System.out.println("TEST CASES UPDATE STOP: " + envIdentify);
 
 	}
 
