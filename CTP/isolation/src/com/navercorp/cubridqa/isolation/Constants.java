@@ -32,20 +32,11 @@ import java.util.HashMap;
 public class Constants {
 	public static final String LINE_SEPARATOR = System.getProperty("line.separator");;
 
-	public static final int TYPE_MASTER = 1;
-	public static final int TYPE_SLAVE = 2;
-	public static final int TYPE_REPLICA = 3;
-
-	public static final String DIR_CONF = "./conf";
-	public static final String DIR_LOG_ROOT = "./log";
-
 	public static final String TC_RESULT_OK = "OK";
 	public static final String TC_RESULT_NOK = "NOK";
 
 	public static final String SKIP_TYPE_NO = "0";
-	public static final String SKIP_TYPE_BY_MACRO = "1"; // Not implement.
-															// Please ignore. By
-															// Fan
+	public static final String SKIP_TYPE_BY_MACRO = "1"; 
 	public static final String SKIP_TYPE_BY_TEMP = "2";
 
 	public static final HashMap<String, String> DB_TEST_MAP;

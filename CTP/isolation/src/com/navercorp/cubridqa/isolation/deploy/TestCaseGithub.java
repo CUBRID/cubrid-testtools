@@ -28,9 +28,11 @@
 package com.navercorp.cubridqa.isolation.deploy;
 
 import com.navercorp.cubridqa.isolation.Constants;
+
+
 import com.navercorp.cubridqa.isolation.Context;
+import com.navercorp.cubridqa.isolation.IsolationShellInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
 
 public class TestCaseGithub {
 
@@ -42,10 +44,10 @@ public class TestCaseGithub {
 	public TestCaseGithub(Context context, String currEnvId) throws Exception {
 		this.context = context;
 		this.currEnvId = currEnvId;
-		String host = context.getProperty("env." + currEnvId + ".ssh.host");
-		String port = context.getProperty("env." + currEnvId + ".ssh.port");
-		String user = context.getProperty("env." + currEnvId + ".ssh.user");
-		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		String host = context.getInstanceProperty(currEnvId, "ssh.host");
+		String port = context.getInstanceProperty(currEnvId, "ssh.port");
+		String user = context.getInstanceProperty(currEnvId, "sh.user");
+		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 
 		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
 
@@ -54,26 +56,22 @@ public class TestCaseGithub {
 	}
 
 	public void update() throws Exception {
-		context.getFeedback().onSvnUpdateStart(envIdentify);
+		context.getFeedback().onTestCaseUpdateStart(envIdentify);
 
 		cleanProcess();
 
-		ShellInput scripts;
-		if (context.isWindows()) {
-			scripts = new ShellInput();
-		} else {
-			scripts = new ShellInput();
-		}
-
-		if (context.getCleanTestCase()) {
+		IsolationShellInput scripts = new IsolationShellInput();
+		if (context.shouldUpdateTestCase()) {
 			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
 		}
 
-		if (context.isUpdateCTL()) {
-			scripts.addCommand("cd ");
-			scripts.addCommand("cd " + context.getCtlHome());
-			scripts.addCommand("sh upgrade.sh");
-		}
+		scripts.addCommand("cd ");
+		scripts.addCommand("cd ${CTP_HOME}/common/script");
+		scripts.addCommand("export CTP_BRANCH_NAME=" + System.getenv("CTP_BRANCH_NAME"));
+		scripts.addCommand("export SKIP_UPGRADE=" + System.getenv("SKIP_UPGRADE"));
+		scripts.addCommand("chmod u+x upgrade.sh");
+		scripts.addCommand("./upgrade.sh");
+		
 		scripts.addCommand("echo Above EnvId is " + this.currEnvId);
 		String result;
 		try {
@@ -85,7 +83,7 @@ public class TestCaseGithub {
 		}
 		System.out.println("TEST CASES AND CTLTOOL UPDATE COMPLETE");
 
-		context.getFeedback().onSvnUpdateStop(envIdentify);
+		context.getFeedback().onTestCaseUpdateStop(envIdentify);
 	}
 
 	public void cleanProcess() {
@@ -97,7 +95,7 @@ public class TestCaseGithub {
 	}
 
 	private void cleanProcess_linux() {
-		ShellInput scripts = new ShellInput();
+		IsolationShellInput scripts = new IsolationShellInput();
 		scripts.addCommand(Constants.LIN_KILL_PROCESS);
 		try {
 			ssh.execute(scripts);
@@ -106,7 +104,7 @@ public class TestCaseGithub {
 	}
 
 	private void cleanProcess_windows() {
-		ShellInput scripts = new ShellInput();
+		IsolationShellInput scripts = new IsolationShellInput();
 		scripts.addCommand(Constants.WIN_KILL_PROCESS);
 
 		try {

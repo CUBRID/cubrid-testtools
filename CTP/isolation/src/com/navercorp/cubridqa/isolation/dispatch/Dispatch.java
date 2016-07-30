@@ -28,6 +28,8 @@
 package com.navercorp.cubridqa.isolation.dispatch;
 
 import java.io.File;
+
+
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -37,10 +39,10 @@ import java.util.ArrayList;
 
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
-import com.navercorp.cubridqa.shell.common.CommonUtils;
-import com.navercorp.cubridqa.shell.common.Log;
+import com.navercorp.cubridqa.isolation.IsolationShellInput;
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
 
 public class Dispatch {
 
@@ -102,7 +104,7 @@ public class Dispatch {
 			this.tbdList = CommonUtils.getLineList(getFileNameForDispatchAll());
 			ArrayList<String> finList;
 
-			File[] subList = new File(Constants.DIR_CONF).listFiles(new FilenameFilter() {
+			File[] subList = new File(context.getCurrentLogDir()).listFiles(new FilenameFilter() {
 				public boolean accept(File dir, String name) {
 					return name.startsWith("dispatch_tc_FIN") && name.endsWith(".txt");
 				}
@@ -157,18 +159,17 @@ public class Dispatch {
 	private ArrayList<String> findAllTestCase() throws Exception {
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getProperty("env." + envId + ".ssh.host");
-		String port = context.getProperty("env." + envId + ".ssh.port");
-		String user = context.getProperty("env." + envId + ".ssh.user");
-		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
+		String host = context.getInstanceProperty(envId, "ssh.host");
+		String port = context.getInstanceProperty(envId, "ssh.port");
+		String user = context.getInstanceProperty(envId, "sh.user");
+		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
-		ShellInput script;
+		IsolationShellInput script;
 		String result;
 
 		try {
-
-			script = new ShellInput();
+			script = new IsolationShellInput();
 			script.addCommand("cd ");
 			script.addCommand("find " + context.getTestCaseRoot() + " -name \"*.ctl\" -type f -print");
 			result = ssh.execute(script);
@@ -197,17 +198,17 @@ public class Dispatch {
 
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getProperty("env." + envId + ".ssh.host");
-		String port = context.getProperty("env." + envId + ".ssh.port");
-		String user = context.getProperty("env." + envId + ".ssh.user");
-		String pwd = context.getProperty("env." + envId + ".ssh.pwd");
+		String host = context.getInstanceProperty(envId, "ssh.host");
+		String port = context.getInstanceProperty(envId, "ssh.port");
+		String user = context.getInstanceProperty(envId, "sh.user");
+		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
-		ShellInput script;
+		IsolationShellInput script;
 		String result;
 
 		try {
-			script = new ShellInput();
+			script = new IsolationShellInput();
 			script.addCommand("cd > /dev/null 2>&1");
 			script.addCommand("cat " + excludedFilename);
 			result = ssh.execute(script);
@@ -237,7 +238,7 @@ public class Dispatch {
 		File allFile;
 		File finishedFile;
 
-		File[] subList = new File(Constants.DIR_CONF).listFiles(new FilenameFilter() {
+		File[] subList = new File(context.getCurrentLogDir()).listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return name.startsWith("dispatch_tc_");
 			}
@@ -280,12 +281,12 @@ public class Dispatch {
 		return this.tempSkippedList;
 	}
 
-	public static String getFileNameForDispatchAll() {
-		return CommonUtils.concatFile(Constants.DIR_CONF, "dispatch_tc_ALL.txt");
+	public String getFileNameForDispatchAll() {
+		return CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_ALL.txt");
 	}
 
-	public static String getFileNameForDispatchFin(String envId) {
-		return CommonUtils.concatFile(Constants.DIR_CONF, "dispatch_tc_FIN_" + envId + ".txt");
+	public String getFileNameForDispatchFin(String envId) {
+		return CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt");
 	}
 
 	public static String getFileContent(String filename) throws IOException {

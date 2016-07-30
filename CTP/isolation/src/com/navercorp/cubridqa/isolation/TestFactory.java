@@ -27,8 +27,8 @@
 
 package com.navercorp.cubridqa.isolation;
 
-import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
@@ -37,13 +37,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.isolation.deploy.Deploy;
 import com.navercorp.cubridqa.isolation.deploy.TestCaseGithub;
 import com.navercorp.cubridqa.isolation.dispatch.Dispatch;
-import com.navercorp.cubridqa.isolation.impl.FeedbackDB;
-import com.navercorp.cubridqa.isolation.impl.FeedbackFile;
-import com.navercorp.cubridqa.isolation.impl.FeedbackNull;
-import com.navercorp.cubridqa.shell.common.CommonUtils;
+import com.navercorp.cubridqa.shell.common.LocalInvoker;
 
 public class TestFactory {
 
@@ -60,38 +58,37 @@ public class TestFactory {
 		this.testPool = Executors.newFixedThreadPool(100);
 		this.configPool = Executors.newFixedThreadPool(1);
 		this.testMap = new HashMap<String, Test>();
-
-		String feedbackType = context.getProperty("main.feedback.type", "").trim();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			feedback = new FeedbackFile(context);
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			feedback = new FeedbackDB(context);
-		} else {
-			feedback = new FeedbackNull();
-		}
-		context.setFeedback(feedback);
+		this.feedback = this.context.getFeedback();
 	}
 
 	public void execute() throws Exception {
+		ArrayList<String> stableEnvList = (ArrayList<String>) context.getEnvList().clone();
 
 		if (context.isContinueMode()) {
 			feedback.onTaskContinueEvent();
+			System.out.println("============= FETCH TEST CASES ==================");
+			Dispatch.init(context);
+			if (Dispatch.getInstance().getTotalTbdSize() == 0) {
+				System.out.println("NO TEST CASE TO TEST WITH CONTINUE MODE!");
+				return;
+			}
+
+			System.out.println("============= UPDATE TEST CASES ==================");
+			concurrentUpdateScenarios(stableEnvList);
+			System.out.println("DONE");
+
 		} else {
-			clean();
 			feedback.onTaskStartEvent(context.getCubridPackageUrl());
-		}
+			System.out.println("============= UPDATE TEST CASES ==================");
+			concurrentUpdateScenarios(stableEnvList);
+			System.out.println("DONE");
 
-		ArrayList<String> stableEnvList = (ArrayList<String>) context.getEnvList().clone();
-
-		System.out.println("============= GIT UPDATE ==================");
-		concurrentGitUpdate(stableEnvList);
-		System.out.println("DONE");
-
-		System.out.println("============= FETCH TEST CASES ==================");
-		Dispatch.init(context);
-		if (Dispatch.getInstance().getTotalTbdSize() == 0) {
-			System.out.println("NO TEST CASE TO TEST");
-			return;
+			System.out.println("============= FETCH TEST CASES ==================");
+			Dispatch.init(context);
+			if (Dispatch.getInstance().getTotalTbdSize() == 0) {
+				System.out.println("NO TEST CASE TO TEST!");
+				return;
+			}
 		}
 
 		feedback.setTotalTestCase(Dispatch.getInstance().getTotalTbdSize(), Dispatch.getInstance().getMacroSkippedSize(), Dispatch.getInstance().getTempSkippedSize());
@@ -105,7 +102,6 @@ public class TestFactory {
 		System.out.println("============= DEPLOY ==================");
 		concurrentDeploy(stableEnvList);
 		System.out.println("DONE");
-		// Thread.sleep(10000000 * 1000);
 
 		System.out.println("============= TEST ==================");
 		concurrentTest(stableEnvList);
@@ -122,6 +118,27 @@ public class TestFactory {
 		feedback.onTaskStopEvent();
 
 		System.out.println("TEST COMPLETE");
+		
+		backupTestResults();
+	}
+
+	public void backupTestResults() {
+		if (CommonUtils.isWindowsPlatform()) {
+			return;
+		}
+
+		String backupFileName = "";
+		Calendar cal = Calendar.getInstance();
+		int year = cal.get(Calendar.YEAR);
+		int month = cal.get(Calendar.MONTH) + 1;
+		int day = cal.get(Calendar.DAY_OF_MONTH);
+		int hour = cal.get(Calendar.HOUR);
+		int minute = cal.get(Calendar.MINUTE);
+		int second = cal.get(Calendar.SECOND);
+		String curTimestamp = year + "." + month + "." + day + "_" + hour + "." + minute + "." + second;
+
+		backupFileName = "isolation_result_" + context.getBuildId() + "_" + context.getBuildBits() + "_" + context.getFeedback().getTaskId() + "_" + curTimestamp + ".tar.gz";
+		LocalInvoker.exec("mkdir -p " + context.getLogRootDir() + "; cd " + context.getLogRootDir() + "; tar zvcf " + backupFileName + " " + context.getCurrentLogDir(), false, false);
 	}
 
 	private static void addSkippedTestCases(Feedback feedback, ArrayList<String> list, String skippedType) {
@@ -272,7 +289,7 @@ public class TestFactory {
 		deployPool.shutdown();
 	}
 
-	private void concurrentGitUpdate(final ArrayList<String> envList) throws InterruptedException {
+	private void concurrentUpdateScenarios(final ArrayList<String> envList) throws InterruptedException {
 		ExecutorService pool = Executors.newCachedThreadPool();
 		ArrayList<Callable<Boolean>> callers = new ArrayList<Callable<Boolean>>();
 
@@ -315,14 +332,4 @@ public class TestFactory {
 		}
 		return true;
 	}
-
-	public static void clean() {
-		File[] subList = new File(Constants.DIR_LOG_ROOT).listFiles();
-		for (File file : subList) {
-			if (file.exists()) {
-				file.delete();
-			}
-		}
-	}
-
 }

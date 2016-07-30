@@ -162,6 +162,9 @@ public class CTP {
 				case SHELL:
 					executeShell(getConfigData(taskLabel, configFilename, "shell"), "shell");
 					break;
+				case ISOLATION:
+					executeIsolation(getConfigData(taskLabel, configFilename, "isolation"), "isolation");
+					break;
 				case UNITTEST:
 					executeUnitTest(getConfigData(taskLabel, configFilename, "unittest"), "unittest");
 					break;
@@ -208,6 +211,25 @@ public class CTP {
 			URL url = new URL("file:" + jar);
 			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
 			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.shell.main.Main");
+			Method m = clz.getDeclaredMethod("exec", String.class);
+			String configFilename;
+			if (CommonUtils.isWindowsPlatform()) {
+				configFilename = CommonUtils.getWindowsStylePath(config.getFilename());
+			} else {
+				configFilename = config.getFilename();
+			}			
+			m.invoke(clz, configFilename);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void executeIsolation(IniData config, String suite) {
+		String jar = ctpHome + File.separator + "isolation" + File.separator + "lib" + File.separator + "cubridqa-isolation.jar";
+		try {
+			URL url = new URL("file:" + jar);
+			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
+			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.isolation.Main");
 			Method m = clz.getDeclaredMethod("exec", String.class);
 			String configFilename;
 			if (CommonUtils.isWindowsPlatform()) {

@@ -66,6 +66,14 @@ public class CommonUtils {
 		strDest = strDest + strSource;
 		return strDest;
 	}
+	
+	
+	public static boolean isEmpty(String s) {
+		if (s == null) {
+			return true;
+		}
+		return s.trim().equals("");
+	}
 
 	public static String rightTrim(String str) {
 		if (str == null)
@@ -435,5 +443,80 @@ public class CommonUtils {
 			shellType = LocalInvoker.SHELL_TYPE_LINUX;
 		}
 		return shellType;
+	}
+	
+	public static String getSimplifiedBuildId(String cubridPackageUrl) {
+		// get test build number
+		String sBuildId = null;
+		Pattern pattern = Pattern.compile("\\d+\\.\\d+\\.\\d+\\.\\d+");
+		Matcher matcher = pattern.matcher(cubridPackageUrl);
+		while (matcher.find()) {
+			sBuildId = matcher.group();
+		}
+		return sBuildId;
+	}
+	
+	public static boolean isNewBuildNumberSystem(String simplifiedBuildId) {
+		if (simplifiedBuildId == null) {
+			return false;
+		}
+		String curValue = convertNumberSystemToFixedLength(simplifiedBuildId);
+		String stdValue = convertNumberSystemToFixedLength("10.1.0.6858");
+		return curValue.compareTo(stdValue) >= 0;
+	}
+	
+	public static String convertNumberSystemToFixedLength(String simplifiedBuildId) {
+		if (simplifiedBuildId == null) {
+			return simplifiedBuildId;
+		}
+
+		String[] items = simplifiedBuildId.split("\\.");
+		return toFixedLength(items[0], 3, '0') + toFixedLength(items[1], 3, '0') + toFixedLength(items[2], 3, '0') + toFixedLength(items[3], 10, '0');
+	}
+	
+	public static String toFixedLength(String str, int len, char fillChar) {
+
+		if (str == null)
+			return null;
+		String result = str;
+		for (int i = 0; i < len; i++) {
+			result = fillChar + result;
+		}
+		return result.substring(result.length() - len);
+	}
+	
+	public static String getBuildId(String cubridPackageUrl) {
+		String simplifiedBuild = getSimplifiedBuildId(cubridPackageUrl);
+
+		if (isNewBuildNumberSystem(simplifiedBuild)) {
+			String buildId;
+
+			int p1 = cubridPackageUrl.lastIndexOf(simplifiedBuild);
+			int p2 = cubridPackageUrl.indexOf("-", p1 + simplifiedBuild.length() + 1);
+
+			if (p2 == -1) {
+				p2 = cubridPackageUrl.indexOf(".", p1 + simplifiedBuild.length() + 1);
+			}
+
+			buildId = p2 == -1 ? cubridPackageUrl.substring(p1) : cubridPackageUrl.substring(p1, p2);
+			return buildId;
+		} else {
+			return simplifiedBuild;
+		}
+	}
+	
+	public static String getBuildBits(String cubridPackageUrl) {
+		String version = null;
+		int idx1 = cubridPackageUrl.indexOf("_64");
+		int idx2 = cubridPackageUrl.indexOf("x64");
+		int idx3 = cubridPackageUrl.indexOf("ppc64"); // AIX BUILD.
+														// CUBRID-8.4.4.0136-AIX-ppc64.sh
+
+		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0) {
+			version = "64bits";
+		} else {
+			version = "32bits";
+		}
+		return version;
 	}
 }

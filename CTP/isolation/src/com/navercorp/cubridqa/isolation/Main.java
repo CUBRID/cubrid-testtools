@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Search Solution Corporation. All rights reserved.
+ * Copyright (c) 2016, Search Solution Corporation. All rights reserved.\
 
 
  * 
@@ -28,61 +28,27 @@
 package com.navercorp.cubridqa.isolation;
 
 import java.util.ArrayList;
+
+
+
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.navercorp.cubridqa.shell.common.CommonUtils;
-import com.navercorp.cubridqa.shell.common.Log;
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Log;
 
 public class Main {
 
-	public static void main(String[] args) throws Exception {
+	public static void exec(String configFilename) throws Exception {
+		
+		Properties system = System.getProperties();
+		system.setProperty("sun.rmi.transport.connectionTimeout", "10000000");
 
-		Context context = new Context(CommonUtils.concatFile(Constants.DIR_CONF, "main.properties"));
-		String cubridPackageUrl = context.getCubridPackageUrl();
+		Context context = new Context(configFilename);
+		context.setBuildId(CommonUtils.getBuildId(context.getCubridPackageUrl()));
+		context.setBuildBits(CommonUtils.getBuildBits(context.getCubridPackageUrl()));
 
-		// get test build number
-		String build = null;
-		Pattern pattern = Pattern.compile("\\d+\\.\\d+\\.\\d+\\.\\d+");
-		Matcher matcher = pattern.matcher(cubridPackageUrl);
-		while (matcher.find()) {
-			build = matcher.group();
-		}
-
-		if (CommonUtils.isNewBuildNumberSystem(build)) {
-			String buildId;
-
-			int p1 = cubridPackageUrl.lastIndexOf(build);
-			int p2 = cubridPackageUrl.indexOf("-", p1 + build.length() + 1);
-
-			if (p2 == -1) {
-				p2 = cubridPackageUrl.indexOf(".", p1 + build.length() + 1);
-			}
-
-			buildId = p2 == -1 ? cubridPackageUrl.substring(p1) : cubridPackageUrl.substring(p1, p2);
-			context.setTestBuild(buildId);
-		} else {
-			context.setTestBuild(build);
-		}
-
-		System.out.println("Build Number: " + context.getTestBuild());
-
-		// get version (64bit or 32bit)
-		String version = null;
-		int idx1 = cubridPackageUrl.indexOf("_64");
-		int idx2 = cubridPackageUrl.indexOf("x64");
-		int idx3 = cubridPackageUrl.indexOf("ppc64"); // AIX BUILD.
-														// CUBRID-8.4.4.0136-AIX-ppc64.sh
-
-		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0) {
-			version = "64bits";
-		} else {
-			version = "32bits";
-		}
-		context.setVersion(version);
-		System.out.println("Test Version: " + version);
+		System.out.println("Build Id: " + context.getBuildId());
+		System.out.println("Build Bits: " + context.getBuildBits());
 
 		ArrayList<String> envList = context.getEnvList();
 		System.out.println("Available Env: " + envList);
@@ -91,14 +57,14 @@ public class Main {
 			throw new Exception("Not found any environment instance to test on it.");
 		}
 
+		Log contextSnapshot = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "main_snapshot.properties"), true, false);
 		Properties props = context.getProperties();
-		Set set = props.keySet();
-		Log contextSnapshot = new Log(CommonUtils.concatFile(Constants.DIR_CONF, "main_snapshot.properties"), true, false);
+		Set set = props.keySet();		
 		for (Object key : set) {
 			contextSnapshot.println(key + "=" + props.getProperty((String) key));
 		}
-		contextSnapshot.println("AUTO_TEST_VERSION=" + context.getTestBuild());
-		contextSnapshot.println("AUTO_TEST_BITS=" + context.getVersion());
+		contextSnapshot.println("AUTO_BUILD_ID=" + context.getBuildId());
+		contextSnapshot.println("AUTO_BUILD_BITS=" + context.getBuildBits());
 		contextSnapshot.close();
 
 		TestFactory factory = new TestFactory(context);

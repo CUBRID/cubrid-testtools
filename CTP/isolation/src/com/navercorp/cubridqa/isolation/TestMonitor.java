@@ -27,9 +27,9 @@
 
 package com.navercorp.cubridqa.isolation;
 
-import com.navercorp.cubridqa.shell.common.CommonUtils;
+import com.navercorp.cubridqa.common.CommonUtils;
+
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
 
 public class TestMonitor {
 
@@ -43,10 +43,10 @@ public class TestMonitor {
 		this.test = test;
 
 		String currEnvId = test.getCurrentEnvId();
-		String host = context.getProperty("env." + currEnvId + ".ssh.host");
-		String port = context.getProperty("env." + currEnvId + ".ssh.port");
-		String user = context.getProperty("env." + currEnvId + ".ssh.user");
-		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		String host = context.getInstanceProperty(currEnvId, "ssh.host");
+		String port = context.getInstanceProperty(currEnvId, "ssh.port");
+		String user = context.getInstanceProperty(currEnvId, "sh.user");
+		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 
 		this.ssh = new SSHConnect(host, port, user, pwd);
 
@@ -87,14 +87,9 @@ public class TestMonitor {
 		if (endTime - test.startTime < testCaseTimeout * 1000)
 			return;
 
-		ShellInput scripts;
-		if (context.isWindows) {
-			scripts = new ShellInput();
-			scripts.addCommand(Constants.WIN_KILL_PROCESS);
-		} else {
-			scripts = new ShellInput();
-			scripts.addCommand(Constants.LIN_KILL_PROCESS);
-		}
+		IsolationShellInput scripts = new IsolationShellInput();
+		scripts.addCommand(Constants.LIN_KILL_PROCESS);
+
 		try {
 			ssh.execute(scripts);
 		} catch (Exception e) {

@@ -28,10 +28,13 @@
 package com.navercorp.cubridqa.isolation.deploy;
 
 import com.navercorp.cubridqa.isolation.Constants;
+
+
 import com.navercorp.cubridqa.isolation.Context;
-import com.navercorp.cubridqa.shell.common.Log;
+import com.navercorp.cubridqa.isolation.IsolationShellInput;
+import com.navercorp.cubridqa.common.Log;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
 
 public class DeployOneNode {
 
@@ -39,15 +42,17 @@ public class DeployOneNode {
 	SSHConnect ssh;
 	String cubridPackageUrl;
 
+	String currEnvId;
 	String envIdentify;
 	Log log;
 
 	public DeployOneNode(Context context, String currEnvId, String host, Log log) throws Exception {
 		this.context = context;
+		this.currEnvId = currEnvId;
 
-		String port = context.getProperty("env." + currEnvId + ".ssh.port");
-		String user = context.getProperty("env." + currEnvId + ".ssh.user");
-		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		String port = context.getInstanceProperty(currEnvId, "ssh.port");
+		String user = context.getInstanceProperty(currEnvId, "sh.user");
+		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
 
 		this.ssh = new SSHConnect(host, port, user, pwd);
@@ -58,104 +63,18 @@ public class DeployOneNode {
 	}
 
 	public void deploy() {
-		if (context.isWindows()) {
-			deploy_windows();
-		} else {
-			deploy_cubrid_common();
-			deploy_linux_by_cubrid_common();
-			prepareCtl();
-		}
-	}
-
-	private void deploy_windows() {
-		cleanProcess();
-
-		String cubridInstallName = cubridPackageUrl.substring(cubridPackageUrl.indexOf("CUBRID-"));
-
-		// TODO: check cubridInstallName
-
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("cd $CUBRID/..");
-		scripts.addCommand("rm -rf CUBRID");
-		scripts.addCommand("rm -rf " + cubridInstallName + "* ");
-		scripts.addCommand("if [ ! -f " + cubridInstallName + " ] ");
-		scripts.addCommand("then");
-		scripts.addCommand("    wget " + cubridPackageUrl);
-		scripts.addCommand("fi");
-		scripts.addCommand("mkdir CUBRID");
-		scripts.addCommand("cd CUBRID");
-		scripts.addCommand("unzip -o ../" + cubridInstallName);
-		scripts.addCommand("chmod -R u+x ../CUBRID");
-		String buildId = context.getTestBuild();
-		String[] arr = buildId.split("\\.");
-		if (Integer.parseInt(arr[0]) >= 10) {
-			scripts.addCommand("echo inquire_on_exit=3 >> $CUBRID/conf/cubrid.conf");
-		}
-		scripts.addCommand("rm -rf ../" + cubridInstallName + "* ");
-
-		String result;
-		try {
-			result = ssh.execute(scripts);
-			log.println(result);
-		} catch (Exception e) {
-			log.print("[ERROR] " + e.getMessage());
-		}
-	}
-
-	private void deploy_linux() {
-		cleanProcess();
-
-		String cubridInstallName = cubridPackageUrl.substring(cubridPackageUrl.indexOf("CUBRID-"));
-
-		// TODO: check cubridInstallName
-
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("echo 'ulimit -c unlimited' >> ~/.bash_profile");
-		scripts.addCommand("cat ~/.bash_profile | uniq >  ~/.bash_profile_tmp; cp ~/.bash_profile_tmp ~/.bash_profile");
-		scripts.addCommand("rm -rf ~/CUBRID");
-		scripts.addCommand("rm -rf " + cubridInstallName + "*");
-		scripts.addCommand("if [ ! -f " + cubridInstallName + " ] ");
-		scripts.addCommand("then");
-		scripts.addCommand("    wget " + cubridPackageUrl);
-		scripts.addCommand("fi");
-
-		scripts.addCommand("sh " + cubridInstallName + " > /dev/null <<EOF");
-		scripts.addCommand("yes");
-		scripts.addCommand("");
-		scripts.addCommand("");
-		scripts.addCommand("");
-		scripts.addCommand("EOF");
-		scripts.addCommand("sh ~/.cubrid_cc_fm.sh > /dev/null 2>&1");
-		String buildId = context.getTestBuild();
-		String[] arr = buildId.split("\\.");
-		if (Integer.parseInt(arr[0]) >= 10) {
-			scripts.addCommand("echo inquire_on_exit=3 >> $CUBRID/conf/cubrid.conf");
-		}
-		scripts.addCommand("rm -rf " + cubridInstallName + "*");
-
-		String result;
-		try {
-			result = ssh.execute(scripts);
-			log.println(result);
-		} catch (Exception e) {
-			log.print("[ERROR] " + e.getMessage());
-		}
-	}
-
-	private void deploy_linux_by_cubrid_common() {
 		cleanProcess();
 
 		String role = context.getProperty("main.testing.role", "").trim();
 		log.print("Start Install Build");
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("echo 'ulimit -c unlimited' >> ~/.bash_profile");
-		scripts.addCommand("cat ~/.bash_profile | uniq >  ~/.bash_profile_tmp; cp ~/.bash_profile_tmp ~/.bash_profile");
+		IsolationShellInput scripts = new IsolationShellInput();
 		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim());
-		String buildId = context.getTestBuild();
+		String buildId = context.getBuildId();
 		String[] arr = buildId.split("\\.");
 		if (Integer.parseInt(arr[0]) >= 10) {
 			scripts.addCommand("echo inquire_on_exit=3 >> $CUBRID/conf/cubrid.conf");
 		}
+		scripts.addCommand("cd ${CTP_HOME}/isolation/ctltool; sh prepare.sh");
 
 		String result;
 		try {
@@ -164,33 +83,44 @@ public class DeployOneNode {
 		} catch (Exception e) {
 			log.print("[ERROR] " + e.getMessage());
 		}
+		
+		updateCUBRIDConfigurations();
 	}
-
-	private void deploy_cubrid_common() {
-
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("cd $HOME/cubrid_common");
-		scripts.addCommand("sh upgrade.sh");
-
-		String result;
-		try {
-			result = ssh.execute(scripts);
-			log.println(result);
-		} catch (Exception e) {
-			log.print("[ERROR] " + e.getMessage());
+	
+	private void updateCUBRIDConfigurations(){
+		String cubridPortId, brokerFirstPort, brokerSecondPort;
+		cubridPortId = context.getInstanceProperty(this.currEnvId, "cubrid.cubrid_port_id");
+		brokerFirstPort = context.getInstanceProperty(this.currEnvId, "broker1.BROKER_PORT");
+		brokerSecondPort = context.getInstanceProperty(this.currEnvId, "broker2.BROKER_PORT");
+		
+		if (CommonUtils.isEmpty(cubridPortId) && CommonUtils.isEmpty(brokerFirstPort) && CommonUtils.isEmpty(brokerSecondPort)) {
+			return;
 		}
-
-	}
-
-	private void prepareCtl() {
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("sh $HOME/" + context.getCtlHome() + "/prepare.sh");
-
+		
+		IsolationShellInput scripts = new IsolationShellInput();
+		
+		if (!CommonUtils.isEmpty(cubridPortId)) {
+			scripts.addCommand("ini.sh -s 'common' -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
+			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
+		}
+		
+		if (!CommonUtils.isEmpty(brokerFirstPort)) {
+			scripts.addCommand("ini.sh -s '%query_editor' -u BROKER_PORT=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s '%query_editor' -u APPL_SERVER_SHM_ID=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
+		}
+		
+		if (!CommonUtils.isEmpty(brokerSecondPort)) {
+			scripts.addCommand("ini.sh -s '%BROKER1' -u BROKER_PORT=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s '%BROKER1' -u APPL_SERVER_SHM_ID=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
+		}
+		
 		String result;
+		
 		try {
-			result = ssh.execute(scripts);
+			result=ssh.execute(scripts);
 			log.println(result);
 		} catch (Exception e) {
+			e.printStackTrace();
 			log.print("[ERROR] " + e.getMessage());
 		}
 	}
@@ -204,7 +134,7 @@ public class DeployOneNode {
 	}
 
 	private void cleanProcess_windows() {
-		ShellInput scripts = new ShellInput();
+		IsolationShellInput scripts = new IsolationShellInput();
 		scripts.addCommand(Constants.WIN_KILL_PROCESS);
 		String result;
 		try {
@@ -216,7 +146,7 @@ public class DeployOneNode {
 	}
 
 	private void cleanProcess_linux() {
-		ShellInput scripts = new ShellInput();
+		IsolationShellInput scripts = new IsolationShellInput();
 		scripts.addCommand(Constants.LIN_KILL_PROCESS);
 		String result;
 		try {

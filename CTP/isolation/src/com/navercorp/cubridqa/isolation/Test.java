@@ -28,14 +28,14 @@
 package com.navercorp.cubridqa.isolation;
 
 import java.util.ArrayList;
+
 import java.util.Properties;
 
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.isolation.dispatch.Dispatch;
-import com.navercorp.cubridqa.shell.common.CommonUtils;
-import com.navercorp.cubridqa.shell.common.Log;
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
 
 public class Test {
 
@@ -68,12 +68,12 @@ public class Test {
 		this.context = context;
 		this.currEnvId = currEnvId;
 		this.startTime = 0;
-		this.dispatchLog = new Log(CommonUtils.concatFile(Constants.DIR_CONF, "dispatch_tc_FIN_" + currEnvId + ".txt"), false, context.isContinueMode());
-		this.workerLog = new Log(CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "test_" + currEnvId + ".log"), false, true);
+		this.dispatchLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + currEnvId + ".txt"), false, context.isContinueMode());
+		this.workerLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, true);
 
-		String host = context.getProperty("env." + currEnvId + ".ssh.host");
-		String port = context.getProperty("env." + currEnvId + ".ssh.port");
-		String user = context.getProperty("env." + currEnvId + ".ssh.user");
+		String host = context.getInstanceProperty(currEnvId, "ssh.host");
+		String port = context.getInstanceProperty(currEnvId, "ssh.port");
+		String user = context.getInstanceProperty( currEnvId, "sh.user");
 		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
 
 		resetSSH();
@@ -93,14 +93,20 @@ public class Test {
 			}
 
 			this.testCaseFullName = testCase;
-			p = testCase.lastIndexOf("cases");
-			this.testCaseDir = testCase.substring(0, p + 5);
+			p = testCase.lastIndexOf("/");
+			if(p == -1) {
+				p = testCase.lastIndexOf("\\");
+			}
+			if (p == -1) {
+				this.testCaseDir = ".";
+			} else {
+				this.testCaseDir = testCase.substring(0, p);
+			}
 
 			startTime = System.currentTimeMillis();
 			context.getFeedback().onTestCaseStartEvent(this.testCaseFullName, envIdentify);
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
-			System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId);
 
 			resetSSH();
 			resultItemList.clear();
@@ -129,7 +135,7 @@ public class Test {
 					resultCont.append(cont).append(Constants.LINE_SEPARATOR);
 				}
 				context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore, Constants.SKIP_TYPE_NO);
-
+				System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " " + (testCaseSuccess? "[OK]": "[NOK]"));
 				workerLog.println("");
 				dispatchLog.println(this.testCaseFullName);
 			}
@@ -149,10 +155,10 @@ public class Test {
 		String answerFilename = d + "/answer/" + n + ".answer";
 		String resultFilename = d + "/result/" + n + ".log";
 
-		ShellInput script;
+		IsolationShellInput script;
 		String result;
 
-		script = new ShellInput("cd ");
+		script = new IsolationShellInput("cd ");
 		script.addCommand("touch " + resultFilename);
 		script.addCommand("mkdir -p " + d + "/result/");
 		script.addCommand("diff -a -y -W 185 " + answerFilename + " " + resultFilename);
@@ -168,48 +174,10 @@ public class Test {
 	}
 
 	public boolean runTestCase() throws Exception {
-		if (this.context.isWindows) {
-			return runTestCase_windows();
-		} else {
-			return runTestCase_linux();
-		}
-	}
 
-	public boolean runTestCase_windows() throws Exception {
-
-		ShellInput script;
 		String result;
-
-		// TODO
-		script = new ShellInput("cd ");
-		script.addCommand("cd " + testCaseDir);
-		script.addCommand("TMP_PATH=`cygpath -w \"$JAVA_HOME/bin\"`\\;$PATH");
-		script.addCommand("export CUBRID='d:/CUBRID'"); // TODO HARD CODE
-		script.addCommand("export QA_REPOSITORY=/d/qa_repository");
-		script.addCommand("export init_path=$QA_REPOSITORY/lib/shell/common");
-		script.addCommand("export SHELL_CONFIG_PATH=$QA_REPOSITORY/lib/shell/common");
-		script.addCommand("export CLASSPATH=`cygpath -w \"$CUBRID/jdbc/cubrid_jdbc.jar\"`\\;`cygpath -w \"$QA_REPOSITORY/lib/shell/common/commonforjdbc.jar\"`\\;.");
-		script.addCommand("export LD_LIBRARY_PATH=$QA_REPOSITORY/lib/shell/common/commonforc/lib:$LD_LIBRARY_PATH");
-		script.addCommand("export HOME=/d");
-		script.addCommand("export QA_REPOSITORY=`cygpath -w $QA_REPOSITORY`");
-		script.addCommand("export init_path=`cygpath -w $init_path`");
-
-		result = ssh.execute(script);
-
-		workerLog.println(result);
-
-		return true;
-	}
-
-	public boolean runTestCase_linux() throws Exception {
-
-		ShellInput script;
-		String result;
-
-		script = new ShellInput("cd ");
-		script.addCommand("cd " + context.getCtlHome());
-		script.addCommand("export ctlpath=`pwd`");
-
+		IsolationShellInput script = new IsolationShellInput("cd ");		
+		script.addCommand("cd ${ctlpath}");
 		script.addCommand("ulimit -c unlimited");
 		script.addCommand("export TEST_ID=" + this.context.getFeedback().getTaskId());
 		script.addCommand("sh runone.sh -r " + context.getProperty("main.testcase.retry") + " $HOME/" + testCaseFullName + " " + context.getProperty("main.testcase.timeout") + " "
@@ -251,10 +219,10 @@ public class Test {
 	private void processCoreFile() throws Exception {
 		String result;
 
-		String findCmd = "find $CUBRID " + context.getCtlHome() + " " + this.testCaseDir + " -name 'core.*'";
+		String findCmd = "find $CUBRID ${CTP_HOME} ${init_path} " + this.testCaseDir + " -name 'core.*'";
 
-		ShellInput script;
-		script = new ShellInput("cd; " + findCmd + "| grep -v 'core.log'");
+		IsolationShellInput script;
+		script = new IsolationShellInput("cd; " + findCmd + "| grep -v 'core.log'");
 
 		result = ssh.execute(script);
 		if (result != null && result.trim().equals("") == false) {
@@ -263,7 +231,7 @@ public class Test {
 			result = CommonUtils.replace(result, "\r", ", ");
 			this.addResultItem("NOK", "FOUND CORE(S): " + result);
 
-			script = new ShellInput("cd; " + findCmd + " -exec rm -rf {} \\;");
+			script = new IsolationShellInput("cd; " + findCmd + " -exec rm -rf {} \\;");
 			result = ssh.execute(script);
 		}
 	}
@@ -287,10 +255,10 @@ public class Test {
 			e.printStackTrace();
 		}
 
-		String host = context.getProperty("env." + currEnvId + ".ssh.host");
-		String port = context.getProperty("env." + currEnvId + ".ssh.port");
-		String user = context.getProperty("env." + currEnvId + ".ssh.user");
-		String pwd = context.getProperty("env." + currEnvId + ".ssh.pwd");
+		String host = context.getInstanceProperty(currEnvId, "ssh.host");
+		String port = context.getInstanceProperty(currEnvId, "ssh.port");
+		String user = context.getInstanceProperty(currEnvId, "sh.user");
+		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 
 		this.ssh = new SSHConnect(host, port, user, pwd);
 	}

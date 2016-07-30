@@ -28,34 +28,40 @@
 package com.navercorp.cubridqa.isolation;
 
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 
-import com.navercorp.cubridqa.shell.common.CommonUtils;
+import com.navercorp.cubridqa.isolation.impl.FeedbackDB;
+import com.navercorp.cubridqa.isolation.impl.FeedbackFile;
+import com.navercorp.cubridqa.isolation.impl.FeedbackNull;
+import com.navercorp.cubridqa.common.CommonUtils;
 
 public class Context {
+	
+	private String ctpHome;
+	private String rootLogDir;
+	private String currentLogDir;
 
-	Properties config;
+	private Properties config;
 
 	private boolean isContinueMode = false;
 
-	ArrayList<String> envList;
+	private ArrayList<String> envList;
 
-	String cubridPackageUrl;
-
-	private boolean cleanTestCase = false;
+	private boolean shouldUpdateTestCase = false;
 
 	private String filename;
 
-	boolean isWindows = false;
+	private boolean isWindows = false;
 
-	Feedback feedback;
+	private Feedback feedback;
 
-	String build;
+	private String buildId;
 
-	String version;
+	private String buildBits;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -65,10 +71,22 @@ public class Context {
 	public void reload() throws IOException {
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
 		this.envList = initEnvList(config);
+		this.ctpHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
 
-		this.cleanTestCase = getProperty("main.testcase.clean", "false").equalsIgnoreCase("true");
+		this.shouldUpdateTestCase = getProperty("main.testcase.update_yn", "false").equalsIgnoreCase("true");
 		this.isWindows = getProperty("main.testing.platform", "linux").equalsIgnoreCase("windows");
 		this.isContinueMode = getProperty("main.mode.continue", "false").equalsIgnoreCase("true");
+		
+		String feedbackType = getProperty("main.feedback.type", "").trim();
+		if (feedbackType.equalsIgnoreCase("file")) {
+			this.feedback = new FeedbackFile(this);
+		} else if (feedbackType.equalsIgnoreCase("database")) {
+			this.feedback = new FeedbackDB(this);
+		} else {
+			this.feedback = new FeedbackNull();
+		}
+		
+		setLogDir("isolation");
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {
@@ -96,6 +114,20 @@ public class Context {
 	public ArrayList<String> getEnvList() {
 		return this.envList;
 	}
+	
+	public String getInstanceProperty(String envId, String key, String defaultValue) {
+		String value = getInstanceProperty(envId, key);
+		if (value == null || value.trim().equals("")) {
+			return defaultValue;
+		} else {
+			return value;
+		}
+	}
+
+	public String getInstanceProperty(String envId, String key){
+		String value = getProperty("env." + envId + "." + key);
+		return value == null ? getProperty("default." + key, "") : value;
+	}
 
 	public boolean isContinueMode() {
 		return this.isContinueMode;
@@ -113,16 +145,8 @@ public class Context {
 		return getProperty("main.testbuild.url");
 	}
 
-	public boolean getCleanTestCase() {
-		return cleanTestCase;
-	}
-
-	public String getSVNUserInfo() {
-		String user = getProperty("main.svn.user", "");
-		String pwd = getProperty("main.svn.pwd", "");
-		if (user.trim().equals("") || pwd.trim().equals(""))
-			return "";
-		return " --username " + user + " --password " + pwd + " --non-interactive ";
+	public boolean shouldUpdateTestCase() {
+		return shouldUpdateTestCase;
 	}
 
 	public boolean isWindows() {
@@ -149,42 +173,32 @@ public class Context {
 
 	public String getFeedbackDbUser() {
 		String user = getProperty("feedback.db.user", "");
-
 		return user;
 	}
 
 	public String getFeedbackDbPwd() {
 		String pwd = getProperty("feedback.db.pwd", "");
-
 		return pwd;
 	}
 
-	public void setTestBuild(String build) {
-		this.build = build;
+	public void setBuildId(String buildId) {
+		this.buildId = buildId;
 	}
 
-	public String getTestBuild() {
-		return this.build;
+	public String getBuildId() {
+		return this.buildId;
 	}
 
-	public void setVersion(String version) {
-		this.version = version;
+	public void setBuildBits(String bits) {
+		this.buildBits = bits;
 	}
 
-	public String getVersion() {
-		return this.version;
+	public String getBuildBits() {
+		return this.buildBits;
 	}
 
 	public Properties getProperties() {
 		return this.config;
-	}
-
-	public String getCtlHome() {
-		return this.config.getProperty("ctl.home").trim();
-	}
-
-	public boolean isUpdateCTL() {
-		return this.config.getProperty("ctl.git.update", "false").equalsIgnoreCase("true");
 	}
 
 	public boolean isStartMonitor() {
@@ -206,6 +220,19 @@ public class Context {
 			}
 		}
 		return Constants.DB_TEST_MAP.get(v);
+	}
+	
+	public void setLogDir(String category) {
+		this.rootLogDir = ctpHome + "/result/" + category;
+		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
+	}
+	
+	public String getCurrentLogDir() {
+		return this.currentLogDir;
+	}
+	
+	public String getLogRootDir() {
+		return this.rootLogDir;
 	}
 
 }

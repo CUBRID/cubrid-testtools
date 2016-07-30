@@ -28,6 +28,8 @@ import java.io.File;
 import java.util.Properties;
 
 public class Constants {
+	
+	public static final String ENV_CTP_HOME_KEY="CTP_HOME";
 
 	public final static String LINE_SEPARATOR = System.getProperty("line.separator");
 	
