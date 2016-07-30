@@ -28,7 +28,7 @@ package com.navercorp.cubridqa.ha_repl;
 
 import java.util.ArrayList;
 
-import com.navercorp.cubridqa.ha_repl.common.Constants;
+
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
