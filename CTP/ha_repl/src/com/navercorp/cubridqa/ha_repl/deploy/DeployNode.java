@@ -28,15 +28,16 @@ package com.navercorp.cubridqa.ha_repl.deploy;
 
 import java.util.ArrayList;
 
+
+
 import java.util.Properties;
 import java.util.Set;
 
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.HostManager;
-import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.ha_repl.common.SSHConnect;
-import com.navercorp.cubridqa.ha_repl.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.GeneralShellInput;
 
 public class DeployNode {
 
@@ -67,7 +68,7 @@ public class DeployNode {
 		this.type = type;
 		this.hostManager = hostManager;
 		this.context = context;
-		this.deploylog = new Log(Constants.DIR_LOG_ROOT + "/deploy_" + envId + ".log", true, true);
+		this.deploylog = new Log(context.getCurrentLogDir() + "/deploy_" + envId + ".log", true, true);
 	}
 
 	public void deploy() throws Exception {
@@ -150,7 +151,7 @@ public class DeployNode {
 		s.append("pkill cub").append(";");
 		s.append("rm -rf ~/CUBRID").append(";");
 		s.append("ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {}").append(";");
-		ShellInput script = new ShellInput(s.toString());
+		GeneralShellInput script = new GeneralShellInput(s.toString());
 		try {
 			ssh.execute(script);
 		} catch (Exception e) {
@@ -163,7 +164,7 @@ public class DeployNode {
 
 		String role = context.getProperty("main.testing.role", "").trim();
 		deploylog.log("Start Install Build");
-		ShellInput scripts = new ShellInput();
+		GeneralShellInput scripts = new GeneralShellInput();
 
 		scripts.addCommand("if [ \"`ulimit -c`\" != \"unlimited\" ] ; then ");
 		scripts.addCommand("    echo 'ulimit -c unlimited' >> .bash_profile");
@@ -184,7 +185,7 @@ public class DeployNode {
 		String gitUser = context.getProperty("main.git.user", "").trim();
 		String gitPwd = context.getProperty("main.git.pwd", "").trim();
 		String gitMail = context.getProperty("main.git.mail", "").trim();
-		ShellInput scripts = new ShellInput();
+		GeneralShellInput scripts = new GeneralShellInput();
 		scripts.addCommand("function git_update_cubrid_common {");
 		scripts.addCommand("  ( cd $HOME/cubrid_common; sh upgrade.sh)");
 		scripts.addCommand("   export PATH=$HOME/cubrid_common:$PATH");
@@ -204,7 +205,7 @@ public class DeployNode {
 	}
 
 	private void makeI18N() throws Exception {
-		ShellInput scripts = new ShellInput();
+		GeneralShellInput scripts = new GeneralShellInput();
 		scripts.addCommand("cp ~/CUBRID/conf/cubrid_locales.all.txt ~/CUBRID/conf/cubrid_locales.txt");
 		scripts.addCommand("~/CUBRID/bin/make_locale.sh -t 64bit");
 		scripts.addCommand("cubrid deletedb demodb");
@@ -222,7 +223,7 @@ public class DeployNode {
 	}
 
 	private void configStep() throws Exception {
-		ShellInput scripts = new ShellInput();
+		GeneralShellInput scripts = new GeneralShellInput();
 		// configure cubrid.conf
 		scripts.addCommand("sed -i 's/cubrid_port_id=1523/cubrid_port_id=" + this.cubrid_port_id + "/' ~/CUBRID/conf/cubrid.conf");
 		scripts.addCommand("sed -i 's/data_buffer_size=512M/data_buffer_size=512M/' ~/CUBRID/conf/cubrid.conf");
@@ -267,7 +268,7 @@ public class DeployNode {
 	private boolean is_above_banana_vesion() throws Exception {
 		boolean flag = false;
 
-		String buildId = context.getVersionId();
+		String buildId = context.getBuildId();
 		String arr[] = buildId.split("\\.");
 
 		deploylog.log("Version number:" + buildId);

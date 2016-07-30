@@ -27,15 +27,13 @@
 package com.navercorp.cubridqa.ha_repl.dispatch;
 
 import java.io.File;
-
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import com.navercorp.cubridqa.ha_repl.Context;
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
-import com.navercorp.cubridqa.ha_repl.common.Constants;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
+import com.navercorp.cubridqa.ha_repl.Context;
 
 public class Dispatch {
 
@@ -95,10 +93,10 @@ public class Dispatch {
 	private void load() throws Exception {
 
 		if (this.isContinueMode) {
-			this.tbdList = CommonUtils.getLineList(CommonUtils.getFileNameForDispatchAll());
+			this.tbdList = CommonUtils.getLineList(getFileNameForDispatchAll());
 			ArrayList<String> finList;
 			for (String envId : envList) {
-				finList = CommonUtils.getLineList(CommonUtils.getFileNameForDispatchFin(envId));
+				finList = CommonUtils.getLineList(getFileNameForDispatchFin(envId));
 				if (finList != null) {
 					this.tbdList.removeAll(finList);
 				}
@@ -126,7 +124,7 @@ public class Dispatch {
 				}
 			}
 
-			this.all = new Log(CommonUtils.getFileNameForDispatchAll(), false);
+			this.all = new Log(getFileNameForDispatchAll(), false);
 			for (String line : tbdList) {
 				all.println(line);
 			}
@@ -147,6 +145,14 @@ public class Dispatch {
 				tbdList.add(testCaseFile.getAbsolutePath());
 			}
 		}
+	}
+	
+	public String getFileNameForDispatchAll() {
+		return CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_ALL.txt");
+	}
+
+	public String getFileNameForDispatchFin(String envName) {
+		return CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envName + ".txt");
 	}
 
 	private ArrayList<String> findExcludedList() throws Exception {
@@ -177,7 +183,7 @@ public class Dispatch {
 		File allFile;
 		File finishedFile;
 
-		File[] subList = new File(Constants.DIR_CONF).listFiles(new FilenameFilter() {
+		File[] subList = new File(context.getCurrentLogDir()).listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return name.startsWith("dispatch_tc_");
 			}
@@ -186,11 +192,11 @@ public class Dispatch {
 			file.delete();
 		}
 
-		allFile = new File(CommonUtils.getFileNameForDispatchAll());
+		allFile = new File(getFileNameForDispatchAll());
 		allFile.createNewFile();
 
 		for (String envName : envList) {
-			finishedFile = new File(CommonUtils.getFileNameForDispatchFin(envName));
+			finishedFile = new File(getFileNameForDispatchFin(envName));
 			finishedFile.createNewFile();
 		}
 	}

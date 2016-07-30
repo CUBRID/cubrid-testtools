@@ -28,14 +28,17 @@ package com.navercorp.cubridqa.ha_repl.deploy;
 
 import java.util.ArrayList;
 
+
+
 import java.util.Properties;
 
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.HostManager;
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.ha_repl.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.GeneralShellInput;
 
 public class Deploy {
 
@@ -58,10 +61,10 @@ public class Deploy {
 	private void logMessage(String strMessage) {
 		Log deploylog = null;
 		if (logStart == false) {
-			deploylog = new Log(Constants.DIR_LOG_ROOT + "/deploy_" + envId + ".log", true, false);
+			deploylog = new Log(context.getCurrentLogDir() + "/deploy_" + envId + ".log", true, false);
 			logStart = true;
 		} else {
-			deploylog = new Log(Constants.DIR_LOG_ROOT + "/deploy_" + envId + ".log", true, true);
+			deploylog = new Log(context.getCurrentLogDir() + "/deploy_" + envId + ".log", true, true);
 		}
 		deploylog.log(strMessage);
 		deploylog.close();

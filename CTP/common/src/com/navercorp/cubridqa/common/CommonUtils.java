@@ -519,4 +519,31 @@ public class CommonUtils {
 		}
 		return version;
 	}
+	
+	public static boolean containToken(String filename, String token) throws IOException {
+
+		File file = new File(filename);
+		if (!file.exists()) {
+			return false;
+		}
+
+		FileInputStream fis = new FileInputStream(file);
+		InputStreamReader reader = new InputStreamReader(fis, "UTF-8");
+
+		LineNumberReader lineReader = new LineNumberReader(reader);
+		String line;
+		String upperToken = token.toUpperCase().trim();
+
+		boolean hasToken = false;
+		while ((line = lineReader.readLine()) != null) {
+			if (line.toUpperCase().indexOf(upperToken) != -1) {
+				hasToken = true;
+				break;
+			}
+		}
+		lineReader.close();
+		reader.close();
+		fis.close();
+		return hasToken;
+	}
 }

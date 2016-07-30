@@ -28,7 +28,6 @@ package com.navercorp.cubridqa.ha_repl;
 
 import java.io.File;
 
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -41,13 +40,13 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.common.DBConnection;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.ha_repl.common.SSHConnect;
-import com.navercorp.cubridqa.ha_repl.common.ShellInput;
-import com.navercorp.cubridqa.ha_repl.common.SyncException;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.SyncException;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
 
 public class Test {
@@ -94,9 +93,9 @@ public class Test {
 		this.port = props.getProperty("cubrid.ha.port");
 		this.broker_port = props.getProperty("cubrid.ha.broker.port");
 
-		this.mlog = new Log(CommonUtils.concatFile(Constants.DIR_LOG_ROOT, "test_" + envId + ".log"), false, isContinueMode);
-		this.finishedLog = new Log(CommonUtils.getFileNameForDispatchFin(envId), true, isContinueMode);
-		this.commonReader = new CommonReader(CommonUtils.concatFile(Constants.DIR_CONF, "common.inc"));
+		this.mlog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + envId + ".log"), false, isContinueMode);
+		this.finishedLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt"), true, isContinueMode);
+		this.commonReader = new CommonReader(CommonUtils.concatFile(context.getCtpHome() + "/ha_repl/lib", "common.inc"));
 	}
 
 	public void runAll() {
@@ -128,7 +127,7 @@ public class Test {
 			}
 
 			if (isFinalDatabaseDirty() || haveLeapInCurrTestCase != haveLeapInLastDB) {
-				CUBRID_HA_Util.rebuildFinalDatabase(context, hostManager, testDb, mlog, haveLeapInCurrTestCase ? "tz_leap_second_support=yes" : "");
+				HAUtils.rebuildFinalDatabase(context, hostManager, testDb, mlog, haveLeapInCurrTestCase ? "tz_leap_second_support=yes" : "");
 			}
 
 			haveLeapInLastDB = haveLeapInCurrTestCase;
@@ -166,7 +165,7 @@ public class Test {
 
 		masterDumpLog = new Log(logFilename + ".master.dump", false);
 
-		ArrayList<SSHConnect> slaveAndReplicaList = CUBRID_HA_Util.getAllSlaveAndReplicaList(hostManager);
+		ArrayList<SSHConnect> slaveAndReplicaList = HAUtils.getAllSlaveAndReplicaList(hostManager);
 		for (SSHConnect ssh : slaveAndReplicaList) {
 			Log slave_replicat_log = new Log(logFilename + "." + ssh.getTitle() + ".dump", false);
 			logHashTable.put(ssh.getTitle(), slave_replicat_log);
@@ -360,7 +359,7 @@ public class Test {
 		} while (RETRY > 0);
 
 		masterDumpLog(expectResult);
-		ArrayList<SSHConnect> slaveAndReplicaList = CUBRID_HA_Util.getAllSlaveAndReplicaList(hostManager);
+		ArrayList<SSHConnect> slaveAndReplicaList = HAUtils.getAllSlaveAndReplicaList(hostManager);
 		int len = slaveAndReplicaList.size();
 		for (int i = 0; i < len; i++) {
 			this.logHashTable.get(slaveAndReplicaList.get(i).getTitle()).println(actualResultList.get(i));
@@ -404,7 +403,7 @@ public class Test {
 	}
 
 	private void clearDatabaseLog() {
-		ArrayList<SSHConnect> allNodeList = CUBRID_HA_Util.getAllNodeList(hostManager);
+		ArrayList<SSHConnect> allNodeList = HAUtils.getAllNodeList(hostManager);
 		String cmd = "find ~/CUBRID/log -type f -print | xargs -i sh -c 'cat /dev/null > {}'";
 		for (SSHConnect ssh : allNodeList) {
 			try {
@@ -418,9 +417,9 @@ public class Test {
 	}
 
 	private String collectMoreInfoWhenFail() {
-		ArrayList<SSHConnect> allNodeList = CUBRID_HA_Util.getAllNodeList(hostManager);
+		ArrayList<SSHConnect> allNodeList = HAUtils.getAllNodeList(hostManager);
 
-		String resultId = getResultId(context.getFeedback().getTaskId(), null, "FAIL", context.getVersionId());
+		String resultId = getResultId(context.getFeedback().getTaskId(), null, "FAIL", context.getBuildId());
 		String result;
 
 		for (SSHConnect ssh : allNodeList) {
@@ -441,10 +440,10 @@ public class Test {
 	}
 
 	private boolean checkCoresAndErrors() {
-		ArrayList<SSHConnect> allNodeList = CUBRID_HA_Util.getAllNodeList(hostManager);
+		ArrayList<SSHConnect> allNodeList = HAUtils.getAllNodeList(hostManager);
 		String result;
 		String hitHost;
-		ShellInput checkScript;
+		GeneralShellInput checkScript;
 		String error = null;
 		String cat;
 		boolean hit = false;
@@ -454,7 +453,7 @@ public class Test {
 			cat = null;
 			try {
 				hitHost = ssh.getHost().trim();
-				checkScript = new ShellInput("find $CUBRID -name \"core.*\" | wc -l");
+				checkScript = new GeneralShellInput("find $CUBRID -name \"core.*\" | wc -l");
 				result = ssh.execute(checkScript);
 				mlog.println("Check core on " + hitHost + ":     \t\t\t" + result.trim());
 
@@ -464,7 +463,7 @@ public class Test {
 					this.hasCore = true;
 				}
 
-				checkScript = new ShellInput("grep -r \"FATAL ERROR\" $CUBRID/log/* | wc -l");
+				checkScript = new GeneralShellInput("grep -r \"FATAL ERROR\" $CUBRID/log/* | wc -l");
 				result = ssh.execute(checkScript);
 				mlog.println("Check fatal error on " + hitHost + ": \t\t\t" + result.trim());
 				if (!result.trim().equals("0")) {
@@ -486,7 +485,7 @@ public class Test {
 			}
 
 			hit = true;
-			String resultId = getResultId(context.getFeedback().getTaskId(), hitHost, cat, context.getVersionId());
+			String resultId = getResultId(context.getFeedback().getTaskId(), hitHost, cat, context.getBuildId());
 			for (SSHConnect ssh1 : allNodeList) {
 				try {
 					result = ssh1.execute(getBackupScripts(resultId, this.currentTestFile));
@@ -506,7 +505,7 @@ public class Test {
 
 		for (SSHConnect ssh : allNodeList) {
 			try {
-				checkScript = new ShellInput("find $CUBRID -name \"core.*\" -exec rm -rf {} \\; ");
+				checkScript = new GeneralShellInput("find $CUBRID -name \"core.*\" -exec rm -rf {} \\; ");
 				result = ssh.execute(checkScript);
 				mlog.println("clean core files: " + ssh.toString());
 			} catch (Exception e) {
@@ -517,9 +516,9 @@ public class Test {
 		return hit;
 	}
 
-	private static ShellInput getBackupScripts(String resultId, String testCase) {
+	private static GeneralShellInput getBackupScripts(String resultId, String testCase) {
 
-		ShellInput script = new ShellInput("");
+		GeneralShellInput script = new GeneralShellInput("");
 		script.addCommand("backup_dir_root=" + Constants.DIR_ERROR_BACKUP);
 		script.addCommand("mkdir -p ${backup_dir_root}");
 		script.addCommand("freadme=${backup_dir_root}/readme.txt ");
@@ -550,7 +549,7 @@ public class Test {
 
 	private void checkCUBRIDLogFile() {
 		String cmd = "grep -s -Ri 'Internal error' ~/CUBRID/log | wc -l";
-		ArrayList<SSHConnect> allNodeList = CUBRID_HA_Util.getAllNodeList(hostManager);
+		ArrayList<SSHConnect> allNodeList = HAUtils.getAllNodeList(hostManager);
 		String result;
 		for (SSHConnect ssh : allNodeList) {
 			try {
@@ -579,9 +578,9 @@ public class Test {
 		SSHConnect ssh = hostManager.getHost("master");
 		String script = "csql -u dba " + testDb
 				+ " -c \"select 'FIND'||'_'||'PK_CLASS', class_name, count(*) from db_attribute where class_name in (select distinct class_name from db_index where is_primary_key='YES' and class_name in (select class_name from db_class where is_system_class='NO' and lower(class_name)<>'qa_system_tb_flag')) group by class_name;\" | grep 'FIND_PK_CLASS' ";
-		ShellInput csql = new ShellInput(script);
+		GeneralShellInput csql = new GeneralShellInput(script);
 		String tablesResult = ssh.execute(csql);
-		ArrayList<String[]> tablesToBeVerified = CommonUtils.extractTableToBeVerified(tablesResult, "FIND_PK_CLASS");
+		ArrayList<String[]> tablesToBeVerified = HAUtils.extractTableToBeVerified(tablesResult, "FIND_PK_CLASS");
 		ArrayList<String> result = new ArrayList<String>();
 		if (tablesToBeVerified.size() == 0) {
 			return result;
@@ -740,7 +739,7 @@ public class Test {
 			boolean shouldExecuteOnSlave = u.indexOf("SETSYSTEMPARAMETERS") != -1 && u.indexOf("TZ_LEAP_SECOND_SUPPORT") == -1;
 
 			if (shouldExecuteOnSlave) {
-				ArrayList<SSHConnect> slaveAndReplicaList = CUBRID_HA_Util.getAllSlaveAndReplicaList(hostManager);
+				ArrayList<SSHConnect> slaveAndReplicaList = HAUtils.getAllSlaveAndReplicaList(hostManager);
 				for (SSHConnect ssh1 : slaveAndReplicaList) {
 					result = executeScript(ssh1, true, false, oriStmt, true);
 				}
@@ -758,7 +757,7 @@ public class Test {
 		String result = null;
 
 		SSHConnect masterSsh = hostManager.getHost("master");
-		ShellInput script = new ShellInput("csql -u dba " + this.testDb + " -c \"select 'EXP' ||'ECT-'|| v from qa_system_tb_flag;\" | grep EXPECT");
+		GeneralShellInput script = new GeneralShellInput("csql -u dba " + this.testDb + " -c \"select 'EXP' ||'ECT-'|| v from qa_system_tb_flag;\" | grep EXPECT");
 
 		long expectedFlagId = -1;
 		if (isSQL && !isTest) {
@@ -774,7 +773,7 @@ public class Test {
 			}
 		}
 
-		ArrayList<SSHConnect> slaveAndReplicaList = CUBRID_HA_Util.getAllSlaveAndReplicaList(hostManager);
+		ArrayList<SSHConnect> slaveAndReplicaList = HAUtils.getAllSlaveAndReplicaList(hostManager);
 		for (SSHConnect ssh : slaveAndReplicaList) {
 			if (isSQL && !isTest) {
 				waitDataReplicated(ssh, expectedFlagId);
@@ -796,11 +795,11 @@ public class Test {
 			script += stmt + Constants.LINE_SEPARATOR;
 			script += "EOF" + Constants.LINE_SEPARATOR;
 
-			ShellInput csql = new ShellInput(script);
+			GeneralShellInput csql = new GeneralShellInput(script);
 			result = ssh.execute(csql);
 
 		} else if (isCMD) {
-			ShellInput cmd = new ShellInput(stmt + " 2>&1");
+			GeneralShellInput cmd = new GeneralShellInput(stmt + " 2>&1");
 			result = ssh.execute(cmd);
 		}
 
@@ -821,7 +820,7 @@ public class Test {
 	}
 
 	private boolean __isDatabaseDirty() throws Exception {
-		ArrayList<SSHConnect> allHosts = CUBRID_HA_Util.getAllNodeList(hostManager);
+		ArrayList<SSHConnect> allHosts = HAUtils.getAllNodeList(hostManager);
 
 		StringBuffer s = new StringBuffer();
 		s.append("select 'FAIL['||sum(c)||']' flag from ( ");
@@ -834,8 +833,8 @@ public class Test {
 		s.append("    select count(*) c from db_user where name not in ('DBA', 'PUBLIC') ");
 		s.append("    ); ");
 
-		ShellInput script = new ShellInput("csql -u dba " + this.testDb + " -c \"" + s.toString() + "\"");
-		ShellInput scriptMode = new ShellInput("cubrid changemode " + this.testDb);
+		GeneralShellInput script = new GeneralShellInput("csql -u dba " + this.testDb + " -c \"" + s.toString() + "\"");
+		GeneralShellInput scriptMode = new GeneralShellInput("cubrid changemode " + this.testDb);
 
 		String result;
 		SSHConnect ssh;
@@ -872,21 +871,21 @@ public class Test {
 		mlog.print(Constants.LINE_SEPARATOR + "begin to rebuild flag table ... ");
 
 		SSHConnect masterNode = hostManager.getHost("master");
-		ShellInput script;
+		GeneralShellInput script;
 
-		script = new ShellInput("csql -u dba " + this.testDb + " -c \"drop table QA_SYSTEM_TB_FLAG;\"");
+		script = new GeneralShellInput("csql -u dba " + this.testDb + " -c \"drop table QA_SYSTEM_TB_FLAG;\"");
 		masterNode.execute(script);
 
 		this.globalFlag++;
-		script = new ShellInput("csql -u dba " + this.testDb + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values (" + this.globalFlag + ");\"");
+		script = new GeneralShellInput("csql -u dba " + this.testDb + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values (" + this.globalFlag + ");\"");
 		masterNode.execute(script);
 
 		mlog.println("DONE");
 	}
 
 	private boolean waitDataReplicated(SSHConnect ssh, long expectedFlagId) throws Exception {
-		ShellInput script = new ShellInput("csql -u dba " + this.testDb + " -c \"select 'GO'||'OD-'||v FROM QA_SYSTEM_TB_FLAG \" | grep GOOD");
-		ShellInput scriptMore = new ShellInput("cubrid applyinfo " + this.testDb + " -L ~/CUBRID/databases/" + this.testDb + "_* -a | grep -E 'count|LSA'");
+		GeneralShellInput script = new GeneralShellInput("csql -u dba " + this.testDb + " -c \"select 'GO'||'OD-'||v FROM QA_SYSTEM_TB_FLAG \" | grep GOOD");
+		GeneralShellInput scriptMore = new GeneralShellInput("cubrid applyinfo " + this.testDb + " -L ~/CUBRID/databases/" + this.testDb + "_* -a | grep -E 'count|LSA'");
 		String result, halfApplyResult = null, currentApplyResult;
 		int MAX = 100;
 		int cnt = 0;
@@ -971,7 +970,7 @@ public class Test {
 		s.append("rm -rf ~/CUBRID").append(";");
 		s.append("ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {}").append(";");
 
-		ArrayList<SSHConnect> list = CUBRID_HA_Util.getAllNodeList(hostManager);
+		ArrayList<SSHConnect> list = HAUtils.getAllNodeList(hostManager);
 		for (SSHConnect ssh : list) {
 			try {
 				executeScript(ssh, false, true, s.toString(), false);

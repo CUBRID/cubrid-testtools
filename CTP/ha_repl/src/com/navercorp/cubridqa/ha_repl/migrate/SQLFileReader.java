@@ -27,6 +27,7 @@
 package com.navercorp.cubridqa.ha_repl.migrate;
 
 import java.io.File;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,7 +35,7 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStreamWriter;
 
-import com.navercorp.cubridqa.ha_repl.common.CommonUtils;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 
 public class SQLFileReader {
