@@ -24,10 +24,8 @@
  */
 package com.navercorp.cubridqa.common;
 
-import java.io.File;
-
-
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -38,6 +36,8 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,8 +47,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.navercorp.cubridqa.common.CommonUtils;
 
 public class CommonUtils {
 	public static String replace(String strSource, String strFrom, String strTo) {
@@ -545,5 +543,64 @@ public class CommonUtils {
 		reader.close();
 		fis.close();
 		return hasToken;
+	}
+	
+	public static String getFileMD5(File file) throws Exception {
+		if (!file.isFile() || file.exists() == false ) {
+			return null;
+		}
+		MessageDigest digest = null;
+		FileInputStream in = null;
+		byte buffer[] = new byte[8192];
+		int len;
+		try {
+			digest = MessageDigest.getInstance("MD5");
+			in = new FileInputStream(file);
+			while ((len = in.read(buffer)) != -1) {
+				digest.update(buffer, 0, len);
+			}
+			BigInteger bigInt = new BigInteger(1, digest.digest());
+			return bigInt.toString(16);
+		} finally {
+			try {
+				in.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static int greaterThanVersion(String v1, String v2) {
+		String[] a1 = v1.split("\\.");
+		String[] a2 = v2.split("\\.");
+		int p1, p2;
+		for (int i = 0; i < 4; i++) {
+			p1 = Integer.parseInt(a1[i]);
+			p2 = Integer.parseInt(a2[i]);
+			if (p1 == p2)
+				continue;
+			return (p1 > p2) ? 1 : -1;
+		}
+		return 0;
+	}
+
+	public static int getVersionNum(String versionId, int pos) {
+		String[] arr = versionId.split("\\.");
+		return Integer.parseInt(arr[pos - 1]);
+	}
+
+	public static boolean haveCharsetToCreateDB(String versionId) {
+		if (greaterThanVersion(versionId, Constants.HAVE_CHARSET_10) >= 0) {
+			return true;
+		} else if (getVersionNum(versionId, 1) == 9 && greaterThanVersion(versionId, Constants.HAVE_CHARSET_9) >= 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean supportInquireOnExit(String buildId) {
+		String arr[] = buildId.split("\\.");
+		return Integer.parseInt(arr[0]) >= 10;
 	}
 }

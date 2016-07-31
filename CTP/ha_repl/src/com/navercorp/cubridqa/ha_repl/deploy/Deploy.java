@@ -28,78 +28,57 @@ package com.navercorp.cubridqa.ha_repl.deploy;
 
 import java.util.ArrayList;
 
-
-
-import java.util.Properties;
-
-import com.navercorp.cubridqa.ha_repl.Context;
-import com.navercorp.cubridqa.ha_repl.HostManager;
-import com.navercorp.cubridqa.ha_repl.common.Constants;
-import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
+import com.navercorp.cubridqa.ha_repl.Context;
+import com.navercorp.cubridqa.ha_repl.InstanceManager;
+import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.GeneralShellInput;
 
 public class Deploy {
 
 	String envId;
-	HostManager hostManager;
-	Properties props;
+	InstanceManager hostManager;
 	Boolean logStart = false;
-	String cubridPackageUrl;
 	Context context;
+	Log log;
 
-	public Deploy(String envId, String configFilename, String cubridPackageUrl, Context context) throws Exception {
+	public Deploy(Context context, String envId) throws Exception {
 		this.envId = envId;
-		this.props = CommonUtils.getProperties(configFilename);
-		this.hostManager = new HostManager(props);
-
-		this.cubridPackageUrl = cubridPackageUrl;
-		this.context = context;
-	}
-
-	private void logMessage(String strMessage) {
-		Log deploylog = null;
-		if (logStart == false) {
-			deploylog = new Log(context.getCurrentLogDir() + "/deploy_" + envId + ".log", true, false);
-			logStart = true;
-		} else {
-			deploylog = new Log(context.getCurrentLogDir() + "/deploy_" + envId + ".log", true, true);
-		}
-		deploylog.log(strMessage);
-		deploylog.close();
-
+		this.context = context;		
+		this.hostManager = new InstanceManager(context, envId);
+		this.log = new Log(context.getCurrentLogDir() + "/deploy_" + envId + ".log", true, context.isContinueMode());
 	}
 
 	public void deployAll() throws Exception {
-		// if(1==1) return;
-		String tempMessage = "Start deployAll";
-		logMessage(tempMessage);
-		SSHConnect master = hostManager.getHost("master");
-		deployOne(master, Constants.TYPE_MASTER, hostManager, envId);
-		tempMessage = "envId is " + envId + ". Master delployment finished.";
-		logMessage(tempMessage);
+		SSHConnect ssh;
+
+		log.log("Start deployAll");
+
+		ssh = hostManager.getHost("master");
+		deployOne(Constants.TYPE_MASTER, ssh);
+		log.log("envId is " + envId + ". Master delployment finished." + ssh.getTitle());
+
 		ArrayList<SSHConnect> list;
+
 		list = hostManager.getAllHost("slave");
-		for (final SSHConnect slave : list) {
-			deployOne(slave, Constants.TYPE_SLAVE, hostManager, envId);
+		for (SSHConnect slave : list) {
+			deployOne(Constants.TYPE_SLAVE, slave);
+			log.log("envId is " + envId + ". Slave delployment finished." + slave.getTitle());
 		}
-		tempMessage = "envId is " + envId + ". Slave delployment finished. Slave count is " + list.size() + ".";
-		logMessage(tempMessage);
+
 		list = hostManager.getAllHost("replica");
 		for (final SSHConnect replica : list) {
-			deployOne(replica, Constants.TYPE_REPLICA, hostManager, envId);
+			deployOne(Constants.TYPE_REPLICA, replica);
+			log.log("envId is " + envId + ". Reolica delployment finished." + replica.getTitle());
 		}
-		tempMessage = "envId is " + envId + ". Replica delployment finished. Replica count is " + list.size() + ".";
-		logMessage(tempMessage);
 	}
 
 	public void close() {
 		this.hostManager.close();
 	}
 
-	public void deployOne(SSHConnect ssh, int type, HostManager hostManager, String envId) throws Exception {
-		DeployNode deployNode = new DeployNode(cubridPackageUrl, props, ssh, type, hostManager, envId, context);
+	private void deployOne(int haRole, SSHConnect ssh) throws Exception {
+		DeployNode deployNode = new DeployNode(context, haRole, hostManager, ssh);
 		deployNode.deploy();
 	}
 }

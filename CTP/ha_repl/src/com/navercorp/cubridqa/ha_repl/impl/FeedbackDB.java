@@ -42,7 +42,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.Feedback;
-import com.navercorp.cubridqa.ha_repl.HostManager;
+import com.navercorp.cubridqa.ha_repl.InstanceManager;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.shell.common.HttpUtil;
 import com.navercorp.cubridqa.common.CommonUtils;
@@ -65,7 +65,7 @@ public class FeedbackDB implements Feedback {
 	}
 
 	@Override
-	public void onTaskStartEvent(String buildFilename) {
+	public void onTaskStartEvent() {
 		println("[TASK START] Current Time is " + new Date());
 
 		PreparedStatement stmt = null;
@@ -153,7 +153,7 @@ public class FeedbackDB implements Feedback {
 	}
 
 	@Override
-	public void onStopEnvEvent(HostManager hostManager, Log log) {
+	public void onStopEnvEvent(InstanceManager hostManager, Log log) {
 
 	}
 

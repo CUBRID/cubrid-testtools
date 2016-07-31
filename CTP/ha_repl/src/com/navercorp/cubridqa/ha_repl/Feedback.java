@@ -30,7 +30,7 @@ import com.navercorp.cubridqa.common.Log;
 
 public interface Feedback {
 
-	public void onTaskStartEvent(String buildFilename);
+	public void onTaskStartEvent();
 
 	public void onTaskContinueEvent();
 
@@ -54,6 +54,6 @@ public interface Feedback {
 
 	public int getTaskId();
 
-	public void onStopEnvEvent(HostManager hostManager, Log log);
+	public void onStopEnvEvent(InstanceManager hostManager, Log log);
 
 }

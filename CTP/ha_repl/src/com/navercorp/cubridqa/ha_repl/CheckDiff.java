@@ -39,14 +39,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Properties;
 
-//TODO 
 public class CheckDiff {
-	public int check(String FilePath, String masterName, String slaveOrReplicaFile, String fileSuffix) {
-		// String FilePath =
-		// "E:/Informations/Projects/CUBRID_HA/HA/ha_repl_fm/NOKFiles_54_user1_09";
-		String masterFile = FilePath + "." + masterName + ".dump";
-		String slaveFile = FilePath + "." + slaveOrReplicaFile + ".dump";
-		String master_slaveOrReplicaDiffFile = FilePath + "." + masterName + "." + slaveOrReplicaFile + "." + fileSuffix;
+	public int check(String filePath, String masterName, String slaveOrReplicaName, String fileSuffix) {
+		String masterFile = filePath + "." + masterName + ".dump";
+		String slaveFile = filePath + "." + slaveOrReplicaName + ".dump";
+		String master_slaveOrReplicaDiffFile = filePath + "." + masterName + "." + slaveOrReplicaName + "." + fileSuffix;
 		String master_slaveOrReplicaDiffFileTemp = master_slaveOrReplicaDiffFile + ".temp";
 		String command = "sh -c 'diff " + masterFile + " " + slaveFile + " > " + master_slaveOrReplicaDiffFileTemp + "'";
 		String command1 = "sh -c 'diff " + master_slaveOrReplicaDiffFile + " " + master_slaveOrReplicaDiffFileTemp + "'";
@@ -62,7 +59,7 @@ public class CheckDiff {
 				result = ExecCommand(command1);
 			}
 		} else if (OS.contains("Linux")) {
-			File file = new File(FilePath + ".sh");
+			File file = new File(filePath + ".sh");
 			try {
 				OutputStream out;
 				out = new FileOutputStream(file);
@@ -75,9 +72,9 @@ public class CheckDiff {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			command = "sh " + FilePath + ".sh";
+			command = "sh " + filePath + ".sh";
 			if (ExecCommand(command) != 0) {
-				File file1 = new File(FilePath + "1.sh");
+				File file1 = new File(filePath + "1.sh");
 				try {
 					OutputStream out;
 					out = new FileOutputStream(file1);
@@ -90,7 +87,7 @@ public class CheckDiff {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				command1 = "sh " + FilePath + "1.sh";
+				command1 = "sh " + filePath + "1.sh";
 				result = ExecCommand(command1);
 				file1.delete();
 			}

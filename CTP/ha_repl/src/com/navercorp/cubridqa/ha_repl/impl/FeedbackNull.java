@@ -29,7 +29,7 @@ package com.navercorp.cubridqa.ha_repl.impl;
 import com.navercorp.cubridqa.ha_repl.Context;
 
 import com.navercorp.cubridqa.ha_repl.Feedback;
-import com.navercorp.cubridqa.ha_repl.HostManager;
+import com.navercorp.cubridqa.ha_repl.InstanceManager;
 import com.navercorp.cubridqa.common.Log;
 
 public class FeedbackNull implements Feedback {
@@ -39,7 +39,7 @@ public class FeedbackNull implements Feedback {
 	}
 
 	@Override
-	public void onTaskStartEvent(String buildFilename) {
+	public void onTaskStartEvent() {
 		// TODO Auto-generated method stub
 
 	}
@@ -116,7 +116,7 @@ public class FeedbackNull implements Feedback {
 	}
 
 	@Override
-	public void onStopEnvEvent(HostManager hostManager, Log log) {
+	public void onStopEnvEvent(InstanceManager hostManager, Log log) {
 
 	}
 

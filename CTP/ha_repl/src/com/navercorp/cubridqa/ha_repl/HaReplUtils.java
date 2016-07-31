@@ -32,19 +32,18 @@ import java.util.regex.Pattern;
 
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.ha_repl.common.Constants;
-import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
 
-public class HAUtils {
+public class HaReplUtils {
 
 	private static int MAX_TRY_WAIT_STATUS = 180;
 
-	public static void rebuildFinalDatabase(Context context, HostManager hostManager, String dbName, Log log, String... params) {
+	public static void rebuildFinalDatabase(Context context, InstanceManager hostManager, Log log, String... params) {
 		int maxTry = 5;
 		while (maxTry-- > 0) {
 			try {
-				__rebuildDatabase(context, hostManager, dbName, log, params);
+				__rebuildDatabase(context, hostManager, log, params);
 				break;
 			} catch (Exception e) {
 				log.println("Rebuild DB Error: " + e.getMessage());
@@ -52,16 +51,18 @@ public class HAUtils {
 		}
 	}
 
-	private static void __rebuildDatabase(Context context, HostManager hostManager, String dbName, Log log, String... params) throws Exception {
+	private static void __rebuildDatabase(Context context, InstanceManager hostManager, Log log, String... params) throws Exception {
 		log.println("DATABASE IS DIRTY. REBUILD...");
 
-		ArrayList<SSHConnect> allHosts = getAllNodeList(hostManager);
+		ArrayList<SSHConnect> allHosts = hostManager.getAllNodeList();
 
 		StringBuffer s = new StringBuffer();
 		s.append("pkill -u $USER cub;ps -u $USER | grep cub | awk '{print $1}' | grep -v PID | xargs -i  kill -9 {}; ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {};cubrid deletedb "
-				+ dbName).append(";");
+				+ hostManager.getTestDb()).append(";");
 		s.append("cd ~/CUBRID/databases/").append(";");
-		s.append("rm -rf ").append(dbName.trim() + "*").append(";");
+		if(CommonUtils.isEmpty(hostManager.getTestDb()) == false) {
+			s.append("rm -rf ").append(hostManager.getTestDb().trim() + "*").append(";");
+		}
 		s.append("cd ~;");
 
 		GeneralShellInput script = new GeneralShellInput(s.toString());
@@ -71,8 +72,8 @@ public class HAUtils {
 
 		s = new StringBuffer();
 		s.append("cd ~/CUBRID/databases").append(";");
-		s.append("mkdir ").append(dbName).append(";");
-		s.append("cd ").append(dbName).append(";");
+		s.append("mkdir ").append(hostManager.getTestDb()).append(";");
+		s.append("cd ").append(hostManager.getTestDb()).append(";");
 
 		if (params != null) {
 			for (String p : params) {
@@ -82,15 +83,15 @@ public class HAUtils {
 			}
 		}
 
-		if (haveCharsetToCreateDB(context.getBuildId())) {
+		if (CommonUtils.haveCharsetToCreateDB(context.getBuildId())) {
 			// use different DBcharset to run test
 			String dbCharset = context.getProperty("main.db.charset", "").trim();
 			if (dbCharset.equals("")) {
 				dbCharset = "en_US";
 			}
-			s.append("cubrid createdb ").append(dbName).append(" --db-volume-size=50M --log-volume-size=50M " + dbCharset + ";");
+			s.append("cubrid createdb ").append(hostManager.getTestDb()).append(" --db-volume-size=50M --log-volume-size=50M " + dbCharset + ";");
 		} else {
-			s.append("cubrid createdb ").append(dbName).append(" --db-volume-size=50M --log-volume-size=50M;");
+			s.append("cubrid createdb ").append(hostManager.getTestDb()).append(" --db-volume-size=50M --log-volume-size=50M;");
 		}
 
 		s.append("cubrid hb start ").append(";");
@@ -106,23 +107,23 @@ public class HAUtils {
 		if (result.indexOf("fail") != -1) {
 			throw new Exception("fail to create on master.");
 		}
-		boolean succ = waitDatabaseReady(master, dbName, "to-be-active", log, MAX_TRY_WAIT_STATUS);
+		boolean succ = waitDatabaseReady(master, hostManager.getTestDb(), "to-be-active", log, MAX_TRY_WAIT_STATUS);
 		if (!succ)
 			throw new Exception("timeout when wait to-be-active in master");
 
-		ArrayList<SSHConnect> slaveAndReplicaList = getAllSlaveAndReplicaList(hostManager);
+		ArrayList<SSHConnect> slaveAndReplicaList = hostManager.getAllSlaveAndReplicaList();
 		for (SSHConnect ssh : slaveAndReplicaList) {
 			log.println("------------ SLAVE/REPLICA : CREATE DATABASE -----------------");
 			result = ssh.execute(script);
 			if (result.indexOf("fail") != -1) {
 				throw new Exception("fail to create on slave/replica.");
 			}
-			succ = waitDatabaseReady(ssh, dbName, "is standby", log, MAX_TRY_WAIT_STATUS);
+			succ = waitDatabaseReady(ssh, hostManager.getTestDb(), "is standby", log, MAX_TRY_WAIT_STATUS);
 			if (!succ)
 				throw new Exception("timeout when wait standby in slave/replica");
 		}
 		log.println("------------ MASTER : WAIT ACTIVE -----------------");
-		succ = waitDatabaseReady(master, dbName, "is active", log, MAX_TRY_WAIT_STATUS);
+		succ = waitDatabaseReady(master, hostManager.getTestDb(), "is active", log, MAX_TRY_WAIT_STATUS);
 		if (!succ)
 			throw new Exception("timout when wait active in master");
 
@@ -144,19 +145,7 @@ public class HAUtils {
 		return false;
 	}
 
-	public static ArrayList<SSHConnect> getAllNodeList(HostManager hostManager) {
-		ArrayList<SSHConnect> allList = new ArrayList<SSHConnect>();
-		allList.add(hostManager.getHost("master"));
-		allList.addAll(getAllSlaveAndReplicaList(hostManager));
-		return allList;
-	}
 
-	public static ArrayList<SSHConnect> getAllSlaveAndReplicaList(HostManager hostManager) {
-		ArrayList<SSHConnect> slaveAndReplicaList = new ArrayList<SSHConnect>();
-		slaveAndReplicaList.addAll(hostManager.getAllHost("slave"));
-		slaveAndReplicaList.addAll(hostManager.getAllHost("replica"));
-		return slaveAndReplicaList;
-	}
 	
 	public static ArrayList<String[]> extractTableToBeVerified(String input, String flag) {
 
@@ -178,34 +167,5 @@ public class HAUtils {
 		}
 		return list;
 
-	}
-
-	public static int greaterThanVersion(String v1, String v2) {
-		String[] a1 = v1.split("\\.");
-		String[] a2 = v2.split("\\.");
-		int p1, p2;
-		for (int i = 0; i < 4; i++) {
-			p1 = Integer.parseInt(a1[i]);
-			p2 = Integer.parseInt(a2[i]);
-			if (p1 == p2)
-				continue;
-			return (p1 > p2) ? 1 : -1;
-		}
-		return 0;
-	}
-
-	public static int getVersionNum(String versionId, int pos) {
-		String[] arr = versionId.split("\\.");
-		return Integer.parseInt(arr[pos - 1]);
-	}
-
-	public static boolean haveCharsetToCreateDB(String versionId) {
-		if (greaterThanVersion(versionId, Constants.HAVE_CHARSET_10) >= 0) {
-			return true;
-		} else if (getVersionNum(versionId, 1) == 9 && greaterThanVersion(versionId, Constants.HAVE_CHARSET_9) >= 0) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 }

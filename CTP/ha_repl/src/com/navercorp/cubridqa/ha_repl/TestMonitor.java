@@ -41,15 +41,16 @@ public class TestMonitor {
 	SSHConnect master;
 	ArrayList<SSHConnect> slaveList;
 	Log log;
-	HostManager hostManager;
+	InstanceManager hostManager;
 
 	public TestMonitor(Context context, Test test) throws Exception {
 
 		this.context = context;
 		this.test = test;
-		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(),  "monitor_" + test.envId + ".log"), false, test.isContinueMode);
+		hostManager = test.getInstanceManager();
+		
+		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(),  "monitor_" + hostManager.getEnvId() + ".log"), false, context.isContinueMode());
 
-		hostManager = new HostManager(test.props);
 		this.master = hostManager.getHost("master");
 		this.slaveList = hostManager.getAllHost("slave");
 	}
@@ -65,7 +66,7 @@ public class TestMonitor {
 
 	private void monitorOnce() {
 
-		log.println("alive");
+		//log.println("alive");
 
 		// try{
 		// resolveSlaveIsInActiveMode();
@@ -100,7 +101,7 @@ public class TestMonitor {
 		GeneralShellInput script;
 
 		// resolve standby in master: stop slave to ensure fail over
-		context.getFeedback().onTestCaseMonitor(test.currentTestFile, "[RESOLVE-01] stop heartbeat in slave", test.envId);
+		context.getFeedback().onTestCaseMonitor(test.currentTestFile, "[RESOLVE-01] stop heartbeat in slave", hostManager.getEnvId());
 		log.print("[RESOLVE-1] stop heartbeat in slave (file: " + test.currentTestFile + ") ... ");
 
 		script = new GeneralShellInput("cubrid hb stop");
@@ -136,7 +137,7 @@ public class TestMonitor {
 		GeneralShellInput script;
 
 		// resolve active in slave: stop slave to ensure fail over
-		context.getFeedback().onTestCaseMonitor(test.currentTestFile, "[RESOLVE-02] stop heartbeat in slave", test.envId);
+		context.getFeedback().onTestCaseMonitor(test.currentTestFile, "[RESOLVE-02] stop heartbeat in slave", hostManager.getEnvId());
 		log.print("[RESOLVE-2] stop heartbeat in slave (file: " + test.currentTestFile + ") ... ");
 		script = new GeneralShellInput("cubrid hb stop");
 		activeSlave.execute(script);
@@ -151,7 +152,7 @@ public class TestMonitor {
 	}
 
 	public String getCurrentChangeMode(SSHConnect ssh) throws Exception {
-		GeneralShellInput scriptMode = new GeneralShellInput("cubrid changemode " + test.getTestDb());
+		GeneralShellInput scriptMode = new GeneralShellInput("cubrid changemode " + hostManager.getTestDb());
 		return ssh.execute(scriptMode);
 	}
 
@@ -159,8 +160,8 @@ public class TestMonitor {
 		String result;
 		String currPID, lastPID = null;
 
-		GeneralShellInput script = new GeneralShellInput("cubrid killtran -d " + test.getTestDb() + "| grep sql | awk '{print $4}'");
-		GeneralShellInput resolveScript = new GeneralShellInput("csql -u  dba " + test.getTestDb() + " -c \"drop table qa_system_tb_flag\"");
+		GeneralShellInput script = new GeneralShellInput("cubrid killtran -d " + hostManager.getTestDb() + "| grep sql | awk '{print $4}'");
+		GeneralShellInput resolveScript = new GeneralShellInput("csql -u  dba " + hostManager.getTestDb() + " -c \"drop table qa_system_tb_flag\"");
 
 		boolean needResolve;
 		for (SSHConnect ssh : slaveList) {
@@ -176,7 +177,7 @@ public class TestMonitor {
 				CommonUtils.sleep(2);
 			}
 			if (needResolve) {
-				context.getFeedback().onTestCaseMonitor(test.currentTestFile, "[RESOLVE-03] drop qa_system_tb_flag", test.envId);
+				context.getFeedback().onTestCaseMonitor(test.currentTestFile, "[RESOLVE-03] drop qa_system_tb_flag", hostManager.getEnvId());
 				log.print("[RESOLVE-3] drop qa_system_tb_flag (file: " + test.currentTestFile + ") ... ");
 				master.execute(resolveScript);
 				log.println("DONE");

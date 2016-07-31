@@ -38,4 +38,6 @@ public class Constants {
 		COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile("CTP_HOME") + File.separator + "conf" + File.separator + "dailyqa.conf");
 	}
 
+	public static final String HAVE_CHARSET_10 = "10.0.0.0074";
+	public static final String HAVE_CHARSET_9 = "9.2.0.0067";
 }

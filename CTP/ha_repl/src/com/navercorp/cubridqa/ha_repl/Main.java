@@ -27,36 +27,28 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import java.io.File;
-
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.deploy.Deploy;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
-import com.navercorp.cubridqa.ha_repl.impl.FeedbackDB;
-import com.navercorp.cubridqa.ha_repl.impl.FeedbackFile;
-import com.navercorp.cubridqa.ha_repl.impl.FeedbackNull;
 import com.navercorp.cubridqa.ha_repl.migrate.Convert;
-import com.navercorp.cubridqa.ha_repl.Context;
 
 public class Main {
 	public static void exec(String configFilename) throws Exception {
+		
+		Class.forName("cubrid.jdbc.driver.CUBRIDDriver").newInstance();
 
 		Context context = new Context(configFilename);
 
-		/*
-		 * read test root
-		 */
-		String testRoot = context.getProperty("main.testcase.root");
+		String testRoot = context.getTestCaseRoot();
 		boolean hasError = false;
 		if (testRoot == null || testRoot.trim().equals("")) {
 			hasError = true;
@@ -66,31 +58,23 @@ public class Main {
 			hasError = !file.exists();
 		}
 		if (hasError)
-			throw new Exception("Not found root directory for test cases. Please set it in main.properties.");
+			throw new Exception("Not found test cases directory. Please check 'main.testcase.root' in test configuration file.");
 
-		/*
-		 * continue mode
-		 */
-
-		String cubridPackageUrl = context.getProperty("main.testbuild.url", "").trim();
-		String differMode = context.getProperty("main.differ.mode", "diff_1");
-
+		String cubridPackageUrl = context.getCubridPackageUrl();
 		context.setBuildId(CommonUtils.getBuildId(cubridPackageUrl));
 		context.setBuildBits(CommonUtils.getBuildBits(cubridPackageUrl));
 
 		System.out.println("BUILD URL: " + cubridPackageUrl);
 		System.out.println("BUILD D: " + context.getBuildId());
 		System.out.println("BUILD BITS: " + context.getBuildBits());		
-		System.out.println("Test Mode: " + context.isContinueMode());
+		System.out.println("Continue Mode: " + context.isContinueMode());
 
-		ArrayList<String> envList = getIntanceList(context);
+		ArrayList<String> envList = context.getTestEnvList();
 		System.out.println("Available Env: " + envList);
-
+		
 		if (envList.size() == 0) {
-			throw new Exception("Not found any HA instance to test. (ha_instance_<EnvId>_<ON|OFF>.properties)");
+			throw new Exception("Not found any HA instance to test.");
 		}
-
-
 
 		Properties props = context.getProperties();
 		Set set = props.keySet();
@@ -102,95 +86,51 @@ public class Main {
 		contextSnapshot.println("AUTO_TEST_BUILD_BITS=" + context.getBuildBits());
 		contextSnapshot.close();
 
-		if (!context.isContinueMode()) {
-			context.getFeedback().onTaskStartEvent(cubridPackageUrl);
-			//
-			// /*
-			// * SVN UP for SQL
-			// */
-			//
-			// /*
-			// * SQL Patch phase: TBD
-			// */
-			//
-			// /*
-			// * convert phase
-			// */
+		if (context.isContinueMode()) {
+			context.getFeedback().onTaskContinueEvent();
+		} else {
+			context.getFeedback().onTaskStartEvent();
 			context.getFeedback().onConvertEventStart();
 			Convert c = new Convert(testRoot);
 			c.convert();
 			context.getFeedback().onConvertEventStop();
-		} else {
-			context.getFeedback().onTaskContinueEvent();
 		}
 
-		String rebuildEnv = context.getProperty("main.deploy.rebuild", "true");
-		if (rebuildEnv.trim().equalsIgnoreCase("true")) {
-			/*
-			 * deploy phase
-			 */
+		if (context.rebuildYn()) {
 			System.out.println("============= DEPLOY STEP ==================");
-			concurrentDeploy(context, envList, cubridPackageUrl);
+			concurrentDeploy(context, envList);
 			System.out.println("DONE.");
 		}
-
+		CommonUtils.sleep(1000);
 		/*
 		 * dispatch phase
 		 */
 		System.out.println("============= DISPATCH STEP ==================");
-		Dispatch.init(context, envList, context.isContinueMode(), testRoot);
+		Dispatch.init(context);
 		context.getFeedback().setTotalTestCase(Dispatch.getInstance().getTbdSize(), Dispatch.getInstance().getMacroSkippedSize(), Dispatch.getInstance().getTempSkippedSize());
 		if (context.isContinueMode() == false) {
 			addSkippedTestCases(context.getFeedback(), Dispatch.getInstance().getMacroSkippedList(), Constants.SKIP_TYPE_BY_MACRO);
 			addSkippedTestCases(context.getFeedback(), Dispatch.getInstance().getTempSkippedList(), Constants.SKIP_TYPE_BY_TEMP);
 		}
 
-		// System.out.println("============= DISPATCH STEP ==================");
-		// startServiceAndVerifyTestEnv(context, envList);
-
 		/*
 		 * test phase
 		 */
 		System.out.println("============= TEST STEP ==================");
-		concurrentTest(context, envList, context.isContinueMode(), differMode);
+		concurrentTest(context);
 		context.getFeedback().onTaskStopEvent();
 
 		System.out.println("DONE.");
 
 	}
 
-	public static ArrayList<String> getIntanceList(Context context) {
-		ArrayList<String> resultList = new ArrayList<String>();
-		String[] subList = new File(context.getCurrentLogDir()).list();
-		String reg = "ha_instance_(.*)_(.*?).properties";
-		Pattern pattern = Pattern.compile(reg);
-		Matcher matcher;
-		String envId;
-		String flag;
-		boolean findit;
-		for (String filename : subList) {
-			matcher = pattern.matcher(filename);
-			findit = matcher.find();
-			if (!findit)
-				continue;
-			envId = matcher.group(1);
-			flag = matcher.group(2);
-
-			if (flag.equals("ON")) {
-				resultList.add(envId);
-			}
-		}
-		return resultList;
-	}
-
-	private static void concurrentTest(Context context, final ArrayList<String> envList, final boolean isContinueMode, final String differMode) throws Exception {
+	private static void concurrentTest(Context context) throws Exception {
 		ExecutorService pool;
 
-		pool = Executors.newFixedThreadPool(envList.size() * 2);
+		pool = Executors.newFixedThreadPool(context.getTestEnvList().size() * 2);
 
-		for (final String envId : envList) {
-			String envConfigFilename = CommonUtils.concatFile(context.getCurrentLogDir(), "ha_instance_" + envId + "_ON.properties");
-			final Test test = new Test(context, envId, envConfigFilename, isContinueMode, differMode);
+		for (final String envId : context.getTestEnvList()) {			
+			final Test test = new Test(context, envId);
 			final TestMonitor monitor = new TestMonitor(context, test);
 			pool.execute(new Runnable() {
 				@Override
@@ -220,28 +160,27 @@ public class Main {
 		pool = null;
 	}
 
-	private static void concurrentDeploy(final Context context, ArrayList<String> envList, final String cubridPackageUrl) throws InterruptedException {
+	private static void concurrentDeploy(final Context context, ArrayList<String> envList) throws InterruptedException {
 		ExecutorService pool;
 
 		pool = Executors.newFixedThreadPool(envList.size());
 
 		for (final String envId : envList) {
 			pool.execute(new Runnable() {
-				String envConfigFilename;
 				Deploy deploy;
 
 				@Override
 				public void run() {
-					envConfigFilename = CommonUtils.concatFile(context.getCurrentLogDir(), "ha_instance_" + envId + "_ON.properties");
 					try {
-						// context.getFeedback().onDeployStart(envId);
-						deploy = new Deploy(envId, envConfigFilename, cubridPackageUrl, context);
+						context.getFeedback().onDeployStart(envId);
+						deploy = new Deploy(context, envId);
 						deploy.deployAll();
-						// context.getFeedback().onDeployStop(envId);
+						context.getFeedback().onDeployStop(envId);
 					} catch (Exception e) {
 						e.printStackTrace();
+					} finally{
+						deploy.close();
 					}
-					deploy.close();
 				}
 			});
 		}

@@ -27,23 +27,26 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import java.util.ArrayList;
-
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Set;
 
-import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
 
-public class HostManager {
+public class InstanceManager {
 
 	private Hashtable<String, SSHConnect> hostTable;
-	Properties props;
+	private String currEnvId;
+	private Context context;
+	private String testDb;
 
-	public HostManager(Properties props) throws Exception {
+	public InstanceManager(Context context, String currEnvId) throws Exception {
+		this.currEnvId = currEnvId;
+		this.context = context;
 		this.hostTable = new Hashtable<String, SSHConnect>();
-		this.props = props;
+		this.testDb = getInstanceProperty("testdb");
 
 		addHost("master", -1);
 		addHost("slave");
@@ -63,22 +66,37 @@ public class HostManager {
 
 	private SSHConnect addHost(String role, int num) throws Exception {
 		String hostId = role + (num < 1 ? "" : num);
-		String prefix = "ha." + hostId;
-
-		String host = props.getProperty(prefix + ".ssh.host");
-		int port = Integer.parseInt(props.getProperty(prefix + ".ssh.port"));
-		String user = props.getProperty(prefix + ".ssh.user");
-		String pwd = props.getProperty(prefix + ".ssh.password");
+		String host = getInstanceProperty(hostId + ".ssh.host");
+		if(CommonUtils.isEmpty(host)) {
+			throw new Exception("Not Found More Hosts");
+		}
+		String port = getInstanceProperty(hostId + ".ssh.port");
+		if(CommonUtils.isEmpty(port)) {
+			port = context.getProperty("default.ssh.port");
+		}
+		String user = getInstanceProperty(hostId + ".ssh.user");
+		String pwd = getInstanceProperty(hostId + ".ssh.pwd");
+		if(CommonUtils.isEmpty(pwd)) {
+			pwd = context.getProperty("default.ssh.pwd");
+		}
 		return addHost(hostId, host, port, user, pwd);
 	}
+	
+	public String getInstanceProperty(String key) {
+		return context.getInstanceProperty(this.currEnvId, key);
+	}
+	
+	public String getTestDb() {
+		return this.testDb;
+	}
 
-	public SSHConnect addHost(String hostId, String host, int port, String user, String pwd) throws Exception {
+	public SSHConnect addHost(String hostId, String host, String port, String user, String pwd) throws Exception {
 		System.out.print("connect " + user + "@" + host + ":" + port);
 
 		if (this.hostTable.contains(hostId)) {
 			throw new Exception("host already existed");
 		}
-		SSHConnect ssh = new SSHConnect(host, String.valueOf(port), user, pwd);
+		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
 		ssh.setTitle(hostId);
 		System.out.println("  success");
 		this.hostTable.put(hostId, ssh);
@@ -102,6 +120,10 @@ public class HostManager {
 				ssh.close();
 			}
 		}
+	}
+	
+	public boolean supportReplica() {
+		return this.hostTable.get("replica1") != null;
 	}
 
 	public SSHConnect getHost(String hostId) {
@@ -136,5 +158,23 @@ public class HostManager {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public ArrayList<SSHConnect> getAllNodeList() {
+		ArrayList<SSHConnect> allList = new ArrayList<SSHConnect>();
+		allList.add(getHost("master"));
+		allList.addAll(getAllSlaveAndReplicaList());
+		return allList;
+	}
+
+	public ArrayList<SSHConnect> getAllSlaveAndReplicaList() {
+		ArrayList<SSHConnect> slaveAndReplicaList = new ArrayList<SSHConnect>();
+		slaveAndReplicaList.addAll(getAllHost("slave"));
+		slaveAndReplicaList.addAll(getAllHost("replica"));
+		return slaveAndReplicaList;
+	}
+	
+	public String getEnvId() {
+		return this.currEnvId;
 	}
 }

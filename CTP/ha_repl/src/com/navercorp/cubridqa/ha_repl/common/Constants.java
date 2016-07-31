@@ -35,8 +35,6 @@ public class Constants {
 
 	public static String FM_DATE_SNAPSHOT = "yyyyMMdd_hhmmss";
 
-	public static final String HAVE_CHARSET_10 = "10.0.0.0074";
-	public static final String HAVE_CHARSET_9 = "9.2.0.0067";
 
 	public static final String SKIP_TYPE_NO = "0";
 	public static final String SKIP_TYPE_BY_MACRO = "1"; // Not implement.
