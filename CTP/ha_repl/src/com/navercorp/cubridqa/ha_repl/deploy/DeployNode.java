@@ -28,256 +28,155 @@ package com.navercorp.cubridqa.ha_repl.deploy;
 
 import java.util.ArrayList;
 
-
-
-import java.util.Properties;
-import java.util.Set;
-
-import com.navercorp.cubridqa.ha_repl.Context;
-import com.navercorp.cubridqa.ha_repl.HostManager;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.ha_repl.Context;
+import com.navercorp.cubridqa.ha_repl.InstanceManager;
 import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class DeployNode {
 
-	Properties props;
-	String cubridPackageUrl;
 	SSHConnect ssh;
-	int type;
-	HostManager hostManager;
-	String testDb;
-	Log deploylog;
-	String cubrid_port_id;
-	String ha_port_id;
-	String ha_cubrid_broker_port;
-	String ha_cubrid_master_shm_id;
-	String ha_node_list;
-	String ha_replica_list;
-	String ha_master_host_name;
-	String ha_slave_host_name_list = "";
-	String ha_replic_host_name_list = "";
-	ArrayList<SSHConnect> slaveList, replicaList;
-	SSHConnect masterSSH;
+	int haRole;
+	InstanceManager hostManager;
+	Log log;
 	Context context;
 
-	public DeployNode(String cubridPackageUrl, Properties props, SSHConnect ssh, int type, HostManager hostManager, String envId, Context context) {
-		this.cubridPackageUrl = cubridPackageUrl;
-		this.props = props;
+	public DeployNode(Context context, int haRole, InstanceManager instanceManager, SSHConnect ssh) throws Exception {
 		this.ssh = ssh;
-		this.type = type;
-		this.hostManager = hostManager;
+		this.haRole = haRole;
 		this.context = context;
-		this.deploylog = new Log(context.getCurrentLogDir() + "/deploy_" + envId + ".log", true, true);
+		this.hostManager = instanceManager;
+		this.log = new Log(context.getCurrentLogDir() + "/deploy_" + instanceManager.getEnvId() + ".log", true, true);
 	}
 
 	public void deploy() throws Exception {
-		initparam();
-		cleanStep();
-		deploy_cubrid_common();
-		deploy_linux_by_cubrid_common();
-		makeI18N();
-		configStep();
-		// startServiceAndVerifyStatus();
+		clean();
+		install();
+		config();
 	}
 
-	private void initparam() throws Exception {
-		if (cubridPackageUrl == null || props == null || ssh == null || hostManager == null) {
-			deploylog.log("FAIL: cubridPackageUrl is " + cubridPackageUrl + ";" + "props is " + props + ";" + "ssh is " + ssh + ";" + "hostManager is " + hostManager + ";");
-			throw new Exception("The deploy init param exception.");
-		}
-
-		testDb = props.getProperty("ha.testdb");
-		cubrid_port_id = props.getProperty("cubrid.port");
-		ha_port_id = props.getProperty("cubrid.ha.port");
-		ha_cubrid_broker_port = props.getProperty("cubrid.ha.broker.port");
-		ha_cubrid_master_shm_id = props.getProperty("cubrid.ha.master.shm.id");
-		ha_master_host_name = props.getProperty("ha.master.ssh.hostname");
-
-		Set<Object> a = props.keySet();
-
-		String user = props.getProperty("ha.master.ssh.user");
-
-		ha_node_list = "";
-		ha_replica_list = "";
-		this.masterSSH = hostManager.getHost("master");
-		this.slaveList = hostManager.getAllHost("slave");
-		this.replicaList = hostManager.getAllHost("replica");
-
-		if (masterSSH == null) {
-			deploylog.log("FAIL: masterSSH is " + masterSSH + ";");
-			throw new Exception("The deploy init param exception. masterSSH is null");
-		}
-
-		// Get ha_node_list
-		ha_node_list += user + "@";
-		ha_node_list += ha_master_host_name;
-		// ha_node_list += masterSSH.getHost();
-
-		int idx = 1;
-		for (SSHConnect ssh : slaveList) {
-			ha_slave_host_name_list += props.getProperty("ha.slave" + idx + ".ssh.hostname");
-			ha_node_list += ":" + ha_slave_host_name_list;
-			++idx;
-			// ha_node_list += ":" + ssh.getHost();
-		}
-
-		// Get ha_replica_list
-		if (!replicaList.isEmpty()) {
-			ha_replica_list += user + "@";
-
-			int length = replicaList.size();
-			int replic_idx = 1;
-			for (SSHConnect ssh : replicaList) {
-				length--;
-				if (length > 0) {
-					ha_replic_host_name_list += props.getProperty("ha.replica" + replic_idx + ".ssh.hostname");
-					++replic_idx;
-					ha_replica_list += ha_replic_host_name_list + ":";
-					// ha_replica_list += ssh.getHost() + ":";
-				} else {
-					ha_replic_host_name_list += props.getProperty("ha.replica" + replic_idx + ".ssh.hostname");
-					++replic_idx;
-					ha_replica_list += ha_replic_host_name_list;
-				}
-			}
-		}
-
-	}
-
-	private void cleanStep() throws Exception {
+	private void clean() throws Exception {
 		StringBuffer s = new StringBuffer();
 		s.append("cubrid service stop;");
 		s.append("pkill cub").append(";");
 		s.append("rm -rf ~/CUBRID").append(";");
+		if (CommonUtils.isEmpty(hostManager.getTestDb()) == false) {
+			s.append("rm -rf ~/" + hostManager.getTestDb()).append(";");
+		}
 		s.append("ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {}").append(";");
 		GeneralShellInput script = new GeneralShellInput(s.toString());
 		try {
-			ssh.execute(script);
+			log.log("Begin to clean: ");
+			log.log(script.getCommands());
+			String result = ssh.execute(script);
+			log.log(result);
 		} catch (Exception e) {
-			deploylog.log("ip:" + ssh.getHost() + "  user:" + ssh.getUser() + " exception:" + e.getMessage());
-			throw new Exception("The deploy cleanStep() exception. exception:" + e.getMessage());
+			throw new Exception("Fail to clean on " + ssh.getTitle() + ":" + e.getMessage());
 		}
 	}
 
-	private void deploy_linux_by_cubrid_common() {
-
+	private void install() throws Exception {
 		String role = context.getProperty("main.testing.role", "").trim();
-		deploylog.log("Start Install Build");
 		GeneralShellInput scripts = new GeneralShellInput();
-
-		scripts.addCommand("if [ \"`ulimit -c`\" != \"unlimited\" ] ; then ");
-		scripts.addCommand("    echo 'ulimit -c unlimited' >> .bash_profile");
-		scripts.addCommand("fi");
-		scripts.addCommand("  run_cubrid_install " + role + " " + this.cubridPackageUrl + " " + context.getProperty("main.testbuild.collaborate.url", "").trim() + " 2>&1");
+		scripts.addCommand("chmod u+x ${CTP_HOME}/common/script/run_cubrid_install");
+		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.testbuild.collaborate.url", "").trim() + " 2>&1");
 
 		String result;
 		try {
+			log.log("Begin to install CUBRID:");
+			log.log(scripts.getCommands());
 			result = ssh.execute(scripts);
-			deploylog.log(scripts.toString());
-			deploylog.log(result);
+			log.log(result);
 		} catch (Exception e) {
-			deploylog.log("[ERROR] " + e.getMessage());
+			throw new Exception("Fail to install CUBRID on " + ssh.getTitle() + ":" + e.getMessage());
 		}
 	}
 
-	private void deploy_cubrid_common() {
-		String gitUser = context.getProperty("main.git.user", "").trim();
-		String gitPwd = context.getProperty("main.git.pwd", "").trim();
-		String gitMail = context.getProperty("main.git.mail", "").trim();
-		GeneralShellInput scripts = new GeneralShellInput();
-		scripts.addCommand("function git_update_cubrid_common {");
-		scripts.addCommand("  ( cd $HOME/cubrid_common; sh upgrade.sh)");
-		scripts.addCommand("   export PATH=$HOME/cubrid_common:$PATH");
-		scripts.addCommand("}");
-
-		scripts.addCommand("git_update_cubrid_common");
-
-		String result;
-		try {
-			result = ssh.execute(scripts);
-			deploylog.log(scripts.toString());
-			deploylog.log(result);
-		} catch (Exception e) {
-			deploylog.log("[ERROR] " + e.getMessage());
-		}
-
-	}
-
-	private void makeI18N() throws Exception {
-		GeneralShellInput scripts = new GeneralShellInput();
-		scripts.addCommand("cp ~/CUBRID/conf/cubrid_locales.all.txt ~/CUBRID/conf/cubrid_locales.txt");
-		scripts.addCommand("~/CUBRID/bin/make_locale.sh -t 64bit");
-		scripts.addCommand("cubrid deletedb demodb");
-
-		// Configuration supporting internationalization , we first use the
-		// default Settings, so commented out
-		// scripts.addCommand("echo 'export CUBRID_LANG=ko_KR.utf8' >>
-		// ~/.bash_profile");
-		try {
-			ssh.execute(scripts);
-		} catch (Exception e) {
-			deploylog.println(e.getMessage());
-			throw e;
-		}
-	}
-
-	private void configStep() throws Exception {
+	private void config() throws Exception {
 		GeneralShellInput scripts = new GeneralShellInput();
 		// configure cubrid.conf
-		scripts.addCommand("sed -i 's/cubrid_port_id=1523/cubrid_port_id=" + this.cubrid_port_id + "/' ~/CUBRID/conf/cubrid.conf");
-		scripts.addCommand("sed -i 's/data_buffer_size=512M/data_buffer_size=512M/' ~/CUBRID/conf/cubrid.conf");
-		scripts.addCommand("cat ~/CUBRID/conf/cubrid.conf| grep -v \"ha_mode\" > ~/CUBRID/conf/cubrid.conf_tmp");
-		scripts.addCommand("mv ~/CUBRID/conf/cubrid.conf_tmp ~/CUBRID/conf/cubrid.conf");
-		scripts.addCommand("echo 'ha_mode=on' >> ~/CUBRID/conf/cubrid.conf");
-		scripts.addCommand("echo 'test_mode=yes' >> ~/CUBRID/conf/cubrid.conf");
-		scripts.addCommand("echo 'max_plan_cache_entries=1000' >> ~/CUBRID/conf/cubrid.conf");
-		if (true == is_above_banana_vesion()) {
-			scripts.addCommand("echo 'inquire_on_exit=3' >> ~/CUBRID/conf/cubrid.conf");
+		String cubridPortId = this.hostManager.getInstanceProperty("cubrid.cubrid_port_id");
+		String brokerPort = this.hostManager.getInstanceProperty("broker.BROKER_PORT");
+		String haPortId = this.hostManager.getInstanceProperty("ha.ha_port_id");
+		if (CommonUtils.isEmpty(haPortId)) {
+			haPortId = "59901";
 		}
-		// for prefetch test.
-		if (context.getProperty("main.testing.prefetch", "").trim().equalsIgnoreCase("true")) {
-			scripts.addCommand("echo 'ha_prefetchlogdb_enable=true' >> ~/CUBRID/conf/cubrid.conf");
-		}
-		// configure cubrid_broker.conf
-		scripts.addCommand("sed -i '/query_editor/,/CCI_DEFAULT_AUTOCOMMIT/d' ~/CUBRID/conf/cubrid_broker.conf");
-		scripts.addCommand("sed -i 's/30001/" + ha_cubrid_master_shm_id + "/' ~/CUBRID/conf/cubrid_broker.conf");
-		scripts.addCommand("sed -i 's/33000/" + ha_cubrid_broker_port + "/' ~/CUBRID/conf/cubrid_broker.conf");
 
-		// configure cubrid_ha.conf
-		scripts.addCommand("echo '[common]'>> ~/CUBRID/conf/cubrid_ha.conf");
-		scripts.addCommand("echo 'ha_mode=on' >> ~/CUBRID/conf/cubrid_ha.conf");
-		scripts.addCommand("echo 'ha_port_id=" + this.ha_port_id + "' >> ~/CUBRID/conf/cubrid_ha.conf");
-		scripts.addCommand("echo 'ha_node_list=" + this.ha_node_list + "' >> ~/CUBRID/conf/cubrid_ha.conf");
-		if (this.ha_replica_list.length() > 0) {
-			scripts.addCommand("echo 'ha_replica_list=" + this.ha_replica_list + "' >> ~/CUBRID/conf/cubrid_ha.conf");
+		if (!CommonUtils.isEmpty(cubridPortId)) {
+			scripts.addCommand("ini.sh -s 'common' $CUBRID/conf/cubrid.conf cubrid_port_id " + cubridPortId);
+			scripts.addCommand("ini.sh -s 'broker' $CUBRID/conf/cubrid_broker.conf MASTER_SHM_ID " + cubridPortId);
 		}
-		scripts.addCommand("echo 'ha_db_list=" + this.testDb + "' >> ~/CUBRID/conf/cubrid_ha.conf");
+		scripts.addCommand("ini.sh -s 'common' $CUBRID/conf/cubrid.conf test_mode yes");
+		scripts.addCommand("ini.sh -s 'common' $CUBRID/conf/cubrid.conf ha_mode on");
+
+		if (CommonUtils.supportInquireOnExit(context.getBuildId())) {
+			scripts.addCommand("ini.sh -s 'common' $CUBRID/conf/cubrid.conf inquire_on_exit 3");
+		}
+
+		if (!CommonUtils.isEmpty(brokerPort)) {
+			scripts.addCommand("ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf BROKER_PORT " + brokerPort);
+			scripts.addCommand("ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID " + brokerPort);
+		}
+
+		scripts.addCommand("ini.sh -s '%BROKER1' -d CCI_DEFAULT_AUTOCOMMIT $CUBRID/conf/cubrid_broker.conf");
+
+		scripts.addCommand("echo '[common]' > ~/CUBRID/conf/cubrid_ha.conf");
+		scripts.addCommand("echo 'ha_mode=on' >> ~/CUBRID/conf/cubrid_ha.conf");
+		scripts.addCommand("echo 'ha_port_id=" + haPortId + "' >> ~/CUBRID/conf/cubrid_ha.conf");
+		scripts.addCommand("echo 'ha_node_list=" + calcHaNodeList() + "' >> ~/CUBRID/conf/cubrid_ha.conf");
+		if (this.hostManager.supportReplica()) {
+			scripts.addCommand("echo 'ha_replica_list=" + calcHaReplicaList() + "' >> ~/CUBRID/conf/cubrid_ha.conf");
+		}
+		scripts.addCommand("echo 'ha_db_list=" + hostManager.getTestDb() + "' >> ~/CUBRID/conf/cubrid_ha.conf");
 		scripts.addCommand("echo 'ha_apply_max_mem_size=300'  >> ~/CUBRID/conf/cubrid_ha.conf");
 		scripts.addCommand("echo 'ha_copy_sync_mode=sync:sync'  >> ~/CUBRID/conf/cubrid_ha.conf");
-		scripts.addCommand("EOF");
 
+		scripts.addCommand("cp ~/CUBRID/conf/cubrid_locales.all.txt ~/CUBRID/conf/cubrid_locales.txt");
+		scripts.addCommand("~/CUBRID/bin/make_locale.sh -t 64bit");
+
+		String result;
 		try {
-			ssh.execute(scripts);
+			log.log("Begin to deploy: ");
+			log.log(scripts.getCommands());
+			result = ssh.execute(scripts);
+			log.log(result);
 		} catch (Exception e) {
-			deploylog.log("ip:" + ssh.getHost() + "  user:" + ssh.getUser() + " exception:" + e.getMessage());
+			log.log("ip:" + ssh.getHost() + "  user:" + ssh.getUser() + " exception:" + e.getMessage());
 			throw new Exception("The deploy configStep() exception. exception:" + e.getMessage());
 		}
 	}
 
-	private boolean is_above_banana_vesion() throws Exception {
-		boolean flag = false;
+	private String calcHaNodeList() throws Exception {
+		StringBuffer haNodeList = new StringBuffer();
 
-		String buildId = context.getBuildId();
-		String arr[] = buildId.split("\\.");
+		String userName = hostManager.getInstanceProperty("master.ssh.user");
+		haNodeList.append(userName).append('@');
+		haNodeList.append(hostManager.getHost("master").execute("hostname").trim());
 
-		deploylog.log("Version number:" + buildId);
-
-		if (Integer.parseInt(arr[0]) >= 10) {
-			flag = true;
+		ArrayList<SSHConnect> sshList = hostManager.getAllHost("slave");
+		for (int i = 0; i < sshList.size(); i++) {
+			haNodeList.append(':').append(sshList.get(i).execute("hostname").trim());
 		}
 
-		return flag;
+		return haNodeList.toString();
 	}
+	
+	private String calcHaReplicaList() throws Exception {
+		StringBuffer haNodeList = new StringBuffer();
 
+		String userName = hostManager.getInstanceProperty("master.ssh.user");
+		haNodeList.append(userName).append('@');
+
+		ArrayList<SSHConnect> sshList = hostManager.getAllHost("replica");
+		for (int i = 0; i < sshList.size(); i++) {
+			if(i > 0) {
+				haNodeList.append(':');
+			}
+			haNodeList.append(sshList.get(i).execute("hostname").trim());
+		}
+
+		return haNodeList.toString();
+	}
 }

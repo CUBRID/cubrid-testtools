@@ -35,6 +35,7 @@ public class Convert {
 
 	public Convert(String rootFilename) {
 		this.rootFilename = rootFilename;
+		System.out.println("Convert Root:  " + this.rootFilename);
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -65,13 +66,10 @@ public class Convert {
 
 	private void convert(File f) throws Exception {
 
-		// Print the convert number.
-		// added by cn15209 2012.09.11
 		if (count % 100 == 0) {
 			System.out.println(count);
 		}
 		count++;
-		// System.out.println(count + ". " + f.getAbsolutePath());
 		SQLFileReader r = new SQLFileReader(f);
 		try {
 			r.convert();

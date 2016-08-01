@@ -32,10 +32,10 @@ import java.util.ArrayList;
 
 import java.util.Date;
 
-import com.navercorp.cubridqa.ha_repl.HAUtils;
+import com.navercorp.cubridqa.ha_repl.HaReplUtils;
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.Feedback;
-import com.navercorp.cubridqa.ha_repl.HostManager;
+import com.navercorp.cubridqa.ha_repl.InstanceManager;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
@@ -55,7 +55,7 @@ public class FeedbackFile implements Feedback {
 	}
 
 	@Override
-	public void onTaskStartEvent(String buildFilename) {
+	public void onTaskStartEvent() {
 		feedbackLog = new Log(logName, false, false);
 		taskStartTime = System.currentTimeMillis();
 		println("[TASK START] Current Time is " + new Date());
@@ -139,7 +139,7 @@ public class FeedbackFile implements Feedback {
 	}
 
 	@Override
-	public void onStopEnvEvent(HostManager hostManager, Log log) {
+	public void onStopEnvEvent(InstanceManager hostManager, Log log) {
 		String role = context.getProperty("main.testing.role", "").trim();
 
 		if (role.indexOf("coverage") != -1) {
@@ -153,7 +153,7 @@ public class FeedbackFile implements Feedback {
 
 			String svnParams = " --username " + context.getProperty("main.svn.user", "").trim() + " --password " + context.getProperty("main.svn.pwd", "").trim()
 					+ " --non-interactive --no-auth-cache ";
-			ArrayList<SSHConnect> list = HAUtils.getAllNodeList(hostManager);
+			ArrayList<SSHConnect> list = hostManager.getAllNodeList();
 			for (SSHConnect ssh : list) {
 				try {
 

@@ -28,9 +28,10 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import java.io.IOException;
-
-
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
 
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.impl.FeedbackDB;
@@ -51,6 +52,7 @@ public class Context {
 
 	private String buildBits;
 	private String buildId;
+	private ArrayList<String> testEnvList = new ArrayList<String>();
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -73,6 +75,20 @@ public class Context {
 			feedback = new FeedbackNull(this);
 		}
 		setFeedback(feedback);
+		
+		Set<Object> set = config.keySet();
+		Iterator<Object> it = set.iterator();
+		String key;
+		while (it.hasNext()) {
+			key = (String) it.next();
+			if (key.startsWith("env.") && key.endsWith(".master.ssh.host")) {
+				testEnvList.add(key.substring(4, key.indexOf(".master.ssh.host")));
+			}
+		}
+	}
+	
+	public ArrayList<String> getTestEnvList() {
+		return this.testEnvList;
 	}
 
 	public void setFeedback(Feedback feedback) {
@@ -92,8 +108,7 @@ public class Context {
 	}
 
 	public boolean isContinueMode() {
-		String value = getProperty("main.mode.continue", "false");
-		return value.equalsIgnoreCase("true");
+		return CommonUtils.convertBoolean(getProperty("main.mode.continue", "false"));
 	}
 
 	public String getDBUrl() {
@@ -186,5 +201,39 @@ public class Context {
 
 	public String getBuildBits() {
 		return this.buildBits;
+	}
+	
+	public String getCubridPackageUrl() {
+		return getProperty("main.testbuild.url", "").trim();
+	}
+	
+	public String getDiffMode() {
+		return getProperty("main.differ.mode", "diff_1").trim();
+	}
+	
+	public String getTestCaseRoot() {
+		return getProperty("main.testcase.root", "").trim();
+	}
+	
+	public boolean rebuildYn() {
+		String rebuildEnv = getProperty("main.deploy.rebuild_yn", "true");
+		return CommonUtils.convertBoolean(rebuildEnv);
+	}
+	
+	public String getExcludedTestCaseFile() {
+		return getProperty("main.testcase.excluded");
+	}
+	
+	public String getInstanceProperty(String envId, String key) {
+		String value = getProperty("env." + envId + "." + key);
+		System.out.println("env." + envId + "."  +key+"="+value);
+		if (CommonUtils.isEmpty(value)) {
+			value = getProperty("default." + key);
+		}
+		return value;
+	}
+	
+	public boolean shouldCleanupAfterQuit() {
+		return CommonUtils.convertBoolean(getProperty("main.testing.cleanup_after_quit_yn", "true"));
 	}
 }

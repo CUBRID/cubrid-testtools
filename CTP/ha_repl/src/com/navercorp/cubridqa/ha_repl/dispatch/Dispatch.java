@@ -57,11 +57,11 @@ public class Dispatch {
 	private ArrayList<String> tempSkippedList;
 	private int tempSkippedSize = 0;
 
-	private Dispatch(Context context, ArrayList<String> envList, boolean isContinueMode, String testCaseRoot) throws Exception {
+	private Dispatch(Context context) throws Exception {
 		this.context = context;
-		this.testCaseRoot = testCaseRoot;
-		this.envList = envList;
-		this.isContinueMode = isContinueMode;
+		this.testCaseRoot = context.getTestCaseRoot();
+		this.envList = context.getTestEnvList();
+		this.isContinueMode = context.isContinueMode();
 
 		this.tbdList = new ArrayList<String>();
 		this.tbdSize = 0;
@@ -70,8 +70,8 @@ public class Dispatch {
 		load();
 	}
 
-	public synchronized static void init(Context context, ArrayList<String> envList, boolean isContinueMode, String testCaseRoot) throws Exception {
-		instance = new Dispatch(context, envList, isContinueMode, testCaseRoot);
+	public synchronized static void init(Context context) throws Exception {
+		instance = new Dispatch(context);
 	}
 
 	public static Dispatch getInstance() {
@@ -146,17 +146,17 @@ public class Dispatch {
 			}
 		}
 	}
-	
-	public String getFileNameForDispatchAll() {
+
+	private String getFileNameForDispatchAll() {
 		return CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_ALL.txt");
 	}
 
-	public String getFileNameForDispatchFin(String envName) {
+	private String getFileNameForDispatchFin(String envName) {
 		return CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envName + ".txt");
 	}
 
 	private ArrayList<String> findExcludedList() throws Exception {
-		String excludedFilename = context.getProperty("main.testcase.excluded");
+		String excludedFilename = context.getExcludedTestCaseFile();
 		if (excludedFilename == null || excludedFilename.trim().equals(""))
 			return null;
 
