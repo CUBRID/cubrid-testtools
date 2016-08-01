@@ -28,6 +28,7 @@ package com.navercorp.cubridqa.ha_repl;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -40,6 +41,7 @@ import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.deploy.Deploy;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
 import com.navercorp.cubridqa.ha_repl.migrate.Convert;
+import com.navercorp.cubridqa.shell.common.LocalInvoker;
 
 public class Main {
 	public static void exec(String configFilename) throws Exception {
@@ -101,7 +103,7 @@ public class Main {
 			concurrentDeploy(context, envList);
 			System.out.println("DONE.");
 		}
-		CommonUtils.sleep(1000);
+		
 		/*
 		 * dispatch phase
 		 */
@@ -112,6 +114,9 @@ public class Main {
 			addSkippedTestCases(context.getFeedback(), Dispatch.getInstance().getMacroSkippedList(), Constants.SKIP_TYPE_BY_MACRO);
 			addSkippedTestCases(context.getFeedback(), Dispatch.getInstance().getTempSkippedList(), Constants.SKIP_TYPE_BY_TEMP);
 		}
+		System.out.println("Total: " + Dispatch.getInstance().getTotalSize() + ", tbd: " + Dispatch.getInstance().getTbdSize() + ", skipped: "
+				+ (Dispatch.getInstance().getMacroSkippedSize() + Dispatch.getInstance().getTempSkippedSize()));
+		System.out.println("DONE.");
 
 		/*
 		 * test phase
@@ -119,8 +124,13 @@ public class Main {
 		System.out.println("============= TEST STEP ==================");
 		concurrentTest(context);
 		context.getFeedback().onTaskStopEvent();
-
 		System.out.println("DONE.");
+		
+		System.out.println("============= BACKUP TEST RESULTS ==================");
+		backupTestResults(context);		
+		System.out.println("DONE.");
+		
+		System.out.println("TEST COMPLETED.");
 
 	}
 
@@ -196,5 +206,25 @@ public class Main {
 		for (String tc : list) {
 			feedback.onTestCaseStopEvent(tc, false, -1, "", "", false, false, skippedType);
 		}
+	}
+	
+	private static void backupTestResults(Context context) {
+		if (CommonUtils.isWindowsPlatform()) {
+			return;
+		}
+
+		String backupFileName = "";
+		Calendar cal = Calendar.getInstance();
+		int year = cal.get(Calendar.YEAR);
+		int month = cal.get(Calendar.MONTH) + 1;
+		int day = cal.get(Calendar.DAY_OF_MONTH);
+		int hour = cal.get(Calendar.HOUR);
+		int minute = cal.get(Calendar.MINUTE);
+		int second = cal.get(Calendar.SECOND);
+		String curTimestamp = year + "." + month + "." + day + "_" + hour + "." + minute + "." + second;
+
+		backupFileName = "ha_repl_result_" + context.getBuildId() + "_" + context.getBuildBits() + "_" + context.getFeedback().getTaskId() + "_" + curTimestamp + ".tar.gz";
+		LocalInvoker.exec("mkdir -p " + context.getLogRootDir() + "; cd " + context.getLogRootDir() + "; tar zvcf " + backupFileName + " " + context.getCurrentLogDir() + " `cat "
+				+ context.getCurrentLogDir() + "/test*.log | grep \"\\[FAIL\\]\" | awk '{print $2}' |sed 's/test$/*/'` ", false, true);
 	}
 }

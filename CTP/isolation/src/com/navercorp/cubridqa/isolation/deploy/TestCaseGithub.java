@@ -27,6 +27,7 @@
 
 package com.navercorp.cubridqa.isolation.deploy;
 
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.isolation.Constants;
 
 
@@ -66,8 +67,17 @@ public class TestCaseGithub {
 
 		scripts.addCommand("cd ");
 		scripts.addCommand("cd ${CTP_HOME}/common/script");
-		scripts.addCommand("export CTP_BRANCH_NAME=" + System.getenv("CTP_BRANCH_NAME"));
-		scripts.addCommand("export SKIP_UPGRADE=" + System.getenv("SKIP_UPGRADE"));
+		
+		String ctpBranchName = System.getenv("CTP_BRANCH_NAME");
+		if (!CommonUtils.isEmpty(ctpBranchName)) {
+			scripts.addCommand("export CTP_BRANCH_NAME=" + ctpBranchName);
+		}
+		
+		String skipUpgrade = System.getenv("SKIP_UPGRADE");
+		if (!CommonUtils.isEmpty(ctpBranchName)) {
+			scripts.addCommand("export SKIP_UPGRADE=" + skipUpgrade);
+		}		
+
 		scripts.addCommand("chmod u+x upgrade.sh");
 		scripts.addCommand("./upgrade.sh");
 		
