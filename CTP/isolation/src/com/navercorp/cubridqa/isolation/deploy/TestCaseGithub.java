@@ -61,9 +61,6 @@ public class TestCaseGithub {
 		cleanProcess();
 
 		IsolationShellInput scripts = new IsolationShellInput();
-		if (context.shouldUpdateTestCase()) {
-			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
-		}
 
 		scripts.addCommand("cd ");
 		scripts.addCommand("cd ${CTP_HOME}/common/script");
@@ -80,6 +77,10 @@ public class TestCaseGithub {
 
 		scripts.addCommand("chmod u+x upgrade.sh");
 		scripts.addCommand("./upgrade.sh");
+		
+		if (context.shouldUpdateTestCase()) {
+			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
+		}
 		scripts.addCommand("cd ${CTP_HOME}/isolation/ctltool");
 		scripts.addCommand("chmod u+x *.sh");
 		
