@@ -27,20 +27,16 @@
 package com.navercorp.cubridqa.ha_repl.impl;
 
 import java.util.ArrayList;
-
-
-
 import java.util.Date;
 
-import com.navercorp.cubridqa.ha_repl.HaReplUtils;
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.Feedback;
 import com.navercorp.cubridqa.ha_repl.InstanceManager;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
-import com.navercorp.cubridqa.common.CommonUtils;
-import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class FeedbackFile implements Feedback {
 
@@ -92,12 +88,11 @@ public class FeedbackFile implements Feedback {
 			head = "[UNKNOWN]";
 		}
 
-		println(head + " " + testCase + " " + elapseTime + " " + envIdentify + " " + (hasCore ? "FOUND CORE" : "") + " " + (isTimeOut ? "TIMEOUT" : ""), resultCont, "");
+		println(head + " " + testCase + " " + elapseTime + "ms " + envIdentify + " " + (hasCore ? "FOUND CORE" : "") + " " + (isTimeOut ? "TIMEOUT" : ""), resultCont, "");
 	}
 
 	@Override
 	public void onTestCaseStartEvent(String testCase, String envIdentify) {
-		println("[TEST CASE] START " + testCase + " " + envIdentify);
 	}
 
 	protected synchronized void println(String... conts) {
@@ -114,13 +109,11 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onDeployStart(String envIdentify) {
 		println("[DEPLOY] START " + envIdentify);
-
 	}
 
 	@Override
 	public void onDeployStop(String envIdentify) {
 		println("[DEPLOY] STOP " + envIdentify);
-
 	}
 
 	@Override
@@ -151,19 +144,14 @@ public class FeedbackFile implements Feedback {
 			String c_port = context.getProperty("main.coverage.port", "").trim();
 			String c_dir = context.getProperty("main.coverage.dir", "").trim();
 
-			String svnParams = " --username " + context.getProperty("main.svn.user", "").trim() + " --password " + context.getProperty("main.svn.pwd", "").trim()
-					+ " --non-interactive --no-auth-cache ";
 			ArrayList<SSHConnect> list = hostManager.getAllNodeList();
 			for (SSHConnect ssh : list) {
 				try {
 
 					GeneralShellInput scripts = new GeneralShellInput();
 
-					scripts.addCommand("   cd ~/cubrid_common");
-					scripts.addCommand("   svn revert upgrade.sh; svn up " + svnParams + " upgrade.sh ");
-					scripts.addCommand("  sh upgrade.sh 2>&1");
 					scripts.addCommand(
-							"  run_coverage_collect_and_upload -n " + build_id + " -c " + category + " -user " + c_user + " -pwd " + c_pwd + " -host " + c_ip + " -to " + c_dir + " -port " + c_port);
+							"run_coverage_collect_and_upload -n " + build_id + " -c " + category + " -user " + c_user + " -pwd " + c_pwd + " -host " + c_ip + " -to " + c_dir + " -port " + c_port);
 					scripts.addCommand(" ");
 
 					String result = ssh.execute(scripts);

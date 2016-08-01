@@ -71,7 +71,7 @@ public class Test {
 		this.hostManager = new InstanceManager(context, envId);
 	
 		this.mlog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + envId + ".log"), false, context.isContinueMode());
-		this.finishedLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt"), true, context.isContinueMode());
+		this.finishedLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt"), false, context.isContinueMode());
 		this.commonReader = new CommonReader(CommonUtils.concatFile(context.getCtpHome() + "/ha_repl/lib", "common.inc"));
 	}
 
@@ -154,8 +154,6 @@ public class Test {
 		}
 		log("===========================================================================================");
 		long startTime = System.currentTimeMillis();
-		mlog.println("[TEST-FILE] " + f.getAbsolutePath());
-		// log("[TEST-FILE] " + f.getAbsolutePath());
 
 		clearDatabaseLog();
 		try {
@@ -309,7 +307,8 @@ public class Test {
 
 		context.getFeedback().onTestCaseStopEvent(currentTestFile, succFlag != null && succFlag.equals("SUCC"), endTime - startTime, userInfo.toString(), hostManager.getEnvId(), false, hasCore,
 				Constants.SKIP_TYPE_NO);
-
+		System.out.println("[TESTCASE] " + currentTestFile + " " + (endTime - startTime) + "ms " + hostManager.getEnvId() + " " + (hasCore ? "FOUND CORE" : "") + " " + ((succFlag != null && succFlag.equals("SUCC"))? "[OK]": "[NOK]") );
+		
 		Iterator logHashTableIterator = this.logHashTable.entrySet().iterator();
 		while (logHashTableIterator.hasNext()) {
 			Entry entry = (Entry) logHashTableIterator.next();

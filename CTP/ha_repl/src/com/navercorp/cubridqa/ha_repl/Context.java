@@ -226,7 +226,6 @@ public class Context {
 	
 	public String getInstanceProperty(String envId, String key) {
 		String value = getProperty("env." + envId + "." + key);
-		System.out.println("env." + envId + "."  +key+"="+value);
 		if (CommonUtils.isEmpty(value)) {
 			value = getProperty("default." + key);
 		}

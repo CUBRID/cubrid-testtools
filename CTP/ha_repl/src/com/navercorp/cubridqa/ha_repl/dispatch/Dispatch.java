@@ -183,11 +183,7 @@ public class Dispatch {
 		File allFile;
 		File finishedFile;
 
-		File[] subList = new File(context.getCurrentLogDir()).listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.startsWith("dispatch_tc_");
-			}
-		});
+		File[] subList = new File(context.getCurrentLogDir()).listFiles();
 		for (File file : subList) {
 			file.delete();
 		}
@@ -219,5 +215,9 @@ public class Dispatch {
 
 	public ArrayList<String> getTempSkippedList() {
 		return this.tempSkippedList;
+	}
+	
+	public int getTotalSize() {
+		return tbdSize + macroSkippedSize + tempSkippedSize;
 	}
 }

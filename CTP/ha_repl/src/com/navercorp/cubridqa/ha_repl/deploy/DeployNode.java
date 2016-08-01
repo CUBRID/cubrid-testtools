@@ -52,9 +52,10 @@ public class DeployNode {
 	}
 
 	public void deploy() throws Exception {
-		clean();
-		install();
-		config();
+		updateCTP();
+		clean();		
+		installCUBRID();
+		configCUBRID();
 	}
 
 	private void clean() throws Exception {
@@ -68,16 +69,43 @@ public class DeployNode {
 		s.append("ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {}").append(";");
 		GeneralShellInput script = new GeneralShellInput(s.toString());
 		try {
-			log.log("Begin to clean: ");
-			log.log(script.getCommands());
+			log.log("==> Begin to clean on " + ssh.toString() + ": ");
 			String result = ssh.execute(script);
 			log.log(result);
+			log.log("DONE.");
 		} catch (Exception e) {
-			throw new Exception("Fail to clean on " + ssh.getTitle() + ":" + e.getMessage());
+			throw new Exception("Fail to clean on " + ssh.toString() + ":" + e.getMessage());
 		}
 	}
 
-	private void install() throws Exception {
+	private void updateCTP() throws Exception {
+		GeneralShellInput scripts = new GeneralShellInput();
+		scripts.addCommand("cd ${CTP_HOME}/common/script");
+
+		String ctpBranchName = System.getenv("CTP_BRANCH_NAME");
+		if (!CommonUtils.isEmpty(ctpBranchName)) {
+			scripts.addCommand("export CTP_BRANCH_NAME=" + ctpBranchName);
+		}
+		
+		String skipUpgrade = System.getenv("SKIP_UPGRADE");
+		if (!CommonUtils.isEmpty(ctpBranchName)) {
+			scripts.addCommand("export SKIP_UPGRADE=" + skipUpgrade);
+		}
+		scripts.addCommand("chmod u+x upgrade.sh");
+		scripts.addCommand("./upgrade.sh");
+		
+		String result;
+		try {
+			log.log("==> Begin to update CTP on " + ssh.toString() + ":");
+			result = ssh.execute(scripts);
+			log.log(result);
+			log.log("DONE.");
+		} catch (Exception e) {
+			throw new Exception("Fail to update CTP on " + ssh.toString() + ":" + e.getMessage());
+		}
+	}
+	
+	private void installCUBRID() throws Exception {
 		String role = context.getProperty("main.testing.role", "").trim();
 		GeneralShellInput scripts = new GeneralShellInput();
 		scripts.addCommand("chmod u+x ${CTP_HOME}/common/script/run_cubrid_install");
@@ -85,16 +113,16 @@ public class DeployNode {
 
 		String result;
 		try {
-			log.log("Begin to install CUBRID:");
-			log.log(scripts.getCommands());
+			log.log("==> Begin to install CUBRID on " + ssh.toString() + ":");
 			result = ssh.execute(scripts);
 			log.log(result);
+			log.log("DONE.");
 		} catch (Exception e) {
-			throw new Exception("Fail to install CUBRID on " + ssh.getTitle() + ":" + e.getMessage());
+			throw new Exception("Fail to install CUBRID on " + ssh.toString() + ":" + e.getMessage());
 		}
 	}
 
-	private void config() throws Exception {
+	private void configCUBRID() throws Exception {
 		GeneralShellInput scripts = new GeneralShellInput();
 		// configure cubrid.conf
 		String cubridPortId = this.hostManager.getInstanceProperty("cubrid.cubrid_port_id");
@@ -114,6 +142,8 @@ public class DeployNode {
 		if (CommonUtils.supportInquireOnExit(context.getBuildId())) {
 			scripts.addCommand("ini.sh -s 'common' $CUBRID/conf/cubrid.conf inquire_on_exit 3");
 		}
+
+		scripts.addCommand("ini.sh -s '%query_editor' $CUBRID/conf/cubrid_broker.conf SERVICE OFF");
 
 		if (!CommonUtils.isEmpty(brokerPort)) {
 			scripts.addCommand("ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf BROKER_PORT " + brokerPort);
@@ -138,10 +168,10 @@ public class DeployNode {
 
 		String result;
 		try {
-			log.log("Begin to deploy: ");
-			log.log(scripts.getCommands());
+			log.log("==> Begin to config HA on " + ssh.toString() + ": ");
 			result = ssh.execute(scripts);
 			log.log(result);
+			log.log("DONE.");
 		} catch (Exception e) {
 			log.log("ip:" + ssh.getHost() + "  user:" + ssh.getUser() + " exception:" + e.getMessage());
 			throw new Exception("The deploy configStep() exception. exception:" + e.getMessage());
@@ -162,7 +192,7 @@ public class DeployNode {
 
 		return haNodeList.toString();
 	}
-	
+
 	private String calcHaReplicaList() throws Exception {
 		StringBuffer haNodeList = new StringBuffer();
 
@@ -171,7 +201,7 @@ public class DeployNode {
 
 		ArrayList<SSHConnect> sshList = hostManager.getAllHost("replica");
 		for (int i = 0; i < sshList.size(); i++) {
-			if(i > 0) {
+			if (i > 0) {
 				haNodeList.append(':');
 			}
 			haNodeList.append(sshList.get(i).execute("hostname").trim());
