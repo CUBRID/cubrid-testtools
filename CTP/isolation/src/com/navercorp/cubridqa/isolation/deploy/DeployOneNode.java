@@ -74,7 +74,6 @@ public class DeployOneNode {
 		if (Integer.parseInt(arr[0]) >= 10) {
 			scripts.addCommand("echo inquire_on_exit=3 >> $CUBRID/conf/cubrid.conf");
 		}
-		scripts.addCommand("cd ${CTP_HOME}/isolation/ctltool; sh prepare.sh");
 
 		String result;
 		try {

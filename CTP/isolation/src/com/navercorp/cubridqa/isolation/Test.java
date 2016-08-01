@@ -73,7 +73,7 @@ public class Test {
 
 		String host = context.getInstanceProperty(currEnvId, "ssh.host");
 		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty( currEnvId, "ssh.user");
+		String user = context.getInstanceProperty(currEnvId, "ssh.user");
 		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
 
 		resetSSH();
@@ -94,7 +94,7 @@ public class Test {
 
 			this.testCaseFullName = testCase;
 			p = testCase.lastIndexOf("/");
-			if(p == -1) {
+			if (p == -1) {
 				p = testCase.lastIndexOf("\\");
 			}
 			if (p == -1) {
@@ -135,7 +135,7 @@ public class Test {
 					resultCont.append(cont).append(Constants.LINE_SEPARATOR);
 				}
 				context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore, Constants.SKIP_TYPE_NO);
-				System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " " + (testCaseSuccess? "[OK]": "[NOK]"));
+				System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " " + (testCaseSuccess ? "[OK]" : "[NOK]"));
 				workerLog.println("");
 				dispatchLog.println(this.testCaseFullName);
 			}
@@ -176,11 +176,11 @@ public class Test {
 	public boolean runTestCase() throws Exception {
 
 		String result;
-		IsolationShellInput script = new IsolationShellInput("cd;pwd ");		
+		IsolationShellInput script = new IsolationShellInput("cd;pwd ");
 		script.addCommand("ulimit -c unlimited");
 		script.addCommand("export TEST_ID=" + this.context.getFeedback().getTaskId());
-		script.addCommand("sh $ctlpath/runone.sh -r " + context.getProperty("main.testcase.retry") + " " + testCaseFullName + " " + context.getProperty("main.testcase.timeout") + " "
-				+ context.getTestingDatabase() + " 2>&1");
+		
+		script.addCommand("sh $ctlpath/runone.sh -r " + (context.getRetryTimes() + 1) + " " + testCaseFullName + " " + context.getProperty("main.testcase.timeout") + " " + context.getTestingDatabase() + " 2>&1");
 		result = ssh.execute(script);
 		workerLog.println(result);
 

@@ -232,5 +232,17 @@ public class Context {
 	public String getLogRootDir() {
 		return this.rootLogDir;
 	}
-
+	
+	public int getRetryTimes() {
+		int retryTimes = 0;
+		try {
+			retryTimes = Integer.parseInt(getProperty("main.testcase.retry", "0"));
+			if (retryTimes <= 0) {
+				retryTimes = 0;
+			}
+		} catch (Exception e) {
+			System.out.println("Fail to read 'main.testcase.retry' value");
+		}
+		return retryTimes;
+	}
 }
