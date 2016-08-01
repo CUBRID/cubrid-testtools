@@ -80,6 +80,8 @@ public class TestCaseGithub {
 
 		scripts.addCommand("chmod u+x upgrade.sh");
 		scripts.addCommand("./upgrade.sh");
+		scripts.addCommand("cd ${CTP_HOME}/isolation/ctltool");
+		scripts.addCommand("chmod u+x *.sh");
 		
 		scripts.addCommand("echo Above EnvId is " + this.currEnvId);
 		String result;
