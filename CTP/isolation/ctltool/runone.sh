@@ -157,8 +157,8 @@ function removeCoreAndLog
 
 function checkCoreAndFatalError
 {
-	find $ctlpath $CUBRID $casedir -name "core.*" -type f | grep -v core.log>temp_log
-	core_dump_cnt=`cat temp_log|wc -l`       
+	find $ctlpath $CUBRID $casedir -name "core.*" -type f | grep -v core.log>.isolation_temp_log
+	core_dump_cnt=`cat .isolation_temp_log|wc -l`       
         fatal_err_cnt=`grep -r "FATAL ERROR" $CUBRID/log/* | wc -l`
         # 4. check core
         if [ $core_dump_cnt -gt 0 ] ||
@@ -171,7 +171,7 @@ function checkCoreAndFatalError
             while read line 
             do
                 mv $line ${backup_dir}
-            done<temp_log
+            done<.isolation_temp_log
 
             # stop service before copy CUBRID
             cubrid service stop
