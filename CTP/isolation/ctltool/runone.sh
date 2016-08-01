@@ -215,7 +215,7 @@ function run_test_case
         removeCoreAndLog
 
 	# 1. setup
-	if [ ${client} = "qacsql" ] && [ `cubrid server status|grep $db|wc -l` -eq 0 ]
+	if [ ${client} = "qacsql" ] && [ ! -f ${ctlpath}/qactl ]
 	then
 	    sh $ctlpath/prepare.sh ${client} $db "log"
 	fi
