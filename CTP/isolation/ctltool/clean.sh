@@ -1,5 +1,7 @@
 #!/bin/bash
 
+temp_file_for_clean=.isolation_clean_temp
+
 function clean_cubrid
 {
   [ $# -lt 1 ] && { echo "ERROR: missing dbname"; return 1; };
@@ -10,53 +12,53 @@ function clean_cubrid
   cubrid tranlist -u dba $dbname|grep $HOSTNAME|awk '{print $4}'|xargs -i kill -9 {} >/dev/null 2>&1
 
   # delete user
-  csql -u dba $dbname -c "select name from db_user where name !='DBA' and name !='PUBLIC'" >temp 
-  cat temp |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop user " {} ";" >deleteuser.sql
+  csql -u dba $dbname -c "select name from db_user where name !='DBA' and name !='PUBLIC'" > ${temp_file_for_clean} 
+  cat ${temp_file_for_clean}  |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop user " {} ";" >deleteuser.sql
   csql -u dba $dbname -i deleteuser.sql >/dev/null
-  rm temp deleteuser.sql
+  rm ${temp_file_for_clean}  deleteuser.sql
 
   # delete foreign key table
-  csql -u dba $dbname -c "select class_name from db_index where is_foreign_key='YES';" >temp 
-  cat temp |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop table " {} ";" >deletefk.sql
+  csql -u dba $dbname -c "select class_name from db_index where is_foreign_key='YES';" > ${temp_file_for_clean}  
+  cat ${temp_file_for_clean}  |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop table " {} ";" >deletefk.sql
   csql -u dba $dbname -i deletefk.sql >/dev/null
-  rm temp deletefk.sql
+  rm ${temp_file_for_clean}  deletefk.sql
 
   # delete trigger
-  csql -u dba $dbname -c "select name from db_trigger;" >temp
-  cat temp |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop trigger " {} ";" >deletetrigger.sql
+  csql -u dba $dbname -c "select name from db_trigger;" >${temp_file_for_clean} 
+  cat ${temp_file_for_clean}  |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop trigger " {} ";" >deletetrigger.sql
   csql -u dba $dbname -i deletetrigger.sql >/dev/null
-  rm temp deletetrigger.sql
+  rm ${temp_file_for_clean}  deletetrigger.sql
 
   # delete serial
-  csql -u dba $dbname -c "select name from db_serial where att_name is null;" >temp
-  cat temp |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop serial " {} ";" >deleteserial.sql
+  csql -u dba $dbname -c "select name from db_serial where att_name is null;" >${temp_file_for_clean} 
+  cat ${temp_file_for_clean}  |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop serial " {} ";" >deleteserial.sql
   csql -u dba $dbname -i deleteserial.sql >/dev/null
-  rm temp deleteserial.sql
+  rm ${temp_file_for_clean}  deleteserial.sql
 
   # delete function
-  csql -u dba $dbname -c "SELECT sp_name FROM db_stored_procedure where sp_type='FUNCTION' and sp_name !='sleep' and sp_name !='sleep1' and sp_name !='sleep2'" >temp
-  cat temp |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop function " {} ";" >deletefun.sql
+  csql -u dba $dbname -c "SELECT sp_name FROM db_stored_procedure where sp_type='FUNCTION' and sp_name !='sleep' and sp_name !='sleep1' and sp_name !='sleep2'" >${temp_file_for_clean} 
+  cat ${temp_file_for_clean}  |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop function " {} ";" >deletefun.sql
   csql -u dba $dbname -i deletefun.sql >/dev/null
-  rm temp deletefun.sql
+  rm ${temp_file_for_clean}  deletefun.sql
 
   # delete procedure
-  csql -u dba $dbname -c "SELECT sp_name FROM db_stored_procedure where sp_type='PROCEDURE';" >temp
-  cat temp |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop procedure " {} ";" >deletefun.sql
+  csql -u dba $dbname -c "SELECT sp_name FROM db_stored_procedure where sp_type='PROCEDURE';" >${temp_file_for_clean} 
+  cat ${temp_file_for_clean}  |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop procedure " {} ";" >deletefun.sql
   csql -u dba $dbname -i deletefun.sql >/dev/null
-  rm temp deletefun.sql
+  rm ${temp_file_for_clean}  deletefun.sql
 
 
   # delete table
-  csql -u dba $dbname -c "select class_name from db_class where is_system_class='NO' and class_type='VCLASS';" >temp
-  cat temp |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop view " {} ";" >deletetable.sql
+  csql -u dba $dbname -c "select class_name from db_class where is_system_class='NO' and class_type='VCLASS';" >${temp_file_for_clean} 
+  cat ${temp_file_for_clean}  |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop view " {} ";" >deletetable.sql
   csql -u dba $dbname -i deletetable.sql >/dev/null
-  rm temp deletetable.sql
+  rm ${temp_file_for_clean}  deletetable.sql
 
   # delete table
-  csql -u dba $dbname -c "select class_name from db_class where is_system_class='NO' and class_type='CLASS';" >temp
-  cat temp |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop table " {} ";" >deletetable.sql
+  csql -u dba $dbname -c "select class_name from db_class where is_system_class='NO' and class_type='CLASS';" >${temp_file_for_clean} 
+  cat ${temp_file_for_clean}  |grep "^ *[\']"|sed "s/'//g"|xargs -i echo "drop table " {} ";" >deletetable.sql
   csql -u dba $dbname -i deletetable.sql >/dev/null
-  rm temp deletetable.sql
+  rm ${temp_file_for_clean}  deletetable.sql
 }
 
 
