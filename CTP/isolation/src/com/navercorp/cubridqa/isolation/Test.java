@@ -176,11 +176,11 @@ public class Test {
 	public boolean runTestCase() throws Exception {
 
 		String result;
-		IsolationShellInput script = new IsolationShellInput("cd;pwd ");
+		IsolationShellInput script = new IsolationShellInput("");
 		script.addCommand("ulimit -c unlimited");
 		script.addCommand("export TEST_ID=" + this.context.getFeedback().getTaskId());
 		script.addCommand("cd $ctlpath");
-		script.addCommand("sh $ctlpath/runone.sh -r " + (context.getRetryTimes() + 1) + " " + testCaseFullName + " " + context.getProperty("main.testcase.timeout") + " " + context.getTestingDatabase() + " 2>&1");
+		script.addCommand("sh runone.sh -r " + (context.getRetryTimes() + 1) + " $HOME/" + testCaseFullName + " " + context.getProperty("main.testcase.timeout") + " " + context.getTestingDatabase() + " 2>&1");
 		result = ssh.execute(script);
 		workerLog.println(result);
 
