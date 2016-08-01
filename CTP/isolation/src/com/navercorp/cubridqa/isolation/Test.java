@@ -179,7 +179,7 @@ public class Test {
 		IsolationShellInput script = new IsolationShellInput("cd;pwd ");
 		script.addCommand("ulimit -c unlimited");
 		script.addCommand("export TEST_ID=" + this.context.getFeedback().getTaskId());
-		
+		script.addCommand("cd $ctlpath");
 		script.addCommand("sh $ctlpath/runone.sh -r " + (context.getRetryTimes() + 1) + " " + testCaseFullName + " " + context.getProperty("main.testcase.timeout") + " " + context.getTestingDatabase() + " 2>&1");
 		result = ssh.execute(script);
 		workerLog.println(result);
