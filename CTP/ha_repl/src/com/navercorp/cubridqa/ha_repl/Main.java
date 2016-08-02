@@ -42,6 +42,7 @@ import com.navercorp.cubridqa.ha_repl.deploy.Deploy;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
 import com.navercorp.cubridqa.ha_repl.migrate.Convert;
 import com.navercorp.cubridqa.shell.common.LocalInvoker;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class Main {
 	public static void exec(String configFilename) throws Exception {
@@ -77,6 +78,8 @@ public class Main {
 		if (envList.size() == 0) {
 			throw new Exception("Not found any HA instance to test.");
 		}
+		
+		checkRequirement(context);
 
 		Properties props = context.getProperties();
 		Set set = props.keySet();
@@ -226,5 +229,32 @@ public class Main {
 		backupFileName = "ha_repl_result_" + context.getBuildId() + "_" + context.getBuildBits() + "_" + context.getFeedback().getTaskId() + "_" + curTimestamp + ".tar.gz";
 		LocalInvoker.exec("mkdir -p " + context.getCurrentLogDir() + " >/dev/null 2>&1 ; cd " + context.getCurrentLogDir() + "; tar zvcf ../" + backupFileName + " . " + " `cat "
 				+ context.getCurrentLogDir() + "/test*.log | grep \"\\[FAIL\\]\" | awk '{print $2}' |sed 's/test$/*/'` ", false, true);
+	}
+	
+	private static void checkRequirement(Context context) throws Exception {
+		System.out.println("BEGIN TO CHECK: ");
+		ArrayList<String> envList = context.getTestEnvList();
+		CheckRequirement check;
+		boolean pass = true;
+		InstanceManager im;
+		ArrayList<SSHConnect> sshList;
+		for(String envId: envList) {
+			im = new InstanceManager(context,envId);
+			sshList = im.getAllNodeList();
+			for(SSHConnect s: sshList) {
+				check = new CheckRequirement(context, envId, s);
+				if (!check.check()) {				
+					pass = false;
+				}
+			}
+			im.close();
+		}
+		if (pass) {
+			System.out.println("CHECK RESULT: PASS");
+		} else {
+			System.out.println("CHECK RESULT: FAIL");
+			System.out.println("QUIT");
+			System.exit(-1);
+		}
 	}
 }

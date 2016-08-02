@@ -90,8 +90,13 @@ public class Log {
 	public void println(String msg, boolean newLine) {
 		if (msg == null)
 			return;
-		if (echo)
-			System.out.println(msg);
+		if (echo) {
+			if(newLine) {	
+				System.out.println(msg);
+			} else {
+				System.out.print(msg);
+			}
+		}
 		try {
 			pw.write(msg);
 		} catch (Exception e) {

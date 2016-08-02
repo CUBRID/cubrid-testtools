@@ -141,7 +141,7 @@ public class Test {
 				resetCUBRID();
 				resetSSH();
 				startTime = -1;
-				if (this.context.enableCheckDiskSpace){
+				if (this.context.enableCheckDiskSpace()) {
 					checkDiskSpace();
 				}
 				
@@ -612,39 +612,41 @@ public class Test {
 	}
 	
 	public void checkDiskSpace() throws JSchException {
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
-		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
-		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
-		String result;
-		try {
-			result = ssh.execute(scripts);
-			workerLog.println("[INFO]  finish check disk space successfully on" + result);
-		} catch (Exception e) {
-			workerLog.println("[ERROR] fail to check disk space on " + e.getMessage());
-		}
+		checkDiskSpace(ssh, false);
 			
 		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
 		String serviceProtocol = context.getServiceProtocolType();
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
-				sshRelated = null;
-				try {
-					sshRelated = new SSHConnect(h, sshPort, sshUser, sshPwd, serviceProtocol);
-					sshRelated.execute(scripts);
-					workerLog.println("[INFO] finish check disk space successfully on " + h + ".");
-				} catch (Exception e) {
-					workerLog.println("[ERROR] fail to check disk space on  " + h + ":" + e.getMessage());
-				} finally {
-					if (sshRelated != null) {
-						sshRelated.close();
-					}
+				sshRelated = new SSHConnect(h, sshPort, sshUser, sshPwd, serviceProtocol);
+				checkDiskSpace(sshRelated, true);
+			}
+		}
+	}
+	
+	private void checkDiskSpace(SSHConnect ssh1, boolean closeSSH) {
+		
+		ShellInput scripts = new ShellInput();
+		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
+		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
+		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
+		String result;
+		try {
+			result = ssh1.execute(scripts);
+			workerLog.println("[INFO] Check disk space PASS on " + ssh1.toString());
+		} catch (Exception e) {
+			workerLog.println("[FAIL] Check disk space FAIL on " + ssh1.toString());
+			workerLog.println(e.getMessage());
+		} finally {
+			if(closeSSH) {
+				if (ssh1 != null) {
+					ssh1.close();
 				}
 			}
 		}
-
 	}
+	
 	public String doSaveNormalErrorLog() throws JSchException {
 		String ret = "";		
 		ShellInput scripts = new ShellInput();

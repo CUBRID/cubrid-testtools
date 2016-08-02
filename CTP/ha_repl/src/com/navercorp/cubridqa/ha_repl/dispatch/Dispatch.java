@@ -185,7 +185,8 @@ public class Dispatch {
 
 		File[] subList = new File(context.getCurrentLogDir()).listFiles();
 		for (File file : subList) {
-			file.delete();
+			if (file.isFile())
+				file.delete();
 		}
 
 		allFile = new File(getFileNameForDispatchAll());

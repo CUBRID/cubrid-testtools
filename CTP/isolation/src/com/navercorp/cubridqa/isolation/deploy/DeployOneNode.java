@@ -27,13 +27,11 @@
 
 package com.navercorp.cubridqa.isolation.deploy;
 
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.Constants;
-
-
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.IsolationShellInput;
-import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class DeployOneNode {
@@ -54,7 +52,6 @@ public class DeployOneNode {
 		String user = context.getInstanceProperty(currEnvId, "ssh.user");
 		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
-		System.out.println(envIdentify);
 		this.ssh = new SSHConnect(host, port, user, pwd);
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
@@ -123,7 +120,7 @@ public class DeployOneNode {
 			log.print("[ERROR] " + e.getMessage());
 		}
 	}
-
+	
 	public void cleanProcess() {
 		if (context.isWindows()) {
 			cleanProcess_windows();
