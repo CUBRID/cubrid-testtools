@@ -24,10 +24,8 @@
  */
 package com.navercorp.cubridqa.common;
 
-import java.io.File;
-
-
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -38,6 +36,8 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,8 +47,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.navercorp.cubridqa.common.CommonUtils;
 
 public class CommonUtils {
 	public static String replace(String strSource, String strFrom, String strTo) {
@@ -65,6 +63,14 @@ public class CommonUtils {
 		}
 		strDest = strDest + strSource;
 		return strDest;
+	}
+	
+	
+	public static boolean isEmpty(String s) {
+		if (s == null) {
+			return true;
+		}
+		return s.trim().equals("");
 	}
 
 	public static String rightTrim(String str) {
@@ -435,5 +441,166 @@ public class CommonUtils {
 			shellType = LocalInvoker.SHELL_TYPE_LINUX;
 		}
 		return shellType;
+	}
+	
+	public static String getSimplifiedBuildId(String cubridPackageUrl) {
+		// get test build number
+		String sBuildId = null;
+		Pattern pattern = Pattern.compile("\\d+\\.\\d+\\.\\d+\\.\\d+");
+		Matcher matcher = pattern.matcher(cubridPackageUrl);
+		while (matcher.find()) {
+			sBuildId = matcher.group();
+		}
+		return sBuildId;
+	}
+	
+	public static boolean isNewBuildNumberSystem(String simplifiedBuildId) {
+		if (simplifiedBuildId == null) {
+			return false;
+		}
+		String curValue = convertNumberSystemToFixedLength(simplifiedBuildId);
+		String stdValue = convertNumberSystemToFixedLength("10.1.0.6858");
+		return curValue.compareTo(stdValue) >= 0;
+	}
+	
+	public static String convertNumberSystemToFixedLength(String simplifiedBuildId) {
+		if (simplifiedBuildId == null) {
+			return simplifiedBuildId;
+		}
+
+		String[] items = simplifiedBuildId.split("\\.");
+		return toFixedLength(items[0], 3, '0') + toFixedLength(items[1], 3, '0') + toFixedLength(items[2], 3, '0') + toFixedLength(items[3], 10, '0');
+	}
+	
+	public static String toFixedLength(String str, int len, char fillChar) {
+
+		if (str == null)
+			return null;
+		String result = str;
+		for (int i = 0; i < len; i++) {
+			result = fillChar + result;
+		}
+		return result.substring(result.length() - len);
+	}
+	
+	public static String getBuildId(String cubridPackageUrl) {
+		String simplifiedBuild = getSimplifiedBuildId(cubridPackageUrl);
+
+		if (isNewBuildNumberSystem(simplifiedBuild)) {
+			String buildId;
+
+			int p1 = cubridPackageUrl.lastIndexOf(simplifiedBuild);
+			int p2 = cubridPackageUrl.indexOf("-", p1 + simplifiedBuild.length() + 1);
+
+			if (p2 == -1) {
+				p2 = cubridPackageUrl.indexOf(".", p1 + simplifiedBuild.length() + 1);
+			}
+
+			buildId = p2 == -1 ? cubridPackageUrl.substring(p1) : cubridPackageUrl.substring(p1, p2);
+			return buildId;
+		} else {
+			return simplifiedBuild;
+		}
+	}
+	
+	public static String getBuildBits(String cubridPackageUrl) {
+		String version = null;
+		int idx1 = cubridPackageUrl.indexOf("_64");
+		int idx2 = cubridPackageUrl.indexOf("x64");
+		int idx3 = cubridPackageUrl.indexOf("ppc64"); // AIX BUILD.
+														// CUBRID-8.4.4.0136-AIX-ppc64.sh
+
+		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0) {
+			version = "64bits";
+		} else {
+			version = "32bits";
+		}
+		return version;
+	}
+	
+	public static boolean containToken(String filename, String token) throws IOException {
+
+		File file = new File(filename);
+		if (!file.exists()) {
+			return false;
+		}
+
+		FileInputStream fis = new FileInputStream(file);
+		InputStreamReader reader = new InputStreamReader(fis, "UTF-8");
+
+		LineNumberReader lineReader = new LineNumberReader(reader);
+		String line;
+		String upperToken = token.toUpperCase().trim();
+
+		boolean hasToken = false;
+		while ((line = lineReader.readLine()) != null) {
+			if (line.toUpperCase().indexOf(upperToken) != -1) {
+				hasToken = true;
+				break;
+			}
+		}
+		lineReader.close();
+		reader.close();
+		fis.close();
+		return hasToken;
+	}
+	
+	public static String getFileMD5(File file) throws Exception {
+		if (!file.isFile() || file.exists() == false ) {
+			return null;
+		}
+		MessageDigest digest = null;
+		FileInputStream in = null;
+		byte buffer[] = new byte[8192];
+		int len;
+		try {
+			digest = MessageDigest.getInstance("MD5");
+			in = new FileInputStream(file);
+			while ((len = in.read(buffer)) != -1) {
+				digest.update(buffer, 0, len);
+			}
+			BigInteger bigInt = new BigInteger(1, digest.digest());
+			return bigInt.toString(16);
+		} finally {
+			try {
+				in.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static int greaterThanVersion(String v1, String v2) {
+		String[] a1 = v1.split("\\.");
+		String[] a2 = v2.split("\\.");
+		int p1, p2;
+		for (int i = 0; i < 4; i++) {
+			p1 = Integer.parseInt(a1[i]);
+			p2 = Integer.parseInt(a2[i]);
+			if (p1 == p2)
+				continue;
+			return (p1 > p2) ? 1 : -1;
+		}
+		return 0;
+	}
+
+	public static int getVersionNum(String versionId, int pos) {
+		String[] arr = versionId.split("\\.");
+		return Integer.parseInt(arr[pos - 1]);
+	}
+
+	public static boolean haveCharsetToCreateDB(String versionId) {
+		if (greaterThanVersion(versionId, Constants.HAVE_CHARSET_10) >= 0) {
+			return true;
+		} else if (getVersionNum(versionId, 1) == 9 && greaterThanVersion(versionId, Constants.HAVE_CHARSET_9) >= 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean supportInquireOnExit(String buildId) {
+		String arr[] = buildId.split("\\.");
+		return Integer.parseInt(arr[0]) >= 10;
 	}
 }

@@ -27,6 +27,7 @@
 package com.navercorp.cubridqa.shell.main;
 
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -125,8 +126,9 @@ public class Context {
 		this.maxRetryCount = Integer.parseInt(getProperty("max.retry.count", "0").trim());
         this.defaultDbCharset = getProperty("main.testing.default_charset", "en_US").trim();
        
-		this.enableCheckDiskSpace = getProperty("main.testing.enable_check_disk_space", "FALSE").trim().toUpperCase().equals("TRUE");
-		this.mailNoticeTo = getProperty("main.testing.bigspace_dir", "fanzq@nhn.com").trim();
+		this.enableCheckDiskSpace = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
+		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
+		
 		this.enableSaveNormalErrorLog = getProperty("main.testing.do_save_normal_error_log", "FALSE").trim().toUpperCase().equals("TRUE");        
       
 		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.mode.continue", "false"), false);
@@ -399,14 +401,7 @@ public class Context {
 	public void setMsgId(String msgId) {
 		this.msgId = msgId;
 	}
-	public boolean getEnableCheckDiskSpace() {
-		return this.enableCheckDiskSpace;
-	}
     
-	public String getMailNoticeTo() {
-		return mailNoticeTo;
-	}
-
 	public boolean getEnableSaveNormalErrorLog() {
 		return enableSaveNormalErrorLog;
 	}
@@ -449,5 +444,13 @@ public class Context {
 
 	public void setEnableSkipUpgrade(String enableSkipUpgrade) {
 		this.enableSkipUpgrade = enableSkipUpgrade;
+	}
+	
+	public String getMailNoticeTo() {
+		return this.mailNoticeTo;		
+	}
+	
+	public boolean enableCheckDiskSpace() {
+		return enableCheckDiskSpace;
 	}
 }

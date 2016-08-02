@@ -305,10 +305,7 @@ public class CommonUtils {
 	}
 	
 	public static boolean isEmpty(String s) {
-		if (s == null) {
-			return true;
-		}
-		return s.trim().equals("");
+		return com.navercorp.cubridqa.common.CommonUtils.isEmpty(s);
 	}
 	
 	public static void main(String[] args) throws IOException {

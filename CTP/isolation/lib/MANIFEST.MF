@@ -1,0 +1,2 @@
+Manifest-Version: 2.0
+Class-Path: ../../common/lib/cubridqa-common.jar ../../shell/lib/cubridqa-shell.jar
