@@ -138,7 +138,7 @@ public class TestFactory {
 		String curTimestamp = year + "." + month + "." + day + "_" + hour + "." + minute + "." + second;
 
 		backupFileName = "isolation_result_" + context.getBuildId() + "_" + context.getBuildBits() + "_" + context.getFeedback().getTaskId() + "_" + curTimestamp + ".tar.gz";
-		LocalInvoker.exec("mkdir -p " + context.getLogRootDir() + "; cd " + context.getLogRootDir() + "; tar zvcf " + backupFileName + " " + context.getCurrentLogDir(), false, false);
+		LocalInvoker.exec("mkdir -p " + context.getCurrentLogDir() + " >/dev/null 2>&1 ; cd " + context.getCurrentLogDir() + "; tar zvcf ../" + backupFileName + " . ", false, false);
 	}
 
 	private static void addSkippedTestCases(Feedback feedback, ArrayList<String> list, String skippedType) {
