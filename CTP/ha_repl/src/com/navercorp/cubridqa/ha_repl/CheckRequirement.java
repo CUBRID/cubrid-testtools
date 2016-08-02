@@ -1,6 +1,7 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.GeneralShellInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -124,7 +125,7 @@ public class CheckRequirement {
 		try {
 			script = new GeneralShellInput("if [ -d \"" + dir + "\" ]; then echo PASS; else echo FAIL; fi");
 			result = ssh.execute(script);
-			if (result.indexOf("PASS") == -1) {
+			if (result.indexOf("PASS") != -1) {
 				log.print("...... PASS");
 			} else {
 				log.print("...... FAIL. Not found");
