@@ -70,8 +70,7 @@ public class Deploy {
 			d.close();
 		}
 		
-		if(relatedHosts!=null && relatedHosts.size() >0)
-		{
+		if (relatedHosts != null && relatedHosts.size() > 0) {
 			DeployHA  dHa = new DeployHA (context, currEnvId, relatedHosts.get(0), log);
 			dHa.deploy();
 		    dHa.close();

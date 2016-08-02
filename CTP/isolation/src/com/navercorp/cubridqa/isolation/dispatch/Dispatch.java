@@ -238,13 +238,9 @@ public class Dispatch {
 		File allFile;
 		File finishedFile;
 
-		File[] subList = new File(context.getCurrentLogDir()).listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.startsWith("dispatch_tc_");
-			}
-		});
+		File[] subList = new File(context.getCurrentLogDir()).listFiles();
 		for (File file : subList) {
-			file.delete();
+			if(file.isFile()) file.delete();
 		}
 
 		allFile = new File(getFileNameForDispatchAll());

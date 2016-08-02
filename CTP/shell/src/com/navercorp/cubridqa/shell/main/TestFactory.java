@@ -27,6 +27,7 @@
 package com.navercorp.cubridqa.shell.main;
 
 import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
@@ -84,7 +85,6 @@ public class TestFactory {
 	public void execute() throws Exception {
 		ArrayList<String> stableEnvList = (ArrayList<String>) context.getEnvList().clone();
 		if (context.isContinueMode) {
-			feedback.onTaskContinueEvent();
 			System.out.println("============= FETCH TEST CASES ==================");
 			Dispatch.init(context);
 			if(Dispatch.getInstance().getTotalTbdSize() == 0){
@@ -92,11 +92,16 @@ public class TestFactory {
 				return;
 			}
 			
+			checkRequirement(context);
+			feedback.onTaskContinueEvent();
+			
 			System.out.println("============= UPDATE TEST CASES ==================");
 			concurrentSVNUpdate(stableEnvList);
 			System.out.println("DONE");
 			
 		} else {
+			checkRequirement(context);
+			
 			feedback.onTaskStartEvent(context.getCubridPackageUrl());
 			System.out.println("============= UPDATE TEST CASES ==================");
 			concurrentSVNUpdate(stableEnvList);
@@ -137,8 +142,6 @@ public class TestFactory {
 		
 		CommonUtils.generateFailBackupPackage(context);
 		System.out.println("TEST COMPLETE");
-		
-		
 	}
 
 	private void joinTest(ArrayList<String> envList) throws Exception {
@@ -324,5 +327,37 @@ public class TestFactory {
 			}
 		}
 		return true;
+	}
+	
+	private static void checkRequirement(Context context) throws Exception {
+		System.out.println("BEGIN TO CHECK: ");
+		ArrayList<String> envList = context.getEnvList();
+		
+		CheckRequirement check;		
+		ArrayList<String> relatedHosts;
+		boolean pass = true;
+		
+		for(String envId: envList) {			
+			
+			check = new CheckRequirement(context, envId, context.getInstanceProperty(envId, "ssh.host"), false);
+			if (!check.check()) {
+				pass = false;
+			}
+			
+			relatedHosts = context.getRelatedHosts(envId);
+			for (String h : relatedHosts) {
+				check = new CheckRequirement(context, envId, h, true);
+				if (!check.check()) {
+					pass = false;
+				}
+			}			
+		}
+		if (pass) {
+			System.out.println("CHECK RESULT: PASS");
+		} else {
+			System.out.println("CHECK RESULT: FAIL");
+			System.out.println("QUIT");
+			System.exit(-1);
+		}
 	}
 }

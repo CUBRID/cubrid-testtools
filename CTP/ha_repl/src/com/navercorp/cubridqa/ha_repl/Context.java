@@ -53,6 +53,8 @@ public class Context {
 	private String buildBits;
 	private String buildId;
 	private ArrayList<String> testEnvList = new ArrayList<String>();
+	private boolean enableCheckDiskSpace;
+	String mailNoticeTo;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -85,6 +87,9 @@ public class Context {
 				testEnvList.add(key.substring(4, key.indexOf(".master.ssh.host")));
 			}
 		}
+		
+		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
+		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
 	}
 	
 	public ArrayList<String> getTestEnvList() {
@@ -235,4 +240,13 @@ public class Context {
 	public boolean shouldCleanupAfterQuit() {
 		return CommonUtils.convertBoolean(getProperty("main.testing.cleanup_after_quit_yn", "true"));
 	}
+	
+	public boolean enableCheckDiskSpace() {
+		return enableCheckDiskSpace;
+	}
+	
+	public String getMailNoticeTo() {
+		return this.mailNoticeTo;		
+	}
+
 }

@@ -62,6 +62,9 @@ public class Context {
 	private String buildId;
 
 	private String buildBits;
+	
+	private String mailNoticeTo;
+	private boolean enableCheckDiskSpace;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -85,6 +88,9 @@ public class Context {
 		} else {
 			this.feedback = new FeedbackNull();
 		}
+		
+		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
+		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {
@@ -244,5 +250,13 @@ public class Context {
 			System.out.println("Fail to read 'main.testcase.retry' value");
 		}
 		return retryTimes;
+	}
+	
+	public String getMailNoticeTo() {
+		return this.mailNoticeTo;		
+	}
+	
+	public boolean enableCheckDiskSpace() {
+		return enableCheckDiskSpace;
 	}
 }
