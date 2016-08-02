@@ -93,7 +93,7 @@ public class CheckRequirement {
 		}
 		
 		String excludedFilename = context.getProperty("main.testcase.excluded");
-		if (!CommonUtils.isEmpty(excludedFilename)) {
+		if (!CommonUtils.isEmpty(excludedFilename) && isRelated == false) {
 			checkFile(excludedFilename);
 		}
 
