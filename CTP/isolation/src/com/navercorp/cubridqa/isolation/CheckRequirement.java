@@ -151,7 +151,7 @@ public class CheckRequirement {
 		try {
 			script = new GeneralShellInput("if [ -d \"" + dir + "\" ]; then echo PASS; else echo FAIL; fi");
 			result = ssh.execute(script);
-			if (result.indexOf("PASS") == -1) {
+			if (result.indexOf("PASS") != -1) {
 				log.print("...... PASS");
 			} else {
 				log.print("...... FAIL. Not found");
