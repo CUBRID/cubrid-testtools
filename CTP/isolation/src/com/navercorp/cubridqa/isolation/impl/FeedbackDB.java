@@ -69,7 +69,7 @@ public class FeedbackDB implements Feedback {
 		Timestamp d = new Timestamp(System.currentTimeMillis());
 
 		String category = context.getProperty("main.testing.category");
-		String os = context.getProperty("main.testing.os");
+		String os = context.getProperty("main.testing.platform");
 
 		sql = "insert into shell_main(test_build, category, start_time, os, version) values(?, ?, ?, ?, ?)";
 
