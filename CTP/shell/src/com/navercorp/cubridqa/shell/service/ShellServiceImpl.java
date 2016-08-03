@@ -27,7 +27,7 @@
 package com.navercorp.cubridqa.shell.service;
 
 import java.io.File;
-import java.rmi.RemoteException;
+
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
@@ -84,11 +84,15 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 	public String exec(String user, String pwd, String scripts, boolean pureWindows) throws Exception {
 		String clientHost = super.getClientHost();
 		System.out.println();
-		System.out.println("=========================================================================================");
-		System.out.println("host: " + clientHost + ", user:" + user + "(" + new java.util.Date() + ")");
+		System.out.println("===========================================================");
+		System.out.println("host: " + clientHost + ", user:" + user + "(" + new java.util.Date() + ") (v20160803)");
 		String preScript;
 
 		if (requiredUser.equals(user) && requiredPwd.equals(pwd) && requiredHosts.indexOf("," + clientHost + ",") != -1) {
+			if(scripts.equals("PLEASE_RESTART_AGENT")) {
+				System.out.println("Service will restart. Quit.");
+				System.exit(0);
+			}
 			if (pureWindows) {
 				preScript = "set HOME=" + userHomePureWin + "\n\r";
 				preScript = preScript + "set USER=" + user + "\n\r";
