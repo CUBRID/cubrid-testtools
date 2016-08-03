@@ -71,7 +71,7 @@ public class FeedbackDB implements Feedback {
 		String build = context.getTestBuild();
 
 		String category = context.getProperty("main.testing.category");
-		String os = context.getProperty("main.testing.os");
+		String os = context.getProperty("main.testing.platform");
 
 		String version = context.getVersion();
 		String msgId = context.getMsgId();
