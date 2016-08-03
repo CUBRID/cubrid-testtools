@@ -144,7 +144,7 @@ function updateCodes()
     then
 		echo "-------------------------- Begin to update codes -----------------------------"
 		default_lc_all=`echo $LC_ALL`
-		export LC_ALL=en_us
+		export LC_ALL=en_US
 		echo "Update status: CHANGED " `date`
 		commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
 	    echo "#!/bin/bash " > $HOME/.autoUpdate.sh
