@@ -12,7 +12,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
   not conflict with another instance exists. Otherwise, start server or broker will be fail.
 
 ## Quick Start
-This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell`` and so on. Regarding more information please refer to the related sections.
+This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation`` and so on. Regarding more information please refer to the related sections.
 
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly.
 * Execute a sample test as follows:
@@ -98,7 +98,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 - **SHELL**
   - Prepare
 	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
-	* Controller Node:
+	* Controller Node configuration:
 	
 	  ```
 	    Test nodes are configured in CTP/conf/shell.conf as below:
@@ -136,17 +136,44 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  ```   
     
  - Examine the results
-	* Once it completes, you can find the results/logs from ``CTP/result/current_runtime_logs``
+	* Once it completes, you can find the results and logs from ``CTP/result/shell/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this server node.
 	* ``main_snapshot.properties`` will save the configurations for your current testing.
 	* ``test_${Node_Name}.log`` will show the logs of testing based on this server node.
+	
+- **Isolation**
+  - Prepare
+	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
+	* Controller Node configuration is basically same as ``Shell``.
+	  Regarding more parameters for ``isolation`` testing, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
+	* Environment variables set on test Node:
+	  
+	  ```
+	     JAVA_HOME=$java_nstallation_directory 
+	     CTP_HOME=$HOME/CTP
+	  ```
+	  
+ - Run Tests 
+	* For **Isolation** test:
+	
+	  ```
+	  $ bin/ctp.sh isolation -c ./conf/isolation.conf
+	  ```   
+    
+ - Examine the results
+	* Once it completes, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
+	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this server node.
+	* ``main_snapshot.properties`` will save the configurations for your current testing.
+	* ``test_${Node_Name}.log`` will show the logs of testing based on this server node.
+
+
 
 ## How To Build CTP
 You are not required to build CTP from source codes, unless you make some changes. To make your own build, please install ant and make a build as follows: 
   ```
     $ ant clean dist
   ```
-You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar`` and ``shell/lib/cubridqa-shell.jar``.
+You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar`` and ``isolation/lib/cubridqa-isolation.jar``.
 
 ## How To Write Testcase
  - **SQL**
@@ -210,6 +237,89 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
 	#clean environment
 	finish
 	```
+
+- **Isolation**
+   * Test cases: the file extension is ``.ctl``
+   * Sample for reference
+     ```
+    /*
+	Test Case: Changing Owner
+	Priority: 1
+	Reference case:
+	Author: xxx
+
+	Test Plan: 
+	Test update locks (X_LOCK on instance) and SELECT not need locks, they are not blocked each other.
+
+	Test Scenario:
+	C1 granting authorization, C2 verify authorization, 
+	C1 verify authorization, 
+	C1 commit, C2 commit, 
+	Metrics: data size = small, where clause = simple (multiple columns)
+	
+	Test Point:
+	1) C1 and C2 will not be waiting 
+	2) All the data affected from C1 and C2 should be deleted
+
+	NUM_CLIENTS = 2
+	C1: granting authorization - verify authorization;  
+	C2: verify authorization;  
+	*/
+
+	MC: setup NUM_CLIENTS = 2;
+
+	C1: login as 'dba';
+	C1: set transaction lock timeout INFINITE;
+	C1: set transaction isolation level read committed;
+
+	C2: set transaction lock timeout INFINITE;
+	C2: set transaction isolation level read committed;
+
+	/* preparation */
+	C1: DROP TABLE IF EXISTS t1;
+	C1: CREATE USER company GROUPS public;
+	C1: CREATE USER engineering GROUPS company;
+	C1: CREATE USER jones GROUPS engineering; 
+	C1: CREATE USER brown;
+	C1: CREATE USER design MEMBERS brown;
+	C1: COMMIT;
+	MC: wait until C1 ready;
+
+	C1: CREATE TABLE t1 (id INT primary key);
+	C1: GRANT SELECT, UPDATE ON t1 TO company;
+	C1: GRANT ALTER, INDEX, DELETE ON t1 TO design;
+	C1: insert into t1 values (1),(2),(3),(4),(5),(6),(7);
+	C1: COMMIT;
+	MC: wait until C1 ready;
+
+	C1: ALTER TABLE t1 OWNER TO public;
+	C1: COMMIT;
+	MC: wait until C1 ready;
+	C2: login as 'company';
+	C2: TRUNCATE table t1;
+	C2: COMMIT;
+	MC: wait until C2 ready;
+	C2: select * from t1 order by 1;
+	C2: COMMIT;
+	MC: wait until C2 ready;
+
+	C1: login as 'dba';
+	C1: DROP table t1;
+	C1: DROP USER jones;
+	C1: DROP USER brown;
+	C1: DROP USER design;
+	C1: DROP USER engineering;
+	C1: DROP USER company;
+	C1: COMMIT;
+	MC: wait until C1 ready;
+
+	C1: quit;
+	C2: quit;
+	```
+    Note:
+        - The purpose/author/reference/priority of case to help reader understand your points
+        - C1~n means transaction session
+        - MC means main controller, it will control and coordinate the order of all transaction clients
 
 ## License
 CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details.
