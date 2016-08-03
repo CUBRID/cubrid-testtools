@@ -144,7 +144,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 - **Isolation**
   - Prepare
 	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
-	* Controller Node configuration is basically same as ``Shell``:
+	* Controller Node configuration is basically same as ``Shell``.
 	  Regarding more parameters for shell testing, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
 	* Environment variables set on test Node:
 	  
@@ -173,7 +173,7 @@ You are not required to build CTP from source codes, unless you make some change
   ```
     $ ant clean dist
   ```
-You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar`` and ``shell/lib/cubridqa-shell.jar``.
+You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar`` and ``isolation/lib/cubridqa-isolation.jar``.
 
 ## How To Write Testcase
  - **SQL**
@@ -317,9 +317,9 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
 	C2: quit;
 	```
     Note:
-    1. The purpose/author/reference/priority of case to help reader understand your points
-    2. C1~n means transaction session
-    3. MC means main controller, it will control and coordinate the order of all transaction clients
+        - The purpose/author/reference/priority of case to help reader understand your points
+        - C1~n means transaction session
+        - MC means main controller, it will control and coordinate the order of all transaction clients
 
 ## License
 CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details.
