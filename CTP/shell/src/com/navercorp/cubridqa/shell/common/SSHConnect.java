@@ -151,8 +151,21 @@ public class SSHConnect {
 		//System.out.println(result.trim());
 		return result.trim();
 	}
-
+	
+	public void restartRemoteAgent() throws Exception {
+		try {
+			execute("PLEASE_RESTART_AGENT");
+		} catch (Exception e) {
+		}
+		
+		wait("\n\necho COME BACK\n", "COME BACK");
+	}
+	
 	public void wait(ShellInput scripts, String expectKeyworkInclude) throws Exception {
+		wait(scripts.getCommands(), expectKeyworkInclude);
+	}
+
+	public void wait(String scripts, String expectKeyworkInclude) throws Exception {
 		String result;
 		System.out.println();
 		while (true) {
