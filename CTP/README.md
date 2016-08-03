@@ -145,7 +145,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
   - Prepare
 	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
 	* Controller Node configuration is basically same as ``Shell``.
-	  Regarding more parameters for shell testing, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
+	  Regarding more parameters for ``isolation`` testing, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
 	* Environment variables set on test Node:
 	  
 	  ```
