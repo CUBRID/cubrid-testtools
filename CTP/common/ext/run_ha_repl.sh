@@ -121,16 +121,48 @@ function run_ha_repl_lagacy_continue()
     cd - 
 }
 
+function do_case_update()
+{
+   sourceType=$1
+   if [ "x$sourceType" != "x" ] || [ "$sourceType" == "svn" ];then
+   		run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/sql
+   		run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/_24_functional_repl
+   		run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/config
+   else
+   
+   		#Get branch of case
+   		testcase_path=""
+        if [ "$BUILD_SCENARIOS" == "ha_repl_ext" -o "$BUILD_SCENARIOS" == "ha_repl_ext_debug" ];then
+			testcase_path=$HOME/cubrid-testcases-private
+		elif [ "$BUILD_SCENARIOS" == "ha_repl" -o "$BUILD_SCENARIOS" == "ha_repl_debug" ];then
+		    testcase_path=$HOME/cubrid-testcases
+		fi
+		
+		if [ "x${testcase_path}" != "x" ];then
+			run_git_update -f $testcase_path  -b $BUILD_SCENARIO_BRANCH_GIT
+			ini.sh -u "main.testcase.root=$testcase_path" $ha_repl_fm_test_conf
+		fi
+   fi 
+}
+
 if [ "$is_continue_mode" == "YES" ];then
    if [ "${BUILD_IS_FROM_GIT}" == "1" ];then
+    #Do case update from controller server based on git repository
+	do_case_update
 	run_ha_repl_continue
    else
+    #Do case update from controller server based on svn repository
+    do_case_update svn
 	run_ha_repl_lagacy_continue
    fi
 else
    if [ "${BUILD_IS_FROM_GIT}" == "1" ]; then
+        #Do case update from controller server based on git repository
+   		do_case_update
         run_ha_repl
    else
+   	    #Do case update from controller server based on svn repository
+   		do_case_update svn
         run_ha_repl_legacy
    fi 
 
