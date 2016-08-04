@@ -124,8 +124,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* Test Node:
 	  
 	  ```
-	     JAVA_HOME=$java_nstallation_directory 
-	     init_path=CTP/shell/init_path
+	     export JAVA_HOME=$java_installation_directory 
+	     export CTP_HOME=$CTP_installation_directory
 	  ```
 
  - Run Tests 
