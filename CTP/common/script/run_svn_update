@@ -78,10 +78,3 @@ echo ""
 echo "=== End to case update ==="
 
 cd $curDir
- 
-
-
-
-
-
-

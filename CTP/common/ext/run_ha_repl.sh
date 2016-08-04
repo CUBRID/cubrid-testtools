@@ -124,7 +124,6 @@ function run_ha_repl_lagacy_continue()
 function do_case_update()
 {
    sourceType=$1
-   
    if [ "x$sourceType" != "x" ] || [ "$sourceType" == "svn" ];then
    		run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/sql
    		run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/_24_functional_repl
@@ -132,12 +131,16 @@ function do_case_update()
    else
    
    		#Get branch of case
-   		branchName=`ini.sh ${ha_repl_fm_test_conf} "main.testcase.branch_git"`
-        if [ "$BUILD_SCENARIOS" == "ha_repl_ext" -o "$BUILD_SCENARIOS" == "ha_repl_ext_debug" ]
-		then
-		    run_git_update -f $HOME/cubrid-testcases-private -b $branchName
-		else
-		    run_git_update -f $HOME/cubrid-testcases -b $branchName
+   		testcase_path=""
+        if [ "$BUILD_SCENARIOS" == "ha_repl_ext" -o "$BUILD_SCENARIOS" == "ha_repl_ext_debug" ];then
+			testcase_path=$HOME/cubrid-testcases-private
+		elif [ "$BUILD_SCENARIOS" == "ha_repl" -o "$BUILD_SCENARIOS" == "ha_repl_debug" ];then
+		    testcase_path=$HOME/cubrid-testcases
+		fi
+		
+		if [ "x${testcase_path}" != "x" ];then
+			run_git_update -f $testcase_path  -b $BUILD_SCENARIO_BRANCH_GIT
+			ini.sh -u "main.testcase.root=$testcase_path" $ha_repl_fm_test_conf
 		fi
    fi 
 }
