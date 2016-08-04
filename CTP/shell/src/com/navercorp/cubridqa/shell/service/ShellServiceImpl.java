@@ -85,7 +85,7 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 		String clientHost = super.getClientHost();
 		System.out.println();
 		System.out.println("===========================================================");
-		System.out.println("host: " + clientHost + ", user:" + user + "(" + new java.util.Date() + ") (v20160803)");
+		System.out.println("host: " + clientHost + ", user:" + user + "(" + new java.util.Date() + ") (v20160804)");
 		String preScript;
 
 		if (requiredUser.equals(user) && requiredPwd.equals(pwd) && requiredHosts.indexOf("," + clientHost + ",") != -1) {
@@ -117,11 +117,11 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 			System.out.println(scripts);
 			String result = LocalInvoker.exec(scripts, pureWindows, false);
 			int pos;
-			pos = result.lastIndexOf(com.navercorp.cubridqa.shell.common.ShellInput.START_FLAG);
+			pos = result.lastIndexOf(com.navercorp.cubridqa.shell.common.ScriptInput.START_FLAG);
 			if (pos != -1) {
-				result = result.substring(pos + com.navercorp.cubridqa.shell.common.ShellInput.START_FLAG.length());
+				result = result.substring(pos + com.navercorp.cubridqa.shell.common.ScriptInput.START_FLAG.length());
 			}
-			pos = result.indexOf(com.navercorp.cubridqa.shell.common.ShellInput.COMP_FLAG);
+			pos = result.indexOf(com.navercorp.cubridqa.shell.common.ScriptInput.COMP_FLAG);
 			if (pos != -1) {
 				result = result.substring(0, pos);
 			}

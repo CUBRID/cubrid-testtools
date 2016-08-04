@@ -1,6 +1,5 @@
 /**
  * Copyright (c) 2016, Search Solution Corporation. All rights reserved.
-
  * 
  * Redistribution and use in source and binary forms, with or without 
  * modification, are permitted provided that the following conditions are met:
@@ -23,35 +22,21 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
-
 package com.navercorp.cubridqa.shell.common;
 
-import com.navercorp.cubridqa.shell.common.ShellInput;
-
-public class GeneralShellInput extends ShellInput {
-
-	public static final String INIT_SCRIPT;
+public class ShellScriptInput extends GeneralScriptInput {
+	private final static String INIT_SCRIPTS;
 	static {
 		StringBuffer scripts = new StringBuffer();
-		scripts.append("if [ \"${CTP_HOME}\" == \"\" ]; then").append('\n');
-		scripts.append("  if which ctp.sh >/dev/null 2>&1 ; then").append('\n');
-		scripts.append("    CTP_HOME=$(dirname $(readlink -f `which ctp.sh`))/..").append('\n');
-		scripts.append("  elif [ ! \"${init_path}\" == \"\" ]; then").append('\n');
-		scripts.append("    CTP_HOME=${init_path}/../..").append('\n');
-		scripts.append("  fi").append('\n');
-		scripts.append("fi").append('\n');
-		scripts.append("ulimit -c unlimited").append('\n');
-		scripts.append("export CTP_HOME=$(cd ${CTP_HOME}; pwd)").append('\n');
-		scripts.append("export PATH=${CTP_HOME}/bin:${CTP_HOME}/common/script:$PATH").append('\n');
-		INIT_SCRIPT = scripts.toString();
+		scripts.append("export init_path=${CTP_HOME}/shell/init_path").append('\n');
+		INIT_SCRIPTS = scripts.toString();
 	}
 
-	public GeneralShellInput() {
-		super(INIT_SCRIPT);
+	public ShellScriptInput() {
+		super(INIT_SCRIPTS);
 	}
 
-	public GeneralShellInput(String scripts) {
-		super(INIT_SCRIPT + scripts);
+	public ShellScriptInput(String scripts) {
+		super(INIT_SCRIPTS + scripts);
 	}
-
 }

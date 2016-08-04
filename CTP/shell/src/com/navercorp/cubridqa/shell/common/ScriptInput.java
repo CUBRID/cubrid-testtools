@@ -26,7 +26,7 @@
 
 package com.navercorp.cubridqa.shell.common;
 
-public class ShellInput {
+public class ScriptInput {
 
 	StringBuilder cmds;
 	boolean isPureWindows = false;
@@ -43,15 +43,15 @@ public class ShellInput {
 	public static final String START_FLAG = "ALL_STARTED";
 	public static final String COMP_FLAG = "ALL_COMPLETED";
 
-	public ShellInput() {
+	public ScriptInput() {
 		this(null);
 	}
 
-	public ShellInput(String cmd) {
+	public ScriptInput(String cmd) {
 		this(cmd, false);
 	}
 
-	public ShellInput(String cmd, boolean isPureWindows) {
+	public ScriptInput(String cmd, boolean isPureWindows) {
 		this.isPureWindows = isPureWindows;
 		this.cmds = new StringBuilder();
 

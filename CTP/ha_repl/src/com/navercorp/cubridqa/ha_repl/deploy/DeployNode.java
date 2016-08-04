@@ -30,7 +30,7 @@ import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.InstanceManager;
-import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class DeployNode {
@@ -65,7 +65,7 @@ public class DeployNode {
 			s.append("rm -rf ~/" + hostManager.getTestDb()).append(";");
 		}
 		s.append("ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {}").append(";");
-		GeneralShellInput script = new GeneralShellInput(s.toString());
+		GeneralScriptInput script = new GeneralScriptInput(s.toString());
 		try {
 			log.log("==> Begin to clean on " + ssh.toString() + ": ");
 			String result = ssh.execute(script);
@@ -77,7 +77,7 @@ public class DeployNode {
 	}
 
 	private void updateCTP() throws Exception {
-		GeneralShellInput scripts = new GeneralShellInput();
+		GeneralScriptInput scripts = new GeneralScriptInput();
 		scripts.addCommand("cd ${CTP_HOME}/common/script");
 
 		String ctpBranchName = System.getenv("CTP_BRANCH_NAME");
@@ -105,7 +105,7 @@ public class DeployNode {
 	
 	private void installCUBRID() throws Exception {
 		String role = context.getProperty("main.testing.role", "").trim();
-		GeneralShellInput scripts = new GeneralShellInput();
+		GeneralScriptInput scripts = new GeneralScriptInput();
 		scripts.addCommand("chmod u+x ${CTP_HOME}/common/script/run_cubrid_install");
 		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.testbuild.collaborate.url", "").trim() + " 2>&1");
 
@@ -121,7 +121,7 @@ public class DeployNode {
 	}
 
 	private void configCUBRID() throws Exception {
-		GeneralShellInput scripts = new GeneralShellInput();
+		GeneralScriptInput scripts = new GeneralScriptInput();
 		// configure cubrid.conf
 		String cubridPortId = this.hostManager.getInstanceProperty("cubrid.cubrid_port_id");
 		String brokerPort = this.hostManager.getInstanceProperty("broker.BROKER_PORT");

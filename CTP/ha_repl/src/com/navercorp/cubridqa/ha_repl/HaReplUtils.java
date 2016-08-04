@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class HaReplUtils {
@@ -63,7 +63,7 @@ public class HaReplUtils {
 		}
 		s.append("cd ~;");
 
-		GeneralShellInput script = new GeneralShellInput(s.toString());
+		GeneralScriptInput script = new GeneralScriptInput(s.toString());
 		for (SSHConnect ssh : allHosts) {
 			ssh.execute(script);
 		}
@@ -96,7 +96,7 @@ public class HaReplUtils {
 		s.append("cubrid broker start").append(";");
 		s.append("cd ~;");
 
-		script = new GeneralShellInput(s.toString());
+		script = new GeneralScriptInput(s.toString());
 
 		SSHConnect master = hostManager.getHost("master");
 		log.println("------------ MASTER : CREATE DATABASE -----------------");
@@ -130,7 +130,7 @@ public class HaReplUtils {
 	}
 
 	private static boolean waitDatabaseReady(SSHConnect ssh, String dbName, String expectedStatus, Log log, int maxTry) throws Exception {
-		GeneralShellInput script = new GeneralShellInput("cubrid changemode " + dbName);
+		GeneralScriptInput script = new GeneralScriptInput("cubrid changemode " + dbName);
 		String result;
 		while (maxTry-- > 0) {
 			result = ssh.execute(script);

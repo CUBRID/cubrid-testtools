@@ -33,7 +33,7 @@ import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.Feedback;
-import com.navercorp.cubridqa.isolation.IsolationShellInput;
+import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class FeedbackFile implements Feedback {
@@ -154,7 +154,7 @@ public class FeedbackFile implements Feedback {
 			try {
 				ssh = new SSHConnect(host, port, user, pwd);
 
-				IsolationShellInput scripts = new IsolationShellInput();
+				IsolationScriptInput scripts = new IsolationScriptInput();
 				scripts.addCommand("run_coverage_collect_and_upload " + covParams);
 				String result;
 				try {

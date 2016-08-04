@@ -33,7 +33,7 @@ import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.Feedback;
 import com.navercorp.cubridqa.ha_repl.InstanceManager;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
-import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class FeedbackFile implements Feedback {
@@ -146,7 +146,7 @@ public class FeedbackFile implements Feedback {
 			for (SSHConnect ssh : list) {
 				try {
 
-					GeneralShellInput scripts = new GeneralShellInput();
+					GeneralScriptInput scripts = new GeneralScriptInput();
 
 					scripts.addCommand(
 							"run_coverage_collect_and_upload -n " + build_id + " -c " + category + " -user " + c_user + " -pwd " + c_pwd + " -host " + c_ip + " -to " + c_dir + " -port " + c_port);

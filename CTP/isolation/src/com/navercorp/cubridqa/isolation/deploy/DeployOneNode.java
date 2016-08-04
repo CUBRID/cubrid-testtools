@@ -29,7 +29,7 @@ import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
-import com.navercorp.cubridqa.isolation.IsolationShellInput;
+import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class DeployOneNode {
@@ -62,7 +62,7 @@ public class DeployOneNode {
 
 		String role = context.getProperty("main.testing.role", "").trim();
 		log.print("Start Install Build");
-		IsolationShellInput scripts = new IsolationShellInput();
+		IsolationScriptInput scripts = new IsolationScriptInput();
 		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
 		String buildId = context.getBuildId();
 		String[] arr = buildId.split("\\.");
@@ -91,7 +91,7 @@ public class DeployOneNode {
 			return;
 		}
 		
-		IsolationShellInput scripts = new IsolationShellInput();
+		IsolationScriptInput scripts = new IsolationScriptInput();
 		
 		if (!CommonUtils.isEmpty(cubridPortId)) {
 			scripts.addCommand("ini.sh -s 'common' -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
@@ -128,7 +128,7 @@ public class DeployOneNode {
 	}
 
 	private void cleanProcess_windows() {
-		IsolationShellInput scripts = new IsolationShellInput();
+		IsolationScriptInput scripts = new IsolationScriptInput();
 		scripts.addCommand(Constants.WIN_KILL_PROCESS);
 		String result;
 		try {
@@ -140,7 +140,7 @@ public class DeployOneNode {
 	}
 
 	private void cleanProcess_linux() {
-		IsolationShellInput scripts = new IsolationShellInput();
+		IsolationScriptInput scripts = new IsolationScriptInput();
 		scripts.addCommand(Constants.LIN_KILL_PROCESS);
 		String result;
 		try {

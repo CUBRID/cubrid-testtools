@@ -30,7 +30,7 @@ import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
 
 public class DeployHA {
@@ -62,8 +62,7 @@ public class DeployHA {
 	public void deploy()
 	{
 		log.print("===== Start to update HA.properties =====");
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("ini.sh -u MASTER_SERVER_IP=" + masterHost + " $init_path/HA.properties");
 		scripts.addCommand("ini.sh -u MASTER_SERVER_USER=" + this.user + " $init_path/HA.properties");
 		scripts.addCommand("ini.sh -u MASTER_SERVER_PW=" + this.pwd + " $init_path/HA.properties ");
