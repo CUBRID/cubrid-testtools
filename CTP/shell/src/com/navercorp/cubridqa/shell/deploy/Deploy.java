@@ -28,8 +28,8 @@ package com.navercorp.cubridqa.shell.deploy;
 
 import java.util.ArrayList;
 
+
 import com.navercorp.cubridqa.shell.common.CommonUtils;
-import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.main.Context;
 

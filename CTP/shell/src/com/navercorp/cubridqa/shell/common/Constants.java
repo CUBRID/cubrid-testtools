@@ -49,12 +49,12 @@ public class Constants {
 	public static final String SKIP_TYPE_BY_TEMP = "2";
 	
 	public static final String WIN_KILL_PROCESS_NATIVE = createWinKillNativeScripts();
-	public static final ShellInput WIN_KILL_PROCESS = createWinKillScripts();
-	public static final ShellInput LIN_KILL_PROCESS = createLinKillScripts();
+	public static final ShellScriptInput WIN_KILL_PROCESS = createWinKillScripts();
+	public static final ShellScriptInput LIN_KILL_PROCESS = createLinKillScripts();
 
 	
-	private static ShellInput createWinKillScripts (){
-		ShellInput scripts = new ShellInput();
+	private static ShellScriptInput createWinKillScripts (){
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' \\) DELETE");
 		scripts.addCommand("$CUBRID/bin/cubrid.exe service stop ");
 		scripts.addCommand("tasklist |  grep cubridservice | awk '{print $2}' | xargs -i taskkill '/T' '/F' '/PID' {} ");
@@ -135,8 +135,8 @@ public class Constants {
 		return sb.toString();
 	}
 	
-	private static ShellInput createLinKillScripts (){
-		ShellInput scripts = new ShellInput();
+	private static ShellScriptInput createLinKillScripts (){
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("cubrid service stop");
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep cub_admin | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep cub_master | awk '{print $1}'"));
@@ -161,7 +161,7 @@ public class Constants {
 	}
 	
 	private static String bothKill(String k) {
-		return k + " | xargs -i kill -9 {} " + ShellInput.LINE_SEPARATOR + "kill -9 `" + k + "`";
+		return k + " | xargs -i kill -9 {} " + ScriptInput.LINE_SEPARATOR + "kill -9 `" + k + "`";
 	}
 	
 	public static void main(String args[]) {

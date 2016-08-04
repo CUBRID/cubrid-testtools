@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.navercorp.cubridqa.common.CommonUtils;
-import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class InstanceManager {
@@ -105,7 +105,7 @@ public class InstanceManager {
 		Set set = hostTable.keySet();
 		Iterator it = set.iterator();
 		SSHConnect ssh;
-		GeneralShellInput script = new GeneralShellInput("echo HELLO");
+		GeneralScriptInput script = new GeneralScriptInput("echo HELLO");
 		String result;
 		while (it.hasNext()) {
 			ssh = hostTable.get(it.next());

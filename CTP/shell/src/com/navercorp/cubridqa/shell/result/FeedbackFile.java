@@ -34,8 +34,7 @@ import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
-import com.navercorp.cubridqa.shell.deploy.DeployOneNode;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
 import com.navercorp.cubridqa.shell.main.Feedback;
 
@@ -178,7 +177,7 @@ public class FeedbackFile implements Feedback {
 		try {
 			ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
 
-			ShellInput scripts = new ShellInput();
+			ShellScriptInput scripts = new ShellScriptInput();
 			scripts.addCommand("run_coverage_collect_and_upload " + covParams);
 			String result;
 			try {

@@ -88,7 +88,7 @@ public class SSHConnect {
 		}
 	}
 	
-	public String execute(ShellInput scripts) throws Exception {
+	public String execute(ScriptInput scripts) throws Exception {
 		return execute(scripts.getCommands(), scripts.isPureWindows);
 	}
 	
@@ -131,7 +131,7 @@ public class SSHConnect {
 		while ((len = in.read(b)) > 0) {
 			buffer.append(new String(b, 0, len));
 
-			if (buffer.toString().indexOf(ShellInput.COMP_FLAG) > 0) {
+			if (buffer.toString().indexOf(ScriptInput.COMP_FLAG) > 0) {
 				break;
 			}
 		}
@@ -140,11 +140,11 @@ public class SSHConnect {
 
 		String result = buffer.toString();
 
-		int p = result.indexOf(ShellInput.START_FLAG);
+		int p = result.indexOf(ScriptInput.START_FLAG);
 		if (p != -1) {
-			result = result.substring(p + ShellInput.START_FLAG.length());
+			result = result.substring(p + ScriptInput.START_FLAG.length());
 		}
-		p = result.indexOf(ShellInput.COMP_FLAG);
+		p = result.indexOf(ScriptInput.COMP_FLAG);
 		if (p != -1) {
 			result = result.substring(0, p);
 		}
@@ -161,7 +161,7 @@ public class SSHConnect {
 		wait("\n\necho COME BACK\n", "COME BACK");
 	}
 	
-	public void wait(ShellInput scripts, String expectKeyworkInclude) throws Exception {
+	public void wait(ScriptInput scripts, String expectKeyworkInclude) throws Exception {
 		wait(scripts.getCommands(), expectKeyworkInclude);
 	}
 
@@ -181,14 +181,14 @@ public class SSHConnect {
 	}
 
 	public void reboot() throws Exception {
-		ShellInput scripts = new ShellInput("reboot && echo REBOOT_OK");
+		ScriptInput scripts = new ScriptInput("reboot && echo REBOOT_OK");
 		String result = execute(scripts);
 		if (result.indexOf("REBOOT_OK") == -1) {
 			throw new Exception("fail to reboot");
 		}
 
 		String kw = "ACTIVE_FLAG";
-		scripts = new ShellInput("echo " + kw);
+		scripts = new ScriptInput("echo " + kw);
 		while (true) {
 			try {
 				result = execute(scripts);
