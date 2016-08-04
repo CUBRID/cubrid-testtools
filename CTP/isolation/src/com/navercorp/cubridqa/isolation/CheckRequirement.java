@@ -27,7 +27,7 @@ package com.navercorp.cubridqa.isolation;
 
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class CheckRequirement {
@@ -110,10 +110,10 @@ public class CheckRequirement {
 	private void checkVariable(String var) {
 		this.log.print("==> Check variable '" + var + "' ");
 
-		GeneralShellInput script;
+		GeneralScriptInput script;
 		String result;
 		try {
-			script = new GeneralShellInput("echo $" + var.trim());
+			script = new GeneralScriptInput("echo $" + var.trim());
 			result = ssh.execute(script);
 			if (CommonUtils.isEmpty(result)) {
 				log.print("...... FAIL. Please set " + var + ".");
@@ -132,7 +132,7 @@ public class CheckRequirement {
 		this.log.println("==> Check disk space ");
 		this.log.println("If insufficient available disk space (<2G), you will receive a mail in '" + context.getMailNoticeTo() + "'. And checking will hang till you resovle it.");
 
-		GeneralShellInput scripts = new GeneralShellInput();
+		GeneralScriptInput scripts = new GeneralScriptInput();
 		scripts.addCommand("source ${CTP_HOME}/common/script/util_common.sh");
 		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
 		String result;
@@ -150,10 +150,10 @@ public class CheckRequirement {
 	private void checkCommand(String cmd) {
 		this.log.print("==> Check command '" + cmd + "' ");
 
-		GeneralShellInput script;
+		GeneralScriptInput script;
 		String result;
 		try {
-			script = new GeneralShellInput("which " + cmd + " 2>&1 ");
+			script = new GeneralScriptInput("which " + cmd + " 2>&1 ");
 			result = ssh.execute(script);
 			if (result.indexOf("no " + cmd) == -1) {
 				log.print("...... PASS");
@@ -171,10 +171,10 @@ public class CheckRequirement {
 	private void checkDirectory(String dir) {
 		this.log.print("==> Check directory '" + dir + "' ");
 
-		GeneralShellInput script;
+		GeneralScriptInput script;
 		String result;
 		try {
-			script = new GeneralShellInput("if [ -d \"" + dir + "\" ]; then echo PASS; else echo FAIL; fi");
+			script = new GeneralScriptInput("if [ -d \"" + dir + "\" ]; then echo PASS; else echo FAIL; fi");
 			result = ssh.execute(script);
 			if (result.indexOf("PASS") != -1) {
 				log.print("...... PASS");

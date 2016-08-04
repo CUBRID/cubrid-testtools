@@ -36,7 +36,7 @@ import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.dispatch.Dispatch;
 
 public class Test {
@@ -101,7 +101,7 @@ public class Test {
 		while (!shouldStop && !Dispatch.getInstance().isFinished()) {
 
 			if (this.context.getServiceProtocolType()!=null && this.context.getServiceProtocolType().equals("rmi") && context.isWindows()) {
-				ShellInput aliveScript = new ShellInput("echo HELLO");
+				ShellScriptInput aliveScript = new ShellScriptInput("echo HELLO");
 				try {
 					String aliveResult = ssh.execute(aliveScript);
 					if (!aliveResult.trim().equals("HELLO")) {
@@ -243,10 +243,10 @@ public class Test {
 
 	public String runTestCase_windows() throws Exception {
 
-		ShellInput script;
+		ShellScriptInput script;
 		String result;
 
-		script = new ShellInput("cd ");
+		script = new ShellScriptInput("cd ");
 		script.addCommand("cd " + testCaseDir);
 
 		script.addCommand("export TEST_BIG_SPACE=$(echo $TEST_BIG_SPACE)");
@@ -270,10 +270,10 @@ public class Test {
 
 	public String runTestCase_linux() throws Exception {
 
-		ShellInput script;
+		ShellScriptInput script;
 		String result;
 
-		script = new ShellInput("cd " + testCaseDir);
+		script = new ShellScriptInput("cd " + testCaseDir);
 		script.addCommand("ulimit -c unlimited");
 		script.addCommand("if [ \"$JAVA_HOME_" + context.getVersion().trim().toUpperCase() + "\" ]; then");
 		script.addCommand("        export JAVA_HOME=$JAVA_HOME_" + (context.getVersion().trim().toUpperCase()));
@@ -314,7 +314,7 @@ public class Test {
 		String haPortId = context.getInstanceProperty(this.currEnvId, "ha.ha_port_id", "59901");
 		String cmPortId = context.getInstanceProperty(this.currEnvId, "cm.cm_port", "8001");
 
-		ShellInput script = new ShellInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':" + brokerFirstPort + "|:" + brokerSecondPort + "|:" + cubridPortId + "|:"
+		ShellScriptInput script = new ShellScriptInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':" + brokerFirstPort + "|:" + brokerSecondPort + "|:" + cubridPortId + "|:"
 				+ haPortId + "|:" + cmPortId + "' | wc -l");
 		while (true) {
 			currentTime = System.currentTimeMillis();
@@ -343,10 +343,10 @@ public class Test {
 			return false;
 		}
 
-		ShellInput script;
+		ShellScriptInput script;
 		String result;
 
-		script = new ShellInput("cd " + testCaseDir);
+		script = new ShellScriptInput("cd " + testCaseDir);
 		script.addCommand("grep " + key + " " + testCaseName);
 		result = ssh.execute(script);
 
@@ -384,7 +384,7 @@ public class Test {
 	}
 
 	public String resetCUBRID_windows() {
-		ShellInput scripts = new ShellInput();
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("cd $CUBRID/..");
 		scripts.addCommand("rm -rf CUBRID/conf/*");
 		scripts.addCommand("cp -rf .CUBRID_SHELL_FM/conf/* CUBRID/conf/");
@@ -407,7 +407,7 @@ public class Test {
 	}
 
 	public void resetCUBRID_linux() {
-		ShellInput scripts = new ShellInput();
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("rm -rf ~/CUBRID/conf/*");
 		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/conf/* ~/CUBRID/conf/");
 		scripts.addCommand("rm -rf ~/CUBRID/databases/*");
@@ -490,9 +490,9 @@ public class Test {
 	public void collectGeneralResult() {
 
 		String result = "";		
-		ShellInput scripts;
+		ShellScriptInput scripts;
 		
-		scripts = new ShellInput();
+		scripts = new ShellScriptInput();
 		scripts.addCommand("cd ");
 		scripts.addCommand("cd " + testCaseDir);
 		scripts.addCommand("cat " + testCaseResultName);
@@ -532,8 +532,8 @@ public class Test {
 		}
 		
 		String result;
-		ShellInput scripts;
-		scripts = new ShellInput();
+		ShellScriptInput scripts;
+		scripts = new ShellScriptInput();
 		scripts.addCommand("rm -rf " + testCaseDir.trim() + "/*");
 		try {
 			result = ssh.execute(scripts);
@@ -546,7 +546,7 @@ public class Test {
 	private void doFinalCheck() {
 		String result = null;
 
-		ShellInput scripts = new ShellInput("source /dev/stdin <<EOF");
+		ShellScriptInput scripts = new ShellScriptInput("source /dev/stdin <<EOF");
 		scripts.addCommand("`grep -E \"SKIP_CHECK_FATAL_ERROR\" " + this.testCaseFullName + " `");
 		scripts.addCommand("EOF");
 		
@@ -628,8 +628,7 @@ public class Test {
 	
 	private void checkDiskSpace(SSHConnect ssh1, boolean closeSSH) {
 		
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
 		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
 		String result;
@@ -650,7 +649,7 @@ public class Test {
 	
 	public String doSaveNormalErrorLog() throws JSchException {
 		String ret = "";		
-		ShellInput scripts = new ShellInput();
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("source $init_path/shell_utils.sh && do_save_normal_error_logs \"" + this.testCaseDir + "\"");
 		StringBuffer sb = new StringBuffer();
 		String result = "";

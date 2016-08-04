@@ -1,6 +1,5 @@
 /**
  * Copyright (c) 2016, Search Solution Corporation. All rights reserved.
-
  * 
  * Redistribution and use in source and binary forms, with or without 
  * modification, are permitted provided that the following conditions are met:
@@ -24,32 +23,25 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-package com.navercorp.cubridqa.shell.service;
+package com.navercorp.cubridqa.isolation;
 
-import java.rmi.registry.LocateRegistry;
-import java.util.Properties;
+import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 
-import com.navercorp.cubridqa.shell.common.CommonUtils;
+public class IsolationScriptInput extends GeneralScriptInput {
 
-public class Server {
-	
-	public static void main(String[] args) {
-		try {
+	private final static String INIT_SCRIPTS;
+	static {
+		StringBuffer scripts = new StringBuffer();
+		scripts.append("export ctlpath=${CTP_HOME}/isolation/ctltool").append('\n');
+		scripts.append("export PATH=${ctlpath}:$PATH").append('\n');
+		INIT_SCRIPTS = scripts.toString();
+	}
 
-			Properties props = CommonUtils.getProperties("../conf/shell_agent.conf");
-			int port = Integer.parseInt(props.getProperty("main.service.port", "1099"));
+	public IsolationScriptInput() {
+		super(INIT_SCRIPTS);
+	}
 
-			LocateRegistry.createRegistry(port);
-
-			ShellService shellService = new ShellServiceImpl(props);
-
-			LocateRegistry.getRegistry(port).rebind("shellService", shellService);
-
-			// Naming.rebind("rmi://:" + port + "/shellService", shellService);
-
-			System.out.println("Service Start!");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public IsolationScriptInput(String scripts) {
+		super(INIT_SCRIPTS + scripts);
 	}
 }

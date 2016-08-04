@@ -33,7 +33,7 @@ import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 
 public class TestMonitor {
 
@@ -45,7 +45,7 @@ public class TestMonitor {
 	Log logRelated;
 	boolean enableTracing = false;
 	ArrayList<SSHConnect> sshRelateds = null;
-	ShellInput traceScript;
+	ShellScriptInput traceScript;
 
 	public TestMonitor(Context context, Test test) throws Exception {
 		this.context = context;
@@ -137,8 +137,8 @@ public class TestMonitor {
 		}
 	}
 	
-	private ShellInput initTraceScript() {
-		ShellInput scripts = new ShellInput();
+	private ShellScriptInput initTraceScript() {
+		ShellScriptInput scripts = new ShellScriptInput();
 	
 		scripts.addCommand("date");
 			

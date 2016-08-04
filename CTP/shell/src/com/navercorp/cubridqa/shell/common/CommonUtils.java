@@ -27,6 +27,7 @@
 package com.navercorp.cubridqa.shell.common;
 
 import java.io.File;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -44,7 +45,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.navercorp.cubridqa.shell.main.Context;
-import com.navercorp.cubridqa.common.*;
 
 public class CommonUtils {
 	public static String replace(String strSource, String strFrom, String strTo) {
@@ -201,7 +201,6 @@ public class CommonUtils {
 	}
 	
 	public static String resetProcess(SSHConnect ssh, boolean isWindows) {
-		ShellInput scripts;
 		try {			
 			if(isWindows) {
 				return ssh.execute(Constants.WIN_KILL_PROCESS) + ssh.execute(Constants.WIN_KILL_PROCESS_NATIVE, true);
