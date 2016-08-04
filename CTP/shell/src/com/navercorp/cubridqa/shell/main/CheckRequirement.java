@@ -26,7 +26,7 @@ package com.navercorp.cubridqa.shell.main;
 
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class CheckRequirement {
@@ -65,6 +65,7 @@ public class CheckRequirement {
 		checkVariable("HOME");
 		checkVariable("USER");
 		checkVariable("JAVA_HOME");
+		checkVariable("CTP_HOME");
 		checkVariable("init_path");
 		checkVariable("CUBRID");
 
@@ -81,8 +82,8 @@ public class CheckRequirement {
 			checkCommand("git");
 		}
 		
-		checkDirectory("${init_path}");
-		checkDirectory("${init_path}/../../common/script");
+		checkDirectory("${CTP_HOME}/bin");
+		checkDirectory("${CTP_HOME}/common/script");
 
 		if (!isRelated) {
 			checkDirectory(context.getTestCaseRoot());
@@ -133,10 +134,10 @@ public class CheckRequirement {
 	private void checkVariable(String var) {
 		this.log.print("==> Check variable '" + var + "' ");
 
-		GeneralShellInput script;
+		ShellScriptInput script;
 		String result;
 		try {
-			script = new GeneralShellInput("echo $" + var.trim());
+			script = new ShellScriptInput("echo $" + var.trim());
 			result = ssh.execute(script);
 			if (CommonUtils.isEmpty(result)) {
 				log.print("...... FAIL. Please set " + var + ".");
@@ -155,7 +156,7 @@ public class CheckRequirement {
 		this.log.println("==> Check disk space ");
 		this.log.println("If insufficient available disk space (<2G), you will receive a mail in '" + context.getMailNoticeTo() + "'. And checking will hang till you resovle it.");
 
-		GeneralShellInput scripts = new GeneralShellInput();
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
 		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
 		String result;
@@ -173,10 +174,10 @@ public class CheckRequirement {
 	private void checkCommand(String cmd) {
 		this.log.print("==> Check command '" + cmd + "' ");
 
-		GeneralShellInput script;
+		ShellScriptInput script;
 		String result;
 		try {
-			script = new GeneralShellInput("which " + cmd + " 2>&1 ");
+			script = new ShellScriptInput("which " + cmd + " 2>&1 ");
 			result = ssh.execute(script);
 			if (result.indexOf("no " + cmd) == -1) {
 				log.print("...... PASS");
@@ -194,10 +195,10 @@ public class CheckRequirement {
 	private void checkDirectory(String dir) {
 		this.log.print("==> Check directory '" + dir + "' ");
 
-		GeneralShellInput script;
+		ShellScriptInput script;
 		String result;
 		try {
-			script = new GeneralShellInput("if [ -d \"" + dir + "\" ]; then echo PASS; else echo FAIL; fi");
+			script = new ShellScriptInput("if [ -d \"" + dir + "\" ]; then echo PASS; else echo FAIL; fi");
 			result = ssh.execute(script);
 			if (result.indexOf("PASS") != -1) {
 				log.print("...... PASS");
@@ -216,10 +217,10 @@ public class CheckRequirement {
 	private void checkFile(String file) {
 		this.log.print("==> Check file '" + file + "' ");
 
-		GeneralShellInput script;
+		ShellScriptInput script;
 		String result;
 		try {
-			script = new GeneralShellInput("if [ -f \"" + file + "\" ]; then echo PASS; else echo FAIL; fi");
+			script = new ShellScriptInput("if [ -f \"" + file + "\" ]; then echo PASS; else echo FAIL; fi");
 			result = ssh.execute(script);
 			if (result.indexOf("PASS") != -1) {
 				log.print("...... PASS");

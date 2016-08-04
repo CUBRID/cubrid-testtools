@@ -28,10 +28,9 @@ package com.navercorp.cubridqa.shell.deploy;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 
-import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
 
 public class DeployOneNode {
@@ -97,7 +96,7 @@ public class DeployOneNode {
 
 		// TODO: check cubridInstallName
 
-		ShellInput scripts = new ShellInput();
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("cd $CUBRID/..");
 		scripts.addCommand("rm -rf CUBRID 2>&1");
 		scripts.addCommand("ls -l CUBRID");
@@ -140,52 +139,12 @@ public class DeployOneNode {
 		}
 	}
 	
-	private void deploy_linux_old() {
-		cleanProcess();
-
-		String cubridInstallName = cubridPackageUrl.substring(cubridPackageUrl.indexOf("CUBRID-"));
-		
-		//TODO: check cubridInstallName
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("echo 'ulimit -c unlimited' >> ~/.bash_profile");
-		scripts.addCommand("cat ~/.bash_profile | uniq >  ~/.bash_profile_tmp; cp ~/.bash_profile_tmp ~/.bash_profile");
-		scripts.addCommand("rm -rf ~/CUBRID");
-		scripts.addCommand("rm -rf " + cubridInstallName + "*");
-		scripts.addCommand("if [ ! -f " + cubridInstallName + " ] ");//TODO: no need
-		scripts.addCommand("then");
-		scripts.addCommand("    wget " + cubridPackageUrl);
-		scripts.addCommand("fi");
-		scripts.addCommand("sh " + cubridInstallName + " > /dev/null <<EOF");
-		scripts.addCommand("yes");
-		scripts.addCommand("");
-		scripts.addCommand("");
-		scripts.addCommand("");
-		scripts.addCommand("EOF");
-		scripts.addCommand("sh ~/.change_cubrid_ports.sh > /dev/null 2>&1");
-		String buildId = context.getTestBuild();
-		String[] arr = buildId.split("\\.");
-		if ( Integer.parseInt(arr[0]) >= 10 )
-		{
-			scripts.addCommand("echo inquire_on_exit=3 >> $CUBRID/conf/cubrid.conf");
-		}
- 		scripts.addCommand("rm -rf " + cubridInstallName + "*");
-
-		String result;
-		try {
-			result = ssh.execute(scripts);
-			log.println(result);
-		} catch (Exception e) {
-			log.print("[ERROR] " + e.getMessage());
-		}
-	}
-	
 	private void deploy_build_on_linux() {
 		cleanProcess();
 		
 		String role = context.getProperty("main.testing.role", "").trim();
 		log.print("Start Install Build");
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("echo 'ulimit -c unlimited' >> ~/.bash_profile");
 		scripts.addCommand("cat ~/.bash_profile | uniq >  ~/.bash_profile_tmp; cp ~/.bash_profile_tmp ~/.bash_profile");
 		scripts.addCommand(CommonUtils.getExportsOfMEKYParams());
@@ -211,11 +170,10 @@ public class DeployOneNode {
 		String enableSkipUpgrade = context.getEnableSkipUpgrade();
 		String branchName = context.getCtpBranchName();
 		
-		ShellInput scripts = new ShellInput();
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("echo 'BEGIN TO UPGRADE CTP'");
 		scripts.addCommand("export SKIP_UPGRADE=" + enableSkipUpgrade);
 		scripts.addCommand("export CTP_BRANCH_NAME=" + branchName);
-		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
 		scripts.addCommand("cd ${init_path}/../../");
 		scripts.addCommand("chmod u+x ./common/script/upgrade.sh");
 		scripts.addCommand("chmod u+x ./bin/ini.sh");
@@ -241,8 +199,7 @@ public class DeployOneNode {
 			return;
 		}
 		
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
+		ShellScriptInput scripts = new ShellScriptInput();
 		if (!CommonUtils.isEmpty(cubridPortId)) {
 			scripts.addCommand("ini.sh -s 'common' -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
 			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
@@ -270,7 +227,7 @@ public class DeployOneNode {
 	}
 	
 	public String backup_windows() {
-		ShellInput scripts = new ShellInput();
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("cd $CUBRID/..");
 		scripts.addCommand("rm -rf .CUBRID_SHELL_FM > /dev/null 2>&1");
 		scripts.addCommand("cp -r CUBRID .CUBRID_SHELL_FM");
@@ -287,7 +244,7 @@ public class DeployOneNode {
 	}
 
 	public void backup_linux() {
-		ShellInput scripts = new ShellInput();
+		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("rm -rf ~/.CUBRID_SHELL_FM > /dev/null 2>&1");
 		scripts.addCommand("cp -r ~/CUBRID ~/.CUBRID_SHELL_FM");
 		String result;

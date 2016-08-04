@@ -37,7 +37,7 @@ import java.util.ArrayList;
 
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
-import com.navercorp.cubridqa.isolation.IsolationShellInput;
+import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -163,11 +163,11 @@ public class Dispatch {
 		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
-		IsolationShellInput script;
+		IsolationScriptInput script;
 		String result;
 
 		try {
-			script = new IsolationShellInput();
+			script = new IsolationScriptInput();
 			script.addCommand("cd ");
 			script.addCommand("find " + context.getTestCaseRoot() + " -name \"*.ctl\" -type f -print");
 			result = ssh.execute(script);
@@ -202,11 +202,11 @@ public class Dispatch {
 		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
-		IsolationShellInput script;
+		IsolationScriptInput script;
 		String result;
 
 		try {
-			script = new IsolationShellInput();
+			script = new IsolationScriptInput();
 			script.addCommand("cd > /dev/null 2>&1");
 			script.addCommand("cat " + excludedFilename);
 			result = ssh.execute(script);

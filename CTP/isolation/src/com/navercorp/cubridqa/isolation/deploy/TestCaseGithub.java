@@ -30,7 +30,7 @@ import com.navercorp.cubridqa.isolation.Constants;
 
 
 import com.navercorp.cubridqa.isolation.Context;
-import com.navercorp.cubridqa.isolation.IsolationShellInput;
+import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class TestCaseGithub {
@@ -58,7 +58,7 @@ public class TestCaseGithub {
 
 		cleanProcess();
 
-		IsolationShellInput scripts = new IsolationShellInput();
+		IsolationScriptInput scripts = new IsolationScriptInput();
 
 		scripts.addCommand("cd ");
 		scripts.addCommand("cd ${CTP_HOME}/common/script");
@@ -105,7 +105,7 @@ public class TestCaseGithub {
 	}
 
 	private void cleanProcess_linux() {
-		IsolationShellInput scripts = new IsolationShellInput();
+		IsolationScriptInput scripts = new IsolationScriptInput();
 		scripts.addCommand(Constants.LIN_KILL_PROCESS);
 		try {
 			ssh.execute(scripts);
@@ -114,7 +114,7 @@ public class TestCaseGithub {
 	}
 
 	private void cleanProcess_windows() {
-		IsolationShellInput scripts = new IsolationShellInput();
+		IsolationScriptInput scripts = new IsolationScriptInput();
 		scripts.addCommand(Constants.WIN_KILL_PROCESS);
 
 		try {

@@ -33,10 +33,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
-import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
 
 public class Dispatch {
@@ -174,11 +173,11 @@ public class Dispatch {
 		String serviceProtocol = context.getServiceProtocolType();
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
-		ShellInput script;
+		ShellScriptInput script;
 		String result;
 		
 		try {
-			script = new ShellInput();			
+			script = new ShellScriptInput();			
 			script.addCommand("cd ");
 			script.addCommand(getAllTestCaseScripts(context.getTestCaseWorkspace()));
 			result = ssh.execute(script);
@@ -214,11 +213,11 @@ public class Dispatch {
 		String serviceProtocol = context.getServiceProtocolType();
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
-		ShellInput script;
+		ShellScriptInput script;
 		String result;
 
 		try {
-			script = new ShellInput();
+			script = new ShellScriptInput();
 			script.addCommand("cd ");
 			script.addCommand("grep \"" + context.getTestCaseSkipKey() + "\" ` " + getAllTestCaseScripts(context.getTestCaseWorkspace()) + " `");
 			result = ssh.execute(script);
@@ -262,11 +261,11 @@ public class Dispatch {
 		String serviceProtocol = context.getServiceProtocolType();
 
 		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
-		ShellInput script;
+		ShellScriptInput script;
 		String result;
 		
 		try {			
-			script = new ShellInput();
+			script = new ShellScriptInput();
 			String dir, filename;
 			excludedFilename = excludedFilename.replace('\\', '/');
 			int p0 = excludedFilename.lastIndexOf("/");

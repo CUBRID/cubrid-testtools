@@ -28,9 +28,8 @@ package com.navercorp.cubridqa.shell.deploy;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 
-import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellInput;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
 
 public class TestCaseGithub {
@@ -63,14 +62,7 @@ public class TestCaseGithub {
 		
 		//TODO if test case doesn't exist
 		
-		ShellInput scripts = new ShellInput();
-		scripts.addCommand("export PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH");
-		String sedCmds;
-		if(context.isWindows()) {
-			sedCmds = "sed 's;\\\\;/;g'|";
-		} else {
-			sedCmds = "";
-		}
+		ShellScriptInput scripts = new ShellScriptInput();
 		
 		if(context.getCleanTestCase()) {
 			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch() + "  2>&1");
@@ -114,7 +106,7 @@ public class TestCaseGithub {
 	
 	
 	private void initWindows() {
-		ShellInput scripts = new ShellInput();
+		ShellScriptInput scripts = new ShellScriptInput();
 
 		scripts.addCommand("REG DELETE \"HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Session Manager\\Environment\" /v CUBRID_LANG /f");
 		scripts.addCommand("REG DELETE \"HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Session Manager\\Environment\" /v CUBRID_CHARSET /f");

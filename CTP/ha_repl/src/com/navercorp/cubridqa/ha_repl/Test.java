@@ -40,7 +40,7 @@ import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
-import com.navercorp.cubridqa.shell.common.GeneralShellInput;
+import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.SyncException;
 
@@ -422,7 +422,7 @@ public class Test {
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
 		String result;
 		String hitHost;
-		GeneralShellInput checkScript;
+		GeneralScriptInput checkScript;
 		String error = null;
 		String cat;
 		boolean hit = false;
@@ -432,7 +432,7 @@ public class Test {
 			cat = null;
 			try {
 				hitHost = ssh.getHost().trim();
-				checkScript = new GeneralShellInput("find $CUBRID -name \"core.*\" | wc -l");
+				checkScript = new GeneralScriptInput("find $CUBRID -name \"core.*\" | wc -l");
 				result = ssh.execute(checkScript);
 				mlog.println("Check core on " + hitHost + ":     \t\t\t" + result.trim());
 
@@ -442,7 +442,7 @@ public class Test {
 					this.hasCore = true;
 				}
 
-				checkScript = new GeneralShellInput("grep -r \"FATAL ERROR\" $CUBRID/log/* | wc -l");
+				checkScript = new GeneralScriptInput("grep -r \"FATAL ERROR\" $CUBRID/log/* | wc -l");
 				result = ssh.execute(checkScript);
 				mlog.println("Check fatal error on " + hitHost + ": \t\t\t" + result.trim());
 				if (!result.trim().equals("0")) {
@@ -484,7 +484,7 @@ public class Test {
 
 		for (SSHConnect ssh : allNodeList) {
 			try {
-				checkScript = new GeneralShellInput("find $CUBRID -name \"core.*\" -exec rm -rf {} \\; ");
+				checkScript = new GeneralScriptInput("find $CUBRID -name \"core.*\" -exec rm -rf {} \\; ");
 				result = ssh.execute(checkScript);
 				mlog.println("clean core files: " + ssh.toString());
 			} catch (Exception e) {
@@ -495,9 +495,9 @@ public class Test {
 		return hit;
 	}
 
-	private static GeneralShellInput getBackupScripts(String resultId, String testCase) {
+	private static GeneralScriptInput getBackupScripts(String resultId, String testCase) {
 
-		GeneralShellInput script = new GeneralShellInput("");
+		GeneralScriptInput script = new GeneralScriptInput("");
 		script.addCommand("backup_dir_root=" + Constants.DIR_ERROR_BACKUP);
 		script.addCommand("mkdir -p ${backup_dir_root}");
 		script.addCommand("freadme=${backup_dir_root}/readme.txt ");
@@ -557,7 +557,7 @@ public class Test {
 		SSHConnect ssh = hostManager.getHost("master");
 		String script = "csql -u dba " + hostManager.getTestDb()
 				+ " -c \"select 'FIND'||'_'||'PK_CLASS', class_name, count(*) from db_attribute where class_name in (select distinct class_name from db_index where is_primary_key='YES' and class_name in (select class_name from db_class where is_system_class='NO' and lower(class_name)<>'qa_system_tb_flag')) group by class_name;\" | grep 'FIND_PK_CLASS' ";
-		GeneralShellInput csql = new GeneralShellInput(script);
+		GeneralScriptInput csql = new GeneralScriptInput(script);
 		String tablesResult = ssh.execute(csql);
 		ArrayList<String[]> tablesToBeVerified = HaReplUtils.extractTableToBeVerified(tablesResult, "FIND_PK_CLASS");
 		ArrayList<String> result = new ArrayList<String>();
@@ -737,7 +737,7 @@ public class Test {
 		String result = null;
 
 		SSHConnect masterSsh = hostManager.getHost("master");
-		GeneralShellInput script = new GeneralShellInput("csql -u dba " + hostManager.getTestDb() + " -c \"select 'EXP' ||'ECT-'|| v from qa_system_tb_flag;\" | grep EXPECT");
+		GeneralScriptInput script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"select 'EXP' ||'ECT-'|| v from qa_system_tb_flag;\" | grep EXPECT");
 
 		long expectedFlagId = -1;
 		if (isSQL && !isTest) {
@@ -774,11 +774,11 @@ public class Test {
 			script += stmt + Constants.LINE_SEPARATOR;
 			script += "EOF" + Constants.LINE_SEPARATOR;
 
-			GeneralShellInput csql = new GeneralShellInput(script);
+			GeneralScriptInput csql = new GeneralScriptInput(script);
 			result = ssh.execute(csql);
 
 		} else if (isCMD) {
-			GeneralShellInput cmd = new GeneralShellInput(stmt + " 2>&1");
+			GeneralScriptInput cmd = new GeneralScriptInput(stmt + " 2>&1");
 			result = ssh.execute(cmd);
 		}
 
@@ -812,8 +812,8 @@ public class Test {
 		s.append("    select count(*) c from db_user where name not in ('DBA', 'PUBLIC') ");
 		s.append("    ); ");
 
-		GeneralShellInput script = new GeneralShellInput("csql -u dba " + hostManager.getTestDb() + " -c \"" + s.toString() + "\"");
-		GeneralShellInput scriptMode = new GeneralShellInput("cubrid changemode " + hostManager.getTestDb());
+		GeneralScriptInput script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"" + s.toString() + "\"");
+		GeneralScriptInput scriptMode = new GeneralScriptInput("cubrid changemode " + hostManager.getTestDb());
 
 		String result;
 		SSHConnect ssh;
@@ -850,20 +850,20 @@ public class Test {
 		mlog.print(Constants.LINE_SEPARATOR + "begin to rebuild flag table ... ");
 
 		SSHConnect masterNode = hostManager.getHost("master");
-		GeneralShellInput script;
+		GeneralScriptInput script;
 
-		script = new GeneralShellInput("csql -u dba " + hostManager.getTestDb() + " -c \"drop table QA_SYSTEM_TB_FLAG;\"");
+		script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"drop table QA_SYSTEM_TB_FLAG;\"");
 		masterNode.execute(script);
 
 		this.globalFlag++;
-		script = new GeneralShellInput("csql -u dba " + hostManager.getTestDb() + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values (" + this.globalFlag + ");\"");
+		script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values (" + this.globalFlag + ");\"");
 		masterNode.execute(script);
 
 		mlog.println("DONE");
 	}
 
 	private boolean waitDataReplicated(SSHConnect ssh, long expectedFlagId) throws Exception {
-		GeneralShellInput script = new GeneralShellInput("csql -u dba " + hostManager.getTestDb() + " -c \"select 'GO'||'OD-'||v FROM QA_SYSTEM_TB_FLAG \" | grep GOOD");
+		GeneralScriptInput script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"select 'GO'||'OD-'||v FROM QA_SYSTEM_TB_FLAG \" | grep GOOD");
 		String result;
 		int index = 1;
 

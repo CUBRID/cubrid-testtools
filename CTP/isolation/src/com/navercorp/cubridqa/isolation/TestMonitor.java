@@ -85,7 +85,7 @@ public class TestMonitor {
 		if (endTime - test.startTime < testCaseTimeout * 1000)
 			return;
 
-		IsolationShellInput scripts = new IsolationShellInput();
+		IsolationScriptInput scripts = new IsolationScriptInput();
 		scripts.addCommand(Constants.LIN_KILL_PROCESS);
 
 		try {

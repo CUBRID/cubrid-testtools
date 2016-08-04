@@ -153,10 +153,10 @@ public class Test {
 		String answerFilename = d + "/answer/" + n + ".answer";
 		String resultFilename = d + "/result/" + n + ".log";
 
-		IsolationShellInput script;
+		IsolationScriptInput script;
 		String result;
 
-		script = new IsolationShellInput("cd ");
+		script = new IsolationScriptInput("cd ");
 		script.addCommand("touch " + resultFilename);
 		script.addCommand("mkdir -p " + d + "/result/");
 		script.addCommand("diff -a -y -W 185 " + answerFilename + " " + resultFilename);
@@ -174,7 +174,7 @@ public class Test {
 	public boolean runTestCase() throws Exception {
 
 		String result;
-		IsolationShellInput script = new IsolationShellInput("");
+		IsolationScriptInput script = new IsolationScriptInput("");
 		script.addCommand("ulimit -c unlimited");
 		script.addCommand("export TEST_ID=" + this.context.getFeedback().getTaskId());
 		script.addCommand("cd $ctlpath");
@@ -222,8 +222,8 @@ public class Test {
 
 		String findCmd = "find $CUBRID ${CTP_HOME} ${init_path} " + this.testCaseDir + " -name 'core.*'";
 
-		IsolationShellInput script;
-		script = new IsolationShellInput("cd; " + findCmd + "| grep -v 'core.log'");
+		IsolationScriptInput script;
+		script = new IsolationScriptInput("cd; " + findCmd + "| grep -v 'core.log'");
 
 		result = ssh.execute(script);
 		if (result != null && result.trim().equals("") == false) {
@@ -232,7 +232,7 @@ public class Test {
 			result = CommonUtils.replace(result, "\r", ", ");
 			this.addResultItem("NOK", "FOUND CORE(S): " + result);
 
-			script = new IsolationShellInput("cd; " + findCmd + " -exec rm -rf {} \\;");
+			script = new IsolationScriptInput("cd; " + findCmd + " -exec rm -rf {} \\;");
 			result = ssh.execute(script);
 		}
 	}
