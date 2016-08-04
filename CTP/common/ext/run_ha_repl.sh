@@ -114,7 +114,7 @@ function run_ha_repl_legacy()
 
 function run_ha_repl_lagacy_continue()
 {
-    cd $HOME/cubrid_shell_fm
+    cd $HOME/ha_repl_test
     #execute testing
     sh upgrade.sh
     sh run_continue.sh
