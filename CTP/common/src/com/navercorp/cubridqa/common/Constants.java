@@ -27,15 +27,32 @@ package com.navercorp.cubridqa.common;
 import java.io.File;
 import java.util.Properties;
 
+import com.navercorp.cubridqa.common.CommonUtils;
+
 public class Constants {
-	
-	public static final String ENV_CTP_HOME_KEY="CTP_HOME";
+
+	public static final String ENV_CTP_HOME_KEY = "CTP_HOME";
 
 	public final static String LINE_SEPARATOR = System.getProperty("line.separator");
-	
+
 	public final static Properties COMMON_DAILYQA_CONF;
 	static {
 		COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile("CTP_HOME") + File.separator + "conf" + File.separator + "dailyqa.conf");
+	}
+
+	public final static String MAIL_FROM;
+	static {
+		String nick = COMMON_DAILYQA_CONF.getProperty("mail.from.nickname", "").trim();
+		String mail = COMMON_DAILYQA_CONF.getProperty("mail.from.address", "").trim();
+		if (mail.indexOf("<") != -1) {
+			MAIL_FROM = mail;
+		} else {
+			if (CommonUtils.isEmpty(nick)) {
+				MAIL_FROM = mail;
+			} else {
+				MAIL_FROM = nick + "<" + mail + ">";
+			}
+		}
 	}
 
 	public static final String HAVE_CHARSET_10 = "10.0.0.0074";
