@@ -83,6 +83,19 @@ function run_ha_repl()
    fi 
    ini.sh -u "main.testbuild.url=$url" $ha_repl_fm_test_conf
    ini.sh -u "main.mode.continue=false" $ha_repl_fm_test_conf
+   
+   #Get branch of case
+   testcase_path=""
+   if [ "$BUILD_SCENARIOS" == "ha_repl_ext" -o "$BUILD_SCENARIOS" == "ha_repl_ext_debug" ];then
+		testcase_path=$HOME/cubrid-testcases-private/sql
+   elif [ "$BUILD_SCENARIOS" == "ha_repl" -o "$BUILD_SCENARIOS" == "ha_repl_debug" ];then
+		testcase_path=$HOME/cubrid-testcases/sql
+   fi
+		
+   if [ "x${testcase_path}" != "x" ];then
+	    run_git_update -f $testcase_path  -b $BUILD_SCENARIO_BRANCH_GIT
+	    ini.sh -u "main.testcase.root=$testcase_path" $ha_repl_fm_test_conf
+   fi
 
    #execute testing
    ctp.sh ha_repl -c $ha_repl_fm_test_conf 2>&1 | tee $tmplog
@@ -105,6 +118,11 @@ function run_ha_repl_continue()
 function run_ha_repl_legacy()
 {
     category=$BUILD_SCENARIOS
+    
+    # Update case from svn repository
+    run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/sql
+    run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/_24_functional_repl
+    run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/config
     cd $HOME/ha_repl_test
     sh upgrade.sh
     sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false
@@ -121,30 +139,6 @@ function run_ha_repl_lagacy_continue()
     cd - 
 }
 
-function do_case_update()
-{
-   sourceType=$1
-   if [ "x$sourceType" != "x" ] || [ "$sourceType" == "svn" ];then
-   		run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/sql
-   		run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/_24_functional_repl
-   		run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/config
-   else
-   
-   		#Get branch of case
-   		testcase_path=""
-        if [ "$BUILD_SCENARIOS" == "ha_repl_ext" -o "$BUILD_SCENARIOS" == "ha_repl_ext_debug" ];then
-			testcase_path=$HOME/cubrid-testcases-private
-		elif [ "$BUILD_SCENARIOS" == "ha_repl" -o "$BUILD_SCENARIOS" == "ha_repl_debug" ];then
-		    testcase_path=$HOME/cubrid-testcases
-		fi
-		
-		if [ "x${testcase_path}" != "x" ];then
-			run_git_update -f $testcase_path  -b $BUILD_SCENARIO_BRANCH_GIT
-			ini.sh -u "main.testcase.root=$testcase_path" $ha_repl_fm_test_conf
-		fi
-   fi 
-}
-
 if [ "$is_continue_mode" == "YES" ];then
    if [ "${BUILD_IS_FROM_GIT}" == "1" ];then
 		run_ha_repl_continue
@@ -153,14 +147,9 @@ if [ "$is_continue_mode" == "YES" ];then
    fi
 else
    if [ "${BUILD_IS_FROM_GIT}" == "1" ]; then
-        #Do case update from controller server based on git repository
-   		do_case_update
         run_ha_repl
    else
-   	    #Do case update from controller server based on svn repository
-   		do_case_update svn
         run_ha_repl_legacy
    fi 
-
 fi
 
