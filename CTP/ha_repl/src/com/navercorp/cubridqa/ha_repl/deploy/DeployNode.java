@@ -66,10 +66,11 @@ public class DeployNode {
 		}
 		s.append("ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {}").append(";");
 		GeneralScriptInput script = new GeneralScriptInput(s.toString());
+		script.addCommand("source ${CTP_HOME}/common/script/util_common.sh; clean_processes");
 		try {
 			log.log("==> Begin to clean on " + ssh.toString() + ": ");
-			String result = ssh.execute(script);
-			log.log(result);
+			String result = ssh.execute(script);			
+			log.log(result);			
 			log.log("DONE.");
 		} catch (Exception e) {
 			throw new Exception("Fail to clean on " + ssh.toString() + ":" + e.getMessage());
