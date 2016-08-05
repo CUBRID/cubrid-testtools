@@ -95,6 +95,7 @@ function run_ha_repl()
    if [ "x${testcase_path}" != "x" ];then
 	    run_git_update -f $testcase_path  -b $BUILD_SCENARIO_BRANCH_GIT
 	    ini.sh -u "main.testcase.root=$testcase_path" $ha_repl_fm_test_conf
+	    ini.sh -u "main.testcase.excluded=${testcase_path}/config/daily_regression_test_exclude_list_ha_repl.conf" $ha_repl_fm_test_conf
    fi
 
    #execute testing
