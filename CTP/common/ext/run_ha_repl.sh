@@ -147,13 +147,9 @@ function do_case_update()
 
 if [ "$is_continue_mode" == "YES" ];then
    if [ "${BUILD_IS_FROM_GIT}" == "1" ];then
-    #Do case update from controller server based on git repository
-	do_case_update
-	run_ha_repl_continue
+		run_ha_repl_continue
    else
-    #Do case update from controller server based on svn repository
-    do_case_update svn
-	run_ha_repl_lagacy_continue
+		run_ha_repl_lagacy_continue
    fi
 else
    if [ "${BUILD_IS_FROM_GIT}" == "1" ]; then
