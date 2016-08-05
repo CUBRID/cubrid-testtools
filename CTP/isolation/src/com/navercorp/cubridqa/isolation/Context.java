@@ -255,6 +255,15 @@ public class Context {
 		return this.mailNoticeTo;		
 	}
 	
+	public String getMailNoticeCC() {
+		String cc = getProperty("main.stakeholder.mail", "").trim();
+		if (CommonUtils.isEmpty(cc)) {
+			return com.navercorp.cubridqa.common.Constants.MAIL_FROM;
+		} else {
+			return cc;
+		}
+	}
+	
 	public boolean enableCheckDiskSpace() {
 		return enableCheckDiskSpace;
 	}
