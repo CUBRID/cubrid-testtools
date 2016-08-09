@@ -1424,6 +1424,7 @@ _DUMPTABLE_ERROR:return -1;
 
 int execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
 {
+    static int seq = 0;
     int req = 0, res = 0;
     int execute_result = 0;
     T_CCI_ERROR error;
@@ -1525,6 +1526,7 @@ _END:if (req > 0)
 
 int executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bool iscall)
 {
+    static int seq = 0;
     int bnum = 0i, ind;
     int out_count = 0;
     int req = 0;
@@ -1958,18 +1960,41 @@ char *getanswerfile (const char *casename)
     return answer_str;
 }
 
+char *getRelativeCasePath(char *filename)
+{
+      if(filename == NULL) return filename;
+
+      char *res = NULL;
+      int len = 0;
+      char *pos = NULL;
+
+      if(strstr (filename, "/scenario/")){
+           len = strlen("/scenario");
+           res = strstr(filename, "/scenario/");
+       }else if(strstr (filename, "/cubrid-testcases-private/")){
+           len = strlen("/cubrid-testcases-private");
+           res = strstr(filename, "/cubrid-testcases-private/");
+       }else if(strstr (filename, "/cubrid-testcases/")){
+           len = strlen("/cubrid-testcases");
+           res = strstr(filename, "/cubrid-testcases/");
+       }
+
+      res = res + len + 1;
+
+      return res;
+}
+
 char *merge_result_path (const char *result_path, char *res_path)
 {
-    char *pos = NULL;
-    int len = strlen ("/scenario");
+    int len = 0;
     char *new_path = NULL;
-    pos = strstr (res_path, "/scenario/");
-    pos = pos + len;
-    len = strlen (pos) + strlen (result_path);
-
+    char *res_ralative_path = NULL;
+    
+    res_ralative_path = getRelativeCasePath(res_path);
+  
+    len = strlen(result_path) + strlen("/") +  strlen(res_ralative_path);
     new_path = malloc (sizeof (char) * (len + 1));
-    sprintf (new_path, "%s%s", result_path, pos);
-
+    sprintf (new_path, "%s/%s", result_path, res_ralative_path);
     return new_path;
 }
 
@@ -2000,6 +2025,7 @@ int main (int argc, char *argv[])
     int sql_count;
     int rs = -1;
     char *result;
+    char *ans_file = NULL;
     char *test_type = NULL;
     char cci_ext[255] = { 0 };
     long start_time, end_time, elapse_time;
@@ -2078,17 +2104,16 @@ int main (int argc, char *argv[])
     }
 
     //write the compare result into summary file.
-    char *case_file = strstr (filename, "scenario");
-    case_file = strstr (case_file, test_type);
+    char *case_file = getRelativeCasePath(filename);
     if (rs == 0)
     {
-        fprintf (result_recorder, "TestCase: %s", case_file);
-        fprintf (result_recorder, "\t%s:%ld", ":OK", elapse_time);
+	fprintf (result_recorder, "TestCase: %s", case_file);
+        fprintf (result_recorder, "\t%s:%ld\n", ":OK", elapse_time);
         printf ("Test Result: OK\n");
     }
     else
     {
-        fprintf (result_recorder, "TestCase: %s", case_file);
+	fprintf (result_recorder, "TestCase: %s", case_file);
         fprintf (result_recorder, "\t%s:%ld", ":NOK", elapse_time);
         char *result_p = NULL;
         char *pos = NULL;

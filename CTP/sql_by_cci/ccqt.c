@@ -13,7 +13,7 @@
 char *dbname = NULL;
 char *port   = NULL;
 char *path   = NULL;
-char *hm     = NULL;
+char *sql_by_cci_home     = NULL;
 char *result = NULL;
 char *test_tp = NULL;
 int count = 0;
@@ -53,14 +53,14 @@ int checkext (char *path)
 int execute (const char *filename, char *resultfile)
 {
     char *exe_p = NULL;
-    int len = strlen (hm) + strlen ("/bin/execute");
+    int len = strlen (sql_by_cci_home) + strlen ("execute");
     int ret;
     int child_ret;
 
     exe_p = (char *) malloc (len + 1);
     memset (exe_p, 0, len + 1);
-    strcpy (exe_p, hm);
-    strcat (exe_p, "/bin/execute");
+    strcpy (exe_p, sql_by_cci_home);
+    strcat (exe_p, "execute");
 
     if (fork () == 0)
     {
@@ -104,6 +104,52 @@ void close_log ()
         exit (-1);
     }    
 }
+
+int mkdir_r (const char *path)
+{
+    if (path == NULL)
+    {
+        return -1;
+    }
+
+    char *temp = strdup (path);
+    char *pos = temp;
+    char *str = NULL;
+    char *tmp = NULL;
+
+    if (strncmp (temp, "/", 1) == 0)
+    {
+        pos += 1;
+    }
+    else if (strncmp (temp, "./", 2) == 0)
+    {
+        pos += 2;
+    }
+
+    for (; *pos != '\0'; ++pos)
+    {
+        if (*pos == '/')
+        {
+            int t = pos - temp;
+            tmp = malloc (t + 1);
+            memset (tmp, 0, t + 1);
+            strncpy (tmp, temp, t);
+            *pos = '\0';
+            if (access (tmp, F_OK) != 0)
+            {
+                mkdir (tmp, 0755);
+            }
+            *pos = '/';
+            if (tmp != NULL)
+                free (tmp);
+        }
+    }
+
+  free (temp);
+
+  return 0;
+}
+
 char *getinfoname (char *casename)
 {
     char *res = NULL;
@@ -193,14 +239,6 @@ void get_case_in_directory (char *path)
                     //printf ("%s\n", filename);
                     int ret = execute (filename, result);
                     count = count + 1;
-                    
-                    //check if get core dump when finished test a sql file.
-                    sprintf (command, "sh $HOME/ccqt/scripts/check_error.sh  %s %s %s %s", p->d_name, path, strv, strd );
-                    system(command);
-                    write_core_fatal_make(path, p->d_name, result);
-
-                    if (ret != 0)
-                        continue;
                 }
             }
         }
@@ -260,6 +298,8 @@ int main (int argc, char **argv)
     int res_folder_len = 0;
     int t = 0;
     char *bit = NULL;
+    char *hm = NULL;
+    
     port    = argv[1];
     dbname  = argv[2];
     test_tp = argv[3];
@@ -275,10 +315,11 @@ int main (int argc, char **argv)
     memset (res_folder_name, 0, res_folder_len + 1);
     sprintf (res_folder_name, "schedule_cdriver_linux_%s_%s_%s_%s", test_tp, strd, strv, bit);
     printf("RESULT_DIR: %s\n\n", res_folder_name);
-    t = strlen (res_folder_name) + strlen (hm) + strlen ("/result/");
+    t = strlen (res_folder_name) + strlen (hm) + strlen ("/result/sql_by_cci/");
     result = malloc (sizeof (char) * (t + 1));
     memset (result, 0, (t + 1));
-    sprintf (result, "%s%s%s", hm, "/result/", res_folder_name);
+    sprintf (result, "%s%s%s", hm, "/result/sql_by_cci/", res_folder_name);
+    sql_by_cci_home=strcat(hm, "/sql_by_cci/");
     if (res_folder_name != NULL)
         free (res_folder_name);
 
@@ -286,8 +327,7 @@ int main (int argc, char **argv)
     {
         if (mkdir (result, 0755) == -1)
         {
-            perror ("Mkdir error");
-            return -1;
+            mkdir_r(result);
         }
     }
 
