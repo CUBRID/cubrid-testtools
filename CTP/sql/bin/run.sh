@@ -50,6 +50,8 @@ is_support_ha=""
 scenario_alias=""
 need_make_locale=""
 test_data_file=""
+interface_type=""
+elapse_time_for_cci=""
 alias ini="sh ${CTP_HOME}/bin/ini.sh"
 
 
@@ -167,6 +169,10 @@ function do_init()
 	 is_support_ha="yes"
     fi
 
+    if [ "x${sql_interface_type}" != "x" ];then
+         interface_type=${sql_interface_type}	
+    fi
+
     cd $curDir
 }
 
@@ -206,6 +212,13 @@ function do_clean()
 
      #reset cubrid conf files
      reset_cubrid_files 
+
+     #clean c binary files
+     if [ "$interface_type" == "cci" ];then
+	cd $CTP_HOME/sql_by_cci
+	make clean
+	cd -
+     fi 
 }
 
 function init_cubrid_version()
@@ -312,20 +325,48 @@ function config_cubrid_without_ha()
 
 }
 
-function config_cqt_tool()
+function config_qa_tool()
 {
      curDir=`pwd`
-     build_ver_type=""
-     qa_db_xml_path=${CTP_HOME}/sql/configuration/Function_Db/${db_name}_qa.xml
-     avaliable_broker_port=`awk '/SERVICE[[:space:]]*=[[:space:]]*ON/, /BROKER_PORT/' $CUBRID/conf/cubrid_broker.conf|grep BROKER_PORT|grep -v '#'|awk -F '=' '{print $2}'|head -1| tr -d ' '`
-     db_url="<dburl>jdbc:cubrid:localhost:${avaliable_broker_port}:${db_name}:::</dburl>"
-     sed -i "s#<dburl>.*</dburl>#$db_url#g" $qa_db_xml_path
-     if [ "$cubrid_bits" == "32" ];then
-          build_ver_type="32bits"
+     if [ "$interface_type" == "cci" ];then
+	
+	cd $CTP_HOME/sql_by_cci
+		
+        echo ""> interface_verify.h 
+
+	BitFlag=64
+	bits=`cubrid_rel|grep 64bit|grep -v grep|wc -l`
+	if [ $bits -eq 1 ];then
+		build_mode="-m64"
+	else
+		build_mode="-m32"
+		BitFlag=32
+	fi
+	
+        gcc -o interface_verify src/interface_verify.c -I${CUBRID}/include -L${CUBRID}/lib -lcascci  ${build_mode}
+        if [ $? -eq 0 ]
+        then
+                echo "#define CCI_SET_CAS_CHANGE_MODE_INTERFACE  1" >  src/interface_verify.h
+        else
+                echo "" >  src/interface_verify.h
+        fi 
+	
+	make BITS=$BitFlag
+
      else
-          build_ver_type="Main"
+     	build_ver_type=""
+     	qa_db_xml_path=${CTP_HOME}/sql/configuration/Function_Db/${db_name}_qa.xml
+     	avaliable_broker_port=`awk '/SERVICE[[:space:]]*=[[:space:]]*ON/, /BROKER_PORT/' $CUBRID/conf/cubrid_broker.conf|grep BROKER_PORT|grep -v '#'|awk -F '=' '{print $2}'|head -1| tr -d ' '`
+     	db_url="<dburl>jdbc:cubrid:localhost:${avaliable_broker_port}:${db_name}:::</dburl>"
+     	sed -i "s#<dburl>.*</dburl>#$db_url#g" $qa_db_xml_path
+     	if [ "$cubrid_bits" == "32" ];then
+        	  build_ver_type="32bits"
+     	else
+        	  build_ver_type="Main"
+     	fi
+     	sed -i "s#<version>.*</version>#<version>$build_ver_type</version>#g" $qa_db_xml_path
      fi
-     sed -i "s#<version>.*</version>#<version>$build_ver_type</version>#g" $qa_db_xml_path
+
      cd $curDir
 }
 
@@ -655,8 +696,8 @@ function do_configure()
      #config HA env, to check if need ha mode, if need it, config it
      config_cubrid_ha
 
-     #config cqt tool
-     config_cqt_tool
+     #config qa tool
+     config_qa_tool
      
      #make locale
      make_locale
@@ -728,6 +769,14 @@ function do_test()
 	
           #do clean for interactive mode
           do_clean
+     elif [ "$interface_type" == "cci" ];then
+	  start_timestamp=`date '+%Y%m%d%H%M%S'`
+	  port=`ini -s "%BROKER1"  $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
+	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${cubrid_bits} ${scenario_repo_root} $CTP_HOME/sql_by_cci $start_timestamp 2>&1 >> $log_filename 
+	  end_timestamp=`date '+%Y%m%d%H%M%S'`
+	  let "elapse_time_for_cci=end_timestamp-start_timestamp"
+	  cd $curDir
+	  
      else   
      	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $config_file_ext $javaArgs 2>&1 >> $log_filename 
           cd $curDir
@@ -740,26 +789,31 @@ function do_summary_and_clean()
 {
      #get summary info
      [ "$sql_interactive" == "yes" ] && return
+
      coreCount=0
      resultDirTemp=`cat ${log_filename}|grep "^Result Root Dir"|head -n 1`
      resultDir=${resultDirTemp#*:}
-     resultSummaryInfoFile=${resultDir}/main.info
-     [ ! -f $resultSummaryInfoFile ] && echo "No Results!! please confirm your scenario path include valid case script(the current scenairo path:$scenario_repo_root)" && exit 1
-     failNum=`cat $resultSummaryInfoFile|grep 'fail:'|awk -F ':' '{print $2}'`
-     succNum=`cat $resultSummaryInfoFile|grep 'success:'|awk -F ':' '{print $2}'`
-     totalNum=`cat $resultSummaryInfoFile|grep 'total:'|awk -F ':' '{print $2}'`
-     elapseTime=`cat $resultSummaryInfoFile|grep 'totalTime:'|awk -F ':' '{print $2}'`
-     
-     echo ""
-     echo "-----------------------"
-     echo "Fail:$failNum"
-     echo "Success:$succNum"
-     echo "Total:$totalNum"
-     echo "Elapse Time:$elapseTime"
-     echo "Test Log:$log_filename"
-     echo "Test Result Directory:$resultDir"
-     echo "-----------------------"
-     echo ""
+     if [ "$interface_type" == "cci" ];then
+	          		
+     else
+     	resultSummaryInfoFile=${resultDir}/main.info
+     	[ ! -f $resultSummaryInfoFile ] && echo "No Results!! please confirm your scenario path include valid case script(the current scenairo path:$scenario_repo_root)" && exit 1
+     	failNum=`cat $resultSummaryInfoFile|grep 'fail:'|awk -F ':' '{print $2}'`
+     	succNum=`cat $resultSummaryInfoFile|grep 'success:'|awk -F ':' '{print $2}'`
+     	totalNum=`cat $resultSummaryInfoFile|grep 'total:'|awk -F ':' '{print $2}'`
+     	elapseTime=`cat $resultSummaryInfoFile|grep 'totalTime:'|awk -F ':' '{print $2}'`
+     	
+     	echo ""
+     	echo "-----------------------"
+     	echo "Fail:$failNum"
+     	echo "Success:$succNum"
+     	echo "Total:$totalNum"
+     	echo "Elapse Time:$elapseTime"
+     	echo "Test Log:$log_filename"
+     	echo "Test Result Directory:$resultDir"
+     	echo "-----------------------"
+     	echo ""
+     fi
 
      #check core
      coreFiles=$(find "$CUBRID" "${CTP_HOME}" -type f -name "core*")
