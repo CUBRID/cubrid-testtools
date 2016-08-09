@@ -142,23 +142,23 @@ public class CTP {
 				System.out.println();
 				switch (component) {
 				case SQL:
-					executeSQL(getConfigData(taskLabel, configFilename, "sql"), "sql", interactiveMode);
+					executeSQL(getConfigData(taskLabel, configFilename, "sql"), "sql", interactiveMode, false);
 					break;
 				case MEDIUM:
-					executeSQL(getConfigData(taskLabel, configFilename, "medium"), "medium", interactiveMode);
+					executeSQL(getConfigData(taskLabel, configFilename, "medium"), "medium", interactiveMode, false);
 					break;
 				case KCC:
-					executeSQL(getConfigData(taskLabel, configFilename, "kcc"), "kcc", interactiveMode);
+					executeSQL(getConfigData(taskLabel, configFilename, "kcc"), "kcc", interactiveMode, false);
 					break;
 				case NEIS05:
-					executeSQL(getConfigData(taskLabel, configFilename, "neis05"), "neis05", interactiveMode);
+					executeSQL(getConfigData(taskLabel, configFilename, "neis05"), "neis05", interactiveMode, false);
 					break;
 				case NEIS08:
-					executeSQL(getConfigData(taskLabel, configFilename, "neis08"), "neis08", interactiveMode);
+					executeSQL(getConfigData(taskLabel, configFilename, "neis08"), "neis08", interactiveMode, false);
 					break;
 				case SQL_BY_CCI:
-					executeSQL_By_CCI(getConfigData(taskLabel, configFilename, "sql_by_cci"), "sql_by_cci");
-					break;					
+					executeSQL(getConfigData(taskLabel, configFilename, "sql_by_cci"), "sql_by_cci", interactiveMode, true);
+					break;
 				case SHELL:
 					executeShell(getConfigData(taskLabel, configFilename, "shell"), "shell");
 					break;
@@ -186,28 +186,21 @@ public class CTP {
 		}
 	}
 
-	private static void executeSQL(IniData config, String suite, boolean interactiveMode) throws IOException {
-		// String newfileName = CommonUtils.concatFile(ctpHome, "conf");
-		// newfileName = CommonUtils.concatFile(newfileName, ".sql.conf");
-		// config.saveAs(newfileName, suite, "sql");
+	private static void executeSQL(IniData config, String suite, boolean interactiveMode, boolean useCCI) throws IOException {
 		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
 		boolean enableMemoryLeak = CommonUtils.convertBoolean(config.get("sql", "enable_memory_leak"));
 		
 		String runStmt = "sh ${CTP_HOME}/sql/bin/" + (enableMemoryLeak ? "run_memory.sh" : "run.sh") + " -s " + suite + " -f " + configFilePath;
 		
 		if(interactiveMode) {
+			addContScript("export sql_interface_type=" + (useCCI ? "cci" : "jdbc"));
 			addContScript("export sql_interactive=yes");
 			addContScript(runStmt);
 		} else {
-			LocalInvoker.exec(runStmt, CommonUtils.getShellType(false), true);
+			LocalInvoker.exec("export sql_interface_type=" + (useCCI ? "cci" : "jdbc") + "; " + runStmt, CommonUtils.getShellType(false), true);
 		}		
 	}
 	
-	private static void executeSQL_By_CCI(IniData config, String suite) throws IOException {
-		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
-		LocalInvoker.exec("sh ${CTP_HOME}/sql_by_cci/bin/run.sh" + " -s " + suite + " -f " + configFilePath, CommonUtils.getShellType(false), true);
-	}
-
 	private static void executeShell(IniData config, String suite) {
 		String jar = ctpHome + File.separator + "shell" + File.separator + "lib" + File.separator + "cubridqa-shell.jar";
 		try {
