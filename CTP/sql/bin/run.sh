@@ -212,13 +212,6 @@ function do_clean()
 
      #reset cubrid conf files
      reset_cubrid_files 
-
-     #clean c binary files
-     if [ "$interface_type" == "cci" ];then
-	cd $CTP_HOME/sql_by_cci
-	make clean
-	cd -
-     fi 
 }
 
 function init_cubrid_version()
@@ -332,17 +325,7 @@ function config_qa_tool()
 	
 	cd $CTP_HOME/sql_by_cci
         echo ""> interface_verify.h 
-
-	BitFlag=64
-	bits=`cubrid_rel|grep 64bit|grep -v grep|wc -l`
-	if [ $bits -eq 1 ];then
-		build_mode="-m64"
-	else
-		build_mode="-m32"
-		BitFlag=32
-	fi
-	
-	make BITS=$BitFlag
+	sh compile.sh
 
      else
      	build_ver_type=""
