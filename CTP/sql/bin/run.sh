@@ -331,7 +331,6 @@ function config_qa_tool()
      if [ "$interface_type" == "cci" ];then
 	
 	cd $CTP_HOME/sql_by_cci
-		
         echo ""> interface_verify.h 
 
 	BitFlag=64
@@ -342,14 +341,6 @@ function config_qa_tool()
 		build_mode="-m32"
 		BitFlag=32
 	fi
-	
-        gcc -o interface_verify src/interface_verify.c -I${CUBRID}/include -L${CUBRID}/lib -lcascci  ${build_mode}
-        if [ $? -eq 0 ]
-        then
-                echo "#define CCI_SET_CAS_CHANGE_MODE_INTERFACE  1" >  src/interface_verify.h
-        else
-                echo "" >  src/interface_verify.h
-        fi 
 	
 	make BITS=$BitFlag
 
@@ -769,8 +760,7 @@ function do_test()
           do_clean
      elif [ "$interface_type" == "cci" ];then
 	  port=`ini -s "%BROKER1"  $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
-	  start_timestamp=`date '+%Y%m%d%H%M%S'`
-	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${cubrid_bits} ${scenario_repo_root} $CTP_HOME $start_timestamp 2>&1 >> $log_filename 
+	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${cubrid_bits} ${scenario_repo_root} $CTP_HOME 2>&1 >> $log_filename 
 	  cd $curDir
 	  
      else   

@@ -19,7 +19,6 @@ char *test_tp = NULL;
 int count = 0;
 char strv[16] = { 0x00 };
 char command[1024] = "";
-char strd[32] = { 0x00 };
 FILE *result_recorder = NULL;
 char *summarylog = NULL;
 
@@ -254,6 +253,19 @@ long getCurrentTime()
     return ((long)curTime.tv_sec)*1000+(long)curTime.tv_usec/1000;
 }
 
+char *time_stamp()
+{
+    char *timestamp = (char *)malloc(sizeof(char) * 16);
+    time_t ltime;
+    ltime=time(NULL);
+    struct tm *tm;
+    tm=localtime(&ltime);
+    sprintf(timestamp,"%04d%02d%02d%02d%02d%02d", tm->tm_year+1900, tm->tm_mon, 
+    tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
+    return timestamp;
+}
+
+
 char *cubrid_version (char *strv)
 {
     char str[100] = { 0x00 };
@@ -286,6 +298,7 @@ int main (int argc, char **argv)
     int t = 0;
     char *bit = NULL;
     char *hm = NULL;
+    char *str_date = NULL;
     long start_time, end_time, elapse_time;
     
     port    = argv[1];
@@ -294,14 +307,13 @@ int main (int argc, char **argv)
     bit     = argv[4];
     path    = argv[5];		//loop directory 
     hm      = argv[6];			//the home directory of ccqt 
-    memcpy(strd, argv[7], sizeof(strd));             //get the timestamp from ccqt.sh  
-    
+    str_date = time_stamp(); 
     cubrid_version (strv);
 
-    res_folder_len = strlen ("Schedule_cdriver_linux_") + strlen (strd) + strlen ("_") * 3 + strlen (strv) + strlen (bit) + strlen (test_tp);
+    res_folder_len = strlen ("Schedule_cdriver_linux_") + strlen (str_date) + strlen ("_") * 3 + strlen (strv) + strlen (bit) + strlen (test_tp);
     res_folder_name = malloc (sizeof (char) * (res_folder_len + 1));
     memset (res_folder_name, 0, res_folder_len + 1);
-    sprintf (res_folder_name, "schedule_cdriver_linux_%s_%s_%s_%s", test_tp, strd, strv, bit);
+    sprintf (res_folder_name, "schedule_cdriver_linux_%s_%s_%s_%s", test_tp, str_date, strv, bit);
     t = strlen (res_folder_name) + strlen (hm) + strlen ("/result/sql_by_cci/");
     result = malloc (sizeof (char) * (t + 1));
     memset (result, 0, (t + 1));
