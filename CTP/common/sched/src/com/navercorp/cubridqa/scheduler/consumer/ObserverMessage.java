@@ -143,7 +143,9 @@ public class ObserverMessage extends Thread {
 					new Comparator<String>() {
 						@Override
 						public int compare(String ver1, String ver2) {
-
+							ver1 = ver1.indexOf("-") == -1 ? ver1 : ver1.substring(0, ver1.indexOf("-"));
+							ver2 = ver2.indexOf("-") == -1 ? ver2 : ver2.substring(0, ver2.indexOf("-"));
+							
 							String[] v1 = ver1.split("\\.");
 							String[] v2 = ver2.split("\\.");
 

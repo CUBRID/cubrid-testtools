@@ -191,7 +191,7 @@ public class IniCommand {
 		if (fname == null)
 			return list;
 
-		File file = new File(fname);
+		File file = new File(CommonUtils.getFixedPath(fname));
 		if (file.exists() == false)
 			return list;
 

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="sql/src"/>
+	<classpathentry kind="src" path="ha_repl/src"/>
+	<classpathentry kind="src" path="isolation/src"/>
+	<classpathentry kind="src" path="shell/src"/>
 	<classpathentry kind="src" path="common/sched/src"/>
 	<classpathentry kind="src" path="common/grepo/src"/>
 	<classpathentry kind="src" path="common/src"/>

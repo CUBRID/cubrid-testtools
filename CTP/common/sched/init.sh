@@ -55,6 +55,7 @@ function analyzeMessageInfo() {
 	    fi
     fi
 
+    export url com_url com_img_url src_url
     fn=${url##*/}
     fexe=${fn##*.}
     if [ "$fexe" == 'zip' ]
@@ -62,11 +63,11 @@ function analyzeMessageInfo() {
         isWin='yes'
     fi
 	
-	if [ -f $statusFile ]
-	then
-		echo "TEST_TYPE:$BUILD_SCENARIOS" >> $statusFile
-		echo "TEST_BUILD:$BUILD_ID" >> $statusFile
-	fi 
+	if [ -f $statusFile ]		
+ 	then		
+ 		echo "TEST_TYPE:$BUILD_SCENARIOS" >> $statusFile		
+ 		echo "TEST_BUILD:$BUILD_ID" >> $statusFile		
+ 	fi 
 }
 
 function getMsgValue() {
@@ -84,6 +85,23 @@ function runAction() {
     fi
 }
 
+function upload_to_dailysrv () {
+    from=$1
+    to=$2
+    run_upload -host "$DAILYQA_DAILYSRV_HOST" -user "$DAILYQA_DAILYSRV_USER" -password "$DAILYQA_DAILYSRV_PWD" -port "$DAILYQA_DAILYSRV_PORT" -from "$from" -to "$to"
+}
+
+export DAILYQA_DAILYSRV_HOST=`ini.sh conf/dailyqa.conf dailysrv.host`
+export DAILYQA_DAILYSRV_USER=`ini.sh conf/dailyqa.conf dailysrv.user`
+export DAILYQA_DAILYSRV_PWD=`ini.sh conf/dailyqa.conf dailysrv.pwd`
+export DAILYQA_DAILYSRV_PORT=`ini.sh conf/dailyqa.conf dailysrv.port`
+export DAILYQA_GIT_USER=`ini.sh conf/dailyqa.conf git.user`
+export DAILYQA_GIT_PWD=`ini.sh conf/dailyqa.conf git.pwd`
+export DAILYQA_GIT_EMAIL=`ini.sh conf/dailyqa.conf git.email`
+export DAILYQA_SSH_PWD_DEFAULT=`ini.sh conf/dailyqa.conf ssh.pwd.default`
+export DAILYQA_SSH_PORT_DEFAULT=`ini.sh conf/dailyqa.conf ssh.port.default`
+
 analyzeMessageInfo $1
 export -f getMsgValue
 export -f runAction
+export -f upload_to_dailysrv

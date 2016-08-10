@@ -24,12 +24,13 @@
  */
 package com.navercorp.cubridqa.common;
 
+import java.io.File;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-
 
 public class SFTPUpload {
 
@@ -79,16 +80,60 @@ public class SFTPUpload {
 
 		String from = cmd.getOptionValue("from");
 		String to = cmd.hasOption("to") ? cmd.getOptionValue("to") : ".";
-		
+
 		boolean needLog = Boolean.parseBoolean(System.getProperty("main.need.debug.info", "false"));
 
 		SSHConnect ssh = null;
-		
+
+		File fromFile = new File(CommonUtils.getFixedPath(from));
+		boolean isFolder = fromFile.exists() && fromFile.isDirectory();
 		SFTP sftp = null;
+
 		try {
+			System.out.println("[INFO] START TO UPDATE: " + from);
 			ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword, needLog);
 			sftp = ssh.createSFTP();
-			sftp.upload(from, to);
+
+			if (isFolder == false) {
+				sftp.upload(fromFile.getCanonicalPath(), to);
+				System.out.println("[INFO] upload done");
+			} else {
+				String pkgName = null;
+				StringBuffer scriptLocal;
+				ShellInput scriptRemote;
+				int shellType = CommonUtils.getShellType(false);
+
+				pkgName = ".UP_" + fromFile.getName().trim() + "_" + System.currentTimeMillis() + ".tar.gz";
+
+				scriptLocal = new StringBuffer();
+				scriptLocal.append("cd " + from).append(";");
+				scriptLocal.append("tar czvf " + "../" + pkgName + " .").append(";");
+				LocalInvoker.exec(scriptLocal.toString(), shellType, true);
+				System.out.println("[INFO] package done in local: " + pkgName);
+
+				scriptRemote = new ShellInput();
+				scriptRemote.addCommand("mkdir -p " + to);
+				ssh.execute(scriptRemote);
+				System.out.println("[INFO] create dest name done in remote: " + to);
+
+				sftp.upload(fromFile.getParentFile().getCanonicalPath() + "/" + pkgName, to);
+				System.out.println("[INFO] upload done");
+
+				scriptRemote = new ShellInput();
+				scriptRemote.addCommand("cd " + to);
+				scriptRemote.addCommand("tar xzvf " + pkgName);
+				scriptRemote.addCommand("rm -rf " + pkgName);
+				ssh.execute(scriptRemote);
+				System.out.println("[INFO] expand package done");
+
+				scriptLocal = new StringBuffer();
+				scriptLocal.append("cd " + from).append(";");
+				scriptLocal.append("rm -rf ../" + pkgName).append(";");
+				LocalInvoker.exec(scriptLocal.toString(), shellType, true);
+				System.out.println("[INFO] clean temporary files in local and remote");
+			}
+
+			System.out.println("DONE");
 		} finally {
 			if (ssh != null)
 				ssh.close();
