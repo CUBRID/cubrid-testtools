@@ -12,7 +12,10 @@ else
 	CFLAGS += -m64
 endif
 
-all : ccqt execute interface_verify
+all : clean prepare ccqt execute
+
+prepare:
+	$(shell isSupportHoldCas=`cat ${CUBRID}/include/cas_cci.h | grep "cci_set_cas_change_mode" | wc -l`; if [ $$isSupportHoldCas -ne 0 ];then echo "#define CCI_SET_CAS_CHANGE_MODE_INTERFACE  1" >interface_verify.h;else echo "" > interface_verify.h;fi)
 
 ccqt : ccqt.o
 	$(CC) -o $@ $^
@@ -20,18 +23,11 @@ ccqt : ccqt.o
 execute : execute.o
 	$(CC) -o $@ $^ $(CUBRID_LDFLAGS)	
 
-interface_verify : interface_verify.o
-	$(CC) -o $@ $^ $(CUBRID_LDFLAGS) 
-
-interface_verify.o : interface_verify.c
-	$(CC) $(CFLAGS) $(CUBRID_INCLUDE) -c -o $@ $^
-
 execute.o : execute.c
 	$(CC) $(CFLAGS) $(CUBRID_INCLUDE) -c -o $@ $^
 
 ccqt.o : ccqt.c
 	$(CC) $(CFLAGS) -c -o $@ $^
-
 
 clean:
 	rm -rf *.o ccqt execute interface_verify

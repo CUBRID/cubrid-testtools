@@ -247,24 +247,11 @@ void get_case_in_directory (char *path)
     closedir (db);
 }
 
-char *current_date (char *strt)
+long getCurrentTime()
 {
-    time_t curtime;
-    time_t t;
-    int tmp = 0;
-    struct tm *loctime;
-
-    /* Get the current time.  */
-    curtime = time (NULL);
-    t = time (0);
-    /* Convert it to local time representation.  */
-    loctime = localtime (&curtime);
-    /* Format local time */
-    strftime (strt, 8, "%Y%m%d", loctime);
-    tmp = strlen (strt);
-    strt = strt + tmp;
-    sprintf (strt, "%d", t);
-    return strt;
+    struct timeval curTime;
+    gettimeofday(&curTime, NULL);
+    return ((long)curTime.tv_sec)*1000+(long)curTime.tv_usec/1000;
 }
 
 char *cubrid_version (char *strv)
@@ -299,6 +286,7 @@ int main (int argc, char **argv)
     int t = 0;
     char *bit = NULL;
     char *hm = NULL;
+    long start_time, end_time, elapse_time;
     
     port    = argv[1];
     dbname  = argv[2];
@@ -314,12 +302,13 @@ int main (int argc, char **argv)
     res_folder_name = malloc (sizeof (char) * (res_folder_len + 1));
     memset (res_folder_name, 0, res_folder_len + 1);
     sprintf (res_folder_name, "schedule_cdriver_linux_%s_%s_%s_%s", test_tp, strd, strv, bit);
-    printf("RESULT_DIR: %s\n\n", res_folder_name);
     t = strlen (res_folder_name) + strlen (hm) + strlen ("/result/sql_by_cci/");
     result = malloc (sizeof (char) * (t + 1));
     memset (result, 0, (t + 1));
     sprintf (result, "%s%s%s", hm, "/result/sql_by_cci/", res_folder_name);
+    printf("Result Root Dir: %s\n\n", result);
     sql_by_cci_home=strcat(hm, "/sql_by_cci/");
+    start_time = getCurrentTime();
     if (res_folder_name != NULL)
         free (res_folder_name);
 
@@ -344,5 +333,8 @@ int main (int argc, char **argv)
             printf ("%s is test\n", path);
         }
     }
+    end_time = getCurrentTime();
+    elapse_time = end_time - start_time;
     printf("TOTAL_COUNT: %d\n", count);
+    printf("TOTAL_ELAPSE_TIME: %lu\n", elapse_time);
 }

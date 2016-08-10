@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 # 
 #Copyright (c) 2016, Search Solution Corporation? All rights reserved.
 #
@@ -51,7 +52,6 @@ scenario_alias=""
 need_make_locale=""
 test_data_file=""
 interface_type=""
-elapse_time_for_cci=""
 alias ini="sh ${CTP_HOME}/bin/ini.sh"
 
 
@@ -98,7 +98,7 @@ function do_init()
     scenario_update_yn=no
     result_copy_yn=no
     config_file_ext="test_default.xml"
-    log_dir=${CTP_HOME}/sql/log
+    log_dir=${CTP_HOME}/result/${scenario_category}/current_runtime_log
     result_dir=${CTP_HOME}/sql/result
     log_filename=cqt.log
     cubrid_root_dir=$CUBRID
@@ -169,7 +169,7 @@ function do_init()
 	 is_support_ha="yes"
     fi
 
-    if [ "x${sql_interface_type}" != "x" ];then
+    if [ "${sql_interface_type}" ];then
          interface_type=${sql_interface_type}	
     fi
 
@@ -541,7 +541,6 @@ function start_db()
 
 function delete_db()
 {
-     curDir=`pwd`
      echo "delete database $1"
      cubrid deletedb $1 2>&1 >> $log_filename
      sleep 2
@@ -551,8 +550,7 @@ function delete_db()
      if [ -d "$db_name" ];then
 	rm -rf $db_name
      fi
-
-     cd $curDir
+      
 }
 
 function restart_broker()
@@ -770,11 +768,9 @@ function do_test()
           #do clean for interactive mode
           do_clean
      elif [ "$interface_type" == "cci" ];then
-	  start_timestamp=`date '+%Y%m%d%H%M%S'`
 	  port=`ini -s "%BROKER1"  $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
-	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${cubrid_bits} ${scenario_repo_root} $CTP_HOME/sql_by_cci $start_timestamp 2>&1 >> $log_filename 
-	  end_timestamp=`date '+%Y%m%d%H%M%S'`
-	  let "elapse_time_for_cci=end_timestamp-start_timestamp"
+	  start_timestamp=`date '+%Y%m%d%H%M%S'`
+	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${cubrid_bits} ${scenario_repo_root} $CTP_HOME $start_timestamp 2>&1 >> $log_filename 
 	  cd $curDir
 	  
      else   
@@ -782,6 +778,41 @@ function do_test()
           cd $curDir
      fi
     )
+}
+
+function generate_summary_info()
+{
+    summaryFolder=$1
+    if [ "x${summaryFolder}" != "x" -a -d "$summaryFolder" ];then
+	summaryFile=${summaryFolder}/summary.info
+        failCount=`cat $summaryFile|grep "NOK"|wc -l`
+	totalCount=`cat ${log_filename}|grep "TOTAL_COUNT"|awk -F ':' '{print $2}'|tr -d ' '`
+	totalElapseTime=`cat ${log_filename}|grep "TOTAL_ELAPSE_TIME"|awk -F ':' '{print $2}'|tr -d ' '`
+	let "succCount=totalCount-failCount" 
+	echo "cubrid_build_id=$cubrid_ver" >> ${summaryFolder}/summary_info
+	echo "execute_date=`date +"%Y-%m-%d %H:%M:%S"`" >> ${summaryFolder}/summary_info
+	echo "Num_total=$totalCount" >> ${summaryFolder}/summary_info
+	echo "Num_test=$totalCount" >> ${summaryFolder}/summary_info
+	echo "Num_success=$succCount" >> ${summaryFolder}/summary_info
+	echo "Num_fail=$failCount" >> ${summaryFolder}/summary_info
+	echo "Test_cat=$scenario_alias" >> ${summaryFolder}/summary_info
+	echo "Test_upcat=function" >> ${summaryFolder}/summary_info
+	echo "OS=`uname`" >> ${summaryFolder}/summary_info
+	echo "Bit=$cubrid_bits" >> ${summaryFolder}/summary_info
+	echo "Elapse_time=$totalElapseTime" >> ${summaryFolder}/summary_info
+
+        echo ""
+	echo "-----------------------"
+        echo "Fail:$failCount"
+        echo "Success:$succCount"
+        echo "Total:$totalCount"
+        echo "Elapse Time:$totalElapseTime"
+        echo "Test Log:$log_filename"
+        echo "Test Result Directory:$summaryFolder"
+        echo "-----------------------"
+        echo ""
+    fi
+
 }
 
 
@@ -794,7 +825,7 @@ function do_summary_and_clean()
      resultDirTemp=`cat ${log_filename}|grep "^Result Root Dir"|head -n 1`
      resultDir=${resultDirTemp#*:}
      if [ "$interface_type" == "cci" ];then
-	          		
+	 generate_summary_info $resultDir	          		
      else
      	resultSummaryInfoFile=${resultDir}/main.info
      	[ ! -f $resultSummaryInfoFile ] && echo "No Results!! please confirm your scenario path include valid case script(the current scenairo path:$scenario_repo_root)" && exit 1
