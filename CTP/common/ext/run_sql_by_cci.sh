@@ -99,7 +99,7 @@ function run_sql {
     then
         testResultPath=`cat $tmplog|grep "^Test Result Directory"|awk -F ':' '{print $NF}'|tr -d " "`
         testResultName="`basename ${testResultPath}`"
-        (cd $testResultPath/..; upload_to_dailysrv "./$testResultName" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$testResultName")
+        (cd $testResultPath/..; upload_to_dailysrv "./$testResultName" "./qa_repository/function_cci_for_sql/y`date +%Y`/m`date +%-m`/$testResultName")
 
         if [ `cat $tmplog |grep '^CORE_FILE:' | wc -l` -gt 0 ]; then
             timestamp=`echo $testResultName|awk -F '_' '{print $5}'`
