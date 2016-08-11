@@ -772,7 +772,7 @@ function generate_summary_info()
 	echo "Test_cat=$scenario_alias" >> ${summaryFolder}/summary_info
 	echo "Test_upcat=function" >> ${summaryFolder}/summary_info
 	echo "OS=$os_type" >> ${summaryFolder}/summary_info
-	echo "Bit=$cubrid_bits" >> ${summaryFolder}/summary_info
+	echo "Bit=${cubrid_bits}bits" >> ${summaryFolder}/summary_info
 	echo "Elapse_time=$totalElapseTime" >> ${summaryFolder}/summary_info
 
         echo ""
