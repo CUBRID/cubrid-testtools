@@ -722,7 +722,7 @@ function do_test()
    
      if [ ! -f ${scenario_repo_root} ];then
          lastChar=${scenario_repo_root:${#scenario_repo_root}-1:1}
-         if [ "$lastChar" != "/" -a "$lastChar" != "\\" ];then
+         if [ "$lastChar" != "/" -a "$lastChar" != "\\" ] && [ "$sql_interactive" != "cci" ];then
             scenario_repo_root=${scenario_repo_root}/
          fi
      fi
