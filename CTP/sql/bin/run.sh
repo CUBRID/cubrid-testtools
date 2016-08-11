@@ -743,7 +743,8 @@ function do_test()
           do_clean
      elif [ "$interface_type" == "cci" ];then
 	  port=`ini -s "%BROKER1"  $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
-	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${cubrid_bits} ${scenario_repo_root} $CTP_HOME 2>&1 >> $log_filename 
+	  resultFolder="schedule_cdriver_${os_type}_${scenario_alias}_`date +"%Y%m%d%H%M%S"`_${cubrid_ver}_${cubrid_bits}"
+	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${resultFolder} ${scenario_repo_root} $CTP_HOME 2>&1 >> $log_filename 
 	  cd $curDir
 	  
      else   
@@ -770,7 +771,7 @@ function generate_summary_info()
 	echo "Num_fail=$failCount" >> ${summaryFolder}/summary_info
 	echo "Test_cat=$scenario_alias" >> ${summaryFolder}/summary_info
 	echo "Test_upcat=function" >> ${summaryFolder}/summary_info
-	echo "OS=`uname`" >> ${summaryFolder}/summary_info
+	echo "OS=$os_type" >> ${summaryFolder}/summary_info
 	echo "Bit=$cubrid_bits" >> ${summaryFolder}/summary_info
 	echo "Elapse_time=$totalElapseTime" >> ${summaryFolder}/summary_info
 

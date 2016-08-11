@@ -17,7 +17,6 @@ char *sql_by_cci_home     = NULL;
 char *result = NULL;
 char *test_tp = NULL;
 int count = 0;
-char strv[16] = { 0x00 };
 char command[1024] = "";
 FILE *result_recorder = NULL;
 char *summarylog = NULL;
@@ -265,26 +264,6 @@ char *time_stamp()
     return timestamp;
 }
 
-
-char *cubrid_version (char *strv)
-{
-    char str[100] = { 0x00 };
-    FILE *fp = NULL;
-
-    sprintf (str, "cubrid_rel|grep -Po '\\d{1,2}\\.\\d{1,2}\\.\\d{1,2}.\\d{1,6}' > v.txt");
-    system (str);
-
-    if ((fp = fopen ("v.txt", "r")) != NULL)
-    {
-        fgets (strv, 16, fp);
-        strv[strlen (strv) - 1] = 0x00;
-        fclose (fp);
-    }
-
-    return strv;
-}
-
-
 int main (int argc, char **argv)
 {
     if (argc < 6)
@@ -294,9 +273,7 @@ int main (int argc, char **argv)
     }
 
     char *res_folder_name = NULL;
-    int res_folder_len = 0;
     int t = 0;
-    char *bit = NULL;
     char *hm = NULL;
     char *str_date = NULL;
     long start_time, end_time, elapse_time;
@@ -304,16 +281,11 @@ int main (int argc, char **argv)
     port    = argv[1];
     dbname  = argv[2];
     test_tp = argv[3];
-    bit     = argv[4];
-    path    = argv[5];		//loop directory 
-    hm      = argv[6];			//the home directory of ccqt 
+    res_folder_name = argv[4];
+    path    = argv[5];		//loop directory for cases
+    hm      = argv[6];			//the home directory of ctp
     str_date = time_stamp(); 
-    cubrid_version (strv);
 
-    res_folder_len = strlen ("Schedule_cdriver_linux_") + strlen (str_date) + strlen ("_") * 3 + strlen (strv) + strlen (bit) + strlen (test_tp);
-    res_folder_name = malloc (sizeof (char) * (res_folder_len + 1));
-    memset (res_folder_name, 0, res_folder_len + 1);
-    sprintf (res_folder_name, "schedule_cdriver_linux_%s_%s_%s_%s", test_tp, str_date, strv, bit);
     t = strlen (res_folder_name) + strlen (hm) + strlen ("/result/sql_by_cci/");
     result = malloc (sizeof (char) * (t + 1));
     memset (result, 0, (t + 1));
