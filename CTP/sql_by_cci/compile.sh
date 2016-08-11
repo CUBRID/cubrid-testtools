@@ -23,8 +23,6 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
-
-set -x
 script_dir=$(dirname $(readlink -f $0))
 cd $script_dir
 
@@ -54,7 +52,16 @@ rm -f *.o ccqt execute interface_verify
 echo ""
 echo "======Start Compile======"
 gcc -o execute execute.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
+statOfExecute=$?
 gcc -o ccqt ccqt.c $CFLAGS
+statOfCcqt=$?
+
+echo ""
+if [ $statOfExecute -eq 0 -a $statOfCcqt -eq 0 ];then
+	echo "======Compile Succuss!!======"
+else
+	echo "======Compile Fail!!======"
+fi
 echo "======End Compile======"
 echo ""
 cd -
