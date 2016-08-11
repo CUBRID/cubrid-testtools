@@ -100,6 +100,8 @@ public class Context {
 	
 	String currentLogDir;
 	String rootLogDir;
+	
+	boolean skipToSaveSuccCase = false;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -452,5 +454,13 @@ public class Context {
 	
 	public boolean enableCheckDiskSpace() {
 		return enableCheckDiskSpace;
+	}
+
+	public boolean isSkipToSaveSuccCase() {
+		return skipToSaveSuccCase;
+	}
+
+	public void setSkipToSaveSuccCase(boolean skipToSaveSuccCase) {
+		this.skipToSaveSuccCase = skipToSaveSuccCase;
 	}
 }

@@ -404,7 +404,7 @@ public class CommonUtils {
 			return defaultValue;
 
 		value = value.trim().toUpperCase();
-		return value.equals("1") || value.equals("TRUE") || value.equals("YES");
+		return value.equals("1") || value.equals("TRUE") || value.equals("YES") || value.equals("T") || value.equals("Y");
 	}
 
 	public static String getSystemProperty(String key, String defaultValue, Properties props) {

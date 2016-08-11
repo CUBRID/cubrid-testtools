@@ -120,13 +120,15 @@ public class FeedbackFile implements Feedback {
 	
 	private synchronized void println(String... conts){
 		for(String cont: conts){
+			if (cont == null)
+				continue;
 			feedbackLog.println(cont);
 		}
 	}
 
 	@Override
 	public void onTestCaseMonitor(String testCase, String action, String envIdentify) {
-		println(action + " " + testCase + " " + envIdentify);		
+		println(action + " " + testCase + " " + envIdentify);
 	}
 
 	@Override
