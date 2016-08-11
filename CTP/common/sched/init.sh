@@ -91,6 +91,13 @@ function upload_to_dailysrv () {
     run_upload -host "$DAILYQA_DAILYSRV_HOST" -user "$DAILYQA_DAILYSRV_USER" -password "$DAILYQA_DAILYSRV_PWD" -port "$DAILYQA_DAILYSRV_PORT" -from "$from" -to "$to"
 }
 
+function check_local_disk_space () {
+    (source ${CTP_HOME}/common/script/util_common.sh
+     cc=`ini.sh ${CTP_HOME}/conf/dailyqa.conf mail.from.address`
+     check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G "$1" "$cc"
+    )
+}
+
 export DAILYQA_DAILYSRV_HOST=`ini.sh conf/dailyqa.conf dailysrv.host`
 export DAILYQA_DAILYSRV_USER=`ini.sh conf/dailyqa.conf dailysrv.user`
 export DAILYQA_DAILYSRV_PWD=`ini.sh conf/dailyqa.conf dailysrv.pwd`
@@ -105,3 +112,4 @@ analyzeMessageInfo $1
 export -f getMsgValue
 export -f runAction
 export -f upload_to_dailysrv
+export -f check_local_disk_space
