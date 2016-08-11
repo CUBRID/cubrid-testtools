@@ -293,8 +293,6 @@ int main (int argc, char **argv)
     printf("Result Root Dir: %s\n\n", result);
     sql_by_cci_home=strcat(hm, "/sql_by_cci/");
     start_time = getCurrentTime();
-    if (res_folder_name != NULL)
-        free (res_folder_name);
 
     if (access (result, 0) != 0)
     {
