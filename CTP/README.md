@@ -170,7 +170,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
   - Prepare
 	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
 	* Controller Node configuration is basically same as ``Shell``.
-	  Regarding more parameters for ``HA Replication`` testing, please refer to [CTP/conf/ha_repl_template.conf](conf/ha_repl_template.conf)
+	  Regarding more parameters for ``HA Replication`` testing, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)
 	* Environment variables set on test Node:
 	  
 	  ```
@@ -182,7 +182,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* For **HA Replication** test:
 	
 	  ```
-	  $ bin/ctp.sh ha_repl -c ./conf/ha_repl_template.conf
+	  $ bin/ctp.sh ha_repl -c ./conf/ha_repl.conf
 	  ```   
     
  - Examine the results
@@ -353,63 +353,44 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
      CTP will add primary key on column
    * Sample for reference
      ```
-       --test: #test flag
-       create class DML_0001 \
-       (       int_col int not null, \
-       var_col varchar(20), \
-       set_col set (int,varchar(20)));
-       --check: #check data flag between master and slave
-       @HC_CHECK_FOR_EACH_STATEMENT #check schema flag between master and slave 
+       --test: #execute test flag for statement
+       create table t1 ( \
+       a1 nchar(10 ) PRIMARY KEY collate euckr_bin, \
+       a2 nchar(10) collate iso88591_bin      , \
+       a3 nchar(10) collate iso88591_en_ci    , \
+       a4 nchar(10) collate iso88591_en_cs    , \
+       a5 nchar(10) collate utf8_bin          , \
+       a6 nchar(10) collate utf8_de_exp       , \
+       a7 nchar(10) collate utf8_de_exp_ai_ci , \
+       a8 nchar(10) collate utf8_en_ci        , \
+       a9 nchar(10) collate utf8_en_cs        , \
+       a10 nchar(10) collate utf8_es_cs        , \
+       a11 nchar(10) collate utf8_fr_exp_ab    , \
+       a12 nchar(10) collate utf8_gen          , \
+       a13 nchar(10) collate utf8_gen_ai_ci    , \
+       a14 nchar(10) collate utf8_gen_ci       , \
+       a15 nchar(10) collate utf8_ja_exp       , \
+       a16 nchar(10) collate utf8_ja_exp_cbm   , \
+       a17 nchar(10) collate utf8_km_exp       , \
+       a18 nchar(10) collate utf8_ko_cs        , \
+       a19 nchar(10) collate utf8_ko_cs_uca    , \
+       a20 nchar(10) collate utf8_ro_cs        , \
+       a21 nchar(10) collate utf8_tr_cs        , \
+       a22 nchar(10) collate utf8_tr_cs_uca    , \
+       a23 nchar(10) collate utf8_vi_cs        );
+       --check: #check data between master and slave
+       @HC_CHECK_FOR_EACH_STATEMENT #check if schema is consistent between master and slave 
        --test:
        
-       create class DML_0002 \
-       (       int_col int not null, \
-       var_col varchar(20), \
-       set_col set (int, varchar(20)), \
-       ref_col DML_0001, \
-       set_ref_col set of DML_0001);
+       insert into t1 values (n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a');
+       --check:
+       $HC_CHECK_FOR_DML
+       
+       --test:
+       drop table t1;
        --check:
        @HC_CHECK_FOR_EACH_STATEMENT
-       --test:
-       
-       create class DML_0003 under DML_0001 \
-       (       int_col1 int not null PRIMARY KEY);
-       --check:
-       @HC_CHECK_FOR_EACH_STATEMENT
-       --test:
-       insert into DML_0001 values (1,'test1', {1,'test1'});
-       --check:
-       $HC_CHECK_FOR_DML
-       
-       --test:
-       insert into DML_0001 values (2,'test1', {1,'test1'});
-       --check:
-       $HC_CHECK_FOR_DML
-       
-       --test:
-       insert into DML_0001 values (3,'test2', {1,'test2'});
-       --check:
-       $HC_CHECK_FOR_DML
-       
-       --test:
-       insert into DML_0001 values (4,'test1', {2,'test1'});
-       --check:
-       $HC_CHECK_FOR_DML
-       
-       --test:
-       insert into DML_0001 values (5,'test2', {2,'test2'});
-       --check:
-       $HC_CHECK_FOR_DML
-       
-       --test:
-       
-       
-       
-       drop class DML_0001;
-       --check:
-       @HC_CHECK_FOR_EACH_STATEMENT
-       "1006.test" 64L, 1143C 
-
+       --test
      ```    
 
 
