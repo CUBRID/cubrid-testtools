@@ -134,12 +134,12 @@ function do_init()
 
     #init log file
     if [ ! -d $log_dir ];then
-       mkdir $log_dir
+       mkdir -p $log_dir
     fi
 
     #init result folder
     if [ ! -d $result_dir ];then
-       mkdir $result_dir
+       mkdir -p $result_dir
     fi
 
     cd $log_dir
