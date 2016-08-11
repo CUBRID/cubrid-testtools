@@ -64,11 +64,11 @@ function run_sql {
         ctp_type="sql_by_cci"
         git_repo_name=cubrid-testcases
         ctp_scenario=medium
-    elif [ "$BUILD_SCENARIOS" == "sql" -o "$BUILD_SCENARIOS" == "sql_debug" ]; then
+    elif [ "$BUILD_SCENARIOS" == "sql_by_cci" -o "$BUILD_SCENARIOS" == "sql_by_cci_debug" ]; then
         ctp_type="sql_by_cci"
         git_repo_name=cubrid-testcases
         ctp_scenario=sql
-    elif [ "$BUILD_SCENARIOS" == "sql_ext" -o "$BUILD_SCENARIOS" == "sql_ext_debug" ]; then
+    elif [ "$BUILD_SCENARIOS" == "sql_by_cci_ext" -o "$BUILD_SCENARIOS" == "sql_by_cci_ext_debug" ]; then
         ctp_type="sql_by_cci"
         git_repo_name=cubrid-testcases-private
         ctp_scenario=sql
@@ -99,7 +99,7 @@ function run_sql {
     then
         testResultPath=`cat $tmplog|grep "^Test Result Directory"|awk -F ':' '{print $NF}'|tr -d " "`
         testResultName="`basename ${testResultPath}`"
-        (cd $testResultPath/..; upload_to_dailysrv "./$testResultName" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$testResultName")
+        (cd $testResultPath/..; upload_to_dailysrv "./$testResultName" "./qa_repository/function_cci_for_sql/y`date +%Y`/m`date +%-m`/$testResultName")
 
         if [ `cat $tmplog |grep '^CORE_FILE:' | wc -l` -gt 0 ]; then
             timestamp=`echo $testResultName|awk -F '_' '{print $5}'`
