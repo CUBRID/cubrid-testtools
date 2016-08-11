@@ -54,7 +54,7 @@ rm -f *.o ccqt execute interface_verify
 echo ""
 echo "======Start Compile======"
 gcc -o execute execute.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
-gcc -o ccqt ccqt.c
+gcc -o ccqt ccqt.c $CFLAGS
 echo "======End Compile======"
 echo ""
 cd -

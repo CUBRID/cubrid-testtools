@@ -2114,7 +2114,7 @@ int main (int argc, char *argv[])
     else
     {
 	fprintf (result_recorder, "TestCase: %s", case_file);
-        fprintf (result_recorder, "\t%s:%ld", ":NOK", elapse_time);
+        fprintf (result_recorder, "\t%s:%ld\n", ":NOK", elapse_time);
         char *result_p = NULL;
         char *pos = NULL;
 
