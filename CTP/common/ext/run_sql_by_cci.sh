@@ -128,7 +128,10 @@ function run_sql {
 function run_sql_legacy {
     # CONSTANTS
     tmplog=$HOME/ccqt/tmp.log
-
+    if [ "$BUILD_SCENARIOS" ] && [ "${BUILD_SCENARIOS}" == "sql_by_cci" ];then
+	BUILD_SCENARIOS="sql"
+    fi
+    
     #STEP 1: CLEAN
     runAction sql_by_cci.act
     (cd $HOME/ccqt; sh upgrade.sh)
@@ -159,9 +162,9 @@ function run_sql_legacy {
     #STEP 3: EXECUTE TEST
     if [ "$BUILD_TYPE" != "coverage" ]
     then
-	sh $ccqt/ccqt.sh -n $url -v $BUILD_SVN_BRANCH -s $BUILD_SCENARIOS -t $BUILD_BIT -y -q 2>&1 |tee $tmplog
+	sh $HOME/ccqt/ccqt.sh -n $url -v $BUILD_SVN_BRANCH -s $BUILD_SCENARIOS -t $BUILD_BIT -y -q 2>&1 |tee $tmplog
     else 
-	sh $ccqt/ccqt.sh -n $url -c $src_url -v $BUILD_SVN_BRANCH -s $BUILD_SCENARIOS -t $BUILD_BIT -y -q 2>&1 |tee $tmplog
+	sh $HOME/ccqt/ccqt.sh -n $url -c $src_url -v $BUILD_SVN_BRANCH -s $BUILD_SCENARIOS -t $BUILD_BIT -y -q 2>&1 |tee $tmplog
     fi        
 
 }
