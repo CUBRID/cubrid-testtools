@@ -24,7 +24,12 @@
  */
 package com.navercorp.cubridqa.shell.main;
 
+import java.util.Properties;
+
+import javax.mail.internet.InternetAddress;
+
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Constants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -157,8 +162,8 @@ public class CheckRequirement {
 		this.log.println("If insufficient available disk space (<2G), you will receive a mail in '" + context.getMailNoticeTo() + "'. And checking will hang till you resovle it.");
 
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
-		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
+		scripts.addCommand("source ${CTP_HOME}/common/script/util_common.sh");
+		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G \"" + context.getMailNoticeTo() + "\"" + " \"" + context.getMailNoticeCC() + "\"");
 		String result;
 		try {
 			result = ssh.execute(scripts);
