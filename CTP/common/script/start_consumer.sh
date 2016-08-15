@@ -142,11 +142,11 @@ function updateCodes()
         
     if [ "$changedCount" -gt "0" ]
     then
-		echo "-------------------------- Begin to update codes -----------------------------"
-		default_lc_all=`echo $LC_ALL`
-		export LC_ALL=en_US
-		echo "Update status: CHANGED " `date`
-		commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
+	    echo "-------------------------- Begin to update codes -----------------------------"
+	    default_lc_all=`echo $LC_ALL`
+	    export LC_ALL=en_US
+	    echo "Update status: CHANGED " `date`
+	    commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
 	    echo "#!/bin/bash " > $HOME/.autoUpdate.sh
 	    echo "if [ -f ~/.bash_profile ]; " >> $HOME/.autoUpdate.sh
 	    echo "then " >> $HOME/.autoUpdate.sh
@@ -155,14 +155,23 @@ function updateCodes()
 	    echo "set -x " >> $HOME/.autoUpdate.sh
 	    echo "cd ${CURRENT_TOOL_HOME}/../script ">> $HOME/.autoUpdate.sh
 	    echo "chmod u+x *">> $HOME/.autoUpdate.sh
-       	echo "./stop_consumer.sh" >>$HOME/.autoUpdate.sh
-        echo "./upgrade.sh" >>$HOME/.autoUpdate.sh
-        echo "nohup ${commands} 2>&1 >> $HOME/nohup.out &">>$HOME/.autoUpdate.sh
-        echo "cd -" >>$HOME/.autoUpdate.sh
-		at -f $HOME/.autoUpdate.sh now+1 minutes 2>&1 | xargs -i echo \#{} >> $HOME/.autoUpdate.sh
-		export LC_ALL=$default_lc_all
-		echo "----------------------------Done ----------------------------------------------"
-		exit
+       	    echo "./stop_consumer.sh" >>$HOME/.autoUpdate.sh
+            echo "./upgrade.sh" >>$HOME/.autoUpdate.sh
+            echo "nohup ${commands} 2>&1 >> $HOME/nohup.out &">>$HOME/.autoUpdate.sh
+            echo "cd -" >>$HOME/.autoUpdate.sh
+	    if [ "$os" == "Linux" -o "$os" = "AIX" ];then
+	    	at -f $HOME/.autoUpdate.sh now+1 minutes 2>&1 | xargs -i echo \#{} >> $HOME/.autoUpdate.sh
+	    else
+		h=$(date +%H)
+                m=$(date +%M)
+		let "m=m+1"
+		timeStr="$h:$m"
+		at $timeStr cmd /c sh $HOME/.autoUpdate.sh
+		echo "At task will be start: $timeStr" >> $HOME/.autoUpdate.sh
+	    fi 
+	    export LC_ALL=$default_lc_all
+	    echo "----------------------------Done ----------------------------------------------"
+	    exit
 	fi
 
 	cd $curDir
