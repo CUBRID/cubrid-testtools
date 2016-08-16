@@ -212,7 +212,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 
  - Examine the results
         * Once it completes, you can find the results and logs from ``CTP/result/sql_by_cci/current_runtime_logs``
-	* The result message will be printed as the below
+        * The result message will be printed as the below
+
           ```
 	  -----------------------
 	  Fail:2
@@ -224,7 +225,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  Test Result Directory:/home/sqlbycci_git/CTP/result/sql_by_cci/schedule_cdriver_Linux_sql_by_cci_ext_20160812140225_10.1.0.6948-76691d6_64
 	  -----------------------
           ```
-	* You can find the details of the test result from ``Test Result Directory``
+        * You can find the details of the test result from ``Test Result Directory``
 	 
 
 ## How To Build CTP
@@ -429,8 +430,9 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
      ```    
 
 - **SQL_By_CCI**
-   * Test cases: Since ``SQL_By_CCI`` is using ``SQL`` scenarios to test on HA mode to verify if queries can be executed  correctly via CCI driver,
-     so the cases are same as ``SQL``. Regarding how to write case for ``SQL_By_CCI``, please refer to ``SQL`` 
+   * Test cases: Since ``SQL_By_CCI`` is using ``SQL`` scenarios to test on HA mode to verify if the queries can be executed correctly via CCI driver,
+     so the cases are same as ``SQL``. 
+   * Regarding how to write case for ``SQL_By_CCI``, please refer to ``SQL`` 
 
 
 
