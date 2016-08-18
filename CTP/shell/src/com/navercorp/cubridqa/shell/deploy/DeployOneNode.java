@@ -92,35 +92,12 @@ public class DeployOneNode {
 	private void deploy_build_on_windows() {
 		cleanProcess();
 
-		String cubridInstallName = cubridPackageUrl.substring(cubridPackageUrl.indexOf("CUBRID-"));
-
-		// TODO: check cubridInstallName
-
+		String role = context.getProperty("main.testing.role", "").trim();
+		log.print("Start Install Build");
 		ShellScriptInput scripts = new ShellScriptInput();
+		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
 		scripts.addCommand("cd $CUBRID/..");
-		scripts.addCommand("rm -rf CUBRID 2>&1");
-		scripts.addCommand("ls -l CUBRID");
-		scripts.addCommand("ps -W");
-		scripts.addCommand("rm -rf " + cubridInstallName + "* ");
-		scripts.addCommand("if [ ! -f " + cubridInstallName + " ] "); // TODO:
-																		// no
-																		// need
-		scripts.addCommand("then");
-		scripts.addCommand("    wget " + cubridPackageUrl);
-		scripts.addCommand("fi");
-
-		if (isNewBuildNumberSystem) {
-			scripts.addCommand("unzip " + cubridInstallName);
-			scripts.addCommand("cd CUBRID");
-			scripts.addCommand("mkdir databases");
-		} else {
-			scripts.addCommand("mkdir CUBRID");
-			scripts.addCommand("cd CUBRID");
-			scripts.addCommand("unzip -o ../" + cubridInstallName);
-		}
-
-		scripts.addCommand("chmod -R u+x ../CUBRID");
-
+		scripts.addCommand("chmod -R u+x CUBRID");
 		String buildId = context.getTestBuild();
 		String[] arr = buildId.split("\\.");
 		if ( Integer.parseInt(arr[0]) >= 10 )
@@ -128,7 +105,6 @@ public class DeployOneNode {
 			scripts.addCommand("echo inquire_on_exit=3 >> $CUBRID/conf/cubrid.conf");
 		}
                 scripts.addCommand("echo error_log_size=800000000 >> $CUBRID/conf/cubrid.conf");
- 		scripts.addCommand("rm -rf ../" + cubridInstallName + "* ");
 
 		String result;
 		try {
@@ -149,7 +125,6 @@ public class DeployOneNode {
 		scripts.addCommand("cat ~/.bash_profile | uniq >  ~/.bash_profile_tmp; cp ~/.bash_profile_tmp ~/.bash_profile");
 		scripts.addCommand(CommonUtils.getExportsOfMEKYParams());
 		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
-		scripts.addCommand("sh ~/.change_cubrid_ports.sh > /dev/null 2>&1");
 		String buildId = context.getTestBuild();
 		String[] arr = buildId.split("\\.");
 		if (Integer.parseInt(arr[0]) >= 10) {
