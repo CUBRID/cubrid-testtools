@@ -33,6 +33,8 @@ chmod u+x ${CTP_HOME}/common/script*
 mkdir -p ${CTP_HOME}/common/sched/result/ >/dev/null 2>&1
 mkdir -p ${CTP_HOME}/common/sched/status/ >/dev/null 2>&1
 cd ${CURRENT_TOOL_HOME}
+params=$@
+cmd=$0
 
 ##variable for script
 separator=":"
@@ -135,9 +137,8 @@ function consumerTimer()
 
 function updateCodes()
 { 
-	curDir=`pwd`
+    curDir=`pwd`
     branchName=$1
-
     changedCount=`cd ${CTP_HOME}; run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" --check-only . | grep "fetch" | grep CHANGED | wc -l`
         
     if [ "$changedCount" -gt "0" ]
@@ -146,7 +147,12 @@ function updateCodes()
 	    default_lc_all=`echo $LC_ALL`
 	    export LC_ALL=en_US
 	    echo "Update status: CHANGED " `date`
-	    commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
+	    if [ "$os" == "Linux" -o "$os" = "AIX" ];then
+	    	commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
+	    else
+		commands="$cmd $params"
+	    fi
+
 	    echo "#!/bin/bash " > $HOME/.autoUpdate.sh
 	    echo "if [ -f ~/.bash_profile ]; " >> $HOME/.autoUpdate.sh
 	    echo "then " >> $HOME/.autoUpdate.sh
