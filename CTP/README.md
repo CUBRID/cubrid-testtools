@@ -195,7 +195,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 - **SQL_By_CCI**
   - Prepare
         * ``SQL_By_CCI`` executes ``SQL`` cases by using CCI driver, so checkout ``SQL`` testcase from our GitHub projects or make your own test case
-        * Install CUBRID build and make sure your environment variable of CUBRID is correctly set, the configuration file is same as ``SQL``, please refer to [CTP/conf/sql_by_cci.conf](conf/sql_by_cci.conf) for the details
+        * Install CUBRID build and make sure your environment variable of CUBRID is correctly set
+        * Regarding to the configuration file of ``SQL_By_CCI``, please refer to [CTP/conf/sql.conf](conf/sql.conf) for the details, but you need notice the parameter ``config_file`` in ``SQL`` configuration file is not supported by ``SQL_By_CCI``, please remove it from the configuration file when you execute ``SQL_By_CCI`` testing 
         * Environment variables set on test machine:
 
           ```
