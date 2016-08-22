@@ -766,7 +766,7 @@ function generate_summary_info()
 	echo "cubrid_build_id=$cubrid_ver" >> ${summaryFolder}/summary_info
 	echo "execute_date=`date +"%Y-%m-%d %H:%M:%S"`" >> ${summaryFolder}/summary_info
 	echo "Num_total=$totalCount" >> ${summaryFolder}/summary_info
-	echo "Num_test=$totalCount" >> ${summaryFolder}/summary_info
+	echo "Num_test_total=$totalCount" >> ${summaryFolder}/summary_info
 	echo "Num_success=$succCount" >> ${summaryFolder}/summary_info
 	echo "Num_fail=$failCount" >> ${summaryFolder}/summary_info
 	echo "Test_cat=$scenario_alias" >> ${summaryFolder}/summary_info
