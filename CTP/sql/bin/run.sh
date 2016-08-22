@@ -31,7 +31,7 @@ scenario_category=""
 scenario_full_name=""
 scenario_update_yn=""
 result_copy_yn=""
-config_file_ext=""
+jdbc_config_file_ext=""
 config_file_main=""
 log_dir=""
 log_filename=""
@@ -95,7 +95,7 @@ function do_init()
     cubrid_bits=64
     scenario_update_yn=no
     result_copy_yn=no
-    config_file_ext="test_default.xml"
+    jdbc_config_file_ext="test_default.xml"
     log_dir=${CTP_HOME}/sql/log
     result_dir=${CTP_HOME}/sql/result
     log_filename=cqt.log
@@ -668,9 +668,9 @@ function do_configure()
      fi
   
      #get config file
-     config_file=`ini -s sql ${config_file_main} config_file`
-     if [ -n "$config_file" ];then
-  	config_file_ext=$config_file
+     jdbc_config_file=`ini -s sql ${config_file_main} jdbc_config_file`
+     if [ -n "$jdbc_config_file" ];then
+  	jdbc_config_file_ext=$jdbc_config_file
      fi
   
      cd $curDir
@@ -723,13 +723,13 @@ function do_test()
           export scenario_alias_in_interactive=${scenario_alias}
           export bits_in_interactive=${cubrid_bits}
           export db_name_in_interactive=$db_name
-          export client_charset_in_interactive=$config_file_ext
+          export client_charset_in_interactive=$jdbc_config_file_ext
           export PS1="sql> ";cd ${scenario_repo_root}; source ${CTP_HOME}/sql/bin/interactive.sh; help; bash --posix)
 	
           #do clean for interactive mode
           do_clean
      else   
-     	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $config_file_ext $javaArgs 2>&1 >> $log_filename 
+     	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $jdbc_config_file_ext $javaArgs 2>&1 >> $log_filename 
           cd $curDir
      fi
     )

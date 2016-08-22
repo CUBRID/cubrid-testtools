@@ -196,7 +196,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
   - Prepare
         * ``SQL_By_CCI`` executes ``SQL`` cases by using CCI driver, so checkout ``SQL`` testcase from our GitHub projects or make your own test case
         * Install CUBRID build and make sure your environment variable of CUBRID is correctly set
-        * Regarding to the configuration file of ``SQL_By_CCI``, please refer to [CTP/conf/sql.conf](conf/sql.conf) for the details, but you need notice the parameter ``config_file`` in ``SQL`` configuration file is not supported by ``SQL_By_CCI``, please remove it from the configuration file when you execute ``SQL_By_CCI`` testing 
+        * Regarding to the configuration file of ``SQL_By_CCI``, please refer to [CTP/conf/sql.conf](conf/sql.conf) for the details 
         * Environment variables set on test machine:
 
           ```
@@ -208,7 +208,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
         * For **SQL_By_CCI** test:
 
           ```
-          $ bin/ctp.sh sql_by_cci -c ./conf/sql_by_cci.conf
+          $ bin/ctp.sh sql_by_cci -c ./conf/sql.conf
           ```
 
  - Examine the results
@@ -391,35 +391,12 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
    * Sample for reference
      ```
        --test: #execute test flag for statement
-       create table t1 ( \
-       a1 nchar(10 ) PRIMARY KEY collate euckr_bin, \
-       a2 nchar(10) collate iso88591_bin      , \
-       a3 nchar(10) collate iso88591_en_ci    , \
-       a4 nchar(10) collate iso88591_en_cs    , \
-       a5 nchar(10) collate utf8_bin          , \
-       a6 nchar(10) collate utf8_de_exp       , \
-       a7 nchar(10) collate utf8_de_exp_ai_ci , \
-       a8 nchar(10) collate utf8_en_ci        , \
-       a9 nchar(10) collate utf8_en_cs        , \
-       a10 nchar(10) collate utf8_es_cs        , \
-       a11 nchar(10) collate utf8_fr_exp_ab    , \
-       a12 nchar(10) collate utf8_gen          , \
-       a13 nchar(10) collate utf8_gen_ai_ci    , \
-       a14 nchar(10) collate utf8_gen_ci       , \
-       a15 nchar(10) collate utf8_ja_exp       , \
-       a16 nchar(10) collate utf8_ja_exp_cbm   , \
-       a17 nchar(10) collate utf8_km_exp       , \
-       a18 nchar(10) collate utf8_ko_cs        , \
-       a19 nchar(10) collate utf8_ko_cs_uca    , \
-       a20 nchar(10) collate utf8_ro_cs        , \
-       a21 nchar(10) collate utf8_tr_cs        , \
-       a22 nchar(10) collate utf8_tr_cs_uca    , \
-       a23 nchar(10) collate utf8_vi_cs        );
+       create table t1 (id int primary key, name varchar);
        --check: #check data between master and slave
        @HC_CHECK_FOR_EACH_STATEMENT #check if schema is consistent between master and slave 
        --test:
        
-       insert into t1 values (n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a');
+       insert into t1 values (1, 'qa'), (2, 'cubrid');
        --check:
        $HC_CHECK_FOR_DML
        
