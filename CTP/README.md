@@ -149,7 +149,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* Environment variables set on test Node:
 	  
 	  ```
-	     JAVA_HOME=$java_nstallation_directory 
+	     JAVA_HOME=$java_installation_directory 
 	     CTP_HOME=$HOME/CTP
 	  ```
 	  
@@ -168,13 +168,45 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 
 - **HA Replication**
   - Prepare
-	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
-	* Controller Node configuration is basically same as ``Shell``.
-	  Regarding more parameters for ``HA Replication`` testing, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)
-	* Environment variables set on test Node:
+	* ``HA Replication`` test environment includes unique controller node, at least one or more HA test environments. One HA test environment means one CUBRID HA instance with 1:1 master and slave. The CTP must be installed in controller node and each master and slave node.
+	* Controller node configuration:
+	
+		```
+		One or more HA test environments are configured in CTP/conf/ha_repl.conf. 
+		There are two HA test environments instance01 and instance02 as below:
+		env.instance01.master.ssh.host=<master ip>
+		env.instance01.master.ssh.user=<ssh user>
+		env.instance01.slave1.ssh.host=<slave ip>
+		env.instance01.slave1.ssh.user=<ssh user>
+		env.instance01.cubrid.cubrid_port_id=<cubrid port>
+		env.instance01.ha.ha_port_id=<ha port>
+		env.instance01.broker.BROKER_PORT=<broker port>
+	
+		env.instance02.master.ssh.host=<master ip>
+		env.instance02.master.ssh.user=<ssh user>
+		env.instance02.slave1.ssh.host=<slave ip>
+		env.instance02.slave1.ssh.user=<ssh user>
+		env.instance02.cubrid.cubrid_port_id=<cubrid port>
+		env.instance02.ha.ha_port_id=<ha port>
+		env.instance02.broker.BROKER_PORT=<broker port>
+		```
+		
+		```
+		Test cases are placed in controller node and configured like below:
+		main.testcase.root=/path/to/testcases/
+		```
+			
+		```
+		The test build should be provided with URL link:
+		main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh	
+		```
+		
+		Regarding more parameters for ``HA Replication`` test, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)	
+			
+	* HA test environment configuration (master and slave node):
 	  
 	  ```
-	     JAVA_HOME=$java_nstallation_directory 
+	     JAVA_HOME=$java_installation_directory 
 	     CTP_HOME=$HOME/CTP
 	  ```
 	  
