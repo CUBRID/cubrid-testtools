@@ -168,11 +168,12 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 
 - **HA Replication**
   - Prepare
-	* HA replication test environment includes the unique controller node, at least one or more HA test environments. One HA test environment means one CUBRID HA instance with 1:1 master and slave. The CTP must be installed in controller node and each master and slave node.
-	* Controller Node configuration:
+	* ``HA Replication`` test environment includes unique controller node, at least one or more HA test environments. One HA test environment means one CUBRID HA instance with 1:1 master and slave. The CTP must be installed in controller node and each master and slave node.
+	* Controller node configuration:
 	
 		```
-		One or more HA test environments are configured in CTP/conf/ha_repl.conf. There are two HA test environments instance01 and instance02 as below:
+		One or more HA test environments are configured in CTP/conf/ha_repl.conf. 
+		There are two HA test environments instance01 and instance02 as below:
 		env.instance01.master.ssh.host=<master ip>
 		env.instance01.master.ssh.user=<ssh user>
 		env.instance01.slave1.ssh.host=<slave ip>
@@ -200,9 +201,9 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 		main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh	
 		```
 		
-		Regarding more parameters for ``HA Replication`` testing, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)	
+		Regarding more parameters for ``HA Replication`` test, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)	
 			
-	* Test Node configuration:
+	* HA test environment configuration (master and slave node):
 	  
 	  ```
 	     JAVA_HOME=$java_installation_directory 
