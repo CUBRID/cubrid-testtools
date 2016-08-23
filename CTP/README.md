@@ -8,8 +8,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * It supports Linux and Windows (Cygwin is required).
 * Install Java 6 or higher version, and you also need to set ``JAVA_HOME`` environment variable to point to the installation directory.
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configurations.
-* CUBRID QA executes testing for SQL and Medium on linux is based on ha mode, so you must make sure ports in cubrid.conf, cubrid_broker.conf and cubrid_ha.conf will
-  not conflict with another instance exists. Otherwise, start server or broker will be fail.
+* CUBRID QA executes testing for SQL and Medium on linux is based on ha mode, so you must make sure ports in cubrid.conf, cubrid_broker.conf and cubrid_ha.conf will not conflict with another instances exist. Otherwise, start server or broker will be fail.
 
 ## Quick Start
 This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication`` and so on. Regarding more information please refer to the related sections.
@@ -98,7 +97,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 - **SHELL**
   - Prepare
 	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
-	* Controller Node configuration:
+	* Controller node configuration:
 	
 	  ```
 	    Test nodes are configured in CTP/conf/shell.conf as below:
@@ -120,7 +119,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 		
 	  ```
 	  
-	  Regarding more parameters for shell testing, please refer to [CTP/conf/shell.conf](conf/shell.conf)
+	  Regarding more parameters setting for shell testing, please refer to [CTP/conf/shell.conf](conf/shell.conf)
 	* Test Node:
 	  
 	  ```
@@ -137,15 +136,15 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     
  - Examine the results
 	* Once it completes, you can find the results and logs from ``CTP/result/shell/current_runtime_logs``
-	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this server node.
-	* ``main_snapshot.properties`` will save the configurations for your current testing.
-	* ``test_${Node_Name}.log`` will show the logs of testing based on this server node.
+	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this instance.
+	* ``main_snapshot.properties`` will save all values of parameters configured during testing.
+	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance.
 	
 - **Isolation**
   - Prepare
 	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
-	* Controller Node configuration is basically same as ``Shell``.
-	  Regarding more parameters for ``isolation`` testing, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
+	* Controller node configuration is basically same as ``Shell``.
+	  Regarding more parameters setting for ``isolation`` testing, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
 	* Environment variables set on test Node:
 	  
 	  ```
@@ -162,18 +161,18 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     
  - Examine the results
 	* Once it completes, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
-	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this server node.
-	* ``main_snapshot.properties`` will save the configurations for your current testing.
-	* ``test_${Node_Name}.log`` will show the logs of testing based on this server node.
+	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this instance.
+	* ``main_snapshot.properties`` will save all values of parameters configured during testing.
+	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance.
 
 - **HA Replication**
   - Prepare
-	* ``HA Replication`` test environment includes unique controller node, at least one or more HA test environments. One HA test environment means one CUBRID HA instance with 1:1 master and slave. The CTP must be installed in controller node and each master and slave node.
+	* ``HA Replication`` test requires at least two test machines - a unique controller node from independent user, two users with the same name on two machines will be as a pair instance for the master and slave. 
+	* In order to speed testing, multiple master and slave pairs of test instances can be supported to configure in CTP. At the same time, as an extended test feature, CTP supports one master can have multiple slaves to verify data synchronization among multiple servers.  
 	* Controller node configuration:
 	
 		```
-		One or more HA test environments are configured in CTP/conf/ha_repl.conf. 
-		There are two HA test environments instance01 and instance02 as below:
+		# To configure two pairs of instances (instance01 and instance02) in CTP/conf/ha_repl.conf. 
 		env.instance01.master.ssh.host=<master ip>
 		env.instance01.master.ssh.user=<ssh user>
 		env.instance01.slave1.ssh.host=<slave ip>
@@ -192,12 +191,14 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 		```
 		
 		```
-		Test cases are placed in controller node and configured like below:
+		# Define the path of test cases used for testing, it should be checked out on controller node.
+		# CTP gets all the cases from this path and distributes to each test node to execute test.
 		main.testcase.root=/path/to/testcases/
 		```
 			
 		```
-		The test build should be provided with URL link:
+		# Define the URL of build which will be used to test. 
+		# If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored. 
 		main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh	
 		```
 		
@@ -218,10 +219,10 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  ```   
     
  - Examine the results
-	* Once it completes, you can find the results and logs from ``CTP/result/ha_repl/current_runtime_logs``
-	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this server node.
-	* ``main_snapshot.properties`` will save the configurations for your current testing.
-	* ``test_${Node_Name}.log`` will show the logs of testing based on this server node.
+	* When the test is completed, you can find the results and logs from ``CTP/result/ha_repl/current_runtime_logs``
+	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the cases which are executed on this instance.
+	* ``main_snapshot.properties`` will save all values of parameters configured during testing.
+	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance.
 
 
 ## How To Build CTP
@@ -379,42 +380,18 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
 
 
 - **HA Replication**
-   * Test cases: Since ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data synchronization between an active server and a standby server,
-     so the cases are same as ``SQL``
-   * CTP will transform case file to be ``case_name.test`` file with some checking statement flags around the SQL statement. And If the SQL does not contain primary key,
-     CTP will add primary key on column
+   * Test cases: Since ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data synchronization between an active server and a standby server, so the cases are same as ``SQL``
+   * CTP will transform case file to be ``case_name.test`` file with some checking statement flags around the SQL statement. And If the SQL does not contain primary key, CTP will add primary key on column
    * Sample for reference
      ```
        --test: #execute test flag for statement
-       create table t1 ( \
-       a1 nchar(10 ) PRIMARY KEY collate euckr_bin, \
-       a2 nchar(10) collate iso88591_bin      , \
-       a3 nchar(10) collate iso88591_en_ci    , \
-       a4 nchar(10) collate iso88591_en_cs    , \
-       a5 nchar(10) collate utf8_bin          , \
-       a6 nchar(10) collate utf8_de_exp       , \
-       a7 nchar(10) collate utf8_de_exp_ai_ci , \
-       a8 nchar(10) collate utf8_en_ci        , \
-       a9 nchar(10) collate utf8_en_cs        , \
-       a10 nchar(10) collate utf8_es_cs        , \
-       a11 nchar(10) collate utf8_fr_exp_ab    , \
-       a12 nchar(10) collate utf8_gen          , \
-       a13 nchar(10) collate utf8_gen_ai_ci    , \
-       a14 nchar(10) collate utf8_gen_ci       , \
-       a15 nchar(10) collate utf8_ja_exp       , \
-       a16 nchar(10) collate utf8_ja_exp_cbm   , \
-       a17 nchar(10) collate utf8_km_exp       , \
-       a18 nchar(10) collate utf8_ko_cs        , \
-       a19 nchar(10) collate utf8_ko_cs_uca    , \
-       a20 nchar(10) collate utf8_ro_cs        , \
-       a21 nchar(10) collate utf8_tr_cs        , \
-       a22 nchar(10) collate utf8_tr_cs_uca    , \
-       a23 nchar(10) collate utf8_vi_cs        );
+       create table t1 (id int primary key, name varchar)
+
        --check: #check data between master and slave
        @HC_CHECK_FOR_EACH_STATEMENT #check if schema is consistent between master and slave 
        --test:
        
-       insert into t1 values (n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a',n'a');
+       insert into t1 values (1, 'qa'), (2, 'cubrid');
        --check:
        $HC_CHECK_FOR_DML
        

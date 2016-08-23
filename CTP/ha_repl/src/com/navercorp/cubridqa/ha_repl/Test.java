@@ -910,10 +910,6 @@ public class Test {
 		s.append("cubrid service stop;");
 		s.append("cubrid hb stop;");
 		s.append("pkill cub").append(";");
-		s.append("rm -rf ~/CUBRID").append(";");
-		if (CommonUtils.isEmpty(hostManager.getTestDb()) == false) {
-			s.append("rm -rf ~/" + hostManager.getTestDb()).append(";");
-		}
 		s.append("ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {}").append(";");
 
 		ArrayList<SSHConnect> list = hostManager.getAllNodeList();

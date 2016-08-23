@@ -67,7 +67,7 @@ public class Context {
 		setLogDir("ha_repl");
 		
 		Feedback feedback;
-		String feedbackType = getProperty("main.feedback.type", "").trim();
+		String feedbackType = getProperty("main.feedback.type", "file").trim();
 		if (feedbackType.equalsIgnoreCase("file")) {
 			feedback = new FeedbackFile(this);
 		} else if (feedbackType.equalsIgnoreCase("database")) {
@@ -237,7 +237,7 @@ public class Context {
 	}
 	
 	public boolean shouldCleanupAfterQuit() {
-		return CommonUtils.convertBoolean(getProperty("main.testing.cleanup_after_quit_yn", "true"));
+		return CommonUtils.convertBoolean(getProperty("main.test.clean_processes_after_quit_yn", "true"));
 	}
 	
 	public boolean enableCheckDiskSpace() {
