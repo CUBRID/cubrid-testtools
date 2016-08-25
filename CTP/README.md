@@ -43,7 +43,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* Prepare environments (e.g.: one account ``sql1`` as controller and test instance).
 	* Checkout CTP and scenario from our GitHub projects or make your own test cases.
 	* Install CUBRID and make sure your environment variable of ``CUBRID`` is correctly set.
-	* Example ``sql.conf`` for scenario, data file and some important parameters changes
+	* Example ``sql.conf`` for scenario, data file and some important parameters changes.
 	  ```
 		# SQL section - a section for CTP tool configuration when executing sql/medium testing
 		[sql]
@@ -65,6 +65,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 		
 	  ```
 	  NOTE:
+
 		`1.` Set ``data_file`` under ``[sql]`` section to the directory path of the initial data files for ``Medium`` test.
 		`2.` ``java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are used for the existing ``SQL`` and ``Medium`` scenario test, If you want to execute the scenario your own, they are not required. 
 
@@ -133,7 +134,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* Example ``shell.conf`` for test instance, scenario and build:
 	
 	  ```
-	        # Test instances should be configured in CTP/conf/shell.conf as below:
+	      	
+		# Test instances should be configured in CTP/conf/shell.conf as below:
 		env.instance1.ssh.host=192.168.1.10
 		env.instance1.ssh.port=22
 		env.instance1.ssh.user=shell_instance1
@@ -152,6 +154,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 		
 	  ```
 	  ```
+
                 # Define the path of test cases used for testing, it should be checked out on controller node.
                 # CTP gets all the cases from this path and distributes to each test node to execute test.
                 main.testcase.root=/home/qa/shell_instance1/shell
@@ -180,9 +183,10 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	
 - **Isolation**
   - Prepare
-        * Prepare environments (e.g.: one account ``controller`` as controller, one account ``isolation_instance1`` as test instance).
-        * Checkout CTP in both accounts above.
-        * Configure environment variables for CTP ``controller`` and test instance ``isolation_instance1``.
+    * Prepare environments (e.g.: one account ``controller`` as controller, one account ``isolation_instance1`` as test instance).
+    * Checkout CTP in both accounts above.
+    * Configure environment variables for CTP ``controller`` and test instance ``isolation_instance1``.
+
 	```
           // on controller node
           JAVA_HOME (e.g.: export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
@@ -191,7 +195,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
           CTP_HOME (e.g.: export CTP_HOME=$HOME/CTP)
           JAVA_HOME (e.g.: export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
         ```
-	* Example ``isolation.conf`` for test instance, scenario and build:
+    * Example ``isolation.conf`` for test instance, scenario and build:
 	```
 		# Test instances should be configured in CTP/conf/isolation.conf as below:
 		env.instance1.ssh.host=192.168.1.10
@@ -213,7 +217,6 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
                 # CTP gets all the cases from this path and distributes to each test node to execute test.
                 main.testcase.root=/home/qa/isolation_instance1/isolation
         ```
-
         ```
                 # Define the URL of build which will be used to test.
                 # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored.
@@ -238,7 +241,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 - **HA Replication**
   - Prepare
 	* Prepare environments (e.g.: one account ``controller`` as controller, one account ``ha_repl_instance1`` as a master test instance, one same account name ``ha_repl_instance1`` on other machines as a slave test instance).
-        * Checkout CTP in three accounts above.
+	* Checkout CTP in three accounts above.
         * Configure environment variables for CTP ``controller`` and test instances ``ha_repl_instance1`` (both master and slave) .
 
           ```
