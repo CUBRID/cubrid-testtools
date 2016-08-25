@@ -40,13 +40,35 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 ## How To Execute
 - **SQL** 
  - Prepare
-	* Checkout test cases from our GitHub projects or make your own test cases.
+	* Prepare environments (e.g.: one account ``sql1`` as controller and test instance).
+	* Checkout CTP and scenario from our GitHub projects or make your own test cases.
 	* Install CUBRID and make sure your environment variable of ``CUBRID`` is correctly set.
-	* Check configuration files, for **SQL/Medium** test, you can modify parameters of ``conf/sql.conf`` or ``conf/medium.conf``. 
-	* Set ``scenario`` of ``[sql]`` section to the test cases directory.
-	* Set ``data_file`` of ``[sql]`` section to the directory path of initial data files for **Medium** test.
-	* ``test_mode=yes`` and ``java_stored_procedure=yes`` parameters must be set for **SQL/Medium** test.
-	* Please see ``conf/sql.conf`` or  ``conf/medium.conf`` for details about other parameters.
+	* Example ``sql.conf`` for scenario, data file and some important parameters changes
+	  ```
+		# SQL section - a section for CTP tool configuration when executing sql/medium testing
+		[sql]
+
+		# The location of your testing scenario
+		scenario=${HOME}/cubrid-testcases/sql
+		
+		# SQL cubrid.conf section - a section for cubrid.conf configuration
+		[sql/cubrid.conf]
+
+		# To decide if the Java store procedure will be used when testing
+		java_stored_procedure=yes
+
+		# Allow scenario to change database system parameter
+		test_mode=yes
+		
+		# In order to simulate the scenario customer use
+		ha_mode=yes
+		
+	  ```
+	  NOTE:
+		`1.` Set ``data_file`` under ``[sql]`` section to the directory path of the initial data files for ``Medium`` test.
+		`2.` ``java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are used for the existing ``SQL`` and ``Medium`` scenario test, If you want to execute the scenario your own, they are not required. 
+
+	  For more parameters setting of ``sql.conf`` and parameters explanation, please refer to [CTP/conf/sql.conf](conf/sql.conf)
 
   - Run Tests
 	* For **SQL/Medium** test:
@@ -96,36 +118,52 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
   
 - **SHELL**
   - Prepare
-	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
-	* Controller node configuration:
+	* Prepare environments (e.g.: one account ``controller`` as controller, one account ``shell_instance1`` as test instance).
+	* Checkout CTP in both accounts above.
+	* Configure environment variables for CTP ``controller`` and test instance ``shell_instance1``.
+	  
+	  ```
+	   // on controller node
+	   JAVA_HOME (e.g.: export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+
+	   // on test instance node
+	   CTP_HOME (e.g.: export CTP_HOME=$HOME/CTP) 
+	   JAVA_HOME (e.g.: export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+          ```	 
+	* Example ``shell.conf`` for test instance, scenario and build:
 	
 	  ```
-	    Test nodes are configured in CTP/conf/shell.conf as below:
+	        # Test instances should be configured in CTP/conf/shell.conf as below:
 		env.instance1.ssh.host=192.168.1.10
 		env.instance1.ssh.port=22
-		env.instance1.ssh.user=<user>
-		env.instance1.ssh.pwd=<pwd>
+		env.instance1.ssh.user=shell_instance1
+		env.instance1.ssh.pwd=123456
 		env.instance1.cubrid.cubrid_port_id=11523
 		env.instance1.broker1.BROKER_PORT=35000
 		env.instance1.broker2.BROKER_PORT=35500
 		
 		env.instance2.ssh.host=192.168.1.11
 		env.instance2.ssh.port=22
-		env.instance2.ssh.user=<user>
-		env.instance2.ssh.pwd=<pwd>
+		env.instance2.ssh.user=shell_instance2
+		env.instance2.ssh.pwd=123456
 		env.instance2.cubrid.cubrid_port_id=11523
 		env.instance2.broker1.BROKER_PORT=35000
 		env.instance2.broker2.BROKER_PORT=35500
 		
 	  ```
-	  
-	  Regarding more parameters setting for shell testing, please refer to [CTP/conf/shell.conf](conf/shell.conf)
-	* Test Node:
-	  
 	  ```
-	     export JAVA_HOME=$java_installation_directory 
-	     export CTP_HOME=$CTP_installation_directory
-	  ```
+                # Define the path of test cases used for testing, it should be checked out on controller node.
+                # CTP gets all the cases from this path and distributes to each test node to execute test.
+                main.testcase.root=/home/qa/shell_instance1/shell
+          ```
+
+          ```
+                # Define the URL of build which will be used to test.
+                # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored.
+                main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+          ```	 
+ 
+	  For more parameters setting of ``shell.conf`` and parameters explanation, please refer to [CTP/conf/shell.conf](conf/shell.conf)
 
  - Run Tests 
 	* For **Shell** test:
@@ -135,23 +173,55 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  ```   
     
  - Examine the results
-	* Once it completes, you can find the results and logs from ``CTP/result/shell/current_runtime_logs``
+	* When it is completed, you can find the results and logs from ``CTP/result/shell/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this instance.
 	* ``main_snapshot.properties`` will save all values of parameters configured during testing.
 	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance.
 	
 - **Isolation**
   - Prepare
-	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
-	* Controller node configuration is basically same as ``Shell``.
-	  Regarding more parameters setting for ``isolation`` testing, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
-	* Environment variables set on test Node:
-	  
-	  ```
-	     JAVA_HOME=$java_installation_directory 
-	     CTP_HOME=$HOME/CTP
-	  ```
-	  
+        * Prepare environments (e.g.: one account ``controller`` as controller, one account ``isolation_instance1`` as test instance).
+        * Checkout CTP in both accounts above.
+        * Configure environment variables for CTP ``controller`` and test instance ``isolation_instance1``.
+	```
+          // on controller node
+          JAVA_HOME (e.g.: export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+
+          // on test instance node
+          CTP_HOME (e.g.: export CTP_HOME=$HOME/CTP)
+          JAVA_HOME (e.g.: export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+        ```
+	* Example ``isolation.conf`` for test instance, scenario and build:
+	```
+		# Test instances should be configured in CTP/conf/isolation.conf as below:
+		env.instance1.ssh.host=192.168.1.10
+		env.instance1.ssh.port=22
+		env.instance1.ssh.user=isolation_instance1
+		env.instance1.ssh.pwd=12345
+		env.instance2.broker1.BROKER_PORT=30093
+                env.instance2.broker2.BROKER_PORT=30094
+
+		env.instance2.ssh.host=192.168.1.11
+		env.instance2.ssh.port=22
+		env.instance2.ssh.user=isolation_instance2
+		env.instance2.ssh.pwd=12345
+		env.instance2.broker1.BROKER_PORT=30093
+		env.instance2.broker2.BROKER_PORT=30094
+	```
+	```
+                # Define the path of test cases used for testing, it should be checked out on controller node.
+                # CTP gets all the cases from this path and distributes to each test node to execute test.
+                main.testcase.root=/home/qa/isolation_instance1/isolation
+        ```
+
+        ```
+                # Define the URL of build which will be used to test.
+                # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored.
+                main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+        ``` 
+	
+	For more parameters setting of ``isolation.conf`` and parameters explanation, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
+
  - Run Tests 
 	* For **Isolation** test:
 	
@@ -160,56 +230,60 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  ```   
     
  - Examine the results
-	* Once it completes, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
+	* When it is completed, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this instance.
 	* ``main_snapshot.properties`` will save all values of parameters configured during testing.
 	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance.
 
 - **HA Replication**
   - Prepare
-	* ``HA Replication`` test requires at least two test machines - a unique controller node from independent user, two users with the same name on two machines will be as a pair instance for the master and slave. 
-	* In order to speed testing, multiple master and slave pairs of test instances can be supported to configure in CTP. At the same time, as an extended test feature, CTP supports one master can have multiple slaves to verify data synchronization among multiple servers.  
-	* Controller node configuration:
+	* Prepare environments (e.g.: one account ``controller`` as controller, one account ``ha_repl_instance1`` as a master test instance, one same account name ``ha_repl_instance1`` on other machines as a slave test instance).
+        * Checkout CTP in three accounts above.
+        * Configure environment variables for CTP ``controller`` and test instances ``ha_repl_instance1`` (both master and slave) .
+
+          ```
+           // on controller node
+           JAVA_HOME (e.g.: export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+
+           // on test instance nodes (master and slave)
+           CTP_HOME (e.g.: export CTP_HOME=$HOME/CTP)
+           JAVA_HOME (e.g.: export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+          ```	
+	* Example ``ha_repl.conf`` for test instances(master and slave), scenario and build::
 	
 		```
-		# To configure two pairs of instances (instance01 and instance02) in CTP/conf/ha_repl.conf. 
-		env.instance01.master.ssh.host=<master ip>
-		env.instance01.master.ssh.user=<ssh user>
-		env.instance01.slave1.ssh.host=<slave ip>
-		env.instance01.slave1.ssh.user=<ssh user>
-		env.instance01.cubrid.cubrid_port_id=<cubrid port>
-		env.instance01.ha.ha_port_id=<ha port>
-		env.instance01.broker.BROKER_PORT=<broker port>
+		# Test instances should be configured in CTP/conf/ha_repl.conf as below:
+		env.instance1.master.ssh.host=192.168.1.10
+		env.instance1.master.ssh.user=ha_repl_instance1
+		env.instance1.slave1.ssh.host=192.168.1.11
+		env.instance1.slave1.ssh.user=ha_repl_instance1
+		env.instance1.cubrid.cubrid_port_id=1137
+		env.instance1.ha.ha_port_id=59001
+		env.instance1.broker.BROKER_PORT=35000
 	
-		env.instance02.master.ssh.host=<master ip>
-		env.instance02.master.ssh.user=<ssh user>
-		env.instance02.slave1.ssh.host=<slave ip>
-		env.instance02.slave1.ssh.user=<ssh user>
-		env.instance02.cubrid.cubrid_port_id=<cubrid port>
-		env.instance02.ha.ha_port_id=<ha port>
-		env.instance02.broker.BROKER_PORT=<broker port>
+		env.instance2.master.ssh.host=192.168.1.10
+		env.instance2.master.ssh.user=ha_repl_instance2
+		env.instance2.slave1.ssh.host=192.168.1.11
+		env.instance2.slave1.ssh.user=ha_repl_instance2
+		env.instance2.cubrid.cubrid_port_id=1138
+		env.instance2.ha.ha_port_id=59002
+		env.instance2.broker.BROKER_PORT=35001
 		```
 		
 		```
 		# Define the path of test cases used for testing, it should be checked out on controller node.
 		# CTP gets all the cases from this path and distributes to each test node to execute test.
-		main.testcase.root=/path/to/testcases/
+		main.testcase.root=/home/controller/testcases/sql
 		```
-			
+		NOTE: the scenario must be checkouted on ``controller`` account, not on the test instance.
+
 		```
 		# Define the URL of build which will be used to test. 
 		# If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored. 
 		main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh	
 		```
 		
-		Regarding more parameters for ``HA Replication`` test, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)	
-			
-	* HA test environment configuration (master and slave node):
-	  
-	  ```
-	     JAVA_HOME=$java_installation_directory 
-	     CTP_HOME=$HOME/CTP
-	  ```
+		For more parameters setting of ``ha_repl.conf`` and parameters explanation, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)	
 	  
  - Run Tests 
 	* For **HA Replication** test:
