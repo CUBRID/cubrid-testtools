@@ -127,7 +127,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  ```
 	* **Example** ``shell.conf`` for test instance, scenario and test build:
 	
-	  ```
+	   ```
 	   # Test instance information:
 	   env.instance1.ssh.host=192.168.1.10
 	   env.instance1.ssh.port=22
@@ -140,8 +140,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   ```
 	   # Define the path of test cases used for testing, it should be checked out on test node
 	   main.testcase.root=/home/qa/shell_instance1/shell
-	  ```
-	  ```
+	   ```
+	   ```
 	   # Define the URL of test build which will be used to test
 	   # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored
 	   main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
@@ -167,14 +167,14 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     * Prepare environments (e.g., one account ``controller`` as controller, another account ``isolation_instance1`` as test instance)
     * Check out CTP for each account and configure environment variables for CTP ``controller`` and test instance ``isolation_instance1``
 
-        ```
+      ```
 	  // on controller node
 	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 
 	  // on test instance node
 	  CTP_HOME (e.g., export CTP_HOME=$HOME/CTP)
 	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-        ```
+      ```
     * **Example** ``isolation.conf`` for test instance, scenario and test build:
       
       ```
@@ -185,25 +185,25 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  env.instance1.ssh.pwd=12345
 	  env.instance1.broker1.BROKER_PORT=30093
 	  env.instance1.broker2.BROKER_PORT=30094
-       ```
+      ```
       ```
 	  # Define the path of test cases used for testing, it should be checked out on test node.
 	  main.testcase.root=/home/qa/isolation_instance1/isolation
-        ```
+      ```
       ```
 	  # Define the URL of test build which will be used to test.
 	  # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored.
 	  main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
-        ```	
+      ```	
 	
 	More parameters setting and parameters explanation within ``isolation.conf``, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
 
  - Run Tests 
 	* For **Isolation** test:
 
-        ```
+      ```
 	  $ bin/ctp.sh isolation -c ./conf/isolation.conf
-        ```   
+      ```   
         
  - Examine the results
 	* When test is completed, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
@@ -222,7 +222,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  // on test instance nodes (master and slave)
 	  CTP_HOME (e.g., export CTP_HOME=$HOME/CTP)
 	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-        ```	
+      ```	
 	* **Example** ``ha_repl.conf`` for test instances (master and slave), scenario and test build:
       ```
 	  # Test instance information:
@@ -233,18 +233,19 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  env.instance1.cubrid.cubrid_port_id=1137
 	  env.instance1.ha.ha_port_id=59001
 	  env.instance1.broker.BROKER_PORT=35000
-        ```	
+      ```	
 	  
       ```
 	  # Define the path of test cases used for testing, it should be checked out on controller node
 	  main.testcase.root=/home/controller/testcases/sql
-        ```
+      ```
 	NOTE: the scenario must be checked out on ``controller`` account, not on the test instance
 
       ```
 	  # Define the URL of test build which will be used to test
 	  # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored
-	  main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh ```
+	  main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh 
+	  ```
 
 	More parameters setting and parameters explanation within ``ha_repl.conf``, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)	
 	  
@@ -253,7 +254,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 
       ```
 	  $ bin/ctp.sh ha_repl -c ./conf/ha_repl.conf
-	 ```   
+      ```   
     
  - Examine the results
 	* When test is completed, you can find the results and logs from ``CTP/result/ha_repl/current_runtime_logs``
@@ -263,10 +264,12 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 
 
 ## How To Build CTP
-You are not required to build CTP from source codes, unless you make some changes. To make your own build, please install ant and make a build as follows: 
-  ```
+You are not required to build CTP from source codes, unless you make some changes. To make your own build, please install ant and make a build as follows:
+
+```
     $ ant clean dist
-    ```
+```
+    
 You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar``, ``isolation/lib/cubridqa-isolation.jar`` and ``ha_repl/lib/cubridqa-ha_repl.jar``.
 
 ## How To Write Testcase
@@ -305,125 +308,125 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
 - **SHELL**
    * Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory, naming rule: ``/path/to/test_name/cases/test_name.sh``
    * Sample for reference
-   * 
+    
      ```
      #!/bin/sh
      # to initialize the environment variables which are required by case
-	. $init_path/init.sh
-	init test
-	dbname=tmpdb
+     . $init_path/init.sh
+     init test
+     dbname=tmpdb
 
-	cubrid_createdb $dbname
+     cubrid_createdb $dbname
 	
-	dosomethings
-	...
+     dosomethings
+     ...
 	
-	if [condition]
-	then
+     if [condition]
+     then
 	        #print testing result according to the condition, PASS means ok, otherwise nok
 	        write_ok
-	else
+     else
 	        write_nok
-	fi
+     fi
 	
-	cubrid server stop $dbname
-	cubrid broker stop
+     cubrid server stop $dbname
+     cubrid broker stop
 	
-	cubrid deletedb $dbname
-	#clean environment
-	finish
-	```
+     cubrid deletedb $dbname
+     #clean environment
+     finish
+	  ```
 
 - **Isolation**
    * Test cases: the file extension is ``.ctl``
    * Sample for reference
-   * 
+   
      ```
-    /*
-	Test Case: Changing Owner
-	Priority: 1
-	Reference case:
-	Author: xxx
+      /*
+     Test Case: Changing Owner
+     Priority: 1
+     Reference case:
+     Author: xxx
 
-	Test Plan: 
-	Test update locks (X_LOCK on instance) and SELECT not need locks, they are not blocked each other.
+     Test Plan: 
+     Test update locks (X_LOCK on instance) and SELECT not need locks, they are not blocked each other.
 
-	Test Scenario:
-	C1 granting authorization, C2 verify authorization, 
-	C1 verify authorization, 
-	C1 commit, C2 commit, 
-	Metrics: data size = small, where clause = simple (multiple columns)
+     Test Scenario:
+     C1 granting authorization, C2 verify authorization, 
+     C1 verify authorization, 
+     C1 commit, C2 commit, 
+     Metrics: data size = small, where clause = simple (multiple columns)
 	
-	Test Point:
-	1) C1 and C2 will not be waiting 
-	2) All the data affected from C1 and C2 should be deleted
+     Test Point:
+     1) C1 and C2 will not be waiting 
+     2) All the data affected from C1 and C2 should be deleted
 
-	NUM_CLIENTS = 2
-	C1: granting authorization - verify authorization;  
-	C2: verify authorization;  
-	*/
+     NUM_CLIENTS = 2
+     C1: granting authorization - verify authorization;  
+     C2: verify authorization;  
+     */
 
-	MC: setup NUM_CLIENTS = 2;
+     MC: setup NUM_CLIENTS = 2;
 
-	C1: login as 'dba';
-	C1: set transaction lock timeout INFINITE;
-	C1: set transaction isolation level read committed;
+     C1: login as 'dba';
+     C1: set transaction lock timeout INFINITE;
+     C1: set transaction isolation level read committed;
 
-	C2: set transaction lock timeout INFINITE;
-	C2: set transaction isolation level read committed;
+     C2: set transaction lock timeout INFINITE;
+     C2: set transaction isolation level read committed;
 
-	/* preparation */
-	C1: DROP TABLE IF EXISTS t1;
-	C1: CREATE USER company GROUPS public;
-	C1: CREATE USER engineering GROUPS company;
-	C1: CREATE USER jones GROUPS engineering; 
-	C1: CREATE USER brown;
-	C1: CREATE USER design MEMBERS brown;
-	C1: COMMIT;
-	MC: wait until C1 ready;
+     /* preparation */
+     C1: DROP TABLE IF EXISTS t1;
+     C1: CREATE USER company GROUPS public;
+     C1: CREATE USER engineering GROUPS company;
+     C1: CREATE USER jones GROUPS engineering; 
+     C1: CREATE USER brown;
+     C1: CREATE USER design MEMBERS brown;
+     C1: COMMIT;
+     MC: wait until C1 ready;
 
-	C1: CREATE TABLE t1 (id INT primary key);
-	C1: GRANT SELECT, UPDATE ON t1 TO company;
-	C1: GRANT ALTER, INDEX, DELETE ON t1 TO design;
-	C1: insert into t1 values (1),(2),(3),(4),(5),(6),(7);
-	C1: COMMIT;
-	MC: wait until C1 ready;
+     C1: CREATE TABLE t1 (id INT primary key);
+     C1: GRANT SELECT, UPDATE ON t1 TO company;
+     C1: GRANT ALTER, INDEX, DELETE ON t1 TO design;
+     C1: insert into t1 values (1),(2),(3),(4),(5),(6),(7);
+     C1: COMMIT;
+     MC: wait until C1 ready;
 
-	C1: ALTER TABLE t1 OWNER TO public;
-	C1: COMMIT;
-	MC: wait until C1 ready;
-	C2: login as 'company';
-	C2: TRUNCATE table t1;
-	C2: COMMIT;
-	MC: wait until C2 ready;
-	C2: select * from t1 order by 1;
-	C2: COMMIT;
-	MC: wait until C2 ready;
+     C1: ALTER TABLE t1 OWNER TO public;
+     C1: COMMIT;
+     MC: wait until C1 ready;
+     C2: login as 'company';
+     C2: TRUNCATE table t1;
+     C2: COMMIT;
+     MC: wait until C2 ready;
+     C2: select * from t1 order by 1;
+     C2: COMMIT;
+     MC: wait until C2 ready;
 
-	C1: login as 'dba';
-	C1: DROP table t1;
-	C1: DROP USER jones;
-	C1: DROP USER brown;
-	C1: DROP USER design;
-	C1: DROP USER engineering;
-	C1: DROP USER company;
-	C1: COMMIT;
-	MC: wait until C1 ready;
+     C1: login as 'dba';
+     C1: DROP table t1;
+     C1: DROP USER jones;
+     C1: DROP USER brown;
+     C1: DROP USER design;
+     C1: DROP USER engineering;
+     C1: DROP USER company;
+     C1: COMMIT;
+     MC: wait until C1 ready;
 
-	C1: quit;
-	C2: quit;
-	```
-    Note:
-        - The purpose/author/reference/priority of case to help reader understand your points
-        - C1~n means transaction session
-        - MC means main controller, it will control and coordinate the order of all transaction clients
+     C1: quit;
+     C2: quit;
+	  ```
+   Note:
+     - The purpose/author/reference/priority of case to help reader understand your points
+      - C1~n means transaction session
+      - MC means main controller, it will control and coordinate the order of all transaction clients
 
 
 - **HA Replication**
    * Test cases: Since ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data synchronization between an active server and a standby server, so the cases are same as ``SQL``
    * CTP will transform case file to be ``case_name.test`` file with some checking statement flags around the SQL statement. And If the SQL does not contain primary key, CTP will add primary key on column
    * Sample for reference
-   * 
+    
      ```
        --test: #execute test flag for statement
        create table t1 (id int primary key, name varchar)
@@ -442,7 +445,6 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
        @HC_CHECK_FOR_EACH_STATEMENT
        --test
      ```    
-
 
 ## License
 CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details.
