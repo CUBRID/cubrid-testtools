@@ -225,6 +225,11 @@ public class Context {
 		return Constants.DB_TEST_MAP.get(v);
 	}
 	
+	public boolean rebuildYn() {
+		String rebuildEnv = getProperty("main.deploy.rebuild_yn", "true");
+		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(rebuildEnv);
+	}
+	
 	public void setLogDir(String category) {
 		this.rootLogDir = ctpHome + "/result/" + category;
 		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";

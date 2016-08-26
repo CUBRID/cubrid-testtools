@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.shell.main;
 
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,7 +37,6 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import javax.mail.internet.InternetAddress;
-
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 
@@ -235,6 +233,11 @@ public class Context {
 		} else {
 			return ws;
 		}
+	}
+	
+	public boolean rebuildYn() {
+		String rebuildEnv = getProperty("main.deploy.rebuild_yn", "true");
+		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(rebuildEnv);
 	}
 
 	public void setCubridPackageUrl(String cubridPackageUrl) {
