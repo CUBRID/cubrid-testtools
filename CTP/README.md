@@ -116,7 +116,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
   - Prepare
 	* Prepare at least two accounts (e.g., one account ``controller`` as controller, another account ``shell_instance1`` as test instance)
 	* Check out CTP for each account and configure environment variables for CTP ``controller`` and test instance ``shell_instance1``
-	* 
+	
 	  ```
 	   // on controller node
 	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
@@ -124,9 +124,9 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   // on test instance node
 	   CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
 	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-       ```
+	  ```
 	* **Example** ``shell.conf`` for test instance, scenario and test build:
-	* 
+	
 	  ```
 	   # Test instance information:
 	   env.instance1.ssh.host=192.168.1.10
@@ -136,27 +136,27 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   env.instance1.cubrid.cubrid_port_id=11523
 	   env.instance1.broker1.BROKER_PORT=35000
 	   env.instance1.broker2.BROKER_PORT=35500
-		```
-	  ```
+	   ```
+	   ```
 	   # Define the path of test cases used for testing, it should be checked out on test node
-       main.testcase.root=/home/qa/shell_instance1/shell
-		```
+	   main.testcase.root=/home/qa/shell_instance1/shell
 	  ```
-       # Define the URL of test build which will be used to test
-       # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored
-       main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
-		```				
+	  ```
+	   # Define the URL of test build which will be used to test
+	   # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored
+	   main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+	   ```				
  
 	  More parameters setting and parameters explanation within ``shell.conf``, please refer to [CTP/conf/shell.conf](conf/shell.conf)
 
- - Run Tests 
+  - Run Tests 
 	* For **Shell** test:
-	* 	
+	
 	  ```
 	  $ bin/ctp.sh shell -c ./conf/shell.conf
 	  ```   
     
- - Examine the results
+  - Examine the results
 	* When test is completed, you can find the results and logs from ``CTP/result/shell/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this instance
 	* ``main_snapshot.properties`` will save all values of parameters configured during testing
@@ -167,7 +167,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     * Prepare environments (e.g., one account ``controller`` as controller, another account ``isolation_instance1`` as test instance)
     * Check out CTP for each account and configure environment variables for CTP ``controller`` and test instance ``isolation_instance1``
 
-      ```
+        ```
 	  // on controller node
 	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 
@@ -201,10 +201,10 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
  - Run Tests 
 	* For **Isolation** test:
 
-      ```
+        ```
 	  $ bin/ctp.sh isolation -c ./conf/isolation.conf
         ```   
-    
+        
  - Examine the results
 	* When test is completed, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this instance
