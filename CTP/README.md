@@ -264,13 +264,13 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 
 
 ## How To Build CTP
-You are not required to build CTP from source codes, unless you make some changes. To make your own build, please install ant and make a build as follows:
+It's not required that you execute build for CTP, unless you make some changes within source codes. To build CTP from source code, you'll need ant installation and change to the directory CTP, execute ant command as the below:
 
 ```
     $ ant clean dist
 ```
     
-You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar``, ``isolation/lib/cubridqa-isolation.jar`` and ``ha_repl/lib/cubridqa-ha_repl.jar``.
+You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar``, ``isolation/lib/cubridqa-isolation.jar`` and ``ha_repl/lib/cubridqa-ha_repl.jar``.
 
 ## How To Write Testcase
  - **SQL**
@@ -286,7 +286,7 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
 	                       /answers
 	                             /int_primary_key_test.answer
 	  ```
-   * When you also want to examine query plan of a case, you have two options:
+   * If you want to examine the query plan of a case, you have two options to achieve:
      - Create an empty ``case_name.queryPlan`` file in the test case directory, its query plan will be printed with the results of queries 
 	  ```
 	  _08_primary_foreign_key
@@ -417,14 +417,14 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
      C2: quit;
 	  ```
    Note:
-     - The purpose/author/reference/priority of case to help reader understand your points
-      - C1~n means transaction session
+     - The purpose/author/reference/priority of case will help reader understand your points
+      - C1~n means transaction session name
       - MC means main controller, it will control and coordinate the order of all transaction clients
 
 
 - **HA Replication**
    * Test cases: Since ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data synchronization between an active server and a standby server, so the cases are same as ``SQL``
-   * CTP will transform case file to be ``case_name.test`` file with some checking statement flags around the SQL statement. And If the SQL does not contain primary key, CTP will add primary key on column
+   * CTP will transform case file to be ``case_name.test`` format with some checking statement flags around the SQL statements. And If the SQL does not contain primary key, CTP will add primary key on column
    * Sample for reference
     
      ```
