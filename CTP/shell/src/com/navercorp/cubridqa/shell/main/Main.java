@@ -69,11 +69,14 @@ public class Main {
 			String port = context.getInstanceProperty(envId, "ssh.port");
 			String user = context.getInstanceProperty(envId, "ssh.user");
 			String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-			SSHConnect ssh = new SSHConnect(host, port, user, pwd, "ssh"); 
-			context.setTestBuild(CommonUtils.getBuildId(com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh)));
-			context.setVersion(CommonUtils.getBuildBits(com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh)));
+			SSHConnect ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType()); 
+			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
+			context.setTestBuild(CommonUtils.getBuildId(buildInfo));
+			context.setVersion(CommonUtils.getBuildBits(buildInfo));
 			context.setIsNewBuildNumberSystem(CommonUtils.isNewBuildNumberSystem(context.getTestBuild()));
 			context.setRebuildYn(false);
+			
+			if(ssh != null) ssh.close();
 		}
 		
 		System.out.println("Build Number: " + context.getTestBuild());
