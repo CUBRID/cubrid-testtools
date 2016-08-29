@@ -64,7 +64,7 @@ public class Context {
 	
 	private String mailNoticeTo;
 	private boolean enableCheckDiskSpace;
-	private boolean rebuildYn = false;
+	private boolean reInstallTestBuildYn = false;
 	
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -205,20 +205,20 @@ public class Context {
 		return this.config;
 	}
 
-	public boolean isRebuildYn() {
-		return rebuildYn;
-	}
-
-	public void setRebuildYn(boolean rebuildYn) {
-		this.rebuildYn = rebuildYn;
-	}
-	
 	public boolean isStartMonitor() {
 		return this.config.getProperty("main.testing.monitor", "false").equalsIgnoreCase("true");
 	}
 
 	public String getTestCaseBranch() {
 		return getProperty("main.testcase.branch_git", "").trim();
+	}
+	
+	public boolean isReInstallTestBuildYn() {
+		return reInstallTestBuildYn;
+	}
+
+	public void setReInstallTestBuildYn(boolean reInstallTestBuildYn) {
+		this.reInstallTestBuildYn = reInstallTestBuildYn;
 	}
 
 	public String getTestingDatabase() {

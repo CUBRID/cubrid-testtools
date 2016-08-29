@@ -62,7 +62,7 @@ public class Main {
 			context.setVersion(CommonUtils.getBuildBits(context
 					.getCubridPackageUrl()));
 			context.setIsNewBuildNumberSystem(CommonUtils.isNewBuildNumberSystem(context.getTestBuild()));
-			context.setRebuildYn(true);
+			context.setReInstallTestBuildYn(true);
 		} else {
 			String envId = context.getEnvList().get(0);
 			String host = context.getInstanceProperty(envId, "ssh.host");
@@ -74,7 +74,7 @@ public class Main {
 			context.setTestBuild(CommonUtils.getBuildId(buildInfo));
 			context.setVersion(CommonUtils.getBuildBits(buildInfo));
 			context.setIsNewBuildNumberSystem(CommonUtils.isNewBuildNumberSystem(context.getTestBuild()));
-			context.setRebuildYn(false);
+			context.setReInstallTestBuildYn(false);
 			
 			if(ssh != null) ssh.close();
 		}

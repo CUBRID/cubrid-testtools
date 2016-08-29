@@ -58,7 +58,7 @@ public class Main {
 					.getCubridPackageUrl()));
 			context.setBuildBits(CommonUtils.getBuildBits(context
 					.getCubridPackageUrl()));
-			context.setRebuildYn(true);
+			context.setReInstallTestBuildYn(true);
 		}else{
 			String envId = context.getEnvList().get(0);
 			String host = context.getInstanceProperty(envId, "ssh.host");
@@ -69,7 +69,7 @@ public class Main {
 			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
 			context.setBuildId(CommonUtils.getBuildId(buildInfo));
 			context.setBuildBits(CommonUtils.getBuildBits(buildInfo));
-			context.setRebuildYn(false);
+			context.setReInstallTestBuildYn(false);
 			
 			if(ssh != null) ssh.close();
 		}

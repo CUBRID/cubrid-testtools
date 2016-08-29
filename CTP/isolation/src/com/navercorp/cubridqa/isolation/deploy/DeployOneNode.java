@@ -62,7 +62,7 @@ public class DeployOneNode {
 
 		String buildUrl = context.getCubridPackageUrl();
 		IsolationScriptInput scripts = new IsolationScriptInput();
-		if (!context.isRebuildYn()) {
+		if (!context.isReInstallTestBuildYn()) {
 			log.print("Skip build installation since main.testbuild.url is not configured!!");
 		} else {
 			String role = context.getProperty("main.testing.role", "").trim();

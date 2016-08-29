@@ -93,7 +93,7 @@ public class DeployOneNode {
 
 		String role = context.getProperty("main.testing.role", "").trim();
 		ShellScriptInput scripts = new ShellScriptInput();
-		if (!context.isRebuildYn()) {
+		if (!context.isReInstallTestBuildYn()) {
 			log.print("Skip build installation since main.testbuild.url is not configured!!");
 		} else {
 			log.print("Start Install Build");
@@ -124,7 +124,7 @@ public class DeployOneNode {
 		
 		String buildUrl = context.getCubridPackageUrl();
 		ShellScriptInput scripts = new ShellScriptInput();
-		if (!context.isRebuildYn()) {
+		if (!context.isReInstallTestBuildYn()) {
 			log.print("Skip build installation since main.testbuild.url is not configured!!");
 		} else {
 			String role = context.getProperty("main.testing.role", "").trim();

@@ -71,7 +71,7 @@ public class Main {
 		if (cubridPackageUrl != null && cubridPackageUrl.trim().length() > 0) {
 			context.setBuildId(CommonUtils.getBuildId(cubridPackageUrl));
 			context.setBuildBits(CommonUtils.getBuildBits(cubridPackageUrl));
-			context.setRebuildYn(true);
+			context.setReInstallTestBuildYn(true);
 		} else {
 
 			String envId = context.getTestEnvList().get(0);
@@ -83,7 +83,7 @@ public class Main {
 			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
 			context.setBuildId(CommonUtils.getBuildId(buildInfo));
 			context.setBuildBits(CommonUtils.getBuildBits(buildInfo));
-			context.setRebuildYn(false);
+			context.setReInstallTestBuildYn(false);
 			
 			if(ssh != null) ssh.close();
 		}
@@ -116,9 +116,11 @@ public class Main {
 			context.getFeedback().onConvertEventStop();
 		}
 
-		System.out.println("============= DEPLOY STEP ==================");
-		concurrentDeploy(context, envList);
-		System.out.println("DONE.");
+		if (context.rebuildYn()) {
+			System.out.println("============= DEPLOY STEP ==================");
+			concurrentDeploy(context, envList);
+			System.out.println("DONE.");
+		}
 		
 		/*
 		 * dispatch phase

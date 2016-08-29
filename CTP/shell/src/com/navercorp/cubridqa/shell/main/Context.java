@@ -100,7 +100,7 @@ public class Context {
 	
 	String currentLogDir;
 	String rootLogDir;
-	boolean rebuildYn = false;
+	boolean reInstallTestBuildYn = false;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -317,12 +317,12 @@ public class Context {
 		return rootLogDir;
 	}
 	
-	public boolean isRebuildYn() {
-		return rebuildYn;
+	public boolean isReInstallTestBuildYn() {
+		return reInstallTestBuildYn;
 	}
 
-	public void setRebuildYn(boolean rebuildYn) {
-		this.rebuildYn = rebuildYn;
+	public void setReInstallTestBuildYn(boolean reInstallTestBuildYn) {
+		this.reInstallTestBuildYn = reInstallTestBuildYn;
 	}
 	
 	public String getFeedbackDbUrl(){
