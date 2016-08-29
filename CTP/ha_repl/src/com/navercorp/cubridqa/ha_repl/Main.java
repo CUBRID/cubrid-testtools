@@ -48,7 +48,13 @@ public class Main {
 		Class.forName("cubrid.jdbc.driver.CUBRIDDriver").newInstance();
 
 		Context context = new Context(configFilename);
-
+		ArrayList<String> envList = context.getTestEnvList();
+		System.out.println("Available Env: " + envList);
+		
+		if (envList.size() == 0) {
+			throw new Exception("Not found any HA instance to test.");
+		}
+		
 		String testRoot = context.getTestCaseRoot();
 		boolean hasError = false;
 		if (testRoot == null || testRoot.trim().equals("")) {
@@ -62,20 +68,26 @@ public class Main {
 			throw new Exception("Not found test cases directory. Please check 'main.testcase.root' in test configuration file.");
 
 		String cubridPackageUrl = context.getCubridPackageUrl();
-		context.setBuildId(CommonUtils.getBuildId(cubridPackageUrl));
-		context.setBuildBits(CommonUtils.getBuildBits(cubridPackageUrl));
+		if (cubridPackageUrl != null && cubridPackageUrl.trim().length() > 0) {
+			context.setBuildId(CommonUtils.getBuildId(cubridPackageUrl));
+			context.setBuildBits(CommonUtils.getBuildBits(cubridPackageUrl));
+		} else {
 
-		System.out.println("BUILD URL: " + cubridPackageUrl);
-		System.out.println("BUILD D: " + context.getBuildId());
+			String envId = context.getTestEnvList().get(0);
+			String host = context.getInstanceProperty(envId, "ssh.host");
+			String port = context.getInstanceProperty(envId, "ssh.port");
+			String user = context.getInstanceProperty(envId, "ssh.user");
+			String pwd = context.getInstanceProperty(envId, "ssh.pwd");
+			SSHConnect ssh = new SSHConnect(host, port, user, pwd, "ssh"); 
+			context.setBuildId(CommonUtils.getBuildId(com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh)));
+			context.setBuildBits(CommonUtils.getBuildBits(com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh)));
+		}
+
+		System.out.println("BUILD ID: " + context.getBuildId());
 		System.out.println("BUILD BITS: " + context.getBuildBits());		
 		System.out.println("Continue Mode: " + context.isContinueMode());
 
-		ArrayList<String> envList = context.getTestEnvList();
-		System.out.println("Available Env: " + envList);
-		
-		if (envList.size() == 0) {
-			throw new Exception("Not found any HA instance to test.");
-		}
+
 		
 		checkRequirement(context);
 
@@ -99,11 +111,9 @@ public class Main {
 			context.getFeedback().onConvertEventStop();
 		}
 
-		if (context.rebuildYn()) {
-			System.out.println("============= DEPLOY STEP ==================");
-			concurrentDeploy(context, envList);
-			System.out.println("DONE.");
-		}
+		System.out.println("============= DEPLOY STEP ==================");
+		concurrentDeploy(context, envList);
+		System.out.println("DONE.");
 		
 		/*
 		 * dispatch phase

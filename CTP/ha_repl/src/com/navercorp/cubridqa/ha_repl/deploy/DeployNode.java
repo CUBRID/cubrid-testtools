@@ -51,8 +51,10 @@ public class DeployNode {
 
 	public void deploy() throws Exception {
 		updateCTP();
-		clean();		
-		installCUBRID();
+		clean();
+		if (context.isRebuildYn()) {
+			installCUBRID();
+		}
 		configCUBRID();
 	}
 

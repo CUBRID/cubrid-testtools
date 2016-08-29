@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.shell.common;
 
 import java.io.File;
-
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -81,6 +80,21 @@ public class CommonUtils {
 
 	}
 	
+	public static String getBuildVersionInfo(SSHConnect ssh) {
+		String ver = null;
+		if(ssh == null) return ver;
+		
+		try {
+			ver = ssh.execute(Constants.GET_VERSION_SCRIPT);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return ver;
+	}
+	
 	public static ArrayList<String[]> extractTableToBeVerified(String input, String flag) {
 		
 		ArrayList<String[]> list = new ArrayList<String[]>();
@@ -100,6 +114,54 @@ public class CommonUtils {
 		}
 		return list;
 		
+	}
+	
+	public static String getSimplifiedBuildId(String cubridPackageUrl) {
+		// get test build number
+		String sBuildId = null;
+		Pattern pattern = Pattern.compile("\\d+\\.\\d+\\.\\d+\\.\\d+");
+		Matcher matcher = pattern.matcher(cubridPackageUrl);
+		while (matcher.find()) {
+			sBuildId = matcher.group();
+		}
+		return sBuildId;
+	}
+	
+	public static String getBuildId(String cubridPackageUrl) {
+		String simplifiedBuild = getSimplifiedBuildId(cubridPackageUrl);
+
+		if (isNewBuildNumberSystem(simplifiedBuild)) {
+			String buildId;
+
+			int p1 = cubridPackageUrl.lastIndexOf(simplifiedBuild);
+			int p2 = cubridPackageUrl.indexOf("-", p1 + simplifiedBuild.length() + 1);
+			int p3 = p2 == -1 ? cubridPackageUrl.indexOf(")", p1 + simplifiedBuild.length() + 1) : p2;
+			
+			if (p3 == -1) {
+				p3 = cubridPackageUrl.indexOf(".", p1 + simplifiedBuild.length() + 1);
+			}
+
+			buildId = p3 == -1 ? cubridPackageUrl.substring(p1) : cubridPackageUrl.substring(p1, p3);
+			return buildId;
+		} else {
+			return simplifiedBuild;
+		}
+	}
+	
+	public static String getBuildBits(String cubridPackageUrl) {
+		String version = null;
+		int idx1 = cubridPackageUrl.indexOf("_64");
+		int idx2 = cubridPackageUrl.indexOf("x64");
+		int idx3 = cubridPackageUrl.indexOf("ppc64"); // AIX BUILD.
+														// CUBRID-8.4.4.0136-AIX-ppc64.sh
+		int idx4 = cubridPackageUrl.indexOf("64bit"); //Parse cubrid_rel result
+
+		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0 || idx4 >= 0) {
+			version = "64bits";
+		} else {
+			version = "32bits";
+		}
+		return version;
 	}
 	
 	public static String concatFile(String p1, String p2) {

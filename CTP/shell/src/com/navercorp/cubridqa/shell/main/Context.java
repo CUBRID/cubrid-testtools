@@ -100,6 +100,7 @@ public class Context {
 	
 	String currentLogDir;
 	String rootLogDir;
+	boolean rebuildYn = false;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -235,11 +236,6 @@ public class Context {
 		}
 	}
 	
-	public boolean rebuildYn() {
-		String rebuildEnv = getProperty("main.deploy.rebuild_yn", "true");
-		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(rebuildEnv);
-	}
-
 	public void setCubridPackageUrl(String cubridPackageUrl) {
 		this.cubridPackageUrl = cubridPackageUrl;
 	}
@@ -319,6 +315,14 @@ public class Context {
 	
 	public String getRootLogDir(){		
 		return rootLogDir;
+	}
+	
+	public boolean isRebuildYn() {
+		return rebuildYn;
+	}
+
+	public void setRebuildYn(boolean rebuildYn) {
+		this.rebuildYn = rebuildYn;
 	}
 	
 	public String getFeedbackDbUrl(){

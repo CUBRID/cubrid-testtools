@@ -101,11 +101,9 @@ public class TestFactory {
 
 		System.out.println("The Number of Test Case : " + Dispatch.getInstance().getTotalTbdSize());
 
-		if (context.rebuildYn()) {
-			System.out.println("============= DEPLOY ==================");
-			concurrentDeploy(stableEnvList);
-			System.out.println("DONE");
-		}
+		System.out.println("============= DEPLOY ==================");
+		concurrentDeploy(stableEnvList);
+		System.out.println("DONE");
 
 		System.out.println("============= TEST ==================");
 		concurrentTest(stableEnvList);

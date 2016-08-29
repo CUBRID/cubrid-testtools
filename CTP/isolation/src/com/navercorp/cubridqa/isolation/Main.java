@@ -31,8 +31,10 @@ import java.util.ArrayList;
 
 import java.util.Properties;
 import java.util.Set;
-import com.navercorp.cubridqa.common.CommonUtils;
+
+import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class Main {
 
@@ -42,18 +44,35 @@ public class Main {
 		system.setProperty("sun.rmi.transport.connectionTimeout", "10000000");
 
 		Context context = new Context(configFilename);
-		context.setBuildId(CommonUtils.getBuildId(context.getCubridPackageUrl()));
-		context.setBuildBits(CommonUtils.getBuildBits(context.getCubridPackageUrl()));
-
-		System.out.println("Build Id: " + context.getBuildId());
-		System.out.println("Build Bits: " + context.getBuildBits());
-
 		ArrayList<String> envList = context.getEnvList();
 		System.out.println("Available Env: " + envList);
 
 		if (context.getEnvList().size() == 0) {
 			throw new Exception("Not found any environment instance to test on it.");
 		}
+		
+		String buildUrl = context.getCubridPackageUrl();
+		
+		if (buildUrl != null && buildUrl.trim().length() > 0) {
+			context.setBuildId(CommonUtils.getBuildId(context
+					.getCubridPackageUrl()));
+			context.setBuildBits(CommonUtils.getBuildBits(context
+					.getCubridPackageUrl()));
+			context.setRebuildYn(true);
+		}else{
+			String envId = context.getEnvList().get(0);
+			String host = context.getInstanceProperty(envId, "ssh.host");
+			String port = context.getInstanceProperty(envId, "ssh.port");
+			String user = context.getInstanceProperty(envId, "ssh.user");
+			String pwd = context.getInstanceProperty(envId, "ssh.pwd");
+			SSHConnect ssh = new SSHConnect(host, user, port, pwd, "ssh"); 
+			context.setBuildId(CommonUtils.getBuildId(com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh)));
+			context.setBuildBits(CommonUtils.getBuildBits(com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh)));
+			context.setRebuildYn(false);
+		}
+
+		System.out.println("Build Id: " + context.getBuildId());
+		System.out.println("Build Bits: " + context.getBuildBits());
 
 		Log contextSnapshot = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "main_snapshot.properties"), true, false);
 		Properties props = context.getProperties();

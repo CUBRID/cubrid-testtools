@@ -53,6 +53,7 @@ public class Context {
 	private String buildId;
 	private ArrayList<String> testEnvList = new ArrayList<String>();
 	private boolean enableCheckDiskSpace;
+	private boolean rebuildYn = false;
 	String mailNoticeTo;
 
 	public Context(String filename) throws IOException {
@@ -207,6 +208,14 @@ public class Context {
 		return this.buildBits;
 	}
 	
+	public boolean isRebuildYn() {
+		return rebuildYn;
+	}
+
+	public void setRebuildYn(boolean rebuildYn) {
+		this.rebuildYn = rebuildYn;
+	}
+	
 	public String getCubridPackageUrl() {
 		return getProperty("main.testbuild.url", "").trim();
 	}
@@ -217,11 +226,6 @@ public class Context {
 	
 	public String getTestCaseRoot() {
 		return getProperty("main.testcase.root", "").trim();
-	}
-	
-	public boolean rebuildYn() {
-		String rebuildEnv = getProperty("main.deploy.rebuild_yn", "true");
-		return CommonUtils.convertBoolean(rebuildEnv);
 	}
 	
 	public String getExcludedTestCaseFile() {

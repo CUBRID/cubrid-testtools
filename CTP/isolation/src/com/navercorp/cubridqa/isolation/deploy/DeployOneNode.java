@@ -60,10 +60,17 @@ public class DeployOneNode {
 	public void deploy() {
 		cleanProcess();
 
-		String role = context.getProperty("main.testing.role", "").trim();
-		log.print("Start Install Build");
+		String buildUrl = context.getCubridPackageUrl();
 		IsolationScriptInput scripts = new IsolationScriptInput();
-		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
+		if (!context.isRebuildYn()) {
+			log.print("Skip build installation since main.testbuild.url is not configured!!");
+		} else {
+			String role = context.getProperty("main.testing.role", "").trim();
+			log.print("Start Install Build");
+			
+			scripts.addCommand("run_cubrid_install " + role + " " + buildUrl + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
+		}
+		
 		String buildId = context.getBuildId();
 		String[] arr = buildId.split("\\.");
 		if (Integer.parseInt(arr[0]) >= 10) {

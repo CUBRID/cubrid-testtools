@@ -64,7 +64,8 @@ public class Context {
 	
 	private String mailNoticeTo;
 	private boolean enableCheckDiskSpace;
-
+	private boolean rebuildYn = false;
+	
 	public Context(String filename) throws IOException {
 		this.filename = filename;
 		reload();
@@ -204,6 +205,14 @@ public class Context {
 		return this.config;
 	}
 
+	public boolean isRebuildYn() {
+		return rebuildYn;
+	}
+
+	public void setRebuildYn(boolean rebuildYn) {
+		this.rebuildYn = rebuildYn;
+	}
+	
 	public boolean isStartMonitor() {
 		return this.config.getProperty("main.testing.monitor", "false").equalsIgnoreCase("true");
 	}
@@ -223,11 +232,6 @@ public class Context {
 			}
 		}
 		return Constants.DB_TEST_MAP.get(v);
-	}
-	
-	public boolean rebuildYn() {
-		String rebuildEnv = getProperty("main.deploy.rebuild_yn", "true");
-		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(rebuildEnv);
 	}
 	
 	public void setLogDir(String category) {
