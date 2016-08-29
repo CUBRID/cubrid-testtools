@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
 
-import com.navercorp.cubridqa.shell.common.CommonUtils;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 

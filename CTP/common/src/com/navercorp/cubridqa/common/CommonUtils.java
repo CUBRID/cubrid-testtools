@@ -491,12 +491,13 @@ public class CommonUtils {
 
 			int p1 = cubridPackageUrl.lastIndexOf(simplifiedBuild);
 			int p2 = cubridPackageUrl.indexOf("-", p1 + simplifiedBuild.length() + 1);
-
-			if (p2 == -1) {
-				p2 = cubridPackageUrl.indexOf(".", p1 + simplifiedBuild.length() + 1);
+			int p3 = p2 == -1 ? cubridPackageUrl.indexOf(")", p1 + simplifiedBuild.length() + 1) : p2;
+			
+			if (p3 == -1) {
+				p3 = cubridPackageUrl.indexOf(".", p1 + simplifiedBuild.length() + 1);
 			}
 
-			buildId = p2 == -1 ? cubridPackageUrl.substring(p1) : cubridPackageUrl.substring(p1, p2);
+			buildId = p3 == -1 ? cubridPackageUrl.substring(p1) : cubridPackageUrl.substring(p1, p3);
 			return buildId;
 		} else {
 			return simplifiedBuild;
@@ -509,8 +510,9 @@ public class CommonUtils {
 		int idx2 = cubridPackageUrl.indexOf("x64");
 		int idx3 = cubridPackageUrl.indexOf("ppc64"); // AIX BUILD.
 														// CUBRID-8.4.4.0136-AIX-ppc64.sh
+		int idx4 = cubridPackageUrl.indexOf("64bit"); //Parse cubrid_rel result
 
-		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0) {
+		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0 || idx4 >= 0) {
 			version = "64bits";
 		} else {
 			version = "32bits";
