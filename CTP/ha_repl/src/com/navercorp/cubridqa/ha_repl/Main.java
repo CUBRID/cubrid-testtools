@@ -71,6 +71,7 @@ public class Main {
 		if (cubridPackageUrl != null && cubridPackageUrl.trim().length() > 0) {
 			context.setBuildId(CommonUtils.getBuildId(cubridPackageUrl));
 			context.setBuildBits(CommonUtils.getBuildBits(cubridPackageUrl));
+			context.setRebuildYn(true);
 		} else {
 
 			String envId = context.getTestEnvList().get(0);
@@ -81,6 +82,7 @@ public class Main {
 			SSHConnect ssh = new SSHConnect(host, port, user, pwd, "ssh"); 
 			context.setBuildId(CommonUtils.getBuildId(com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh)));
 			context.setBuildBits(CommonUtils.getBuildBits(com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh)));
+			context.setRebuildYn(false);
 		}
 
 		System.out.println("BUILD ID: " + context.getBuildId());
