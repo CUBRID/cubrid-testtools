@@ -80,7 +80,7 @@ public class Context {
 		this.shouldUpdateTestCase = getProperty("main.testcase.update_yn", "false").equalsIgnoreCase("true");
 		this.isWindows = getProperty("main.testing.platform", "linux").equalsIgnoreCase("windows");
 		this.isContinueMode = getProperty("main.mode.continue", "false").equalsIgnoreCase("true");
-		String feedbackType = getProperty("main.feedback.type", "").trim();
+		String feedbackType = getProperty("main.feedback.type", "file").trim();
 		if (feedbackType.equalsIgnoreCase("file")) {
 			this.feedback = new FeedbackFile(this);
 		} else if (feedbackType.equalsIgnoreCase("database")) {
@@ -210,7 +210,7 @@ public class Context {
 	}
 
 	public String getTestCaseBranch() {
-		return getProperty("main.testcase.branch_git", "").trim();
+		return getProperty("main.testcase.branch_git", "develop").trim();
 	}
 	
 	public boolean isReInstallTestBuildYn() {

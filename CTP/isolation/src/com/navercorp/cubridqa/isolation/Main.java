@@ -52,7 +52,6 @@ public class Main {
 		}
 		
 		String buildUrl = context.getCubridPackageUrl();
-		
 		if (buildUrl != null && buildUrl.trim().length() > 0) {
 			context.setBuildId(CommonUtils.getBuildId(context
 					.getCubridPackageUrl()));

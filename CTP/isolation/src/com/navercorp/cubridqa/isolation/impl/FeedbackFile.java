@@ -144,7 +144,7 @@ public class FeedbackFile implements Feedback {
 			String covPwd = context.getProperty("main.coverage.controller.pwd", "").trim();
 			String covPort = context.getProperty("main.coverage.controller.port", "").trim();
 			String covTargetDir = context.getProperty("main.coverage.controller.result", "").trim();
-			String category = context.getProperty("main.testing.category");
+			String category = context.getProperty("main.testing.category", "isolation");
 			String covParams = "-n " + context.getBuildId() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
 			String host = context.getInstanceProperty(envIdentify, "ssh.host");
 			String port = context.getInstanceProperty(envIdentify, "ssh.port");
