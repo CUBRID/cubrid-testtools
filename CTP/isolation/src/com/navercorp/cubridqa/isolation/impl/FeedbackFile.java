@@ -139,12 +139,13 @@ public class FeedbackFile implements Feedback {
 		if (role.indexOf("coverage") != -1) {
 			println("[Code Coverage] Current Time is " + new Date());
 			feedbackLog.print("[Code Coverage] start code coverage data collection!");
+			
 			String covHost = context.getProperty("main.coverage.controller.ip", "").trim();
 			String covUser = context.getProperty("main.coverage.controller.user", "").trim();
 			String covPwd = context.getProperty("main.coverage.controller.pwd", "").trim();
 			String covPort = context.getProperty("main.coverage.controller.port", "").trim();
 			String covTargetDir = context.getProperty("main.coverage.controller.result", "").trim();
-			String category = context.getProperty("main.testing.category", "isolation");
+			String category = context.getTestCategory();
 			String covParams = "-n " + context.getBuildId() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
 			String host = context.getInstanceProperty(envIdentify, "ssh.host");
 			String port = context.getInstanceProperty(envIdentify, "ssh.port");
