@@ -114,8 +114,8 @@ public class Context {
 		this.envList = initEnvList(config);
 		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (Constants.ENV_CTP_HOME_KEY);
 		
-		this.cleanTestCase = getProperty("main.testcase.clean", "false").equalsIgnoreCase("true");
-		this.isWindows = getProperty("main.testing.platform", "linux").equalsIgnoreCase("windows");
+		this.cleanTestCase = needCleanTestCase().equalsIgnoreCase("true") && !CommonUtils.isEmpty(getTestCaseBranch());
+		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
 		
 		this.testCaseSkipKey = getProperty("main.testcase.skip_key", "").trim().toUpperCase();
 		if(this.testCaseSkipKey.equals("")) {
@@ -124,7 +124,7 @@ public class Context {
                  		
 		this.isSaveCorefile = getProperty("main.testing.savecorefile", "FALSE").trim().toUpperCase().equals("TRUE");
 		this.bigSpaceDir = getProperty("main.testing.bigspace_dir", "").trim();
-		this.maxRetryCount = Integer.parseInt(getProperty("max.retry.count", "0").trim());
+		this.maxRetryCount = Integer.parseInt(getTestCaseMaxRetryCount());
         this.defaultDbCharset = getProperty("main.testing.default_charset", "en_US").trim();
        
 		this.enableCheckDiskSpace = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
@@ -135,7 +135,7 @@ public class Context {
 		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.mode.continue", "false"), false);
 		this.cubridPackageUrl = getProperty("main.testbuild.url");
 
-		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
+		this.serviceProtocolType = getTestServiceProtocol();
 		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "1");
 		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
 		
@@ -236,6 +236,30 @@ public class Context {
 		}
 	}
 	
+	public String getTestPlatform(){
+		return getProperty("main.testing.platform", "linux");
+	}
+	
+	public String getTestCategory()
+	{
+		return getProperty("main.testing.category", "general");
+	}
+	
+	public String needCleanTestCase()
+	{
+		return getProperty("main.testcase.clean", "false");
+	}
+	
+	public String getTestCaseTimeout()
+	{
+		return getProperty("main.testcase.timeout", "-1");
+	}
+	
+	public String getTestServiceProtocol()
+	{
+		return getProperty("main.service.protocol", "ssh").trim().toLowerCase();
+	}
+	
 	public void setCubridPackageUrl(String cubridPackageUrl) {
 		this.cubridPackageUrl = cubridPackageUrl;
 	}
@@ -272,6 +296,11 @@ public class Context {
 		String git = getProperty ("main.testcase.branch_git").trim();
 		boolean isGit = git != null && git.length() > 0;
 		return isGit;
+	}
+	
+	public String getTestCaseMaxRetryCount()
+	{
+		return getProperty("max.retry.count", "0").trim();
 	}
 	
 	private void putMKeyEnvVaribleIntoMap(){
@@ -441,6 +470,10 @@ public class Context {
 	
 	public String getCtpBranchName() {
 		return ctpBranchName;
+	}
+	
+	public String getFeedbackType(){
+		return getProperty("main.feedback.type", "file").trim();
 	}
 
 	public void setCtpBranchName(String ctpBranchName) {

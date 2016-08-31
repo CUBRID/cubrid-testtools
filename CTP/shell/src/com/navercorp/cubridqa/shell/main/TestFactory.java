@@ -62,7 +62,7 @@ public class TestFactory {
 		this.configPool = Executors.newFixedThreadPool(1);
 		this.testMap = new HashMap<String, Test>();
 
-		String feedbackType = context.getProperty("main.feedback.type", "").trim();
+		String feedbackType = context.getFeedbackType();
 		if (feedbackType.equalsIgnoreCase("file")) {
 			feedback = new FeedbackFile(context);
 		} else if (feedbackType.equalsIgnoreCase("database")) {

@@ -15,15 +15,15 @@ public class GeneralLocalTest {
 
 	public GeneralLocalTest(Context context) {
 		this.context = context;
-		this.context.setLogDir(context.getProperty("main.testing.category", "general"));
-		String feedbackType = context.getProperty("main.feedback.type", "").trim();
+		this.context.setLogDir(context.getTestCategory());
+		String feedbackType = context.getFeedbackType();
 		if (feedbackType.equalsIgnoreCase("file")) {
 			context.setFeedback(new FeedbackFile(context));
 		} else if (feedbackType.equalsIgnoreCase("database")) {
 			context.setFeedback(new FeedbackDB(context));
 		}
-		context.setTestBuild(context.getProperty("main.testing.build_id"));
-		context.setVersion(context.getProperty("main.testing.bits"));
+		context.setTestBuild(context.getTestBuild());
+		context.setVersion(context.getVersion());
 	}
 
 	public void start() {

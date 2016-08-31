@@ -64,7 +64,7 @@ public class TestMonitor {
 		this.initRelatedSSH();
 
 		try {
-			testCaseTimeout = Integer.parseInt(context.getProperty("main.testcase.timeout"));
+			testCaseTimeout = Integer.parseInt(context.getTestCaseTimeout());
 		} catch (Exception e) {
 			testCaseTimeout = -1;
 		}
