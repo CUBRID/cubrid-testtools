@@ -260,6 +260,21 @@ public class Context {
 		return getProperty("main.service.protocol", "ssh").trim().toLowerCase();
 	}
 	
+	public boolean needEnableMonitorTrace()
+	{
+		return getProperty("main.monitor.enable_tracing").equalsIgnoreCase("true");
+	}
+	
+	public String getExcludedCoresByAssertLine()
+	{
+		return getProperty("main.testing.excluded_cores_by_assert_line");
+	}
+	
+	public boolean needDeleteTestCaseAfterTest()
+	{
+		return getProperty("main.testing.delete_test_case_after_execution", "false").trim().toLowerCase().equals("true");
+	}
+	
 	public void setCubridPackageUrl(String cubridPackageUrl) {
 		this.cubridPackageUrl = cubridPackageUrl;
 	}

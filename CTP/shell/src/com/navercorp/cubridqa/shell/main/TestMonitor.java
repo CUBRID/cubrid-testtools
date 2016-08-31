@@ -70,7 +70,7 @@ public class TestMonitor {
 		}
 
 		try {
-			enableTracing = context.getProperty("main.monitor.enable_tracing").equalsIgnoreCase("true");
+			enableTracing = context.needEnableMonitorTrace();
 			traceScript = initTraceScript();
 		} catch (Exception e) {
 			enableTracing = false;
