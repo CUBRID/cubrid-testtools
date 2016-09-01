@@ -53,6 +53,7 @@ public class Context {
 	private String buildId;
 	private ArrayList<String> testEnvList = new ArrayList<String>();
 	private boolean enableCheckDiskSpace;
+	private boolean reInstallTestBuildYn = false;
 	String mailNoticeTo;
 
 	public Context(String filename) throws IOException {
@@ -67,7 +68,7 @@ public class Context {
 		setLogDir("ha_repl");
 		
 		Feedback feedback;
-		String feedbackType = getProperty("main.feedback.type", "").trim();
+		String feedbackType = getProperty("main.feedback.type", "file").trim();
 		if (feedbackType.equalsIgnoreCase("file")) {
 			feedback = new FeedbackFile(this);
 		} else if (feedbackType.equalsIgnoreCase("database")) {
@@ -170,6 +171,10 @@ public class Context {
 		return testmode;
 	}
 
+	public boolean rebuildYn() {
+		String rebuildEnv = getProperty("main.deploy.rebuild_yn", "true");
+		return CommonUtils.convertBoolean(rebuildEnv);
+	}
 	public boolean isFailureBackup() {
 		return getProperty("main.testing.failure.backup", "false").toUpperCase().trim().equals("TRUE");
 	}
@@ -219,9 +224,12 @@ public class Context {
 		return getProperty("main.testcase.root", "").trim();
 	}
 	
-	public boolean rebuildYn() {
-		String rebuildEnv = getProperty("main.deploy.rebuild_yn", "true");
-		return CommonUtils.convertBoolean(rebuildEnv);
+	public boolean isReInstallTestBuildYn() {
+		return reInstallTestBuildYn;
+	}
+
+	public void setReInstallTestBuildYn(boolean reInstallTestBuildYn) {
+		this.reInstallTestBuildYn = reInstallTestBuildYn;
 	}
 	
 	public String getExcludedTestCaseFile() {
@@ -237,7 +245,7 @@ public class Context {
 	}
 	
 	public boolean shouldCleanupAfterQuit() {
-		return CommonUtils.convertBoolean(getProperty("main.testing.cleanup_after_quit_yn", "true"));
+		return CommonUtils.convertBoolean(getProperty("main.test.clean_processes_after_quit_yn", "true"));
 	}
 	
 	public boolean enableCheckDiskSpace() {

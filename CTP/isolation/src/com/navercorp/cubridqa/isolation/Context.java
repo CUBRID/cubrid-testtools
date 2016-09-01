@@ -64,7 +64,8 @@ public class Context {
 	
 	private String mailNoticeTo;
 	private boolean enableCheckDiskSpace;
-
+	private boolean reInstallTestBuildYn = false;
+	
 	public Context(String filename) throws IOException {
 		this.filename = filename;
 		reload();
@@ -76,10 +77,10 @@ public class Context {
 		this.ctpHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
 		setLogDir("isolation");
 		
-		this.shouldUpdateTestCase = getProperty("main.testcase.update_yn", "false").equalsIgnoreCase("true");
-		this.isWindows = getProperty("main.testing.platform", "linux").equalsIgnoreCase("windows");
+		this.shouldUpdateTestCase = CommonUtils.convertBoolean(getProperty("main.testcase.update_yn", "false")) && !CommonUtils.isEmpty(getTestCaseBranch());
+		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
 		this.isContinueMode = getProperty("main.mode.continue", "false").equalsIgnoreCase("true");
-		String feedbackType = getProperty("main.feedback.type", "").trim();
+		String feedbackType = getProperty("main.feedback.type", "file").trim();
 		if (feedbackType.equalsIgnoreCase("file")) {
 			this.feedback = new FeedbackFile(this);
 		} else if (feedbackType.equalsIgnoreCase("database")) {
@@ -143,6 +144,16 @@ public class Context {
 	public String getTestCaseRoot() {
 		return getProperty("main.testcase.root");
 	}
+	
+	public String getTestCategory(){
+		return getProperty("main.testing.category", "isolation");
+	}
+	
+	public String getTestPlatform()
+	{
+		return getProperty("main.testing.platform", "linux");
+	}
+	
 
 	public String getCubridPackageUrl() {
 		return getProperty("main.testbuild.url");
@@ -209,7 +220,15 @@ public class Context {
 	}
 
 	public String getTestCaseBranch() {
-		return getProperty("main.testcase.branch_git", "").trim();
+		return getProperty("main.testcase.branch_git").trim();
+	}
+	
+	public boolean isReInstallTestBuildYn() {
+		return reInstallTestBuildYn;
+	}
+
+	public void setReInstallTestBuildYn(boolean reInstallTestBuildYn) {
+		this.reInstallTestBuildYn = reInstallTestBuildYn;
 	}
 
 	public String getTestingDatabase() {

@@ -72,7 +72,7 @@ public class TestCaseSVN {
 			sedCmds = "";
 		}
 		
-		if(context.getCleanTestCase()) {
+		if(context.needCleanTestCase()) {
 			scripts.addCommand("cd ");
 			scripts.addCommand("cd " + context.getTestCaseRoot());
 			scripts.addCommand("svn st " + context.getSVNUserInfo() + " | grep '~' | awk '{print $NF}' | " + sedCmds + " xargs -i rm -rf {} ");

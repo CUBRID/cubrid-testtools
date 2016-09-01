@@ -64,13 +64,13 @@ public class TestMonitor {
 		this.initRelatedSSH();
 
 		try {
-			testCaseTimeout = Integer.parseInt(context.getProperty("main.testcase.timeout"));
+			testCaseTimeout = Integer.parseInt(context.getTestCaseTimeout());
 		} catch (Exception e) {
 			testCaseTimeout = -1;
 		}
 
 		try {
-			enableTracing = context.getProperty("main.monitor.enable_tracing").equalsIgnoreCase("true");
+			enableTracing = context.needEnableMonitorTrace();
 			traceScript = initTraceScript();
 		} catch (Exception e) {
 			enableTracing = false;
