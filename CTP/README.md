@@ -8,7 +8,6 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * It supports Linux and Windows (Cygwin is required)
 * Install Java 6 or higher version, and you also need to set ``JAVA_HOME`` environment variable to point to the installation directory
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configurations
-* CUBRID QA executes testing for SQL and Medium on linux is based on ha mode, so you must make sure ports in cubrid.conf, cubrid_broker.conf and cubrid_ha.conf will not conflict with another instances exist. Otherwise, start server or broker will be fail
 
 ## Quick Start
 This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication`` and so on. Regarding more information please refer to the related sections
@@ -63,7 +62,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  # In order to simulate the scenario customer use
 	  ha_mode=yes
 	  ```
- 	* For ``Medium`` test, ``data_file`` must be set to the path of the initial data file, regarding  the initial data file, please refer to [mdb.tar.gz](https://github.com/CUBRID/cubrid-testcases/tree/master/medium/files/mdb.tar.gz "mdb.tar.gz")
+ 	* For ``Medium`` test, ``data_file`` must be set to the path of the initial data file, regarding  the initial data file, please download it from [mdb.tar.gz](https://github.com/CUBRID/cubrid-testcases/tree/master/medium/files/mdb.tar.gz "mdb.tar.gz")
 
 	More parameters setting and parameters explanation within ``sql.conf``, please refer to [CTP/conf/sql.conf](conf/sql.conf)
 
@@ -142,8 +141,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   main.testcase.root=/home/qa/shell_instance1/shell
 	   ```
 	   ```
-	   # Define the URL of test build which will be used to test
-	   # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored
+	   # Define the URL of test build which will be used to test.
+	   # If this parameter is not set or commented out, CTP will execute testing without build installation.
 	   main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
 	   ```				
  
@@ -192,7 +191,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
       ```
       ```
 	  # Define the URL of test build which will be used to test.
-	  # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored.
+	  # If this parameter is not set or commented out, CTP will execute testing without build installation.
 	  main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
       ```	
 	
@@ -242,8 +241,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	NOTE: the scenario must be checked out on ``controller`` account, not on the test instance
 
       ```
-	  # Define the URL of test build which will be used to test
-	  # If set 'main.deploy.rebuild_yn' as 'false', this parameter will be ignored
+	  # Define the URL of test build which will be used to test.
+	  # If this parameter is not set or commented out, CTP will execute testing without build installation.
 	  main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh 
 	  ```
 
