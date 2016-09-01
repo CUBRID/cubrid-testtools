@@ -37,8 +37,12 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import javax.mail.internet.InternetAddress;
+
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
+import com.navercorp.cubridqa.shell.result.FeedbackDB;
+import com.navercorp.cubridqa.shell.result.FeedbackFile;
+import com.navercorp.cubridqa.shell.result.FeedbackNull;
 
 public class Context {
 
@@ -143,6 +147,15 @@ public class Context {
 		
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
+		
+		String feedbackType = getProperty("main.feedback.type", "file").trim();
+		if (feedbackType.equalsIgnoreCase("file")) {
+			feedback = new FeedbackFile(this);
+		} else if (feedbackType.equalsIgnoreCase("database")) {
+			feedback = new FeedbackDB(this);
+		} else {
+			feedback = new FeedbackNull();
+		}
     }
 	
 	public void setLogDir(String category) {
@@ -242,7 +255,7 @@ public class Context {
 	
 	public String getTestCategory()
 	{
-		return getProperty("main.testing.category", "general");
+		return getProperty("main.testing.category", "shell");
 	}
 	
 	public boolean needCleanTestCase()
@@ -257,7 +270,7 @@ public class Context {
 	
 	public boolean needEnableMonitorTrace()
 	{
-		return getProperty("main.monitor.enable_tracing").equalsIgnoreCase("true");
+		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.monitor.enable_tracing", "false"));
 	}
 	
 	public String getExcludedCoresByAssertLine()
@@ -329,10 +342,6 @@ public class Context {
 	
 	public boolean isWindows () {
 		 return this.isWindows;
-	}
-	
-	public void setFeedback(Feedback feedback) {
-		this.feedback = feedback;
 	}
 	
 	public Feedback getFeedback() {
@@ -473,10 +482,6 @@ public class Context {
 		return ctpBranchName;
 	}
 	
-	public String getFeedbackType(){
-		return getProperty("main.feedback.type", "file").trim();
-	}
-
 	public void setCtpBranchName(String ctpBranchName) {
 		this.ctpBranchName = ctpBranchName;
 	}

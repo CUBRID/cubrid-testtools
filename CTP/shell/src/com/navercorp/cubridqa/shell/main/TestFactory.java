@@ -61,16 +61,6 @@ public class TestFactory {
 		this.testPool = Executors.newFixedThreadPool(100);
 		this.configPool = Executors.newFixedThreadPool(1);
 		this.testMap = new HashMap<String, Test>();
-
-		String feedbackType = context.getFeedbackType();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			feedback = new FeedbackFile(context);
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			feedback = new FeedbackDB(context);
-		} else {
-			feedback = new FeedbackNull();
-		}
-		context.setFeedback(feedback);
 	}
 	
 	private void addSkippedTestCases(ArrayList<String> list, String skippedType) {
