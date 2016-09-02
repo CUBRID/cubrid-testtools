@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.shell.deploy;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
-
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
@@ -93,11 +92,16 @@ public class DeployOneNode {
 		cleanProcess();
 
 		String role = context.getProperty("main.testing.role", "").trim();
-		log.print("Start Install Build");
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
-		scripts.addCommand("cd $CUBRID/..");
-		scripts.addCommand("chmod -R u+x CUBRID");
+		if (!context.isReInstallTestBuildYn()) {
+			log.print("Skip build installation since main.testbuild.url is not configured!!");
+		} else {
+			log.print("Start Install Build");
+			scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
+			scripts.addCommand("cd $CUBRID/..");
+			scripts.addCommand("chmod -R u+x CUBRID");
+		}
+		
 		String buildId = context.getTestBuild();
 		String[] arr = buildId.split("\\.");
 		if ( Integer.parseInt(arr[0]) >= 10 )
@@ -118,13 +122,19 @@ public class DeployOneNode {
 	private void deploy_build_on_linux() {
 		cleanProcess();
 		
-		String role = context.getProperty("main.testing.role", "").trim();
-		log.print("Start Install Build");
+		String buildUrl = context.getCubridPackageUrl();
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("echo 'ulimit -c unlimited' >> ~/.bash_profile");
-		scripts.addCommand("cat ~/.bash_profile | uniq >  ~/.bash_profile_tmp; cp ~/.bash_profile_tmp ~/.bash_profile");
-		scripts.addCommand(CommonUtils.getExportsOfMEKYParams());
-		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
+		if (!context.isReInstallTestBuildYn()) {
+			log.print("Skip build installation since main.testbuild.url is not configured!!");
+		} else {
+			String role = context.getProperty("main.testing.role", "").trim();
+			log.print("Start Install Build");
+			scripts.addCommand("echo 'ulimit -c unlimited' >> ~/.bash_profile");
+			scripts.addCommand("cat ~/.bash_profile | uniq >  ~/.bash_profile_tmp; cp ~/.bash_profile_tmp ~/.bash_profile");
+			scripts.addCommand(CommonUtils.getExportsOfMEKYParams());
+			scripts.addCommand("run_cubrid_install " + role + " " + buildUrl + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
+		}
+		
 		String buildId = context.getTestBuild();
 		String[] arr = buildId.split("\\.");
 		if (Integer.parseInt(arr[0]) >= 10) {

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import com.navercorp.cubridqa.common.LocalInvoker;
+import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.result.FeedbackDB;
 import com.navercorp.cubridqa.shell.result.FeedbackFile;
@@ -15,13 +16,12 @@ public class GeneralLocalTest {
 
 	public GeneralLocalTest(Context context) {
 		this.context = context;
-		this.context.setLogDir(context.getProperty("main.testing.category", "general"));
-		String feedbackType = context.getProperty("main.feedback.type", "").trim();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			context.setFeedback(new FeedbackFile(context));
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			context.setFeedback(new FeedbackDB(context));
+		if (CommonUtils.isEmpty(context.getTestCategory())) {
+			this.context.setLogDir("general");
+		} else {
+			this.context.setLogDir(context.getTestCategory());
 		}
+		
 		context.setTestBuild(context.getProperty("main.testing.build_id"));
 		context.setVersion(context.getProperty("main.testing.bits"));
 	}

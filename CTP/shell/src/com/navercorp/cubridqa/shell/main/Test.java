@@ -81,7 +81,7 @@ public class Test {
 		sshUser = context.getInstanceProperty(currEnvId, "ssh.user");
 		sshPwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
 		
-		this.needDropTestCase = context.getProperty("main.testing.delete_test_case_after_execution", "false").trim().toLowerCase().equals("true");
+		this.needDropTestCase = context.needDeleteTestCaseAfterTest();
 
 		envIdentify = "EnvId=" + currEnvId + "[" + sshUser + "@" + sshHost + ":" + sshPort + "]";
 		this.maxRetryCount = this.context.getMaxRetryCount();
@@ -286,7 +286,7 @@ public class Test {
 			script.addCommand("export CUBRID_CHARSET=" + context.getDefaultDbcharset());
 		}
 
-		String excludedCoresByAssertLine = context.getProperty("main.testing.excluded_cores_by_assert_line");
+		String excludedCoresByAssertLine = context.getExcludedCoresByAssertLine();
 		if (excludedCoresByAssertLine != null && excludedCoresByAssertLine.trim().equals("") == false) {
 			script.addCommand("export EXCLUDED_CORES_BY_ASSERT_LINE=\"" + excludedCoresByAssertLine + "\"" );
 		}
