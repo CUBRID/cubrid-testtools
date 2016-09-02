@@ -36,8 +36,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import javax.mail.internet.InternetAddress;
-
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.result.FeedbackDB;
@@ -148,13 +146,15 @@ public class Context {
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
 		
-		String feedbackType = getProperty("main.feedback.type", "file").trim();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			feedback = new FeedbackFile(this);
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			feedback = new FeedbackDB(this);
-		} else {
-			feedback = new FeedbackNull();
+		if(this.feedback == null) {
+			String feedbackType = getProperty("main.feedback.type", "file").trim();
+			if (feedbackType.equalsIgnoreCase("file")) {
+				this.feedback = new FeedbackFile(this);
+			} else if (feedbackType.equalsIgnoreCase("database")) {
+				this.feedback = new FeedbackDB(this);
+			} else {
+				this.feedback = new FeedbackNull();
+			}
 		}
     }
 	

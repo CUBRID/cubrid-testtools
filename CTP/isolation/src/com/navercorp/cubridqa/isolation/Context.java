@@ -80,17 +80,21 @@ public class Context {
 		this.shouldUpdateTestCase = CommonUtils.convertBoolean(getProperty("main.testcase.update_yn", "false")) && !CommonUtils.isEmpty(getTestCaseBranch());
 		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
 		this.isContinueMode = getProperty("main.mode.continue", "false").equalsIgnoreCase("true");
-		String feedbackType = getProperty("main.feedback.type", "file").trim();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			this.feedback = new FeedbackFile(this);
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			this.feedback = new FeedbackDB(this);
-		} else {
-			this.feedback = new FeedbackNull();
-		}
 		
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
 		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
+		
+		if (this.feedback == null) {
+			String feedbackType = getProperty("main.feedback.type", "file")
+					.trim();
+			if (feedbackType.equalsIgnoreCase("file")) {
+				this.feedback = new FeedbackFile(this);
+			} else if (feedbackType.equalsIgnoreCase("database")) {
+				this.feedback = new FeedbackDB(this);
+			} else {
+				this.feedback = new FeedbackNull();
+			}
+		}
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {
@@ -165,10 +169,6 @@ public class Context {
 
 	public boolean isWindows() {
 		return this.isWindows;
-	}
-
-	public void setFeedback(Feedback feedback) {
-		this.feedback = feedback;
 	}
 
 	public Feedback getFeedback() {

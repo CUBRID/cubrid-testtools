@@ -67,17 +67,6 @@ public class Context {
 		this.ctpHome = CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
 		setLogDir("ha_repl");
 		
-		Feedback feedback;
-		String feedbackType = getProperty("main.feedback.type", "file").trim();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			feedback = new FeedbackFile(this);
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			feedback = new FeedbackDB(this);
-		} else {
-			feedback = new FeedbackNull(this);
-		}
-		setFeedback(feedback);
-		
 		Set<Object> set = config.keySet();
 		Iterator<Object> it = set.iterator();
 		String key;
@@ -90,14 +79,22 @@ public class Context {
 		
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
 		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
+		
+		if (this.feedback == null) {
+			String feedbackType = getProperty("main.feedback.type", "file")
+					.trim();
+			if (feedbackType.equalsIgnoreCase("file")) {
+				this.feedback = new FeedbackFile(this);
+			} else if (feedbackType.equalsIgnoreCase("database")) {
+				this.feedback = new FeedbackDB(this);
+			} else {
+				this.feedback = new FeedbackNull(this);
+			}
+		}
 	}
 	
 	public ArrayList<String> getTestEnvList() {
 		return this.testEnvList;
-	}
-
-	public void setFeedback(Feedback feedback) {
-		this.feedback = feedback;
 	}
 
 	public Feedback getFeedback() {
