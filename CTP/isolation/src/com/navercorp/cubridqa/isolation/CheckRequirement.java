@@ -38,7 +38,6 @@ public class CheckRequirement {
 	String sshTitle;
 	Log log;
 	boolean finalPass = true;
-	String host, port, user, pwd;
 
 	public CheckRequirement(Context context, String envId) {
 		this.context = context;
@@ -46,13 +45,7 @@ public class CheckRequirement {
 
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "check_" + envId + ".log"), true, context.isContinueMode());
 		this.finalPass = true;
-
-		this.host = context.getInstanceProperty(envId, "ssh.host");
-		this.port = context.getInstanceProperty(envId, "ssh.port");
-		this.user = context.getInstanceProperty(envId, "ssh.user");
-		this.pwd = context.getInstanceProperty(envId, "ssh.pwd");
-
-		this.sshTitle = user + "@" + host + ":" + port;
+		this.sshTitle = IsolationHelper.getTestNodeTitle(context, envId);
 	}
 
 	public boolean check() throws Exception {
@@ -97,7 +90,7 @@ public class CheckRequirement {
 	private void checkSSH() throws Exception {
 		try {
 			this.log.print("==> Check ssh connection ");
-			this.ssh = new SSHConnect(host, port, user, pwd);
+			this.ssh = IsolationHelper.createTestNodeConnect(context, envId);
 			log.print("...... PASS");
 		} catch (Exception e) {
 			log.print("...... FAIL: " + e.getMessage());

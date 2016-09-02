@@ -66,6 +66,8 @@ public class Context {
 	private boolean enableCheckDiskSpace;
 	private boolean reInstallTestBuildYn = false;
 	
+	private boolean isExecuteAtLocal = false;
+	
 	public Context(String filename) throws IOException {
 		this.filename = filename;
 		reload();
@@ -74,6 +76,13 @@ public class Context {
 	public void reload() throws IOException {
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
 		this.envList = initEnvList(config);
+		if (this.envList.size() == 0) {
+			isExecuteAtLocal = true;
+			this.envList.add("LOCAL");
+		} else {
+			isExecuteAtLocal = false;
+		}
+		
 		this.ctpHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
 		setLogDir("isolation");
 		
@@ -285,5 +294,9 @@ public class Context {
 	
 	public boolean enableCheckDiskSpace() {
 		return enableCheckDiskSpace;
+	}
+
+	public boolean isExecuteAtLocal() {
+		return isExecuteAtLocal;
 	}
 }

@@ -30,6 +30,7 @@ import com.navercorp.cubridqa.isolation.Constants;
 
 
 import com.navercorp.cubridqa.isolation.Context;
+import com.navercorp.cubridqa.isolation.IsolationHelper;
 import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
@@ -43,13 +44,8 @@ public class TestCaseGithub {
 	public TestCaseGithub(Context context, String currEnvId) throws Exception {
 		this.context = context;
 		this.currEnvId = currEnvId;
-		String host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-
-		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
-		this.ssh = new SSHConnect(host, port, user, pwd);
+		envIdentify = "EnvId=" + currEnvId + "[" + IsolationHelper.getTestNodeTitle(context, currEnvId) + "]";
+		this.ssh = IsolationHelper.createTestNodeConnect(context, currEnvId);
 
 	}
 
