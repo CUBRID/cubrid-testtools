@@ -26,6 +26,7 @@
 
 package com.navercorp.cubridqa.shell.common;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.rmi.Naming;
 import java.util.Properties;
@@ -120,25 +121,24 @@ public class SSHConnect {
 		ChannelExec exec = (ChannelExec) session.openChannel("exec");
 
 		InputStream in = exec.getInputStream();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		
 		byte[] b = new byte[1024];
 
 		exec.setCommand(scripts);
 		exec.connect();
 
-		StringBuffer buffer = new StringBuffer();
-
 		int len = 0;
 		while ((len = in.read(b)) > 0) {
-			buffer.append(new String(b, 0, len));
-
-			if (buffer.toString().indexOf(ScriptInput.COMP_FLAG) > 0) {
+			out.write(b, 0, len);
+			if (out.toString().indexOf(ScriptInput.COMP_FLAG) > 0) {
 				break;
 			}
 		}
 
 		exec.disconnect();
 
-		String result = buffer.toString();
+		String result = out.toString();
 
 		int p = result.indexOf(ScriptInput.START_FLAG);
 		if (p != -1) {

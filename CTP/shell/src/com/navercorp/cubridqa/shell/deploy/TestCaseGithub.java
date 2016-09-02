@@ -64,7 +64,7 @@ public class TestCaseGithub {
 		
 		ShellScriptInput scripts = new ShellScriptInput();
 		
-		if(context.getCleanTestCase()) {
+		if(context.needCleanTestCase()) {
 			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch() + "  2>&1");
 		}
 		

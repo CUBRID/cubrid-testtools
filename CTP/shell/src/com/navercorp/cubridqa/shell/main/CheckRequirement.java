@@ -83,7 +83,7 @@ public class CheckRequirement {
 		checkCommand("kill");
 		checkCommand("dos2unix");
 		checkCommand("tar");
-		if (context.getCleanTestCase()) {
+		if (context.needCleanTestCase()) {
 			checkCommand("git");
 		}
 		

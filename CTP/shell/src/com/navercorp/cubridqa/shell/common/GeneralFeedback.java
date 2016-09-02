@@ -24,14 +24,9 @@ public class GeneralFeedback {
 		this.context = new Context(configFilename);
 		this.messageFilename = messageFilename;
 		this.context.setLogDir(context.getProperty("main.testing.category", "general"));
-		String feedbackType = context.getProperty("main.feedback.type", "").trim();
+		
 		keyData = new HashMap<String, String>();
 
-		if (feedbackType.equalsIgnoreCase("file")) {
-			context.setFeedback(new FeedbackFile(context));
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			context.setFeedback(new FeedbackDB(context));
-		}
 		context.setTestBuild(context.getProperty("main.testing.build_id"));
 		context.setVersion(context.getProperty("main.testing.bits"));
 		
