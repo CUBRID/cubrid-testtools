@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.shell.common;
 
 import java.io.File;
-
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -79,6 +78,21 @@ public class CommonUtils {
 		}
 		return str.substring(0, len - count);
 
+	}
+	
+	public static String getBuildVersionInfo(SSHConnect ssh) {
+		String ver = null;
+		if(ssh == null) return ver;
+		
+		try {
+			ver = ssh.execute(Constants.GET_VERSION_SCRIPT);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return ver;
 	}
 	
 	public static ArrayList<String[]> extractTableToBeVerified(String input, String flag) {
@@ -247,15 +261,6 @@ public class CommonUtils {
 			}
 		}
 		return result.toString();
-	}
-
-	public static boolean isNewBuildNumberSystem(String simplifiedBuildId) {
-		if (simplifiedBuildId == null) {
-			return false;
-		}
-		String curValue = convertNumberSystemToFixedLength(simplifiedBuildId);
-		String stdValue = convertNumberSystemToFixedLength("10.1.0.6858");
-		return curValue.compareTo(stdValue) >= 0;
 	}
 
 	public static String convertNumberSystemToFixedLength(String simplifiedBuildId) {
