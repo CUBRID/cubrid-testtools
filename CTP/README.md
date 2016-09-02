@@ -77,7 +77,13 @@ such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``S
 	    ```
 	    $ bin/ctp.sh medium -c ./conf/medium.conf
 	    ```
-	* Use interactive mode to debug your **SQL/Medium** case          
+	    
+	* For **SQL_By_CCI** test:
+	    ```
+	    $ bin/ctp.sh sql_by_cci -c ./conf/sql.conf
+	    ``` 
+
+	* Use interactive mode to debug your **SQL/Medium** case (this feature does not support SQL_By_CCI)          
 	    ```
 	    $ bin/ctp.sh sql --interactive
 	    ```
@@ -92,7 +98,7 @@ such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``S
 	    Success:1
 	    Total:1
 	    Elapse Time:193
-	    Test Result Directory:/home/user/CTP/sql/result/y2016/m3/schedule_linux_sql_64bit_24202122_10.0.0_1376
+	    Test Result Directory:/home/user/CTP/{sql|medium|sql_by_cci}/result/y2016/m3/schedule_linux_sql_64bit_24202122_10.0.0_1376
 	    Test Log:/home/user/CTP/sql/log/sql_10.0.0.1376_1458818452.log
 	    -----------------------
 		
@@ -101,7 +107,7 @@ such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``S
 	    -----------------------
 	    ```
 	* You can find the details of the test result from ``Test Result Directory``
-	* You can also use your web browser to examine the result with webconsole service of CTP
+	* You can also use your web browser to examine the result of ``SQL`` or ``Medium`` with webconsole service of CTP(the current webconsole feature does not support SQL_By_CCI)
 	* ``bin/ctp.sh webconsole start`` will show you the URL of the result as follows:
 	  ```
 	  Config: /home/user/CTP/conf/webconsole.conf
@@ -264,41 +270,6 @@ such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``S
 	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance.
 
 
-- **SQL_By_CCI**
-  - Prepare
-	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
-	* Check out SQL scenarios from GitHub projects or prepare your own test cases for testing
-	* Check out CTP and update the value of ``scenario`` parameter within ``CTP/conf/sql.conf`` to point to the path of your scenarios. The current existing ``SQL_By_CCI`` is using SQL scenarios to 
-      test, so you also need make sure the parameters `` java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are configured
-	* **Example** ``sql.conf`` for test instance, scenario and test build, please refer to ``SQL`` section.
-        
-	More parameters setting and parameters explanation within ``sql.conf``, please refer to [CTP/conf/sql.conf](conf/sql.conf)
-
- - Run Tests
-	* For **SQL_By_CCI** test:
-
-      ```
-	  $ bin/ctp.sh sql_by_cci -c ./conf/sql.conf
-      ``` 
-
- - Examine the results
-	* When test is completed, you can find the results and logs from ``CTP/result/sql_by_cci/current_runtime_logs``
-	* CTP will print summary information as the following:
-
-	    ```
-	    -----------------------
-	    Fail:2
-	    Success:7506
-	    Total:7508
-	    Elapse Time:1653649
-	    Success:7506
-	    Test Log:/home/sqlbycci_git/CTP/result/sql_by_cci/current_runtime_log/sql_by_cci_10.1.0.6948-76691d6_1470978044.log
-	    Test Result Directory:/home/sqlbycci_git/CTP/result/sql_by_cci/schedule_cdriver_Linux_sql_by_cci_ext_20160812140225_10.1.0.6948-76691d6_64
-	    -----------------------
-	    ```
-	* You can find the details of the test result from ``Test Result Directory``
-	 
-
 ## How To Build CTP
 It's not required that you execute build for CTP, unless you make some changes within source codes. To build CTP from source code, you'll need ant installation and change to the directory CTP, execute ant command as the below:
 
@@ -309,7 +280,7 @@ It's not required that you execute build for CTP, unless you make some changes w
 You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar``, ``isolation/lib/cubridqa-isolation.jar`` and ``ha_repl/lib/cubridqa-ha_repl.jar``.
 
 ## How To Write Testcase
- - **SQL**
+ - **SQL/Medium/SQL_By_CCI**
     
    When you want to write your own test case, please follow the following rules.
    * Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory. 
@@ -480,11 +451,6 @@ You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/l
        @HC_CHECK_FOR_EACH_STATEMENT
        --test
      ```    
-
-- **SQL_By_CCI**
-   * Test cases: ``SQL_By_CCI`` is using same scenarios with ``SQL`` to test on HA mode to verify if the queries can be executed correctly via CCI driver,
-     so regarding how to write case for ``SQL_By_CCI``, please refer to ``SQL`` section. 
-
 
 ## License
 CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details.
