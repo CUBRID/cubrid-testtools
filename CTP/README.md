@@ -10,7 +10,9 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configurations
 
 ## Quick Start
-This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication`` and so on. Regarding more information please refer to the related sections
+This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, 
+such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``SQL_By_CCI`` and so on. Regarding more information please refer to the related sections
+
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly
 * Execute a sample test as follows:
 
@@ -40,7 +42,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
  - Prepare
  	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
  	* Check out scenarios from GitHub projects or prepare your own test cases for testing
- 	* Check out CTP and update the value of ``scenario`` parameter within ``CTP/conf/sql.conf`` to point to the path of your scenarios. For the current existing ``SQL`` test, you need to make sure the parameters `` java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are configured
+ 	* Check out CTP and update the value of ``scenario`` parameter within ``CTP/conf/sql.conf`` to point to the path of your scenarios. The current existing ``SQL`` test, you need make sure the parameters `` java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are configured
  	* **Example** ``sql.conf`` for scenario, data file and some important parameters changes
  	* 
 	  ```
@@ -264,39 +266,37 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 
 - **SQL_By_CCI**
   - Prepare
-        * ``SQL_By_CCI`` executes ``SQL`` cases by using CCI driver, so checkout ``SQL`` testcase from our GitHub projects or make your own test case
-        * Install CUBRID build and make sure your environment variable of CUBRID is correctly set
-        * Regarding to the configuration file of ``SQL_By_CCI``, please refer to [CTP/conf/sql.conf](conf/sql.conf) for the details 
-        * Environment variables set on test machine:
-
-          ```
-             JAVA_HOME=$java_nstallation_directory
-             CTP_HOME=$HOME/CTP
-          ```
+	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
+	* Check out SQL scenarios from GitHub projects or prepare your own test cases for testing
+	* Check out CTP and update the value of ``scenario`` parameter within ``CTP/conf/sql.conf`` to point to the path of your scenarios. The current existing ``SQL_By_CCI`` is using SQL scenarios to 
+      test, so you also need make sure the parameters `` java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are configured
+	* **Example** ``sql.conf`` for test instance, scenario and test build, please refer to ``SQL`` section.
+        
+	More parameters setting and parameters explanation within ``sql.conf``, please refer to [CTP/conf/sql.conf](conf/sql.conf)
 
  - Run Tests
-        * For **SQL_By_CCI** test:
+	* For **SQL_By_CCI** test:
 
-          ```
-          $ bin/ctp.sh sql_by_cci -c ./conf/sql.conf
-          ```
+      ```
+	  $ bin/ctp.sh sql_by_cci -c ./conf/sql.conf
+      ``` 
 
  - Examine the results
-        * Once it completes, you can find the results and logs from ``CTP/result/sql_by_cci/current_runtime_logs``
-        * The result message will be printed as the below
+	* When test is completed, you can find the results and logs from ``CTP/result/sql_by_cci/current_runtime_logs``
+	* CTP will print summary information as the following:
 
-          ```
-	  -----------------------
-	  Fail:2
-	  Success:7506
-	  Total:7508
-	  Elapse Time:1653649
-	  + echo Success:7506
-	  Test Log:/home/sqlbycci_git/CTP/result/sql_by_cci/current_runtime_log/sql_by_cci_10.1.0.6948-76691d6_1470978044.log
-	  Test Result Directory:/home/sqlbycci_git/CTP/result/sql_by_cci/schedule_cdriver_Linux_sql_by_cci_ext_20160812140225_10.1.0.6948-76691d6_64
-	  -----------------------
-          ```
-        * You can find the details of the test result from ``Test Result Directory``
+	    ```
+	    -----------------------
+	    Fail:2
+	    Success:7506
+	    Total:7508
+	    Elapse Time:1653649
+	    Success:7506
+	    Test Log:/home/sqlbycci_git/CTP/result/sql_by_cci/current_runtime_log/sql_by_cci_10.1.0.6948-76691d6_1470978044.log
+	    Test Result Directory:/home/sqlbycci_git/CTP/result/sql_by_cci/schedule_cdriver_Linux_sql_by_cci_ext_20160812140225_10.1.0.6948-76691d6_64
+	    -----------------------
+	    ```
+	* You can find the details of the test result from ``Test Result Directory``
 	 
 
 ## How To Build CTP
@@ -459,13 +459,13 @@ You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/l
 
 
 - **HA Replication**
-   * Test cases: Since ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data synchronization between an active server and a standby server, so the cases are same as ``SQL``
+   * Test cases: ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data synchronization between an active server and a standby server, so the cases are same as ``SQL``
    * CTP will transform case file to be ``case_name.test`` format with some checking statement flags around the SQL statements. And If the SQL does not contain primary key, CTP will add primary key on column
    * Sample for reference
     
      ```
        --test: #execute test flag for statement
-       create table t1 (id int primary key, name varchar)
+       create table t1 (id int primary key, name varchar);
        --check: #check data between master and slave
        @HC_CHECK_FOR_EACH_STATEMENT #check if schema is consistent between master and slave 
        --test:
@@ -482,9 +482,8 @@ You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/l
      ```    
 
 - **SQL_By_CCI**
-   * Test cases: Since ``SQL_By_CCI`` is using ``SQL`` scenarios to test on HA mode to verify if the queries can be executed correctly via CCI driver,
-     so the cases are same as ``SQL``. 
-   * Regarding how to write case for ``SQL_By_CCI``, please refer to ``SQL`` 
+   * Test cases: ``SQL_By_CCI`` is using same scenarios with ``SQL`` to test on HA mode to verify if the queries can be executed correctly via CCI driver,
+     so regarding how to write case for ``SQL_By_CCI``, please refer to ``SQL`` section. 
 
 
 ## License
