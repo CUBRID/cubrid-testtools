@@ -78,7 +78,7 @@ public class Context {
 		this.envList = initEnvList(config);
 		if (this.envList.size() == 0) {
 			isExecuteAtLocal = true;
-			this.envList.add("LOCAL");
+			this.envList.add("local");
 		} else {
 			isExecuteAtLocal = false;
 		}
