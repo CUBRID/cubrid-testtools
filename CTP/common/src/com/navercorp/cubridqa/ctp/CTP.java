@@ -267,6 +267,8 @@ public class CTP {
 	
 	private static void executeUnitTest(IniData config, String suite) {
 		String jar = ctpHome + File.separator + "shell" + File.separator + "lib" + File.separator + "cubridqa-shell.jar";
+		System.setProperty("TEST_TYPE", "unittest");
+		System.setProperty("TEST_CATEGORY", "unittest");
 		try {
 			URL url = new URL("file:" + jar);
 			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());

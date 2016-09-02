@@ -1,6 +1,7 @@
 package com.navercorp.cubridqa.shell.common;
 
 import java.io.File;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -8,8 +9,6 @@ import java.io.LineNumberReader;
 import java.util.HashMap;
 
 import com.navercorp.cubridqa.shell.main.Context;
-import com.navercorp.cubridqa.shell.result.FeedbackDB;
-import com.navercorp.cubridqa.shell.result.FeedbackFile;
 
 public class GeneralFeedback {
 
@@ -23,15 +22,24 @@ public class GeneralFeedback {
 	public GeneralFeedback(String configFilename, String messageFilename) throws IOException {
 		this.context = new Context(configFilename);
 		this.messageFilename = messageFilename;
-		this.context.setLogDir(context.getProperty("main.testing.category", "general"));
+		String category = context.getProperty("main.testing.category", "TEST_CATEGORY", false);
+		if(CommonUtils.isEmpty(category)) {
+			category = "general";
+		}
+		context.setTestCategory(category);
+		this.context.setLogDir(category);	
 		
 		keyData = new HashMap<String, String>();
 
-		context.setTestBuild(context.getProperty("main.testing.build_id"));
-		context.setVersion(context.getProperty("main.testing.bits"));
-		
-		boolean skipToSaveSuccCase = convertToBool(context.getProperty("main.skip_to_save_passed_testcases_yn", "true"));
-		context.setSkipToSaveSuccCase(skipToSaveSuccCase);
+		String buildId = context.getProperty("main.testing.build_id", "BUILD_ID", false);
+		if (!CommonUtils.isEmpty(buildId)) {
+			context.setTestBuild(buildId);
+		}
+
+		String buildBit = context.getProperty("main.testing.build_bits", "BUILD_BITS", false);
+		if (!CommonUtils.isEmpty(buildBit)) {
+			context.setVersion(buildBit);
+		}
 	}
 
 	public static void main(String[] args) throws IOException {

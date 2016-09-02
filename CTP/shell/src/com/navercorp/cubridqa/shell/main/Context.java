@@ -98,6 +98,8 @@ public class Context {
 	
 	String ctpBranchName;
 	
+	String testCategory;
+	
 	Map<String, String> envMap = null;
 	
 	String currentLogDir;
@@ -142,8 +144,10 @@ public class Context {
 		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
 		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "1");
 		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
+		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.skip_to_save_passed_testcases_yn", "false"));
+		this.testCategory = getProperty("main.testing.category", "shell").trim();
 		
-		setLogDir("shell");
+		setLogDir(this.testCategory);
 		
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
@@ -255,9 +259,12 @@ public class Context {
 		return getProperty("main.testing.platform", "linux");
 	}
 	
-	public String getTestCategory()
-	{
-		return getProperty("main.testing.category", "shell");
+	public String getTestCategory() {
+		return this.testCategory;
+	}
+
+	public void setTestCategory(String category) {
+		this.testCategory = category;
 	}
 	
 	public boolean needCleanTestCase()
@@ -520,4 +527,19 @@ public class Context {
 	public void setSkipToSaveSuccCase(boolean skipToSaveSuccCase) {
 		this.skipToSaveSuccCase = skipToSaveSuccCase;
 	}
+	
+	public String getProperty(String key1, String key2, boolean reverse) {
+		String value1 = getProperty(key1);
+		String value2 = System.getProperty(key2);
+		if (CommonUtils.isEmpty(value2)) {
+			value2 = System.getenv(key2);
+		}
+
+		if (reverse) {
+			return CommonUtils.isEmpty(value2) ? value1 : value2;
+		} else {
+			return CommonUtils.isEmpty(value1) ? value2 : value1;
+		}
+	}
+
 }
