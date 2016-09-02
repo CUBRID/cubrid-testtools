@@ -88,7 +88,7 @@ public class MailSender {
 		}
 
 		if (!cmd.hasOption("title") && !cmd.hasOption("content")) {
-			showHelp("Please give mail subject and content", options);
+			showHelp("Please give mail subject and content", options); 
 			return;
 		}
 
@@ -101,6 +101,9 @@ public class MailSender {
 		ArrayList<InternetAddress> toAdrrList = new ArrayList<InternetAddress>();
 		ArrayList<InternetAddress> ccAdrrList = new ArrayList<InternetAddress>();
 		for (int i = 0; i < toList.length; i++) {
+			if (toList[i].indexOf("@") <= 0) {
+				continue;
+			}
 			if (toList[i].indexOf("<") >= 0) {
 				String mailAlias = toList[i].substring(0, toList[i].indexOf("<"));
 				String mailAddr = toList[i].substring(toList[i].indexOf("<") + 1, toList[i].indexOf(">"));
@@ -119,6 +122,9 @@ public class MailSender {
 		if (cc != null && cc.length() > 0) {
 			String[] ccList = cc.split(",");
 			for (int j = 0; j < ccList.length; j++) {
+				if (ccList[j].indexOf("@") <= 0) {
+					continue;
+				}
 				if (ccList[j].indexOf("<") >= 0) {
 					String mailAlias = ccList[j].substring(0, ccList[j].indexOf("<"));
 					String mailAddr = ccList[j].substring(ccList[j].indexOf("<") + 1, ccList[j].indexOf(">"));
@@ -131,11 +137,6 @@ public class MailSender {
 					ccAdrrList.add(idxCc);
 				}
 			}
-
-		} else {
-			// InternetAddress defaultCC = new
-			// InternetAddress("!cubridqa@navercorp.com", "CUBRIDQA");
-			// ccAdrrList.add(defaultCC);
 		}
 
 		if (content != null && content.length() > 0) {
@@ -143,7 +144,9 @@ public class MailSender {
 			content = content.replace("#TO#", dearContent);
 		}
 
-		MailSender.getInstance().send(from, toAdrrList, ccAdrrList, title, content);
+		if ((toAdrrList != null && toAdrrList.size() > 0) || (ccAdrrList != null && ccAdrrList.size() > 0)) {
+			MailSender.getInstance().send(from, toAdrrList, ccAdrrList, title, content);
+		}
 
 	}
 

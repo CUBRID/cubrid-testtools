@@ -12,7 +12,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
   not conflict with another instance exists. Otherwise, start server or broker will be fail.
 
 ## Quick Start
-This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation`` and so on. Regarding more information please refer to the related sections.
+This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``SQL_By_CCI`` and so on. Regarding more information please refer to the related sections.
 
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly.
 * Execute a sample test as follows:
@@ -166,14 +166,75 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* ``main_snapshot.properties`` will save the configurations for your current testing.
 	* ``test_${Node_Name}.log`` will show the logs of testing based on this server node.
 
+- **HA Replication**
+  - Prepare
+	* Use one server as controller to checkout CTP, and test node may be one or more, they will be controlled by controller, and CTP must be deployed on each node.
+	* Controller Node configuration is basically same as ``Shell``.
+	  Regarding more parameters for ``HA Replication`` testing, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)
+	* Environment variables set on test Node:
+	  
+	  ```
+	     JAVA_HOME=$java_nstallation_directory 
+	     CTP_HOME=$HOME/CTP
+	  ```
+	  
+ - Run Tests 
+	* For **HA Replication** test:
+	
+	  ```
+	  $ bin/ctp.sh ha_repl -c ./conf/ha_repl.conf
+	  ```   
+    
+ - Examine the results
+	* Once it completes, you can find the results and logs from ``CTP/result/ha_repl/current_runtime_logs``
+	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this server node.
+	* ``main_snapshot.properties`` will save the configurations for your current testing.
+	* ``test_${Node_Name}.log`` will show the logs of testing based on this server node.
 
+
+- **SQL_By_CCI**
+  - Prepare
+        * ``SQL_By_CCI`` executes ``SQL`` cases by using CCI driver, so checkout ``SQL`` testcase from our GitHub projects or make your own test case
+        * Install CUBRID build and make sure your environment variable of CUBRID is correctly set
+        * Regarding to the configuration file of ``SQL_By_CCI``, please refer to [CTP/conf/sql.conf](conf/sql.conf) for the details 
+        * Environment variables set on test machine:
+
+          ```
+             JAVA_HOME=$java_nstallation_directory
+             CTP_HOME=$HOME/CTP
+          ```
+
+ - Run Tests
+        * For **SQL_By_CCI** test:
+
+          ```
+          $ bin/ctp.sh sql_by_cci -c ./conf/sql.conf
+          ```
+
+ - Examine the results
+        * Once it completes, you can find the results and logs from ``CTP/result/sql_by_cci/current_runtime_logs``
+        * The result message will be printed as the below
+
+          ```
+	  -----------------------
+	  Fail:2
+	  Success:7506
+	  Total:7508
+	  Elapse Time:1653649
+	  + echo Success:7506
+	  Test Log:/home/sqlbycci_git/CTP/result/sql_by_cci/current_runtime_log/sql_by_cci_10.1.0.6948-76691d6_1470978044.log
+	  Test Result Directory:/home/sqlbycci_git/CTP/result/sql_by_cci/schedule_cdriver_Linux_sql_by_cci_ext_20160812140225_10.1.0.6948-76691d6_64
+	  -----------------------
+          ```
+        * You can find the details of the test result from ``Test Result Directory``
+	 
 
 ## How To Build CTP
 You are not required to build CTP from source codes, unless you make some changes. To make your own build, please install ant and make a build as follows: 
   ```
     $ ant clean dist
   ```
-You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar`` and ``isolation/lib/cubridqa-isolation.jar``.
+You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar``, ``isolation/lib/cubridqa-isolation.jar`` and ``ha_repl/lib/cubridqa-ha_repl.jar``.
 
 ## How To Write Testcase
  - **SQL**
@@ -320,6 +381,38 @@ You can find generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/c
         - The purpose/author/reference/priority of case to help reader understand your points
         - C1~n means transaction session
         - MC means main controller, it will control and coordinate the order of all transaction clients
+
+
+- **HA Replication**
+   * Test cases: Since ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data synchronization between an active server and a standby server,
+     so the cases are same as ``SQL``
+   * CTP will transform case file to be ``case_name.test`` file with some checking statement flags around the SQL statement. And If the SQL does not contain primary key,
+     CTP will add primary key on column
+   * Sample for reference
+     ```
+       --test: #execute test flag for statement
+       create table t1 (id int primary key, name varchar);
+       --check: #check data between master and slave
+       @HC_CHECK_FOR_EACH_STATEMENT #check if schema is consistent between master and slave 
+       --test:
+       
+       insert into t1 values (1, 'qa'), (2, 'cubrid');
+       --check:
+       $HC_CHECK_FOR_DML
+       
+       --test:
+       drop table t1;
+       --check:
+       @HC_CHECK_FOR_EACH_STATEMENT
+       --test
+     ```    
+
+- **SQL_By_CCI**
+   * Test cases: Since ``SQL_By_CCI`` is using ``SQL`` scenarios to test on HA mode to verify if the queries can be executed correctly via CCI driver,
+     so the cases are same as ``SQL``. 
+   * Regarding how to write case for ``SQL_By_CCI``, please refer to ``SQL`` 
+
+
 
 ## License
 CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details.
