@@ -51,6 +51,7 @@ public class Constants {
 	public static final String WIN_KILL_PROCESS_NATIVE = createWinKillNativeScripts();
 	public static final ShellScriptInput WIN_KILL_PROCESS = createWinKillScripts();
 	public static final ShellScriptInput LIN_KILL_PROCESS = createLinKillScripts();
+	public static final ShellScriptInput GET_VERSION_SCRIPT = craeteGetVersionScript();
 
 	
 	private static ShellScriptInput createWinKillScripts (){
@@ -82,6 +83,14 @@ public class Constants {
 		scripts.addCommand("taskkill /F /IM ps.exe");
 		scripts.addCommand("taskkill /F /IM sed.exe");
 		scripts.addCommand("taskkill /F /IM awk.exe");
+		return scripts;
+	}
+	
+	private static ShellScriptInput craeteGetVersionScript()
+	{
+		ShellScriptInput scripts = new ShellScriptInput();
+		scripts.addCommand("cubrid_rel");
+		
 		return scripts;
 	}
 	

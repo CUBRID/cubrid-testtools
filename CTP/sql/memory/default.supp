@@ -139,6 +139,19 @@
    fun:css_init
 }
 
+## CBRD-20454 not a bug
+{
+   hl_register_lea_heap_shutdown
+   Memcheck:Leak
+   fun:malloc
+   fun:hl_register_lea_heap
+   fun:thread_initialize_entry
+   fun:thread_initialize_manager
+   fun:boot_restart_server
+   fun:net_server_start
+   fun:main
+}
+
 ## ## suppress memory leak 
 ## CUBRIDSUS-9310, CUBRIDSUS-14464, not a bug.
 {

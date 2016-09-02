@@ -42,9 +42,6 @@ import com.navercorp.cubridqa.shell.deploy.Deploy;
 import com.navercorp.cubridqa.shell.deploy.TestCaseGithub;
 import com.navercorp.cubridqa.shell.deploy.TestCaseSVN;
 import com.navercorp.cubridqa.shell.dispatch.Dispatch;
-import com.navercorp.cubridqa.shell.result.FeedbackDB;
-import com.navercorp.cubridqa.shell.result.FeedbackFile;
-import com.navercorp.cubridqa.shell.result.FeedbackNull;
 
 public class TestFactory {
 
@@ -61,16 +58,7 @@ public class TestFactory {
 		this.testPool = Executors.newFixedThreadPool(100);
 		this.configPool = Executors.newFixedThreadPool(1);
 		this.testMap = new HashMap<String, Test>();
-
-		String feedbackType = context.getProperty("main.feedback.type", "").trim();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			feedback = new FeedbackFile(context);
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			feedback = new FeedbackDB(context);
-		} else {
-			feedback = new FeedbackNull();
-		}
-		context.setFeedback(feedback);
+		this.feedback = context.getFeedback();
 	}
 	
 	private void addSkippedTestCases(ArrayList<String> list, String skippedType) {
@@ -122,6 +110,7 @@ public class TestFactory {
 		}
 		
 		System.out.println("The Number of Test Case : " + Dispatch.getInstance().getTotalTbdSize());
+		
 		System.out.println("============= DEPLOY ==================");
 		concurrentDeploy(stableEnvList, false);
 		System.out.println("DONE");

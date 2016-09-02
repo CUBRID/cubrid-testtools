@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.shell.main;
 
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,10 +36,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import javax.mail.internet.InternetAddress;
-
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
+import com.navercorp.cubridqa.shell.result.FeedbackDB;
+import com.navercorp.cubridqa.shell.result.FeedbackFile;
+import com.navercorp.cubridqa.shell.result.FeedbackNull;
 
 public class Context {
 
@@ -98,12 +98,15 @@ public class Context {
 	
 	String ctpBranchName;
 	
+	String testCategory;
+	
 	Map<String, String> envMap = null;
 	
 	String currentLogDir;
 	String rootLogDir;
 	
 	boolean skipToSaveSuccCase = false;
+	boolean reInstallTestBuildYn = false;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -117,8 +120,8 @@ public class Context {
 		this.envList = initEnvList(config);
 		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (Constants.ENV_CTP_HOME_KEY);
 		
-		this.cleanTestCase = getProperty("main.testcase.clean", "false").equalsIgnoreCase("true");
-		this.isWindows = getProperty("main.testing.platform", "linux").equalsIgnoreCase("windows");
+		this.cleanTestCase = getProperty("main.testcase.clean", "false").equalsIgnoreCase("true") && !CommonUtils.isEmpty(getTestCaseBranch());
+		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
 		
 		this.testCaseSkipKey = getProperty("main.testcase.skip_key", "").trim().toUpperCase();
 		if(this.testCaseSkipKey.equals("")) {
@@ -141,11 +144,24 @@ public class Context {
 		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
 		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "1");
 		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
+		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.skip_to_save_passed_testcases_yn", "false"));
+		this.testCategory = getProperty("main.testing.category", "shell").trim();
 		
-		setLogDir("shell");
+		setLogDir(this.testCategory);
 		
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
+		
+		if(this.feedback == null) {
+			String feedbackType = getProperty("main.feedback.type", "file").trim();
+			if (feedbackType.equalsIgnoreCase("file")) {
+				this.feedback = new FeedbackFile(this);
+			} else if (feedbackType.equalsIgnoreCase("database")) {
+				this.feedback = new FeedbackDB(this);
+			} else {
+				this.feedback = new FeedbackNull();
+			}
+		}
     }
 	
 	public void setLogDir(String category) {
@@ -238,17 +254,50 @@ public class Context {
 			return ws;
 		}
 	}
+	
+	public String getTestPlatform(){
+		return getProperty("main.testing.platform", "linux");
+	}
+	
+	public String getTestCategory() {
+		return this.testCategory;
+	}
 
+	public void setTestCategory(String category) {
+		this.testCategory = category;
+	}
+	
+	public boolean needCleanTestCase()
+	{
+		return this.cleanTestCase;
+	}
+	
+	public String getTestCaseTimeout()
+	{
+		return getProperty("main.testcase.timeout", "-1");
+	}
+	
+	public boolean needEnableMonitorTrace()
+	{
+		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.monitor.enable_tracing", "false"));
+	}
+	
+	public String getExcludedCoresByAssertLine()
+	{
+		return getProperty("main.testing.excluded_cores_by_assert_line");
+	}
+	
+	public boolean needDeleteTestCaseAfterTest()
+	{
+		return getProperty("main.testing.delete_test_case_after_execution", "false").trim().toLowerCase().equals("true");
+	}
+	
 	public void setCubridPackageUrl(String cubridPackageUrl) {
 		this.cubridPackageUrl = cubridPackageUrl;
 	}
 
 	public String getCubridPackageUrl() {
 		return this.cubridPackageUrl;
-	}
-	
-	public boolean getCleanTestCase(){
-		return cleanTestCase;
 	}
 	
 	public String getSVNUserInfo(){
@@ -304,10 +353,6 @@ public class Context {
 		 return this.isWindows;
 	}
 	
-	public void setFeedback(Feedback feedback) {
-		this.feedback = feedback;
-	}
-	
 	public Feedback getFeedback() {
 		return this.feedback;
 	}
@@ -318,6 +363,14 @@ public class Context {
 	
 	public String getRootLogDir(){		
 		return rootLogDir;
+	}
+	
+	public boolean isReInstallTestBuildYn() {
+		return reInstallTestBuildYn;
+	}
+
+	public void setReInstallTestBuildYn(boolean reInstallTestBuildYn) {
+		this.reInstallTestBuildYn = reInstallTestBuildYn;
 	}
 	
 	public String getFeedbackDbUrl(){
@@ -437,7 +490,7 @@ public class Context {
 	public String getCtpBranchName() {
 		return ctpBranchName;
 	}
-
+	
 	public void setCtpBranchName(String ctpBranchName) {
 		this.ctpBranchName = ctpBranchName;
 	}
@@ -474,4 +527,19 @@ public class Context {
 	public void setSkipToSaveSuccCase(boolean skipToSaveSuccCase) {
 		this.skipToSaveSuccCase = skipToSaveSuccCase;
 	}
+	
+	public String getProperty(String key1, String key2, boolean reverse) {
+		String value1 = getProperty(key1);
+		String value2 = System.getProperty(key2);
+		if (CommonUtils.isEmpty(value2)) {
+			value2 = System.getenv(key2);
+		}
+
+		if (reverse) {
+			return CommonUtils.isEmpty(value2) ? value1 : value2;
+		} else {
+			return CommonUtils.isEmpty(value1) ? value2 : value1;
+		}
+	}
+
 }
