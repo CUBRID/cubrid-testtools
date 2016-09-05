@@ -188,8 +188,12 @@ public class CommonUtils {
 	}
 	
 	public static Properties getProperties(String filename) throws IOException {
-		FileInputStream fis = new FileInputStream(filename);
 		Properties props = new Properties();
+		if (isEmpty(filename)) {
+			return props;
+		}
+		
+		FileInputStream fis = new FileInputStream(filename);		
 		props.load(fis);
 		fis.close();
 		return  props;

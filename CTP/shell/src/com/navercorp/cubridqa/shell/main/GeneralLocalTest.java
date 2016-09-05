@@ -20,7 +20,7 @@ public class GeneralLocalTest {
 			category = "general";
 		}
 		context.setTestCategory(category);
-		this.context.setLogDir(category);		
+		this.context.setLogDir(category);
 
 		String buildId = context.getProperty("main.testing.build_id", "BUILD_ID", false);
 		if (!CommonUtils.isEmpty(buildId)) {
