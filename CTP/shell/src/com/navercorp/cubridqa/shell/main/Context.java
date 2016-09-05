@@ -151,17 +151,6 @@ public class Context {
 		
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
-		
-		if(this.feedback == null) {
-			String feedbackType = getProperty("main.feedback.type", "file").trim();
-			if (feedbackType.equalsIgnoreCase("file")) {
-				this.feedback = new FeedbackFile(this);
-			} else if (feedbackType.equalsIgnoreCase("database")) {
-				this.feedback = new FeedbackDB(this);
-			} else {
-				this.feedback = new FeedbackNull();
-			}
-		}
     }
 	
 	public void setLogDir(String category) {
@@ -354,6 +343,16 @@ public class Context {
 	}
 	
 	public Feedback getFeedback() {
+		if(this.feedback == null) {
+			String feedbackType = getProperty("main.feedback.type", "file").trim();
+			if (feedbackType.equalsIgnoreCase("file")) {
+				this.feedback = new FeedbackFile(this);
+			} else if (feedbackType.equalsIgnoreCase("database")) {
+				this.feedback = new FeedbackDB(this);
+			} else {
+				this.feedback = new FeedbackNull();
+			}
+		}
 		return this.feedback;
 	}
 	
@@ -541,5 +540,4 @@ public class Context {
 			return CommonUtils.isEmpty(value1) ? value2 : value1;
 		}
 	}
-
 }

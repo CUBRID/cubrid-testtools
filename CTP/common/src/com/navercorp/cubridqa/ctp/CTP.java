@@ -169,7 +169,11 @@ public class CTP {
 					executeHaRepl(getConfigData(taskLabel, configFilename, "ha_repl"), "ha_repl");
 					break;
 				case UNITTEST:
-					executeUnitTest(getConfigData(taskLabel, configFilename, "unittest"), "unittest");
+					if (CommonUtils.isEmpty(configFilename)) {
+						executeUnitTest(null, "unittest");
+					} else {
+						executeUnitTest(getConfigData(taskLabel, configFilename, "unittest"), "unittest");
+					}
 					break;
 				}
 
@@ -274,13 +278,18 @@ public class CTP {
 			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
 			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.shell.main.GeneralLocalTest");
 			Method m = clz.getDeclaredMethod("exec", String.class);
-			String configFilename;
-			if (CommonUtils.isWindowsPlatform()) {
-				configFilename = CommonUtils.getWindowsStylePath(config.getFilename());
+
+			if (config == null) {
+				m.invoke(clz, (String) null);
 			} else {
-				configFilename = config.getFilename();
-			}			
-			m.invoke(clz, configFilename);
+				String configFilename;
+				if (CommonUtils.isWindowsPlatform()) {
+					configFilename = CommonUtils.getWindowsStylePath(config.getFilename());
+				} else {
+					configFilename = config.getFilename();
+				}
+				m.invoke(clz, configFilename);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
