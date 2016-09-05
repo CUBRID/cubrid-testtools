@@ -100,7 +100,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	    ```
 	* You can find the details of the test result from ``Test Result Directory``
 	* You can also use your web browser to examine the result with webconsole service of CTP
-	* ``bin/ctp.sh webconsole start`` will show you the URL of the result as follows:
+	* ``bin/ctp.sh webconsole start`` shows you the URL of the result as follows:
 	  ```
 	  Config: /home/user/CTP/conf/webconsole.conf
 	  Web Root: /home/user/CTP/sql/webconsole
@@ -206,9 +206,9 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
         
  - Examine the results
 	* When test is completed, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
-	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this instance
-	* ``main_snapshot.properties`` will save all values of parameters configured during testing
-	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance
+	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the case list which is executed on this instance
+	* ``main_snapshot.properties`` saves all values of parameters configured during testing
+	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 
 - **HA Replication**
   - Prepare
@@ -257,9 +257,9 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     
  - Examine the results
 	* When test is completed, you can find the results and logs from ``CTP/result/ha_repl/current_runtime_logs``
-	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the cases which are executed on this instance
-	* ``main_snapshot.properties`` will save all values of parameters configured during testing
-	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance
+	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the cases which are executed on this instance
+	* ``main_snapshot.properties`` saves all values of parameters configured during testing
+	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 
 
 ## How To Build CTP
@@ -418,7 +418,7 @@ You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/l
    Note:
      - The purpose/author/reference/priority of case will help reader understand your points
       - C1~n means transaction session name
-      - MC means main controller, it will control and coordinate the order of all transaction clients
+      - MC means main controller, it controls and coordinates the order of all transaction clients
 
 
 - **HA Replication**
