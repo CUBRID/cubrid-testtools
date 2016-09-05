@@ -58,13 +58,9 @@ public class Main {
 			context.setBuildBits(CommonUtils.getBuildBits(context
 					.getCubridPackageUrl()));
 			context.setReInstallTestBuildYn(true);
-		}else{
+		} else {
 			String envId = context.getEnvList().get(0);
-			String host = context.getInstanceProperty(envId, "ssh.host");
-			String port = context.getInstanceProperty(envId, "ssh.port");
-			String user = context.getInstanceProperty(envId, "ssh.user");
-			String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-			SSHConnect ssh = new SSHConnect(host, user, port, pwd, "ssh"); 
+			SSHConnect ssh = IsolationHelper.createTestNodeConnect(context, envId);
 			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
 			context.setBuildId(CommonUtils.getBuildId(buildInfo));
 			context.setBuildBits(CommonUtils.getBuildBits(buildInfo));
