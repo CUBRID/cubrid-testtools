@@ -249,6 +249,14 @@ public class Context {
 		return enableCheckDiskSpace;
 	}
 	
+	public String getTestPlatform() {
+		return getProperty("main.testing.platform", "linux");
+	}
+
+	public String getTestCategory() {
+		return getProperty("main.testing.category", "ha_repl");
+	}
+	
 	public String getMailNoticeTo() {
 		return this.mailNoticeTo;		
 	}
