@@ -24,12 +24,7 @@
  */
 package com.navercorp.cubridqa.shell.main;
 
-import java.util.Properties;
-
-import javax.mail.internet.InternetAddress;
-
 import com.navercorp.cubridqa.common.CommonUtils;
-import com.navercorp.cubridqa.common.Constants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -42,7 +37,7 @@ public class CheckRequirement {
 	String sshTitle;
 	Log log;
 	boolean finalPass = true;
-	String host, port, user, pwd;
+	String host;
 	boolean isRelated;
 
 	public CheckRequirement(Context context, String envId, String host, boolean isRelated) {
@@ -51,11 +46,7 @@ public class CheckRequirement {
 		this.isRelated = isRelated;
 		this.host = host;
 		
-		this.port = context.getInstanceProperty(envId, "ssh.port");
-		this.user = context.getInstanceProperty(envId, "ssh.user");
-		this.pwd = context.getInstanceProperty(envId, "ssh.pwd");
-
-		this.sshTitle = user + "@" + host + ":" + port;
+		this.sshTitle = ShellHelper.getTestNodeTitle(context, envId, host);
 
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "check_" + envId + ".log"), true, context.isContinueMode());
 		this.finalPass = true;
@@ -122,11 +113,7 @@ public class CheckRequirement {
 	private void checkSSH() throws Exception {
 		try {
 			this.log.print("==> Check ssh connection ");
-			if(context.isWindows()) {
-				this.ssh = new SSHConnect(host, port, user, pwd, "rmi");
-			} else {
-				this.ssh = new SSHConnect(host, port, user, pwd);
-			}
+			this.ssh = ShellHelper.createTestNodeConnect(context, envId, host);			
 			log.print("...... PASS");
 		} catch (Exception e) {
 			log.print("...... FAIL: " + e.getMessage());

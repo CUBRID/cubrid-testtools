@@ -32,6 +32,7 @@ import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
+import com.navercorp.cubridqa.shell.main.ShellHelper;
 
 public class DeployHA {
 	Context context;
@@ -54,7 +55,7 @@ public class DeployHA {
 		masterHost = context.getInstanceProperty(masterEnvId, "ssh.host");
 		
 		envIdentify = "MasterEnvId=" + masterEnvId + "[" + user+"@"+ masterHost +":" + port + "] - SlaveEnvId:" + slaveIp;
-		this.ssh = new SSHConnect(masterHost, port, user, pwd, context.getServiceProtocolType());
+		this.ssh = ShellHelper.createTestNodeConnect(context, masterEnvId);
 		this.log = log;
 	}
 	

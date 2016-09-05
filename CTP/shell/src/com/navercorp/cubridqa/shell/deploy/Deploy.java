@@ -32,14 +32,15 @@ import java.util.ArrayList;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.main.Context;
+import com.navercorp.cubridqa.shell.main.ShellHelper;
 
 public class Deploy {
 
 	Context context;
 	String currEnvId;
 	String cubridPackageUrl;
+	String host;
 	
-	String host, port, user, pwd;
 	String envIdentify;
 	
 	Log log;
@@ -49,9 +50,7 @@ public class Deploy {
 		this.currEnvId = currEnvId;
 
 		this.host = context.getInstanceProperty(currEnvId, "ssh.host");
-		this.port = context.getInstanceProperty(currEnvId, "ssh.port");
-		this.user = context.getInstanceProperty(currEnvId, "ssh.user");
-		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "]";
+		envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId, host)) + "]";
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, laterJoined ? true : context.isContinueMode());

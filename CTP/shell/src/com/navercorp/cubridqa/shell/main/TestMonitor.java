@@ -53,14 +53,7 @@ public class TestMonitor {
 		
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "monitor_" + test.getCurrentEnvId() + ".log"), false, context.isContinueMode);
 		
-		String currEnvId = test.getCurrentEnvId();
-		String host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-		String serviceProtocol = context.getServiceProtocolType();
-
-		this.ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);		
+		this.ssh = ShellHelper.createTestNodeConnect(context, test.getCurrentEnvId());
 		this.initRelatedSSH();
 
 		try {
@@ -96,12 +89,11 @@ public class TestMonitor {
 		}
 		
 		ArrayList<String> relatedHosts = context.getRelatedHosts(test.getCurrentEnvId());
-		String serviceProtocol = context.getServiceProtocolType();
 		if (relatedHosts != null && relatedHosts.size() > 0) {			
 			SSHConnect s;
 			for (String host : relatedHosts) {
 				try {
-					s = new SSHConnect(host, test.sshPort, test.sshUser, test.sshPwd, serviceProtocol);
+					s = ShellHelper.createTestNodeConnect(context, test.getCurrentEnvId(), host);
 					this.sshRelateds.add(s);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -222,7 +214,7 @@ public class TestMonitor {
 		
 		long elapse_time = (endTime - test.startTime) / 1000;
 		
-		String result = CommonUtils.resetProcess(ssh, context.isWindows);
+		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
 		
 		test.testCaseSuccess = false;
 		test.addResultItem("NOK", "timeout");
