@@ -135,7 +135,7 @@ public class FeedbackFile implements Feedback {
 
 		if (role.indexOf("coverage") != -1) {
 			String build_id = context.getBuildId();
-			String category = context.getProperty("main.testing.category", "").trim();
+			String category = context.getTestCategory();
 			String c_user = context.getProperty("main.coverage.user", "").trim();
 			String c_pwd = context.getProperty("main.coverage.pwd", "").trim();
 			String c_ip = context.getProperty("main.coverage.ip", "").trim();
