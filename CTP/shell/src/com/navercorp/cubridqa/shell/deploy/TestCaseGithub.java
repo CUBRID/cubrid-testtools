@@ -31,6 +31,7 @@ import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
+import com.navercorp.cubridqa.shell.main.ShellHelper;
 
 public class TestCaseGithub {
 
@@ -42,13 +43,10 @@ public class TestCaseGithub {
 	public TestCaseGithub(Context context, String currEnvId) throws Exception {
 		this.context = context;
 		this.currEnvId =currEnvId;
-		String host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
+
 		
-		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "] with " + context.getServiceProtocolType() + " protocol!";
-		this.ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
+		envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId)) + "] with " + context.getServiceProtocolType() + " protocol!";
+		this.ssh = ShellHelper.createTestNodeConnect(context, currEnvId);
 		
 		if(context.isWindows()) {
 			initWindows();
@@ -98,7 +96,7 @@ public class TestCaseGithub {
  	}
 	
 	public void cleanProcess() {
-		String result = CommonUtils.resetProcess(ssh, context.isWindows());
+		String result = CommonUtils.resetProcess(ssh, context.isWindows(), context.isExecuteAtLocal());
 		System.out.println("CLEAN PROCESSES:");
 		System.out.println(result);
  	}

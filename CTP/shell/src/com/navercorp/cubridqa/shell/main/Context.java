@@ -107,6 +107,8 @@ public class Context {
 	
 	boolean skipToSaveSuccCase = false;
 	boolean reInstallTestBuildYn = false;
+	
+	private boolean isExecuteAtLocal = false;	
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -118,6 +120,13 @@ public class Context {
 	public void reload() throws IOException{
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
 		this.envList = initEnvList(config);
+		if (this.envList.size() == 0) {
+			isExecuteAtLocal = true;
+			this.envList.add("local");
+		} else {
+			isExecuteAtLocal = false;
+		}
+		
 		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (Constants.ENV_CTP_HOME_KEY);
 		
 		this.cleanTestCase = getProperty("main.testcase.clean", "false").equalsIgnoreCase("true") && !CommonUtils.isEmpty(getTestCaseBranch());
@@ -539,5 +548,9 @@ public class Context {
 		} else {
 			return CommonUtils.isEmpty(value1) ? value2 : value1;
 		}
+	}
+
+	public boolean isExecuteAtLocal() {
+		return isExecuteAtLocal;
 	}
 }
