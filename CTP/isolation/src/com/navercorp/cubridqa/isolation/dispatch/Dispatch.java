@@ -37,6 +37,7 @@ import java.util.ArrayList;
 
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
+import com.navercorp.cubridqa.isolation.IsolationHelper;
 import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
@@ -157,12 +158,7 @@ public class Dispatch {
 	private ArrayList<String> findAllTestCase() throws Exception {
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getInstanceProperty(envId, "ssh.host");
-		String port = context.getInstanceProperty(envId, "ssh.port");
-		String user = context.getInstanceProperty(envId, "ssh.user");
-		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh = IsolationHelper.createTestNodeConnect(context, envId);
 		IsolationScriptInput script;
 		String result;
 
@@ -196,12 +192,7 @@ public class Dispatch {
 
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getInstanceProperty(envId, "ssh.host");
-		String port = context.getInstanceProperty(envId, "ssh.port");
-		String user = context.getInstanceProperty(envId, "ssh.user");
-		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh =  IsolationHelper.createTestNodeConnect(context, envId);
 		IsolationScriptInput script;
 		String result;
 

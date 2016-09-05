@@ -33,6 +33,7 @@ import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.Feedback;
+import com.navercorp.cubridqa.isolation.IsolationHelper;
 import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
@@ -147,13 +148,9 @@ public class FeedbackFile implements Feedback {
 			String covTargetDir = context.getProperty("main.coverage.controller.result", "").trim();
 			String category = context.getTestCategory();
 			String covParams = "-n " + context.getBuildId() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
-			String host = context.getInstanceProperty(envIdentify, "ssh.host");
-			String port = context.getInstanceProperty(envIdentify, "ssh.port");
-			String user = context.getInstanceProperty(envIdentify, "ssh.user");
-			String pwd = context.getInstanceProperty(envIdentify, "ssh.pwd");
-			envIdentify = "EnvId=" + envIdentify + "[" + user + "@" + host + ":" + port + "]";
+			envIdentify = "EnvId=" + envIdentify + "[" + IsolationHelper.getTestNodeTitle(context, envIdentify) + "]";
 			try {
-				ssh = new SSHConnect(host, port, user, pwd);
+				ssh = IsolationHelper.createTestNodeConnect(context, envIdentify);
 
 				IsolationScriptInput scripts = new IsolationScriptInput();
 				scripts.addCommand("run_coverage_collect_and_upload " + covParams);

@@ -38,6 +38,10 @@ import com.jcraft.jsch.Session;
 import com.navercorp.cubridqa.shell.service.ShellService;
 
 public class SSHConnect {
+	
+	public final static String SERVICE_TYPE_SSH = "ssh";
+	public final static String SERVICE_TYPE_RMI = "rmi";
+	public final static String SERVICE_TYPE_LOCAL = "local";
 
 	private Session session;
 
@@ -50,8 +54,12 @@ public class SSHConnect {
 	
 	final int MAX_TRY_TIME = 10;
 	
+	public SSHConnect() throws JSchException {
+		this(null, -1, null, null, SERVICE_TYPE_LOCAL);
+	}
+	
 	public SSHConnect(String host, String port, String user, String pwd) throws JSchException {
-		this(host, Integer.parseInt(port), user, pwd, "ssh");
+		this(host, Integer.parseInt(port), user, pwd, SERVICE_TYPE_SSH);
 	}
 	
 	public SSHConnect(String host, String port, String user, String pwd, String serviceProtocol) throws JSchException {
@@ -59,7 +67,6 @@ public class SSHConnect {
 	}
 
 	public SSHConnect(String host, int port, String user, String pwd, String serviceProtocol) throws JSchException {
-
 		this.host = host;
 		this.port = port;
 		this.user = user;
@@ -99,7 +106,7 @@ public class SSHConnect {
 
 	public String execute(String scripts, boolean pureWindows) throws Exception {
 		//System.out.println(scripts);
-		if (serviceProtocol.equals("rmi")) {
+		if (serviceProtocol.equals(SERVICE_TYPE_RMI)) {
 			ShellService srv = null;
 			String url = "rmi://" + host + ":" + port + "/shellService";
 			while(true) {
@@ -113,6 +120,9 @@ public class SSHConnect {
 				}				
 			}			
 			return srv.exec(user, pwd, scripts, pureWindows);
+		} else if (serviceProtocol.equals(SERVICE_TYPE_LOCAL)) {
+			String raw = LocalInvoker.exec(scripts, pureWindows, false);
+			return extractOutput(raw);
 		}
 
 		if (session == null || !session.isConnected())
@@ -137,8 +147,16 @@ public class SSHConnect {
 		}
 
 		exec.disconnect();
-
-		String result = out.toString();
+		
+		return extractOutput(out.toString());
+	}
+	
+	private static String extractOutput(String raw) {
+		if (raw == null) {
+			return raw;
+		}
+		
+		String result = raw;
 
 		int p = result.indexOf(ScriptInput.START_FLAG);
 		if (p != -1) {
@@ -148,8 +166,8 @@ public class SSHConnect {
 		if (p != -1) {
 			result = result.substring(0, p);
 		}
-		//System.out.println(result.trim());
 		return result.trim();
+		
 	}
 	
 	public void restartRemoteAgent() throws Exception {
