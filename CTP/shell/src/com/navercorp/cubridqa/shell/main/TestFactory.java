@@ -183,8 +183,7 @@ public class TestFactory {
 	private void startConfigMonitor() throws Exception {
 		configPool.execute(new Runnable() {
 			@Override
-			public void run() {
-				Properties newConfig;
+			public void run() {				
 				ArrayList<String> newEnvList, oldEnvList, addedList, deletedList;
 				Test test;
 				while (!Dispatch.getInstance().isFinished()) {
@@ -197,6 +196,10 @@ public class TestFactory {
 						context.reload();
 					}catch(Exception e) {
 						System.out.println("[ERROR] fail to reload context ( " + e.getMessage() + ")");
+					}
+					
+					if (context.isExecuteAtLocal()) {
+						continue;
 					}
 
 					newEnvList = context.getEnvList();
@@ -223,13 +226,27 @@ public class TestFactory {
 
 					addedList = (ArrayList<String>) newEnvList.clone();
 					addedList.removeAll(oldEnvList);
+					boolean pass;
+					String envId;
+					for (int i = addedList.size() - 1; i >= 0; i--) {
+						envId = addedList.get(i);
+						try {
+							pass = checkRequirement(context, envId);
+						} catch (Exception e) {
+							pass = false;
+						}
+						if (pass) {
+							System.out.println("[ENV CHECK] " + envId + " PASS");
+						} else {
+							addedList.remove(i);
+							System.out.println("[ENV CHECK] " + envId + " REMOVE");
+						}
+					}
 					
 					if (addedList.size() > 0) {
-						System.out.println("[ENV ADD] " + addedList + " ...");
-
-						ArrayList<String> _addedList = (ArrayList<String>) addedList.clone();
+						System.out.println("[ENV ADD] " + addedList + " ...");						
 						try {
-							joinTest(_addedList);
+							joinTest(addedList);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -320,27 +337,15 @@ public class TestFactory {
 	
 	private static void checkRequirement(Context context) throws Exception {
 		System.out.println("BEGIN TO CHECK: ");
-		ArrayList<String> envList = context.getEnvList();
 		
-		CheckRequirement check;		
-		ArrayList<String> relatedHosts;
 		boolean pass = true;
-		
-		for(String envId: envList) {			
-			
-			check = new CheckRequirement(context, envId, context.getInstanceProperty(envId, "ssh.host"), false);
-			if (!check.check()) {
+
+		for (String envId : context.getEnvList()) {
+			if (!checkRequirement(context, envId)) {
 				pass = false;
 			}
-			
-			relatedHosts = context.getRelatedHosts(envId);
-			for (String h : relatedHosts) {
-				check = new CheckRequirement(context, envId, h, true);
-				if (!check.check()) {
-					pass = false;
-				}
-			}			
 		}
+
 		if (pass) {
 			System.out.println("CHECK RESULT: PASS");
 		} else {
@@ -348,5 +353,25 @@ public class TestFactory {
 			System.out.println("QUIT");
 			System.exit(-1);
 		}
+	}
+	
+	private static boolean checkRequirement(Context context, String envId) throws Exception {
+		CheckRequirement check;
+		ArrayList<String> relatedHosts;
+		boolean pass = true;
+		
+		check = new CheckRequirement(context, envId, context.getInstanceProperty(envId, "ssh.host"), false);
+		if (!check.check()) {
+			pass = false;
+		}
+
+		relatedHosts = context.getRelatedHosts(envId);
+		for (String h : relatedHosts) {
+			check = new CheckRequirement(context, envId, h, true);
+			if (!check.check()) {
+				pass = false;
+			}
+		}
+		return pass;
 	}
 }

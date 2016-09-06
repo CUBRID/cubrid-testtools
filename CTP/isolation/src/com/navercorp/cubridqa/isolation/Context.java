@@ -71,16 +71,20 @@ public class Context {
 	public Context(String filename) throws IOException {
 		this.filename = filename;
 		reload();
-	}
-
-	public void reload() throws IOException {
-		this.config = CommonUtils.getPropertiesWithPriority(filename);
-		this.envList = initEnvList(config);
+		
 		if (this.envList.size() == 0) {
 			isExecuteAtLocal = true;
 			this.envList.add("local");
 		} else {
 			isExecuteAtLocal = false;
+		}
+	}
+
+	public void reload() throws IOException {
+		this.config = CommonUtils.getPropertiesWithPriority(filename);
+		
+		if (isExecuteAtLocal == false) {
+			this.envList = initEnvList(config);
 		}
 		
 		this.ctpHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);

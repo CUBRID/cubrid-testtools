@@ -112,7 +112,7 @@ public class CheckRequirement {
 
 	private void checkSSH() throws Exception {
 		try {
-			this.log.print("==> Check ssh connection ");
+			this.log.print("==> Check connection(" + context.getServiceProtocolType() + ") ");
 			this.ssh = ShellHelper.createTestNodeConnect(context, envId, host);			
 			log.print("...... PASS");
 		} catch (Exception e) {
