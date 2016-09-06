@@ -219,16 +219,12 @@ public class CommonUtils {
 	}
 	
 	public static String resetProcess(SSHConnect ssh, boolean isWindows, boolean executeAtLocal) {
-		
-		if (executeAtLocal) {
-			return "";
-		}
-		
 		try {			
-			if(isWindows) {
-				return ssh.execute(Constants.WIN_KILL_PROCESS) + ssh.execute(Constants.WIN_KILL_PROCESS_NATIVE, true);
+			if (isWindows) {
+				return ssh.execute(executeAtLocal ? Constants.WIN_KILL_PROCESS_LOCAL : Constants.WIN_KILL_PROCESS)
+						+ ssh.execute(executeAtLocal ? Constants.WIN_KILL_PROCESS_NATIVE_LOCAL : Constants.WIN_KILL_PROCESS_NATIVE, true);
 			} else {
-				return ssh.execute(Constants.LIN_KILL_PROCESS);
+				return ssh.execute(executeAtLocal ? Constants.LIN_KILL_PROCESS_LOCAL : Constants.LIN_KILL_PROCESS);
 			}
 		} catch (Exception e) {
 			return "fail to reset processes: " + e.getMessage();

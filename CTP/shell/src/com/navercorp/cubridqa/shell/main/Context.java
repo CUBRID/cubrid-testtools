@@ -129,7 +129,8 @@ public class Context {
 		
 		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (Constants.ENV_CTP_HOME_KEY);
 		
-		this.cleanTestCase = getProperty("main.testcase.clean", "false").equalsIgnoreCase("true") && !CommonUtils.isEmpty(getTestCaseBranch());
+		this.cleanTestCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.testcase.clean", "false"));
+		 
 		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
 		
 		this.testCaseSkipKey = getProperty("main.testcase.skip_key", "").trim().toUpperCase();
@@ -318,10 +319,9 @@ public class Context {
 		return getProperty("main.git.pwd", "").trim();
 	}
 	
-	public boolean isScenarioInGit(){
-		String git = getProperty ("main.testcase.branch_git").trim();
-		boolean isGit = git != null && git.length() > 0;
-		return isGit;
+	public boolean isScenarioInGit() {
+		String git = getTestCaseBranch();
+		return git != null && git.trim().length() > 0;
 	}
 	
 	private void putMKeyEnvVaribleIntoMap(){

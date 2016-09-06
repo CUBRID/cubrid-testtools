@@ -48,15 +48,22 @@ public class Constants {
 	public static final String SKIP_TYPE_BY_MACRO = "1";
 	public static final String SKIP_TYPE_BY_TEMP = "2";
 	
-	public static final String WIN_KILL_PROCESS_NATIVE = createWinKillNativeScripts();
-	public static final ShellScriptInput WIN_KILL_PROCESS = createWinKillScripts();
-	public static final ShellScriptInput LIN_KILL_PROCESS = createLinKillScripts();
+	public static final String WIN_KILL_PROCESS_NATIVE = createWinKillNativeScripts(false);
+	public static final ShellScriptInput WIN_KILL_PROCESS = createWinKillScripts(false);
+	public static final ShellScriptInput LIN_KILL_PROCESS = createLinKillScripts(false);
+
+	public static final String WIN_KILL_PROCESS_NATIVE_LOCAL = createWinKillNativeScripts(true);
+	public static final ShellScriptInput WIN_KILL_PROCESS_LOCAL = createWinKillScripts(true);
+	public static final ShellScriptInput LIN_KILL_PROCESS_LOCAL = createLinKillScripts(true);
+	
 	public static final ShellScriptInput GET_VERSION_SCRIPT = craeteGetVersionScript();
 
 	
-	private static ShellScriptInput createWinKillScripts (){
+	private static ShellScriptInput createWinKillScripts (boolean inLocal){
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' \\) DELETE");
+		if(inLocal == false) {
+			scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' \\) DELETE");
+		}
 		scripts.addCommand("$CUBRID/bin/cubrid.exe service stop ");
 		scripts.addCommand("tasklist |  grep cubridservice | awk '{print $2}' | xargs -i taskkill '/T' '/F' '/PID' {} ");
 		scripts.addCommand("tasklist |  grep cub_master | awk '{print $2}' | xargs -i taskkill '/T' '/F' '/PID' {} ");
@@ -78,7 +85,9 @@ public class Constants {
 		scripts.addCommand("taskkill /F /IM cub_server.exe");
 		scripts.addCommand("taskkill /F /IM cub_cas.exe");
 		scripts.addCommand("taskkill /F /IM cub_broker.exe");
-		scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' \\) DELETE");
+		if(inLocal == false) {
+			scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' \\) DELETE");
+		}
 		scripts.addCommand("taskkill /F /IM cat.exe");
 		scripts.addCommand("taskkill /F /IM ps.exe");
 		scripts.addCommand("taskkill /F /IM sed.exe");
@@ -94,9 +103,11 @@ public class Constants {
 		return scripts;
 	}
 	
-	private static String createWinKillNativeScripts() {
+	private static String createWinKillNativeScripts(boolean inLocal) {
 		StringBuffer sb = new StringBuffer();
-		sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%') DELETE").append(LINE_SEPARATOR);		
+		if(inLocal == false) {
+			sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%') DELETE").append(LINE_SEPARATOR);
+		}
 		sb.append("%CUBRID%/bin/cubrid service stop").append(LINE_SEPARATOR);		
 		sb.append("taskkill /T /F /IM broker_changer.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM broker_log_converter.exe").append(LINE_SEPARATOR);
@@ -132,10 +143,12 @@ public class Constants {
 		sb.append("taskkill /T /F /IM loadjava.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM migrate_91_to_92.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM setupmanage.exe").append(LINE_SEPARATOR);
-		sb.append("taskkill /T /F /IM make_locale.bat").append(LINE_SEPARATOR);
-		sb.append("taskkill /T /F /IM bash.exe").append(LINE_SEPARATOR);
-		sb.append("taskkill /T /F /IM sh.exe").append(LINE_SEPARATOR);
-		sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%') DELETE").append(LINE_SEPARATOR);
+		sb.append("taskkill /T /F /IM make_locale.bat").append(LINE_SEPARATOR);		
+		if(inLocal == false) {
+			sb.append("taskkill /T /F /IM bash.exe").append(LINE_SEPARATOR);
+			sb.append("taskkill /T /F /IM sh.exe").append(LINE_SEPARATOR);
+			sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%') DELETE").append(LINE_SEPARATOR);
+		}
 		sb.append("tasklist").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM cat.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM ps.exe").append(LINE_SEPARATOR);
@@ -144,7 +157,7 @@ public class Constants {
 		return sb.toString();
 	}
 	
-	private static ShellScriptInput createLinKillScripts (){
+	private static ShellScriptInput createLinKillScripts (boolean inLocal){
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("cubrid service stop");
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep cub_admin | awk '{print $1}'"));
@@ -161,10 +174,14 @@ public class Constants {
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep migrate | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep shard | awk '{print $1}'"));
 		scripts.addCommand("ipcs | grep $USER | awk '{print $2}'  | xargs -i ipcrm -m {}");
-		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i java | awk '{print $1}'"));
+		if (inLocal == false) {
+			scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i java | awk '{print $1}'"));
+		}
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i sleep | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i expect | awk '{print $1}'"));
-		scripts.addCommand(bothKill("ps -u $USER -o pid,cmd| grep -v grep | grep -i '\\.sh' | awk '{print $1}'"));
+		if(inLocal == false) {
+			scripts.addCommand(bothKill("ps -u $USER -o pid,cmd| grep -v grep | grep -i '\\.sh' | awk '{print $1}'"));
+		}
 		scripts.addCommand("ps -u $USER -f");
 		return scripts;
 	}
