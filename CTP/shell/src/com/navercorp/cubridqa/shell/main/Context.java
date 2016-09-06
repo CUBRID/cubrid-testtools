@@ -114,17 +114,22 @@ public class Context {
 		this.filename = filename;
 		this.startDate = new java.util.Date();
 		this.envMap = new HashMap<String, String>();
+		
 		reload();
-	}
-	
-	public void reload() throws IOException{
-		this.config = CommonUtils.getPropertiesWithPriority(filename);
-		this.envList = initEnvList(config);
+		
 		if (this.envList.size() == 0) {
 			isExecuteAtLocal = true;
 			this.envList.add("local");
 		} else {
 			isExecuteAtLocal = false;
+		}
+	}
+	
+	public void reload() throws IOException{
+		this.config = CommonUtils.getPropertiesWithPriority(filename);
+		
+		if(isExecuteAtLocal == false) {
+			this.envList = initEnvList(config);
 		}
 		
 		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (Constants.ENV_CTP_HOME_KEY);
