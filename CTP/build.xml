@@ -21,6 +21,9 @@
 			<include name="*.jar" />
 			<exclude name="cubridqa-scheduler.jar" />
 		</fileset>
+		<fileset dir="jdbc/lib">
+			<include name="*.jar" />
+		</fileset>
 	</path>
 
 	<target name="init">
