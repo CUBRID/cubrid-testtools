@@ -12,7 +12,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 ## Quick Start
 This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication`` and so on. Regarding more information please refer to the related sections
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly
-* Execute a sample test as follows:
+* Execute a example test as follows:
 
     ``` 
     $ bin/ctp.sh sql -c ./conf/sample.conf
@@ -33,13 +33,13 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	URL:  http://127.0.0.1:8888    
     ```
 	
-* Please open the URL with your browser.
+* Please open the URL with your browser
   
 ## How To Execute
 - **SQL**
  - Prepare
  	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
- 	* Check out scenarios from GitHub projects or prepare your own test cases for testing
+ 	* Check out scenarios from CUBRID GitHub projects or prepare your own test cases for testing
  	* Check out CTP and update the value of ``scenario`` parameter within ``CTP/conf/sql.conf`` to point to the path of your scenarios. For the current existing ``SQL`` test, you need to make sure the parameters `` java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are configured
  	* **Example** ``sql.conf`` for scenario, data file and some important parameters changes
  	* 
@@ -59,7 +59,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  # Allow scenario to change database system parameter
 	  test_mode=yes
 
-	  # In order to simulate the scenario customer use
+	  # In order to simulate the scenario customer uses
 	  ha_mode=yes
 	  ```
  	* For ``Medium`` test, ``data_file`` must be set to the path of the initial data file, regarding  the initial data file, please download it from [mdb.tar.gz](https://github.com/CUBRID/cubrid-testcases/tree/master/medium/files/mdb.tar.gz "mdb.tar.gz")
@@ -100,7 +100,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	    ```
 	* You can find the details of the test result from ``Test Result Directory``
 	* You can also use your web browser to examine the result with webconsole service of CTP
-	* ``bin/ctp.sh webconsole start`` will show you the URL of the result as follows:
+	* ``bin/ctp.sh webconsole start`` shows you the URL of the result as follows:
 	  ```
 	  Config: /home/user/CTP/conf/webconsole.conf
 	  Web Root: /home/user/CTP/sql/webconsole
@@ -109,7 +109,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  Done
 	  URL:  http://127.0.0.1:8888
 	  ```
-	* Please open the ``URL`` with your browser.
+	* Please open the ``URL`` with your browser
   
 - **SHELL**
   - Prepare
@@ -157,9 +157,9 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     
   - Examine the results
 	* When test is completed, you can find the results and logs from ``CTP/result/shell/current_runtime_logs``
-	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this instance
-	* ``main_snapshot.properties`` will save all values of parameters configured during testing
-	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance.
+	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the case list which is executed on this instance
+	* ``main_snapshot.properties`` saves all values of parameters configured during testing
+	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 	
 - **Isolation**
   - Prepare
@@ -186,11 +186,11 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  env.instance1.broker2.BROKER_PORT=30094
       ```
       ```
-	  # Define the path of test cases used for testing, it should be checked out on test node.
+	  # Define the path of test cases used for testing, it should be checked out on test node
 	  main.testcase.root=/home/qa/isolation_instance1/isolation
       ```
       ```
-	  # Define the URL of test build which will be used to test.
+	  # Define the URL of test build which will be used to test
 	  # If this parameter is not set or commented out, CTP will execute testing without build installation.
 	  main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
       ```	
@@ -206,9 +206,9 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
         
  - Examine the results
 	* When test is completed, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
-	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the case list which is executed on this instance
-	* ``main_snapshot.properties`` will save all values of parameters configured during testing
-	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance
+	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the case list which is executed on this instance
+	* ``main_snapshot.properties`` saves all values of parameters configured during testing
+	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 
 - **HA Replication**
   - Prepare
@@ -241,7 +241,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	NOTE: the scenario must be checked out on ``controller`` account, not on the test instance
 
       ```
-	  # Define the URL of test build which will be used to test.
+	  # Define the URL of test build which will be used to test
 	  # If this parameter is not set or commented out, CTP will execute testing without build installation.
 	  main.testbuild.url=http://127.0.0.1/REPO_ROOT/store_01/10.1.0.6929-b049ba5/drop/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh 
 	  ```
@@ -257,9 +257,9 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
     
  - Examine the results
 	* When test is completed, you can find the results and logs from ``CTP/result/ha_repl/current_runtime_logs``
-	* ``dispatch_tc_ALL.txt`` will show the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` will show the cases which are executed on this instance.
-	* ``main_snapshot.properties`` will save all values of parameters configured during testing.
-	* ``test_${Node_Name}.log`` will show the logs of testing based on this instance.
+	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the cases which are executed on this instance
+	* ``main_snapshot.properties`` saves all values of parameters configured during testing
+	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 
 
 ## How To Build CTP
@@ -269,14 +269,14 @@ It's not required that you execute build for CTP, unless you make some changes w
     $ ant clean dist
 ```
     
-You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar``, ``isolation/lib/cubridqa-isolation.jar`` and ``ha_repl/lib/cubridqa-ha_repl.jar``.
+You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar``, ``isolation/lib/cubridqa-isolation.jar`` and ``ha_repl/lib/cubridqa-ha_repl.jar``
 
 ## How To Write Testcase
  - **SQL**
     
-   When you want to write your own test case, please follow the following rules.
-   * Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory. 
-   * Expected results: The file extension is ``.answer`` and it is located in ``answers`` subdirectory. 
+   When you want to write your own test case, please follow the following rules
+   * Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory
+   * Expected results: The file extension is ``.answer`` and it is located in ``answers`` subdirectory
      - An example for a case is:
 	  ```
 	   _08_primary_foreign_key
@@ -302,11 +302,11 @@ You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/l
 	  SELECT /*+ recompile */ median(a) FROM x;
 	  ```
 
-   * You can add "autocommit off;", "autocommit on;" to change autocommit mode. 
+   * You can add "autocommit off;", "autocommit on;" to change autocommit mode 
 
 - **SHELL**
    * Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory, naming rule: ``/path/to/test_name/cases/test_name.sh``
-   * Sample for reference
+   * Example for reference
     
      ```
      #!/bin/sh
@@ -338,7 +338,7 @@ You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/l
 
 - **Isolation**
    * Test cases: the file extension is ``.ctl``
-   * Sample for reference
+   * Example for reference
    
      ```
       /*
@@ -348,7 +348,7 @@ You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/l
      Author: xxx
 
      Test Plan: 
-     Test update locks (X_LOCK on instance) and SELECT not need locks, they are not blocked each other.
+     Test update locks (X_LOCK on instance) and SELECT not need locks, they are not blocked each other
 
      Test Scenario:
      C1 granting authorization, C2 verify authorization, 
@@ -418,13 +418,13 @@ You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/l
    Note:
      - The purpose/author/reference/priority of case will help reader understand your points
       - C1~n means transaction session name
-      - MC means main controller, it will control and coordinate the order of all transaction clients
+      - MC means main controller, it controls and coordinates the order of all transaction clients
 
 
 - **HA Replication**
    * Test cases: Since ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data synchronization between an active server and a standby server, so the cases are same as ``SQL``
    * CTP will transform case file to be ``case_name.test`` format with some checking statement flags around the SQL statements. And If the SQL does not contain primary key, CTP will add primary key on column
-   * Sample for reference
+   * Example for reference
     
      ```
        --test: #execute test flag for statement
@@ -446,5 +446,5 @@ You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/l
      ```    
 
 ## License
-CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details.
-Third-party libraries used by CTP are under their own licenses. See [LICENSE-3RD-PARTY.md](LICENSE-3RD-PARTY.md) for details on the license they use.
+CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details
+Third-party libraries used by CTP are under their own licenses. See [LICENSE-3RD-PARTY.md](LICENSE-3RD-PARTY.md) for details on the license they use
