@@ -1,2 +1,2 @@
 Manifest-Version: 2.0
-Class-Path: ../../common/lib/cubridqa-common.jar
+Class-Path: ../../common/lib/cubridqa-common.jar ../../jdbc/lib/junit-4.8.1.jar
