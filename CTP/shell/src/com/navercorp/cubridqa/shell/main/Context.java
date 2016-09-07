@@ -117,6 +117,11 @@ public class Context {
 		
 		reload();
 		
+		setLogDir("shell");
+		
+		// to get msg id from environment variable
+		putEnvVriableIntoMapByKey("MSG_ID");
+		
 		if (this.envList.size() == 0) {
 			isExecuteAtLocal = true;
 			this.envList.add("local");
@@ -161,16 +166,11 @@ public class Context {
 		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
 		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.skip_to_save_passed_testcases_yn", "false"));
 		this.testCategory = getProperty("main.testing.category", "shell").trim();
-		
-		setLogDir(this.testCategory);
-		
-		// to get msg id from environment variable
-		putEnvVriableIntoMapByKey("MSG_ID");
     }
 	
 	public void setLogDir(String category) {
 		this.rootLogDir = getToolHome() + "/result/" + category;
-		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";		
+		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {

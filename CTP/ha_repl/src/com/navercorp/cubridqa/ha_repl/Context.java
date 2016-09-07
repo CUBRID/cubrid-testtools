@@ -59,13 +59,13 @@ public class Context {
 	public Context(String filename) throws IOException {
 		this.filename = filename;
 		reload();
+		setLogDir("ha_repl");
 	}
 
 	public void reload() throws IOException {
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
 		
-		this.ctpHome = CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
-		setLogDir("ha_repl");
+		this.ctpHome = CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);		
 		
 		Set<Object> set = config.keySet();
 		Iterator<Object> it = set.iterator();
@@ -79,7 +79,13 @@ public class Context {
 		
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
 		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
-		
+	}
+	
+	public ArrayList<String> getTestEnvList() {
+		return this.testEnvList;
+	}
+
+	public Feedback getFeedback() {
 		if (this.feedback == null) {
 			String feedbackType = getProperty("main.feedback.type", "file")
 					.trim();
@@ -91,13 +97,6 @@ public class Context {
 				this.feedback = new FeedbackNull(this);
 			}
 		}
-	}
-	
-	public ArrayList<String> getTestEnvList() {
-		return this.testEnvList;
-	}
-
-	public Feedback getFeedback() {
 		return this.feedback;
 	}
 
