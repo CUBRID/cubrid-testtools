@@ -311,10 +311,9 @@ public class Context {
 		return getProperty("main.git.pwd", "").trim();
 	}
 	
-	public boolean isScenarioInGit(){
-		String git = getProperty ("main.testcase.branch_git").trim();
-		boolean isGit = git != null && git.length() > 0;
-		return isGit;
+	public boolean isScenarioInGit() {
+		String git = getTestCaseBranch();
+		return git != null && git.trim().length() > 0;
 	}
 	
 	private void putMKeyEnvVaribleIntoMap(){
