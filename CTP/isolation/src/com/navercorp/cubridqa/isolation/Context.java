@@ -146,7 +146,8 @@ public class Context {
 	}
 
 	public String getTestCaseRoot() {
-		return getProperty("main.testcase.root");
+		//return getProperty("main.testcase.root");
+		return getProperty("scenario");
 	}
 	
 	public String getTestCategory(){

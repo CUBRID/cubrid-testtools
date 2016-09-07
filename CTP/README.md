@@ -39,7 +39,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 - **SQL**
  - Prepare
  	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
- 	* Check out scenarios from CUBRID GitHub projects or prepare your own test cases for testing
+ 	* Check out scenarios from [cubrid-testcases](https://github.com/CUBRID/cubrid-testcases) project or prepare your own test cases for testing
  	* Check out CTP and update the value of ``scenario`` parameter within ``CTP/conf/sql.conf`` to point to the path of your scenarios. For the current existing ``SQL`` test, you need to make sure the parameters `` java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are configured
  	* **Example** ``sql.conf`` for scenario, data file and some important parameters changes
  	* 
@@ -62,16 +62,22 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  # In order to simulate the scenario customer uses
 	  ha_mode=yes
 	  ```
- 	* For ``Medium`` test, ``data_file`` must be set to the path of the initial data file, regarding  the initial data file, please download it from [mdb.tar.gz](https://github.com/CUBRID/cubrid-testcases/tree/master/medium/files/mdb.tar.gz "mdb.tar.gz")
+ 	* For ``Medium`` test, ``data_file`` must be set to the path of the initial data file
+ 	
+	  ```
+	  # Path of the data file for initial loading
+	  data_file=${HOME}/cubrid-testcases/medium/files/mdb.tar.gz
+ 	  ```   	
 
-	More parameters setting and parameters explanation within ``sql.conf``, please refer to [CTP/conf/sql.conf](conf/sql.conf)
+	More parameters setting and parameters explanation within ``sql.conf`` and ``medium.conf``, please refer to [CTP/conf/sql.conf](conf/sql.conf) for SQL and [CTP/conf/medium.conf](conf/medium.conf) for Medium
 
   - Run Tests
-	* For **SQL/Medium** test:
+	* For **SQL** test:
 	    ```
 	    $ bin/ctp.sh sql -c ./conf/sql.conf
 	    ```
-
+	    
+	* For **Medium** test:
 	    ```
 	    $ bin/ctp.sh medium -c ./conf/medium.conf
 	    ```
@@ -138,7 +144,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   ```
 	   ```
 	   # Define the path of test cases used for testing, it should be checked out on test node
-	   main.testcase.root=/home/qa/shell_instance1/shell
+	   scenario=${HOME}/cubrid-testcases/shell
 	   ```
 	   ```
 	   # Define the URL of test build which will be used to test.
@@ -187,7 +193,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
       ```
       ```
 	  # Define the path of test cases used for testing, it should be checked out on test node
-	  main.testcase.root=/home/qa/isolation_instance1/isolation
+	  scenario=${HOME}/cubrid-testcases/isolation
       ```
       ```
 	  # Define the URL of test build which will be used to test
@@ -236,7 +242,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  
       ```
 	  # Define the path of test cases used for testing, it should be checked out on controller node
-	  main.testcase.root=/home/controller/testcases/sql
+	  scenario=${HOME}/cubrid-testcases/sql
       ```
 	NOTE: the scenario must be checked out on ``controller`` account, not on the test instance
 

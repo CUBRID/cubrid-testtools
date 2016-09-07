@@ -233,7 +233,8 @@ public class Context {
 	}
 
 	public String getTestCaseRoot() {
-		return getProperty("main.testcase.root", "").trim();
+		// return getProperty("main.testcase.root", "").trim();
+		return getProperty("scenario", "").trim();
 	}
 	
 	public String getTestCaseBranch() {
