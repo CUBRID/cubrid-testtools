@@ -32,12 +32,16 @@ import com.navercorp.cubridqa.common.CommonUtils;
 public class Constants {
 
 	public static final String ENV_CTP_HOME_KEY = "CTP_HOME";
+	public static final String ENV_HOME_KEY = "HOME";
+	
+	public static final String ENV_CTP_HOME = CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY);
+	public static final String ENV_HOME = CommonUtils.getEnvInFile(ENV_HOME_KEY);
 
 	public final static String LINE_SEPARATOR = System.getProperty("line.separator");
 
 	public final static Properties COMMON_DAILYQA_CONF;
 	static {
-		COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile("CTP_HOME") + File.separator + "conf" + File.separator + "dailyqa.conf");
+		COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY) + File.separator + "conf" + File.separator + "dailyqa.conf");
 	}
 
 	public final static String MAIL_FROM;

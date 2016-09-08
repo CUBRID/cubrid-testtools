@@ -33,6 +33,7 @@ import java.util.Set;
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 
 public class Main {
 
@@ -74,8 +75,10 @@ public class Main {
 			context.setReInstallTestBuildYn(false);
 			
 			if(ssh != null) ssh.close();
-		}
+		}		
 		
+		context.setTestCaseRoot(calcScenario(context));
+				
 		System.out.println("Build Number: " + context.getTestBuild());
 
 		Properties props = context.getProperties();
@@ -95,5 +98,25 @@ public class Main {
 
 		TestFactory factory = new TestFactory(context);
 		factory.execute();
+	}
+	
+	private static String calcScenario(Context context) throws Exception {
+		String scenarioDir = null;
+		SSHConnect ssh = null;
+		
+		try{
+			scenarioDir = context.getTestCaseRoot();
+			ssh = ShellHelper.createFirstTestNodeConnect(context);
+			String homeDir = ssh.execute(new ShellScriptInput("echo $(cd $HOME; pwd)")).trim();
+			scenarioDir = ssh.execute(new ShellScriptInput("echo $(cd " + scenarioDir + "; pwd)")).trim();
+			if (scenarioDir.startsWith(homeDir)) {
+				scenarioDir = scenarioDir.substring(homeDir.length() + 1);
+			}
+		} finally{
+			if (ssh != null)
+				ssh.close();
+		}
+			
+		return scenarioDir;
 	}
 }

@@ -261,13 +261,13 @@ public class Dispatch {
 			}
 			
 			script.addCommand("cd " + dir + " > /dev/null 2>&1");
-			script.addCommand("cat " + filename);
 			
 			if (context.needCleanTestCase() && ! context.isScenarioInGit()) {
 				script.addCommand("svn revert -R -q " + filename + " >/dev/null 2>&1");
 				script.addCommand("svn up " + context.getSVNUserInfo() + " " + filename + " >/dev/null 2>&1");
 				System.out.println("Update Excluded List result ("+ envId + "): ");
 			}
+			script.addCommand("cat " + filename);
 			result = ssh.execute(script);			
 //			System.out.println(result);
 		} finally {

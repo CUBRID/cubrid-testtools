@@ -70,7 +70,7 @@ public class Test {
 	
 		this.mlog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + envId + ".log"), false, context.isContinueMode());
 		this.finishedLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt"), false, context.isContinueMode());
-		this.commonReader = new CommonReader(CommonUtils.concatFile(context.getCtpHome() + "/ha_repl/lib", "common.inc"));
+		this.commonReader = new CommonReader(CommonUtils.concatFile(com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME + "/ha_repl/lib", "common.inc"));
 	}
 
 	public void runAll() {

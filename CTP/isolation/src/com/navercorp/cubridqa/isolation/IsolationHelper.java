@@ -18,6 +18,11 @@ public class IsolationHelper {
 
 		return title;
 	}
+	
+	public final static SSHConnect createFirstTestNodeConnect(Context context) throws JSchException {
+		String envId = context.getEnvList().get(0);
+		return createTestNodeConnect(context, envId);
+	}
 
 	public final static SSHConnect createTestNodeConnect(Context context, String envId) throws JSchException {
 		SSHConnect ssh;
