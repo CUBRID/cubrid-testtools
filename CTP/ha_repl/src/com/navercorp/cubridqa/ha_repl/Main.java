@@ -65,7 +65,7 @@ public class Main {
 			hasError = !file.exists();
 		}
 		if (hasError)
-			throw new Exception("Not found test cases directory. Please check 'main.testcase.root' in test configuration file.");
+			throw new Exception("Not found test cases directory. Please check 'scenario' in test configuration file.");
 
 		String cubridPackageUrl = context.getCubridPackageUrl();
 		if (cubridPackageUrl != null && cubridPackageUrl.trim().length() > 0) {

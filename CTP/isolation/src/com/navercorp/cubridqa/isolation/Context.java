@@ -65,10 +65,12 @@ public class Context {
 	private String mailNoticeTo;
 	private boolean enableCheckDiskSpace;
 	private boolean reInstallTestBuildYn = false;
+	private String scenario;
 	
 	public Context(String filename) throws IOException {
 		this.filename = filename;
 		reload();
+		this.scenario = getProperty("scenario", "").trim();
 	}
 
 	public void reload() throws IOException {
@@ -82,7 +84,7 @@ public class Context {
 		this.isContinueMode = getProperty("main.mode.continue", "false").equalsIgnoreCase("true");
 		
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
-		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
+		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();		
 		
 		if (this.feedback == null) {
 			String feedbackType = getProperty("main.feedback.type", "file")
@@ -146,7 +148,12 @@ public class Context {
 	}
 
 	public String getTestCaseRoot() {
-		return getProperty("main.testcase.root");
+		//return getProperty("main.testcase.root");
+		return this.scenario;
+	}
+	
+	public void setTestCaseRoot(String scenario) {
+		this.scenario = scenario;
 	}
 	
 	public String getTestCategory(){

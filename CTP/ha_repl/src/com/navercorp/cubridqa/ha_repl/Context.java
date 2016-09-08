@@ -33,6 +33,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Constants;
 import com.navercorp.cubridqa.ha_repl.impl.FeedbackDB;
 import com.navercorp.cubridqa.ha_repl.impl.FeedbackFile;
 import com.navercorp.cubridqa.ha_repl.impl.FeedbackNull;
@@ -45,7 +46,6 @@ public class Context {
 
 	Feedback feedback;
 	
-	private String ctpHome;
 	private String rootLogDir;
 	private String currentLogDir;
 
@@ -55,6 +55,7 @@ public class Context {
 	private boolean enableCheckDiskSpace;
 	private boolean reInstallTestBuildYn = false;
 	String mailNoticeTo;
+	String scenario;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -64,7 +65,6 @@ public class Context {
 	public void reload() throws IOException {
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
 		
-		this.ctpHome = CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
 		setLogDir("ha_repl");
 		
 		Set<Object> set = config.keySet();
@@ -79,6 +79,7 @@ public class Context {
 		
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
 		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
+		this.scenario = CommonUtils.translateVariable(getProperty("scenario", "").trim());
 		
 		if (this.feedback == null) {
 			String feedbackType = getProperty("main.feedback.type", "file")
@@ -177,7 +178,7 @@ public class Context {
 	}
 	
 	public void setLogDir(String category) {
-		this.rootLogDir = ctpHome + "/result/" + category;
+		this.rootLogDir = Constants.ENV_CTP_HOME + "/result/" + category;
 		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
 	}
 	
@@ -187,10 +188,6 @@ public class Context {
 	
 	public String getLogRootDir() {
 		return this.rootLogDir;
-	}
-	
-	public String getCtpHome() {
-		return this.ctpHome;
 	}
 	
 	public void setBuildId(String buildId) {
@@ -218,7 +215,8 @@ public class Context {
 	}
 	
 	public String getTestCaseRoot() {
-		return getProperty("main.testcase.root", "").trim();
+		// return getProperty("main.testcase.root", "").trim();
+		return this.scenario;
 	}
 	
 	public boolean isReInstallTestBuildYn() {
