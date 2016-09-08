@@ -35,7 +35,7 @@ public class JdbcLocalTest {
 		}
 		
 		context.setTestCategory(category);
-		this.context.setLogDir(category);
+		this.context.setLogDir("jdbc");
 
 		String buildId = context.getProperty("main.testing.build_id", "BUILD_ID", false);
 		if (!CommonUtils.isEmpty(buildId)) {
@@ -47,7 +47,7 @@ public class JdbcLocalTest {
 			context.setVersion(buildBit);
 		}
 		
-		log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + this.category + ".log"), false);
+		log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_jdbc_" + buildId + ".log"), false);
 		
 	}
 
@@ -163,7 +163,13 @@ public class JdbcLocalTest {
 	}
 	
 	
-	public static void exec(String configFilename) throws IOException, ClassNotFoundException {
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
+		if (args == null || args.length == 0) {
+			System.out.println("[ERROR] jdbc.propeties is missing!!");
+			return;
+		}
+		
+		String configFilename = args[0];
 		Context context = new Context(configFilename);
 		JdbcLocalTest test = new JdbcLocalTest(context);
 		test.start();
