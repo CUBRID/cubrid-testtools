@@ -35,7 +35,6 @@ import java.util.Set;
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
-import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 
 public class Main {
 
@@ -100,8 +99,8 @@ public class Main {
 		try {
 			scenarioDir = context.getTestCaseRoot();
 			ssh = IsolationHelper.createFirstTestNodeConnect(context);
-			String homeDir = ssh.execute(new ShellScriptInput("echo $(cd $HOME; pwd)")).trim();
-			scenarioDir = ssh.execute(new ShellScriptInput("echo $(cd " + scenarioDir + "; pwd)")).trim();
+			String homeDir = ssh.execute(new IsolationScriptInput("echo $(cd $HOME; pwd)")).trim();
+			scenarioDir = ssh.execute(new IsolationScriptInput("echo $(cd " + scenarioDir + "; pwd)")).trim();
 			if (scenarioDir.startsWith(homeDir)) {
 				scenarioDir = scenarioDir.substring(homeDir.length() + 1);
 			}
