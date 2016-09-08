@@ -103,6 +103,7 @@ public class Context {
 	String currentLogDir;
 	String rootLogDir;
 	boolean reInstallTestBuildYn = false;
+	String scenario;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -140,6 +141,7 @@ public class Context {
 		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
 		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "1");
 		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
+		this.scenario = getProperty("scenario", "").trim();
 		
 		setLogDir("shell");
 		
@@ -234,7 +236,11 @@ public class Context {
 
 	public String getTestCaseRoot() {
 		// return getProperty("main.testcase.root", "").trim();
-		return getProperty("scenario", "").trim();
+		return this.scenario;
+	}
+	
+	public void setTestCaseRoot(String scenario) {
+		this.scenario = scenario;
 	}
 	
 	public String getTestCaseBranch() {
