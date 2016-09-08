@@ -73,6 +73,8 @@ public class Main {
 			
 			if(ssh != null) ssh.close();
 		}
+		
+		context.setTestCaseRoot(calcScenario(context));
 
 		System.out.println("Build Id: " + context.getBuildId());
 		System.out.println("Build Bits: " + context.getBuildBits());
@@ -90,15 +92,24 @@ public class Main {
 		TestFactory factory = new TestFactory(context);
 		factory.execute();
 	}
-	
+
 	private static String calcScenario(Context context) throws Exception {
-		String scenarioDir = context.getTestCaseRoot();
-		SSHConnect ssh = IsolationHelper.createFirstTestNodeConnect(context);
-		String homeDir = ssh.execute(new ShellScriptInput("echo $(cd $HOME; pwd)")).trim();
-		scenarioDir = ssh.execute(new ShellScriptInput("echo $(cd " + scenarioDir + "; pwd)")).trim();
-		if (scenarioDir.startsWith(homeDir)) {
-			scenarioDir = scenarioDir.substring(homeDir.length() + 1);
+		String scenarioDir = null;
+		SSHConnect ssh = null;
+
+		try {
+			scenarioDir = context.getTestCaseRoot();
+			ssh = IsolationHelper.createFirstTestNodeConnect(context);
+			String homeDir = ssh.execute(new ShellScriptInput("echo $(cd $HOME; pwd)")).trim();
+			scenarioDir = ssh.execute(new ShellScriptInput("echo $(cd " + scenarioDir + "; pwd)")).trim();
+			if (scenarioDir.startsWith(homeDir)) {
+				scenarioDir = scenarioDir.substring(homeDir.length() + 1);
+			}
+		} finally {
+			if (ssh != null)
+				ssh.close();
 		}
+
 		return scenarioDir;
 	}
 }

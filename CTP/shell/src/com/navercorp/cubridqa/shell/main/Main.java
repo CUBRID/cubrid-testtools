@@ -104,13 +104,22 @@ public class Main {
 	}
 	
 	private static String calcScenario(Context context) throws Exception {
-		String scenarioDir = context.getTestCaseRoot();
-		SSHConnect ssh = ShellHelper.createFirstTestNodeConnect(context);
-		String homeDir = ssh.execute(new ShellScriptInput("echo $(cd $HOME; pwd)")).trim();
-		scenarioDir = ssh.execute(new ShellScriptInput("echo $(cd " + scenarioDir + "; pwd)")).trim();
-		if (scenarioDir.startsWith(homeDir)) {
-			scenarioDir = scenarioDir.substring(homeDir.length() + 1);
+		String scenarioDir = null;
+		SSHConnect ssh = null;
+		
+		try{
+			scenarioDir = context.getTestCaseRoot();
+			ssh = ShellHelper.createFirstTestNodeConnect(context);
+			String homeDir = ssh.execute(new ShellScriptInput("echo $(cd $HOME; pwd)")).trim();
+			scenarioDir = ssh.execute(new ShellScriptInput("echo $(cd " + scenarioDir + "; pwd)")).trim();
+			if (scenarioDir.startsWith(homeDir)) {
+				scenarioDir = scenarioDir.substring(homeDir.length() + 1);
+			}
+		} finally{
+			if (ssh != null)
+				ssh.close();
 		}
+			
 		return scenarioDir;
 	}
 }
