@@ -110,6 +110,7 @@ public class Context {
 		this.startDate = new java.util.Date();
 		this.envMap = new HashMap<String, String>();
 		reload();
+		this.scenario = getProperty("scenario", "").trim();
 	}
 	
 	public void reload() throws IOException{
@@ -140,8 +141,7 @@ public class Context {
 
 		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
 		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "1");
-		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
-		this.scenario = getProperty("scenario", "").trim();
+		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");		
 		
 		setLogDir("shell");
 		
