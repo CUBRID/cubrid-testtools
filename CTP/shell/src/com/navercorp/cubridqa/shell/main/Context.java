@@ -109,6 +109,7 @@ public class Context {
 	boolean reInstallTestBuildYn = false;
 	
 	private boolean isExecuteAtLocal = false;	
+	String scenario;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -128,6 +129,7 @@ public class Context {
 		} else {
 			isExecuteAtLocal = false;
 		}
+		this.scenario = getProperty("scenario", "").trim();
 	}
 	
 	public void reload() throws IOException{
@@ -243,7 +245,11 @@ public class Context {
 	}
 
 	public String getTestCaseRoot() {
-		return getProperty("main.testcase.root", "").trim();
+		return this.scenario;
+	}
+	
+	public void setTestCaseRoot(String scenario) {
+		this.scenario = scenario;
 	}
 	
 	public String getTestCaseBranch() {

@@ -605,4 +605,18 @@ public class CommonUtils {
 		String arr[] = buildId.split("\\.");
 		return Integer.parseInt(arr[0]) >= 10;
 	}
+	
+	public static String translateVariable(String value) {
+		if (value == null)
+			return value;
+
+		if (Constants.ENV_HOME != null) {
+			value = CommonUtils.replace(value, "${HOME}", Constants.ENV_HOME);
+		}
+
+		if (Constants.ENV_CTP_HOME != null) {
+			value = CommonUtils.replace(value, "${CTP_HOME}", Constants.ENV_CTP_HOME);
+		}
+		return value;
+	}
 }
