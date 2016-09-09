@@ -51,39 +51,45 @@ public class JdbcLocalTest {
 		this.context.setTestCaseRoot(com.navercorp.cubridqa.common.CommonUtils.translateVariable(this.context.getTestCaseRoot()));
 	}
 
-	private void start() throws ClassNotFoundException{
+	private void start(){
 		String scenarioDir = this.context.getTestCaseRoot();
-		if (scenarioDir == null || scenarioDir.length() <= 0) {
-			this.log.println("[ERROR] Scenario is not configured.");
-			return;
-		}
-		
-		ArrayList testCaseList = findTestCase(scenarioDir);
-		int totalCaseFile = (testCaseList == null || testCaseList.isEmpty()) ? 0 : testCaseList.size();
-		this.log.println("Test Start!");
-		this.log.println("Total Case File Count:" + totalCaseFile);
-		if (totalCaseFile > 0) {
-			context.getFeedback().onTaskStartEvent(context.getTestBuild());
-			context.getFeedback().setTotalTestCase(totalCaseCount, 0, 0);
-			this.log.println("TEST BUILD:" + context.getTestBuild());
-
-			for (int i = 0; i < totalCaseFile; i++) {
-				String caseFullName = testCaseList.get(i).toString();
-				this.log.println("Case File:" + caseFullName);
-				String caseWithPackageName = convertCaseName(caseFullName);
-				Class<?> cls = Class.forName(caseWithPackageName);
-				runTests(cls, caseWithPackageName);
+		try {
+			if (scenarioDir == null || scenarioDir.length() <= 0) {
+				this.log.println("[ERROR] Scenario is not configured.");
+				return;
 			}
 
-		} else {
-			this.log.println("[ERROR] Not found any test cases.");
+			ArrayList testCaseList = findTestCase(scenarioDir);
+			int totalCaseFile = (testCaseList == null || testCaseList.isEmpty()) ? 0
+					: testCaseList.size();
+			this.log.println("Test Start!");
+			this.log.println("Total Case File Count:" + totalCaseFile);
+			if (totalCaseFile > 0) {
+				context.getFeedback().onTaskStartEvent(context.getTestBuild());
+				context.getFeedback().setTotalTestCase(totalCaseCount, 0, 0);
+				this.log.println("TEST BUILD:" + context.getTestBuild());
+				for (int i = 0; i < totalCaseFile; i++) {
+					String caseFullName = testCaseList.get(i).toString();
+					this.log.println("Case File:" + caseFullName);
+					String caseWithPackageName = convertCaseName(caseFullName);
+					Class<?> cls = Class.forName(caseWithPackageName);
+					runTests(cls, caseWithPackageName);
+					this.log.println("===================================================");
+				}
+
+			} else {
+				this.log.println("[ERROR] Not found any test cases.");
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}finally{
+			this.log.println("Test Finished!");
+			this.log.println("==================== Test Summary ====================");
+			this.log.println("Total Case:" + totalCaseCount);
+			this.log.println("Success Case:" + succCaseCount);
+			this.log.println("Fail Case:" + failCaseCount);
+			this.log.close();
 		}
-		
-		this.log.println("Test Finished!");
-		this.log.println("==================== Test Summary ====================");
-		this.log.println("Total Case:" + totalCaseCount);
-		this.log.println("Success Case:" + succCaseCount);
-		this.log.println("Fail Case:" + failCaseCount);
 	}
 	
 	
@@ -109,8 +115,7 @@ public class JdbcLocalTest {
 			res = caseFullNameWithPackageName + " => " +  mothodName + " : " + (isSucc ? "OK" : "NOK") + " => ";
 			res += core.toString();
 			long runTime = result.getRunTime();
-			this.log.println(res + " => Elapse Time:"  + runTime + Constants.LINE_SEPARATOR);
-			this.log.println("===================================================");
+			this.log.println(res + " => Elapse Time:"  + runTime);
 			context.getFeedback().onTestCaseStopEvent(caseFullNameWithPackageName + "=>" +  mothodName, isSucc, runTime, res, "local", false, false, Constants.SKIP_TYPE_NO, 0);
 		}
 	}
@@ -120,7 +125,6 @@ public class JdbcLocalTest {
 		if(caseFullName == null || caseFullName.length() <0) return null;
 		
 		String caseUnityName = com.navercorp.cubridqa.common.CommonUtils.concatFile(caseFullName); 
-		
 		String caseName = "";
 		if(this.context.getTestCaseRoot().endsWith(File.separator)){
 			caseName = caseUnityName.substring(this.context.getTestCaseRoot().length() + "src/".length(), caseUnityName.length());
@@ -129,7 +133,6 @@ public class JdbcLocalTest {
 		}
 		
 		String caseWithPackageName = caseName.replaceAll(File.separator, ".");
-		
 		return caseWithPackageName==null? caseWithPackageName: caseWithPackageName.substring(0, caseWithPackageName.indexOf(".class"));
 	}
 	
@@ -137,7 +140,7 @@ public class JdbcLocalTest {
 		return "find " + dir + " -name \"*.class\" -type f -print";
 	}
 	
-	private ArrayList<String> findTestCase(String scenarioPath) throws ClassNotFoundException{
+	private ArrayList<String> findTestCase(String scenarioPath) {
 		ArrayList<String> caseList = null;
 		if(scenarioPath == null) return caseList;
 		
@@ -151,16 +154,20 @@ public class JdbcLocalTest {
 			
 			String className = tc.substring(tc.lastIndexOf(File.separator) + 1, tc.length());
 			if(className == null || className.indexOf("$")!=-1) continue;
-
 			String caseClassNameWithoutExt = convertCaseName(tc);
-			Class<?> cls = Class.forName(caseClassNameWithoutExt);
-			TestClass testClass = new TestClass(cls);
-			
-			List<FrameworkMethod> tests = testClass.getAnnotatedMethods(org.junit.Test.class);
-			if(tests == null || tests.isEmpty()) continue;
-			totalCaseCount += tests.size();
-			
-			caseList.add(tc);
+			try {
+				Class<?> cls = Class.forName(caseClassNameWithoutExt);
+				TestClass testClass = new TestClass(cls);
+				if(testClass == null) continue;
+				List<FrameworkMethod> tests = testClass.getAnnotatedMethods(org.junit.Test.class);
+				if(tests == null || tests.isEmpty()) continue;
+				totalCaseCount += tests.size();
+				
+				caseList.add(tc);
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		return caseList;
