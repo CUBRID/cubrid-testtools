@@ -37,7 +37,6 @@ log_dir=""
 cubrid_ver=""
 scenario_category="jdbc"
 log_filename=""
-runtime_configuration_file=""
 scenario=""
 jdbc_config_file=""
 db_charset=""
@@ -64,10 +63,6 @@ function do_init()
 	db_charset="en_us"
 	cd ${CTP_HOME}/conf
     rm runtime_jdbc.conf 2>&1 >/dev/null
-    touch runtime_jdbc.conf 
-    runtime_configuration_file=${CTP_HOME}/conf/runtime_jdbc.conf
-    cp $config_file $runtime_configuration_file
-    
     log_dir=${CTP_HOME}/result/jdbc/current_runtime_log
 	if [ "${BUILD_SCENARIOS}" ];then
 		scenario_category=${BUILD_SCENARIOS}
@@ -91,7 +86,7 @@ function do_init()
     touch $fileName
     log_filename=${log_dir}/${fileName}
     
-    scenario=`ini -s common ${runtime_configuration_file} scenario`
+    scenario=`ini -s common ${config_file} scenario`
     [ ! -d "$scenario" -a ! -f "$scenario" ] && echo "please make sure your scenario directory" && exit 1
    
     jdbc_config_file=${scenario}/jdbc.properties
@@ -182,53 +177,23 @@ function do_clean()
      cd $curDir
 }
 
-
-function make_locale()
-{
-     if [ $cubrid_ver_p1 -eq 8 ]; then
-             # cubrid_ver_p1 is equal 8
-             if [ $cubrid_ver_p2 -lt 4 ]; then
-                     echo 1
-                     return
-             else
-                     if [ $cubrid_ver_p3 -lt 9 ]; then
-                             echo 1
-                             return
-                     fi
-             fi
-     fi
-     
-     echo "make locale now"
-     mv $CUBRID/conf/cubrid_locales.txt $CUBRID/conf/cubrid_locales_bak.txt
-     cp $CUBRID/conf/cubrid_locales.all.txt $CUBRID/conf/cubrid_locales.txt
-     cd $CUBRID/bin
-
-     if [ $version_type -eq 0 ]
-     then
-          sh make_locale.sh -t 64
-     else
-          sh make_locale.sh -t 64 -m debug
-     fi
-
-}
-
 funciton do_prepare()
 {
      curDir=`pwd`
-     cubrid_conf_para=`ini -s "jdbc/cubrid.conf" --separator="||" ${runtime_configuration_file}`
+     cubrid_conf_para=`ini -s "jdbc/cubrid.conf" --separator="||" ${config_file}`
      if [ "$cubrid_conf_para" ];then
          ini -s common -u "${cubrid_conf_para}" $CUBRID/conf/cubrid.conf
      fi
    
      ini -s service -u "service=server,broker" $CUBRID/conf/cubrid.conf
    
-     cubrid_broker_shm=`ini -s "jdbc/cubrid_broker.conf/broker" --separator="||" ${runtime_configuration_file}`
+     cubrid_broker_shm=`ini -s "jdbc/cubrid_broker.conf/broker" --separator="||" ${config_file}`
      if [ "$cubrid_broker_shm" ];then
          ini -s "broker" -u $cubrid_broker_shm $CUBRID/conf/cubrid_broker.conf
      fi
    
-     cubrid_broker_conf_para=`ini -s "sql/cubrid_broker.conf/%BROKER1" --separator="||" ${runtime_configuration_file}`
-     cubrid_broker_conf_queryeditor_para=`ini -s "sql/cubrid_broker.conf/%query_editor" --separator="||" ${runtime_configuration_file}`
+     cubrid_broker_conf_para=`ini -s "sql/cubrid_broker.conf/%BROKER1" --separator="||" ${config_file}`
+     cubrid_broker_conf_queryeditor_para=`ini -s "sql/cubrid_broker.conf/%query_editor" --separator="||" ${config_file}`
      is_valid_section_broker1=`cat $CUBRID/conf/cubrid_broker.conf|grep '\[\%BROKER1\]'|grep -v '#'|wc -l`
      is_valid_section_queryeditor=`cat $CUBRID/conf/cubrid_broker.conf|grep '\[\%query_editor\]'|grep -v '#'|wc -l`
    
@@ -239,10 +204,6 @@ funciton do_prepare()
      if [ "$cubrid_broker_conf_para" ] && [ $is_valid_section_broker1 -ne 0 ];then
         ini -s "%BROKER1" -u "${cubrid_broker_conf_para}" $CUBRID/conf/cubrid_broker.conf
      fi
-     
-
-     #make_locale
-     make_locale
      
      echo "MAKE $db_name DATABASE (default size)..."
      cd $CUBRID/databases
@@ -294,7 +255,7 @@ function do_test()
 {
      curDir=`pwd`
      cd ${scenario}
-	 java -cp ".:${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/shell/lib/cubridqa-shell.jar:$CLASSPATH" com.navercorp.cubridqa.shell.main.JdbcLocalTest ${runtime_configuration_file} 2>&1 >> $log_filename     
+	 java -cp ".:${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/shell/lib/cubridqa-shell.jar:$CLASSPATH" com.navercorp.cubridqa.shell.main.JdbcLocalTest ${config_file} 2>&1 >> $log_filename     
      cd $curDir
 }
 
