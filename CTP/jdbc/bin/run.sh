@@ -40,12 +40,13 @@ log_filename=""
 scenario=""
 jdbc_config_file=""
 db_charset=""
+alias ini="sh ${CTP_HOME}/bin/ini.sh"
 
 
 function usage ()
 {
      echo ""
-     echo "Usage: $0  <configuration file of jdbc test>
+     echo "Usage: $0  <configuration file of jdbc test>"
      echo ""
 }
 
@@ -177,7 +178,7 @@ function do_clean()
      cd $curDir
 }
 
-funciton do_prepare()
+function do_prepare()
 {
      curDir=`pwd`
      cubrid_conf_para=`ini -s "jdbc/cubrid.conf" --separator="||" ${config_file}`
@@ -275,6 +276,9 @@ do_clean
 
 #prepare for testing
 do_prepare
+
+#do testing
+do_test
 
 #print summary info
 print_summary
