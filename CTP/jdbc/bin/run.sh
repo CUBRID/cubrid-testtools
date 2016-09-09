@@ -294,7 +294,7 @@ function do_test()
 {
      curDir=`pwd`
      cd ${scenario}
-	 java -cp ".:${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/shell/lib/cubridqa-shell.jar:$CLASSPATH" com.navercorp.cubridqa.shell.main.JdbcLocalTest 2>&1 >> $log_filename     
+	 java -cp ".:${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/shell/lib/cubridqa-shell.jar:$CLASSPATH" com.navercorp.cubridqa.shell.main.JdbcLocalTest ${runtime_configuration_file} 2>&1 >> $log_filename     
      cd $curDir
 }
 
