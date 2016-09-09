@@ -59,15 +59,17 @@ public class JdbcLocalTest {
 		}
 		
 		ArrayList testCaseList = findTestCase(scenarioDir);
-		totalCaseCount = (testCaseList == null || testCaseList.isEmpty()) ? 0 : testCaseList.size();
+		int totalCaseFile = (testCaseList == null || testCaseList.isEmpty()) ? 0 : testCaseList.size();
 		this.log.println("Test Start!");
-		this.log.println("Total Case Count:" + totalCaseCount);
-		if (totalCaseCount > 0) {
+		this.log.println("Total Case File Count:" + totalCaseFile);
+		if (totalCaseFile > 0) {
 			context.getFeedback().onTaskStartEvent(context.getTestBuild());
 			context.getFeedback().setTotalTestCase(totalCaseCount, 0, 0);
+			this.log.println("TEST BUILD:" + context.getTestBuild());
 
-			for (int i = 0; i < totalCaseCount; i++) {
+			for (int i = 0; i < totalCaseFile; i++) {
 				String caseFullName = testCaseList.get(i).toString();
+				this.log.println("TestFile:" + caseFullName + Constants.LINE_SEPARATOR);
 				String caseWithPackageName = convertCaseName(caseFullName);
 				Class<?> cls = Class.forName(caseWithPackageName);
 				runTests(cls, caseWithPackageName);
@@ -104,9 +106,11 @@ public class JdbcLocalTest {
 				isSucc = false;
 				failCaseCount++;
 			}
-			res = caseFullNameWithPackageName + "=>" +  mothodName + ":" + (isSucc ? "OK" : "NOK");
+			res = caseFullNameWithPackageName + "=>" +  mothodName + " : " + (isSucc ? "OK" : "NOK") + "=>";
 			res += core.toString();
 			long runTime = result.getRunTime();
+			this.log.println(res + " => Elapse Time:"  + runTime + Constants.LINE_SEPARATOR);
+			
 			context.getFeedback().onTestCaseStopEvent(caseFullNameWithPackageName + "=>" +  mothodName, isSucc, runTime, res, "local", false, false, Constants.SKIP_TYPE_NO, 0);
 		}
 	}
@@ -119,14 +123,14 @@ public class JdbcLocalTest {
 		
 		String caseName = "";
 		if(this.context.getTestCaseRoot().endsWith(File.separator)){
-			caseName = caseUnityName.substring(this.context.getTestCaseRoot().length(), caseUnityName.length());
+			caseName = caseUnityName.substring(this.context.getTestCaseRoot().length() + "src/".length(), caseUnityName.length());
 		}else{
-			caseName = caseUnityName.substring(this.context.getTestCaseRoot().length() + File.separator.length(), caseUnityName.length());
+			caseName = caseUnityName.substring(this.context.getTestCaseRoot().length() + File.separator.length() + "src/".length(), caseUnityName.length());
 		}
 		
 		String caseWithPackageName = caseName.replaceAll(File.separator, ".");
 		
-		return caseWithPackageName==null? caseWithPackageName: caseWithPackageName.substring(0, caseWithPackageName.indexOf("\\.class"));
+		return caseWithPackageName==null? caseWithPackageName: caseWithPackageName.substring(0, caseWithPackageName.indexOf(".class"));
 	}
 	
 	private static String getAllTestCaseScripts(String dir) {
@@ -154,6 +158,7 @@ public class JdbcLocalTest {
 			
 			List<FrameworkMethod> tests = testClass.getAnnotatedMethods(org.junit.Test.class);
 			if(tests == null || tests.isEmpty()) continue;
+			totalCaseCount += tests.size();
 			
 			caseList.add(tc);
 		}
