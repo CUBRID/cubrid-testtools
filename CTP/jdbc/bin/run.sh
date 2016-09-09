@@ -63,8 +63,7 @@ function do_init()
 	db_name="jdbcdb"
 	db_charset="en_us"
 	cd ${CTP_HOME}/conf
-    rm runtime_jdbc.conf 2>&1 >/dev/null
-    log_dir=${CTP_HOME}/result/jdbc/current_runtime_log
+    log_dir=${CTP_HOME}/result/jdbc/current_runtime_logs
 	if [ "${BUILD_SCENARIOS}" ];then
 		scenario_category=${BUILD_SCENARIOS}
 	fi
@@ -136,7 +135,7 @@ function delete_db()
      sleep 2
 
      #delete db folder 
-     cd $cubrid_root_dir/databases
+     cd $CUBRID/databases
      if [ -d "$db_name" ];then
         rm -rf $db_name
      fi
