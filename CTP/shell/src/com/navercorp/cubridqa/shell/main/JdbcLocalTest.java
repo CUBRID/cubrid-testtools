@@ -69,7 +69,7 @@ public class JdbcLocalTest {
 
 			for (int i = 0; i < totalCaseFile; i++) {
 				String caseFullName = testCaseList.get(i).toString();
-				this.log.println("TestFile:" + caseFullName + Constants.LINE_SEPARATOR);
+				this.log.println("Case File:" + caseFullName);
 				String caseWithPackageName = convertCaseName(caseFullName);
 				Class<?> cls = Class.forName(caseWithPackageName);
 				runTests(cls, caseWithPackageName);
@@ -106,11 +106,11 @@ public class JdbcLocalTest {
 				isSucc = false;
 				failCaseCount++;
 			}
-			res = caseFullNameWithPackageName + "=>" +  mothodName + " : " + (isSucc ? "OK" : "NOK") + "=>";
+			res = caseFullNameWithPackageName + " => " +  mothodName + " : " + (isSucc ? "OK" : "NOK") + " => ";
 			res += core.toString();
 			long runTime = result.getRunTime();
 			this.log.println(res + " => Elapse Time:"  + runTime + Constants.LINE_SEPARATOR);
-			
+			this.log.println("===================================================");
 			context.getFeedback().onTestCaseStopEvent(caseFullNameWithPackageName + "=>" +  mothodName, isSucc, runTime, res, "local", false, false, Constants.SKIP_TYPE_NO, 0);
 		}
 	}
