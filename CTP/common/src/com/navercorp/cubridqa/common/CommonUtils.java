@@ -112,6 +112,9 @@ public class CommonUtils {
 
 	}
 
+	public static String concatFile(String p1){
+		return concatFile(p1, "");
+	}
 	public static String concatFile(String p1, String p2) {
 		String p;
 		if (p1 == null)
