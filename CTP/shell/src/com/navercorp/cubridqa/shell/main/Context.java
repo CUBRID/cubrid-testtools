@@ -172,7 +172,7 @@ public class Context {
 	
 	public void setLogDir(String category) {
 		this.rootLogDir = getToolHome() + "/result/" + category;
-		this.currentLogDir = this.rootLogDir + "/current_runtime_log";
+		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {

@@ -48,7 +48,7 @@ public class JdbcLocalTest {
 		}
 		
 		log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_jdbc_" + buildId + ".log"), false);
-		
+		this.context.setTestCaseRoot(com.navercorp.cubridqa.common.CommonUtils.translateVariable(this.context.getTestCaseRoot()));
 	}
 
 	private void start() throws ClassNotFoundException{
@@ -57,7 +57,6 @@ public class JdbcLocalTest {
 			this.log.println("[ERROR] Scenario is not configured.");
 			return;
 		}
-		
 		
 		ArrayList testCaseList = findTestCase(scenarioDir);
 		totalCaseCount = (testCaseList == null || testCaseList.isEmpty()) ? 0 : testCaseList.size();
