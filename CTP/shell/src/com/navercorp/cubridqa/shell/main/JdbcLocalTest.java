@@ -103,24 +103,30 @@ public class JdbcLocalTest {
 		for(FrameworkMethod m: tests){
 			String res = "";
 			String failureMessage = "";
-			String mothodName = m.getName();
+			String mothodName = "";
 			boolean isSucc = false;
-			Request request = Request.method(clazz, mothodName);
-			JUnitCore core = new JUnitCore();
-			RunListener listener = new RunListener();
-			core.addListener(listener);
-			Result result = core.run(request);
-			if (result.wasSuccessful()) {
+			Result result = null;
+			try {
+				mothodName = m.getName();
+				Request request = Request.method(clazz, mothodName);
+				JUnitCore core = new JUnitCore();
+				RunListener listener = new RunListener();
+				core.addListener(listener);
+				result = core.run(request);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				res += ex.getMessage();
+			}
+			if (result != null && result.wasSuccessful()) {
 				isSucc = true;
 				succCaseCount++;
-			}else{
+			} else {
 				isSucc = false;
 				failCaseCount++;
 				Failure failure = result.getFailures().get(0);
-                failureMessage = failure.getMessage();
+				failureMessage = failure.getMessage();
 			}
-			res = caseFullNameWithPackageName + " => " +  mothodName + " : " + (isSucc ? "OK" : "NOK") + " => ";
-			res += core.toString();
+			res = caseFullNameWithPackageName + " => " +  mothodName + " : " + (isSucc ? "OK" : "NOK");
 			long runTime = result.getRunTime();
 			this.log.println(res + " => Elapse Time:"  + runTime);
 			if (!isSucc) {
