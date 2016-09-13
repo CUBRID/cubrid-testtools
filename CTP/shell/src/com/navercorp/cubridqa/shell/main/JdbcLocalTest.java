@@ -2,12 +2,14 @@ package com.navercorp.cubridqa.shell.main;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
@@ -83,12 +85,14 @@ public class JdbcLocalTest {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}finally{
+			context.getFeedback().onTaskStopEvent();
 			this.log.println("Test Finished!");
 			this.log.println("==================== Test Summary ====================");
 			this.log.println("Total Case:" + totalCaseCount);
 			this.log.println("Success Case:" + succCaseCount);
 			this.log.println("Fail Case:" + failCaseCount);
 			this.log.close();
+			
 		}
 	}
 	
@@ -98,24 +102,37 @@ public class JdbcLocalTest {
 		List<FrameworkMethod> tests = testClass.getAnnotatedMethods(org.junit.Test.class);
 		for(FrameworkMethod m: tests){
 			String res = "";
-			String mothodName = m.getName();
+			String failureMessage = "";
+			String mothodName = "";
 			boolean isSucc = false;
-			Request request = Request.method(clazz, mothodName);
-			JUnitCore core = new JUnitCore();
-			RunListener listener = new RunListener();
-			core.addListener(listener);
-			Result result = core.run(request);
-			if (result.wasSuccessful()) {
+			Result result = null;
+			try {
+				mothodName = m.getName();
+				Request request = Request.method(clazz, mothodName);
+				JUnitCore core = new JUnitCore();
+				RunListener listener = new RunListener();
+				core.addListener(listener);
+				result = core.run(request);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				res += ex.getMessage();
+			}
+			if (result != null && result.wasSuccessful()) {
 				isSucc = true;
 				succCaseCount++;
-			}else{
+			} else {
 				isSucc = false;
 				failCaseCount++;
+				Failure failure = result.getFailures().get(0);
+				failureMessage = failure.getMessage();
 			}
-			res = caseFullNameWithPackageName + " => " +  mothodName + " : " + (isSucc ? "OK" : "NOK") + " => ";
-			res += core.toString();
+			res = caseFullNameWithPackageName + " => " +  mothodName + " : " + (isSucc ? "OK" : "NOK");
 			long runTime = result.getRunTime();
 			this.log.println(res + " => Elapse Time:"  + runTime);
+			if (!isSucc) {
+				this.log.println(" => Failure Message:" + failureMessage);
+				res += " => Failure Message:" + failureMessage;
+			}
 			context.getFeedback().onTestCaseStopEvent(caseFullNameWithPackageName + "=>" +  mothodName, isSucc, runTime, res, "local", false, false, Constants.SKIP_TYPE_NO, 0);
 		}
 	}
@@ -157,15 +174,23 @@ public class JdbcLocalTest {
 			String caseClassNameWithoutExt = convertCaseName(tc);
 			try {
 				Class<?> cls = Class.forName(caseClassNameWithoutExt);
-				TestClass testClass = new TestClass(cls);
-				if(testClass == null) continue;
-				List<FrameworkMethod> tests = testClass.getAnnotatedMethods(org.junit.Test.class);
-				if(tests == null || tests.isEmpty()) continue;
-				totalCaseCount += tests.size();
+				int totalTestMethods = 0;
+				Method[] methods = cls.getDeclaredMethods();
+				if(methods!=null && methods.length >0){
+					for(final Method method : methods){
+						if(method.isAnnotationPresent(org.junit.Test.class)){
+							totalTestMethods++;
+						}
+					}
+				}
 				
-				caseList.add(tc);
+				if(totalTestMethods != 0){
+					totalCaseCount += totalTestMethods;
+					caseList.add(tc);
+				}
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
+				this.log.println("Exception Case:" + tc);
+                this.log.println("Exception Class Name:" + caseClassNameWithoutExt);
 				e.printStackTrace();
 			}
 		}
