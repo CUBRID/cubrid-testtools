@@ -40,6 +40,7 @@ log_filename=""
 scenario=""
 jdbc_config_file=""
 db_charset=""
+CPCLASSES=""
 alias ini="sh ${CTP_HOME}/bin/ini.sh"
 
 
@@ -240,7 +241,7 @@ function do_prepare()
      
      #do compile
      cd $scenario
-     CPCLASSES=""
+     
      for clz in $(ls ./lib/*.jar);do
              CPCLASSES=${CPCLASSES}:$clz
      done
@@ -255,7 +256,7 @@ function do_test()
 {
      curDir=`pwd`
      cd ${scenario}
-	 java -cp ".:./src:${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/shell/lib/cubridqa-shell.jar:$CLASSPATH" com.navercorp.cubridqa.shell.main.JdbcLocalTest ${config_file} 2>&1 >> $log_filename     
+	 java -cp ".:$CUBRID/jdbc/cubrid_jdbc.jar:./src:${CPCLASSES}:${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/shell/lib/cubridqa-shell.jar:$CLASSPATH" com.navercorp.cubridqa.shell.main.JdbcLocalTest ${config_file} 2>&1 >> $log_filename     
      cd $curDir
 }
 
