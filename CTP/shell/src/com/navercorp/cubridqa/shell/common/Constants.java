@@ -47,6 +47,7 @@ public class Constants {
 	public static final String SKIP_TYPE_NO = "0";
 	public static final String SKIP_TYPE_BY_MACRO = "1";
 	public static final String SKIP_TYPE_BY_TEMP = "2";
+	public static final String SKIP_TYPE_BY_INVALID_UNITCASE = "3";
 	
 	public static final String WIN_KILL_PROCESS_NATIVE = createWinKillNativeScripts(false);
 	public static final ShellScriptInput WIN_KILL_PROCESS = createWinKillScripts(false);
