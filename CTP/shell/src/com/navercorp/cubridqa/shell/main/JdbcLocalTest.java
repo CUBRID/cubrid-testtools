@@ -108,6 +108,8 @@ public class JdbcLocalTest {
 				ingoreCount = result.getIgnoreCount();
 			} catch (Exception ex) {
 				ex.printStackTrace();
+				this.log.println("[Execute Error] " + ex.getMessage());
+				failureMessage += ex.getMessage();
 			}
 			
 			if (result != null && result.wasSuccessful()) {
@@ -115,12 +117,12 @@ public class JdbcLocalTest {
 				succCaseCount++;
 			}else{
 				isSucc = false;
-				failureMessage = result.getFailures().get(0).getMessage();
+				failureMessage += result == null ? "" : result.getFailures().get(0).getMessage();
 				failCaseCount++;
 			}
 			
 			res = caseClassPackageFullName + " => " + methodName  + " : " + (isSucc ? "OK" : "NOK");
-			long runTime = result.getRunTime();
+			long runTime = result == null ? 0 : result.getRunTime();
 			this.log.println(res + " => Elapse Time:"  + runTime);
 			if(failureMessage.length()>0) {
 				res += Constants.LINE_SEPARATOR + failureMessage;
@@ -170,15 +172,16 @@ public class JdbcLocalTest {
 				if(methods == null || methods.length <=0) continue;
 				
 				for(Method m:methods){
-					JdbcCaseMethodBean jCaseMethodBean = new JdbcCaseMethodBean();
 					String methodName = m.getName();
 					boolean isTestAnnotationMethod = m.isAnnotationPresent(org.junit.Test.class);
 					if(isTestAnnotationMethod || (methodName !=null && !methodName.equalsIgnoreCase("main") && methodName.toUpperCase().indexOf("TEST")>=0)){
+						JdbcCaseMethodBean jCaseMethodBean = new JdbcCaseMethodBean();
 						Request request = Request.method(cls, methodName);
-						jCaseMethodBean.setCaseFile(tc);
+						jCaseMethodBean.setCaseFile(tc.replaceAll("\\.class", ".java"));
 						jCaseMethodBean.setMethodName(methodName);
 						jCaseMethodBean.setRequest(request);
 						jCaseMethodBean.setClassPackageFullName(caseClassNameWithoutExt);
+						caseList.add(jCaseMethodBean);
 					}
 				}
 				
