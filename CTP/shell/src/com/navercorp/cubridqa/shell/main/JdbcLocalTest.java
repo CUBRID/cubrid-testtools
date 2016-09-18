@@ -58,15 +58,16 @@ public class JdbcLocalTest {
 			}
 
 			ArrayList<JdbcCaseMethodBean> testCaseList = getAllTestCase(scenarioDir);
-			int totalCaseFile = (testCaseList == null || testCaseList.isEmpty()) ? 0
+			int totalCase = (testCaseList == null || testCaseList.isEmpty()) ? 0
 					: testCaseList.size();
 			this.log.println("Test Start!");
-			this.log.println("Total Case File Count:" + totalCaseFile);
-			if (totalCaseFile > 0) {
+			this.log.println("Total Case:" + totalCase);
+			if (totalCase > 0) {
+				totalCaseCount = totalCase;
 				context.getFeedback().onTaskStartEvent(context.getTestBuild());
 				context.getFeedback().setTotalTestCase(totalCaseCount, 0, 0);
 				this.log.println("TEST BUILD:" + context.getTestBuild());
-				for (int i = 0; i < totalCaseFile; i++) {
+				for (int i = 0; i < totalCase; i++) {
 					JdbcCaseMethodBean jdbcCaseMethodBean = (JdbcCaseMethodBean)testCaseList.get(i);
 					runTests(jdbcCaseMethodBean);
 					this.log.println("===================================================");
@@ -170,7 +171,6 @@ public class JdbcLocalTest {
 				Class<?> cls = Class.forName(caseClassNameWithoutExt);
 				Method[] methods = cls.getDeclaredMethods();
 				if(methods == null || methods.length <=0) continue;
-				
 				for(Method m:methods){
 					String methodName = m.getName();
 					boolean isTestAnnotationMethod = m.isAnnotationPresent(org.junit.Test.class);
