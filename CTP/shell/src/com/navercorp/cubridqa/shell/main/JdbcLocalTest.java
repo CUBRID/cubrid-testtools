@@ -18,13 +18,11 @@ import com.navercorp.cubridqa.shell.common.Log;
 public class JdbcLocalTest {
 	
 	private Context context;
-	private static final String EXCLUDED_METHOD_LIST = "getAutoGenerateTestcaseScript, setAutoGenerateTestcaseScript, testTransactionIsolationSkinDeep, test, testAsciiNumbers";
 	Log log;
 	String category;
 	private int totalCaseCount = 0;
 	private int failCaseCount = 0;
 	private int succCaseCount = 0;
-	private int totalSkilCount = 0;
 	
 	public JdbcLocalTest(Context context){
 		this.context = context;
@@ -87,7 +85,6 @@ public class JdbcLocalTest {
 			this.log.println("Total Case:" + totalCaseCount);
 			this.log.println("Success Case:" + succCaseCount);
 			this.log.println("Fail Case:" + failCaseCount);
-			this.log.println("Skip Case:" + totalSkilCount);
 			this.log.close();
 		}
 	}
@@ -98,7 +95,6 @@ public class JdbcLocalTest {
 			String res = "";
 			String failureMessage = "";
 			Result result = null;
-			int ingoreCount = 0;
 			String caseFile = caseMethodBean.getCaseFile();
 			String caseClassPackageFullName = caseMethodBean.getClassPackageFullName();
 			String methodName = caseMethodBean.getMethodName();
@@ -109,7 +105,6 @@ public class JdbcLocalTest {
 				RunListener listener = new RunListener();
 				core.addListener(listener);
 				result = core.run(req);
-				ingoreCount = result.getIgnoreCount();
 			} catch (Exception ex) {
 				ex.printStackTrace();
 				this.log.println("[Execute Error] " + ex.getMessage());
@@ -129,18 +124,10 @@ public class JdbcLocalTest {
 			long runTime = result == null ? 0 : result.getRunTime();
 			this.log.println(res + " => Elapse Time:"  + runTime);
 			if(failureMessage.length()>0) {
-				if(failureMessage.indexOf("No tests found matching Method") >=0){
-					ingoreCount++;
-					totalSkilCount++;
-					res += Constants.LINE_SEPARATOR + "[SKIP CASE]:" + caseClassPackageFullName + " => Method: " + methodName;
-					this.log.println("[SKIP CASE]:" + caseClassPackageFullName + " => Method: " + methodName);
-					this.log.println("[Failure Message]:" + Constants.LINE_SEPARATOR + failureMessage);
-				}else{
 					res += Constants.LINE_SEPARATOR + failureMessage;
 					this.log.println("[Failure Message]:" + Constants.LINE_SEPARATOR + failureMessage);
-				}
 			}
-			context.getFeedback().onTestCaseStopEvent(caseClassPackageFullName, isSucc, runTime, res, "local", false, false, ingoreCount==0 ? Constants.SKIP_TYPE_NO : Constants.SKIP_TYPE_BY_INVALID_UNITCASE , 0);
+			context.getFeedback().onTestCaseStopEvent(caseClassPackageFullName, isSucc, runTime, res, "local", false, false, Constants.SKIP_TYPE_NO , 0);
 	}
 	
 	
@@ -161,20 +148,6 @@ public class JdbcLocalTest {
 	
 	private static String getAllTestCaseScripts(String dir) {
 		return "find " + dir + " -name \"*.class\" -type f -print";
-	}
-	
-	private boolean isValidTestMethod(String className){
-		boolean ret = false;
-		if(className == null || className.length() == 0) return ret;
-		
-		if (className.toUpperCase().indexOf("TEST") >= 0
-				&& className.indexOf("teSt") == -1
-				&& className.indexOf("tesT") == -1
-				&& className.indexOf("tSet") == -1
-				&& EXCLUDED_METHOD_LIST.indexOf(className) == -1) {
-			ret = true;
-		}
-		return ret;
 	}
 	
 	private ArrayList<JdbcCaseMethodBean> getAllTestCase(String scenarioPath){
@@ -199,7 +172,10 @@ public class JdbcLocalTest {
 				for(Method m:methods){
 					String methodName = m.getName();
 					boolean isTestAnnotationMethod = m.isAnnotationPresent(org.junit.Test.class);
-					if(isTestAnnotationMethod || isValidTestMethod(methodName)){
+					boolean isIgnoreTestAnnotationMethod = m.isAnnotationPresent(org.junit.Ignore.class);
+					if(isIgnoreTestAnnotationMethod) continue;
+					
+					if(isTestAnnotationMethod || (methodName != null && methodName.toUpperCase().indexOf("TEST") != -1)){
 						JdbcCaseMethodBean jCaseMethodBean = new JdbcCaseMethodBean();
 						Request request = Request.method(cls, methodName);
 						jCaseMethodBean.setCaseFile(tc.replaceAll("\\.class", ".java"));
