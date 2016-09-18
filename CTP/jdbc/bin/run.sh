@@ -40,6 +40,7 @@ log_filename=""
 scenario=""
 jdbc_config_file=""
 db_charset=""
+CPCLASSES=""
 alias ini="sh ${CTP_HOME}/bin/ini.sh"
 
 
@@ -229,18 +230,17 @@ function do_prepare()
      cubrid broker restart 2>&1 >> $log_filename
      
      sleep 2
-     port=`cubrid broker status -b|grep -vE 'OFF|off'|grep -E 'broker1|query_editor'|awk '{print $4}'`
+     port=`cubrid broker status -b|grep -vE 'OFF|off'|grep -E 'broker1|query_editor'|awk '{print $4}'|tail -n 1`
      jdbc_url="jdbc:cubrid:localhost:${port}:${db_name}:::"
-     ini -u "jdbc.url=${jdbc_url}" $jdbc_config_file
-     ini -u "jdbc.port=${port}" $jdbc_config_file
-     ini -u "jdbc.dbname=${db_name}" $jdbc_config_file
+     sed -i "s/jdbc.url=.*/jdbc.url=${jdbc_url}/g" $jdbc_config_file
+     sed -i "s/jdbc.port=.*/jdbc.port=${port}/g" $jdbc_config_file
+     sed -i "s/jdbc.dbname=.*/jdbc.dbname=${db_name}/g" $jdbc_config_file
      
      rm ${scenario}/lib/cubrid_jdbc.jar 2>&1 >> $log_filename
      cp $CUBRID/jdbc/cubrid_jdbc.jar ${scenario}/lib/ 2>&1 >> $log_filename
      
      #do compile
      cd $scenario
-     CPCLASSES=""
      for clz in $(ls ./lib/*.jar);do
              CPCLASSES=${CPCLASSES}:$clz
      done
@@ -255,7 +255,7 @@ function do_test()
 {
      curDir=`pwd`
      cd ${scenario}
-	 java -cp ".:./src:${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/shell/lib/cubridqa-shell.jar:$CLASSPATH" com.navercorp.cubridqa.shell.main.JdbcLocalTest ${config_file} 2>&1 >> $log_filename     
+	 java -cp ".:$CUBRID/jdbc/cubrid_jdbc.jar:./src:${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/shell/lib/cubridqa-shell.jar:${CPCLASSES}:$CLASSPATH" com.navercorp.cubridqa.shell.main.JdbcLocalTest ${config_file} 2>&1 >> $log_filename     
      cd $curDir
 }
 
