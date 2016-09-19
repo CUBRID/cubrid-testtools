@@ -20,7 +20,6 @@ import com.navercorp.cubridqa.shell.common.Log;
 public class JdbcLocalTest {
 	
 	private Context context;
-	Log log;
 	Log runCaseLog;
 	String category;
 	private int totalCaseCount = 0;
@@ -48,7 +47,6 @@ public class JdbcLocalTest {
 			context.setVersion(buildBit);
 		}
 		
-		log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_jdbc.log"), false);
 		runCaseLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "run_case_details.log"), false);
 		this.context.setTestCaseRoot(com.navercorp.cubridqa.common.CommonUtils.translateVariable(this.context.getTestCaseRoot()));
 	}
@@ -57,45 +55,45 @@ public class JdbcLocalTest {
 		String scenarioDir = this.context.getTestCaseRoot();
 		try {
 			if (scenarioDir == null || scenarioDir.length() <= 0) {
-				this.log.println("[ERROR] Scenario is not configured.");
+				this.runCaseLog.println("[ERROR] Scenario is not configured.");
 				return;
 			}
 
 			ArrayList<JdbcCaseMethodBean> testCaseList = getAllTestCase(scenarioDir);
 			int totalCase = (testCaseList == null || testCaseList.isEmpty()) ? 0
 					: testCaseList.size();
-			this.log.println("Test Start!");
-			this.log.println("Total Case:" + totalCase);
+			this.runCaseLog.println("Test Start!");
+			this.runCaseLog.println("Total Case:" + totalCase);
 			if (totalCase > 0) {
 				totalCaseCount = totalCase;
 				context.getFeedback().onTaskStartEvent(context.getTestBuild());
 				context.getFeedback().setTotalTestCase(totalCaseCount, 0, 0);
-				this.log.println("TEST BUILD:" + context.getTestBuild());
+				this.runCaseLog.println("TEST BUILD:" + context.getTestBuild());
 				for (int i = 0; i < totalCase; i++) {
 					JdbcCaseMethodBean jdbcCaseMethodBean = (JdbcCaseMethodBean)testCaseList.get(i);
 					runTests(jdbcCaseMethodBean);
-					this.log.println("===================================================");
 				}
 
 			} else {
-				this.log.println("[ERROR] Not found any test cases.");
+				this.runCaseLog.println("[ERROR] Not found any test cases.");
 				return;
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}finally{
-			this.log.println("Test Finished!");
-			this.log.println("==================== Test Summary ====================");
-			this.log.println("Total Case:" + totalCaseCount);
-			this.log.println("Success Case:" + succCaseCount);
-			this.log.println("Fail Case:" + failCaseCount);
+			this.runCaseLog.println("Test Finished!");
+			this.runCaseLog.println("==================== Test Summary ====================");
+			this.runCaseLog.println("Total Case:" + totalCaseCount);
+			this.runCaseLog.println("Success Case:" + succCaseCount);
+			this.runCaseLog.println("Fail Case:" + failCaseCount);
 			
 			System.out.println("Test Finished!");
 			System.out.println("Total Case:" + totalCaseCount);
 			System.out.println("Success Case:" + succCaseCount);
 			System.out.println("Fail Case:" + failCaseCount);
-			this.log.close();
 			this.runCaseLog.close();
+			System.out.println();
+			this.context.getFeedback().onTaskStopEvent();
 		}
 	}
 	
@@ -108,7 +106,6 @@ public class JdbcLocalTest {
 			String caseFile = caseMethodBean.getCaseFile();
 			String caseClassPackageFullName = caseMethodBean.getClassPackageFullName();
 			String methodName = caseMethodBean.getMethodName();
-			log.println("Case File:" + caseFile);
 			runCaseLog.println("Case File:" + caseFile);
 			res += "Case File:" + caseFile + Constants.LINE_SEPARATOR; 
 			final PrintStream origStdout = System.out;
@@ -125,7 +122,6 @@ public class JdbcLocalTest {
 				result = core.run(req);
 			} catch (Exception ex) {
 				ex.printStackTrace();
-				this.log.println("[Execute Error] " + ex.getMessage());
 				this.runCaseLog.println("[Execute Error] " + ex.getMessage());
 				failureMessage += ex.getMessage();
 			}
@@ -141,10 +137,10 @@ public class JdbcLocalTest {
 			
 			res += caseClassPackageFullName + " => " + methodName  + " : " + (isSucc ? "OK" : "NOK");
 			long runTime = result == null ? 0 : result.getRunTime();
-			this.log.println(res + " => Elapse Time:"  + runTime);
+			this.runCaseLog.println(res + " => Elapse Time:"  + runTime);
 			if(failureMessage.length()>0) {
 					res += Constants.LINE_SEPARATOR + failureMessage;
-					this.log.println("[Failure Message]:" + Constants.LINE_SEPARATOR + failureMessage);
+					this.runCaseLog.println("[Failure Message]:" + Constants.LINE_SEPARATOR + failureMessage);
 			}
 			System.out.flush();
 			System.err.flush();
@@ -158,7 +154,7 @@ public class JdbcLocalTest {
 			System.out.println(res);
 			System.out.println();
 			System.out.println("===================================================");
-			context.getFeedback().onTestCaseStopEvent(caseClassPackageFullName, isSucc, runTime, res, "local", false, false, Constants.SKIP_TYPE_NO , 0);
+			context.getFeedback().onTestCaseStopEvent(caseFile + ":" + methodName + "()", isSucc, runTime, res, "local", false, false, Constants.SKIP_TYPE_NO , 0);
 	}
 	
 	
