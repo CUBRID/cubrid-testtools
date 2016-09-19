@@ -165,7 +165,6 @@ public class Context {
 		return getProperty("main.testing.platform", "linux");
 	}
 	
-
 	public String getCubridPackageUrl() {
 		return getProperty("main.testbuild.url");
 	}

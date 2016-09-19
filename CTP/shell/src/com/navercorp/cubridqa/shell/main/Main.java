@@ -81,7 +81,6 @@ public class Main {
 		}		
 		
 		context.setTestCaseRoot(calcScenario(context));
-				
 		System.out.println("Build Number: " + context.getTestBuild());
 
 		Properties props = context.getProperties();

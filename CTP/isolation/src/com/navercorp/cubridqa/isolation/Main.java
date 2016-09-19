@@ -74,7 +74,6 @@ public class Main {
 		}
 		
 		context.setTestCaseRoot(calcScenario(context));
-
 		System.out.println("Build Id: " + context.getBuildId());
 		System.out.println("Build Bits: " + context.getBuildBits());
 
