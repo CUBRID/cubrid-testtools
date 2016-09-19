@@ -55,42 +55,37 @@ public class JdbcLocalTest {
 		String scenarioDir = this.context.getTestCaseRoot();
 		try {
 			if (scenarioDir == null || scenarioDir.length() <= 0) {
-				this.runCaseLog.println("[ERROR] Scenario is not configured.");
+				out("[ERROR]:", " Scenario is not configured.", true);
 				return;
 			}
 
 			ArrayList<JdbcCaseMethodBean> testCaseList = getAllTestCase(scenarioDir);
 			int totalCase = (testCaseList == null || testCaseList.isEmpty()) ? 0
 					: testCaseList.size();
-			this.runCaseLog.println("Test Start!");
-			this.runCaseLog.println("Total Case:" + totalCase);
+			out("[INFO]: ", "Test Start!", true);
+			out("[INFO]: ", "Total Case:" + totalCase, true);
 			if (totalCase > 0) {
 				totalCaseCount = totalCase;
 				context.getFeedback().onTaskStartEvent(context.getTestBuild());
 				context.getFeedback().setTotalTestCase(totalCaseCount, 0, 0);
-				this.runCaseLog.println("TEST BUILD:" + context.getTestBuild());
+				out("[INFO]: ", "TEST BUILD:" + context.getTestBuild(), true);
 				for (int i = 0; i < totalCase; i++) {
 					JdbcCaseMethodBean jdbcCaseMethodBean = (JdbcCaseMethodBean)testCaseList.get(i);
 					runTests(jdbcCaseMethodBean);
 				}
 
 			} else {
-				this.runCaseLog.println("[ERROR] Not found any test cases.");
+				out("[ERROR]: ", "Not found any test cases.", true);
 				return;
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}finally{
-			this.runCaseLog.println("Test Finished!");
-			this.runCaseLog.println("==================== Test Summary ====================");
-			this.runCaseLog.println("Total Case:" + totalCaseCount);
-			this.runCaseLog.println("Success Case:" + succCaseCount);
-			this.runCaseLog.println("Fail Case:" + failCaseCount);
-			
-			System.out.println("Test Finished!");
-			System.out.println("Total Case:" + totalCaseCount);
-			System.out.println("Success Case:" + succCaseCount);
-			System.out.println("Fail Case:" + failCaseCount);
+			out("[INFO]: ", "Test Finished!", true);
+			out("", "==================== Test Summary ====================", false);
+			out("[INFO]: ", "Total Case:" + totalCaseCount, true);
+			out("[INFO]: ", "Success Case:" + succCaseCount, true);
+			out("[INFO]: ", "Fail Case:" + failCaseCount, true);
 			this.runCaseLog.close();
 			System.out.println();
 			this.context.getFeedback().onTaskStopEvent();
@@ -104,10 +99,7 @@ public class JdbcLocalTest {
 			String failureMessage = "";
 			Result result = null;
 			String caseFile = caseMethodBean.getCaseFile();
-			String caseClassPackageFullName = caseMethodBean.getClassPackageFullName();
 			String methodName = caseMethodBean.getMethodName();
-			runCaseLog.println("Case File:" + caseFile);
-			res += "Case File:" + caseFile + Constants.LINE_SEPARATOR; 
 			final PrintStream origStdout = System.out;
 			final PrintStream origStderr = System.err;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -122,7 +114,7 @@ public class JdbcLocalTest {
 				result = core.run(req);
 			} catch (Exception ex) {
 				ex.printStackTrace();
-				this.runCaseLog.println("[Execute Error] " + ex.getMessage());
+				out("[ERROR]: ", ex.getMessage(), true);
 				failureMessage += ex.getMessage();
 			}
 			
@@ -135,26 +127,23 @@ public class JdbcLocalTest {
 				failCaseCount++;
 			}
 			
-			res += caseClassPackageFullName + " => " + methodName  + " : " + (isSucc ? "OK" : "NOK");
 			long runTime = result == null ? 0 : result.getRunTime();
-			this.runCaseLog.println(res + " => Elapse Time:"  + runTime);
 			if(failureMessage.length()>0) {
 					res += Constants.LINE_SEPARATOR + failureMessage;
-					this.runCaseLog.println("[Failure Message]:" + Constants.LINE_SEPARATOR + failureMessage);
 			}
 			System.out.flush();
 			System.err.flush();
 			if(baos.toString()!=null && baos.toString().trim().length() >0){
-				res += Constants.LINE_SEPARATOR + "Run_Log:"  + Constants.LINE_SEPARATOR + baos.toString();
+				res += Constants.LINE_SEPARATOR + baos.toString();
 			}
-			this.runCaseLog.println(baos.toString());
-			this.runCaseLog.println("===================================================");
+			
 			System.setOut(origStdout);
 			System.setErr(origStderr);
-			System.out.println(res);
-			System.out.println();
-			System.out.println("===================================================");
-			context.getFeedback().onTestCaseStopEvent(caseFile + ":" + methodName + "()", isSucc, runTime, res, "local", false, false, Constants.SKIP_TYPE_NO , 0);
+			out("[CASE]: ", caseFile + " => " + methodName + "() => " + (isSucc?"OK":"NOK"), true);
+			out("[ELAPSE TIME(ms)]: ", String.valueOf(runTime), true);
+			if(res.trim().length()>0) out("[RUNTIME LOG]: ", Constants.LINE_SEPARATOR + res, true);
+			out("", "===================================================", true);
+			context.getFeedback().onTestCaseStopEvent(caseFile + " => " + methodName + "()", isSucc, runTime, isSucc? "OK":res, "local", false, false, Constants.SKIP_TYPE_NO , 0);
 	}
 	
 	
@@ -175,6 +164,14 @@ public class JdbcLocalTest {
 	
 	private static String getAllTestCaseScripts(String dir) {
 		return "find " + dir + " -name \"*.class\" -type f -print";
+	}
+	
+	private void out(String header, String out, boolean showConsole){
+		boolean needHeader = false;
+		if(header != null && header.length()>0) needHeader = true;
+		
+		if(showConsole) System.out.println(needHeader ? (header + out) : out);
+	    this.runCaseLog.println(needHeader ? (header + out) : out);
 	}
 	
 	private ArrayList<JdbcCaseMethodBean> getAllTestCase(String scenarioPath){
