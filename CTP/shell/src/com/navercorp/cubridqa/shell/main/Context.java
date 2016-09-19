@@ -83,7 +83,7 @@ public class Context {
 	String defaultDbCharset;
 
 	boolean enableCheckDiskSpace = false;
-
+	
 	String mailNoticeTo;
 
 	boolean enableSaveNormalErrorLog = false;

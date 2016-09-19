@@ -36,7 +36,6 @@ config_file=""
 log_dir=""
 cubrid_ver=""
 scenario_category="jdbc"
-log_filename=""
 scenario=""
 jdbc_config_file=""
 db_charset=""
@@ -81,12 +80,7 @@ function do_init()
     	export BUILD_ID=${cubrid_ver}
     	export BUILD_BITS=${cubrid_bits}
     fi
-    
-    cd $log_dir
-    fileName=${scenario_category}_${cubrid_ver}_`get_curr_timestamp`.log
-    touch $fileName
-    log_filename=${log_dir}/${fileName}
-    
+        
     scenario=`ini -s common ${config_file} scenario`
     [ ! -d "$scenario" -a ! -f "$scenario" ] && echo "please make sure your scenario directory" && exit 1
    
@@ -132,7 +126,7 @@ function stop_db()
 function delete_db()
 {
      echo "delete database $1"
-     cubrid deletedb $1 2>&1 >> $log_filename
+     cubrid deletedb $1  
      sleep 2
 
      #delete db folder 
@@ -211,23 +205,23 @@ function do_prepare()
 	 if [ $cubrid_ver_p1 -ge 9 -a $cubrid_ver_p2 -gt 1 ] || [ $cubrid_ver_p1 -ge 10 ]
      then
           echo "cubrid createdb $db_name $db_charset"
-          cubrid createdb $db_name ${db_charset} 2>&1 >> $log_filename
+          cubrid createdb $db_name ${db_charset}  
      else
           echo "cubrid createdb $db_name"
-          cubrid createdb $db_name 2>&1 >> $log_filename
+          cubrid createdb $db_name  
      fi
      
      echo "start database $db_name"
      cnt=`cat $CUBRID/conf/cubrid.conf | grep -v "#" | grep ha_mode | grep -E 'on|yes' | wc -l `
      if [ "$cnt" -gt 0 ]
      then
-         cubrid hb start $db_name 2>&1 >> $log_filename
+         cubrid hb start $db_name  
      else
-         cubrid server start $db_name 2>&1 >> $log_filename
+         cubrid server start $db_name  
      fi
      
      echo "restart broker..."        
-     cubrid broker restart 2>&1 >> $log_filename
+     cubrid broker restart  
      
      sleep 2
      port=`cubrid broker status -b|grep -vE 'OFF|off'|grep -E 'broker1|query_editor'|awk '{print $4}'|tail -n 1`
@@ -236,8 +230,8 @@ function do_prepare()
      sed -i "s/jdbc.port=.*/jdbc.port=${port}/g" $jdbc_config_file
      sed -i "s/jdbc.dbname=.*/jdbc.dbname=${db_name}/g" $jdbc_config_file
      
-     rm ${scenario}/lib/cubrid_jdbc.jar 2>&1 >> $log_filename
-     cp $CUBRID/jdbc/cubrid_jdbc.jar ${scenario}/lib/ 2>&1 >> $log_filename
+     rm ${scenario}/lib/cubrid_jdbc.jar 
+     cp $CUBRID/jdbc/cubrid_jdbc.jar ${scenario}/lib/  
      
      #do compile
      cd $scenario
@@ -245,8 +239,8 @@ function do_prepare()
              CPCLASSES=${CPCLASSES}:$clz
      done
      
-     echo "CLASSPATH ===> .:${CPCLASSES}" >> $log_filename
-     find ${scenario} -type f -name "*.java"|xargs -t javac -cp ".:${CPCLASSES}" >> $log_filename
+     echo "CLASSPATH ===> .:${CPCLASSES}"  
+     find ${scenario} -type f -name "*.java"|xargs -t javac -cp ".:${CPCLASSES}"  
 
      cd $curDir
 }
@@ -255,16 +249,8 @@ function do_test()
 {
      curDir=`pwd`
      cd ${scenario}
-	 java -cp ".:$CUBRID/jdbc/cubrid_jdbc.jar:./src:${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/shell/lib/cubridqa-shell.jar:${CPCLASSES}:$CLASSPATH" com.navercorp.cubridqa.shell.main.JdbcLocalTest ${config_file} 2>&1 >> $log_filename     
+	 java -cp ".:$CUBRID/jdbc/cubrid_jdbc.jar:./src:${CTP_HOME}/common/lib/cubridqa-common.jar:${CTP_HOME}/shell/lib/cubridqa-shell.jar:${CPCLASSES}:$CLASSPATH" com.navercorp.cubridqa.shell.main.JdbcLocalTest ${config_file} 
      cd $curDir
-}
-
-function print_summary()
-{
-	  echo ""
-      echo "==Test Finished!=="
-      echo "log:${log_filename}"
-      echo ""
 }
 
 #init environment for testing
@@ -278,12 +264,3 @@ do_prepare
 
 #do testing
 do_test
-
-#print summary info
-print_summary
-
-
-
-
-
-
