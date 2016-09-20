@@ -1,7 +1,9 @@
 package com.navercorp.cubridqa.shell.main;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
@@ -18,7 +20,7 @@ import com.navercorp.cubridqa.shell.common.Log;
 public class JdbcLocalTest {
 	
 	private Context context;
-	Log log;
+	Log runCaseLog;
 	String category;
 	private int totalCaseCount = 0;
 	private int failCaseCount = 0;
@@ -45,7 +47,7 @@ public class JdbcLocalTest {
 			context.setVersion(buildBit);
 		}
 		
-		log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_jdbc.log"), false);
+		runCaseLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "run_case_details.log"), false);
 		this.context.setTestCaseRoot(com.navercorp.cubridqa.common.CommonUtils.translateVariable(this.context.getTestCaseRoot()));
 	}
 
@@ -53,39 +55,40 @@ public class JdbcLocalTest {
 		String scenarioDir = this.context.getTestCaseRoot();
 		try {
 			if (scenarioDir == null || scenarioDir.length() <= 0) {
-				this.log.println("[ERROR] Scenario is not configured.");
+				out("[ERROR]:", " Scenario is not configured.", true);
 				return;
 			}
 
 			ArrayList<JdbcCaseMethodBean> testCaseList = getAllTestCase(scenarioDir);
 			int totalCase = (testCaseList == null || testCaseList.isEmpty()) ? 0
 					: testCaseList.size();
-			this.log.println("Test Start!");
-			this.log.println("Total Case:" + totalCase);
+			out("[INFO]: ", "Test Start!", true);
+			out("[INFO]: ", "Total Case:" + totalCase, true);
 			if (totalCase > 0) {
 				totalCaseCount = totalCase;
 				context.getFeedback().onTaskStartEvent(context.getTestBuild());
 				context.getFeedback().setTotalTestCase(totalCaseCount, 0, 0);
-				this.log.println("TEST BUILD:" + context.getTestBuild());
+				out("[INFO]: ", "TEST BUILD:" + context.getTestBuild(), true);
 				for (int i = 0; i < totalCase; i++) {
 					JdbcCaseMethodBean jdbcCaseMethodBean = (JdbcCaseMethodBean)testCaseList.get(i);
 					runTests(jdbcCaseMethodBean);
-					this.log.println("===================================================");
 				}
 
 			} else {
-				this.log.println("[ERROR] Not found any test cases.");
+				out("[ERROR]: ", "Not found any test cases.", true);
 				return;
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}finally{
-			this.log.println("Test Finished!");
-			this.log.println("==================== Test Summary ====================");
-			this.log.println("Total Case:" + totalCaseCount);
-			this.log.println("Success Case:" + succCaseCount);
-			this.log.println("Fail Case:" + failCaseCount);
-			this.log.close();
+			out("[INFO]: ", "Test Finished!", true);
+			out("", "==================== Test Summary ====================", false);
+			out("[INFO]: ", "Total Case:" + totalCaseCount, true);
+			out("[INFO]: ", "Success Case:" + succCaseCount, true);
+			out("[INFO]: ", "Fail Case:" + failCaseCount, true);
+			this.runCaseLog.close();
+			System.out.println();
+			this.context.getFeedback().onTaskStopEvent();
 		}
 	}
 	
@@ -95,21 +98,23 @@ public class JdbcLocalTest {
 			String res = "";
 			String failureMessage = "";
 			Result result = null;
-			int ingoreCount = 0;
 			String caseFile = caseMethodBean.getCaseFile();
-			String caseClassPackageFullName = caseMethodBean.getClassPackageFullName();
 			String methodName = caseMethodBean.getMethodName();
-			log.println("Case File:" + caseFile);
+			final PrintStream origStdout = System.out;
+			final PrintStream origStderr = System.err;
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			PrintStream ps = new PrintStream(baos);
+			System.setOut(ps);
+			System.setErr(ps);
 			Request req = caseMethodBean.getRequest();
 			try {
 				JUnitCore core = new JUnitCore();
 				RunListener listener = new RunListener();
 				core.addListener(listener);
 				result = core.run(req);
-				ingoreCount = result.getIgnoreCount();
 			} catch (Exception ex) {
 				ex.printStackTrace();
-				this.log.println("[Execute Error] " + ex.getMessage());
+				out("[ERROR]: ", ex.getMessage(), true);
 				failureMessage += ex.getMessage();
 			}
 			
@@ -122,14 +127,23 @@ public class JdbcLocalTest {
 				failCaseCount++;
 			}
 			
-			res = caseClassPackageFullName + " => " + methodName  + " : " + (isSucc ? "OK" : "NOK");
 			long runTime = result == null ? 0 : result.getRunTime();
-			this.log.println(res + " => Elapse Time:"  + runTime);
 			if(failureMessage.length()>0) {
-				res += Constants.LINE_SEPARATOR + failureMessage;
-				this.log.println("Failure Message:" + Constants.LINE_SEPARATOR + failureMessage);
+					res += Constants.LINE_SEPARATOR + failureMessage;
 			}
-			context.getFeedback().onTestCaseStopEvent(caseClassPackageFullName + "=>" +  methodName, isSucc, runTime, res, "local", false, false, ingoreCount==0 ? Constants.SKIP_TYPE_NO : Constants.SKIP_TYPE_BY_INVALID_UNITCASE , 0);
+			System.out.flush();
+			System.err.flush();
+			if(baos.toString()!=null && baos.toString().trim().length() >0){
+				res += Constants.LINE_SEPARATOR + baos.toString();
+			}
+			
+			System.setOut(origStdout);
+			System.setErr(origStderr);
+			out("[TESTCASE]: ", caseFile + " => " + methodName + "() => " + (isSucc?"OK":"NOK"), true);
+			out("[ELAPSE TIME(ms)]: ", String.valueOf(runTime), true);
+			if(res.trim().length()>0) out("[RUNTIME LOG]: ", Constants.LINE_SEPARATOR + res, true);
+			out("", "===================================================", true);
+			context.getFeedback().onTestCaseStopEvent(caseFile + " => " + methodName + "()", isSucc, runTime, isSucc? null:res, "local", false, false, Constants.SKIP_TYPE_NO , 0);
 	}
 	
 	
@@ -152,6 +166,14 @@ public class JdbcLocalTest {
 		return "find " + dir + " -name \"*.class\" -type f -print";
 	}
 	
+	private void out(String header, String out, boolean showConsole){
+		boolean needHeader = false;
+		if(header != null && header.length()>0) needHeader = true;
+		
+		if(showConsole) System.out.println(needHeader ? (header + out) : out);
+	    this.runCaseLog.println(needHeader ? (header + out) : out);
+	}
+	
 	private ArrayList<JdbcCaseMethodBean> getAllTestCase(String scenarioPath){
 		ArrayList<JdbcCaseMethodBean> caseList = null;
 		if(scenarioPath == null) return caseList;
@@ -168,13 +190,16 @@ public class JdbcLocalTest {
 			
 			String caseClassNameWithoutExt = convertCaseName(tc);
 			try {
-				Class<?> cls = Class.forName(caseClassNameWithoutExt);
+				Class<?> cls = Class.forName(caseClassNameWithoutExt, false, this.getClass().getClassLoader());
 				Method[] methods = cls.getDeclaredMethods();
 				if(methods == null || methods.length <=0) continue;
 				for(Method m:methods){
 					String methodName = m.getName();
 					boolean isTestAnnotationMethod = m.isAnnotationPresent(org.junit.Test.class);
-					if(isTestAnnotationMethod || (methodName !=null && !methodName.equalsIgnoreCase("main") && methodName.toUpperCase().indexOf("TEST")>=0)){
+					boolean isIgnoreTestAnnotationMethod = m.isAnnotationPresent(org.junit.Ignore.class);
+					if(isIgnoreTestAnnotationMethod) continue;
+					
+					if(isTestAnnotationMethod || (methodName != null && methodName.toUpperCase().indexOf("TEST") != -1)){
 						JdbcCaseMethodBean jCaseMethodBean = new JdbcCaseMethodBean();
 						Request request = Request.method(cls, methodName);
 						jCaseMethodBean.setCaseFile(tc.replaceAll("\\.class", ".java"));

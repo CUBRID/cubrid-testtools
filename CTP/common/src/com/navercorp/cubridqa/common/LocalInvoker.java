@@ -45,7 +45,7 @@ public class LocalInvoker {
 	public static final String COMP_FLAG = "ALL_LOCAL_COMPLETED";
 
 	public static String exec(String cmds, int shellType, boolean showInConsole) {
-		//System.out.println("commands: " + cmds + ", " + shellType + "," + showInConsole);
+		// System.out.println("commands: " + cmds + ", " + shellType + "," + showInConsole);
 		File tmpFile;
 		try {
 			tmpFile = File.createTempFile(".localexec", shellType == SHELL_TYPE_WINDOWS ? ".bat" : ".sh");
@@ -123,6 +123,8 @@ public class LocalInvoker {
 			stdout.start();
 			errout.start();
 			p.waitFor();
+			stdout.waitFor();
+			errout.waitFor();
 
 			if (showInConsole) {
 				result = null;
@@ -145,6 +147,7 @@ class StreamReader extends Thread {
 	InputStream in;
 	StringBuffer buffer = new StringBuffer();
 	boolean showInConsole = false;
+	boolean done = false;
 
 	StreamReader(InputStream in, boolean showInConsole) {
 		this.in = in;
@@ -192,9 +195,20 @@ class StreamReader extends Thread {
 				buffer.append("Throw Java IOException: " + e.getMessage());
 			}
 		}
+		done = true;
 	}
 
 	public String getResult() {
 		return buffer.toString();
+	}
+
+	public void waitFor() {
+		while (!done) {
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }
