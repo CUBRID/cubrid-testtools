@@ -38,7 +38,7 @@ function run_jdbc {
 	echo ""
         echo "The current CTP does not support $BUILD_TYPE testing!"
 	exit 
-    elif [ "$BUILD_SCENARIOS" != "jdbc" -a "$BUILD_SCENARIOS" == "jdbc_debug" ]; then
+    elif [ "$BUILD_SCENARIOS" != "jdbc" -a "$BUILD_SCENARIOS" != "jdbc_debug" ]; then
 	echo ""
         echo "Unknown scenario type, stop test."
         echo "Please check and re-send message."
@@ -74,7 +74,7 @@ function run_jdbc {
     cd $CTP_HOME/result/jdbc
     current_id=`cat $CTP_HOME/result/jdbc/current_runtime_logs/current_task_id | tail -n 1`
     timestamp=`date +'%Y.%m.%d_%H.%M.%S'`
-    backup_file=`jdbc_result_${{build_id}_${current_id}_${timestamp}`
+    backup_file=`jdbc_result_${build_id}_${current_id}_${timestamp}`
     mkdir -p ${backup_file} 
     cp -rf current_runtime_logs $backup_file
     cp $ctp_jdbc_test_conf $backup_file
