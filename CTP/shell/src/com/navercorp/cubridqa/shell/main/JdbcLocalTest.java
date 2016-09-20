@@ -139,11 +139,11 @@ public class JdbcLocalTest {
 			
 			System.setOut(origStdout);
 			System.setErr(origStderr);
-			out("[CASE]: ", caseFile + " => " + methodName + "() => " + (isSucc?"OK":"NOK"), true);
+			out("[TESTCASE]: ", caseFile + " => " + methodName + "() => " + (isSucc?"OK":"NOK"), true);
 			out("[ELAPSE TIME(ms)]: ", String.valueOf(runTime), true);
 			if(res.trim().length()>0) out("[RUNTIME LOG]: ", Constants.LINE_SEPARATOR + res, true);
 			out("", "===================================================", true);
-			context.getFeedback().onTestCaseStopEvent(caseFile + " => " + methodName + "()", isSucc, runTime, isSucc? "OK":res, "local", false, false, Constants.SKIP_TYPE_NO , 0);
+			context.getFeedback().onTestCaseStopEvent(caseFile + " => " + methodName + "()", isSucc, runTime, isSucc? null:res, "local", false, false, Constants.SKIP_TYPE_NO , 0);
 	}
 	
 	
