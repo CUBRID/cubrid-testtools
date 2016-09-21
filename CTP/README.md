@@ -10,7 +10,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configurations
 
 ## Quick Start
-This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication`` and so on. Regarding more information please refer to the related sections
+This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``SQL_By_CCI`` and so on. Regarding more information please refer to the related sections
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly
 * Execute a example test as follows:
 
@@ -68,8 +68,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  # Path of the data file for initial loading
 	  data_file=${HOME}/cubrid-testcases/medium/files/mdb.tar.gz
  	  ```   	
-
-	More parameters setting and parameters explanation within ``sql.conf`` and ``medium.conf``, please refer to [CTP/conf/sql.conf](conf/sql.conf) for SQL and [CTP/conf/medium.conf](conf/medium.conf) for Medium
+	More parameters setting and parameters explanation within ``sql.conf`` and ``medium.conf``, please refer to [CTP/conf/sql.conf](conf/sql.conf) for SQL, [CTP/conf/medium.conf](conf/medium.conf) for Medium and [CTP/conf/sql_by_cci.conf](conf/sql_by_cci.conf) for SQL_By_CCI
 
   - Run Tests
 	* For **SQL** test:
@@ -81,7 +80,11 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	    ```
 	    $ bin/ctp.sh medium -c ./conf/medium.conf
 	    ```
-	* Use interactive mode to debug your **SQL/Medium** case          
+	* For **SQL_By_CCI** test:
+	    ```
+	    $ bin/ctp.sh sql_by_cci -c ./conf/sql.conf
+	    ``` 
+	* Use interactive mode to debug your **SQL/Medium** case (this feature does not support SQL_By_CCI)          
 	    ```
 	    $ bin/ctp.sh sql --interactive
 	    ```
@@ -96,7 +99,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	    Success:1
 	    Total:1
 	    Elapse Time:193
-	    Test Result Directory:/home/user/CTP/sql/result/y2016/m3/schedule_linux_sql_64bit_24202122_10.0.0_1376
+	    Test Result Directory:/home/user/CTP/{sql|medium|sql_by_cci}/result/y2016/m3/schedule_linux_sql_64bit_24202122_10.0.0_1376
 	    Test Log:/home/user/CTP/sql/log/sql_10.0.0.1376_1458818452.log
 	    -----------------------
 		
@@ -105,7 +108,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	    -----------------------
 	    ```
 	* You can find the details of the test result from ``Test Result Directory``
-	* You can also use your web browser to examine the result with webconsole service of CTP
+	* You can also use your web browser to examine the result with webconsole service of CTP (the current webconsole feature does not support SQL_By_CCI)
 	* ``bin/ctp.sh webconsole start`` shows you the URL of the result as follows:
 	  ```
 	  Config: /home/user/CTP/conf/webconsole.conf
@@ -278,7 +281,7 @@ It's not required that you execute build for CTP, unless you make some changes w
 You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/lib/cubridqa-cqt.jar``, ``common/sched/lib/cubridqa-scheduler.jar``, ``shell/init_path/commonforjdbc.jar``, ``shell/lib/cubridqa-shell.jar``, ``isolation/lib/cubridqa-isolation.jar`` and ``ha_repl/lib/cubridqa-ha_repl.jar``
 
 ## How To Write Testcase
- - **SQL**
+ - **SQL/Medium/SQL_By_CCI**
     
    When you want to write your own test case, please follow the following rules
    * Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory

@@ -66,7 +66,6 @@ public class Context {
 	private boolean enableCheckDiskSpace;
 	private boolean reInstallTestBuildYn = false;
 	private String scenario;
-	
 	private boolean isExecuteAtLocal = false;
 	
 	public Context(String filename) throws IOException {
@@ -166,7 +165,6 @@ public class Context {
 		return getProperty("main.testing.platform", "linux");
 	}
 	
-
 	public String getCubridPackageUrl() {
 		return getProperty("main.testbuild.url");
 	}

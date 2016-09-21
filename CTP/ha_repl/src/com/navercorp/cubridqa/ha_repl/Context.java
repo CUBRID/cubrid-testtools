@@ -86,6 +86,7 @@ public class Context {
 	}
 
 	public Feedback getFeedback() {
+		
 		if (this.feedback == null) {
 			String feedbackType = getProperty("main.feedback.type", "file")
 					.trim();

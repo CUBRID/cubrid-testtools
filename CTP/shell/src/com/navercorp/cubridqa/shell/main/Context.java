@@ -107,7 +107,6 @@ public class Context {
 	
 	boolean skipToSaveSuccCase = false;
 	boolean reInstallTestBuildYn = false;
-	
 	private boolean isExecuteAtLocal = false;	
 	String scenario;
 
@@ -117,7 +116,6 @@ public class Context {
 		this.envMap = new HashMap<String, String>();
 		
 		reload();
-		
 		setLogDir("shell");
 		
 		// to get msg id from environment variable
