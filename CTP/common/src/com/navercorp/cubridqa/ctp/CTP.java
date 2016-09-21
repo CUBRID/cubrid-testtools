@@ -208,11 +208,6 @@ public class CTP {
 		}		
 	}
 	
-	private static void executeSQL_By_CCI(IniData config, String suite) throws IOException {
-		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
-		LocalInvoker.exec("sh ${CTP_HOME}/sql_by_cci/bin/run.sh" + " -s " + suite + " -f " + configFilePath, CommonUtils.getShellType(false), true);
-	}
-
 	private static void executeJdbc(IniData config, String suite) throws IOException {
 		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
 		LocalInvoker.exec("sh ${CTP_HOME}/jdbc/bin/run.sh " + configFilePath, CommonUtils.getShellType(false), true);
