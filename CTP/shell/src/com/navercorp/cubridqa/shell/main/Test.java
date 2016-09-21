@@ -46,7 +46,6 @@ public class Test {
 
 	String testCaseFullName, testCaseName, testCaseDir, testCaseResultName;
 
-	String sshHost, sshPort, sshUser, sshPwd;
 	SSHConnect ssh;
 	Log dispatchLog;
 	Log workerLog;
@@ -76,14 +75,9 @@ public class Test {
 		this.dispatchLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + currEnvId + ".txt"), false, laterJoined ? true : context.isContinueMode());
 		this.workerLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, true);
 
-		sshHost = context.getInstanceProperty(currEnvId, "ssh.host");
-		sshPort = context.getInstanceProperty(currEnvId, "ssh.port");
-		sshUser = context.getInstanceProperty(currEnvId, "ssh.user");
-		sshPwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-		
 		this.needDropTestCase = context.needDeleteTestCaseAfterTest();
 
-		envIdentify = "EnvId=" + currEnvId + "[" + sshUser + "@" + sshHost + ":" + sshPort + "]";
+		envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId)) + "]";
 		this.maxRetryCount = this.context.getMaxRetryCount();
 
 		resetSSH();
@@ -100,7 +94,7 @@ public class Test {
 		int p;
 		while (!shouldStop && !Dispatch.getInstance().isFinished()) {
 
-			if (this.context.getServiceProtocolType()!=null && this.context.getServiceProtocolType().equals("rmi") && context.isWindows()) {
+			if (this.context.getServiceProtocolType() != null && this.context.getServiceProtocolType().equals(SSHConnect.SERVICE_TYPE_RMI)) {
 				ShellScriptInput aliveScript = new ShellScriptInput("echo HELLO");
 				try {
 					String aliveResult = ssh.execute(aliveScript);
@@ -418,14 +412,13 @@ public class Test {
         scripts.addCommand("find ~/CUBRID/ -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
         scripts.addCommand("find ~/CUBRID/ -name \"core\" | xargs -i rm -rf {} ");
         
-		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
-		String serviceProtocol = context.getServiceProtocolType();
+		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);		
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
 				sshRelated = null;
 				try {
-					sshRelated = new SSHConnect(h, sshPort, sshUser, sshPwd, serviceProtocol);
+					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
 					sshRelated.execute(scripts);
 					workerLog.println("[INFO] remove core file successfully on " + h + ".");
 				} catch (Exception e) {
@@ -458,11 +451,11 @@ public class Test {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		this.ssh = new SSHConnect(sshHost, sshPort, sshUser, sshPwd, context.getServiceProtocolType());
+		this.ssh = ShellHelper.createTestNodeConnect(context, currEnvId);
 	}
 
 	public void resetProcess() {
-		String result = CommonUtils.resetProcess(ssh, context.isWindows);
+		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
 		workerLog.println("[INFO] CLEAN PROCESSES: " + result);
 		
 		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
@@ -474,8 +467,8 @@ public class Test {
 		for (String h : relatedHosts) {
 			sshRelated = null;
 			try {
-				sshRelated = new SSHConnect(h, sshPort, sshUser, sshPwd, context.getServiceProtocolType());
-				result = CommonUtils.resetProcess(sshRelated, context.isWindows);
+				sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId);
+				result = CommonUtils.resetProcess(sshRelated, context.isWindows, context.isExecuteAtLocal());
 				workerLog.println("[INFO] CLEAN PROCESSES(" + h + "): " + result);
 			} catch (Exception e) {
 				workerLog.println("[ERROR] CLEAN PROCESSES(" + h + "): " + e.getMessage());
@@ -560,19 +553,19 @@ public class Test {
 			try {
 				result = ssh.execute(scripts);
 			} catch (Exception e) {
-				addResultItem("NOK", "Runtime error. Fail to check more errors on main host " + sshHost + ": " + e.getMessage());
+				String host = context.getInstanceProperty(currEnvId, "ssh.host");
+				addResultItem("NOK", "Runtime error. Fail to check more errors on main host " + host + ": " + e.getMessage());
 			}
 		}
 
 		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
-		String serviceProtocol = context.getServiceProtocolType();
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
 				sshRelated = null;
 				result = null;
 				try {
-					sshRelated = new SSHConnect(h, sshPort, sshUser, sshPwd, serviceProtocol);
+					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
 					result = sshRelated.execute(scripts);
 					String[] itemArrary = result.split("\n");
 					if (itemArrary != null) {
@@ -616,11 +609,10 @@ public class Test {
 		checkDiskSpace(ssh, false);
 			
 		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
-		String serviceProtocol = context.getServiceProtocolType();
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
-				sshRelated = new SSHConnect(h, sshPort, sshUser, sshPwd, serviceProtocol);
+				sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
 				checkDiskSpace(sshRelated, true);
 			}
 		}
@@ -663,13 +655,12 @@ public class Test {
 		}
 			
 		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
-		String serviceProtocol = context.getServiceProtocolType();
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
 				sshRelated = null;
 				try {
-					sshRelated = new SSHConnect(h, sshPort, sshUser, sshPwd, serviceProtocol);
+					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
 					sshRelated.execute(scripts);
 				    sb.append("[INFO] Normal error log locations on related server:" + result).append(Constants.LINE_SEPARATOR);
 					workerLog.println("[INFO] finish save log successfully on " + h + ".");

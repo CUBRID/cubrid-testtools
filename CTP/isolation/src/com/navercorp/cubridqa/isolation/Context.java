@@ -66,37 +66,38 @@ public class Context {
 	private boolean enableCheckDiskSpace;
 	private boolean reInstallTestBuildYn = false;
 	private String scenario;
+	private boolean isExecuteAtLocal = false;
 	
 	public Context(String filename) throws IOException {
 		this.filename = filename;
 		reload();
+		
+		setLogDir("isolation");
+		
+		if (this.envList.size() == 0) {
+			isExecuteAtLocal = true;
+			this.envList.add("local");
+		} else {
+			isExecuteAtLocal = false;
+		}
 		this.scenario = getProperty("scenario", "").trim();
 	}
 
 	public void reload() throws IOException {
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
-		this.envList = initEnvList(config);
+		
+		if (isExecuteAtLocal == false) {
+			this.envList = initEnvList(config);
+		}
+		
 		this.ctpHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
-		setLogDir("isolation");
 		
 		this.shouldUpdateTestCase = CommonUtils.convertBoolean(getProperty("main.testcase.update_yn", "false")) && !CommonUtils.isEmpty(getTestCaseBranch());
 		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
 		this.isContinueMode = getProperty("main.mode.continue", "false").equalsIgnoreCase("true");
 		
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
-		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();		
-		
-		if (this.feedback == null) {
-			String feedbackType = getProperty("main.feedback.type", "file")
-					.trim();
-			if (feedbackType.equalsIgnoreCase("file")) {
-				this.feedback = new FeedbackFile(this);
-			} else if (feedbackType.equalsIgnoreCase("database")) {
-				this.feedback = new FeedbackDB(this);
-			} else {
-				this.feedback = new FeedbackNull();
-			}
-		}
+		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {
@@ -148,7 +149,6 @@ public class Context {
 	}
 
 	public String getTestCaseRoot() {
-		//return getProperty("main.testcase.root");
 		return this.scenario;
 	}
 	
@@ -178,6 +178,17 @@ public class Context {
 	}
 
 	public Feedback getFeedback() {
+		if (this.feedback == null) {
+			String feedbackType = getProperty("main.feedback.type", "file")
+					.trim();
+			if (feedbackType.equalsIgnoreCase("file")) {
+				this.feedback = new FeedbackFile(this);
+			} else if (feedbackType.equalsIgnoreCase("database")) {
+				this.feedback = new FeedbackDB(this);
+			} else {
+				this.feedback = new FeedbackNull();
+			}
+		}
 		return this.feedback;
 	}
 
@@ -291,5 +302,9 @@ public class Context {
 	
 	public boolean enableCheckDiskSpace() {
 		return enableCheckDiskSpace;
+	}
+
+	public boolean isExecuteAtLocal() {
+		return isExecuteAtLocal;
 	}
 }

@@ -26,7 +26,7 @@
 package com.navercorp.cubridqa.isolation.deploy;
 
 import com.navercorp.cubridqa.isolation.Context;
-
+import com.navercorp.cubridqa.isolation.IsolationHelper;
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 
@@ -36,7 +36,6 @@ public class Deploy {
 	String currEnvId;
 	String cubridPackageUrl;
 
-	String host, port, user, pwd;
 	String[] relatedHosts;
 	String envIdentify;
 
@@ -46,10 +45,7 @@ public class Deploy {
 		this.context = context;
 		this.currEnvId = currEnvId;
 
-		this.host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
+		envIdentify = "EnvId=" + currEnvId + "[" + IsolationHelper.getTestNodeTitle(context, currEnvId) + "]";
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
 
@@ -61,19 +57,10 @@ public class Deploy {
 	public void deploy() throws Exception {
 		context.getFeedback().onDeployStart(envIdentify);
 
-		DeployOneNode d = new DeployOneNode(context, currEnvId, host, log);
+		DeployOneNode d = new DeployOneNode(context, currEnvId, log);
 		d.deploy();
 		d.close();
-
-		for (String h : relatedHosts) {
-			if (h == null || h.trim().equals(""))
-				continue;
-
-			d = new DeployOneNode(context, currEnvId, h, log);
-			d.deploy();
-			d.close();
-		}
-
+		
 		context.getFeedback().onDeployStop(envIdentify);
 	}
 

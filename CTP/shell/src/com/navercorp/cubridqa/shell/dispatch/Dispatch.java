@@ -37,6 +37,7 @@ import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
+import com.navercorp.cubridqa.shell.main.ShellHelper;
 
 public class Dispatch {
 
@@ -166,13 +167,7 @@ public class Dispatch {
 	private ArrayList<String> findAllTestCase() throws Exception {
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getInstanceProperty(envId, "ssh.host");
-		String port = context.getInstanceProperty(envId, "ssh.port");
-		String user = context.getInstanceProperty(envId, "ssh.user");
-		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-		String serviceProtocol = context.getServiceProtocolType();
-
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
+		SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId);
 		ShellScriptInput script;
 		String result;
 		
@@ -206,13 +201,7 @@ public class Dispatch {
 
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getInstanceProperty(envId, "ssh.host");
-		String port = context.getInstanceProperty(envId, "ssh.port");
-		String user = context.getInstanceProperty(envId, "ssh.user");
-		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-		String serviceProtocol = context.getServiceProtocolType();
-
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
+		SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId);
 		ShellScriptInput script;
 		String result;
 
@@ -254,13 +243,7 @@ public class Dispatch {
 		
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getInstanceProperty(envId, "ssh.host");
-		String port = context.getInstanceProperty(envId, "ssh.port");
-		String user = context.getInstanceProperty(envId, "ssh.user");
-		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-		String serviceProtocol = context.getServiceProtocolType();
-
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
+		SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId);
 		ShellScriptInput script;
 		String result;
 		
@@ -279,7 +262,7 @@ public class Dispatch {
 			
 			script.addCommand("cd " + dir + " > /dev/null 2>&1");
 			
-			if (! context.isScenarioInGit()) {
+			if (context.needCleanTestCase() && ! context.isScenarioInGit()) {
 				script.addCommand("svn revert -R -q " + filename + " >/dev/null 2>&1");
 				script.addCommand("svn up " + context.getSVNUserInfo() + " " + filename + " >/dev/null 2>&1");
 				System.out.println("Update Excluded List result ("+ envId + "): ");

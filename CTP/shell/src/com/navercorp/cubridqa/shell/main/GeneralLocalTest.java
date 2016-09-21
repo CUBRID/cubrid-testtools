@@ -7,8 +7,6 @@ import java.util.Properties;
 import com.navercorp.cubridqa.common.LocalInvoker;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
-import com.navercorp.cubridqa.shell.result.FeedbackDB;
-import com.navercorp.cubridqa.shell.result.FeedbackFile;
 
 public class GeneralLocalTest {
 
@@ -16,14 +14,23 @@ public class GeneralLocalTest {
 
 	public GeneralLocalTest(Context context) {
 		this.context = context;
-		if (CommonUtils.isEmpty(context.getTestCategory())) {
-			this.context.setLogDir("general");
-		} else {
-			this.context.setLogDir(context.getTestCategory());
+		
+		String category = context.getProperty("main.testing.category", "TEST_CATEGORY", false);
+		if(CommonUtils.isEmpty(category)) {
+			category = "general";
+		}
+		context.setTestCategory(category);
+		this.context.setLogDir(category);
+
+		String buildId = context.getProperty("main.testing.build_id", "BUILD_ID", false);
+		if (!CommonUtils.isEmpty(buildId)) {
+			context.setTestBuild(buildId);
 		}
 		
-		context.setTestBuild(context.getProperty("main.testing.build_id"));
-		context.setVersion(context.getProperty("main.testing.bits"));
+		String buildBit = context.getProperty("main.testing.build_bits", "BUILD_BITS", false);
+		if (!CommonUtils.isEmpty(buildBit)) {
+			context.setVersion(buildBit);
+		}
 	}
 
 	public void start() {
@@ -83,8 +90,10 @@ public class GeneralLocalTest {
 	private Result invoke(String scripts, String... keys) {
 		if (scripts == null)
 			return null;
+		
+		String testType = context.getProperty("main.testing.type", "TEST_TYPE", false);
 
-		scripts = "cd ${CTP_HOME}; source shell/local/" + context.getProperty("main.testing.type") + ".sh; " + scripts;
+		scripts = "cd ${CTP_HOME}; source shell/local/" + testType + ".sh; " + scripts;
 		if (keys != null && keys.length > 0) {
 			scripts = scripts + "; echo GPROPSTART\n";
 			for (String k : keys) {
@@ -118,6 +127,7 @@ public class GeneralLocalTest {
 		}
 		return new Result(output, props);
 	}
+	
 
 	class Result {
 		String output;

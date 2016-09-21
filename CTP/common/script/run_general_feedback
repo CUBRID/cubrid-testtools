@@ -1,0 +1,147 @@
+#!/bin/sh
+# 
+# Copyright (c) 2016, Search Solution Corporation. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# 
+#   * Redistributions of source code must retain the above copyright notice, 
+#     this list of conditions and the following disclaimer.
+# 
+#   * Redistributions in binary form must reproduce the above copyright 
+#     notice, this list of conditions and the following disclaimer in 
+#     the documentation and/or other materials provided with the distribution.
+# 
+#   * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
+#     derived from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+#
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+
+op_type=""
+feedback_token=""
+feedback_config_file=""
+java_input_file=""
+java_output_file=""
+message_sended=""
+key_id=""
+
+while [ $# -ne 0 ]; do
+	case $1 in
+		-m)
+			shift
+			op_type="message"
+			message_sended="$1"
+            ;;
+		-f)
+			shift
+			op_type="message_file"
+			message_sended="$1"
+            ;;
+		-k)
+			shift
+			key_id="$1"
+            ;;
+		-s)
+			op_type="server"
+			;;
+		-q)
+			op_type="quit"
+			;;
+		-t)
+		    shift
+		    feedback_token=$1
+			;;
+		-c)
+			shift
+			feedback_config_file=$1
+			;;
+	esac
+	shift
+done
+
+function do_init {
+	if [ "${op_type}" == "" ]; then
+	    echo "Usage:"
+	    echo "    $0 [-t feedback_token] -s -c config_file          # start a feedback process"
+	    echo "    $0 [-t feedback_token] -m message_content         # send message to feedback process"
+	    echo "    $0 [-t feedback_token] -f message_file -k key_id  # create a key for large text"
+	    echo "    $0 [-t feedback_token] -q                         # quit"
+	    echo
+	    echo "Message:"
+	    echo "    TASKSTART build_file_name"
+	    echo "    TASKCONTINUE"
+	    echo "    TOTALTESTCASE total skip1 skip2"    
+	    echo "    TESTCASESTART test_case env_id"
+	    echo "    TESTCASESTOP test_case pass_yn elapse_time result_cont(\${key}) env_id timeout_yn core_yn skip_type(0) 0"
+	    echo "    TASKSTOP"	    
+	    echo
+	    exit
+	fi
+	
+	if [ "${feedback_token}" == "" ]; then
+		feedback_token="general"
+	fi
+	
+	mkdir -p ${CTP_HOME}/result 2>&1 >/dev/null
+	java_input_file=${CTP_HOME}/result/.feedback_token_${feedback_token}.m
+	java_output_file=${CTP_HOME}/result/.feedback_token_${feedback_token}.out
+	touch ${java_input_file}
+}
+
+
+function do_run {
+	if [ "${op_type}" == "server" ]; then
+		JAVA_CPS=${CTP_HOME}/shell/lib/cubridqa-shell.jar
+		if [ "$OSTYPE" == "cygwin" ]
+		then
+		    JAVA_CPS=`cygpath -wpm $JAVA_CPS`
+		    real_feedback_config_file=`cygpath -w ${feedback_config_file}`
+		    real_java_input_file=`cygpath -w ${java_input_file}`
+		else
+		    real_feedback_config_file="${feedback_config_file}"
+		    real_java_input_file="${java_input_file}"
+		fi
+
+		send_msg "QUIT"
+		sleep 0.5
+		"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.shell.common.GeneralFeedback "${real_feedback_config_file}" "${real_java_input_file}" > ${java_output_file} 2>&1 &		
+		sync_and_show_output "SSTTAARRTT"
+	elif [ "$op_type" == "message" ]; then
+		send_msg "${message_sended}"
+	elif [ "$op_type" == "quit" ]; then
+		send_msg "QUIT"
+	    sync_and_show_output "QQUUIITT"
+	elif [ "$op_type" == "message_file" ]; then
+		send_msg "KEYSTART ${key_id}"
+		cat ${message_sended} >> ${java_input_file}				
+		send_msg "KEYSTOP"
+	fi
+}
+
+function send_msg {
+	echo "$1" >> ${java_input_file}
+}
+
+function sync_and_show_output {
+	find_key=$1
+    while [ 1 -eq 1 ]
+    do
+        if grep -a "${find_key}" ${java_output_file} >/dev/null 2>&1; then
+        	break
+        fi
+        sleep 0.05
+    done
+    cat ${java_output_file} | grep -v "[%]"
+}
+
+do_init
+
+do_run

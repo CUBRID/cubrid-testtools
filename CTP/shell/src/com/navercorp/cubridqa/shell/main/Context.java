@@ -83,7 +83,7 @@ public class Context {
 	String defaultDbCharset;
 
 	boolean enableCheckDiskSpace = false;
-
+	
 	String mailNoticeTo;
 
 	boolean enableSaveNormalErrorLog = false;
@@ -98,27 +98,49 @@ public class Context {
 	
 	String ctpBranchName;
 	
+	String testCategory;
+	
 	Map<String, String> envMap = null;
 	
 	String currentLogDir;
 	String rootLogDir;
+	
+	boolean skipToSaveSuccCase = false;
 	boolean reInstallTestBuildYn = false;
+	private boolean isExecuteAtLocal = false;	
 	String scenario;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
 		this.startDate = new java.util.Date();
 		this.envMap = new HashMap<String, String>();
+		
 		reload();
+		setLogDir("shell");
+		
+		// to get msg id from environment variable
+		putEnvVriableIntoMapByKey("MSG_ID");
+		
+		if (this.envList.size() == 0) {
+			isExecuteAtLocal = true;
+			this.envList.add("local");
+		} else {
+			isExecuteAtLocal = false;
+		}
 		this.scenario = getProperty("scenario", "").trim();
 	}
 	
 	public void reload() throws IOException{
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
-		this.envList = initEnvList(config);
+		
+		if(isExecuteAtLocal == false) {
+			this.envList = initEnvList(config);
+		}
+		
 		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (Constants.ENV_CTP_HOME_KEY);
 		
-		this.cleanTestCase = getProperty("main.testcase.clean", "false").equalsIgnoreCase("true") && !CommonUtils.isEmpty(getTestCaseBranch());
+		this.cleanTestCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.testcase.clean", "false"));
+		 
 		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
 		
 		this.testCaseSkipKey = getProperty("main.testcase.skip_key", "").trim().toUpperCase();
@@ -141,28 +163,14 @@ public class Context {
 
 		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
 		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "1");
-		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");		
-		
-		setLogDir("shell");
-		
-		// to get msg id from environment variable
-		putEnvVriableIntoMapByKey("MSG_ID");
-		
-		if(this.feedback == null) {
-			String feedbackType = getProperty("main.feedback.type", "file").trim();
-			if (feedbackType.equalsIgnoreCase("file")) {
-				this.feedback = new FeedbackFile(this);
-			} else if (feedbackType.equalsIgnoreCase("database")) {
-				this.feedback = new FeedbackDB(this);
-			} else {
-				this.feedback = new FeedbackNull();
-			}
-		}
+		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
+		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.skip_to_save_passed_testcases_yn", "false"));
+		this.testCategory = getProperty("main.testing.category", "shell").trim();
     }
 	
 	public void setLogDir(String category) {
 		this.rootLogDir = getToolHome() + "/result/" + category;
-		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";		
+		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {
@@ -235,7 +243,6 @@ public class Context {
 	}
 
 	public String getTestCaseRoot() {
-		// return getProperty("main.testcase.root", "").trim();
 		return this.scenario;
 	}
 	
@@ -260,9 +267,12 @@ public class Context {
 		return getProperty("main.testing.platform", "linux");
 	}
 	
-	public String getTestCategory()
-	{
-		return getProperty("main.testing.category", "shell");
+	public String getTestCategory() {
+		return this.testCategory;
+	}
+
+	public void setTestCategory(String category) {
+		this.testCategory = category;
 	}
 	
 	public boolean needCleanTestCase()
@@ -351,6 +361,16 @@ public class Context {
 	}
 	
 	public Feedback getFeedback() {
+		if(this.feedback == null) {
+			String feedbackType = getProperty("main.feedback.type", "file").trim();
+			if (feedbackType.equalsIgnoreCase("file")) {
+				this.feedback = new FeedbackFile(this);
+			} else if (feedbackType.equalsIgnoreCase("database")) {
+				this.feedback = new FeedbackDB(this);
+			} else {
+				this.feedback = new FeedbackNull();
+			}
+		}
 		return this.feedback;
 	}
 	
@@ -515,5 +535,31 @@ public class Context {
 	
 	public boolean enableCheckDiskSpace() {
 		return enableCheckDiskSpace;
+	}
+
+	public boolean isSkipToSaveSuccCase() {
+		return skipToSaveSuccCase;
+	}
+
+	public void setSkipToSaveSuccCase(boolean skipToSaveSuccCase) {
+		this.skipToSaveSuccCase = skipToSaveSuccCase;
+	}
+	
+	public String getProperty(String key1, String key2, boolean reverse) {
+		String value1 = getProperty(key1);
+		String value2 = System.getProperty(key2);
+		if (CommonUtils.isEmpty(value2)) {
+			value2 = System.getenv(key2);
+		}
+
+		if (reverse) {
+			return CommonUtils.isEmpty(value2) ? value1 : value2;
+		} else {
+			return CommonUtils.isEmpty(value1) ? value2 : value1;
+		}
+	}
+
+	public boolean isExecuteAtLocal() {
+		return isExecuteAtLocal;
 	}
 }

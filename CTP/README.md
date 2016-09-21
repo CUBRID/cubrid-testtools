@@ -68,7 +68,6 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  # Path of the data file for initial loading
 	  data_file=${HOME}/cubrid-testcases/medium/files/mdb.tar.gz
  	  ```   	
-
 	More parameters setting and parameters explanation within ``sql.conf`` and ``medium.conf``, please refer to [CTP/conf/sql.conf](conf/sql.conf) for SQL, [CTP/conf/medium.conf](conf/medium.conf) for Medium and [CTP/conf/sql_by_cci.conf](conf/sql_by_cci.conf) for SQL_By_CCI
 
   - Run Tests

@@ -31,12 +31,12 @@ import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
+import com.navercorp.cubridqa.shell.main.ShellHelper;
 
 public class DeployOneNode {
 
 	Context context;
 	SSHConnect ssh;
-	String port, user, pwd;
 	String cubridPackageUrl;
 	boolean isNewBuildNumberSystem;
 
@@ -48,12 +48,9 @@ public class DeployOneNode {
 		this.context = context;
 		this.currentEnvId =currEnvId;
 
-		this.port = context.getInstanceProperty(currEnvId, "ssh.port");
-		this.user = context.getInstanceProperty(currEnvId, "ssh.user");
-		this.pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "] with " + context.getServiceProtocolType() + " protocol!";
+		envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId, host)) + "] with " + context.getServiceProtocolType() + " protocol!";
 
-		this.ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
+		this.ssh = ShellHelper.createTestNodeConnect(context, currEnvId, host);
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
 		this.isNewBuildNumberSystem= context.getIsNewBuildNumberSystem();
@@ -242,7 +239,7 @@ public class DeployOneNode {
 	}
 	
 	public void cleanProcess() {
-		String result = CommonUtils.resetProcess(ssh, context.isWindows());
+		String result = CommonUtils.resetProcess(ssh, context.isWindows(), context.isExecuteAtLocal());
 		System.out.println("CLEAN PROCESSES:");
 		System.out.println(result);	
 	}

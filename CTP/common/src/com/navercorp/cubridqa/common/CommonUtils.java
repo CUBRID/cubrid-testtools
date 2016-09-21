@@ -112,6 +112,40 @@ public class CommonUtils {
 
 	}
 
+	public static String concatFile(String p1){
+		return concatFileWithoutSuffix(p1, "", false);
+	}
+	
+	private static String concatFileWithoutSuffix(String p1, String p2, boolean appendSuffix){
+		String p;
+		
+		if (p1 == null)
+			p1 = "";
+		if (p2 == null)
+			p2 = "";
+
+		p1 = p1.trim().replace('\\', '/');
+		p2 = p2.trim().replace('\\', '/');
+		
+		if(p2.trim().length()<=0 && !appendSuffix){
+			p = p1;
+		}else{
+		    p = p1 + "/" + p2;
+		}
+		
+		String t;
+		while (true) {
+			t = replace(p, "//", "/");
+			if (p.equals(t)) {
+				break;
+			} else {
+				p = t;
+			}
+		}
+		
+		return p.replace('/', File.separatorChar);
+	}
+	
 	public static String concatFile(String p1, String p2) {
 		String p;
 		if (p1 == null)
@@ -404,7 +438,7 @@ public class CommonUtils {
 			return defaultValue;
 
 		value = value.trim().toUpperCase();
-		return value.equals("1") || value.equals("TRUE") || value.equals("YES");
+		return value.equals("1") || value.equals("TRUE") || value.equals("YES") || value.equals("T") || value.equals("Y");
 	}
 
 	public static String getSystemProperty(String key, String defaultValue, Properties props) {

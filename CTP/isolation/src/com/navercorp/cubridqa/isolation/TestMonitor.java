@@ -40,13 +40,7 @@ public class TestMonitor {
 		this.context = context;
 		this.test = test;
 
-		String currEnvId = test.getCurrentEnvId();
-		String host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-
-		this.ssh = new SSHConnect(host, port, user, pwd);
+		this.ssh = IsolationHelper.createTestNodeConnect(context, test.getCurrentEnvId());
 
 		try {
 			testCaseTimeout = Integer.parseInt(context.getProperty("main.testcase.timeout"));

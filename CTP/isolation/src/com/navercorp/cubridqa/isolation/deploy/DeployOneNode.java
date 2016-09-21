@@ -29,6 +29,7 @@ import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
+import com.navercorp.cubridqa.isolation.IsolationHelper;
 import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
@@ -42,15 +43,12 @@ public class DeployOneNode {
 	String envIdentify;
 	Log log;
 
-	public DeployOneNode(Context context, String currEnvId, String host, Log log) throws Exception {
+	public DeployOneNode(Context context, String currEnvId, Log log) throws Exception {
 		this.context = context;
 		this.currEnvId = currEnvId;
 
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
-		this.ssh = new SSHConnect(host, port, user, pwd);
+		envIdentify = "EnvId=" + currEnvId + "[" + IsolationHelper.getTestNodeTitle(context, currEnvId) + "]";
+		this.ssh = IsolationHelper.createTestNodeConnect(context, currEnvId);
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
 

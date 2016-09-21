@@ -37,6 +37,7 @@ import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
 import com.navercorp.cubridqa.shell.main.Feedback;
+import com.navercorp.cubridqa.shell.main.ShellHelper;
 
 public class FeedbackFile implements Feedback {
 	
@@ -120,13 +121,15 @@ public class FeedbackFile implements Feedback {
 	
 	private synchronized void println(String... conts){
 		for(String cont: conts){
+			if (cont == null)
+				continue;
 			feedbackLog.println(cont);
 		}
 	}
 
 	@Override
 	public void onTestCaseMonitor(String testCase, String action, String envIdentify) {
-		println(action + " " + testCase + " " + envIdentify);		
+		println(action + " " + testCase + " " + envIdentify);
 	}
 
 	@Override
@@ -169,13 +172,9 @@ public class FeedbackFile implements Feedback {
 		String category = context.getTestCategory();//flag will mark category as a new for slave node 
 		String covParams = "-n " + context.getTestBuild() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
 		
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-		String serviceProtocol = context.getServiceProtocolType();
-		String envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "] with " + serviceProtocol + " protocol!";
+		String envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId, host)) + "] with " + context.getServiceProtocolType() + " protocol!";
 		try {
-			ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);
+			ssh = ShellHelper.createTestNodeConnect(context, currEnvId, host);
 
 			ShellScriptInput scripts = new ShellScriptInput();
 			scripts.addCommand("run_coverage_collect_and_upload " + covParams);

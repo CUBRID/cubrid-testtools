@@ -69,10 +69,7 @@ public class Test {
 		this.dispatchLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + currEnvId + ".txt"), false, context.isContinueMode());
 		this.workerLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, true);
 
-		String host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
+		envIdentify = "EnvId=" + currEnvId + "[" + IsolationHelper.getTestNodeTitle(context, currEnvId) + "]";
 
 		resetSSH();
 	}
@@ -256,12 +253,7 @@ public class Test {
 			e.printStackTrace();
 		}
 
-		String host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-
-		this.ssh = new SSHConnect(host, port, user, pwd);
+		this.ssh = IsolationHelper.createTestNodeConnect(context, currEnvId);
 	}
 
 	public void addResultItem(String flag, String message) {

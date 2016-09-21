@@ -66,11 +66,8 @@ public class Main {
 			context.setReInstallTestBuildYn(true);
 		} else {
 			String envId = context.getEnvList().get(0);
-			String host = context.getInstanceProperty(envId, "ssh.host");
-			String port = context.getInstanceProperty(envId, "ssh.port");
-			String user = context.getInstanceProperty(envId, "ssh.user");
-			String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-			SSHConnect ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType()); 
+
+			SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId); 
 			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
 			context.setTestBuild(CommonUtils.getBuildId(buildInfo));
 			context.setVersion(CommonUtils.getBuildBits(buildInfo));
