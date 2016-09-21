@@ -74,7 +74,7 @@ function run_jdbc {
     cd $CTP_HOME/result/jdbc
     current_id=`cat $CTP_HOME/result/jdbc/current_runtime_logs/current_task_id | tail -n 1`
     timestamp=`date +'%Y.%m.%d_%H.%M.%S'`
-    backup_file=`jdbc_result_${BUILD_ID}_${current_id}_${timestamp}`
+    backup_file="jdbc_result_${BUILD_ID}_${current_id}_${timestamp}"
     mkdir -p ${backup_file} 
     cp -rf current_runtime_logs $backup_file
     cp $ctp_jdbc_test_conf $backup_file
