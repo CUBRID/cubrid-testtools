@@ -154,8 +154,12 @@ public class DeployOneNode {
 		
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("echo 'BEGIN TO UPGRADE CTP'");
-		scripts.addCommand("export SKIP_UPGRADE=" + enableSkipUpgrade);
 		scripts.addCommand("export CTP_BRANCH_NAME=" + branchName);
+		if(context.isExecuteAtLocal()) {
+			scripts.addCommand("export SKIP_UPGRADE=1");
+		} else {
+			scripts.addCommand("export SKIP_UPGRADE=" + enableSkipUpgrade);
+		}
 		scripts.addCommand("cd ${init_path}/../../");
 		scripts.addCommand("chmod u+x ./common/script/upgrade.sh");
 		scripts.addCommand("chmod u+x ./bin/ini.sh");
