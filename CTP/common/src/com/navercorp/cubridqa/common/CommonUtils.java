@@ -112,11 +112,15 @@ public class CommonUtils {
 
 	}
 
-	public static String concatFile(String p1){
-		return concatFileWithoutSuffix(p1, "", false);
+	public static String uniteFilePath(String p1){
+		return concatFile(p1, "", false);
 	}
 	
-	private static String concatFileWithoutSuffix(String p1, String p2, boolean appendSuffix){
+	public static String concatFile(String p1, String p2) {
+		return concatFile(p1, p2, true);
+	}
+
+	private static String concatFile(String p1, String p2, boolean appendSuffix){
 		String p;
 		
 		if (p1 == null)
@@ -143,28 +147,6 @@ public class CommonUtils {
 			}
 		}
 		
-		return p.replace('/', File.separatorChar);
-	}
-	
-	public static String concatFile(String p1, String p2) {
-		String p;
-		if (p1 == null)
-			p1 = "";
-		if (p2 == null)
-			p2 = "";
-
-		p1 = p1.trim().replace('\\', '/');
-		p2 = p2.trim().replace('\\', '/');
-		p = p1 + "/" + p2;
-		String t;
-		while (true) {
-			t = replace(p, "//", "/");
-			if (p.equals(t)) {
-				break;
-			} else {
-				p = t;
-			}
-		}
 		return p.replace('/', File.separatorChar);
 	}
 
