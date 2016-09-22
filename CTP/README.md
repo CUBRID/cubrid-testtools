@@ -272,17 +272,16 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 
 - **Jdbc**
   - Prepare
-	* Prepare environment (since jdbc unit testing only supports one test node, so only one machine need to be prepared for both of controller and test node)
-	* Check out CTP and configure environment variables for CTP and Java
+	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
+ 	* Configure environment for JAVA
 	  ```
-	  CTP_HOME (e.g., export CTP_HOME=$HOME/CTP)
 	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
       ```	
 	* **Example** ``jdbc.conf`` for test scenario and ports of CUBRID:
       ```
 	  [common]
 	  # Define the path of test cases used for testing, it should be checked out in advance
-	  scenario = ${HOME}/cubrid-testcases-private/interface/JDBC/test_jdbc
+	  scenario = ${HOME}/cubrid-testcases/interface/JDBC/test_jdbc
 	
 	  # SQL cubrid.conf section - a section for cubrid.conf configuration
 	  [jdbc/cubrid.conf]
@@ -307,12 +306,6 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  # Define the identifier of shared memory to avoid conflict
 	  MASTER_SHM_ID = 33122
       ```
-
-      ```
-	  # Define the URL of test build which will be used to test
-	  # If this parameter is not set or commented out, CTP will execute testing without build installation.
-	  main.testbuild.url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh 
-	  ```
 
 	More parameters setting and parameters explanation within ``jdbc.conf``, please refer to [CTP/conf/jdbc.conf](conf/jdbc.conf)	
 	  
