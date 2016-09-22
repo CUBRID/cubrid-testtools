@@ -1,13 +1,27 @@
 #!/bin/bash
-source $init_path/shell_utils.sh  
+
+if [ ! -f $CUBRID/bin/cub_server ]; then
+	exit 127
+fi
+source $init_path/shell_utils.sh
 
 cub_util=$(echo $1|tr "[A-Z]" "[a-z]") >/dev/null 2>&1
 
-if [ $OS != "Windows_NT" -a "$cub_util" == "deletedb" ]; then
-    do_check_more_errors "`pwd`"
-fi >/dev/null 2>&1 
 export PATH=$CUBRID/bin:$PATH >/dev/null
-if [ -f $CUBRID/bin/cub_server ]
-then
+
+if [ "$OS" != "Windows_NT" -a "$cub_util" == "deletedb" ]; then
+    do_check_more_errors "`pwd`" >/dev/null 2>&1
+elif [ "$cub_util" == "server" -o "$cub_util" == "checkdb" ]; then
     cubrid "$@"
+    exit_value=$?
+    if [ ${exit_value} -ne 0 ]; then
+    	is_server_start=`echo "$@" | grep "start " | wc -l`
+    	if [ ${is_server_start} -ge 1 ]; then
+    		do_save_error_logs_by_kind "`pwd`" "SERVER-START" >/dev/null 2>&1
+    	elif [ "$cub_util" == "checkdb" ]; then
+    		do_save_error_logs_by_kind "`pwd`" "CHECKDB" >/dev/null 2>&1
+    	fi
+    fi
+	exit ${exit_value}
 fi
+cubrid "$@"

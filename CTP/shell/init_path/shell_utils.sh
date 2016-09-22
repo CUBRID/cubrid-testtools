@@ -24,8 +24,7 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-function do_check_more_errors
-{
+function do_check_more_errors {
     test_case_dir=$1
     test_case_dir=${test_case_dir%/cases*}
     case_name=`echo ${test_case_dir##*/}`
@@ -124,23 +123,29 @@ function do_check_more_errors
     rm temp_log -f >/dev/null 2>&1
 }
 
-function do_save_normal_error_logs
-{
+function do_save_normal_error_logs {
+    do_save_error_logs_by_kind $1 "NORMAL"
+}
+
+function do_save_error_logs_by_kind {
     test_case_dir=$1
+    kind=$2
     test_case_dir=${test_case_dir%/cases*}
     case_name=`echo ${test_case_dir##*/}`
     result_file=${test_case_dir}/cases/${case_name}.result
     cub_build_id=`cubrid_rel | grep CUBRID | awk -F ')' '{print $1}' | awk -F '(' '{print $NF}'`
     current_datetime=`date "+%Y%m%d_%H%M%S"`
     
-    backup_dir=~/ERROR_BACKUP/AUTO_NORMAL_${cub_build_id}_${current_datetime}
-    mkdir -p $backup_dir
-    cp -rf $CUBRID/log $backup_dir
-    cd ~/ERROR_BACKUP
-    tar zcvf AUTO_NORMAL_${cub_build_id}_${current_datetime}.tar.gz AUTO_NORMAL_${cub_build_id}_${current_datetime} 2>&1 >/dev/null
-    rm -rf AUTO_NORMAL_${cub_build_id}_${current_datetime}
-    cd - 2>&1 >/dev/null
-    echo $backup_dir >> $result_file
-    echo $backup_dir
-}
+    backup_fname=AUTO_${kind}_${cub_build_id}_${current_datetime}
+    backup_dir=~/ERROR_BACKUP/${backup_fname}
 
+    mkdir -p ${backup_dir}
+    cp -rf $CUBRID ${backup_dir}
+    cp -r ${test_case_dir} ${backup_dir}
+    cd ${backup_dir}/..
+    tar zcvf ${backup_fname}.tar.gz ${backup_fname} 2>&1 >/dev/null
+    rm -rf ${backup_fname}
+    cd - 2>&1 >/dev/null
+    host_ip=`hostname -i`
+    echo " : NOK found ${kind} error file on host $host_ip (${backup_dir})" >> ${result_file}
+}
