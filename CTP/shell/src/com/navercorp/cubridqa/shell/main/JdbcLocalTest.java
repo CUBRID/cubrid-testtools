@@ -150,7 +150,7 @@ public class JdbcLocalTest {
 	private String convertCaseName(String caseFullName){
 		if(caseFullName == null || caseFullName.length() <0) return null;
 		
-		String caseUnityName = com.navercorp.cubridqa.common.CommonUtils.concatFile(caseFullName); 
+		String caseUnityName = com.navercorp.cubridqa.common.CommonUtils.concatFile(caseFullName, ""); 
 		String caseName = "";
 		if(this.context.getTestCaseRoot().endsWith(File.separator)){
 			caseName = caseUnityName.substring(this.context.getTestCaseRoot().length() + "src/".length(), caseUnityName.length());
