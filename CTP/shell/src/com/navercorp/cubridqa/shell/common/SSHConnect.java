@@ -75,7 +75,15 @@ public class SSHConnect {
 	}
 
 	public String toString() {
-		return user + "@" + host + ":" + port + ":" + title;
+		if (serviceProtocol != null && serviceProtocol.equals(SERVICE_TYPE_LOCAL)) {
+			return "local";
+		}
+		
+		String result = user + "@" + host + ":" + port;
+		if (title != null) {
+			result = result + ":" + title;
+		}
+		return result;
 	}
 
 	private void reconnect() throws JSchException {

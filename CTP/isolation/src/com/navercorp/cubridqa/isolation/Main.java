@@ -67,7 +67,12 @@ public class Main {
 			if(ssh != null) ssh.close();
 		}
 		
-		context.setTestCaseRoot(calcScenario(context));
+		try {
+			context.setTestCaseRoot(calcScenario(context));
+		} catch (Exception e) {
+			System.out.println("[ERROR]" + e.getMessage());
+			return;
+		}
 		System.out.println("Build Id: " + context.getBuildId());
 		System.out.println("Build Bits: " + context.getBuildBits());
 
@@ -86,22 +91,34 @@ public class Main {
 	}
 
 	private static String calcScenario(Context context) throws Exception {
-		String scenarioDir = null;
 		SSHConnect ssh = null;
-
-		try {
-			scenarioDir = context.getTestCaseRoot();
+		
+		try{
 			ssh = IsolationHelper.createFirstTestNodeConnect(context);
 			String homeDir = ssh.execute(new IsolationScriptInput("echo $(cd $HOME; pwd)")).trim();
-			scenarioDir = ssh.execute(new IsolationScriptInput("echo $(cd " + scenarioDir + "; pwd)")).trim();
-			if (scenarioDir.startsWith(homeDir)) {
-				scenarioDir = scenarioDir.substring(homeDir.length() + 1);
+			
+			String errKey = "DIR_NOT_FOUND";
+			IsolationScriptInput script = new IsolationScriptInput("if [ ! -d " + context.getTestCaseRoot() + " ]; then echo " + errKey + "; fi");
+			script.addCommand("echo $(cd " + context.getTestCaseRoot() + "; pwd)");
+			String scenarioDir = ssh.execute(script).trim();
+			
+			if(scenarioDir.indexOf(errKey) != -1) {
+				throw new Exception("The directory in 'scenario' does not exist. Please check it again at " + ssh.toString() + ".");
 			}
-		} finally {
+						
+			if (scenarioDir.startsWith(homeDir)) {
+				if(scenarioDir.length() > homeDir.length()) {
+					scenarioDir = scenarioDir.substring(homeDir.length() + 1);
+				} else {
+					scenarioDir = ".";
+				}
+				return scenarioDir;
+			} else {
+				return context.getTestCaseRoot().trim();
+			}
+		} finally{
 			if (ssh != null)
 				ssh.close();
 		}
-
-		return scenarioDir;
 	}
 }

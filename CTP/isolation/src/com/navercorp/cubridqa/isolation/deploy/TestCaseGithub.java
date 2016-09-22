@@ -64,10 +64,14 @@ public class TestCaseGithub {
 			scripts.addCommand("export CTP_BRANCH_NAME=" + ctpBranchName);
 		}
 		
-		String skipUpgrade = System.getenv("SKIP_UPGRADE");
-		if (!CommonUtils.isEmpty(ctpBranchName)) {
-			scripts.addCommand("export SKIP_UPGRADE=" + skipUpgrade);
-		}		
+		if(context.isExecuteAtLocal()) {
+			scripts.addCommand("export SKIP_UPGRADE=1");
+		} else {
+			String skipUpgrade = System.getenv("SKIP_UPGRADE");
+			if (!CommonUtils.isEmpty(ctpBranchName)) {
+				scripts.addCommand("export SKIP_UPGRADE=" + skipUpgrade);
+			}
+		}
 
 		scripts.addCommand("chmod u+x upgrade.sh");
 		scripts.addCommand("./upgrade.sh");
