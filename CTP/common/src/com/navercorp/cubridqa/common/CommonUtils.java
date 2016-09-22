@@ -112,15 +112,7 @@ public class CommonUtils {
 
 	}
 
-	public static String uniteFilePath(String p1){
-		return concatFile(p1, "", false);
-	}
-	
-	public static String concatFile(String p1, String p2) {
-		return concatFile(p1, p2, true);
-	}
-
-	private static String concatFile(String p1, String p2, boolean appendSuffix){
+	public static String concatFile(String p1, String p2){
 		String p;
 		
 		if (p1 == null)
@@ -131,11 +123,13 @@ public class CommonUtils {
 		p1 = p1.trim().replace('\\', '/');
 		p2 = p2.trim().replace('\\', '/');
 		
-		if(p2.trim().length()<=0 && !appendSuffix){
+		if (p1.equals("")) {
+			p = p2;
+		} else if (p2.equals("")) {
 			p = p1;
-		}else{
-		    p = p1 + "/" + p2;
-		}
+		} else {
+			p = p1 + "/" + p2;
+		}  
 		
 		String t;
 		while (true) {
