@@ -10,7 +10,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configurations
 
 ## Quick Start
-This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``SQL_By_CCI`` and so on. Regarding more information please refer to the related sections
+This ``Quick Start`` is only for user for reference about how to use ``CTP`` to start ``SQL`` test quickly. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``SQL_By_CCI``, ``Jdbc`` and so on. Regarding more information please refer to the related sections
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly
 * Execute a example test as follows:
 
@@ -270,6 +270,55 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* ``main_snapshot.properties`` saves all values of parameters configured during testing
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 
+- **Jdbc**
+  - Prepare
+	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
+ 	* Configure environment for JAVA
+	  ```
+	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+      ```	
+	* **Example** ``jdbc.conf`` for test scenario and ports of CUBRID:
+      ```
+	  [common]
+	  # Define the path of test cases used for testing, it should be checked out in advance
+	  scenario = ${HOME}/cubrid-testcases/interface/JDBC/test_jdbc
+	
+	  # SQL cubrid.conf section - a section for cubrid.conf configuration
+	  [jdbc/cubrid.conf]
+	  # Define the port of cubrid_port_id to avoid port conflict
+	  cubrid_port_id = 1822
+	
+	  # jdbc cubrid_broker.conf query editor section - a section to change parameters under query_editor
+	  [jdbc/cubrid_broker.conf/%query_editor]
+	  # Close one service to avoid port conflict and reduce configuration complexity
+	  SERVICE = OFF
+	
+	  # jdbc cubrid_broker.conf broker1 section - a section to change parameters under broker1
+	  [jdbc/cubrid_broker.conf/%BROKER1]
+	  # Define the port of broker to avoid conflict
+	  BROKER_PORT = 33120
+	  
+	  # Define ID of shared memory used by CAS
+	  APPL_SERVER_SHM_ID = 33120
+	
+	  # jdbc cubrid_broker.conf broker section - a section to configure parameters under broker section
+	  [jdbc/cubrid_broker.conf/broker]
+	  # Define the identifier of shared memory to avoid conflict
+	  MASTER_SHM_ID = 33122
+      ```
+
+	More parameters setting and parameters explanation within ``jdbc.conf``, please refer to [CTP/conf/jdbc.conf](conf/jdbc.conf)	
+	  
+ - Run Tests 
+	* For **Jdbc** test:
+      ```
+	  $ bin/ctp.sh jdbc -c ./conf/jdbc.conf
+      ```   
+    
+ - Examine the results
+	* When test is completed, you can find the results and logs from ``CTP/result/jdbc/current_runtime_logs``
+	* ``run_case_details.log`` shows all the details of case running
+	
 
 ## How To Build CTP
 It's not required that you execute build for CTP, unless you make some changes within source codes. To build CTP from source code, you'll need ant installation and change to the directory CTP, execute ant command as the below:
@@ -452,7 +501,39 @@ You can find the generated jar files ``common/lib/cubridqa-common.jar``, ``sql/l
        --check:
        @HC_CHECK_FOR_EACH_STATEMENT
        --test
-     ```    
+     ``` 
+     
+- **Jdbc**
+   * Test cases: Since ``Jdbc`` unit test cases are designed based on junit framework, so all cases need follow junit syntax and rule 
+   * The current CTP identifies case according to the @Test annotation and keywords 'test' on test method name, and ignore the case according to the @ignore annotation on test method
+   * Example for reference
+    
+     ```
+      @Test
+      public void testInvalidUrlException() throws SQLException {
+                try {
+                        Class.forName(DRIVER).newInstance();
+                        String strArray[] = URL.split("\\:");
+                        String strTemp = "";
+                        for (int i = 0; i < strArray.length; i++) {
+
+                                strTemp += strArray[i];
+                                if (i == 4) {
+                                        break;
+                                } else {
+                                        strTemp += ":";
+                                }
+                        }
+                        strTemp += ":::?";
+                        Connection conn = DriverManager.getConnection(strTemp, USER, PASS);
+                        conn.close();
+                        Assert.assertTrue(false);
+                } catch (Exception e) {
+                        Assert.assertTrue(true);
+                } finally {
+                }
+       }
+     ```   
 
 ## License
 CTP is published under the BSD 3-Clause license. See [LICENSE.md](LICENSE.md) for more details
