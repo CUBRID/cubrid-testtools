@@ -23,6 +23,27 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
+function generage_readme {
+    test_case_dir=$1
+    backup_dir=$2
+
+    freadme=${backup_dir}/readme.txt
+    echo 1.TEST CASE: ${test_case_dir} > $freadme
+    echo 2.CUBRID VERSION: `cubrid_rel | grep CUBRID` >> $freadme
+    echo 3.TEST DATE: `date` >> $freadme
+    echo 4.ENVIRONMENT: >> $freadme
+    set >> $freadme
+    echo 5.ALL PROCESSES: >> $freadme
+    ps -ef >> $freadme
+    echo 6.IPCS >> $freadme
+    ipcs >> $freadme
+    echo 7.DISK STATUS >> $freadme
+    df -h>> $freadme
+    echo 8.LOGGED >> $freadme
+    who >> $freadme
+    echo 9.MEMORY STATUS >> $freadme
+    free -m >> $freadme
+}
 
 function do_check_more_errors {
     test_case_dir=$1
@@ -71,21 +92,7 @@ function do_check_more_errors {
     if [ $core_dump_cnt -gt 0 ] || [ $fatal_err_cnt -gt $old_fatal_err_cnt -a "$SKIP_CHECK_FATAL_ERROR" != "TRUE" ]; then
         mkdir -p $backup_dir
 
-        #generate readme
-        freadme=$backup_dir/readme.txt
-        echo 1.TEST CASE: $test_case_dir > $freadme
-        echo 2.CUBRID VERSION: `cubrid_rel | grep CUBRID` >> $freadme
-        echo 3.TEST DATE: `date` >> $freadme
-        echo 4.ENVIRONMENT: >> $freadme
-        set >> $freadme
-        echo 5.PROCESS >> $freadme
-        ps -ef >> $freadme
-        echo 6.IPCS >> $freadme
-        ipcs >> $freadme
-        echo 7.DISK STATUS >> $freadme
-        df >> $freadme
-        echo 8.LOGGED >> $freadme
-        who >> $freadme
+        generage_readme ${test_case_dir} ${backup_dir}
 
         host_ip=`hostname -i`
         if [ $core_dump_cnt -gt 0 ]; then
@@ -111,23 +118,26 @@ function do_check_more_errors {
         cp -rf $CUBRID $backup_dir/CUBRID
         cp -rf $test_case_dir $backup_dir
         cp -rf $init_path $backup_dir/init_path
-	cd ~/ERROR_BACKUP
-	tar zcvf AUTO_${cub_build_id}_${current_datetime}.tar.gz AUTO_${cub_build_id}_${current_datetime}
-	rm -rf AUTO_${cub_build_id}_${current_datetime}
+	    cd ~/ERROR_BACKUP
+	    tar zcvf AUTO_${cub_build_id}_${current_datetime}.tar.gz AUTO_${cub_build_id}_${current_datetime}
+	    rm -rf AUTO_${cub_build_id}_${current_datetime}
         cd -
 
-	cat temp_log | xargs -i rm -rf {}
+	    cat temp_log | xargs -i rm -rf {}
         echo $fatal_err_cnt>$CUBRID/log/qa_fatal_error_count.log
-
     fi
     rm temp_log -f >/dev/null 2>&1
 }
 
 function do_save_normal_error_logs {
-    do_save_error_logs_by_kind $1 "NORMAL"
+    do_save_snapshot_by_type $1 "NORMAL"
 }
 
-function do_save_error_logs_by_kind {
+function should_save_snapshot_for_recovery {
+    cat $1 | grep -iE "inconsisten|Assertion|FATAL" | wc -l
+}
+
+function do_save_snapshot_by_type {
     test_case_dir=$1
     kind=$2
     test_case_dir=${test_case_dir%/cases*}
@@ -142,6 +152,12 @@ function do_save_error_logs_by_kind {
     mkdir -p ${backup_dir}
     cp -rf $CUBRID ${backup_dir}
     cp -r ${test_case_dir} ${backup_dir}
+    cubrid_fail_file=${test_case_dir}/cubrid_failure_desc.txt
+    if [ -f ${cubrid_fail_file} ]; then
+        mv ${cubrid_fail_file} ${backup_dir}
+    fi
+    generage_readme ${test_case_dir} ${backup_dir}
+
     cd ${backup_dir}/..
     tar zcvf ${backup_fname}.tar.gz ${backup_fname} 2>&1 >/dev/null
     rm -rf ${backup_fname}

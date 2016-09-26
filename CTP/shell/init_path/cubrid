@@ -12,16 +12,19 @@ export PATH=$CUBRID/bin:$PATH >/dev/null
 if [ "$OS" != "Windows_NT" -a "$cub_util" == "deletedb" ]; then
     do_check_more_errors "`pwd`" >/dev/null 2>&1
 elif [ "$cub_util" == "server" -o "$cub_util" == "checkdb" ]; then
-    cubrid "$@"
-    exit_value=$?
-    if [ ${exit_value} -ne 0 ]; then
+    cubrid "$@" > cubrid_failure_desc.txt 2>&1
+    cat cubrid_failure_desc.txt
+    exit_value=$?    
+    hit_cnts=`should_save_snapshot_for_recovery cubrid_failure_desc.txt`
+    if [ ${exit_value} -ne 0 -a $hit_cnts -gt 0 ]; then
     	is_server_start=`echo "$@" | grep "start " | wc -l`
     	if [ ${is_server_start} -ge 1 ]; then
-    		do_save_error_logs_by_kind "`pwd`" "SERVER-START" >/dev/null 2>&1
+    		do_save_snapshot_by_type "`pwd`" "SERVER-START" >/dev/null 2>&1
     	elif [ "$cub_util" == "checkdb" ]; then
-    		do_save_error_logs_by_kind "`pwd`" "CHECKDB" >/dev/null 2>&1
+    		do_save_snapshot_by_type "`pwd`" "CHECKDB" >/dev/null 2>&1
     	fi
     fi
+    rm -rf cubrid_failure_desc.txt >/dev/null 2>&1
 	exit ${exit_value}
 fi
 cubrid "$@"
