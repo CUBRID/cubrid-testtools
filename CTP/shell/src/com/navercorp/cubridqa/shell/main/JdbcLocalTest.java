@@ -222,7 +222,7 @@ public class JdbcLocalTest {
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		if (args == null || args.length == 0) {
-			System.out.println("[ERROR] jdbc.propeties is missing!!");
+			System.out.println("[ERROR] jdbc.conf is missing!!");
 			return;
 		}
 		
