@@ -274,7 +274,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
   - Prepare
 	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
  	* Configure environment for JAVA
-	  ```
+
+      ```
 	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
       ```	
 	* **Example** ``jdbc.conf`` for test scenario and ports of CUBRID:
@@ -311,6 +312,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  
  - Run Tests 
 	* For **Jdbc** test:
+
       ```
 	  $ bin/ctp.sh jdbc -c ./conf/jdbc.conf
       ```   
