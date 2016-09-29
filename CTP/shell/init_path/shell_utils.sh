@@ -96,7 +96,7 @@ function do_check_more_errors {
 
         host_ip=`hostname -i`
         if [ $core_dump_cnt -gt 0 ]; then
- 	    out=" : NOK found core file on host "$host_ip"("$backup_dir")"
+ 	        out=" : NOK found core file on host "$host_ip"("$backup_dir")"
             echo $out >> $result_file
             echo $out
 	    while read core
@@ -111,7 +111,7 @@ function do_check_more_errors {
 	    done < temp_log
         fi
         if [ $fatal_err_cnt -gt 0 ]; then
-            out=" : NOK found fatal error file on host "$host_ip"("$backup_dir")"
+            out=" : NOK found fatal error on host "$host_ip"("$backup_dir")"
             echo $out >> $result_file
             echo $out
         fi
@@ -134,7 +134,12 @@ function do_save_normal_error_logs {
 }
 
 function should_save_snapshot_for_recovery {
-    cat $1 | grep -iE "inconsisten|Assertion|FATAL" | wc -l
+    cnt=`grep -aE -f ${init_path}/recovery_ignore_item.conf cubrid_failure_desc.txt | wc -l`
+    if [ $cnt -gt 0 ]; then
+        echo 0
+    else
+        echo 1
+    fi
 }
 
 function do_save_snapshot_by_type {
@@ -163,5 +168,5 @@ function do_save_snapshot_by_type {
     rm -rf ${backup_fname}
     cd - 2>&1 >/dev/null
     host_ip=`hostname -i`
-    echo " : NOK found ${kind} error file on host $host_ip (${backup_dir})" >> ${result_file}
+    echo " : NOK found ${kind} error on host $host_ip (${backup_dir})" >> ${result_file}
 }
