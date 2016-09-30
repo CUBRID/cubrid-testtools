@@ -12,9 +12,12 @@ export PATH=$CUBRID/bin:$PATH >/dev/null
 if [ "$OS" != "Windows_NT" -a "$cub_util" == "deletedb" ]; then
     do_check_more_errors "`pwd`" >/dev/null 2>&1
 elif [ "$cub_util" == "server" -o "$cub_util" == "checkdb" ]; then
-    cubrid "$@" > cubrid_failure_desc.txt 2>&1
+    cubrid "$@" >cubrid_failure_stdout.txt 2>cubrid_failure_stderr.txt
     exit_value=$?
-    cat cubrid_failure_desc.txt
+    cat cubrid_failure_stdout.txt > cubrid_failure_desc.txt
+    cat cubrid_failure_stderr.txt >> cubrid_failure_desc.txt
+    cat cubrid_failure_stdout.txt >&1
+    cat cubrid_failure_stderr.txt >&2
     if [ ${exit_value} -ne 0 -a "${SKIP_CHECK_RECOVERY_ERROR}" != "TRUE" ]; then
         cmd_kind=""
         if [ "$cub_util" == "checkdb" ]; then
@@ -32,7 +35,7 @@ elif [ "$cub_util" == "server" -o "$cub_util" == "checkdb" ]; then
             fi
         fi
     fi
-    rm -rf cubrid_failure_desc.txt >/dev/null 2>&1
+    rm -rf cubrid_failure_*.txt >/dev/null 2>&1
 	exit ${exit_value}
 fi
 cubrid "$@"
