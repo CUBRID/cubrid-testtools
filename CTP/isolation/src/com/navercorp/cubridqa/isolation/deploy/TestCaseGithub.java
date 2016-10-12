@@ -77,7 +77,7 @@ public class TestCaseGithub {
 		scripts.addCommand("./upgrade.sh");
 		
 		if (context.shouldUpdateTestCase()) {
-			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
+			scripts.addCommand("cd; ${CTP_HOME}/common/script/run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
 		}
 		scripts.addCommand("cd ${CTP_HOME}/isolation/ctltool");
 		scripts.addCommand("chmod u+x *.sh");
