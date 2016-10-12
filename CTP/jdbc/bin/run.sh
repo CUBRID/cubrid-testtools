@@ -187,8 +187,8 @@ function do_prepare()
          ini -s "broker" -u $cubrid_broker_shm $CUBRID/conf/cubrid_broker.conf
      fi
    
-     cubrid_broker_conf_para=`ini -s "sql/cubrid_broker.conf/%BROKER1" --separator="||" ${config_file}`
-     cubrid_broker_conf_queryeditor_para=`ini -s "sql/cubrid_broker.conf/%query_editor" --separator="||" ${config_file}`
+     cubrid_broker_conf_para=`ini -s "jdbc/cubrid_broker.conf/%BROKER1" --separator="||" ${config_file}`
+     cubrid_broker_conf_queryeditor_para=`ini -s "jdbc/cubrid_broker.conf/%query_editor" --separator="||" ${config_file}`
      is_valid_section_broker1=`cat $CUBRID/conf/cubrid_broker.conf|grep '\[\%BROKER1\]'|grep -v '#'|wc -l`
      is_valid_section_queryeditor=`cat $CUBRID/conf/cubrid_broker.conf|grep '\[\%query_editor\]'|grep -v '#'|wc -l`
    
