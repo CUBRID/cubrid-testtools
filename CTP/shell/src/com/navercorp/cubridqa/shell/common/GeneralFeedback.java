@@ -22,7 +22,7 @@ public class GeneralFeedback {
 	public GeneralFeedback(String configFilename, String messageFilename) throws IOException {
 		this.context = new Context(configFilename);
 		this.messageFilename = messageFilename;
-		String category = context.getProperty(ConfigParameterConstants.TEST_CATEGORY, (ConfigParameterConstants.TEST_CATEGORY).toUpperCase(), false);
+		String category = context.getProperty(ConfigParameterConstants.TEST_CATEGORY, "TEST_CATEGORY", false);
 		if(CommonUtils.isEmpty(category)) {
 			category = "general";
 		}
@@ -31,12 +31,12 @@ public class GeneralFeedback {
 		
 		keyData = new HashMap<String, String>();
 
-		String buildId = context.getProperty(ConfigParameterConstants.TEST_BUILD_ID, (ConfigParameterConstants.TEST_BUILD_ID).toUpperCase(), false);
+		String buildId = context.getProperty(ConfigParameterConstants.TEST_BUILD_ID, "BUILD_ID", false);
 		if (!CommonUtils.isEmpty(buildId)) {
 			context.setTestBuild(buildId);
 		}
 
-		String buildBit = context.getProperty(ConfigParameterConstants.TEST_BUILD_BITS, (ConfigParameterConstants.TEST_BUILD_BITS).toUpperCase(), false);
+		String buildBit = context.getProperty(ConfigParameterConstants.TEST_BUILD_BITS, "BUILD_BITS", false);
 		if (!CommonUtils.isEmpty(buildBit)) {
 			context.setVersion(buildBit);
 		}

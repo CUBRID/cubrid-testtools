@@ -163,9 +163,9 @@ public class Context {
 		this.cubridPackageUrl = getProperty(ConfigParameterConstants.CUBRID_DOWNLOAD_URL);
 
 		this.serviceProtocolType = getProperty(ConfigParameterConstants.AGENT_PROTOCOL, "ssh").trim().toLowerCase();
-		this.enableSkipUpgrade = getPropertyFromEnv(ConfigParameterConstants.SKIP_UPGRADE, "1");
+		this.enableSkipUpgrade = getPropertyFromEnv(ConfigParameterConstants.CTP_SKIP_UPGRADE, "1");
 		this.ctpBranchName = getPropertyFromEnv(ConfigParameterConstants.CTP_BRANCH_NAME, "master");
-		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO, "false"));
+		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO, "false"));
 		this.testCategory = getProperty(ConfigParameterConstants.TEST_CATEGORY, "shell").trim();
     }
 	
@@ -181,7 +181,7 @@ public class Context {
 		String key;
 		while (it.hasNext()) {
 			key = (String) it.next();
-			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith(ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)) {
+			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)) {
 				resultList.add(key.substring(4, key.indexOf(ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)));
 			}
 		}
@@ -215,7 +215,7 @@ public class Context {
 	}
 	
 	public ArrayList<String> getRelatedHosts(String envId) {
-		String[] relates = getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX  + envId + ConfigParameterConstants.TEST_INSTANCE_HA_SLAVE_SUFFIX, "").split(",");
+		String[] relates = getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX  + envId + "." + ConfigParameterConstants.TEST_INSTANCE_HA_SLAVE_SUFFIX, "").split(",");
 		ArrayList<String> list = new ArrayList<String>();
 		String h;
 		for (int i = 0; i < relates.length; i++) {
@@ -322,7 +322,7 @@ public class Context {
 	}
 	
 	public String getGitUserEmail(){
-		return getProperty(ConfigParameterConstants.GIT_CONFIG_EMAIL, "").trim();
+		return getProperty(ConfigParameterConstants.GIT_EMAIL, "").trim();
 	}
 	
 	public String getGitUserPwd(){

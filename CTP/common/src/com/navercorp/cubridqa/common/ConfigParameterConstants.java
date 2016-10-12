@@ -2,8 +2,19 @@ package com.navercorp.cubridqa.common;
 
 public class ConfigParameterConstants {
 	
+	//Prefix and suffix parameters
+	public static final String TEST_INSTANCE_PREFIX = "env.";
+	public static final String TEST_INSTANCE_HOST_SUFFIX = "ssh.host";
+	public static final String TEST_INSTANCE_PORT_SUFFIX = "ssh.port";
+	public static final String TEST_INSTANCE_USER_SUFFIX = "ssh.user";
+	public static final String TEST_INSTANCE_PASSWORD_SUFFIX = "ssh.pwd";
+	public static final String TEST_INSTANCE_HA_SLAVE_SUFFIX = "ssh.relatedhosts";
+	public static final String DEFAULT_CUBRID_PROPERTY_PREFIX = "default.cubrid";
+	public static final String DEFAULT_CUBRID_BROKER1_PROPERTY_PREFIX = "default.broker1";
+	public static final String DEFAULT_CUBRID_BROKER2_PROPERTY_PREFIX = "default.broker2";
+	
 	//Environment variables
-	public static final String SKIP_UPGRADE = "SKIP_UPGRADE";
+	public static final String CTP_SKIP_UPGRADE = "CTP_SKIP_UPGRADE";
 	public static final String CTP_BRANCH_NAME = "CTP_BRANCH_NAME";
 	
 	//CUBRID installation and configuration parameters
@@ -11,9 +22,6 @@ public class ConfigParameterConstants {
 	public static final String CUBRID_DOWNLOAD_URL = "cubrid_download_url";
 	public static final String CUBRID_ADDITIONAL_DOWNLOAD_URL = "cubrid_additional_download_url";
 	public static final String CUBRID_DB_CHARSET = "cubrid_db_charset";
-	public static final String DEFAULT_CUBRID_PROPERTY_PREFIX = "default.cubrid";
-	public static final String DEFAULT_CUBRID_BROKER1_PROPERTY_PREFIX = "default.broker1";
-	public static final String DEFAULT_CUBRID_BROKER2_PROPERTY_PREFIX = "default.broker2";
 	public static final String CUBRID_CUBRID_PORT_ID = "cubrid.cubrid_port_id";
 	public static final String CUBRID_HA_PORT_ID = "ha.ha_port_id";
 	public static final String CUBRID_CM_PORT = "cm.cm_port";
@@ -37,7 +45,7 @@ public class ConfigParameterConstants {
 	public static final String ENABLE_CHECK_DISK_SPACE_YES_OR_NO = "enable_check_disk_space_yn";
 	public static final String ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO = "enable_save_log_once_fail_yn";
 	public static final String ENABLE_SAVE_CORE_FILE_YES_OR_NO = "enable_save_core_file_yn";
-	public static final String ENABLE_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO = "enable_save_succ_testcase_yn";
+	public static final String SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO = "skip_save_succ_testcase_yn";
 	public static final String ENABLE_STATUS_TRACE_YES_OR_NO = "enable_status_trace_yn";
 	public static final String DELETE_TESTCASE_AFTER_EACH_EXECUTION_YES_OR_NO = "delete_testcase_after_each_execution_yn";
 	public static final String TEST_CONTINUE_YES_OR_NO = "test_continue_yn";
@@ -47,7 +55,7 @@ public class ConfigParameterConstants {
 	public static final String SVN_PASSWORD = "svn_pwd";
 	public static final String GIT_USER = "git_user";
 	public static final String GIT_PASSWORD = "git_pwd";
-	public static final String GIT_CONFIG_EMAIL = "git_email";
+	public static final String GIT_EMAIL = "git_email";
 	public static final String TEST_OWNER_EMAIL = "owner_email";
 	public static final String TEST_CC_EMAIL = "cc_email";
 	public static final String AGENT_PROTOCOL = "agent_protocol";
@@ -63,12 +71,6 @@ public class ConfigParameterConstants {
 	public static final String COVERAGE_CONTROLLER_RESULT = "coverage_controller_result";
 	public static final String TEST_REBUILD_ENV_YES_OR_NO = "test_rebuild_env_yn";
 	public static final String TEST_FAILURE_BACKUP_YES_OR_NO = "test_failure_backup_yn";
-	public static final String TEST_INSTANCE_PREFIX = "env.";
-	public static final String TEST_INSTANCE_HOST_SUFFIX = "ssh.host";
-	public static final String TEST_INSTANCE_PORT_SUFFIX = "ssh.port";
-	public static final String TEST_INSTANCE_USER_SUFFIX = "ssh.user";
-	public static final String TEST_INSTANCE_PASSWORD_SUFFIX = "ssh.pwd";
-	public static final String TEST_INSTANCE_HA_SLAVE_SUFFIX = "ssh.relatedhosts";
 	public static final String TEST_BUILD_ID = "build_id";
 	public static final String TEST_BUILD_BITS = "build_bits";
 	
