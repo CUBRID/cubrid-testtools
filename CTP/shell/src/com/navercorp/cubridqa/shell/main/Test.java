@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import com.jcraft.jsch.JSchException;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -302,11 +303,11 @@ public class Test {
 		long currentTime;
 		long len;
 		
-		String cubridPortId = context.getInstanceProperty(this.currEnvId, "cubrid.cubrid_port_id", "1523");
-		String brokerFirstPort = context.getInstanceProperty(this.currEnvId, "broker1.BROKER_PORT", "30000");
-		String brokerSecondPort = context.getInstanceProperty(this.currEnvId, "broker2.BROKER_PORT", "33000");
-		String haPortId = context.getInstanceProperty(this.currEnvId, "ha.ha_port_id", "59901");
-		String cmPortId = context.getInstanceProperty(this.currEnvId, "cm.cm_port", "8001");
+		String cubridPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.CUBRID_CUBRID_PORT_ID, "1523");
+		String brokerFirstPort = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.CUBRID_BROKER1_BROKER_PORT, "30000");
+		String brokerSecondPort = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.CUBRID_BROKER2_BROKER_PORT, "33000");
+		String haPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.CUBRID_HA_PORT_ID, "59901");
+		String cmPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.CUBRID_CM_PORT, "8001");
 
 		ShellScriptInput script = new ShellScriptInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':" + brokerFirstPort + "|:" + brokerSecondPort + "|:" + cubridPortId + "|:"
 				+ haPortId + "|:" + cmPortId + "' | wc -l");

@@ -26,6 +26,7 @@
 
 package com.navercorp.cubridqa.shell.deploy;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -88,13 +89,13 @@ public class DeployOneNode {
 	private void deploy_build_on_windows() {
 		cleanProcess();
 
-		String role = context.getProperty("main.testing.role", "").trim();
+		String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
 		ShellScriptInput scripts = new ShellScriptInput();
 		if (!context.isReInstallTestBuildYn()) {
 			log.print("Skip build installation since main.testbuild.url is not configured!!");
 		} else {
 			log.print("Start Install Build");
-			scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
+			scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty(ConfigParameterConstants.CUBRID_ADDITIONAL_DOWNLOAD_URL, "").trim() + " 2>&1");
 			scripts.addCommand("cd $CUBRID/..");
 			scripts.addCommand("chmod -R u+x CUBRID");
 		}
@@ -124,12 +125,12 @@ public class DeployOneNode {
 		if (!context.isReInstallTestBuildYn()) {
 			log.print("Skip build installation since main.testbuild.url is not configured!!");
 		} else {
-			String role = context.getProperty("main.testing.role", "").trim();
+			String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
 			log.print("Start Install Build");
 			scripts.addCommand("echo 'ulimit -c unlimited' >> ~/.bash_profile");
 			scripts.addCommand("cat ~/.bash_profile | uniq >  ~/.bash_profile_tmp; cp ~/.bash_profile_tmp ~/.bash_profile");
 			scripts.addCommand(CommonUtils.getExportsOfMEKYParams());
-			scripts.addCommand("run_cubrid_install " + role + " " + buildUrl + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
+			scripts.addCommand("run_cubrid_install " + role + " " + buildUrl + " " + context.getProperty(ConfigParameterConstants.CUBRID_ADDITIONAL_DOWNLOAD_URL, "").trim() + " 2>&1");
 		}
 		
 		String buildId = context.getTestBuild();
@@ -177,9 +178,9 @@ public class DeployOneNode {
 	
 	private void updateCUBRIDConfigurations(){
 		String cubridPortId, brokerFirstPort, brokerSecondPort;
-		cubridPortId = context.getInstanceProperty(this.currentEnvId, "cubrid.cubrid_port_id");
-		brokerFirstPort = context.getInstanceProperty(this.currentEnvId, "broker1.BROKER_PORT");
-		brokerSecondPort = context.getInstanceProperty(this.currentEnvId, "broker2.BROKER_PORT");
+		cubridPortId = context.getInstanceProperty(this.currentEnvId, ConfigParameterConstants.CUBRID_CUBRID_PORT_ID);
+		brokerFirstPort = context.getInstanceProperty(this.currentEnvId, ConfigParameterConstants.CUBRID_BROKER1_BROKER_PORT);
+		brokerSecondPort = context.getInstanceProperty(this.currentEnvId, ConfigParameterConstants.CUBRID_BROKER2_BROKER_PORT);
 		
 		if (CommonUtils.isEmpty(cubridPortId) && CommonUtils.isEmpty(brokerFirstPort) && CommonUtils.isEmpty(brokerSecondPort)) {
 			return;

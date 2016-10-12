@@ -25,6 +25,7 @@
 package com.navercorp.cubridqa.shell.main;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -89,7 +90,7 @@ public class CheckRequirement {
 			checkCommand("unzip");
 		}
 		
-		String excludedFilename = context.getProperty("main.testcase.excluded");
+		String excludedFilename = context.getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE);
 		if (!CommonUtils.isEmpty(excludedFilename) && isRelated == false) {
 			checkFile(excludedFilename);
 		}

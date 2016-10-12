@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.shell.main;
 
 import java.util.ArrayList;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
@@ -36,6 +35,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.deploy.Deploy;
@@ -360,7 +360,7 @@ public class TestFactory {
 		ArrayList<String> relatedHosts;
 		boolean pass = true;
 		
-		check = new CheckRequirement(context, envId, context.getInstanceProperty(envId, "ssh.host"), false);
+		check = new CheckRequirement(context, envId, context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX), false);
 		if (!check.check()) {
 			pass = false;
 		}

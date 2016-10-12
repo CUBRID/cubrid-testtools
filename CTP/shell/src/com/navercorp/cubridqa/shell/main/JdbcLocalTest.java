@@ -12,6 +12,7 @@ import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.LocalInvoker;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
@@ -37,12 +38,12 @@ public class JdbcLocalTest {
 		context.setTestCategory(category);
 		this.context.setLogDir("jdbc");
 
-		String buildId = context.getProperty("main.testing.build_id", "BUILD_ID", false);
+		String buildId = context.getProperty(ConfigParameterConstants.TEST_BUILD_ID, (ConfigParameterConstants.TEST_BUILD_ID).toUpperCase(), false);
 		if (!CommonUtils.isEmpty(buildId)) {
 			context.setTestBuild(buildId);
 		}
 		
-		String buildBit = context.getProperty("main.testing.build_bits", "BUILD_BITS", false);
+		String buildBit = context.getProperty(ConfigParameterConstants.TEST_BUILD_BITS, (ConfigParameterConstants.TEST_BUILD_BITS).toUpperCase(), false);
 		if (!CommonUtils.isEmpty(buildBit)) {
 			context.setVersion(buildBit);
 		}

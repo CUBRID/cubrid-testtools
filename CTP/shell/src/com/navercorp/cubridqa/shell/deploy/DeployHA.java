@@ -27,6 +27,7 @@
 package com.navercorp.cubridqa.shell.deploy;
 
 import com.jcraft.jsch.JSchException;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -49,10 +50,10 @@ public class DeployHA {
 		this.masterEnvId = masterEnvId;
 		this.slaveIp = slaveEnvIP;
 		
-		port = context.getInstanceProperty(masterEnvId, "ssh.port");
-		user = context.getInstanceProperty(masterEnvId, "ssh.user");
-		pwd = context.getInstanceProperty(masterEnvId, "ssh.pwd");
-		masterHost = context.getInstanceProperty(masterEnvId, "ssh.host");
+		port = context.getInstanceProperty(masterEnvId, ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
+		user = context.getInstanceProperty(masterEnvId, ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
+		pwd = context.getInstanceProperty(masterEnvId, ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
+		masterHost = context.getInstanceProperty(masterEnvId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 		
 		envIdentify = "MasterEnvId=" + masterEnvId + "[" + user+"@"+ masterHost +":" + port + "] - SlaveEnvId:" + slaveIp;
 		this.ssh = ShellHelper.createTestNodeConnect(context, masterEnvId);
@@ -87,7 +88,7 @@ public class DeployHA {
 		scripts.addCommand("cubrid_broker2_app_server_shm_value=`ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID`");
 		scripts.addCommand("ini.sh -u APPL_SERVER_SHM_ID2=$cubrid_broker2_app_server_shm_value $init_path/HA.properties");
 		
-		String haPortId = context.getInstanceProperty(this.masterEnvId, "ha.ha_port_id");
+		String haPortId = context.getInstanceProperty(this.masterEnvId, ConfigParameterConstants.CUBRID_HA_PORT_ID);
 		if(CommonUtils.isEmpty(haPortId)) {
 			haPortId = "59901";
 		}		

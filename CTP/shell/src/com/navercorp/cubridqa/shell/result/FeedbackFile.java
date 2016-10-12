@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import com.jcraft.jsch.JSchException;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -164,11 +165,11 @@ public class FeedbackFile implements Feedback {
 		SSHConnect ssh = null;
 		println("[Code Coverage] Current Time is " + new Date());
 		feedbackLog.print("[Code Coverage] start code coverage data collection!");
-		String covHost = context.getProperty("main.coverage.controller.ip", "").trim();
-		String covUser = context.getProperty("main.coverage.controller.user", "").trim();
-		String covPwd = context.getProperty("main.coverage.controller.pwd", "").trim();
-		String covPort = context.getProperty("main.coverage.controller.port", "").trim();
-		String covTargetDir = context.getProperty("main.coverage.controller.result", "").trim();
+		String covHost = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_IP, "").trim();
+		String covUser = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_USER, "").trim();
+		String covPwd = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_PASSWORD, "").trim();
+		String covPort = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_PORT, "").trim();
+		String covTargetDir = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_RESULT, "").trim();
 		String category = context.getTestCategory();//flag will mark category as a new for slave node 
 		String covParams = "-n " + context.getTestBuild() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
 		
@@ -199,7 +200,7 @@ public class FeedbackFile implements Feedback {
 
 	@Override
 	public void onStopEnvEvent(String envIdentify) {
-		String role = context.getProperty("main.testing.role", "").trim();
+		String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
 		String host = context.getInstanceProperty(envIdentify, "ssh.host");
 		
 		if (role.indexOf("coverage") != -1) {
