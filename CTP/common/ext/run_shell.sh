@@ -73,20 +73,20 @@ function run_shell()
    
    cd $CTP_HOME
    #update configuration file
-   ini.sh -u "main.testcase.branch_git=$branch" $shell_fm_test_conf
-   ini.sh -u "main.testing.category=$category" $shell_fm_test_conf
-   ini.sh -u "main.testing.role=$role" $shell_fm_test_conf
-   ini.sh -u "main.collaborate.url=$coverage_collaborate_url" $shell_fm_test_conf
-   ini.sh -u "main.coverage.controller.ip=$coverage_controller_ip" $shell_fm_test_conf
-   ini.sh -u "main.coverage.controller.user=$coverage_controller_user" $shell_fm_test_conf 
-   ini.sh -u "main.coverage.controller.pwd=$coverage_controller_pwd" $shell_fm_test_conf 
-   ini.sh -u "main.coverage.controller.port=$coverage_controller_port" $shell_fm_test_conf 
-   ini.sh -u "main.coverage.controller.result=$coverage_controller_target_dir" $shell_fm_test_conf 
+   ini.sh -u "testcase_git_branch=$branch" $shell_fm_test_conf
+   ini.sh -u "test_category=$category" $shell_fm_test_conf
+   ini.sh -u "cubrid_install_role=$role" $shell_fm_test_conf
+   ini.sh -u "cubrid_additional_download_url=$coverage_collaborate_url" $shell_fm_test_conf
+   ini.sh -u "coverage_controller_ip=$coverage_controller_ip" $shell_fm_test_conf
+   ini.sh -u "coverage_controller_user=$coverage_controller_user" $shell_fm_test_conf 
+   ini.sh -u "coverage_controller_pwd=$coverage_controller_pwd" $shell_fm_test_conf 
+   ini.sh -u "coverage_controller_port=$coverage_controller_port" $shell_fm_test_conf 
+   ini.sh -u "coverage_controller_result=$coverage_controller_target_dir" $shell_fm_test_conf 
    if [ "$BUILD_TYPE" == "coverage" ];then
-   		ini.sh -u "main.feedback.type=file" $shell_fm_test_conf
+   		ini.sh -u "feedback_type=file" $shell_fm_test_conf
    fi 
-   ini.sh -u "main.testbuild.url=$url" $shell_fm_test_conf
-   ini.sh -u "main.mode.continue=false" $shell_fm_test_conf
+   ini.sh -u "cubrid_download_url=$url" $shell_fm_test_conf
+   ini.sh -u "test_continue_yn=false" $shell_fm_test_conf
 
    #execute testing
    ctp.sh shell -c $shell_fm_test_conf 2>&1 | tee $tmplog
@@ -101,7 +101,7 @@ function run_shell_continue()
        mkdir -p $CTP_HOME/result/shell/current_runtime_logs
    fi
    
-   ini.sh -u "main.mode.continue=true" ${shell_fm_test_conf}
+   ini.sh -u "test_continue_yn=true" ${shell_fm_test_conf}
    $CTP_HOME/bin/ctp.sh shell -c ${shell_fm_test_conf} 2>&1 | tee -a $tmplog
 }
 
@@ -111,7 +111,7 @@ function run_shell_legacy()
     category=$BUILD_SCENARIOS
     cd $HOME/cubrid_shell_fm
     sh upgrade.sh
-    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false
+    sh run.sh -Dtest_category=$category -Dcubrid_install_role=$role -Dcubrid_additional_download_url=$coverage_collaborate_url -Dcoverage_controller_ip=$coverage_controller_ip -Dcoverage_controller_user=$coverage_controller_user -Dcoverage_controller_pwd=$coverage_controller_pwd -Dcoverage_controller_result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dfeedback_type=$feedback_type";fi` $url false
     cd -
 }
 
