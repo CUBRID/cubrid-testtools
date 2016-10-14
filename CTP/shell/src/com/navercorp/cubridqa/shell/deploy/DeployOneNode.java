@@ -221,14 +221,6 @@ public class DeployOneNode {
 			}
 		}
 		
-		
-		System.out.println("--------------------------------------------------");
-		System.out.println(cubridEnginParamsList);
-		System.out.println(cubridBroker1ParamsList);
-		System.out.println(cubridBroker2ParamsList);
-		System.out.println(scripts);
-		System.out.println("--------------------------------------------------");
-		
 		String result="";
 		
 		try {
