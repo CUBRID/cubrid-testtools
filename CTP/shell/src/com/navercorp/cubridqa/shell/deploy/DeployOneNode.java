@@ -177,12 +177,12 @@ public class DeployOneNode {
 	}
 	
 	private void updateCUBRIDConfigurations(){
-		String cubridEnginParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + "." + this.currentEnvId, ConfigParameterConstants.ROLE_ENGINE);
-		String cubridHAParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + "." + this.currentEnvId, ConfigParameterConstants.ROLE_HA);
-		String cubridCMParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + "." + this.currentEnvId, ConfigParameterConstants.ROLE_CM);
-		String cubridBrokerCommonParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + "." + this.currentEnvId, ConfigParameterConstants.ROLE_BROKER_COMMON);
-		String cubridBroker1ParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + "." + this.currentEnvId, ConfigParameterConstants.ROLE_BROKER1);
-		String cubridBroker2ParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + "." + this.currentEnvId, ConfigParameterConstants.ROLE_BROKER2);
+		String cubridEnginParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + this.currentEnvId, ConfigParameterConstants.ROLE_ENGINE);
+		String cubridHAParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + this.currentEnvId, ConfigParameterConstants.ROLE_HA);
+		String cubridCMParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + this.currentEnvId, ConfigParameterConstants.ROLE_CM);
+		String cubridBrokerCommonParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + this.currentEnvId, ConfigParameterConstants.ROLE_BROKER_COMMON);
+		String cubridBroker1ParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + this.currentEnvId, ConfigParameterConstants.ROLE_BROKER1);
+		String cubridBroker2ParamsList = com.navercorp.cubridqa.common.CommonUtils.parseInstanceParametersByRole(this.context.getProperties(), ConfigParameterConstants.TEST_INSTANCE_PREFIX + this.currentEnvId, ConfigParameterConstants.ROLE_BROKER2);
 		
 		if (CommonUtils.isEmpty(cubridEnginParamsList) && CommonUtils.isEmpty(cubridHAParamsList) && CommonUtils.isEmpty(cubridCMParamsList)&& CommonUtils.isEmpty(cubridBroker1ParamsList)&& CommonUtils.isEmpty(cubridBroker2ParamsList)) {
 			return;
