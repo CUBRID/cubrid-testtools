@@ -190,27 +190,27 @@ public class DeployOneNode {
 		
 		ShellScriptInput scripts = new ShellScriptInput();
 		if (!CommonUtils.isEmpty(cubridEnginParamsList)) {
-			scripts.addCommand("ini.sh -s 'common' -u --separator '||' " + cubridEnginParamsList + " $CUBRID/conf/cubrid.conf");
+			scripts.addCommand("ini.sh -s 'common' --separator '||' -u '" + cubridEnginParamsList + "' $CUBRID/conf/cubrid.conf");
 		}
 		
 		if (!CommonUtils.isEmpty(cubridHAParamsList)) {
-			scripts.addCommand("ini.sh -s 'common' -u --separator '||' " + cubridHAParamsList + " $CUBRID/conf/cubrid_ha.conf");
+			scripts.addCommand("ini.sh -s 'common' --separator '||' -u '" + cubridHAParamsList + "' $CUBRID/conf/cubrid_ha.conf");
 		}
 		
 		if (!CommonUtils.isEmpty(cubridCMParamsList)) {
-			scripts.addCommand("ini.sh -s 'cm' -u --separator '||' " + cubridCMParamsList + " $CUBRID/conf/cm.conf");
+			scripts.addCommand("ini.sh -s 'cm' --separator '||' -u '" + cubridCMParamsList + "' $CUBRID/conf/cm.conf");
 		}
 		
 		if (!CommonUtils.isEmpty(cubridBroker1ParamsList)) {
-			scripts.addCommand("ini.sh -s '%query_editor' -u --separator '||' " + cubridBroker1ParamsList + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s '%query_editor' --separator '||' -u '" + cubridBroker1ParamsList + "' $CUBRID/conf/cubrid_broker.conf");
 		}
 		
 		if (!CommonUtils.isEmpty(cubridBroker2ParamsList)) {
-			scripts.addCommand("ini.sh -s '%BROKER1' -u --separator '||' " + cubridBroker2ParamsList + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s '%BROKER1' --separator '||' -u '" + cubridBroker2ParamsList + "' $CUBRID/conf/cubrid_broker.conf");
 		}
 		
 		if (!CommonUtils.isEmpty(cubridBrokerCommonParamsList)) {
-			scripts.addCommand("ini.sh -s 'broker' -u --separator '||' " + cubridBrokerCommonParamsList + " $CUBRID/conf/cubrid_broker.conf");
+			scripts.addCommand("ini.sh -s 'broker' --separator '||' -u '" + cubridBrokerCommonParamsList + "' $CUBRID/conf/cubrid_broker.conf");
 		}
 		
 		String cubridBrokerSHMId = this.context.getInstanceProperty(this.currentEnvId, ConfigParameterConstants.ROLE_BROKER_COMMON + "."  + "MASTER_SHM_ID");
@@ -220,6 +220,14 @@ public class DeployOneNode {
 				scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
 			}
 		}
+		
+		
+		System.out.println("--------------------------------------------------");
+		System.out.println(cubridEnginParamsList);
+		System.out.println(cubridBroker1ParamsList);
+		System.out.println(cubridBroker2ParamsList);
+		System.out.println(scripts);
+		System.out.println("--------------------------------------------------");
 		
 		String result="";
 		
