@@ -22,7 +22,7 @@ public class ConfigParameterConstants {
 	public static final String ROLE_ENGINE="cubrid";
 	public static final String ROLE_HA="ha";
 	public static final String ROLE_CM="cm";
-	public static final String ROLE_BROKER_COMMON="broker";
+	public static final String ROLE_BROKER_COMMON="brokercommon";
 	public static final String ROLE_BROKER1="broker1";
 	public static final String ROLE_BROKER2="broker2";
 	
