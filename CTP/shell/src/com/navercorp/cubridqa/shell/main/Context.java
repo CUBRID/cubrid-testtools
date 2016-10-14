@@ -73,8 +73,6 @@ public class Context {
 	
 	String testCaseSkipKey;
 	
-	boolean isSaveCorefile = false;
-	
 	Date startDate;
 	
 	String bigSpaceDir;
@@ -95,7 +93,7 @@ public class Context {
     
 	String msgId;
 	
-	String enableSkipUpgrade;
+	String enableSkipUpdate;
 	
 	String ctpBranchName;
 	
@@ -149,7 +147,6 @@ public class Context {
 			this.testCaseSkipKey = null;
 		}
                  		
-		this.isSaveCorefile = getProperty(ConfigParameterConstants.ENABLE_SAVE_CORE_FILE_YES_OR_NO, "FALSE").trim().toUpperCase().equals("TRUE");
 		this.bigSpaceDir = getProperty(ConfigParameterConstants.LARGE_SPACE_DIR, "").trim();
 		this.maxRetryCount = Integer.parseInt(getProperty(ConfigParameterConstants.TESTCASE_RETRY_NUM, "0").trim());
         this.defaultDbCharset = getProperty(ConfigParameterConstants.CUBRID_DB_CHARSET, "en_US").trim();
@@ -157,15 +154,15 @@ public class Context {
 		this.enableCheckDiskSpace = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
 		this.mailNoticeTo = getProperty(ConfigParameterConstants.TEST_OWNER_EMAIL, "").trim();
 		
-		this.enableSaveNormalErrorLog = getProperty(ConfigParameterConstants.ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO, "FALSE").trim().toUpperCase().equals("TRUE");        
+		this.enableSaveNormalErrorLog = getProperty(ConfigParameterConstants.TEST_FAILURE_BACKUP_YES_OR_NO, "FALSE").trim().toUpperCase().equals("TRUE");        
       
 		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TEST_CONTINUE_YES_OR_NO, "false"), false);
 		this.cubridPackageUrl = getProperty(ConfigParameterConstants.CUBRID_DOWNLOAD_URL);
 
 		this.serviceProtocolType = getProperty(ConfigParameterConstants.AGENT_PROTOCOL, "ssh").trim().toLowerCase();
-		this.enableSkipUpgrade = getPropertyFromEnv(ConfigParameterConstants.CTP_SKIP_UPGRADE, "1");
+		this.enableSkipUpdate = getPropertyFromEnv(ConfigParameterConstants.CTP_SKIP_UPDATE, "1");
 		this.ctpBranchName = getPropertyFromEnv(ConfigParameterConstants.CTP_BRANCH_NAME, "master");
-		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO, "false"));
+		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.FEEDBACK_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO, "false"));
 		this.testCategory = getProperty(ConfigParameterConstants.TEST_CATEGORY, "shell").trim();
     }
 	
@@ -182,7 +179,7 @@ public class Context {
 		while (it.hasNext()) {
 			key = (String) it.next();
 			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)) {
-				resultList.add(key.substring(4, key.indexOf(ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)));
+				resultList.add(key.substring(4, key.indexOf("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)));
 			}
 		}
 		return resultList;
@@ -215,7 +212,7 @@ public class Context {
 	}
 	
 	public ArrayList<String> getRelatedHosts(String envId) {
-		String[] relates = getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX  + envId + "." + ConfigParameterConstants.TEST_INSTANCE_HA_SLAVE_SUFFIX, "").split(",");
+		String[] relates = getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX  + envId + "." + ConfigParameterConstants.TEST_INSTANCE_RELATED_HOSTS_SUFFIX, "").split(",");
 		ArrayList<String> list = new ArrayList<String>();
 		String h;
 		for (int i = 0; i < relates.length; i++) {
@@ -445,10 +442,6 @@ public class Context {
 		return this.testCaseSkipKey;
 	}
 
-	public boolean isSaveCorefile() {
-		return this.isSaveCorefile;
-	}
-	
 	public Date getStartDate() {
 		return this.startDate;
 	}
@@ -513,12 +506,12 @@ public class Context {
 		this.ctpBranchName = ctpBranchName;
 	}
 	
-	public String getEnableSkipUpgrade() {
-		return enableSkipUpgrade;
+	public String getEnableSkipUpdate() {
+		return enableSkipUpdate;
 	}
 
-	public void setEnableSkipUpgrade(String enableSkipUpgrade) {
-		this.enableSkipUpgrade = enableSkipUpgrade;
+	public void setEnableSkipUpgrade(String enableSkipUpdate) {
+		this.enableSkipUpdate = enableSkipUpdate;
 	}
 	
 	public String getMailNoticeTo() {

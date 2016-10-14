@@ -8,13 +8,10 @@ public class ConfigParameterConstants {
 	public static final String TEST_INSTANCE_PORT_SUFFIX = "ssh.port";
 	public static final String TEST_INSTANCE_USER_SUFFIX = "ssh.user";
 	public static final String TEST_INSTANCE_PASSWORD_SUFFIX = "ssh.pwd";
-	public static final String TEST_INSTANCE_HA_SLAVE_SUFFIX = "ssh.relatedhosts";
-	public static final String DEFAULT_CUBRID_PROPERTY_PREFIX = "default.cubrid";
-	public static final String DEFAULT_CUBRID_BROKER1_PROPERTY_PREFIX = "default.broker1";
-	public static final String DEFAULT_CUBRID_BROKER2_PROPERTY_PREFIX = "default.broker2";
+	public static final String TEST_INSTANCE_RELATED_HOSTS_SUFFIX = "ssh.relatedhosts";
 	
 	//Environment variables
-	public static final String CTP_SKIP_UPGRADE = "CTP_SKIP_UPGRADE";
+	public static final String CTP_SKIP_UPDATE = "CTP_SKIP_UPDATE";
 	public static final String CTP_BRANCH_NAME = "CTP_BRANCH_NAME";
 	
 	//CUBRID installation and configuration parameters
@@ -22,11 +19,12 @@ public class ConfigParameterConstants {
 	public static final String CUBRID_DOWNLOAD_URL = "cubrid_download_url";
 	public static final String CUBRID_ADDITIONAL_DOWNLOAD_URL = "cubrid_additional_download_url";
 	public static final String CUBRID_DB_CHARSET = "cubrid_db_charset";
-	public static final String CUBRID_CUBRID_PORT_ID = "cubrid.cubrid_port_id";
-	public static final String CUBRID_HA_PORT_ID = "ha.ha_port_id";
-	public static final String CUBRID_CM_PORT = "cm.cm_port";
-	public static final String CUBRID_BROKER1_BROKER_PORT = "broker1.BROKER_PORT";
-	public static final String CUBRID_BROKER2_BROKER_PORT = "broker2.BROKER_PORT";
+	public static final String ROLE_ENGINE="cubrid";
+	public static final String ROLE_HA="ha";
+	public static final String ROLE_CM="cm";
+	public static final String ROLE_BROKER_COMMON="broker";
+	public static final String ROLE_BROKER1="broker1";
+	public static final String ROLE_BROKER2="broker2";
 	
 	//Test case configuration parameters
 	public static final String SCENARIO = "scenario";
@@ -43,9 +41,6 @@ public class ConfigParameterConstants {
 	public static final String IGNORE_CORE_BY_KEYWORDS = "ignore_core_by_keywords";
 	public static final String LARGE_SPACE_DIR = "large_space_dir";
 	public static final String ENABLE_CHECK_DISK_SPACE_YES_OR_NO = "enable_check_disk_space_yn";
-	public static final String ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO = "enable_save_log_once_fail_yn";
-	public static final String ENABLE_SAVE_CORE_FILE_YES_OR_NO = "enable_save_core_file_yn";
-	public static final String SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO = "skip_save_succ_testcase_yn";
 	public static final String ENABLE_STATUS_TRACE_YES_OR_NO = "enable_status_trace_yn";
 	public static final String DELETE_TESTCASE_AFTER_EACH_EXECUTION_YES_OR_NO = "delete_testcase_after_each_execution_yn";
 	public static final String TEST_CONTINUE_YES_OR_NO = "test_continue_yn";
@@ -82,6 +77,7 @@ public class ConfigParameterConstants {
 	public static final String FEEDBACK_DB_NAME = "feedback_db_name";
 	public static final String FEEDBACK_DB_USER = "feedback_db_user";
 	public static final String FEEDBACK_DB_PASSWORD = "feedback_db_pwd";
+	public static final String FEEDBACK_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO = "feedback_skip_save_succ_testcase_yn";
 	public static final String FEEDBACK_NOTICE_QAHOME_URL = "feedback_notice_qahome_url";
 
 }

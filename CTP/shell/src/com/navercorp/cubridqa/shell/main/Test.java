@@ -303,11 +303,11 @@ public class Test {
 		long currentTime;
 		long len;
 		
-		String cubridPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.CUBRID_CUBRID_PORT_ID, "1523");
-		String brokerFirstPort = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.CUBRID_BROKER1_BROKER_PORT, "30000");
-		String brokerSecondPort = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.CUBRID_BROKER2_BROKER_PORT, "33000");
-		String haPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.CUBRID_HA_PORT_ID, "59901");
-		String cmPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.CUBRID_CM_PORT, "8001");
+		String cubridPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_ENGINE + "." + "cubrid_port_id", "1523");
+		String brokerFirstPort = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_BROKER1 + "." + "BROKER_PORT", "30000");
+		String brokerSecondPort = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_BROKER2 + "." + "BROKER_PORT", "33000");
+		String haPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_HA + "." + "ha_port_id", "59901");
+		String cmPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_CM + "." + "cm_port", "8001");
 
 		ShellScriptInput script = new ShellScriptInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':" + brokerFirstPort + "|:" + brokerSecondPort + "|:" + cubridPortId + "|:"
 				+ haPortId + "|:" + cmPortId + "' | wc -l");
