@@ -42,6 +42,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -110,6 +111,57 @@ public class CommonUtils {
 		}
 		return list;
 
+	}
+	
+	public static void main(String[] args){
+		String file = "conf/shell.conf";
+		String lst = parseInstanceParametersByRole(getConfig(file), "env.instance2", "broker1");
+		System.out.println(lst);
+	}
+	
+	public static Properties parsePropertiesByPrefix(Properties config, String prefix){
+		Properties prop = new Properties();
+		final Iterator<Object> keyIterator = config.keySet().iterator();
+		while(keyIterator.hasNext()){
+			String key = keyIterator.next().toString();
+			if(key.startsWith(prefix)){
+				prop.setProperty(key.substring(prefix.length() + 1), config.getProperty(key));
+			}
+		}
+		
+		return prop;
+	}
+	
+	public static Properties parsePropertiesByPrefix(Properties config, String prefix, String defaultPrefix) {
+	    Properties prop1 = parsePropertiesByPrefix(config, prefix);
+	    Properties prop2 = parsePropertiesByPrefix(config, defaultPrefix);
+        prop2.putAll(prop1);
+        
+	    return prop2;
+	}
+	
+	public static String parsePropertiesStringByPrefix(Properties config, String prefix, String defaultPrefix) {
+	    Properties prop = parsePropertiesByPrefix(config, prefix, defaultPrefix);
+	    if(prop == null) return "";
+	    
+	    Set<Object> set = prop.keySet();
+		Iterator<Object> it = set.iterator();
+		String resultList = "";
+		String key;
+		String val;
+		while (it.hasNext()) {
+			key = (String) it.next();
+			val = prop.getProperty(key);
+			resultList += key + "=" + val + "||";
+		}
+		
+		return resultList;
+	}
+	
+	public static String parseInstanceParametersByRole(Properties config, String instancePrefix, String role){
+		String prefix = instancePrefix + "." + role;
+		String defaultPrefix = "default." + role;
+		return parsePropertiesStringByPrefix(config, prefix, defaultPrefix);
 	}
 
 	public static String concatFile(String p1, String p2){
@@ -344,7 +396,7 @@ public class CommonUtils {
 		return path;
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main2(String[] args) throws IOException {
 		System.out.println(getExactFilename("conf/core.1234"));
 		System.out.println(getExactFilename("conf\\core.1234"));
 		System.out.println(getExactFilename("/core\\conf\\core.1234"));
@@ -371,7 +423,8 @@ public class CommonUtils {
 			}
 		}
 	}
-
+	
+	
 	public static Properties getConfig(InputStream is) {
 		try {
 			Properties props = new Properties();

@@ -36,6 +36,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.result.FeedbackDB;
@@ -72,8 +73,6 @@ public class Context {
 	
 	String testCaseSkipKey;
 	
-	boolean isSaveCorefile = false;
-	
 	Date startDate;
 	
 	String bigSpaceDir;
@@ -94,7 +93,7 @@ public class Context {
     
 	String msgId;
 	
-	String enableSkipUpgrade;
+	String enableSkipUpdate;
 	
 	String ctpBranchName;
 	
@@ -127,7 +126,7 @@ public class Context {
 		} else {
 			isExecuteAtLocal = false;
 		}
-		this.scenario = getProperty("scenario", "").trim();
+		this.scenario = getProperty(ConfigParameterConstants.SCENARIO, "").trim();
 	}
 	
 	public void reload() throws IOException{
@@ -138,34 +137,31 @@ public class Context {
 		}
 		
 		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (Constants.ENV_CTP_HOME_KEY);
-		
-		this.cleanTestCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.testcase.clean", "false"));
-		 
+		this.cleanTestCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TESTCASE_UPDATE_YES_OR_NO, "false"));
 		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
 		
-		this.testCaseSkipKey = getProperty("main.testcase.skip_key", "").trim().toUpperCase();
+		this.testCaseSkipKey = getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_BY_MACRO, "").trim().toUpperCase();
 		if(this.testCaseSkipKey.equals("")) {
 			this.testCaseSkipKey = null;
 		}
                  		
-		this.isSaveCorefile = getProperty("main.testing.savecorefile", "FALSE").trim().toUpperCase().equals("TRUE");
-		this.bigSpaceDir = getProperty("main.testing.bigspace_dir", "").trim();
-		this.maxRetryCount = Integer.parseInt(getProperty("max.retry.count", "0").trim());
-        this.defaultDbCharset = getProperty("main.testing.default_charset", "en_US").trim();
+		this.bigSpaceDir = getProperty(ConfigParameterConstants.LARGE_SPACE_DIR, "").trim();
+		this.maxRetryCount = Integer.parseInt(getProperty(ConfigParameterConstants.TESTCASE_RETRY_NUM, "0").trim());
+        this.defaultDbCharset = getProperty(ConfigParameterConstants.CUBRID_DB_CHARSET, "en_US").trim();
        
-		this.enableCheckDiskSpace = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
-		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
+		this.enableCheckDiskSpace = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
+		this.mailNoticeTo = getProperty(ConfigParameterConstants.TEST_OWNER_EMAIL, "").trim();
 		
-		this.enableSaveNormalErrorLog = getProperty("main.testing.do_save_normal_error_log", "FALSE").trim().toUpperCase().equals("TRUE");        
+		this.enableSaveNormalErrorLog = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO, "FALSE").trim());        
       
-		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.mode.continue", "false"), false);
-		this.cubridPackageUrl = getProperty("main.testbuild.url");
+		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TEST_CONTINUE_YES_OR_NO, "false").trim());
+		this.cubridPackageUrl = getProperty(ConfigParameterConstants.CUBRID_DOWNLOAD_URL);
 
-		this.serviceProtocolType = getProperty("main.service.protocol", "ssh").trim().toLowerCase();
-		this.enableSkipUpgrade = getPropertyFromEnv("SKIP_UPGRADE", "1");
-		this.ctpBranchName = getPropertyFromEnv("CTP_BRANCH_NAME", "master");
-		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.skip_to_save_passed_testcases_yn", "false"));
-		this.testCategory = getProperty("main.testing.category", "shell").trim();
+		this.serviceProtocolType = getProperty(ConfigParameterConstants.AGENT_PROTOCOL, "ssh").trim().toLowerCase();
+		this.enableSkipUpdate = getPropertyFromEnv(ConfigParameterConstants.CTP_SKIP_UPDATE, "1");
+		this.ctpBranchName = getPropertyFromEnv(ConfigParameterConstants.CTP_BRANCH_NAME, "master");
+		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.FEEDBACK_DB_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO, "false").trim());
+		this.testCategory = getProperty(ConfigParameterConstants.TEST_CATEGORY, "shell").trim();
     }
 	
 	public void setLogDir(String category) {
@@ -180,8 +176,8 @@ public class Context {
 		String key;
 		while (it.hasNext()) {
 			key = (String) it.next();
-			if (key.startsWith("env.") && key.endsWith(".ssh.host")) {
-				resultList.add(key.substring(4, key.indexOf(".ssh.host")));
+			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)) {
+				resultList.add(key.substring(4, key.indexOf("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)));
 			}
 		}
 		return resultList;
@@ -197,7 +193,7 @@ public class Context {
 	}
 
 	public String getInstanceProperty(String envId, String key){
-		String value = getProperty("env." + envId + "." + key);
+		String value = getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX + envId + "." + key);
 		return value == null ? getProperty("default." + key, "") : value;
 	}
 	
@@ -214,7 +210,7 @@ public class Context {
 	}
 	
 	public ArrayList<String> getRelatedHosts(String envId) {
-		String[] relates = getProperty("env." + envId + ".ssh.host.related", "").split(",");
+		String[] relates = getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX  + envId + "." + ConfigParameterConstants.TEST_INSTANCE_RELATED_HOSTS_SUFFIX, "").split(",");
 		ArrayList<String> list = new ArrayList<String>();
 		String h;
 		for (int i = 0; i < relates.length; i++) {
@@ -251,11 +247,11 @@ public class Context {
 	}
 	
 	public String getTestCaseBranch() {
-		return getProperty("main.testcase.branch_git", "").trim();
+		return getProperty(ConfigParameterConstants.TESTCASE_GIT_BRANCH, "").trim();
 	}
 	
 	public String getTestCaseWorkspace() {
-		String ws = getProperty("main.testcase.workspace", "").trim();
+		String ws = getProperty(ConfigParameterConstants.TESTCASE_WORKSPACE_DIR, "").trim();
 		if (ws.equals("")) {
 			return getTestCaseRoot();
 		} else {
@@ -264,7 +260,7 @@ public class Context {
 	}
 	
 	public String getTestPlatform(){
-		return getProperty("main.testing.platform", "linux");
+		return getProperty(ConfigParameterConstants.TEST_PLATFORM, "linux");
 	}
 	
 	public String getTestCategory() {
@@ -282,22 +278,22 @@ public class Context {
 	
 	public String getTestCaseTimeout()
 	{
-		return getProperty("main.testcase.timeout", "-1");
+		return getProperty(ConfigParameterConstants.TESTCASE_TIMEOUT_IN_SECS, "-1");
 	}
 	
 	public boolean needEnableMonitorTrace()
 	{
-		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty("main.monitor.enable_tracing", "false"));
+		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_STATUS_TRACE_YES_OR_NO, "false"));
 	}
 	
 	public String getExcludedCoresByAssertLine()
 	{
-		return getProperty("main.testing.excluded_cores_by_assert_line");
+		return getProperty(ConfigParameterConstants.IGNORE_CORE_BY_KEYWORDS);
 	}
 	
 	public boolean needDeleteTestCaseAfterTest()
 	{
-		return getProperty("main.testing.delete_test_case_after_execution", "false").trim().toLowerCase().equals("true");
+		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.DELETE_TESTCASE_AFTER_EACH_EXECUTION_YES_OR_NO, "false").trim());
 	}
 	
 	public void setCubridPackageUrl(String cubridPackageUrl) {
@@ -309,23 +305,23 @@ public class Context {
 	}
 	
 	public String getSVNUserInfo(){
-		String user = getProperty("main.svn.user", "");
-		String pwd = getProperty("main.svn.pwd", "");
+		String user = getProperty(ConfigParameterConstants.SVN_USER, "");
+		String pwd = getProperty(ConfigParameterConstants.SVN_PASSWORD, "");
 		if (user.trim().equals("") || pwd.trim().equals(""))
 			return "";
 		return " --username " + user + " --password " + pwd + " --non-interactive "; 
 	}
 	
 	public String getGitUserName(){
-		return getProperty("main.git.user", "").trim();
+		return getProperty(ConfigParameterConstants.GIT_USER, "").trim();
 	}
 	
 	public String getGitUserEmail(){
-		return getProperty("main.git.email", "").trim();
+		return getProperty(ConfigParameterConstants.GIT_EMAIL, "").trim();
 	}
 	
 	public String getGitUserPwd(){
-		return getProperty("main.git.pwd", "").trim();
+		return getProperty(ConfigParameterConstants.GIT_PASSWORD, "").trim();
 	}
 	
 	public boolean isScenarioInGit() {
@@ -362,7 +358,7 @@ public class Context {
 	
 	public Feedback getFeedback() {
 		if(this.feedback == null) {
-			String feedbackType = getProperty("main.feedback.type", "file").trim();
+			String feedbackType = getProperty(ConfigParameterConstants.FEEDBACK_TYPE, "file").trim();
 			if (feedbackType.equalsIgnoreCase("file")) {
 				this.feedback = new FeedbackFile(this);
 			} else if (feedbackType.equalsIgnoreCase("database")) {
@@ -391,9 +387,9 @@ public class Context {
 	}
 	
 	public String getFeedbackDbUrl(){
-		String host = getProperty("feedback.db.host", "");
-		String port = getProperty("feedback.db.port", "");
-		String dbname = getProperty("feedback.db.name", "");
+		String host = getProperty(ConfigParameterConstants.FEEDBACK_DB_HOST, "");
+		String port = getProperty(ConfigParameterConstants.FEEDBACK_DB_PORT, "");
+		String dbname = getProperty(ConfigParameterConstants.FEEDBACK_DB_NAME, "");
 		
 		String url = "jdbc:cubrid:" + host + ":" + port + ":" + dbname + ":::";
 		
@@ -401,13 +397,13 @@ public class Context {
 	}
 	
 	public String getFeedbackDbUser(){
-		String user = getProperty("feedback.db.user", "");
+		String user = getProperty(ConfigParameterConstants.FEEDBACK_DB_USER, "");
 		
 		return user;
 	}
 	
 	public String getFeedbackDbPwd(){
-		String pwd = getProperty("feedback.db.pwd", "");
+		String pwd = getProperty(ConfigParameterConstants.FEEDBACK_DB_PASSWORD, "");
 		
 		return pwd;
 	}
@@ -444,10 +440,6 @@ public class Context {
 		return this.testCaseSkipKey;
 	}
 
-	public boolean isSaveCorefile() {
-		return this.isSaveCorefile;
-	}
-	
 	public Date getStartDate() {
 		return this.startDate;
 	}
@@ -512,12 +504,12 @@ public class Context {
 		this.ctpBranchName = ctpBranchName;
 	}
 	
-	public String getEnableSkipUpgrade() {
-		return enableSkipUpgrade;
+	public String getEnableSkipUpdate() {
+		return enableSkipUpdate;
 	}
 
-	public void setEnableSkipUpgrade(String enableSkipUpgrade) {
-		this.enableSkipUpgrade = enableSkipUpgrade;
+	public void setEnableSkipUpgrade(String enableSkipUpdate) {
+		this.enableSkipUpdate = enableSkipUpdate;
 	}
 	
 	public String getMailNoticeTo() {
@@ -525,7 +517,7 @@ public class Context {
 	}
 
 	public String getMailNoticeCC() {
-		String cc = getProperty("main.stakeholder.mail", "").trim();
+		String cc = getProperty(ConfigParameterConstants.TEST_CC_EMAIL, "").trim();
 		if (CommonUtils.isEmpty(cc)) {
 			return com.navercorp.cubridqa.common.Constants.MAIL_FROM;
 		} else {

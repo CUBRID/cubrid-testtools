@@ -27,10 +27,10 @@
 package com.navercorp.cubridqa.shell.service;
 
 import java.io.File;
-
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.LocalInvoker;
 
@@ -47,17 +47,17 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 		super();
 		this.props = props;
 
-		String value = props.getProperty("main.service.acceptedhosts", "").trim();
+		String value = props.getProperty(ConfigParameterConstants.AGENT_WHITELIST_HOSTS, "").trim();
 		value = "," + CommonUtils.replace(value, " ", "") + ",";
 		this.requiredHosts = value;
 
-		value = props.getProperty("main.service.user", "").trim();
+		value = props.getProperty(ConfigParameterConstants.AGENT_LOGIN_USER, "").trim();
 		this.requiredUser = value;
 
-		value = props.getProperty("main.service.pwd", "").trim();
+		value = props.getProperty(ConfigParameterConstants.AGENT_LOGIN_PASSWORD, "").trim();
 		this.requiredPwd = value;
 
-		userHome = props.getProperty("main.service.userhome");
+		userHome = props.getProperty(ConfigParameterConstants.AGENT_LOGIN_HOME_DIR);
 //		if (userHome == null || userHome.trim().equals("")) {
 //			userHome = System.getenv("HOME");
 //		}		

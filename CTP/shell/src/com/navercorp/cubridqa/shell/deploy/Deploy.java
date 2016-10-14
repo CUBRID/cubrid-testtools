@@ -29,6 +29,8 @@ package com.navercorp.cubridqa.shell.deploy;
 import java.util.ArrayList;
 
 
+
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.main.Context;
@@ -49,7 +51,7 @@ public class Deploy {
 		this.context = context;
 		this.currEnvId = currEnvId;
 
-		this.host = context.getInstanceProperty(currEnvId, "ssh.host");
+		this.host = context.getInstanceProperty(currEnvId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 		envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId, host)) + "]";
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
