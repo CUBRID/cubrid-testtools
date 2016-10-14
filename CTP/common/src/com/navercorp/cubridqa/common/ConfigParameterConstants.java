@@ -42,6 +42,7 @@ public class ConfigParameterConstants {
 	public static final String LARGE_SPACE_DIR = "large_space_dir";
 	public static final String ENABLE_CHECK_DISK_SPACE_YES_OR_NO = "enable_check_disk_space_yn";
 	public static final String ENABLE_STATUS_TRACE_YES_OR_NO = "enable_status_trace_yn";
+	public static final String ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO = "enable_save_log_once_fail_yn";
 	public static final String DELETE_TESTCASE_AFTER_EACH_EXECUTION_YES_OR_NO = "delete_testcase_after_each_execution_yn";
 	public static final String TEST_CONTINUE_YES_OR_NO = "test_continue_yn";
 	public static final String TEST_PLATFORM = "test_platform";
@@ -65,7 +66,6 @@ public class ConfigParameterConstants {
 	public static final String COVERAGE_CONTROLLER_PORT = "coverage_controller_port";
 	public static final String COVERAGE_CONTROLLER_RESULT = "coverage_controller_result";
 	public static final String TEST_REBUILD_ENV_YES_OR_NO = "test_rebuild_env_yn";
-	public static final String TEST_FAILURE_BACKUP_YES_OR_NO = "test_failure_backup_yn";
 	public static final String TEST_BUILD_ID = "build_id";
 	public static final String TEST_BUILD_BITS = "build_bits";
 	
@@ -77,7 +77,7 @@ public class ConfigParameterConstants {
 	public static final String FEEDBACK_DB_NAME = "feedback_db_name";
 	public static final String FEEDBACK_DB_USER = "feedback_db_user";
 	public static final String FEEDBACK_DB_PASSWORD = "feedback_db_pwd";
-	public static final String FEEDBACK_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO = "feedback_skip_save_succ_testcase_yn";
+	public static final String FEEDBACK_DB_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO = "feedback_db_skip_save_succ_testcase_yn";
 	public static final String FEEDBACK_NOTICE_QAHOME_URL = "feedback_notice_qahome_url";
 
 }

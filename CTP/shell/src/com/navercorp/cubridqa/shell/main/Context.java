@@ -137,9 +137,7 @@ public class Context {
 		}
 		
 		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (Constants.ENV_CTP_HOME_KEY);
-		
 		this.cleanTestCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TESTCASE_UPDATE_YES_OR_NO, "false"));
-		 
 		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
 		
 		this.testCaseSkipKey = getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_BY_MACRO, "").trim().toUpperCase();
@@ -154,15 +152,15 @@ public class Context {
 		this.enableCheckDiskSpace = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
 		this.mailNoticeTo = getProperty(ConfigParameterConstants.TEST_OWNER_EMAIL, "").trim();
 		
-		this.enableSaveNormalErrorLog = getProperty(ConfigParameterConstants.TEST_FAILURE_BACKUP_YES_OR_NO, "FALSE").trim().toUpperCase().equals("TRUE");        
+		this.enableSaveNormalErrorLog = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO, "FALSE").trim());        
       
-		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TEST_CONTINUE_YES_OR_NO, "false"), false);
+		this.isContinueMode = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TEST_CONTINUE_YES_OR_NO, "false").trim());
 		this.cubridPackageUrl = getProperty(ConfigParameterConstants.CUBRID_DOWNLOAD_URL);
 
 		this.serviceProtocolType = getProperty(ConfigParameterConstants.AGENT_PROTOCOL, "ssh").trim().toLowerCase();
 		this.enableSkipUpdate = getPropertyFromEnv(ConfigParameterConstants.CTP_SKIP_UPDATE, "1");
 		this.ctpBranchName = getPropertyFromEnv(ConfigParameterConstants.CTP_BRANCH_NAME, "master");
-		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.FEEDBACK_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO, "false"));
+		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.FEEDBACK_DB_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO, "false").trim());
 		this.testCategory = getProperty(ConfigParameterConstants.TEST_CATEGORY, "shell").trim();
     }
 	
@@ -295,7 +293,7 @@ public class Context {
 	
 	public boolean needDeleteTestCaseAfterTest()
 	{
-		return getProperty(ConfigParameterConstants.DELETE_TESTCASE_AFTER_EACH_EXECUTION_YES_OR_NO, "false").trim().toLowerCase().equals("true");
+		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.DELETE_TESTCASE_AFTER_EACH_EXECUTION_YES_OR_NO, "false").trim());
 	}
 	
 	public void setCubridPackageUrl(String cubridPackageUrl) {
