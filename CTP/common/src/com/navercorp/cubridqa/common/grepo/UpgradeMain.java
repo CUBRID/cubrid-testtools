@@ -89,9 +89,9 @@ public class UpgradeMain {
 			return;
 		}
 
-		boolean skipUpgrade = CommonUtils.convertBoolean(CommonUtils.getSystemProperty("SKIP_UPGRADE", "FALSE", null), false);
+		boolean skipUpgrade = CommonUtils.convertBoolean(CommonUtils.getSystemProperty("CTP_SKIP_UPDATE", "FALSE", null), false);
 		if (skipUpgrade) {
-			System.out.println("[INFO] SKIP UPGRADE");
+			System.out.println("[INFO] SKIP TO UPDATE");
 			return;
 		}
 

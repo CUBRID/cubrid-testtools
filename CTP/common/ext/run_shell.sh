@@ -111,12 +111,12 @@ function run_shell_legacy()
     category=$BUILD_SCENARIOS
     cd $HOME/cubrid_shell_fm
     sh upgrade.sh
-    sh run.sh -Dtest_category=$category -Dcubrid_install_role=$role -Dcubrid_additional_download_url=$coverage_collaborate_url -Dcoverage_controller_ip=$coverage_controller_ip -Dcoverage_controller_user=$coverage_controller_user -Dcoverage_controller_pwd=$coverage_controller_pwd -Dcoverage_controller_result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dfeedback_type=$feedback_type";fi` $url false
+    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false
     cd -
 }
 
 
-function run_shell_lagacy_continue()
+function run_shell_legacy_continue()
 {
     cd $HOME/cubrid_shell_fm
     #execute testing
@@ -129,7 +129,7 @@ if [ "$is_continue_mode" == "YES" ];then
    if [ "${BUILD_IS_FROM_GIT}" == "1" ];then
 	run_shell_continue
    else
-	run_shell_lagacy_continue
+	run_shell_legacy_continue
    fi
 else
    if [ "${BUILD_IS_FROM_GIT}" == "1" ]; then

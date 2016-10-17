@@ -201,7 +201,7 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onStopEnvEvent(String envIdentify) {
 		String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
-		String host = context.getInstanceProperty(envIdentify, "ssh.host");
+		String host = context.getInstanceProperty(envIdentify, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 		
 		if (role.indexOf("coverage") != -1) {
 			collectCoverageOnOneNode(this.context, envIdentify, host);

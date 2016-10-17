@@ -32,14 +32,14 @@ then
 fi
 
 function read_property {
-	awk -F '=' "/$1/ {print \$2}" $CTP_HOME/conf/dailyqa.conf|tr -d '\r'
+	awk -F '=' "/$1/ {print \$2}" $CTP_HOME/conf/common.conf|tr -d '\r'
 }
 
-export KEY_SSH_PWD_DEFAULT=`read_property 'ssh.pwd.default'`
-export KEY_SSH_PORT_DEFAULT=`read_property 'ssh.port.default'`
-export KEY_GIT_PWD_DEFAULT=`read_property 'git.pwd'`
-export KEY_MAIL_FROM_NICKNAME=`read_property 'mail.from.nickname'`
-export KEY_MAIL_FROM_ADDRESS=`read_property 'mail.from.address'`
+export KEY_SSH_PWD_DEFAULT=`read_property 'default_ssh_pwd'`
+export KEY_SSH_PORT_DEFAULT=`read_property 'default_ssh_port'`
+export KEY_GIT_PWD_DEFAULT=`read_property 'git_pwd'`
+export KEY_MAIL_FROM_NICKNAME=`read_property 'mail_from_nickname'`
+export KEY_MAIL_FROM_ADDRESS=`read_property 'mail_from_address'`
 
 export PATH=$JAVA_HOME/bin:${CTP_HOME}/common/script:$PATH
 chmod u+x ${CTP_HOME}/common/script/*

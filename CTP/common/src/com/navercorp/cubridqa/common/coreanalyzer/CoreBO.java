@@ -46,7 +46,7 @@ public class CoreBO {
 		
 		props = com.navercorp.cubridqa.common.Constants.COMMON_DAILYQA_CONF;
 
-		Class.forName(props.getProperty("dailydb.driver"));
+		Class.forName(props.getProperty("qahome_db_driver"));
 	}
 
 	public void insertCoreIssue(IssueBean bean) throws SQLException {
@@ -207,9 +207,9 @@ public class CoreBO {
 	}
 
 	private Connection getConnection() throws SQLException {
-		String jdbcUrl = props.getProperty("dailydb.url");
-		String jdbcUser = props.getProperty("dailydb.user");
-		String jdbcPwd = props.getProperty("dailydb.pwd");
+		String jdbcUrl = props.getProperty("qahome_db_url");
+		String jdbcUser = props.getProperty("qahome_db_user");
+		String jdbcPwd = props.getProperty("qahome_db_pwd");
 		Connection conn = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPwd);
 		return conn;
 	}

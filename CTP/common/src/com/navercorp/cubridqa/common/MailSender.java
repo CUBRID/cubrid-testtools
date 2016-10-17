@@ -63,7 +63,7 @@ public class MailSender {
 		
 		Properties props = Constants.COMMON_DAILYQA_CONF;
 		
-		InternetAddress from = new InternetAddress(props.getProperty("mail.from.address"), props.getProperty("mail.from.nickname"));
+		InternetAddress from = new InternetAddress(props.getProperty("mail_from_address"), props.getProperty("mail_from_nickname"));
 		String dearContent = "";
 
 		CommandLineParser parser = null;
