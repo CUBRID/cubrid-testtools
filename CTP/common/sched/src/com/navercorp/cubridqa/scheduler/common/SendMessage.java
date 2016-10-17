@@ -58,9 +58,9 @@ public class SendMessage {
 
 	public SendMessage(Properties props) {
 		this.props = props;
-		String user = props.getProperty("activemq.user");
-		String pwd = props.getProperty("activemq.pwd");
-		String url = props.getProperty("activemq.url");
+		String user = props.getProperty("activemq_user");
+		String pwd = props.getProperty("activemq_pwd");
+		String url = props.getProperty("activemq_url");
 		
 		this.fact = new ActiveMQConnectionFactory(user, pwd, url);
 		this.messageList = new ArrayList<Message>();
@@ -340,9 +340,9 @@ public class SendMessage {
 	}
 	
 	private java.sql.Connection createConnection() throws SQLException {
-		String url = props.getProperty("dailydb.url");
-		String user = props.getProperty("dailydb.user");
-		String pwd = props.getProperty("dailydb.pwd");
+		String url = props.getProperty("qahome_db_url");
+		String user = props.getProperty("qahome_db_user");
+		String pwd = props.getProperty("qahome_db_pwd");
 		return DriverManager.getConnection(url, user, pwd);
 	}
 	

@@ -67,7 +67,7 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 		
 		File userHomeFile = new File(userHome);
 		if (userHomeFile.exists() == false) {
-			throw new Exception("Not found " + userHomeFile.getAbsolutePath() + ". Please check 'main.service.userhome' property");
+			throw new Exception("Not found " + userHomeFile.getAbsolutePath() + ". Please check 'agent_login_home_dir' property");
 		}
 
 		userHomePureWin = userHome;

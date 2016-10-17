@@ -544,7 +544,7 @@ public class Test {
 		scripts.addCommand("`grep -E \"SKIP_CHECK_FATAL_ERROR\" " + this.testCaseFullName + " `");
 		scripts.addCommand("EOF");
 		
-		String excludedCoresByAssertLine = context.getProperty("main.testing.excluded_cores_by_assert_line");
+		String excludedCoresByAssertLine = context.getProperty("ignore_core_by_keywords");
 		if (excludedCoresByAssertLine != null && excludedCoresByAssertLine.trim().equals("") == false) {
 			scripts.addCommand("export EXCLUDED_CORES_BY_ASSERT_LINE=\"" + excludedCoresByAssertLine + "\"" );
 		}
@@ -554,7 +554,7 @@ public class Test {
 			try {
 				result = ssh.execute(scripts);
 			} catch (Exception e) {
-				String host = context.getInstanceProperty(currEnvId, "ssh.host");
+				String host = context.getInstanceProperty(currEnvId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 				addResultItem("NOK", "Runtime error. Fail to check more errors on main host " + host + ": " + e.getMessage());
 			}
 		}

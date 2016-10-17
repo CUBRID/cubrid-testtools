@@ -41,13 +41,13 @@ public class Constants {
 
 	public final static Properties COMMON_DAILYQA_CONF;
 	static {
-		COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY) + File.separator + "conf" + File.separator + "dailyqa.conf");
+		COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY) + File.separator + "conf" + File.separator + "common.conf");
 	}
 
 	public final static String MAIL_FROM;
 	static {
-		String nick = COMMON_DAILYQA_CONF.getProperty("mail.from.nickname", "").trim();
-		String mail = COMMON_DAILYQA_CONF.getProperty("mail.from.address", "").trim();
+		String nick = COMMON_DAILYQA_CONF.getProperty("mail_from_nickname", "").trim();
+		String mail = COMMON_DAILYQA_CONF.getProperty("mail_from_address", "").trim();
 		if (mail.indexOf("<") != -1) {
 			MAIL_FROM = mail;
 		} else {

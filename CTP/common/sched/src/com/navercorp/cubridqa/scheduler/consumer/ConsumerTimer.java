@@ -99,9 +99,9 @@ public class ConsumerTimer {
 
 	private java.sql.Connection createConnection() throws SQLException,
 			ClassNotFoundException {
-		String url = props.getProperty("dailydb.url");
-		String user = props.getProperty("dailydb.user");
-		String pwd = props.getProperty("dailydb.pwd");
+		String url = props.getProperty("qahome_db_url");
+		String user = props.getProperty("qahome_db_user");
+		String pwd = props.getProperty("qahome_db_pwd");
 		return DriverManager.getConnection(url, user, pwd);
 	}
 
