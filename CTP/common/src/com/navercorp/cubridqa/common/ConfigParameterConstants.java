@@ -47,6 +47,9 @@ public class ConfigParameterConstants {
 	public static final String TEST_CONTINUE_YES_OR_NO = "test_continue_yn";
 	public static final String TEST_PLATFORM = "test_platform";
 	public static final String TEST_CATEGORY = "test_category";
+	public static final String GIT_USER = "git_user";
+	public static final String GIT_PASSWORD = "git_pwd";
+	public static final String GIT_EMAIL = "git_email";
 	public static final String SVN_USER = "svn_user";
 	public static final String SVN_PASSWORD = "svn_pwd";
 	public static final String TEST_OWNER_EMAIL = "owner_email";

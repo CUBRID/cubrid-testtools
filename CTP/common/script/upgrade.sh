@@ -15,7 +15,7 @@ fi
 if [ "${CTP_SKIP_UPDATE}" ]; then
    skipUpgrade=${CTP_SKIP_UPDATE}
 fi
-export SKIP_UPGRADE=${skipUpgrade}
+export CTP_SKIP_UPDATE=${skipUpgrade}
 
 rm -rf ../.ctp/* >/dev/null 2>&1
 mkdir -p ../.ctp

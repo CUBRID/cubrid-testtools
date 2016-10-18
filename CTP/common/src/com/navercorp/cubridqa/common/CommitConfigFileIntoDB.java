@@ -51,7 +51,7 @@ public class CommitConfigFileIntoDB {
 		try {
 			Class.forName(driver);
 		} catch (Exception e) {
-			System.out.println("[ERROR] fail to load JDBC Driver, please refer to qahome_db_driver parameter in conf/dailyqa.conf file.");
+			System.out.println("[ERROR] fail to load JDBC Driver, please refer to qahome_db_driver parameter in conf/common.conf file.");
 		}
 	}
 
