@@ -27,6 +27,7 @@ package com.navercorp.cubridqa.ha_repl.deploy;
 import java.util.ArrayList;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.InstanceManager;
@@ -83,14 +84,14 @@ public class DeployNode {
 		GeneralScriptInput scripts = new GeneralScriptInput();
 		scripts.addCommand("cd ${CTP_HOME}/common/script");
 
-		String ctpBranchName = System.getenv("CTP_BRANCH_NAME");
+		String ctpBranchName = System.getenv(ConfigParameterConstants.CTP_BRANCH_NAME);
 		if (!CommonUtils.isEmpty(ctpBranchName)) {
 			scripts.addCommand("export CTP_BRANCH_NAME=" + ctpBranchName);
 		}
 		
-		String skipUpgrade = System.getenv("SKIP_UPGRADE");
+		String skipUpgrade = System.getenv(ConfigParameterConstants.CTP_SKIP_UPDATE);
 		if (!CommonUtils.isEmpty(ctpBranchName)) {
-			scripts.addCommand("export SKIP_UPGRADE=" + skipUpgrade);
+			scripts.addCommand("export CTP_SKIP_UPDATE=" + skipUpgrade);
 		}
 		scripts.addCommand("chmod u+x upgrade.sh");
 		scripts.addCommand("./upgrade.sh");

@@ -113,7 +113,12 @@ public class TestCaseSVN {
 			System.out.print("[ERROR] " + e.getMessage());
 			throw e;
 		}
-		System.out.println("UPDATE TEST CASES COMPLETE");
+		if(context.needCleanTestCase()){
+			System.out.println("UPDATE TEST CASES COMPLETE");
+		}else{
+			System.out.println("SKIP TEST CASES UPDATE");
+		}
+		
 		
 		context.getFeedback().onSvnUpdateStop(envIdentify);
  	}
