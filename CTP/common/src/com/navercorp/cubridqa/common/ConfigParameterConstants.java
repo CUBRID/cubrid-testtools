@@ -49,9 +49,6 @@ public class ConfigParameterConstants {
 	public static final String TEST_CATEGORY = "test_category";
 	public static final String SVN_USER = "svn_user";
 	public static final String SVN_PASSWORD = "svn_pwd";
-	public static final String GIT_USER = "git_user";
-	public static final String GIT_PASSWORD = "git_pwd";
-	public static final String GIT_EMAIL = "git_email";
 	public static final String TEST_OWNER_EMAIL = "owner_email";
 	public static final String TEST_CC_EMAIL = "cc_email";
 	public static final String AGENT_PROTOCOL = "agent_protocol";

@@ -39,9 +39,18 @@ public class Constants {
 
 	public final static String LINE_SEPARATOR = System.getProperty("line.separator");
 
-	public final static Properties COMMON_DAILYQA_CONF;
+	public static Properties COMMON_DAILYQA_CONF;
 	static {
-		COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY) + File.separator + "conf" + File.separator + "common.conf");
+		try {
+			COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils
+					.getEnvInFile(ENV_CTP_HOME_KEY)
+					+ File.separator
+					+ "conf"
+					+ File.separator + "common.conf");
+		} catch (Exception ex) {
+			System.out.println("=> Skip common properties initialation");
+			COMMON_DAILYQA_CONF = new Properties();
+		}
 	}
 
 	public final static String MAIL_FROM;
