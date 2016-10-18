@@ -45,29 +45,32 @@ public class Main {
 
 		Context context = new Context(configFilename);
 		if(CommonUtils.isEmpty(context.getTestCaseRoot())){
-			throw new Exception(
-					"[ERROR]: The parameter 'scenario' must be set correctly in " + configFilename + " !");
+			System.out.println("[ERROR]: The parameter 'scenario' must be set correctly in " + configFilename + " !");
+			System.out.println("QUIT");
+			System.exit(-1);
 		}
 		ArrayList<String> envList = context.getEnvList();
 		System.out.println("Available Env: " + envList);
 
 		if (context.getEnvList().size() == 0) {
-			throw new Exception(
-					"Not found any environment instance to test on it.");
+			System.out.println("[ERROR]: Not found any environment instance to test on it!");
+			System.out.println("QUIT");
+			System.exit(-1);
 		}
 
 		String cubridPackageUrl = context.getCubridPackageUrl();
 
 		System.out.println("Continue Mode: " + context.isContinueMode());
-		System.out.println("Test Build: " + cubridPackageUrl);
+		
 
 		if (!CommonUtils.isEmpty(cubridPackageUrl)) {
 			if(!CommonUtils.isURLAvailable(cubridPackageUrl)){
 				System.out.println();
 				System.out.println("[ERROR]: Please confirm " + cubridPackageUrl + " url is available!");
-				System.exit(1);
+				System.out.println("QUIT");
+				System.exit(-1);
 			}
-			
+			System.out.println("Test Build: " + cubridPackageUrl);
 			context.setTestBuild(CommonUtils.getBuildId(context
 					.getCubridPackageUrl()));
 			context.setVersion(CommonUtils.getBuildBits(context
@@ -79,6 +82,11 @@ public class Main {
 
 			SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId); 
 			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
+			if(CommonUtils.isEmpty(buildInfo)){
+				System.out.println("[ERROR]: Please confirm your build installation for local test!");
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
 			context.setTestBuild(CommonUtils.getBuildId(buildInfo));
 			context.setVersion(CommonUtils.getBuildBits(buildInfo));
 			context.setIsNewBuildNumberSystem(CommonUtils.isNewBuildNumberSystem(context.getTestBuild()));

@@ -26,6 +26,11 @@
 
 package com.navercorp.cubridqa.shell.result;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -84,6 +89,8 @@ public class FeedbackFile implements Feedback {
 
 	@Override
 	public void onTaskStopEvent() {
+		showTestResult();
+		
 		long taskStopTime = System.currentTimeMillis();
 		println("[TEST STOP] Current Time is " + new Date(), "Elapse Time:" + ((taskStopTime - this.taskStartTime)));
 		feedbackLog.close();
@@ -92,6 +99,73 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void setTotalTestCase(int tbdNum, int macroSkippedNum, int tempSkippedNum) {
 		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
+	}
+	
+	public void showTestResult(){
+		File file = new File(this.logName);
+		if(!file.exists()) {
+			System.out.println("Success num: 0, Fail_num: 0, Skipped: 0, Total Scenario: 0");
+			return;
+		}
+		int totalOkCount = 0;
+		int totalNokCount = 0;
+		int totalSkipCount = 0;
+		LineNumberReader lineReader = null;
+		InputStreamReader reader = null;
+		FileInputStream fis = null;
+		
+		try {
+			fis = new FileInputStream(file);
+			reader = new InputStreamReader(fis, "UTF-8");
+
+			lineReader = new LineNumberReader(reader);
+			String line;
+
+			while ((line = lineReader.readLine()) != null) {
+				if (line.trim().equals(""))
+					continue;
+				
+				if(line.trim().indexOf("[OK]") != -1){
+					totalOkCount++;
+				}else if(line.trim().indexOf("[NOK]") != -1){
+					totalNokCount++;
+				}else if(line.trim().indexOf("[[SKIP_BY_") != -1){
+					totalSkipCount++;
+				}
+			}
+			lineReader.close();
+			reader.close();
+			fis.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}finally{
+			if(lineReader!=null){
+				try {
+					lineReader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			if(reader!=null){
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			if(fis!=null){
+				try {
+					fis.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			System.out.println("Success num: " + totalOkCount + ", Fail_num: " + totalNokCount + ", Skipped: " + totalSkipCount + ", Total Scenario: "
+					+ (totalOkCount + totalNokCount + totalSkipCount));
+		}
 	}
 
 	@Override
