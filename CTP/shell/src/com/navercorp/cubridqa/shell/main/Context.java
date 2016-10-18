@@ -312,18 +312,6 @@ public class Context {
 		return " --username " + user + " --password " + pwd + " --non-interactive "; 
 	}
 	
-	public String getGitUserName(){
-		return getProperty(ConfigParameterConstants.GIT_USER, "").trim();
-	}
-	
-	public String getGitUserEmail(){
-		return getProperty(ConfigParameterConstants.GIT_EMAIL, "").trim();
-	}
-	
-	public String getGitUserPwd(){
-		return getProperty(ConfigParameterConstants.GIT_PASSWORD, "").trim();
-	}
-	
 	public boolean isScenarioInGit() {
 		String git = getTestCaseBranch();
 		return git != null && git.trim().length() > 0;

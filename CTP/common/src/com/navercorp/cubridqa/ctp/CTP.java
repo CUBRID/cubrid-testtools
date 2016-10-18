@@ -49,7 +49,8 @@ public class CTP {
 	private static Options OPTIONS = new Options();
 	static {
 		OPTIONS.addOption("c", "config", true, "provide a configuration file");
-		OPTIONS.addOption(null, "interactive", false, "interactive mode to run single test case or cases in a folder");
+		OPTIONS.addOption(null, "interactive", false,
+				"interactive mode to run single test case or cases in a folder");
 		OPTIONS.addOption("h", "help", false, "show help");
 		OPTIONS.addOption("v", "version", false, "show version");
 	}
@@ -95,7 +96,8 @@ public class CTP {
 			return;
 		}
 
-		String configFilename = CommonUtils.getFixedPath(cmd.getOptionValue("c"));
+		String configFilename = CommonUtils.getFixedPath(cmd
+				.getOptionValue("c"));
 
 		@SuppressWarnings("unchecked")
 		List<String> taskList = cmd.getArgList();
@@ -105,7 +107,8 @@ public class CTP {
 		ComponentEnum component;
 
 		try {
-			component = ComponentEnum.valueOf(taskList.get(0).trim().toUpperCase());
+			component = ComponentEnum.valueOf(taskList.get(0).trim()
+					.toUpperCase());
 		} catch (Exception e) {
 			showHelp(e.getMessage());
 			return;
@@ -129,53 +132,79 @@ public class CTP {
 			taskLabel = task.toUpperCase();
 			startDate = new java.util.Date();
 			System.out.println();
-			System.out.println("====================================== " + taskLabel + " ==========================================");
+			System.out
+					.println("====================================== "
+							+ taskLabel
+							+ " ==========================================");
 			try {
 				try {
-					component = ComponentEnum.valueOf(task.trim().toUpperCase());
+					component = ComponentEnum
+							.valueOf(task.trim().toUpperCase());
 				} catch (Exception e) {
 					showHelp(e.getMessage());
 					continue;
 				}
 
-				System.out.println("[" + taskLabel + "] TEST STARTED (" + startDate + ")");
+				System.out.println("[" + taskLabel + "] TEST STARTED ("
+						+ startDate + ")");
 				System.out.println();
 				switch (component) {
 				case SQL:
-					executeSQL(getConfigData(taskLabel, configFilename, "sql"), "sql", interactiveMode, false);
+					executeSQL(getConfigData(taskLabel, configFilename, "sql"),
+							"sql", interactiveMode, false);
 					break;
 				case MEDIUM:
-					executeSQL(getConfigData(taskLabel, configFilename, "medium"), "medium", interactiveMode, false);
+					executeSQL(
+							getConfigData(taskLabel, configFilename, "medium"),
+							"medium", interactiveMode, false);
 					break;
 				case KCC:
-					executeSQL(getConfigData(taskLabel, configFilename, "kcc"), "kcc", interactiveMode, false);
+					executeSQL(getConfigData(taskLabel, configFilename, "kcc"),
+							"kcc", interactiveMode, false);
 					break;
 				case NEIS05:
-					executeSQL(getConfigData(taskLabel, configFilename, "neis05"), "neis05", interactiveMode, false);
+					executeSQL(
+							getConfigData(taskLabel, configFilename, "neis05"),
+							"neis05", interactiveMode, false);
 					break;
 				case NEIS08:
-					executeSQL(getConfigData(taskLabel, configFilename, "neis08"), "neis08", interactiveMode, false);
+					executeSQL(
+							getConfigData(taskLabel, configFilename, "neis08"),
+							"neis08", interactiveMode, false);
 					break;
 				case SQL_BY_CCI:
-					executeSQL(getConfigData(taskLabel, configFilename, "sql_by_cci"), "sql_by_cci", interactiveMode, true);
+					executeSQL(
+							getConfigData(taskLabel, configFilename,
+									"sql_by_cci"), "sql_by_cci",
+							interactiveMode, true);
 					break;
 				case SHELL:
-					executeShell(getConfigData(taskLabel, configFilename, "shell"), "shell");
+					executeShell(
+							getConfigData(taskLabel, configFilename, "shell"),
+							"shell");
 					break;
 				case ISOLATION:
-					executeIsolation(getConfigData(taskLabel, configFilename, "isolation"), "isolation");
+					executeIsolation(
+							getConfigData(taskLabel, configFilename,
+									"isolation"), "isolation");
 					break;
 				case HA_REPL:
-					executeHaRepl(getConfigData(taskLabel, configFilename, "ha_repl"), "ha_repl");
+					executeHaRepl(
+							getConfigData(taskLabel, configFilename, "ha_repl"),
+							"ha_repl");
 					break;
 				case JDBC:
-					executeJdbc(getConfigData(taskLabel, configFilename, "jdbc"), "jdbc");
+					executeJdbc(
+							getConfigData(taskLabel, configFilename, "jdbc"),
+							"jdbc");
 					break;
 				case UNITTEST:
 					if (CommonUtils.isEmpty(configFilename)) {
 						executeUnitTest(null, "unittest");
 					} else {
-						executeUnitTest(getConfigData(taskLabel, configFilename, "unittest"), "unittest");
+						executeUnitTest(
+								getConfigData(taskLabel, configFilename,
+										"unittest"), "unittest");
 					}
 					break;
 				}
@@ -183,101 +212,130 @@ public class CTP {
 				endDate = new java.util.Date();
 				elapseTime = (long) ((endDate.getTime() - startDate.getTime()) / 1000.0);
 				if (!interactiveMode) {
-					System.out.println("[" + taskLabel + "] TEST END (" + endDate + ")");
-					System.out.println("[" + taskLabel + "] ELAPSE TIME: " + elapseTime + " seconds");
+					System.out.println("[" + taskLabel + "] TEST END ("
+							+ endDate + ")");
+					System.out.println("[" + taskLabel + "] ELAPSE TIME: "
+							+ elapseTime + " seconds");
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.out.println("[" + taskLabel + "] ERROR: " + e.getMessage());
+				System.out.println("[" + taskLabel + "] ERROR: "
+						+ e.getMessage());
 			}
 		}
 	}
 
-	private static void executeSQL(IniData config, String suite, boolean interactiveMode, boolean useCCI) throws IOException {
-		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
-		boolean enableMemoryLeak = CommonUtils.convertBoolean(config.get("sql", "enable_memory_leak"));
-		
-		String runStmt = "sh ${CTP_HOME}/sql/bin/" + (enableMemoryLeak ? "run_memory.sh" : "run.sh") + " -s " + suite + " -f " + configFilePath;
-		
-		if(interactiveMode) {
-			addContScript("export sql_interface_type=" + (useCCI ? "cci" : "jdbc"));
+	private static void executeSQL(IniData config, String suite,
+			boolean interactiveMode, boolean useCCI) throws IOException {
+		String configFilePath = CommonUtils.getLinuxStylePath(config
+				.getFilename());
+		boolean enableMemoryLeak = CommonUtils.convertBoolean(config.get("sql",
+				"enable_memory_leak"));
+
+		String runStmt = "sh ${CTP_HOME}/sql/bin/"
+				+ (enableMemoryLeak ? "run_memory.sh" : "run.sh") + " -s "
+				+ suite + " -f " + configFilePath;
+
+		if (interactiveMode) {
+			addContScript("export sql_interface_type="
+					+ (useCCI ? "cci" : "jdbc"));
 			addContScript("export sql_interactive=yes");
 			addContScript(runStmt);
 		} else {
-			LocalInvoker.exec("export sql_interface_type=" + (useCCI ? "cci" : "jdbc") + "; " + runStmt, CommonUtils.getShellType(false), true);
-		}		
+			LocalInvoker.exec("export sql_interface_type="
+					+ (useCCI ? "cci" : "jdbc") + "; " + runStmt,
+					CommonUtils.getShellType(false), true);
+		}
 	}
-	
-	private static void executeJdbc(IniData config, String suite) throws IOException {
-		String configFilePath = CommonUtils.getLinuxStylePath(config.getFilename());
-		LocalInvoker.exec("sh ${CTP_HOME}/jdbc/bin/run.sh " + configFilePath, CommonUtils.getShellType(false), true);
+
+	private static void executeJdbc(IniData config, String suite)
+			throws IOException {
+		String configFilePath = CommonUtils.getLinuxStylePath(config
+				.getFilename());
+		LocalInvoker.exec("sh ${CTP_HOME}/jdbc/bin/run.sh " + configFilePath,
+				CommonUtils.getShellType(false), true);
 	}
 
 	private static void executeShell(IniData config, String suite) {
-		String jar = ctpHome + File.separator + "shell" + File.separator + "lib" + File.separator + "cubridqa-shell.jar";
+		String jar = ctpHome + File.separator + "shell" + File.separator
+				+ "lib" + File.separator + "cubridqa-shell.jar";
 		try {
 			URL url = new URL("file:" + jar);
-			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
-			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.shell.main.Main");
+			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url },
+					Thread.currentThread().getContextClassLoader());
+			Class<?> clz = clzLoader
+					.loadClass("com.navercorp.cubridqa.shell.main.Main");
 			Method m = clz.getDeclaredMethod("exec", String.class);
 			String configFilename;
 			if (CommonUtils.isWindowsPlatform()) {
-				configFilename = CommonUtils.getWindowsStylePath(config.getFilename());
+				configFilename = CommonUtils.getWindowsStylePath(config
+						.getFilename());
 			} else {
 				configFilename = config.getFilename();
-			}			
+			}
 			m.invoke(clz, configFilename);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void executeIsolation(IniData config, String suite) {
-		String jar = ctpHome + File.separator + "isolation" + File.separator + "lib" + File.separator + "cubridqa-isolation.jar";
+		String jar = ctpHome + File.separator + "isolation" + File.separator
+				+ "lib" + File.separator + "cubridqa-isolation.jar";
 		try {
 			URL url = new URL("file:" + jar);
-			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
-			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.isolation.Main");
+			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url },
+					Thread.currentThread().getContextClassLoader());
+			Class<?> clz = clzLoader
+					.loadClass("com.navercorp.cubridqa.isolation.Main");
 			Method m = clz.getDeclaredMethod("exec", String.class);
 			String configFilename;
 			if (CommonUtils.isWindowsPlatform()) {
-				configFilename = CommonUtils.getWindowsStylePath(config.getFilename());
+				configFilename = CommonUtils.getWindowsStylePath(config
+						.getFilename());
 			} else {
 				configFilename = config.getFilename();
-			}			
+			}
 			m.invoke(clz, configFilename);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void executeHaRepl(IniData config, String suite) {
-		String jar = ctpHome + File.separator + "ha_repl" + File.separator + "lib" + File.separator + "cubridqa-ha_repl.jar";
+		String jar = ctpHome + File.separator + "ha_repl" + File.separator
+				+ "lib" + File.separator + "cubridqa-ha_repl.jar";
 		try {
 			URL url = new URL("file:" + jar);
-			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
-			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.ha_repl.Main");
+			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url },
+					Thread.currentThread().getContextClassLoader());
+			Class<?> clz = clzLoader
+					.loadClass("com.navercorp.cubridqa.ha_repl.Main");
 			Method m = clz.getDeclaredMethod("exec", String.class);
 			String configFilename;
 			if (CommonUtils.isWindowsPlatform()) {
-				configFilename = CommonUtils.getWindowsStylePath(config.getFilename());
+				configFilename = CommonUtils.getWindowsStylePath(config
+						.getFilename());
 			} else {
 				configFilename = config.getFilename();
-			}			
+			}
 			m.invoke(clz, configFilename);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void executeUnitTest(IniData config, String suite) {
-		String jar = ctpHome + File.separator + "shell" + File.separator + "lib" + File.separator + "cubridqa-shell.jar";
+		String jar = ctpHome + File.separator + "shell" + File.separator
+				+ "lib" + File.separator + "cubridqa-shell.jar";
 		System.setProperty("TEST_TYPE", "unittest");
 		System.setProperty("TEST_CATEGORY", "unittest");
 		try {
 			URL url = new URL("file:" + jar);
-			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
-			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.shell.main.GeneralLocalTest");
+			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url },
+					Thread.currentThread().getContextClassLoader());
+			Class<?> clz = clzLoader
+					.loadClass("com.navercorp.cubridqa.shell.main.GeneralLocalTest");
 			Method m = clz.getDeclaredMethod("exec", String.class);
 
 			if (config == null) {
@@ -285,7 +343,8 @@ public class CTP {
 			} else {
 				String configFilename;
 				if (CommonUtils.isWindowsPlatform()) {
-					configFilename = CommonUtils.getWindowsStylePath(config.getFilename());
+					configFilename = CommonUtils.getWindowsStylePath(config
+							.getFilename());
 				} else {
 					configFilename = config.getFilename();
 				}
@@ -296,15 +355,18 @@ public class CTP {
 		}
 	}
 
-	private static IniData getConfigData(String taskLable, String configFilename, String suite) throws Exception {
+	private static IniData getConfigData(String taskLable,
+			String configFilename, String suite) throws Exception {
 		File configFile;
 		if (configFilename == null) {
-			configFile = new File(CommonUtils.concatFile(CommonUtils.concatFile(ctpHome, "conf"), suite + ".conf"));
+			configFile = new File(CommonUtils.concatFile(
+					CommonUtils.concatFile(ctpHome, "conf"), suite + ".conf"));
 		} else {
 			configFile = new File(configFilename);
 		}
 
-		System.out.println("[" + taskLable + "] CONFIG FILE: " + configFile.getCanonicalPath());
+		System.out.println("[" + taskLable + "] CONFIG FILE: "
+				+ configFile.getCanonicalPath());
 		if (configFile.exists() == false) {
 			throw new Exception("Not found configuration file");
 		}
@@ -312,10 +374,13 @@ public class CTP {
 		IniData config = null;
 		try {
 			config = new IniData(configFile);
-			System.out.println(config);
+			System.out.println((config != null && config.toString().indexOf(
+					"[?]") != -1) ? config.toString()
+					.replace("[?]", "") : config);
 			System.out.println("----------END OF FILE----------");
 		} catch (Exception e) {
-			throw new Exception("Fail to read configuration file. Please check whether it exists or not.");
+			throw new Exception(
+					"Fail to read configuration file. Please check whether it exists or not.");
 		}
 		return config;
 	}
@@ -335,11 +400,33 @@ public class CTP {
 		System.out.println("For example: ");
 		System.out.println("	ctp.sh sql -c conf/sql.conf");
 		System.out.println("	ctp.sh medium -c conf/medium.conf");
-		System.out.println("	ctp.sh sql		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "sql.conf");
-		System.out.println("	ctp.sh medium		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "medium.conf");
-		System.out.println("	ctp.sh sql medium  	#run both sql and medium with default configuration");
+		System.out.println("	ctp.sh shell -c conf/shell.conf");
+		System.out.println("	ctp.sh ha_repl -c conf/ha_repl.conf");
+		System.out.println("	ctp.sh isolation -c conf/isolation.conf");
+		System.out.println("	ctp.sh jdbc -c conf/jdbc.conf");
+		System.out.println("	ctp.sh sql		#use default configuration file: "
+				+ ctpHome + File.separator + "conf" + File.separator
+				+ "sql.conf");
+		System.out.println("	ctp.sh medium		#use default configuration file: "
+				+ ctpHome + File.separator + "conf" + File.separator
+				+ "medium.conf");
+		System.out.println("	ctp.sh shell		#use default configuration file: "
+				+ ctpHome + File.separator + "conf" + File.separator
+				+ "shell.conf");
+		System.out.println("	ctp.sh ha_repl		#use default configuration file: "
+				+ ctpHome + File.separator + "conf" + File.separator
+				+ "ha_repl.conf");
+		System.out.println("	ctp.sh isolation		#use default configuration file: "
+				+ ctpHome + File.separator + "conf" + File.separator
+				+ "isolation.conf");
+		System.out.println("	ctp.sh jdbc		#use default configuration file: "
+				+ ctpHome + File.separator + "conf" + File.separator
+				+ "jdbc.conf");
+		System.out
+				.println("	ctp.sh sql medium  	#run both sql and medium with default configuration");
 		System.out.println("	ctp.sh medium medium 	#execute medium twice");
-		System.out.println("	ctp.sh webconsole start	#start web console to view sql test results");
+		System.out
+				.println("	ctp.sh webconsole start	#start web console to view sql test results");
 
 		System.out.println();
 	}
@@ -350,26 +437,30 @@ public class CTP {
 			System.out.println();
 			return;
 		}
-		String jar = ctpHome + File.separator + "sql" + File.separator + "lib" + File.separator + "cubridqa-cqt.jar";
+		String jar = ctpHome + File.separator + "sql" + File.separator + "lib"
+				+ File.separator + "cubridqa-cqt.jar";
 		try {
 			URL url = new URL("file:" + jar);
-			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
-			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.cqt.webconsole.Starter");
-			Method m = clz.getDeclaredMethod("exec", String.class, String.class, String.class);
-			String webRoot = ctpHome + File.separator + "sql" + File.separator + "webconsole";
-			String webconsoleConf = ctpHome + File.separator + "conf" + File.separator + "webconsole.conf";
+			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url },
+					Thread.currentThread().getContextClassLoader());
+			Class<?> clz = clzLoader
+					.loadClass("com.navercorp.cubridqa.cqt.webconsole.Starter");
+			Method m = clz.getDeclaredMethod("exec", String.class,
+					String.class, String.class);
+			String webRoot = ctpHome + File.separator + "sql" + File.separator
+					+ "webconsole";
+			String webconsoleConf = ctpHome + File.separator + "conf"
+					+ File.separator + "webconsole.conf";
 			m.invoke(clz, webconsoleConf, webRoot, cmds.get(1));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-
-
 	private static void showVersion() {
 		System.out.println("CUBRID Test Program (CTP) " + Version.getVersion());
 	}
-	
+
 	private static void addContScript(String stmt) {
 		if (stmt == null || stmt.trim().equals("")) {
 			return;

@@ -65,6 +65,9 @@ public class DeployOneNode {
 		if(context.isWindows()) {
 			String ret="";
 			deploy_build_on_windows();
+			if(!checkBuildInstallStatus()){
+				log.println("[ERROR] please check your build installation!");
+			}
 			//update CUBRID ports
 			updateCUBRIDConfigurations();
 			
@@ -79,11 +82,36 @@ public class DeployOneNode {
 			}
 		} else {
 			deploy_build_on_linux();
+			if(!checkBuildInstallStatus()){
+				log.println("[ERROR] please check your build installation!");
+			}
 			//update CUBRID ports
 			updateCUBRIDConfigurations();
 			backup_linux();
 		}
 		
+	}
+	
+	
+	private boolean checkBuildInstallStatus(){
+		boolean isOk = false; 
+		log.println("============= Check Build Installation Status ==================");
+		ShellScriptInput scripts = new ShellScriptInput();
+		scripts.addCommand("cd $CUBRID/bin");
+		scripts.addCommand("cubrid_rel ");
+		String result;
+		try {
+			result = ssh.execute(scripts);
+			if(result!=null && result.indexOf(this.context.getTestBuild()) != -1){
+				isOk = true;
+			}
+			
+			log.println(result);
+		} catch (Exception e) {
+			log.print("[ERROR] " + e.getMessage());
+		}
+		
+		return isOk;
 	}
 
 	private void deploy_build_on_windows() {
@@ -219,6 +247,8 @@ public class DeployOneNode {
 			if(!CommonUtils.isEmpty(cubridPortId)){
 				scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
 			}
+		}else{
+			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridBrokerSHMId + " $CUBRID/conf/cubrid_broker.conf");
 		}
 		
 		String result="";

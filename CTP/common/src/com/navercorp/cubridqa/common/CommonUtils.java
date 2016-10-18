@@ -37,6 +37,7 @@ import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.math.BigInteger;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -196,6 +197,24 @@ public class CommonUtils {
 		return p.replace('/', File.separatorChar);
 	}
 
+	public static boolean checKURLIsAvailable(String urlStr){
+		if (isEmpty(urlStr))
+			return false;
+
+		boolean res = false;
+
+		URL url;
+		try {
+			url = new URL(urlStr);
+			InputStream in = url.openStream();
+			res = true;
+		} catch (Exception e1) {
+			res = false;
+			url = null;
+		}
+
+		return res;
+	}
 	public static String getFileContent(String filename) throws IOException {
 		File file = new File(filename);
 		if (!file.exists()) {
