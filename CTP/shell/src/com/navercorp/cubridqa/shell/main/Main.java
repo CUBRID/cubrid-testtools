@@ -46,7 +46,7 @@ public class Main {
 		Context context = new Context(configFilename);
 		if(CommonUtils.isEmpty(context.getTestCaseRoot())){
 			throw new Exception(
-					"[ERROR]: scenario is null!");
+					"[ERROR]: The parameter 'scenario' must be set correctly in " + configFilename + " !");
 		}
 		ArrayList<String> envList = context.getEnvList();
 		System.out.println("Available Env: " + envList);
@@ -62,9 +62,9 @@ public class Main {
 		System.out.println("Test Build: " + cubridPackageUrl);
 
 		if (!CommonUtils.isEmpty(cubridPackageUrl)) {
-			if(!CommonUtils.checKURLIsAvailable(cubridPackageUrl)){
+			if(!CommonUtils.isURLAvailable(cubridPackageUrl)){
 				System.out.println();
-				System.out.println("[ERROR] Please confirm your build url is available!");
+				System.out.println("[ERROR]: Please confirm " + cubridPackageUrl + " url is available!");
 				System.exit(1);
 			}
 			

@@ -197,20 +197,26 @@ public class CommonUtils {
 		return p.replace('/', File.separatorChar);
 	}
 
-	public static boolean checKURLIsAvailable(String urlStr){
+	public static boolean isURLAvailable(String urlStr){
 		if (isEmpty(urlStr))
 			return false;
-
 		boolean res = false;
-
 		URL url;
+		InputStream in = null;
 		try {
 			url = new URL(urlStr);
-			InputStream in = url.openStream();
+			in = url.openStream();
 			res = true;
 		} catch (Exception e1) {
 			res = false;
 			url = null;
+		}finally{
+			try {
+				if (in != null)
+					in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 		return res;

@@ -48,7 +48,7 @@ public class Constants {
 					+ "conf"
 					+ File.separator + "common.conf");
 		} catch (Exception ex) {
-			System.out.println("[WARNING]: common.conf does not exist!");
+			System.out.println("=> Skip common properties initialation");
 			COMMON_DAILYQA_CONF = new Properties();
 		}
 	}

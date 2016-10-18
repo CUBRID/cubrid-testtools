@@ -165,8 +165,11 @@ function InstallBuildBySh()
     wget -t 3 -T 120 $build_url
     if [ $? -eq 0 ]
     then
-	chmod 777 $buildFile
+		chmod 777 $buildFile
+    else
+    	echo "[ERROR]: Please confirm build url ${build_url}"
     fi
+    
     cubrid service stop >/dev/null 2>&1
     #sleep 2
     if [ -d $cub ]
@@ -184,6 +187,9 @@ y
 n
 
 EOF
+	   if [ $? -ne 0 ];then
+	   		echo "[ERROR]: Please confirm build file name - $buildFile"
+	   fi
 	   rm $buildFile
 	   cd ..
     else
@@ -192,6 +198,9 @@ yes
 
 
 EOF
+	if [ $? -ne 0 ];then
+	   		echo "[ERROR]: Please confirm build file name - $buildFile"
+	fi
     . ~/.cubrid.sh
     fi
     rm $buildFile
@@ -217,8 +226,15 @@ function InstallBuildByPackage()
             rm -rf CUBRID
     fi
     wget -t 3 -T 120 $build_url
+    if [ $? -ne 0 ];then
+    	echo "[ERROR]: Please confirm build url - ${build_url}"
+    fi
     
     `eval $command $buildFile -d ./CUBRID`
+    if [ $? -ne 0 ];then
+    	echo "[ERROR]: Please confirm build file - ${buildFile}"
+    fi
+    
     if [ -d ./CUBRID/CUBRID ]; then
 		mv ./CUBRID/CUBRID/* ./CUBRID
 		rm -rf ./CUBRID/CUBRID
@@ -373,7 +389,7 @@ then
 elif [ "$tCat" == "unit-release" ] || [ "$tCat" == "unit-debug" ];then
      BuildAndInstallForUnitTest $gUrl > $HOME/.unitTestInstall.log 2>&1
 else
-     echo "Please confirm your parameters!!"
+     echo "[ERROR]: Please confirm your parameters - $@ !!"
 fi
 
 autoConfigCUBRIDByMKEY
