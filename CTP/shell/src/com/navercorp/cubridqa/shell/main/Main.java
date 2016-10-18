@@ -44,6 +44,10 @@ public class Main {
 		// system.setProperty("sun.rmi.transport.tcp.responseTimeout", "0");
 
 		Context context = new Context(configFilename);
+		if(CommonUtils.isEmpty(context.getTestCaseRoot())){
+			throw new Exception(
+					"[ERROR]: The parameter 'scenario' must be set correctly in " + configFilename + " !");
+		}
 		ArrayList<String> envList = context.getEnvList();
 		System.out.println("Available Env: " + envList);
 
@@ -57,7 +61,13 @@ public class Main {
 		System.out.println("Continue Mode: " + context.isContinueMode());
 		System.out.println("Test Build: " + cubridPackageUrl);
 
-		if (cubridPackageUrl != null && cubridPackageUrl.trim().length() > 0) {
+		if (!CommonUtils.isEmpty(cubridPackageUrl)) {
+			if(!CommonUtils.isURLAvailable(cubridPackageUrl)){
+				System.out.println();
+				System.out.println("[ERROR]: Please confirm " + cubridPackageUrl + " url is available!");
+				System.exit(1);
+			}
+			
 			context.setTestBuild(CommonUtils.getBuildId(context
 					.getCubridPackageUrl()));
 			context.setVersion(CommonUtils.getBuildBits(context

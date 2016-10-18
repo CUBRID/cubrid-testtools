@@ -88,6 +88,11 @@ git branch ${temp_branch_name}
 git checkout -f ${temp_branch_name}
 git clean -df
 
+git fetch auto_update_url
+if [ $? -ne 0 ];then
+        echo "Please confirm your permission!"
+        exit
+fi
 git branch -D $branch_name
 git fetch auto_update_url
 git checkout -b $branch_name -t auto_update_url/$branch_name
