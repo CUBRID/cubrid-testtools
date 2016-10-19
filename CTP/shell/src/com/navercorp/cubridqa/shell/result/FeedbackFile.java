@@ -162,17 +162,17 @@ public class FeedbackFile implements Feedback {
 			prop = new Properties();
 			e.printStackTrace();
 		}
-
+		
 		this.totalCaseNum = Integer.parseInt(
-				prop.getProperty("total_case_count").trim(), 0);
+				prop.getProperty("total_case_count", "0").trim());
 		this.totalSuccNum = Integer.parseInt(
-				prop.getProperty("total_success_case_count").trim(), 0);
+				prop.getProperty("total_success_case_count", "0").trim());
 		this.totalFailNum = Integer.parseInt(
-				prop.getProperty("total_fail_case_count").trim(), 0);
+				prop.getProperty("total_fail_case_count", "0").trim());
 		this.totalSkipNum = Integer.parseInt(
-				prop.getProperty("total_skip_case_count").trim(), 0);
+				prop.getProperty("total_skip_case_count", "0").trim());
 		this.totalExecutedCaseNum = Integer.parseInt(
-				prop.getProperty("total_executed_case_count").trim(), 0);
+				prop.getProperty("total_executed_case_count", "0").trim());
 	}
 	
 	private synchronized void updateTestingStatistics(){
