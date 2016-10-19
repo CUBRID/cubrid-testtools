@@ -297,10 +297,26 @@ public class TestFactory {
 					try {
 						if (context.isScenarioInGit()) {
 							git = new TestCaseGithub(context, envId);
-							git.update();
+							while(true){
+								if(git.update()){
+									break;
+								}
+								
+								System.out.println("==>Retry to do case update!");
+								CommonUtils.sleep(5);
+							}
+							
 						} else {
 							svn = new TestCaseSVN(context, envId);
-							svn.update();
+							while(true){
+								if(svn.update()){
+									break;
+								}
+								
+								System.out.println("==>Retry to do case update!");
+								CommonUtils.sleep(5);
+							}
+							
 						}
 					} catch (Exception e) {
 						e.printStackTrace();

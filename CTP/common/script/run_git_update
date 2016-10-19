@@ -91,7 +91,7 @@ git clean -df
 git fetch auto_update_url
 if [ $? -ne 0 ];then
 		git branch | grep  temp_branch | xargs -i git branch -D {}
-        echo "Please confirm your permission!"
+        echo "[ERROR]: Please confirm your permission!"
         exit
 fi
 git branch -D $branch_name

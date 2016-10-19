@@ -52,7 +52,8 @@ public class TestCaseSVN {
 		}
 	}
 	
-	public void update() throws Exception {
+	public boolean update() throws Exception {
+		boolean isSucc = true;
 		context.getFeedback().onSvnUpdateStart(envIdentify);
 		
 		cleanProcess();
@@ -110,6 +111,7 @@ public class TestCaseSVN {
 			result = ssh.execute(scripts);
 			System.out.println(result);
 		} catch (Exception e) {
+			isSucc = false;
 			System.out.print("[ERROR] " + e.getMessage());
 			throw e;
 		}
@@ -121,6 +123,8 @@ public class TestCaseSVN {
 		
 		
 		context.getFeedback().onSvnUpdateStop(envIdentify);
+		
+		return isSucc;
  	}
 	
 	public void cleanProcess() {

@@ -53,7 +53,8 @@ public class TestCaseGithub {
 		}
 	}
 	
-	public void update() throws Exception {
+	public boolean update() throws Exception {
+		boolean isSucc = true;
 		context.getFeedback().onSvnUpdateStart(envIdentify);
 		
 		cleanProcess();
@@ -85,8 +86,12 @@ public class TestCaseGithub {
 		String result;
 		try {
 			result = ssh.execute(scripts);
+			if(result!=null && result.indexOf("ERROR") !=-1){
+				isSucc = false;
+			}
 			System.out.println(result);
 		} catch (Exception e) {
+			isSucc = false;
 			System.out.print("[ERROR] " + e.getMessage());
 			throw e;
 		}
@@ -97,6 +102,8 @@ public class TestCaseGithub {
 		}
 		
 		context.getFeedback().onSvnUpdateStop(envIdentify);
+		
+		return isSucc;
  	}
 	
 	public void cleanProcess() {

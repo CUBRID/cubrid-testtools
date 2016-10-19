@@ -64,7 +64,7 @@ public class Main {
 		
 
 		if (!CommonUtils.isEmpty(cubridPackageUrl)) {
-			if(!CommonUtils.isURLAvailable(cubridPackageUrl)){
+			if(!CommonUtils.isAvailableURL(cubridPackageUrl)){
 				System.out.println();
 				System.out.println("[ERROR]: Please confirm " + cubridPackageUrl + " url is available!");
 				System.out.println("QUIT");

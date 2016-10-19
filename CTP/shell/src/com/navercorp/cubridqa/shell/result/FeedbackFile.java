@@ -26,13 +26,12 @@
 
 package com.navercorp.cubridqa.shell.result;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
@@ -48,24 +47,34 @@ import com.navercorp.cubridqa.shell.main.ShellHelper;
 public class FeedbackFile implements Feedback {
 	
 	String logName;
+	String statusLogName;
 	Log feedbackLog;
+	Log statusLog;
 	long taskStartTime;
 	Context context;
 	int task_id;
+	int totalCaseNum = 0;
+	int totalExecutedCaseNum = 0;
+	int totalSuccNum = 0;
+	int totalFailNum = 0;
+	int totalSkipNum = 0;
 	
 	public FeedbackFile(Context context){
 		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
+		statusLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test_status.data");
 		this.context = context;
 	}
 	
 	@Override
 	public void onTaskStartEvent(String buildFilename) {
 		feedbackLog = new Log(logName, false, false);
+		statusLog = new Log(statusLogName, false, false);
 		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
 		this.task_id = 0;
 		log.println(String.valueOf(task_id));
 		context.setTaskId(task_id);
 		log.close();
+		statusLog.close();
 		taskStartTime = System.currentTimeMillis();
 		println("[Task Id] is " + this.task_id);
 		println("[TASK START] Current Time is " + new Date() + ", start MSG Id is " + this.context.getMsgId());
@@ -98,73 +107,38 @@ public class FeedbackFile implements Feedback {
 
 	@Override
 	public void setTotalTestCase(int tbdNum, int macroSkippedNum, int tempSkippedNum) {
+		this.totalCaseNum = tbdNum;
+		this.totalSkipNum = macroSkippedNum + tempSkippedNum;
 		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
 	}
 	
 	public void showTestResult(){
-		File file = new File(this.logName);
-		if(!file.exists()) {
-			System.out.println("Success num: 0, Fail_num: 0, Skipped: 0, Total Scenario: 0");
-			return;
-		}
-		int totalOkCount = 0;
-		int totalNokCount = 0;
-		int totalSkipCount = 0;
-		LineNumberReader lineReader = null;
-		InputStreamReader reader = null;
-		FileInputStream fis = null;
-		
+		System.out.println("============= PRINT SUMMARY ==================");
 		try {
-			fis = new FileInputStream(file);
-			reader = new InputStreamReader(fis, "UTF-8");
-
-			lineReader = new LineNumberReader(reader);
-			String line;
-
-			while ((line = lineReader.readLine()) != null) {
-				if (line.trim().equals(""))
-					continue;
-				
-				if(line.trim().indexOf("[OK]") != -1){
-					totalOkCount++;
-				}else if(line.trim().indexOf("[NOK]") != -1){
-					totalNokCount++;
-				}else if(line.trim().indexOf("[[SKIP_BY_") != -1){
-					totalSkipCount++;
-				}
-			}
-			lineReader.close();
-			reader.close();
-			fis.close();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}finally{
-			if(lineReader!=null){
-				try {
-					lineReader.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+			Properties prop = CommonUtils.getProperties(this.statusLogName);
+			Iterator itr = prop.entrySet().iterator();
+			while (itr.hasNext()){
+	            Entry e = (Entry)itr.next();
+	            System.out.println(e.getKey() + ": " + e.getValue());
+	        }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	private synchronized void updateTestingStatistics(){
+		try {
+			Properties prop = com.navercorp.cubridqa.common.CommonUtils.getProperties(this.statusLogName);
+			prop.setProperty("total_case_count", String.valueOf(this.totalCaseNum));
+			prop.setProperty("total_executed_case_count", String.valueOf(this.totalExecutedCaseNum));
+			prop.setProperty("total_success_case_count", String.valueOf(this.totalSuccNum));
+			prop.setProperty("total_fail_case_count", String.valueOf(this.totalFailNum));
+			prop.setProperty("total_skip_case_count", String.valueOf(this.totalSkipNum));
 			
-			if(reader!=null){
-				try {
-					reader.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			
-			if(fis!=null){
-				try {
-					fis.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			
-			System.out.println("Success num: " + totalOkCount + ", Fail_num: " + totalNokCount + ", Skipped: " + totalSkipCount + ", Total Scenario: "
-					+ (totalOkCount + totalNokCount + totalSkipCount));
+			com.navercorp.cubridqa.common.CommonUtils.writeProperties(this.statusLogName, prop);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -173,15 +147,27 @@ public class FeedbackFile implements Feedback {
 		String head;
 		if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
 			head = flag ? "[OK]: " : "[NOK]: " + Constants.RETRY_FLAG + " = " + retryCount;	
+			if (retryCount != 1) {
+				if (flag) {
+					this.totalSuccNum++;
+				} else {
+					this.totalFailNum++;
+				}
+			}
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_MACRO)) {
 			head = "[SKIP_BY_MACRO]";
+			this.totalSkipNum++;
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_TEMP)) {
 			head = "[SKIP_BY_BUG]";
+			this.totalSkipNum++;
 		} else {
 			head = "[UNKNOWN]";
 		}
 		
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
+		if(retryCount != 1){
+			updateTestingStatistics();
+		}
 	}
 	
 	@Override
