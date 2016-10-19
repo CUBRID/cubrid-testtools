@@ -132,7 +132,7 @@ public class Dispatch {
 				
 			if (excluedList != null) {
 				System.out.println("****************************************");
-				System.out.println("SIZE=" + excluedList.size());
+				System.out.println("# OF THE CASE EXCLUDED = " + excluedList.size());
 				System.out.println("****************************************");
 				for (int i = 0; i < excluedList.size(); i++) {
 					for (int j = 0; j < this.tbdList.size(); j++) {

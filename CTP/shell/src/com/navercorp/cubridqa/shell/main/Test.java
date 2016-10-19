@@ -203,7 +203,7 @@ public class Test {
 						 * For each testing, the retry count just will be updated as 1.
 						 */
 						context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
-								Constants.SKIP_TYPE_NO, 1);
+								Constants.SKIP_TYPE_NO, retryCount);
 					} else {
 						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
 								Constants.SKIP_TYPE_NO, retryCount);
