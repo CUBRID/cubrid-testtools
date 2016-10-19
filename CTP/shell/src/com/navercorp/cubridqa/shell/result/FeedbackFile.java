@@ -30,8 +30,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import com.jcraft.jsch.JSchException;
@@ -120,14 +118,30 @@ public class FeedbackFile implements Feedback {
 	public void showTestResult(){
 		println("============= PRINT SUMMARY ==================");
 		System.out.println("============= PRINT SUMMARY ==================");
+		Properties prop;
 		try {
-			Properties prop = com.navercorp.cubridqa.common.CommonUtils.getProperties(this.statusLogName);
-			Iterator itr = prop.entrySet().iterator();
-			while (itr.hasNext()){
-	            Entry e = (Entry)itr.next();
-	            println(e.getKey() + ": " + e.getValue());
-	            System.out.println(e.getKey() + ": " + e.getValue());
-	        }
+			prop = com.navercorp.cubridqa.common.CommonUtils
+					.getProperties(this.statusLogName);
+
+			println("Total Case:" + prop.getProperty("total_case_count"));
+			println("Total Execution Case:"
+					+ prop.getProperty("total_executed_case_count"));
+			println("Total Success Case:"
+					+ prop.getProperty("total_success_case_count"));
+			println("Total Fail Case:"
+					+ prop.getProperty("total_fail_case_count"));
+			println("Total Skip Case:"
+					+ prop.getProperty("total_skip_case_count"));
+			System.out.println("Total Case:" + prop.getProperty("total_case_count"));
+			System.out.println("Total Execution Case:"
+					+ prop.getProperty("total_executed_case_count"));
+			System.out.println("Total Success Case:"
+					+ prop.getProperty("total_success_case_count"));
+			System.out.println("Total Fail Case:"
+					+ prop.getProperty("total_fail_case_count"));
+			System.out.println("Total Skip Case:"
+					+ prop.getProperty("total_skip_case_count"));
+			System.out.println();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -150,15 +164,15 @@ public class FeedbackFile implements Feedback {
 		}
 
 		this.totalCaseNum = Integer.parseInt(
-				prop.getProperty("total_case_count"), 0);
+				prop.getProperty("total_case_count").trim(), 0);
 		this.totalSuccNum = Integer.parseInt(
-				prop.getProperty("total_success_case_count"), 0);
+				prop.getProperty("total_success_case_count").trim(), 0);
 		this.totalFailNum = Integer.parseInt(
-				prop.getProperty("total_fail_case_count"), 0);
+				prop.getProperty("total_fail_case_count").trim(), 0);
 		this.totalSkipNum = Integer.parseInt(
-				prop.getProperty("total_skip_case_count"), 0);
+				prop.getProperty("total_skip_case_count").trim(), 0);
 		this.totalExecutedCaseNum = Integer.parseInt(
-				prop.getProperty("total_executed_case_count"), 0);
+				prop.getProperty("total_executed_case_count").trim(), 0);
 	}
 	
 	private synchronized void updateTestingStatistics(){
@@ -314,5 +328,4 @@ public class FeedbackFile implements Feedback {
 		}
 
 	}
-	
 }
