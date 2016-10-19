@@ -68,11 +68,13 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onTaskStartEvent(String buildFilename) {
 		feedbackLog = new Log(logName, false, false);
-		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
+		Log statusLog = new Log(statusLogName, false, false);
+		Log log= new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
 		this.task_id = 0;
 		log.println(String.valueOf(task_id));
 		context.setTaskId(task_id);
 		log.close();
+		statusLog.close();
 		taskStartTime = System.currentTimeMillis();
 		println("[Task Id] is " + this.task_id);
 		println("[TASK START] Current Time is " + new Date() + ", start MSG Id is " + this.context.getMsgId());
@@ -143,6 +145,8 @@ public class FeedbackFile implements Feedback {
 			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_skip_case_count"), this.totalSkipNum);
 			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_executed_case_count"), this.totalExecutedCaseNum);
 		} catch (IOException e) {
+			System.out.println("[ERROR]: Please confirm your continue status is correctly or not!");
+			println("[ERROR]: Please confirm your continue status!");
 			e.printStackTrace();
 		}
 	}
