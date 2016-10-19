@@ -53,26 +53,21 @@ public class TestCaseGithub {
 		}
 	}
 	
-	public boolean update() throws Exception {
-		boolean isSucc = true;
+	
+	public void update() throws Exception{
 		context.getFeedback().onSvnUpdateStart(envIdentify);
 		
-		cleanProcess();
-		
-		//TODO if test case doesn't exist
-		
-		ShellScriptInput scripts = new ShellScriptInput();
-		
-		if(context.needCleanTestCase()) {
-			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch() + "  2>&1");
+		while (true) {
+			if (doUpdate()) {
+				break;
+			}
+
+			System.out.println("==>Retry to do case update after 5 seconds!");
+			CommonUtils.sleep(5);
 		}
 		
-		//scripts.addCommand("cd ");
-		//scripts.addCommand("cd " + context.getTestCaseRoot());
-		//scripts.addCommand("echo 'EXPECT NOTHING FOR BELOW (" + this.currEnvId + ")'");
-		//scripts.addCommand("svn st " + context.getSVNUserInfo());
-		//scripts.addCommand("echo Above EnvId is " + this.currEnvId);
 		if (!context.getTestCaseWorkspace().equals(context.getTestCaseRoot())) {
+			ShellScriptInput scripts = new ShellScriptInput();
 			String wsRoot = context.getTestCaseWorkspace().replace('\\', '/');
 			String tcRoot = context.getTestCaseRoot().replace('\\', '/');
 			String fromStar = CommonUtils.concatFile(tcRoot, "*").replace('\\', '/');
@@ -81,27 +76,41 @@ public class TestCaseGithub {
 			scripts.addCommand("mkdir -p " + wsRoot);
 			scripts.addCommand("rm -rf " + toStar);
 			scripts.addCommand("cp -r " + fromStar + " " + wsRoot);
-		}
-		
-		String result;
-		try {
-			result = ssh.execute(scripts);
-			if(result!=null && result.indexOf("ERROR") !=-1){
-				isSucc = false;
+			
+			String result;
+			try {
+				result = ssh.execute(scripts);
+				System.out.println(result);
+			} catch (Exception e) {
+				System.out.print("[ERROR] " + e.getMessage());
 			}
-			System.out.println(result);
-		} catch (Exception e) {
-			isSucc = false;
-			System.out.print("[ERROR] " + e.getMessage());
-			throw e;
-		}
-		if(context.needCleanTestCase()){
-			System.out.println("UPDATE TEST CASES COMPLETE");
-		}else{
-			System.out.println("SKIP TEST CASES UPDATE");
 		}
 		
 		context.getFeedback().onSvnUpdateStop(envIdentify);
+	}
+	
+	private boolean doUpdate() {
+		boolean isSucc = true;
+		cleanProcess();
+		if(context.needCleanTestCase()) {
+			ShellScriptInput scripts = new ShellScriptInput();
+			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch() + "  2>&1");
+			String result;
+			try {
+				result = ssh.execute(scripts);
+				if(result!=null && result.indexOf("ERROR") !=-1){
+					isSucc = false;
+				}
+				System.out.println(result);
+			} catch (Exception e) {
+				isSucc = false;
+				System.out.print("[ERROR] " + e.getMessage());
+			}
+			
+			System.out.println("UPDATE TEST CASES " + (isSucc? "COMPLETE !":"FAIL !"));
+		}else{
+			System.out.println("SKIP TEST CASES UPDATE");
+		}
 		
 		return isSucc;
  	}

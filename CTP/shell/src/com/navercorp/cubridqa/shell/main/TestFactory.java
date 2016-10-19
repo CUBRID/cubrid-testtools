@@ -289,7 +289,6 @@ public class TestFactory {
 
 		for (final String envId : envList) {
 			callers.add(new Callable<Boolean>() {
-
 				@Override
 				public Boolean call() throws Exception {
 					TestCaseGithub git = null;
@@ -297,26 +296,11 @@ public class TestFactory {
 					try {
 						if (context.isScenarioInGit()) {
 							git = new TestCaseGithub(context, envId);
-							while(true){
-								if(git.update()){
-									break;
-								}
-								
-								System.out.println("==>Retry to do case update!");
-								CommonUtils.sleep(5);
-							}
+							git.update();
 							
 						} else {
 							svn = new TestCaseSVN(context, envId);
-							while(true){
-								if(svn.update()){
-									break;
-								}
-								
-								System.out.println("==>Retry to do case update!");
-								CommonUtils.sleep(5);
-							}
-							
+							svn.update();
 						}
 					} catch (Exception e) {
 						e.printStackTrace();

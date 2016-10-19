@@ -118,6 +118,7 @@ public class FeedbackFile implements Feedback {
 	
 	public void showTestResult(){
 		println("============= PRINT SUMMARY ==================");
+		System.out.println("============= PRINT SUMMARY ==================");
 		try {
 			Properties prop = com.navercorp.cubridqa.common.CommonUtils.getProperties(this.statusLogName);
 			Iterator itr = prop.entrySet().iterator();
