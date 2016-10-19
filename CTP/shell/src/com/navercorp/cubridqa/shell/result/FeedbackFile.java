@@ -67,7 +67,7 @@ public class FeedbackFile implements Feedback {
 	
 	@Override
 	public void onTaskStartEvent(String buildFilename) {
-		feedbackLog = new Log(logName, true, false);
+		feedbackLog = new Log(logName, false, false);
 		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
 		this.task_id = 0;
 		log.println(String.valueOf(task_id));
@@ -113,7 +113,7 @@ public class FeedbackFile implements Feedback {
 		this.totalCaseNum = tbdNum;
 		this.totalSkipNum = macroSkippedNum + tempSkippedNum;
 		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
-		updateTestingStatistics(false);
+		updateTestingStatistics();
 	}
 	
 	public void showTestResult(){
@@ -124,6 +124,7 @@ public class FeedbackFile implements Feedback {
 			while (itr.hasNext()){
 	            Entry e = (Entry)itr.next();
 	            println(e.getKey() + ": " + e.getValue());
+	            System.out.println(e.getKey() + ": " + e.getValue());
 	        }
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -135,50 +136,30 @@ public class FeedbackFile implements Feedback {
 	{
 		try {
 			Properties prop = com.navercorp.cubridqa.common.CommonUtils.getProperties(this.statusLogName);
-			Iterator itr = prop.entrySet().iterator();
-			while (itr.hasNext()){
-	            Entry e = (Entry)itr.next();
-	            String key = e.getKey().toString();
-	            if("total_case_count".equalsIgnoreCase(key.trim())){
-	            	this.totalCaseNum = Integer.parseInt(e.getValue().toString());
-	            }else if("total_success_case_count".equalsIgnoreCase(key.trim())){
-	            	this.totalSuccNum  = Integer.parseInt(e.getValue().toString());
-	            }else if("total_fail_case_count".equalsIgnoreCase(key.trim())){
-	            	this.totalFailNum  = Integer.parseInt(e.getValue().toString());
-	            }else if("total_skip_case_count".equalsIgnoreCase(key.trim())){
-	            	this.totalSkipNum = Integer.parseInt(e.getValue().toString());
-	            }else if("total_executed_case_count".equalsIgnoreCase(key.trim())){
-	            	this.totalExecutedCaseNum = Integer.parseInt(e.getValue().toString());
-	            }
-	        }
-			
+			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_case_count"), this.totalCaseNum);
+			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_success_case_count"), this.totalSuccNum);
+			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_fail_case_count"), this.totalFailNum);
+			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_skip_case_count"), this.totalSkipNum);
+			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_executed_case_count"), this.totalExecutedCaseNum);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private synchronized void updateTestingStatistics(boolean onlySuccAndFail){
+	private synchronized void updateTestingStatistics(){
 		try {
-			Properties prop = com.navercorp.cubridqa.common.CommonUtils.getProperties(this.statusLogName);
-			if (onlySuccAndFail) {
-				prop.setProperty("total_executed_case_count",
-						String.valueOf(this.totalExecutedCaseNum));
-				prop.setProperty("total_success_case_count",
-						String.valueOf(this.totalSuccNum));
-				prop.setProperty("total_fail_case_count",
-						String.valueOf(this.totalFailNum));
-			} else {
-				prop.setProperty("total_case_count",
-						String.valueOf(this.totalCaseNum));
-				prop.setProperty("total_executed_case_count",
-						String.valueOf(this.totalExecutedCaseNum));
-				prop.setProperty("total_success_case_count",
-						String.valueOf(this.totalSuccNum));
-				prop.setProperty("total_fail_case_count",
-						String.valueOf(this.totalFailNum));
-				prop.setProperty("total_skip_case_count",
-						String.valueOf(this.totalSkipNum));
-			}
+			Properties prop = com.navercorp.cubridqa.common.CommonUtils
+					.getProperties(this.statusLogName);
+			prop.setProperty("total_case_count",
+					String.valueOf(this.totalCaseNum));
+			prop.setProperty("total_executed_case_count",
+					String.valueOf(this.totalExecutedCaseNum));
+			prop.setProperty("total_success_case_count",
+					String.valueOf(this.totalSuccNum));
+			prop.setProperty("total_fail_case_count",
+					String.valueOf(this.totalFailNum));
+			prop.setProperty("total_skip_case_count",
+					String.valueOf(this.totalSkipNum));
 			com.navercorp.cubridqa.common.CommonUtils.writeProperties(this.statusLogName, prop);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -205,7 +186,7 @@ public class FeedbackFile implements Feedback {
 		
 		this.totalExecutedCaseNum = totalSuccNum + totalFailNum;
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
-		updateTestingStatistics(true);
+		updateTestingStatistics();
 	}
 	
 	@Override
