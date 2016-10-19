@@ -28,7 +28,6 @@ package com.navercorp.cubridqa.shell.common;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -207,14 +206,20 @@ public class CommonUtils {
 	}
 	
 	public static void writeProperties(String filename,Properties props) throws IOException {
-        File f = new File(filename);
-        OutputStream out = null;
+		File f = new File(filename);
+
+		if (!f.exists()) {
+			f.getParentFile().mkdirs();
+			f.createNewFile();
+		}
+
+		OutputStream out = null;
 		try {
 			out = new FileOutputStream(f);
 			props.store(out, "");
 			out.flush();
-		} finally{
-			if(out!=null){
+		} finally {
+			if (out != null) {
 				try {
 					out.close();
 				} catch (IOException e) {

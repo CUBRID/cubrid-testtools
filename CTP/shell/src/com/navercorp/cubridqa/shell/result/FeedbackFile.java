@@ -26,6 +26,7 @@
 
 package com.navercorp.cubridqa.shell.result;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -68,7 +69,7 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onTaskStartEvent(String buildFilename) {
 		feedbackLog = new Log(logName, false, false);
-		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
+		Log log= new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
 		this.task_id = 0;
 		log.println(String.valueOf(task_id));
 		context.setTaskId(task_id);
@@ -135,22 +136,33 @@ public class FeedbackFile implements Feedback {
 	
 	private void initStatisticsForContinue()
 	{
+		Properties prop;
 		try {
-			Properties prop = com.navercorp.cubridqa.common.CommonUtils.getProperties(this.statusLogName);
-			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_case_count"), this.totalCaseNum);
-			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_success_case_count"), this.totalSuccNum);
-			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_fail_case_count"), this.totalFailNum);
-			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_skip_case_count"), this.totalSkipNum);
-			this.totalCaseNum = Integer.parseInt(prop.getProperty("total_executed_case_count"), this.totalExecutedCaseNum);
+			prop = com.navercorp.cubridqa.common.CommonUtils
+					.getProperties(this.statusLogName);
+		} catch (FileNotFoundException ex) {
+			prop = new Properties();
 		} catch (IOException e) {
+			System.out.println("[WARN] file " + this.statusLogName
+					+ " read fail!");
+			prop = new Properties();
 			e.printStackTrace();
 		}
+
+		this.totalCaseNum = Integer.parseInt(
+				prop.getProperty("total_case_count"), 0);
+		this.totalSuccNum = Integer.parseInt(
+				prop.getProperty("total_success_case_count"), 0);
+		this.totalFailNum = Integer.parseInt(
+				prop.getProperty("total_fail_case_count"), 0);
+		this.totalSkipNum = Integer.parseInt(
+				prop.getProperty("total_skip_case_count"), 0);
+		this.totalExecutedCaseNum = Integer.parseInt(
+				prop.getProperty("total_executed_case_count"), 0);
 	}
 	
 	private synchronized void updateTestingStatistics(){
-		try {
-			Properties prop = com.navercorp.cubridqa.common.CommonUtils
-					.getProperties(this.statusLogName);
+			Properties prop = new Properties();
 			prop.setProperty("total_case_count",
 					String.valueOf(this.totalCaseNum));
 			prop.setProperty("total_executed_case_count",
@@ -161,10 +173,13 @@ public class FeedbackFile implements Feedback {
 					String.valueOf(this.totalFailNum));
 			prop.setProperty("total_skip_case_count",
 					String.valueOf(this.totalSkipNum));
-			com.navercorp.cubridqa.common.CommonUtils.writeProperties(this.statusLogName, prop);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+			try {
+				com.navercorp.cubridqa.common.CommonUtils.writeProperties(this.statusLogName, prop);
+			} catch (IOException e) {
+				System.out.println("[ERROR]: Update test status into " + this.statusLogName + " fail!");
+				println("[ERROR]: Update test status into " + this.statusLogName + " fail!");
+				e.printStackTrace();
+			}
 	}
 
 	@Override
