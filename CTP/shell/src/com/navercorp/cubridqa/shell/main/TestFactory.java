@@ -128,7 +128,6 @@ public class TestFactory {
 		this.configPool.shutdown();
 		
 		feedback.onTaskStopEvent();
-		
 		CommonUtils.generateFailBackupPackage(context);
 		System.out.println("TEST COMPLETE");
 	}
@@ -290,7 +289,6 @@ public class TestFactory {
 
 		for (final String envId : envList) {
 			callers.add(new Callable<Boolean>() {
-
 				@Override
 				public Boolean call() throws Exception {
 					TestCaseGithub git = null;
@@ -299,6 +297,7 @@ public class TestFactory {
 						if (context.isScenarioInGit()) {
 							git = new TestCaseGithub(context, envId);
 							git.update();
+							
 						} else {
 							svn = new TestCaseSVN(context, envId);
 							svn.update();

@@ -197,7 +197,7 @@ public class CommonUtils {
 		return p.replace('/', File.separatorChar);
 	}
 
-	public static boolean isURLAvailable(String urlStr){
+	public static boolean isAvailableURL(String urlStr){
 		if (isEmpty(urlStr))
 			return false;
 		boolean res = false;
@@ -285,10 +285,26 @@ public class CommonUtils {
 		return props;
 	}
 
-	public static void writeProperties(String filename, Properties props) throws IOException {
-		File f = new File(filename);
-		OutputStream out = new FileOutputStream(f);
-		props.store(out, "");
+	public static void writeProperties(String filename,Properties props) {
+        File f = new File(filename);
+        OutputStream out = null;
+		try {
+			out = new FileOutputStream(f);
+			props.store(out, "");
+			out.flush();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally{
+			if(out!=null){
+				try {
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 	public static void sleep(int sec) {

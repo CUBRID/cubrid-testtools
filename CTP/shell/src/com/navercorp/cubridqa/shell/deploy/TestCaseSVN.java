@@ -52,15 +52,47 @@ public class TestCaseSVN {
 		}
 	}
 	
-	public void update() throws Exception {
+	public void update() throws Exception{
 		context.getFeedback().onSvnUpdateStart(envIdentify);
 		
+		while(true){
+			if(doUpdate()){
+				break;
+			}
+			
+			System.out.println("==>Retry to do case update after 5 seconds!");
+			CommonUtils.sleep(5);
+		}
+		
+		if (!context.getTestCaseWorkspace().equals(context.getTestCaseRoot())) {
+			ShellScriptInput scripts = new ShellScriptInput();
+			String wsRoot = context.getTestCaseWorkspace().replace('\\', '/');
+			String tcRoot = context.getTestCaseRoot().replace('\\', '/');
+			String fromStar = CommonUtils.concatFile(tcRoot, "*").replace('\\', '/');
+			String toStar = CommonUtils.concatFile(wsRoot, "*").replace('\\', '/');
+
+			scripts.addCommand("mkdir -p " + wsRoot);
+			scripts.addCommand("rm -rf " + toStar);
+			scripts.addCommand("cp -r " + fromStar + " " + wsRoot);
+			
+			String result;
+			try {
+				result = ssh.execute(scripts);
+				System.out.println(result);
+			} catch (Exception e) {
+				System.out.print("[ERROR] " + e.getMessage());
+			}
+		}
+		
+		context.getFeedback().onSvnUpdateStop(envIdentify);
+	}
+	
+	public boolean doUpdate() throws Exception {
+		boolean isSucc = true;
+		boolean needUpdateScenario = context.needCleanTestCase();
 		cleanProcess();
 		
-		//TODO if test case doesn't exist
-		
 		ShellScriptInput scripts = new ShellScriptInput();
-		
 		String sedCmds;
 		if(context.isWindows()) {
 			sedCmds = "sed 's;\\\\;/;g'|";
@@ -68,7 +100,7 @@ public class TestCaseSVN {
 			sedCmds = "";
 		}
 		
-		if(context.needCleanTestCase()) {
+		if(needUpdateScenario) {
 			scripts.addCommand("cd ");
 			scripts.addCommand("cd " + context.getTestCaseRoot());
 			scripts.addCommand("svn st " + context.getSVNUserInfo() + " | grep '~' | awk '{print $NF}' | " + sedCmds + " xargs -i rm -rf {} ");
@@ -94,33 +126,23 @@ public class TestCaseSVN {
 		scripts.addCommand("echo 'EXPECT NOTHING FOR BELOW (" + this.currEnvId + ")'");
 		scripts.addCommand("svn st " + context.getSVNUserInfo());
 		scripts.addCommand("echo Above EnvId is " + this.currEnvId);
-		if (!context.getTestCaseWorkspace().equals(context.getTestCaseRoot())) {
-			String wsRoot = context.getTestCaseWorkspace().replace('\\', '/');
-			String tcRoot = context.getTestCaseRoot().replace('\\', '/');
-			String fromStar = CommonUtils.concatFile(tcRoot, "*").replace('\\', '/');
-			String toStar = CommonUtils.concatFile(wsRoot, "*").replace('\\', '/');
-
-			scripts.addCommand("mkdir -p " + wsRoot);
-			scripts.addCommand("rm -rf " + toStar);
-			scripts.addCommand("cp -r " + fromStar + " " + wsRoot);
-		}
 		
 		String result;
 		try {
 			result = ssh.execute(scripts);
 			System.out.println(result);
 		} catch (Exception e) {
+			isSucc = false;
 			System.out.print("[ERROR] " + e.getMessage());
-			throw e;
 		}
-		if(context.needCleanTestCase()){
-			System.out.println("UPDATE TEST CASES COMPLETE");
+		
+		if(needUpdateScenario){
+			System.out.println("UPDATE TEST CASES " + (isSucc ? "COMPLETE !" : " FAIL!"));
 		}else{
 			System.out.println("SKIP TEST CASES UPDATE");
 		}
 		
-		
-		context.getFeedback().onSvnUpdateStop(envIdentify);
+		return isSucc;
  	}
 	
 	public void cleanProcess() {
