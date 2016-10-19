@@ -285,18 +285,20 @@ public class CommonUtils {
 		return props;
 	}
 
-	public static void writeProperties(String filename,Properties props) {
+	public static void writeProperties(String filename,Properties props) throws IOException {
         File f = new File(filename);
+        
+		if (!f.exists()) {
+			f.getParentFile().mkdirs();
+			f.createNewFile();
+		}
+
         OutputStream out = null;
 		try {
 			out = new FileOutputStream(f);
 			props.store(out, "");
 			out.flush();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally{
+		}finally{
 			if(out!=null){
 				try {
 					out.close();
