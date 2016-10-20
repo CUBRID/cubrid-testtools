@@ -221,11 +221,11 @@ public class Test {
 			}			
 			dispatchLog.println(this.testCaseFullName);
 		}
-
-		isStopped = true;
+		
 		close();
 		context.getFeedback().onStopEnvEvent(currEnvId);
 		System.out.println("[ENV STOP] " + currEnvId);
+		isStopped = true;
 	}
 
 	public String runTestCase() throws Exception {
