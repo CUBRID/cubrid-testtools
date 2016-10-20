@@ -216,7 +216,7 @@ public class Context {
 	}
 	
 	public boolean shouldCleanupAfterQuit() {
-		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.CLEAN_PROCESS_AFTER_EACH_EXECUTION_YES_OR_NO, "true"));
+		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.CLEAN_PROCESS_AFTER_EXECUTION_QUIT_YES_OR_NO, "true"));
 	}
 	
 	public boolean enableCheckDiskSpace() {
