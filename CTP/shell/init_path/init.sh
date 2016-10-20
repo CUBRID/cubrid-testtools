@@ -650,7 +650,7 @@ function init
   export LD_LIBRARY_PATH
   export LIBRARY_PATH
   
-  isAvailableServiceForBroker1=`awk '/BROKER1/,/SERVICE/' $CUBRID/conf/cubrid_broker.conf |grep SERVICE|awk -F '=' '{print $2}'|grep -iw ON|grep -v grep |wc -l`
+  isAvailableServiceForBroker1=`ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf SERVICE |grep -iw ON|grep -v grep |wc -l`
   if [ $isAvailableServiceForBroker1 -ne 0 ];then
   	 broker_port=`ini.sh -s "%BROKER1" $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
   else
