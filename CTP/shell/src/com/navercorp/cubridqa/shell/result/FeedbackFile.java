@@ -223,7 +223,7 @@ public class FeedbackFile implements Feedback {
 	public void onTestCaseStopEventForRetry(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
 		String head;
 		head = flag ? "[OK]: " : "[NOK]: ";	
-		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "(" + Constants.RETRY_FLAG + " = " + retryCount + ")");
+		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, " (" + Constants.RETRY_FLAG + " = " + retryCount + ")");
 	}
 
 	@Override

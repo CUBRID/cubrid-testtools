@@ -38,7 +38,7 @@ public class Constants {
 	public static final String TC_RESULT_OK = "OK";
 	public static final String TC_RESULT_NOK = "NOK";
 	
-	public static final String RETRY_FLAG = "Retry_Count";
+	public static final String RETRY_FLAG = "TRY->";
 	
 	public static final String RUNTIME_ROOT_LOG_DIR = "result/shell";
 	public static final String CURRENT_LOG_DIR = RUNTIME_ROOT_LOG_DIR + "/" + "current_runtime_logs";

@@ -10,6 +10,7 @@ public class ConfigParameterConstants {
 	public static final String TEST_INSTANCE_PASSWORD_SUFFIX = "ssh.pwd";
 	public static final String TEST_INSTANCE_RELATED_HOSTS_SUFFIX = "ssh.relatedhosts";
 	public static final String TEST_INSTANCE_MASTER_HOST_SUFFIX = "master.ssh.host";
+	public static final String TEST_INSTANCE_MASTER_USER_SUFFIX = "master.ssh.user";
 	
 	//Environment variables
 	public static final String CTP_SKIP_UPDATE = "CTP_SKIP_UPDATE";

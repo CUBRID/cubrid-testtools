@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.Feedback;
@@ -131,16 +132,16 @@ public class FeedbackFile implements Feedback {
 
 	@Override
 	public void onStopEnvEvent(InstanceManager hostManager, Log log) {
-		String role = context.getProperty("main.testing.role", "").trim();
+		String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
 
 		if (role.indexOf("coverage") != -1) {
 			String build_id = context.getBuildId();
 			String category = context.getTestCategory();
-			String c_user = context.getProperty("main.coverage.user", "").trim();
-			String c_pwd = context.getProperty("main.coverage.pwd", "").trim();
-			String c_ip = context.getProperty("main.coverage.ip", "").trim();
-			String c_port = context.getProperty("main.coverage.port", "").trim();
-			String c_dir = context.getProperty("main.coverage.dir", "").trim();
+			String c_user = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_USER, "").trim();
+			String c_pwd = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_PASSWORD, "").trim();
+			String c_ip = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_IP, "").trim();
+			String c_port = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_PORT, "").trim();
+			String c_dir = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_RESULT, "").trim();
 
 			ArrayList<SSHConnect> list = hostManager.getAllNodeList();
 			for (SSHConnect ssh : list) {

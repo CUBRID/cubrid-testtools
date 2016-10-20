@@ -69,7 +69,7 @@ public class Main {
 			throw new Exception("Not found test cases directory. Please check 'scenario' in test configuration file.");
 
 		String cubridPackageUrl = context.getCubridPackageUrl();
-		if (cubridPackageUrl != null && cubridPackageUrl.trim().length() > 0) {
+		if (com.navercorp.cubridqa.common.CommonUtils.isEmpty(cubridPackageUrl)) {
 			context.setBuildId(CommonUtils.getBuildId(cubridPackageUrl));
 			context.setBuildBits(CommonUtils.getBuildBits(cubridPackageUrl));
 			context.setReInstallTestBuildYn(true);
@@ -92,9 +92,6 @@ public class Main {
 		System.out.println("BUILD ID: " + context.getBuildId());
 		System.out.println("BUILD BITS: " + context.getBuildBits());		
 		System.out.println("Continue Mode: " + context.isContinueMode());
-
-
-		
 		checkRequirement(context);
 
 		Properties props = context.getProperties();
