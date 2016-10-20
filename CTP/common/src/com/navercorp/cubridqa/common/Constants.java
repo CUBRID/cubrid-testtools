@@ -33,6 +33,7 @@ public class Constants {
 
 	public static final String ENV_CTP_HOME_KEY = "CTP_HOME";
 	public static final String ENV_HOME_KEY = "HOME";
+	public static final String CTP_PACKAGE_NAME = "com.navercorp.cubridqa.ctp.CTP";
 	
 	public static final String ENV_CTP_HOME = CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY);
 	public static final String ENV_HOME = CommonUtils.getEnvInFile(ENV_HOME_KEY);

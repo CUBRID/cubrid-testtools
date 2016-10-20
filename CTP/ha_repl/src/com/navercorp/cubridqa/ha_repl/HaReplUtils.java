@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -83,7 +84,7 @@ public class HaReplUtils {
 
 		if (CommonUtils.haveCharsetToCreateDB(context.getBuildId())) {
 			// use different DBcharset to run test
-			String dbCharset = context.getProperty("main.db.charset", "").trim();
+			String dbCharset = context.getProperty(ConfigParameterConstants.CUBRID_DB_CHARSET, "").trim();
 			if (dbCharset.equals("")) {
 				dbCharset = "en_US";
 			}

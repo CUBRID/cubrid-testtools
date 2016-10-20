@@ -178,8 +178,8 @@ public class Test {
 						resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
 					}	
 					if (testCaseSuccess == false) {
-						System.out.println("Execute retry Time - " + retryCount + ", Max retry count - " + maxRetryCount);
-						workerLog.println("Execute retry Time - " + retryCount + ", Max retry count - " + maxRetryCount);
+//						System.out.println("Execute retry Time - " + retryCount + ", Max retry count - " + maxRetryCount);
+//						workerLog.println("Execute retry Time - " + retryCount + ", Max retry count - " + maxRetryCount);
 						if (hasCore) {
 							needRetry = false;
 						} else {

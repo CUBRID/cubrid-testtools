@@ -86,7 +86,7 @@ public class Constants {
 		scripts.addCommand("taskkill /F /IM cub_cas.exe");
 		scripts.addCommand("taskkill /F /IM cub_broker.exe");
 		if(inLocal == false) {
-			scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' \\) DELETE");
+			scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' AND NOT CommandLine LIKE '%%cubridqa.ctp%%') DELETE");
 		}
 		scripts.addCommand("taskkill /F /IM cat.exe");
 		scripts.addCommand("taskkill /F /IM ps.exe");
@@ -147,7 +147,7 @@ public class Constants {
 		if(inLocal == false) {
 			sb.append("taskkill /T /F /IM bash.exe").append(LINE_SEPARATOR);
 			sb.append("taskkill /T /F /IM sh.exe").append(LINE_SEPARATOR);
-			sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%') DELETE").append(LINE_SEPARATOR);
+			sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%' AND NOT CommandLine LIKE '%%cubridqa.ctp%%') DELETE").append(LINE_SEPARATOR);
 		}
 		sb.append("tasklist").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM cat.exe").append(LINE_SEPARATOR);
@@ -175,7 +175,7 @@ public class Constants {
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep shard | awk '{print $1}'"));
 		scripts.addCommand("ipcs | grep $USER | awk '{print $2}'  | xargs -i ipcrm -m {}");
 		if (inLocal == false) {
-			scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i java | awk '{print $1}'"));
+			scripts.addCommand(bothKill("ps -u $USER -o pid,command| grep -v grep | grep -i java |grep -v '" + com.navercorp.cubridqa.common.Constants.CTP_PACKAGE_NAME + "' | awk '{print $1}'"));
 		}
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i sleep | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i expect | awk '{print $1}'"));
@@ -191,6 +191,6 @@ public class Constants {
 	}
 	
 	public static void main(String args[]) {
-		System.out.println(WIN_KILL_PROCESS);
+		System.out.println(LIN_KILL_PROCESS);
 	}
 }
