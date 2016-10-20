@@ -97,7 +97,7 @@ public class UpgradeMain {
 
 		String grepoServiceUrl = CommonUtils.getSystemProperty("grepo_service_url", null, null);
 		if (grepoServiceUrl == null || grepoServiceUrl.trim().equals("")) {
-			System.out.println("[ERROR] not found grepo service url. Please set grepo_service_url in configuration file");
+			System.out.println("[ERROR] not found grepo service url. Please set grepo_service_url in CTP/conf/common.conf file");
 			return;
 		}
 

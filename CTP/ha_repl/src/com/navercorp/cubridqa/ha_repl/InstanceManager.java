@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
@@ -64,18 +65,18 @@ public class InstanceManager {
 
 	private SSHConnect addHost(String role, int num) throws Exception {
 		String hostId = role + (num < 1 ? "" : num);
-		String host = getInstanceProperty(hostId + ".ssh.host");
+		String host = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 		if(CommonUtils.isEmpty(host)) {
 			throw new Exception("Not Found More Hosts");
 		}
-		String port = getInstanceProperty(hostId + ".ssh.port");
+		String port = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
 		if(CommonUtils.isEmpty(port)) {
-			port = context.getProperty("default.ssh.port");
+			port = context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
 		}
-		String user = getInstanceProperty(hostId + ".ssh.user");
-		String pwd = getInstanceProperty(hostId + ".ssh.pwd");
+		String user = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
+		String pwd = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
 		if(CommonUtils.isEmpty(pwd)) {
-			pwd = context.getProperty("default.ssh.pwd");
+			pwd = context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
 		}
 		return addHost(hostId, host, port, user, pwd);
 	}

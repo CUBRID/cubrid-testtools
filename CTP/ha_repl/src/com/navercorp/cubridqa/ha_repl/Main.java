@@ -34,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.deploy.Deploy;
@@ -57,7 +58,7 @@ public class Main {
 		
 		String testRoot = context.getTestCaseRoot();
 		boolean hasError = false;
-		if (testRoot == null || testRoot.trim().equals("")) {
+		if (com.navercorp.cubridqa.common.CommonUtils.isEmpty(testRoot)) {
 			hasError = true;
 		} else {
 			testRoot = testRoot.trim();
@@ -68,19 +69,30 @@ public class Main {
 			throw new Exception("Not found test cases directory. Please check 'scenario' in test configuration file.");
 
 		String cubridPackageUrl = context.getCubridPackageUrl();
-		if (cubridPackageUrl != null && cubridPackageUrl.trim().length() > 0) {
+		if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(cubridPackageUrl)) {
+			if(!CommonUtils.isAvailableURL(cubridPackageUrl)){
+				System.out.println();
+				System.out.println("[ERROR]: Please confirm " + cubridPackageUrl + " url is available!");
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
 			context.setBuildId(CommonUtils.getBuildId(cubridPackageUrl));
 			context.setBuildBits(CommonUtils.getBuildBits(cubridPackageUrl));
 			context.setReInstallTestBuildYn(true);
 		} else {
-
 			String envId = context.getTestEnvList().get(0);
-			String host = context.getInstanceProperty(envId, "ssh.host");
-			String port = context.getInstanceProperty(envId, "ssh.port");
-			String user = context.getInstanceProperty(envId, "ssh.user");
-			String pwd = context.getInstanceProperty(envId, "ssh.pwd");
+			String host = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+			String port = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
+			String user = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
+			String pwd = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
 			SSHConnect ssh = new SSHConnect(host, port, user, pwd, "ssh"); 
 			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
+			if(CommonUtils.isEmpty(buildInfo)){
+				System.out.println("[ERROR]: Please confirm your build installation for local test!");
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
+			
 			context.setBuildId(CommonUtils.getBuildId(buildInfo));
 			context.setBuildBits(CommonUtils.getBuildBits(buildInfo));
 			context.setReInstallTestBuildYn(false);
@@ -91,9 +103,6 @@ public class Main {
 		System.out.println("BUILD ID: " + context.getBuildId());
 		System.out.println("BUILD BITS: " + context.getBuildBits());		
 		System.out.println("Continue Mode: " + context.isContinueMode());
-
-
-		
 		checkRequirement(context);
 
 		Properties props = context.getProperties();

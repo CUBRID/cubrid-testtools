@@ -37,6 +37,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
@@ -681,7 +682,7 @@ public class Test {
 
 	private Connection getDBConnection() throws SQLException {
 		if (connection == null || connection.isClosed()) {
-			String host = hostManager.getInstanceProperty("master.ssh.host");
+			String host = hostManager.getInstanceProperty(ConfigParameterConstants.TEST_INSTANCE_MASTER_HOST_SUFFIX);
 			String port = hostManager.getInstanceProperty("broker.BROKER_PORT");
 			String url = "jdbc:cubrid:" + host + ":" + port + ":" + hostManager.getTestDb() + ":::";
 			connection = DriverManager.getConnection(url, "dba", "");

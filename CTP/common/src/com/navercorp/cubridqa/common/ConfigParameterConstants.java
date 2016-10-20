@@ -9,6 +9,8 @@ public class ConfigParameterConstants {
 	public static final String TEST_INSTANCE_USER_SUFFIX = "ssh.user";
 	public static final String TEST_INSTANCE_PASSWORD_SUFFIX = "ssh.pwd";
 	public static final String TEST_INSTANCE_RELATED_HOSTS_SUFFIX = "ssh.relatedhosts";
+	public static final String TEST_INSTANCE_MASTER_HOST_SUFFIX = "master.ssh.host";
+	public static final String TEST_INSTANCE_MASTER_USER_SUFFIX = "master.ssh.user";
 	
 	//Environment variables
 	public static final String CTP_SKIP_UPDATE = "CTP_SKIP_UPDATE";
@@ -44,6 +46,7 @@ public class ConfigParameterConstants {
 	public static final String ENABLE_STATUS_TRACE_YES_OR_NO = "enable_status_trace_yn";
 	public static final String ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO = "enable_save_log_once_fail_yn";
 	public static final String DELETE_TESTCASE_AFTER_EACH_EXECUTION_YES_OR_NO = "delete_testcase_after_each_execution_yn";
+	public static final String CLEAN_PROCESS_AFTER_EXECUTION_QUIT_YES_OR_NO = "clean_processes_after_execution_quit_yn";
 	public static final String TEST_CONTINUE_YES_OR_NO = "test_continue_yn";
 	public static final String TEST_PLATFORM = "test_platform";
 	public static final String TEST_CATEGORY = "test_category";
@@ -68,6 +71,7 @@ public class ConfigParameterConstants {
 	public static final String TEST_REBUILD_ENV_YES_OR_NO = "test_rebuild_env_yn";
 	public static final String TEST_BUILD_ID = "build_id";
 	public static final String TEST_BUILD_BITS = "build_bits";
+	public static final String TEST_INTERFACE_TYPE = "test_interface_type";
 	
 	
 	//Test result configuration parameters

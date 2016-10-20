@@ -38,7 +38,7 @@ public class Constants {
 	public static final String TC_RESULT_OK = "OK";
 	public static final String TC_RESULT_NOK = "NOK";
 	
-	public static final String RETRY_FLAG = "Retry_Count";
+	public static final String RETRY_FLAG = "TRY->";
 	
 	public static final String RUNTIME_ROOT_LOG_DIR = "result/shell";
 	public static final String CURRENT_LOG_DIR = RUNTIME_ROOT_LOG_DIR + "/" + "current_runtime_logs";
@@ -86,7 +86,7 @@ public class Constants {
 		scripts.addCommand("taskkill /F /IM cub_cas.exe");
 		scripts.addCommand("taskkill /F /IM cub_broker.exe");
 		if(inLocal == false) {
-			scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' \\) DELETE");
+			scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' AND NOT CommandLine LIKE '%%com.navercorp.cubridqa%%') DELETE");
 		}
 		scripts.addCommand("taskkill /F /IM cat.exe");
 		scripts.addCommand("taskkill /F /IM ps.exe");
@@ -147,7 +147,7 @@ public class Constants {
 		if(inLocal == false) {
 			sb.append("taskkill /T /F /IM bash.exe").append(LINE_SEPARATOR);
 			sb.append("taskkill /T /F /IM sh.exe").append(LINE_SEPARATOR);
-			sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%') DELETE").append(LINE_SEPARATOR);
+			sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%' AND NOT CommandLine LIKE '%%com.navercorp.cubridqa%%') DELETE").append(LINE_SEPARATOR);
 		}
 		sb.append("tasklist").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM cat.exe").append(LINE_SEPARATOR);
@@ -174,9 +174,11 @@ public class Constants {
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep migrate | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep shard | awk '{print $1}'"));
 		scripts.addCommand("ipcs | grep $USER | awk '{print $2}'  | xargs -i ipcrm -m {}");
-		if (inLocal == false) {
-			scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i java | awk '{print $1}'"));
-		}
+		scripts.addCommand("ctp_java_pid_list=`ps -u $USER -o pid,command| grep -v grep | grep -E 'com.navercorp.cubridqa|service.Server' | awk '{print $1}'`");
+		scripts.addCommand("all_java_pid_list=`ps -u $USER -o pid,comm| grep -v grep | grep -i java | awk '{print $1}'`");
+		scripts.addCommand("final_list=\"\"");
+		scripts.addCommand("for x in ${all_java_pid_list};do isExistPid=`echo ${ctp_java_pid_list}|grep -w $x|wc -l`;if [ $isExistPid -eq 0];then final_list=\"${final_list} $x\" ;fi;done");
+		scripts.addCommand(bothKill("echo ${final_list}"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i sleep | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i expect | awk '{print $1}'"));
 		if(inLocal == false) {
@@ -191,6 +193,6 @@ public class Constants {
 	}
 	
 	public static void main(String args[]) {
-		System.out.println(WIN_KILL_PROCESS);
+		System.out.println(LIN_KILL_PROCESS);
 	}
 }
