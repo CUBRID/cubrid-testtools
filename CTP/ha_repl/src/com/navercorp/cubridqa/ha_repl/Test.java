@@ -85,14 +85,13 @@ public class Test {
 			filename = dispatch.nextTestFile();
 			this.hostManager.refreshConnection();
 			if (filename == null) {
-				this.testCompleted = true;
-
 				context.getFeedback().onStopEnvEvent(hostManager, mlog);
 
 				if (context.shouldCleanupAfterQuit()) {
 					cleanAfterQuit();
 				}
 
+				this.testCompleted = true;
 				break;
 			}
 
