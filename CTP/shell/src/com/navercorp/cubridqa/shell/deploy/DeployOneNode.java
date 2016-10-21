@@ -136,7 +136,7 @@ public class DeployOneNode {
 		String result;
 		try {
 			result = ssh.execute(scripts);
-			if(result!=null && (result.indexOf("ERROR") != -1 || result.indexOf("No such file") != -1)){
+			if(!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && (result.indexOf("ERROR") != -1 || result.indexOf("No such file") != -1)){
 				isSucc = false;
 				log.println("[ERROR] build install fail!");
 			}

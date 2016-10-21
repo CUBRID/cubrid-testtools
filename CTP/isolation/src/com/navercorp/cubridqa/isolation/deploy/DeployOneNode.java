@@ -57,7 +57,8 @@ public class DeployOneNode {
 		this.log = log;
 	}
 
-	public void deploy() {
+	private boolean installCUBRID(){
+		boolean isSucc = true;
 		cleanProcess();
 
 		String buildUrl = context.getCubridPackageUrl();
@@ -80,9 +81,26 @@ public class DeployOneNode {
 		String result;
 		try {
 			result = ssh.execute(scripts);
+			if(!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && (result.indexOf("ERROR") != -1 || result.indexOf("No such file") != -1)){
+				isSucc = false;
+				log.println("[ERROR] build install fail!");
+			}
 			log.println(result);
 		} catch (Exception e) {
+			isSucc = false;
 			log.println("[ERROR] " + e.getMessage());
+		}
+		
+		return isSucc;
+	}
+	public void deploy() {
+		while(true){
+			if(installCUBRID()){
+				break;
+			}
+			
+			System.out.println("[INFO]: Retry to install build!");
+			CommonUtils.sleep(5);
 		}
 		
 		updateCUBRIDConfigurations();
