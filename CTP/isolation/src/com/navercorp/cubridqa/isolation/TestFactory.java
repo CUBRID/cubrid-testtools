@@ -185,21 +185,19 @@ public class TestFactory {
 				}
 			});
 
-			if (context.isStartMonitor()) {
-				final TestMonitor monitor = new TestMonitor(context, test);
-				testPool.execute(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							monitor.startMonitor();
-						} catch (Exception e) {
-							e.printStackTrace();
-						} finally {
-							monitor.close();
-						}
+			final TestMonitor monitor = new TestMonitor(context, test);
+			testPool.execute(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						monitor.startMonitor();
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						monitor.close();
 					}
-				});
-			}
+				}
+			});
 		}
 	}
 

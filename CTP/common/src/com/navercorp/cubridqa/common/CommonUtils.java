@@ -164,7 +164,7 @@ public class CommonUtils {
 		String defaultPrefix = "default." + role;
 		return parsePropertiesStringByPrefix(config, prefix, defaultPrefix);
 	}
-
+	
 	public static String concatFile(String p1, String p2){
 		String p;
 		

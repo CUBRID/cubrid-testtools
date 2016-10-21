@@ -45,7 +45,7 @@ public class InstanceManager {
 		this.currEnvId = currEnvId;
 		this.context = context;
 		this.hostTable = new Hashtable<String, SSHConnect>();
-		this.testDb = getInstanceProperty("testdb");
+		this.testDb = context.getProperty(ConfigParameterConstants.CUBRID_TESTDB_NAME, "xdb");
 
 		addHost("master", -1);
 		addHost("slave");

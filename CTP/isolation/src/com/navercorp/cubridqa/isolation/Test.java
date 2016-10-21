@@ -32,6 +32,7 @@ import java.util.Properties;
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.isolation.dispatch.Dispatch;
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
@@ -179,7 +180,7 @@ public class Test {
 		if (tc.startsWith("/") == false) {
 			tc = "$HOME/" + tc;
 		}
-		script.addCommand("sh runone.sh -r " + (context.getRetryTimes() + 1) + " " + tc + " " + context.getProperty("main.testcase.timeout") + " " + context.getTestingDatabase() + " 2>&1");
+		script.addCommand("sh runone.sh -r " + (context.getRetryTimes() + 1) + " " + tc + " " + context.getTestCaseTimeoutInSec() + " " + context.getTestingDatabase() + " 2>&1");
 		result = ssh.execute(script);
 		workerLog.println(result);
 

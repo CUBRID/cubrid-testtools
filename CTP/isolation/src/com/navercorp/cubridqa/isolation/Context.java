@@ -37,6 +37,7 @@ import com.navercorp.cubridqa.isolation.impl.FeedbackDB;
 import com.navercorp.cubridqa.isolation.impl.FeedbackFile;
 import com.navercorp.cubridqa.isolation.impl.FeedbackNull;
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 
 public class Context {
 	
@@ -80,7 +81,7 @@ public class Context {
 		} else {
 			isExecuteAtLocal = false;
 		}
-		this.scenario = getProperty("scenario", "").trim();
+		this.scenario = getProperty(ConfigParameterConstants.SCENARIO, "").trim();
 	}
 
 	public void reload() throws IOException {
@@ -92,12 +93,12 @@ public class Context {
 		
 		this.ctpHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
 		
-		this.shouldUpdateTestCase = CommonUtils.convertBoolean(getProperty("main.testcase.update_yn", "false")) && !CommonUtils.isEmpty(getTestCaseBranch());
+		this.shouldUpdateTestCase = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TESTCASE_UPDATE_YES_OR_NO, "false")) && !CommonUtils.isEmpty(getTestCaseBranch());
 		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
-		this.isContinueMode = getProperty("main.mode.continue", "false").equalsIgnoreCase("true");
+		this.isContinueMode = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TEST_CONTINUE_YES_OR_NO, "false"));
 		
-		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
-		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
+		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
+		this.mailNoticeTo = getProperty(ConfigParameterConstants.TEST_OWNER_EMAIL, "").trim();
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {
@@ -107,8 +108,8 @@ public class Context {
 		String key;
 		while (it.hasNext()) {
 			key = (String) it.next();
-			if (key.startsWith("env.") && key.endsWith(".ssh.host")) {
-				resultList.add(key.substring(4, key.indexOf(".ssh.host")));
+			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)) {
+				resultList.add(key.substring(4, key.indexOf("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)));
 			}
 		}
 		return resultList;
@@ -136,7 +137,7 @@ public class Context {
 	}
 
 	public String getInstanceProperty(String envId, String key){
-		String value = getProperty("env." + envId + "." + key);
+		String value = getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX + envId + "." + key);
 		return value == null ? getProperty("default." + key, "") : value;
 	}
 
@@ -157,16 +158,16 @@ public class Context {
 	}
 	
 	public String getTestCategory(){
-		return getProperty("main.testing.category", "isolation");
+		return getProperty(ConfigParameterConstants.TEST_CATEGORY, "isolation");
 	}
 	
 	public String getTestPlatform()
 	{
-		return getProperty("main.testing.platform", "linux");
+		return getProperty(ConfigParameterConstants.TEST_PLATFORM, "linux");
 	}
 	
 	public String getCubridPackageUrl() {
-		return getProperty("main.testbuild.url");
+		return getProperty(ConfigParameterConstants.CUBRID_DOWNLOAD_URL);
 	}
 
 	public boolean shouldUpdateTestCase() {
@@ -176,10 +177,14 @@ public class Context {
 	public boolean isWindows() {
 		return this.isWindows;
 	}
+	
+	public String getTestCaseTimeoutInSec(){
+		return getProperty(ConfigParameterConstants.TESTCASE_TIMEOUT_IN_SECS, "-1");
+	}
 
 	public Feedback getFeedback() {
 		if (this.feedback == null) {
-			String feedbackType = getProperty("main.feedback.type", "file")
+			String feedbackType = getProperty(ConfigParameterConstants.FEEDBACK_TYPE, "file")
 					.trim();
 			if (feedbackType.equalsIgnoreCase("file")) {
 				this.feedback = new FeedbackFile(this);
@@ -193,9 +198,9 @@ public class Context {
 	}
 
 	public String getFeedbackDbUrl() {
-		String host = getProperty("feedback.db.host", "");
-		String port = getProperty("feedback.db.port", "");
-		String dbname = getProperty("feedback.db.name", "");
+		String host = getProperty(ConfigParameterConstants.FEEDBACK_DB_HOST, "");
+		String port = getProperty(ConfigParameterConstants.FEEDBACK_DB_PORT, "");
+		String dbname = getProperty(ConfigParameterConstants.FEEDBACK_DB_NAME, "");
 
 		String url = "jdbc:cubrid:" + host + ":" + port + ":" + dbname + ":::";
 
@@ -203,12 +208,12 @@ public class Context {
 	}
 
 	public String getFeedbackDbUser() {
-		String user = getProperty("feedback.db.user", "");
+		String user = getProperty(ConfigParameterConstants.FEEDBACK_DB_USER, "");
 		return user;
 	}
 
 	public String getFeedbackDbPwd() {
-		String pwd = getProperty("feedback.db.pwd", "");
+		String pwd = getProperty(ConfigParameterConstants.FEEDBACK_DB_PASSWORD, "");
 		return pwd;
 	}
 
@@ -232,12 +237,8 @@ public class Context {
 		return this.config;
 	}
 
-	public boolean isStartMonitor() {
-		return this.config.getProperty("main.testing.monitor", "false").equalsIgnoreCase("true");
-	}
-
 	public String getTestCaseBranch() {
-		return getProperty("main.testcase.branch_git").trim();
+		return getProperty(ConfigParameterConstants.TESTCASE_GIT_BRANCH).trim();
 	}
 	
 	public boolean isReInstallTestBuildYn() {
@@ -249,7 +250,7 @@ public class Context {
 	}
 
 	public String getTestingDatabase() {
-		String v = this.config.getProperty("main.testing.database");
+		String v = this.config.getProperty(ConfigParameterConstants.CUBRID_TESTDB_NAME);
 		if (v == null) {
 			v = "cubrid";
 		} else {
@@ -277,12 +278,12 @@ public class Context {
 	public int getRetryTimes() {
 		int retryTimes = 0;
 		try {
-			retryTimes = Integer.parseInt(getProperty("main.testcase.retry", "0"));
+			retryTimes = Integer.parseInt(getProperty(ConfigParameterConstants.TESTCASE_RETRY_NUM, "0"));
 			if (retryTimes <= 0) {
 				retryTimes = 0;
 			}
 		} catch (Exception e) {
-			System.out.println("Fail to read 'main.testcase.retry' value");
+			System.out.println("Fail to read 'testcase_retry_num' value");
 		}
 		return retryTimes;
 	}
@@ -292,7 +293,7 @@ public class Context {
 	}
 	
 	public String getMailNoticeCC() {
-		String cc = getProperty("main.stakeholder.mail", "").trim();
+		String cc = getProperty(ConfigParameterConstants.TEST_CC_EMAIL, "").trim();
 		if (CommonUtils.isEmpty(cc)) {
 			return com.navercorp.cubridqa.common.Constants.MAIL_FROM;
 		} else {

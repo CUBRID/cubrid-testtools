@@ -49,10 +49,22 @@ public class TestCaseGithub {
 		this.ssh = IsolationHelper.createTestNodeConnect(context, currEnvId);
 
 	}
-
-	public void update() throws Exception {
+	
+	public void update(){
 		context.getFeedback().onTestCaseUpdateStart(envIdentify);
+		while(true){
+			if(doUpdate()){
+				break;
+			}
+			
+			System.out.println("==>Retry to do case update after 5 seconds!");
+			CommonUtils.sleep(5);
+		}
+		context.getFeedback().onTestCaseUpdateStop(envIdentify);
+	}
 
+	public boolean doUpdate() {
+		boolean isSucc = true;
 		cleanProcess();
 
 		IsolationScriptInput scripts = new IsolationScriptInput();
@@ -87,14 +99,22 @@ public class TestCaseGithub {
 		String result;
 		try {
 			result = ssh.execute(scripts);
+			if(!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && result.indexOf("ERROR") !=-1){
+				isSucc = false;
+			}
 			System.out.println(result);
 		} catch (Exception e) {
+			isSucc = false;
 			System.out.print("[ERROR] " + e.getMessage());
-			throw e;
 		}
-		System.out.println("TEST CASES AND CTLTOOL UPDATE COMPLETE");
-
-		context.getFeedback().onTestCaseUpdateStop(envIdentify);
+		
+		if(isSucc){
+			System.out.println("TEST CASES AND CTLTOOL UPDATE COMPLETE!");
+		}else{
+			System.out.println("TEST CASES AND CTLTOOL UPDATE FAIL!");
+		}
+		
+		return isSucc;
 	}
 
 	public void cleanProcess() {

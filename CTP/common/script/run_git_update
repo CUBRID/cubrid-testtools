@@ -65,7 +65,7 @@ done
 
 [ ! -d "$local_git_source_home" ] && echo "please confirm your local_git_source_home parameter!" && exit 1
 [ -z "$branch_name" ] && echo "please branch_name parameter!" && exit 1
-[ ! -f ${CTP_HOME}/conf/common.conf ] && echo "please comfirm ${CTP_HOME}/conf/common.conf exist!" && exit 1
+[ ! -f ${CTP_HOME}/conf/common.conf ] && echo "please confirm ${CTP_HOME}/conf/common.conf exist or not!" && exit 1
 
 gitUser=`ini ${CTP_HOME}/conf/common.conf 'git_user'|tr -d '\r'`
 gitPwd=`ini ${CTP_HOME}/conf/common.conf 'git_pwd'|tr -d '\r'`

@@ -65,8 +65,8 @@ function run_unittest()
    
    cd $CTP_HOME
    #update configuration file
-   ini.sh -u "main.testing.category=$category" $unittest_test_conf
-   ini.sh -u "main.testing.build_id=${build_id}" $unittest_test_conf
+   ini.sh -u "test_category=$category" $unittest_test_conf
+   ini.sh -u "build_id=${build_id}" $unittest_test_conf
 
    #execute testing
    ctp.sh unittest -c $unittest_test_conf 2>&1 | tee $tmplog
