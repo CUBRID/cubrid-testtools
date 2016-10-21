@@ -192,6 +192,7 @@ public class Main {
 				}
 			});
 		}
+		
 		pool.shutdown();
 		pool.awaitTermination(Integer.MAX_VALUE, TimeUnit.DAYS);
 		pool = null;
