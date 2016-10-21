@@ -248,7 +248,7 @@ public class DeployNode {
 		scripts.addCommand("ini.sh -s 'common' ${CUBRID}/conf/cubrid.conf test_mode yes");
 		scripts.addCommand("ini.sh -s 'common' ${CUBRID}/conf/cubrid.conf ha_mode on");
 		scripts.addCommand("ini.sh -s 'common' ${CUBRID}/conf/cubrid_ha.conf ha_node_list " + calcHaNodeList());
-		scripts.addCommand("ini.sh -s 'common' {CUBRID}/conf/cubrid_ha.conf ha_db_list " + hostManager.getTestDb());
+		scripts.addCommand("ini.sh -s 'common' ${CUBRID}/conf/cubrid_ha.conf ha_db_list " + hostManager.getTestDb());
 		scripts.addCommand("cp ${CUBRID}/conf/cubrid_locales.all.txt ${CUBRID}/conf/cubrid_locales.txt");
 		scripts.addCommand("${CUBRID}/bin/make_locale.sh -t 64bit");
 		String result;
