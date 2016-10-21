@@ -152,7 +152,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   ```
 	   # Define the URL of test build which will be used to test.
 	   # If this parameter is not set or commented out, CTP will execute testing without build installation.
-	   main.testbuild.url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+	   cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
 	   ```				
  
 	  More parameters setting and parameters explanation within ``shell.conf``, please refer to [CTP/conf/shell.conf](conf/shell.conf)
@@ -201,7 +201,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
       ```
 	  # Define the URL of test build which will be used to test
 	  # If this parameter is not set or commented out, CTP will execute testing without build installation.
-	  main.testbuild.url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+	  cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
       ```	
 	
 	More parameters setting and parameters explanation within ``isolation.conf``, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
@@ -252,7 +252,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
       ```
 	  # Define the URL of test build which will be used to test
 	  # If this parameter is not set or commented out, CTP will execute testing without build installation.
-	  main.testbuild.url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh 
+	  cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh 
 	  ```
 
 	More parameters setting and parameters explanation within ``ha_repl.conf``, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)	

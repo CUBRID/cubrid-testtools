@@ -69,20 +69,20 @@ function run_ha_repl()
    
    cd $CTP_HOME
    #update configuration file
-   ini.sh -u "main.testcase.branch_git=$branch" $ha_repl_fm_test_conf
-   ini.sh -u "main.testing.category=$category" $ha_repl_fm_test_conf
-   ini.sh -u "main.testing.role=$role" $ha_repl_fm_test_conf
-   ini.sh -u "main.collaborate.url=$coverage_collaborate_url" $ha_repl_fm_test_conf
-   ini.sh -u "main.coverage.controller.ip=$coverage_controller_ip" $ha_repl_fm_test_conf
-   ini.sh -u "main.coverage.controller.user=$coverage_controller_user" $ha_repl_fm_test_conf 
-   ini.sh -u "main.coverage.controller.pwd=$coverage_controller_pwd" $ha_repl_fm_test_conf 
-   ini.sh -u "main.coverage.controller.port=$coverage_controller_port" $ha_repl_fm_test_conf 
-   ini.sh -u "main.coverage.controller.result=$coverage_controller_target_dir" $ha_repl_fm_test_conf 
+   ini.sh -u "testcase_git_branch=$branch" $ha_repl_fm_test_conf
+   ini.sh -u "test_category=$category" $ha_repl_fm_test_conf
+   ini.sh -u "cubrid_install_role=$role" $ha_repl_fm_test_conf
+   ini.sh -u "cubrid_additional_download_url=$coverage_collaborate_url" $ha_repl_fm_test_conf
+   ini.sh -u "coverage_controller_ip=$coverage_controller_ip" $ha_repl_fm_test_conf
+   ini.sh -u "coverage_controller_user=$coverage_controller_user" $ha_repl_fm_test_conf 
+   ini.sh -u "coverage_controller_pwd=$coverage_controller_pwd" $ha_repl_fm_test_conf 
+   ini.sh -u "coverage_controller_port=$coverage_controller_port" $ha_repl_fm_test_conf 
+   ini.sh -u "coverage_controller_result=$coverage_controller_target_dir" $ha_repl_fm_test_conf 
    if [ "$BUILD_TYPE" == "coverage" ];then
-   		ini.sh -u "main.feedback.type=file" $ha_repl_fm_test_conf
+   		ini.sh -u "feedback_type=file" $ha_repl_fm_test_conf
    fi 
-   ini.sh -u "main.testbuild.url=$url" $ha_repl_fm_test_conf
-   ini.sh -u "main.mode.continue=false" $ha_repl_fm_test_conf
+   ini.sh -u "cubrid_download_url=$url" $ha_repl_fm_test_conf
+   ini.sh -u "test_continue_yn=false" $ha_repl_fm_test_conf
    
    #Get branch of case
    testcase_path=""
@@ -95,7 +95,7 @@ function run_ha_repl()
    if [ "x${testcase_path}" != "x" ];then
 	    run_git_update -f $testcase_path  -b $BUILD_SCENARIO_BRANCH_GIT
 	    ini.sh -u "scenario=$testcase_path" $ha_repl_fm_test_conf
-	    ini.sh -u "main.testcase.excluded=${testcase_path}/config/daily_regression_test_exclude_list_ha_repl.conf" $ha_repl_fm_test_conf
+	    ini.sh -u "testcase_exclude_from_file=${testcase_path}/config/daily_regression_test_exclude_list_ha_repl.conf" $ha_repl_fm_test_conf
    fi
 
    #execute testing
@@ -111,7 +111,7 @@ function run_ha_repl_continue()
        mkdir -p $CTP_HOME/result/ha_repl/current_runtime_logs
    fi
    
-   ini.sh -u "main.mode.continue=true" ${ha_repl_fm_test_conf}
+   ini.sh -u "test_continue_yn=true" ${ha_repl_fm_test_conf}
    $CTP_HOME/bin/ctp.sh ha_repl -c ${ha_repl_fm_test_conf} 2>&1 | tee -a $tmplog
 }
 

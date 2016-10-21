@@ -28,6 +28,7 @@ package com.navercorp.cubridqa.isolation.deploy;
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.IsolationHelper;
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 
 public class Deploy {
@@ -49,7 +50,7 @@ public class Deploy {
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
 
-		this.relatedHosts = context.getInstanceProperty(currEnvId, "host.related", "").split(",");
+		this.relatedHosts = context.getInstanceProperty(currEnvId, ConfigParameterConstants.TEST_INSTANCE_RELATED_HOSTS_SUFFIX, "").split(",");
 
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, context.isContinueMode());
 	}

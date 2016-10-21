@@ -21,6 +21,7 @@ public class ConfigParameterConstants {
 	public static final String CUBRID_DOWNLOAD_URL = "cubrid_download_url";
 	public static final String CUBRID_ADDITIONAL_DOWNLOAD_URL = "cubrid_additional_download_url";
 	public static final String CUBRID_DB_CHARSET = "cubrid_db_charset";
+	public static final String CUBRID_TESTDB_NAME = "cubrid_testdb_name";
 	public static final String ROLE_ENGINE="cubrid";
 	public static final String ROLE_HA="ha";
 	public static final String ROLE_CM="cm";

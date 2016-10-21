@@ -40,6 +40,7 @@ import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.IsolationHelper;
 import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
@@ -186,7 +187,7 @@ public class Dispatch {
 	}
 
 	private ArrayList<String> findExcludedList() throws Exception {
-		String excludedFilename = context.getProperty("main.testcase.excluded");
+		String excludedFilename = context.getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE);
 		if (excludedFilename == null || excludedFilename.trim().equals(""))
 			return null;
 

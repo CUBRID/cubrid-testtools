@@ -26,12 +26,14 @@
 package com.navercorp.cubridqa.isolation.deploy;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.IsolationHelper;
 import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 
 public class DeployOneNode {
 
@@ -61,12 +63,12 @@ public class DeployOneNode {
 		String buildUrl = context.getCubridPackageUrl();
 		IsolationScriptInput scripts = new IsolationScriptInput();
 		if (!context.isReInstallTestBuildYn()) {
-			log.print("Skip build installation since main.testbuild.url is not configured!!");
+			log.print("Skip build installation since cubrid_download_url is not configured!!");
 		} else {
-			String role = context.getProperty("main.testing.role", "").trim();
+			String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
 			log.print("Start Install Build");
 			
-			scripts.addCommand("run_cubrid_install " + role + " " + buildUrl + " " + context.getProperty("main.collaborate.url", "").trim() + " 2>&1");
+			scripts.addCommand("run_cubrid_install " + role + " " + buildUrl + " " + context.getProperty(ConfigParameterConstants.CUBRID_ADDITIONAL_DOWNLOAD_URL, "").trim() + " 2>&1");
 		}
 		
 		String buildId = context.getBuildId();
@@ -87,36 +89,98 @@ public class DeployOneNode {
 	}
 	
 	private void updateCUBRIDConfigurations(){
-		String cubridPortId, brokerFirstPort, brokerSecondPort;
-		cubridPortId = context.getInstanceProperty(this.currEnvId, "cubrid.cubrid_port_id");
-		brokerFirstPort = context.getInstanceProperty(this.currEnvId, "broker1.BROKER_PORT");
-		brokerSecondPort = context.getInstanceProperty(this.currEnvId, "broker2.BROKER_PORT");
-		
-		if (CommonUtils.isEmpty(cubridPortId) && CommonUtils.isEmpty(brokerFirstPort) && CommonUtils.isEmpty(brokerSecondPort)) {
+		String cubridEnginParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.currEnvId,
+						ConfigParameterConstants.ROLE_ENGINE);
+		String cubridHAParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.currEnvId,
+						ConfigParameterConstants.ROLE_HA);
+		String cubridCMParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.currEnvId,
+						ConfigParameterConstants.ROLE_CM);
+		String cubridBrokerCommonParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.currEnvId,
+						ConfigParameterConstants.ROLE_BROKER_COMMON);
+		String cubridBroker1ParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.currEnvId,
+						ConfigParameterConstants.ROLE_BROKER1);
+		String cubridBroker2ParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.currEnvId,
+						ConfigParameterConstants.ROLE_BROKER2);
+
+		if (CommonUtils.isEmpty(cubridEnginParamsList)
+				&& CommonUtils.isEmpty(cubridHAParamsList)
+				&& CommonUtils.isEmpty(cubridCMParamsList)
+				&& CommonUtils.isEmpty(cubridBroker1ParamsList)
+				&& CommonUtils.isEmpty(cubridBroker2ParamsList)) {
 			return;
 		}
-		
-		IsolationScriptInput scripts = new IsolationScriptInput();
-		
-		if (!CommonUtils.isEmpty(cubridPortId)) {
-			scripts.addCommand("ini.sh -s 'common' -u cubrid_port_id=" + cubridPortId + " $CUBRID/conf/cubrid.conf");
-			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
+
+		ShellScriptInput scripts = new ShellScriptInput();
+		if (!CommonUtils.isEmpty(cubridEnginParamsList)) {
+			scripts.addCommand("ini.sh -s 'common' --separator '||' -u '"
+					+ cubridEnginParamsList + "' $CUBRID/conf/cubrid.conf");
 		}
-		
-		if (!CommonUtils.isEmpty(brokerFirstPort)) {
-			scripts.addCommand("ini.sh -s '%query_editor' -u BROKER_PORT=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
-			scripts.addCommand("ini.sh -s '%query_editor' -u APPL_SERVER_SHM_ID=" + brokerFirstPort + " $CUBRID/conf/cubrid_broker.conf");
+
+		if (!CommonUtils.isEmpty(cubridHAParamsList)) {
+			scripts.addCommand("ini.sh -s 'common' --separator '||' -u '"
+					+ cubridHAParamsList + "' $CUBRID/conf/cubrid_ha.conf");
 		}
-		
-		if (!CommonUtils.isEmpty(brokerSecondPort)) {
-			scripts.addCommand("ini.sh -s '%BROKER1' -u BROKER_PORT=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
-			scripts.addCommand("ini.sh -s '%BROKER1' -u APPL_SERVER_SHM_ID=" + brokerSecondPort + " $CUBRID/conf/cubrid_broker.conf");
+
+		if (!CommonUtils.isEmpty(cubridCMParamsList)) {
+			scripts.addCommand("ini.sh -s 'cm' --separator '||' -u '"
+					+ cubridCMParamsList + "' $CUBRID/conf/cm.conf");
 		}
-		
-		String result;
-		
+
+		if (!CommonUtils.isEmpty(cubridBroker1ParamsList)) {
+			scripts.addCommand("ini.sh -s '%query_editor' --separator '||' -u '"
+					+ cubridBroker1ParamsList
+					+ "' $CUBRID/conf/cubrid_broker.conf");
+		}
+
+		if (!CommonUtils.isEmpty(cubridBroker2ParamsList)) {
+			scripts.addCommand("ini.sh -s '%BROKER1' --separator '||' -u '"
+					+ cubridBroker2ParamsList
+					+ "' $CUBRID/conf/cubrid_broker.conf");
+		}
+
+		if (!CommonUtils.isEmpty(cubridBrokerCommonParamsList)) {
+			scripts.addCommand("ini.sh -s 'broker' --separator '||' -u '"
+					+ cubridBrokerCommonParamsList
+					+ "' $CUBRID/conf/cubrid_broker.conf");
+		}
+
+		String cubridBrokerSHMId = this.context.getInstanceProperty(
+				this.currEnvId, ConfigParameterConstants.ROLE_BROKER_COMMON
+						+ "." + "MASTER_SHM_ID");
+		if (CommonUtils.isEmpty(cubridBrokerSHMId)) {
+			String cubridPortId = this.context.getInstanceProperty(
+					this.currEnvId, ConfigParameterConstants.ROLE_ENGINE
+							+ "." + "cubrid_port_id");
+			if (!CommonUtils.isEmpty(cubridPortId)) {
+				scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID="
+						+ cubridPortId + " $CUBRID/conf/cubrid_broker.conf");
+			}
+		}else{
+			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridBrokerSHMId + " $CUBRID/conf/cubrid_broker.conf");
+		}
+
+		String result = "";
+
 		try {
-			result=ssh.execute(scripts);
+			result = ssh.execute(scripts);
 			log.println(result);
 		} catch (Exception e) {
 			e.printStackTrace();

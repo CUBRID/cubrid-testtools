@@ -26,6 +26,7 @@
 package com.navercorp.cubridqa.isolation;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
@@ -43,7 +44,7 @@ public class TestMonitor {
 		this.ssh = IsolationHelper.createTestNodeConnect(context, test.getCurrentEnvId());
 
 		try {
-			testCaseTimeout = Integer.parseInt(context.getProperty("main.testcase.timeout"));
+			testCaseTimeout = Integer.parseInt(this.context.getTestCaseTimeoutInSec());
 		} catch (Exception e) {
 			testCaseTimeout = -1;
 		}

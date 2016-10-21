@@ -1,6 +1,7 @@
 package com.navercorp.cubridqa.isolation;
 
 import com.jcraft.jsch.JSchException;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class IsolationHelper {
@@ -10,9 +11,9 @@ public class IsolationHelper {
 		if (context.isExecuteAtLocal()) {
 			title = "local";
 		} else {
-			String host = context.getInstanceProperty(envId, "ssh.host");
-			String port = context.getInstanceProperty(envId, "ssh.port");
-			String user = context.getInstanceProperty(envId, "ssh.user");
+			String host = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+			String port = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
+			String user = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
 			title = user + "@" + host + ":" + port;
 		}
 
@@ -29,10 +30,10 @@ public class IsolationHelper {
 		if (context.isExecuteAtLocal()) {
 			ssh = new SSHConnect();
 		} else {
-			String host = context.getInstanceProperty(envId, "ssh.host");
-			String port = context.getInstanceProperty(envId, "ssh.port");
-			String user = context.getInstanceProperty(envId, "ssh.user");
-			String pwd = context.getInstanceProperty(envId, "ssh.pwd");
+			String host = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+			String port = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
+			String user = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
+			String pwd = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
 
 			ssh = new SSHConnect(host, port, user, pwd);
 		}

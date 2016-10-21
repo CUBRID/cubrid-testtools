@@ -70,20 +70,20 @@ function run_isolation()
    
    cd $CTP_HOME
    #update configuration file
-   ini.sh -u "main.testcase.branch_git=$branch" $isolation_fm_test_conf
-   ini.sh -u "main.testing.category=$category" $isolation_fm_test_conf
-   ini.sh -u "main.testing.role=$role" $isolation_fm_test_conf
-   ini.sh -u "main.collaborate.url=$coverage_collaborate_url" $isolation_fm_test_conf
-   ini.sh -u "main.coverage.controller.ip=$coverage_controller_ip" $isolation_fm_test_conf
-   ini.sh -u "main.coverage.controller.user=$coverage_controller_user" $isolation_fm_test_conf 
-   ini.sh -u "main.coverage.controller.pwd=$coverage_controller_pwd" $isolation_fm_test_conf 
-   ini.sh -u "main.coverage.controller.port=$coverage_controller_port" $isolation_fm_test_conf 
-   ini.sh -u "main.coverage.controller.result=$coverage_controller_target_dir" $isolation_fm_test_conf 
+   ini.sh -u "testcase_git_branch=$branch" $isolation_fm_test_conf
+   ini.sh -u "test_category=$category" $isolation_fm_test_conf
+   ini.sh -u "cubrid_install_role=$role" $isolation_fm_test_conf
+   ini.sh -u "cubrid_additional_download_url=$coverage_collaborate_url" $isolation_fm_test_conf
+   ini.sh -u "coverage_controller_ip=$coverage_controller_ip" $isolation_fm_test_conf
+   ini.sh -u "coverage_controller_user=$coverage_controller_user" $isolation_fm_test_conf 
+   ini.sh -u "coverage_controller_pwd=$coverage_controller_pwd" $isolation_fm_test_conf 
+   ini.sh -u "coverage_controller_port=$coverage_controller_port" $isolation_fm_test_conf 
+   ini.sh -u "coverage_controller_result=$coverage_controller_target_dir" $isolation_fm_test_conf 
    if [ "$BUILD_TYPE" == "coverage" ];then
-   		ini.sh -u "main.feedback.type=file" $isolation_fm_test_conf
+   		ini.sh -u "feedback_type=file" $isolation_fm_test_conf
    fi 
-   ini.sh -u "main.testbuild.url=$url" $isolation_fm_test_conf
-   ini.sh -u "main.mode.continue=false" $isolation_fm_test_conf
+   ini.sh -u "cubrid_download_url=$url" $isolation_fm_test_conf
+   ini.sh -u "test_continue_yn=false" $isolation_fm_test_conf
 
    #execute testing
    ctp.sh isolation -c $isolation_fm_test_conf 2>&1 | tee $tmplog
@@ -98,7 +98,7 @@ function run_isolation_continue()
        mkdir -p $CTP_HOME/result/isolation/current_runtime_logs
    fi
    
-   ini.sh -u "main.mode.continue=true" ${isolation_fm_test_conf}
+   ini.sh -u "test_continue_yn=true" ${isolation_fm_test_conf}
    $CTP_HOME/bin/ctp.sh isolation -c ${isolation_fm_test_conf} 2>&1 | tee -a $tmplog
 }
 
