@@ -76,6 +76,11 @@ public class FeedbackFile implements Feedback {
 
 	@Override
 	public void onTaskStopEvent() {
+		if(this.totalCaseNum == 0){
+			this.totalCaseNum = this.totalExecutedCaseNum + this.totalSkipNum;
+			updateTestingStatistics();
+		}
+		
 		showTestResult();
 		
 		long taskStopTime = System.currentTimeMillis();
@@ -111,6 +116,7 @@ public class FeedbackFile implements Feedback {
 			head = "[UNKNOWN]";
 		}
 
+		this.totalExecutedCaseNum = totalSuccNum + totalFailNum;
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
 		updateTestingStatistics();
 	}

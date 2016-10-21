@@ -75,6 +75,11 @@ public class FeedbackFile implements Feedback {
 
 	@Override
 	public void onTaskStopEvent() {
+		if(this.totalCaseNum == 0){
+			this.totalCaseNum = this.totalExecutedCaseNum + this.totalSkipNum;
+			updateTestingStatistics();
+		}
+		
 		showTestResult();
 		
 		long taskStopTime = System.currentTimeMillis();
@@ -109,7 +114,8 @@ public class FeedbackFile implements Feedback {
 		} else {
 			head = "[UNKNOWN]";
 		}
-
+		
+		this.totalExecutedCaseNum = totalSuccNum + totalFailNum;
 		println(head + " " + testCase + " " + elapseTime + "ms " + envIdentify + " " + (hasCore ? "FOUND CORE" : "") + " " + (isTimeOut ? "TIMEOUT" : ""), resultCont, "");
 		updateTestingStatistics();
 	}
@@ -232,7 +238,7 @@ public class FeedbackFile implements Feedback {
 	}
 
 	public int getTaskId() {
-		return -1;
+		return 0;
 	}
 
 	@Override
