@@ -232,6 +232,9 @@ public class Context {
 		return value == null ? getProperty("default." + key, "") : value;
 	}
 
+	public String getExcludedFile(){
+		return getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE, "").trim();
+	}
 	public String getProperty(String key, String defaultValue) {
 		return this.config.getProperty(key, defaultValue);
 	}

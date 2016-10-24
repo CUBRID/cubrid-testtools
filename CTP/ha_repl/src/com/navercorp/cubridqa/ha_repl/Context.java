@@ -204,7 +204,7 @@ public class Context {
 	}
 	
 	public String getExcludedTestCaseFile() {
-		return CommonUtils.translateVariable(getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE));
+		return CommonUtils.translateVariable(getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE, "").trim());
 	}
 	
 	public String getInstanceProperty(String envId, String key) {

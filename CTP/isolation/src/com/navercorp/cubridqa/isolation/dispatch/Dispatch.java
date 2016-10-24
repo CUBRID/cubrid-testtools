@@ -187,7 +187,7 @@ public class Dispatch {
 	}
 
 	private ArrayList<String> findExcludedList() throws Exception {
-		String excludedFilename = context.getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE);
+		String excludedFilename = context.getExclucdedFile();
 		if (excludedFilename == null || excludedFilename.trim().equals(""))
 			return null;
 

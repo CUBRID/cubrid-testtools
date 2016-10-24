@@ -181,6 +181,10 @@ public class Context {
 	public String getTestCaseTimeoutInSec(){
 		return getProperty(ConfigParameterConstants.TESTCASE_TIMEOUT_IN_SECS, "-1");
 	}
+	
+	public String getExclucdedFile(){
+		return getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE, "");
+	}
 
 	public Feedback getFeedback() {
 		if (this.feedback == null) {
