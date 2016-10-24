@@ -346,7 +346,7 @@ public class DeployOneNode {
 	public void backup_linux() {
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("rm -rf ~/.CUBRID_SHELL_FM > /dev/null 2>&1");
-		scripts.addCommand("cp -r ~/CUBRID ~/.CUBRID_SHELL_FM");
+		scripts.addCommand("cp -r ${CUBRID} ~/.CUBRID_SHELL_FM");
 		String result;
 		try {
 			result = ssh.execute(scripts);

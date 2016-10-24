@@ -79,7 +79,9 @@ function run_jdbc {
     cp -rf current_runtime_logs $backup_file
     cp $ctp_jdbc_test_conf $backup_file
     tar zvcf ${backup_file}.tar.gz $backup_file
-    rm -rf $backup_file
+    if [ "${backup_file}" ];then
+    	rm -rf $backup_file
+    fi
 }
 
 

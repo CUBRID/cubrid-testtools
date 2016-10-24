@@ -380,7 +380,7 @@ public class Test {
 
 	public String resetCUBRID_windows() {
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("cd $CUBRID/..");
+		scripts.addCommand("cd ${CUBRID}/..");
 		scripts.addCommand("rm -rf CUBRID/conf/*");
 		scripts.addCommand("cp -rf .CUBRID_SHELL_FM/conf/* CUBRID/conf/");
 		scripts.addCommand("rm -rf CUBRID/databases/*");
@@ -403,15 +403,15 @@ public class Test {
 
 	public void resetCUBRID_linux() {
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("rm -rf ~/CUBRID/conf/*");
-		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/conf/* ~/CUBRID/conf/");
-		scripts.addCommand("rm -rf ~/CUBRID/databases/*");
-		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/databases/* ~/CUBRID/databases/");
-		scripts.addCommand("rm -rf ~/CUBRID/lib/libcubrid_??_??.so");
-		scripts.addCommand("rm -rf ~/CUBRID/lib/libcubrid_all_locales.so");
-		scripts.addCommand("find ~/CUBRID/log -type f -print | xargs -i rm -rf {} ");
-        scripts.addCommand("find ~/CUBRID/ -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
-        scripts.addCommand("find ~/CUBRID/ -name \"core\" | xargs -i rm -rf {} ");
+		scripts.addCommand("rm -rf ${CUBRID}/conf/*");
+		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/conf/* ${CUBRID}/conf/");
+		scripts.addCommand("rm -rf ${CUBRID}/databases/*");
+		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/databases/* ${CUBRID}/databases/");
+		scripts.addCommand("rm -rf ${CUBRID}/lib/libcubrid_??_??.so");
+		scripts.addCommand("rm -rf ${CUBRID}/lib/libcubrid_all_locales.so");
+		scripts.addCommand("find ${CUBRID}/log -type f -print | xargs -i rm -rf {} ");
+        scripts.addCommand("find ${CUBRID}/ -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
+        scripts.addCommand("find ${CUBRID}/ -name \"core\" | xargs -i rm -rf {} ");
         
 		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);		
 		if (relatedHosts.size() > 0) {

@@ -70,10 +70,6 @@ public class DeployNode {
 		StringBuffer s = new StringBuffer();
 		s.append("cubrid service stop;");
 		s.append("pkill cub").append(";");
-		s.append("rm -rf ~/CUBRID").append(";");
-		if (CommonUtils.isEmpty(hostManager.getTestDb()) == false) {
-			s.append("rm -rf ~/" + hostManager.getTestDb()).append(";");
-		}
 		s.append("ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {}").append(";");
 		GeneralScriptInput script = new GeneralScriptInput(s.toString());
 		script.addCommand("source ${CTP_HOME}/common/script/util_common.sh; clean_processes");
