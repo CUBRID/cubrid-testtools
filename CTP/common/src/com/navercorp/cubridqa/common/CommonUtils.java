@@ -678,6 +678,17 @@ public class CommonUtils {
 		}
 	}
 	
+	public static void cleanFilesByDirectory(String dir)
+	{
+		if(isEmpty(dir)) return;
+		
+		File[] subList = new File(dir).listFiles();
+		for (File file : subList) {
+			if (file.isFile())
+				file.delete();
+		}
+	}
+	
 	public static int greaterThanVersion(String v1, String v2) {
 		String[] a1 = v1.split("\\.");
 		String[] a2 = v2.split("\\.");
