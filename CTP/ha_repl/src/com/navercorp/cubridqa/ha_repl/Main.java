@@ -65,8 +65,11 @@ public class Main {
 			File file = new File(testRoot);
 			hasError = !file.exists();
 		}
-		if (hasError)
-			throw new Exception("Not found test cases directory. Please check 'scenario' in test configuration file.");
+		if (hasError){
+			System.out.println("[ERROR] Not found test cases directory. Please check 'scenario' in test configuration file.");
+			System.exit(-1);
+		}
+			
 
 		String cubridPackageUrl = context.getCubridPackageUrl();
 		if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(cubridPackageUrl)) {
@@ -81,11 +84,8 @@ public class Main {
 			context.setReInstallTestBuildYn(true);
 		} else {
 			String envId = context.getTestEnvList().get(0);
-			String host = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
-			String port = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
-			String user = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
-			String pwd = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
-			SSHConnect ssh = new SSHConnect(host, port, user, pwd, "ssh"); 
+			InstanceManager hostManager = new InstanceManager(context, envId);
+			SSHConnect ssh = hostManager.getHost("master");
 			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
 			if(CommonUtils.isEmpty(buildInfo)){
 				System.out.println("[ERROR]: Please confirm your build installation for local test!");
