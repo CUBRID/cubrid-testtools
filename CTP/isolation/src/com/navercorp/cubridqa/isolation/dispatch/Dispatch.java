@@ -187,7 +187,7 @@ public class Dispatch {
 	}
 
 	private ArrayList<String> findExcludedList() throws Exception {
-		String excludedFilename = context.getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE);
+		String excludedFilename = context.getExclucdedFile();
 		if (excludedFilename == null || excludedFilename.trim().equals(""))
 			return null;
 
@@ -200,7 +200,7 @@ public class Dispatch {
 		try {
 			script = new IsolationScriptInput();
 			script.addCommand("cd > /dev/null 2>&1");
-			script.addCommand("cat " + excludedFilename);
+			script.addCommand("cat " + excludedFilename.trim());
 			result = ssh.execute(script);
 		} finally {
 			if (ssh != null)

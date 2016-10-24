@@ -74,6 +74,10 @@ public class InstanceManager {
 			port = context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
 		}
 		String user = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
+		if(CommonUtils.isEmpty(user)){
+			user = context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
+		}
+		
 		String pwd = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
 		if(CommonUtils.isEmpty(pwd)) {
 			pwd = context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);

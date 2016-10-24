@@ -100,7 +100,7 @@ public class Dispatch {
 				}
 			}
 		} else {
-			clean();
+			initInstanceFiles();
 			travel(new File(testCaseRoot));
 			this.macroSkippedSize = 0;
 			this.macroSkippedList = new ArrayList<String>();
@@ -177,15 +177,9 @@ public class Dispatch {
 		return excludedList;
 	}
 
-	private void clean() throws IOException {
+	private void initInstanceFiles() throws IOException {
 		File allFile;
 		File finishedFile;
-
-		File[] subList = new File(context.getCurrentLogDir()).listFiles();
-		for (File file : subList) {
-			if (file.isFile())
-				file.delete();
-		}
 
 		allFile = new File(getFileNameForDispatchAll());
 		allFile.createNewFile();

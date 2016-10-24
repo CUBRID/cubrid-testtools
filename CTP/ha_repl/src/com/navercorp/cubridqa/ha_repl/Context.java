@@ -204,7 +204,7 @@ public class Context {
 	}
 	
 	public String getExcludedTestCaseFile() {
-		return CommonUtils.translateVariable(getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE));
+		return CommonUtils.translateVariable(getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE, "").trim());
 	}
 	
 	public String getInstanceProperty(String envId, String key) {
@@ -223,6 +223,9 @@ public class Context {
 		return enableCheckDiskSpace;
 	}
 	
+	public boolean enableSkipMakeLocale(){
+		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_SIKP_MAKE_LOCALE_YES_OR_NO, "false"));
+	}
 	public String getTestPlatform() {
 		return getProperty(ConfigParameterConstants.TEST_PLATFORM, "linux");
 	}

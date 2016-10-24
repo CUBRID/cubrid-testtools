@@ -245,7 +245,6 @@ public class CommonUtils {
 	}
 
 	public static ArrayList<String> getLineList(String filename) throws IOException {
-
 		if (filename == null)
 			return null;
 
@@ -675,6 +674,17 @@ public class CommonUtils {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	public static void cleanFilesByDirectory(String dir)
+	{
+		if(isEmpty(dir)) return;
+		
+		File[] subList = new File(dir).listFiles();
+		for (File file : subList) {
+			if (file.isFile())
+				file.delete();
 		}
 	}
 	

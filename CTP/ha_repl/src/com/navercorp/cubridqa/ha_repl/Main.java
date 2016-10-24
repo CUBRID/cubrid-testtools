@@ -119,6 +119,7 @@ public class Main {
 		if (context.isContinueMode()) {
 			context.getFeedback().onTaskContinueEvent();
 		} else {
+			com.navercorp.cubridqa.common.CommonUtils.cleanFilesByDirectory(context.getCurrentLogDir());
 			context.getFeedback().onTaskStartEvent();
 			context.getFeedback().onConvertEventStart();
 			Convert c = new Convert(testRoot);
