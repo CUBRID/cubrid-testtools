@@ -155,7 +155,7 @@ public class Dispatch {
 
 	private ArrayList<String> findExcludedList() throws Exception {
 		String excludedFilename = context.getExcludedTestCaseFile();
-		if (excludedFilename == null || excludedFilename.trim().equals(""))
+		if (CommonUtils.isEmpty(excludedFilename))
 			return null;
 
 		ArrayList<String> lineList = CommonUtils.getLineList(excludedFilename);
