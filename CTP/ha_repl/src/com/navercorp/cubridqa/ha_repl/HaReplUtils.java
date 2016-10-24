@@ -103,6 +103,8 @@ public class HaReplUtils {
 		log.println("------------ MASTER : CREATE DATABASE -----------------");
 
 		String result = master.execute(script);
+		log.println(result);
+	    System.out.println(result);
 		if (result.indexOf("fail") != -1) {
 			throw new Exception("fail to create on master.");
 		}
@@ -114,6 +116,8 @@ public class HaReplUtils {
 		for (SSHConnect ssh : slaveAndReplicaList) {
 			log.println("------------ SLAVE/REPLICA : CREATE DATABASE -----------------");
 			result = ssh.execute(script);
+			log.println(result);
+		    System.out.println(result);
 			if (result.indexOf("fail") != -1) {
 				throw new Exception("fail to create on slave/replica.");
 			}
