@@ -45,6 +45,7 @@ public class ConfigParameterConstants {
 	public static final String LARGE_SPACE_DIR = "large_space_dir";
 	public static final String ENABLE_CHECK_DISK_SPACE_YES_OR_NO = "enable_check_disk_space_yn";
 	public static final String ENABLE_STATUS_TRACE_YES_OR_NO = "enable_status_trace_yn";
+	public static final String ENABLE_SIKP_MAKE_LOCALE_YES_OR_NO = "enable_skip_make_locale_yn";
 	public static final String ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO = "enable_save_log_once_fail_yn";
 	public static final String DELETE_TESTCASE_AFTER_EACH_EXECUTION_YES_OR_NO = "delete_testcase_after_each_execution_yn";
 	public static final String CLEAN_PROCESS_AFTER_EXECUTION_QUIT_YES_OR_NO = "clean_processes_after_execution_quit_yn";

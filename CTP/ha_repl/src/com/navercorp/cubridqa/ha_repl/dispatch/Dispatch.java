@@ -158,7 +158,7 @@ public class Dispatch {
 		if (CommonUtils.isEmpty(excludedFilename))
 			return null;
 
-		ArrayList<String> lineList = CommonUtils.getLineList(excludedFilename);
+		ArrayList<String> lineList = CommonUtils.getLineList(excludedFilename.trim());
 
 		if (lineList == null || lineList.size() == 0)
 			return null;

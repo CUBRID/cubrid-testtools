@@ -223,6 +223,9 @@ public class Context {
 		return enableCheckDiskSpace;
 	}
 	
+	public boolean enableSkipMakeLocale(){
+		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_SIKP_MAKE_LOCALE_YES_OR_NO, "false"));
+	}
 	public String getTestPlatform() {
 		return getProperty(ConfigParameterConstants.TEST_PLATFORM, "linux");
 	}

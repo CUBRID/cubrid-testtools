@@ -250,7 +250,7 @@ public class Dispatch {
 		try {			
 			script = new ShellScriptInput();
 			String dir, filename;
-			excludedFilename = excludedFilename.replace('\\', '/');
+			excludedFilename = excludedFilename.trim().replace('\\', '/');
 			int p0 = excludedFilename.lastIndexOf("/");
 			if (p0 == -1) {
 				dir = ".";

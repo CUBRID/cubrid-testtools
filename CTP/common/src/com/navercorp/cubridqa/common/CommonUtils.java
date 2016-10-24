@@ -245,7 +245,6 @@ public class CommonUtils {
 	}
 
 	public static ArrayList<String> getLineList(String filename) throws IOException {
-
 		if (filename == null)
 			return null;
 
