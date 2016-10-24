@@ -58,7 +58,7 @@ public class HaReplUtils {
 		StringBuffer s = new StringBuffer();
 		s.append("pkill -u $USER cub;ps -u $USER | grep cub | awk '{print $1}' | grep -v PID | xargs -i  kill -9 {}; ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {};cubrid deletedb "
 				+ hostManager.getTestDb()).append(";");
-		s.append("cd ~/CUBRID/databases/").append(";");
+		s.append("cd ${CUBRID}/databases/").append(";");
 		if(CommonUtils.isEmpty(hostManager.getTestDb()) == false) {
 			s.append("rm -rf ").append(hostManager.getTestDb().trim() + "*").append(";");
 		}
@@ -70,7 +70,7 @@ public class HaReplUtils {
 		}
 
 		s = new StringBuffer();
-		s.append("cd ~/CUBRID/databases").append(";");
+		s.append("cd ${CUBRID}/databases").append(";");
 		s.append("mkdir ").append(hostManager.getTestDb()).append(";");
 		s.append("cd ").append(hostManager.getTestDb()).append(";");
 

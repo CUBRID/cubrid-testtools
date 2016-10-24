@@ -385,7 +385,7 @@ public class Test {
 
 	private void clearDatabaseLog() {
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
-		String cmd = "find ~/CUBRID/log -type f -print | xargs -i sh -c 'cat /dev/null > {}'";
+		String cmd = "find ${CUBRID}/log -type f -print | xargs -i sh -c 'cat /dev/null > {}'";
 		for (SSHConnect ssh : allNodeList) {
 			try {
 				mlog.print("clear database log on " + ssh.toString() + " ... ");
@@ -529,7 +529,7 @@ public class Test {
 	}
 
 	private void checkCUBRIDLogFile() {
-		String cmd = "grep -s -Ri 'Internal error' ~/CUBRID/log | wc -l";
+		String cmd = "grep -s -Ri 'Internal error' ${CUBRID}/log | wc -l";
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
 		String result;
 		for (SSHConnect ssh : allNodeList) {
