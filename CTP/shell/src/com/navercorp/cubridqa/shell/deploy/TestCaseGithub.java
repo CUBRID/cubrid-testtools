@@ -74,7 +74,9 @@ public class TestCaseGithub {
 			String toStar = CommonUtils.concatFile(wsRoot, "*").replace('\\', '/');
 
 			scripts.addCommand("mkdir -p " + wsRoot);
-			scripts.addCommand("rm -rf " + toStar);
+			if (!CommonUtils.isEmpty(toStar)) {
+				scripts.addCommand("rm -rf " + toStar);
+			}
 			scripts.addCommand("cp -r " + fromStar + " " + wsRoot);
 			
 			String result;

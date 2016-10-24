@@ -114,7 +114,7 @@ function run_sql {
 
             cat $tmplog |grep '^CORE_FILE:'|awk -F ':' '{print $NF}'|tr -d " " | xargs -i mv {} ${core_path}/..
             cp -rf $CUBRID ${core_path}/..
-            (cd ${core_backup_root}; tar -czvf ${testResultName}.tar.gz ${testResultName}; rm -rf ${testResultName})
+            (cd ${core_backup_root}; tar -czvf ${testResultName}.tar.gz ${testResultName}; if [ "${testResultName}" ];then rm -rf ${testResultName};fi)
         fi
     else
         run_coverage_collect_and_upload -h "${CTP_HOME}/../build" -n "$BUILD_ID" -c "$BUILD_SCENARIOS" -user "$MKEY_COVERAGE_UPLOAD_USER" -pwd "$MKEY_COVERAGE_UPLOAD_PWD" -host "$MKEY_COVERAGE_UPLOAD_IP" -to "${MKEY_COVERAGE_UPLOAD_DIR}/${BUILD_ID}/new" -port "${DAILYQA_SSH_PORT_DEFAULT}"

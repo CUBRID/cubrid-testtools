@@ -486,7 +486,7 @@ public class Test {
 
 		for (SSHConnect ssh : allNodeList) {
 			try {
-				checkScript = new GeneralScriptInput("find $CUBRID -name \"core.*\" -exec rm -rf {} \\; ");
+				checkScript = new GeneralScriptInput("if [ -d \"${CUBRID}\" ];then find ${CUBRID} -name \"core.*\" -exec rm -rf {} \\; ;fi");
 				result = ssh.execute(checkScript);
 				mlog.println("clean core files: " + ssh.toString());
 			} catch (Exception e) {

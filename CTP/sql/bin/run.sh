@@ -522,7 +522,7 @@ function delete_db()
      #delete db folder 
      cd $cubrid_root_dir/databases
      if [ -d "$db_name" ];then
-	rm -rf $db_name
+		rm -rf $db_name
      fi
       
 }
