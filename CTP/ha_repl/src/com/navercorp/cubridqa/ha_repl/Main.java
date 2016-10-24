@@ -93,6 +93,7 @@ public class Main {
 				System.exit(-1);
 			}
 			
+			hostManager.close();
 			context.setBuildId(CommonUtils.getBuildId(buildInfo));
 			context.setBuildBits(CommonUtils.getBuildBits(buildInfo));
 			context.setReInstallTestBuildYn(false);

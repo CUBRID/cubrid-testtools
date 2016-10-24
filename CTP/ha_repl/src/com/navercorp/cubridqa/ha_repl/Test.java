@@ -122,7 +122,9 @@ public class Test {
 		this.mlog.close();
 		this.hostManager.close();
 		try {
-			this.connection.close();
+			if(this.connection!=null && !this.connection.isClosed()){
+				this.connection.close();
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
