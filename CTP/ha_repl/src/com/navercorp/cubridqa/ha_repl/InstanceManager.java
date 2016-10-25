@@ -48,8 +48,17 @@ public class InstanceManager {
 		this.testDb = context.getProperty(ConfigParameterConstants.CUBRID_TESTDB_NAME, "xdb");
 
 		addHost("master", -1);
-		addHost("slave");
-		addHost("replica");
+		try {
+			addHost("slave", -1);
+		} catch (Exception ex) {
+			addHost("slave");
+		}
+
+		try {
+			addHost("replica", -1);
+		} catch (Exception ex) {
+			addHost("replica");
+		}
 	}
 
 	private void addHost(String role) throws Exception {
@@ -133,7 +142,7 @@ public class InstanceManager {
 	}
 
 	public boolean supportReplica() {
-		return this.hostTable.get("replica1") != null;
+		return this.hostTable.get("replica") != null || this.hostTable.get("replica1") != null;
 	}
 
 	public SSHConnect getHost(String hostId) {
@@ -149,8 +158,13 @@ public class InstanceManager {
 
 	public ArrayList<SSHConnect> getAllHost(String preHost) {
 		ArrayList<SSHConnect> list = new ArrayList<SSHConnect>();
+		SSHConnect ssh = this.hostTable.get(preHost);
+		if (ssh != null) {
+			list.add(ssh);
+			return list;
+		}
+
 		int index = 1;
-		SSHConnect ssh;
 		while (true) {
 			ssh = this.hostTable.get(preHost + (index++));
 			if (ssh == null)
