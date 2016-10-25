@@ -72,8 +72,12 @@ public class InstanceManager {
 		return addHost(hostId, host, port, user, pwd);
 	}
 	
-	public String getInstanceProperty(String key) {
-		String val = context.getInstanceProperty(this.currEnvId, key);
+	public String getUserNameForMasterInstance(){
+		return getInstanceProperty("master", ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
+	}
+	
+	public String getInstanceProperty(String roleId, String key) {
+		String val = getInstanceProperty(roleId + "." + key);
 		if (CommonUtils.isEmpty(val)) {
 			return context.getProperty("default." + key);
 		} else {
@@ -81,6 +85,16 @@ public class InstanceManager {
 		}
 	}
 	
+	public String getInstanceProperty(String key) {
+		String value = context
+				.getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX
+						+ currEnvId + "." + key);
+		if (CommonUtils.isEmpty(value)) {
+			value = context.getProperty("default." + key);
+		}
+		return value;
+	}
+
 	public String getTestDb() {
 		return this.testDb;
 	}

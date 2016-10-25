@@ -204,12 +204,10 @@ public class DeployNode {
 					+ "' $CUBRID/conf/cubrid_broker.conf");
 		}
 		
-		String cubridBrokerSHMId = this.context.getInstanceProperty(
-				this.hostManager.getEnvId(), ConfigParameterConstants.ROLE_BROKER_COMMON
+		String cubridBrokerSHMId = hostManager.getInstanceProperty(ConfigParameterConstants.ROLE_BROKER_COMMON
 						+ "." + "MASTER_SHM_ID");
 		if (CommonUtils.isEmpty(cubridBrokerSHMId)) {
-			String cubridPortId = this.context.getInstanceProperty(
-					this.hostManager.getEnvId(), ConfigParameterConstants.ROLE_ENGINE
+			String cubridPortId = hostManager.getInstanceProperty(ConfigParameterConstants.ROLE_ENGINE
 							+ "." + "cubrid_port_id");
 			if (!CommonUtils.isEmpty(cubridPortId)) {
 				scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID="
@@ -232,8 +230,7 @@ public class DeployNode {
 					+ cubridHAParamsList + "' $CUBRID/conf/cubrid_ha.conf");
 		}else{
 			
-			String cubridHaPortId = this.context.getInstanceProperty(
-					this.hostManager.getEnvId(), ConfigParameterConstants.ROLE_HA
+			String cubridHaPortId = hostManager.getInstanceProperty(ConfigParameterConstants.ROLE_HA
 							+ "." + "ha_port_id");
 			if(!CommonUtils.isEmpty(cubridHaPortId)){
 				cubridHaPortId = "59901";
@@ -265,7 +262,7 @@ public class DeployNode {
 	private String calcHaNodeList() throws Exception {
 		StringBuffer haNodeList = new StringBuffer();
 
-		String userName = hostManager.getInstanceProperty(ConfigParameterConstants.TEST_INSTANCE_MASTER_USER_SUFFIX);
+		String userName = hostManager.getUserNameForMasterInstance();
 		haNodeList.append(userName).append('@');
 		haNodeList.append(hostManager.getHost("master").execute("hostname").trim());
 
@@ -280,7 +277,7 @@ public class DeployNode {
 	private String calcHaReplicaList() throws Exception {
 		StringBuffer haNodeList = new StringBuffer();
 
-		String userName = hostManager.getInstanceProperty(ConfigParameterConstants.TEST_INSTANCE_MASTER_USER_SUFFIX);
+		String userName = hostManager.getUserNameForMasterInstance();
 		haNodeList.append(userName).append('@');
 
 		ArrayList<SSHConnect> sshList = hostManager.getAllHost("replica");

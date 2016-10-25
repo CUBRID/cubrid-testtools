@@ -73,8 +73,8 @@ public class Context {
 		String key;
 		while (it.hasNext()) {
 			key = (String) it.next();
-			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith("." + ConfigParameterConstants.TEST_INSTANCE_MASTER_HOST_SUFFIX)) {
-				testEnvList.add(key.substring(4, key.indexOf("." + ConfigParameterConstants.TEST_INSTANCE_MASTER_HOST_SUFFIX)));
+			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith(".master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)) {
+				testEnvList.add(key.substring(4, key.indexOf(".master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)));
 			}
 		}
 		
@@ -205,14 +205,6 @@ public class Context {
 	
 	public String getExcludedTestCaseFile() {
 		return CommonUtils.translateVariable(getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE, "").trim());
-	}
-	
-	public String getInstanceProperty(String envId, String key) {
-		String value = getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX + envId + "." + key);
-		if (CommonUtils.isEmpty(value)) {
-			value = getProperty("default." + key);
-		}
-		return value;
 	}
 	
 	public boolean shouldCleanupAfterQuit() {
