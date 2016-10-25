@@ -88,6 +88,7 @@ public class TestCaseGithub {
 		scripts.addCommand("./upgrade.sh");
 
 		if (context.shouldUpdateTestCase()) {
+			scripts.addCommand("cd ");
 			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
 		}
 		scripts.addCommand("cd ${CTP_HOME}/isolation/ctltool");
