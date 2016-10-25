@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.isolation;
 
 import java.util.ArrayList;
-
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -71,7 +70,7 @@ public class TestFactory {
 				System.out.println("NO TEST CASE TO TEST WITH CONTINUE MODE!");
 				return;
 			}
-			
+
 			checkRequirement(context);
 
 			System.out.println("============= UPDATE TEST CASES ==================");
@@ -79,6 +78,7 @@ public class TestFactory {
 			System.out.println("DONE");
 
 		} else {
+			com.navercorp.cubridqa.common.CommonUtils.cleanFilesByDirectory(context.getCurrentLogDir());
 			checkRequirement(context);
 			feedback.onTaskStartEvent(context.getCubridPackageUrl());
 			System.out.println("============= UPDATE TEST CASES ==================");
@@ -120,7 +120,7 @@ public class TestFactory {
 		feedback.onTaskStopEvent();
 
 		System.out.println("TEST COMPLETE");
-		
+
 		backupTestResults();
 	}
 
@@ -288,15 +288,15 @@ public class TestFactory {
 		deployPool.invokeAll(callers);
 		deployPool.shutdown();
 	}
-	
+
 	private void checkRequirement(Context context) throws Exception {
 		System.out.println("BEGIN TO CHECK: ");
 		ArrayList<String> envList = context.getEnvList();
 		CheckRequirement check;
 		boolean pass = true;
-		for(String envId: envList) {
+		for (String envId : envList) {
 			check = new CheckRequirement(context, envId);
-			if (!check.check()) {				
+			if (!check.check()) {
 				pass = false;
 			}
 		}

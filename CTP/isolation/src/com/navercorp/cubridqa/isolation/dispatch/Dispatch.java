@@ -114,7 +114,7 @@ public class Dispatch {
 			}
 
 		} else {
-			clean();
+			initInstanceFiles();
 			this.tbdList = findAllTestCase();
 
 			this.macroSkippedSize = 0;
@@ -221,15 +221,9 @@ public class Dispatch {
 		return testCaseList;
 	}
 
-	private void clean() throws IOException {
+	private void initInstanceFiles() throws IOException {
 		File allFile;
 		File finishedFile;
-
-		File[] subList = new File(context.getCurrentLogDir()).listFiles();
-		for (File file : subList) {
-			if (file.isFile())
-				file.delete();
-		}
 
 		allFile = new File(getFileNameForDispatchAll());
 		allFile.createNewFile();
