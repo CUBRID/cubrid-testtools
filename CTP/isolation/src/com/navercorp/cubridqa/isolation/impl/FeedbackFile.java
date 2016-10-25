@@ -90,7 +90,10 @@ public class FeedbackFile implements Feedback {
 
 		this.totalCaseNum = tbdNum;
 		this.totalSkipNum = macroSkippedNum + tempSkippedNum;
+		println("The Category:" + context.getTestCategory());
+		System.out.println("The category:" + context.getTestCategory());
 		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
+		System.out.println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
 		updateTestingStatistics();
 	}
 
@@ -122,12 +125,13 @@ public class FeedbackFile implements Feedback {
 		Properties prop;
 		try {
 			prop = com.navercorp.cubridqa.common.CommonUtils.getProperties(this.statusLogName);
-
+			println("Test Category:" + context.getTestCategory());
 			println("Total Case:" + prop.getProperty("total_case_count"));
 			println("Total Execution Case:" + prop.getProperty("total_executed_case_count"));
 			println("Total Success Case:" + prop.getProperty("total_success_case_count"));
 			println("Total Fail Case:" + prop.getProperty("total_fail_case_count"));
 			println("Total Skip Case:" + prop.getProperty("total_skip_case_count"));
+			System.out.println("Test Category:" + context.getTestCategory());
 			System.out.println("Total Case:" + prop.getProperty("total_case_count"));
 			System.out.println("Total Execution Case:" + prop.getProperty("total_executed_case_count"));
 			System.out.println("Total Success Case:" + prop.getProperty("total_success_case_count"));
