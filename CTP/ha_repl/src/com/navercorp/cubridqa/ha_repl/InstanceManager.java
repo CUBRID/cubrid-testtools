@@ -65,17 +65,20 @@ public class InstanceManager {
 
 	private SSHConnect addHost(String role, int num) throws Exception {
 		String hostId = role + (num < 1 ? "" : num);
-		String host = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
-		String port = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
-		String user = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
-		String pwd = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
+		String host = getInstanceProperty(hostId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+		if (CommonUtils.isEmpty(host)) {
+			throw new Exception("Not Found More Hosts");
+		}
+		String port = getInstanceProperty(hostId, ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
+		String user = getInstanceProperty(hostId, ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
+		String pwd = getInstanceProperty(hostId, ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
 		return addHost(hostId, host, port, user, pwd);
 	}
-	
-	public String getUserNameForMasterInstance(){
+
+	public String getUserNameForMasterInstance() {
 		return getInstanceProperty("master", ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
 	}
-	
+
 	public String getInstanceProperty(String roleId, String key) {
 		String val = getInstanceProperty(roleId + "." + key);
 		if (CommonUtils.isEmpty(val)) {
@@ -84,11 +87,9 @@ public class InstanceManager {
 			return val;
 		}
 	}
-	
+
 	public String getInstanceProperty(String key) {
-		String value = context
-				.getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX
-						+ currEnvId + "." + key);
+		String value = context.getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX + currEnvId + "." + key);
 		if (CommonUtils.isEmpty(value)) {
 			value = context.getProperty("default." + key);
 		}
@@ -130,7 +131,7 @@ public class InstanceManager {
 			}
 		}
 	}
-	
+
 	public boolean supportReplica() {
 		return this.hostTable.get("replica1") != null;
 	}
@@ -168,7 +169,7 @@ public class InstanceManager {
 			}
 		}
 	}
-	
+
 	public ArrayList<SSHConnect> getAllNodeList() {
 		ArrayList<SSHConnect> allList = new ArrayList<SSHConnect>();
 		allList.add(getHost("master"));
@@ -182,7 +183,7 @@ public class InstanceManager {
 		slaveAndReplicaList.addAll(getAllHost("replica"));
 		return slaveAndReplicaList;
 	}
-	
+
 	public String getEnvId() {
 		return this.currEnvId;
 	}
