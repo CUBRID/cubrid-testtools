@@ -31,7 +31,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -47,7 +46,7 @@ public class Dispatch {
 
 	private ArrayList<String> tbdList;
 	private int totalTbdSize;
-	
+
 	private ArrayList<String> macroSkippedList;
 	private int macroSkippedSize = 0;
 
@@ -56,9 +55,9 @@ public class Dispatch {
 
 	private int nextTestFileIndex;
 	private Log all;
-	
+
 	private boolean isFinished;
-	
+
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
 		this.tbdList = new ArrayList<String>();
@@ -77,9 +76,10 @@ public class Dispatch {
 	}
 
 	public synchronized String nextTestFile() {
-		
-		if(isFinished) return null;
-		
+
+		if (isFinished)
+			return null;
+
 		if (totalTbdSize == 0 || this.nextTestFileIndex >= totalTbdSize) {
 			isFinished = true;
 			return null;
@@ -88,7 +88,7 @@ public class Dispatch {
 			this.nextTestFileIndex = 0;
 		}
 		String nextTestFile = tbdList.get(this.nextTestFileIndex);
-		this.nextTestFileIndex++;		
+		this.nextTestFileIndex++;
 		return nextTestFile;
 	}
 
@@ -97,7 +97,7 @@ public class Dispatch {
 		if (context.isContinueMode()) {
 			this.tbdList = CommonUtils.getLineList(getFileNameForDispatchAll());
 			ArrayList<String> finList;
-			
+
 			File[] subList = new File(context.getCurrentLogDir()).listFiles(new FilenameFilter() {
 				public boolean accept(File dir, String name) {
 					return name.startsWith("dispatch_tc_FIN") && name.endsWith(".txt");
@@ -108,7 +108,7 @@ public class Dispatch {
 				if (finList != null) {
 					this.tbdList.removeAll(finList);
 				}
-			}			
+			}
 		} else {
 			clean();
 			this.tbdList = findAllTestCase();
@@ -126,10 +126,10 @@ public class Dispatch {
 				}
 				this.macroSkippedSize = macroSkippedList.size();
 			}
-			
+
 			this.tempSkippedList = new ArrayList<String>();
 			ArrayList<String> excluedList = findExcludedList();
-				
+
 			if (excluedList != null) {
 				System.out.println("****************************************");
 				System.out.println("# OF THE CASE EXCLUDED = " + excluedList.size());
@@ -146,7 +146,7 @@ public class Dispatch {
 					}
 				}
 			}
-			
+
 			this.all = new Log(getFileNameForDispatchAll(), false);
 			for (String line : tbdList) {
 				all.println(line);
@@ -155,11 +155,11 @@ public class Dispatch {
 		}
 		this.nextTestFileIndex = -1;
 		this.totalTbdSize = this.tbdList.size();
-		if(this.totalTbdSize == 0) {
+		if (this.totalTbdSize == 0) {
 			this.isFinished = true;
 		}
 	}
-	
+
 	private static String getAllTestCaseScripts(String dir) {
 		return "find " + dir + " -name \"*.sh\" -type f -print | xargs -i echo {} | awk -F \"/\" '{ if( $(NF-2)\".sh\"== $NF) print }'";
 	}
@@ -170,9 +170,9 @@ public class Dispatch {
 		SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId);
 		ShellScriptInput script;
 		String result;
-		
+
 		try {
-			script = new ShellScriptInput();			
+			script = new ShellScriptInput();
 			script.addCommand("cd ");
 			script.addCommand(getAllTestCaseScripts(context.getTestCaseWorkspace()));
 			result = ssh.execute(script);
@@ -186,7 +186,8 @@ public class Dispatch {
 		ArrayList<String> testCaseList = new ArrayList<String>();
 		for (String tc : tcArray) {
 			tc = tc.trim();
-			if(tc.equals("")) continue;
+			if (tc.equals(""))
+				continue;
 			testCaseList.add(tc);
 		}
 		return testCaseList;
@@ -236,18 +237,19 @@ public class Dispatch {
 		}
 		return testCaseList;
 	}
-	
+
 	private ArrayList<String> findExcludedList() throws Exception {
 		String excludedFilename = context.getExcludedFile();
-		if(excludedFilename == null || excludedFilename.trim().equals("")) return null;
-		
+		if (excludedFilename == null || excludedFilename.trim().equals(""))
+			return null;
+
 		String envId = context.getEnvList().get(0);
 
 		SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId);
 		ShellScriptInput script;
 		String result;
-		
-		try {			
+
+		try {
 			script = new ShellScriptInput();
 			String dir, filename;
 			excludedFilename = excludedFilename.replace('\\', '/');
@@ -259,17 +261,17 @@ public class Dispatch {
 				dir = excludedFilename.substring(0, p0);
 				filename = excludedFilename.substring(p0 + 1);
 			}
-			
+
 			script.addCommand("cd " + dir + " > /dev/null 2>&1");
-			
-			if (context.needCleanTestCase() && ! context.isScenarioInGit()) {
+
+			if (context.needCleanTestCase() && !context.isScenarioInGit()) {
 				script.addCommand("svn revert -R -q " + filename + " >/dev/null 2>&1");
 				script.addCommand("svn up " + context.getSVNUserInfo() + " " + filename + " >/dev/null 2>&1");
-				System.out.println("Update Excluded List result ("+ envId + "): ");
+				System.out.println("Update Excluded List result (" + envId + "): ");
 			}
 			script.addCommand("cat " + filename);
-			result = ssh.execute(script);			
-//			System.out.println(result);
+			result = ssh.execute(script);
+			// System.out.println(result);
 		} finally {
 			if (ssh != null)
 				ssh.close();
@@ -281,20 +283,23 @@ public class Dispatch {
 		String tc1;
 		for (String tc : tcArray) {
 			tc1 = tc.trim();
-			if(tc1.equals("")) continue;
-			if(tc1.startsWith("#")) continue;
-			if(tc1.startsWith("--")) continue;
+			if (tc1.equals(""))
+				continue;
+			if (tc1.startsWith("#"))
+				continue;
+			if (tc1.startsWith("--"))
+				continue;
 			testCaseList.add(tc1);
 		}
 		return testCaseList;
 	}
-	
-	private String getFileNameForDispatchAll(){
+
+	private String getFileNameForDispatchAll() {
 		return CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_ALL.txt");
 	}
 
-	private String getFileNameForDispatchFin(String envId){
-		return CommonUtils.concatFile(context.getCurrentLogDir(),"dispatch_tc_FIN_" + envId + ".txt");
+	private String getFileNameForDispatchFin(String envId) {
+		return CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt");
 	}
 
 	private void clean() throws IOException {
@@ -319,19 +324,19 @@ public class Dispatch {
 			finishedFile.createNewFile();
 		}
 	}
-	
+
 	public int getTotalTbdSize() {
 		return totalTbdSize;
 	}
-	
+
 	public boolean isFinished() {
 		return this.isFinished;
 	}
-	
+
 	public int getMacroSkippedSize() {
 		return this.macroSkippedSize;
 	}
-	
+
 	public ArrayList<String> getMacroSkippedList() {
 		return this.macroSkippedList;
 	}
@@ -339,7 +344,7 @@ public class Dispatch {
 	public int getTempSkippedSize() {
 		return this.tempSkippedSize;
 	}
-	
+
 	public ArrayList<String> getTempSkippedList() {
 		return this.tempSkippedList;
 	}

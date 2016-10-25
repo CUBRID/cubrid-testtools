@@ -15,9 +15,9 @@ public class GeneralLocalTest {
 
 	public GeneralLocalTest(Context context) {
 		this.context = context;
-		
+
 		String category = context.getProperty(ConfigParameterConstants.TEST_CATEGORY, (ConfigParameterConstants.TEST_CATEGORY).toUpperCase(), false);
-		if(CommonUtils.isEmpty(category)) {
+		if (CommonUtils.isEmpty(category)) {
 			category = "general";
 		}
 		context.setTestCategory(category);
@@ -27,7 +27,7 @@ public class GeneralLocalTest {
 		if (!CommonUtils.isEmpty(buildId)) {
 			context.setTestBuild(buildId);
 		}
-		
+
 		String buildBit = context.getProperty(ConfigParameterConstants.TEST_BUILD_BITS, (ConfigParameterConstants.TEST_BUILD_BITS).toUpperCase(), false);
 		if (!CommonUtils.isEmpty(buildBit)) {
 			context.setVersion(buildBit);
@@ -91,7 +91,7 @@ public class GeneralLocalTest {
 	private Result invoke(String scripts, String... keys) {
 		if (scripts == null)
 			return null;
-		
+
 		String testType = context.getProperty("TEST_TYPE", "TEST_TYPE", false);
 
 		scripts = "cd ${CTP_HOME}; source shell/local/" + testType + ".sh; " + scripts;
@@ -128,7 +128,6 @@ public class GeneralLocalTest {
 		}
 		return new Result(output, props);
 	}
-	
 
 	class Result {
 		String output;

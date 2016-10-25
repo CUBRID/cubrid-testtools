@@ -26,8 +26,6 @@
 package com.navercorp.cubridqa.isolation.impl;
 
 import java.sql.Connection;
-
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -37,13 +35,13 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
+import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.Feedback;
-import com.navercorp.cubridqa.common.CommonUtils;
-import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.HttpUtil;
-import com.navercorp.cubridqa.common.Log;
 
 public class FeedbackDB implements Feedback {
 

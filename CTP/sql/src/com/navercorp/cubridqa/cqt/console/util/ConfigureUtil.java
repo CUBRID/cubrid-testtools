@@ -29,8 +29,6 @@ import java.util.Map;
 
 import org.apache.avalon.framework.configuration.Configuration;
 
-import com.navercorp.cubridqa.cqt.console.util.PropertiesUtil;
-
 public class ConfigureUtil {
 
 	private Map<String, String> propMap;
@@ -44,12 +42,12 @@ public class ConfigureUtil {
 	public ConfigureUtil() {
 		loadConf();
 	}
-	
+
 	/**
 	 * 
 	 * @Title: loadConf
 	 * @Description:Load configuration of CUBRID QA tool.
-	 * @param 
+	 * @param
 	 * @return void
 	 * @throws
 	 */
@@ -113,7 +111,7 @@ public class ConfigureUtil {
 		}
 		return ret;
 	}
-	
+
 	public String getDbBuildServer() {
 		return propMap.get("dbbuildserver");
 	}

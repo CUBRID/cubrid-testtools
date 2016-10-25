@@ -91,7 +91,7 @@ public class Log {
 		if (msg == null)
 			return;
 		if (echo) {
-			if(newLine) {	
+			if (newLine) {
 				System.out.println(msg);
 			} else {
 				System.out.print(msg);

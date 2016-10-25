@@ -171,7 +171,7 @@ public class CommonUtil {
 			return null;
 
 		cont = cont.trim();
-		
+
 		char currChar;
 		boolean lastCharIsBlank = false;
 		int len = cont.length();
@@ -179,7 +179,7 @@ public class CommonUtil {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < len; i++) {
 			currChar = cont.charAt(i);
-			if(currChar == ' ' ) {
+			if (currChar == ' ') {
 				if (!lastCharIsBlank) {
 					sb.append(currChar);
 				}
@@ -188,7 +188,7 @@ public class CommonUtil {
 			}
 			lastCharIsBlank = currChar == ' ';
 		}
-		
+
 		return sb.toString();
 	}
 

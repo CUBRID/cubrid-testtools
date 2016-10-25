@@ -27,13 +27,11 @@ package com.navercorp.cubridqa.common;
 import java.io.File;
 import java.util.Properties;
 
-import com.navercorp.cubridqa.common.CommonUtils;
-
 public class Constants {
 
 	public static final String ENV_CTP_HOME_KEY = "CTP_HOME";
 	public static final String ENV_HOME_KEY = "HOME";
-	
+
 	public static final String ENV_CTP_HOME = CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY);
 	public static final String ENV_HOME = CommonUtils.getEnvInFile(ENV_HOME_KEY);
 
@@ -42,11 +40,7 @@ public class Constants {
 	public static Properties COMMON_DAILYQA_CONF;
 	static {
 		try {
-			COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils
-					.getEnvInFile(ENV_CTP_HOME_KEY)
-					+ File.separator
-					+ "conf"
-					+ File.separator + "common.conf");
+			COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY) + File.separator + "conf" + File.separator + "common.conf");
 		} catch (Exception ex) {
 			System.out.println("==> Skip common properties initialization");
 			COMMON_DAILYQA_CONF = new Properties();

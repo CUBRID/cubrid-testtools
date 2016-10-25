@@ -61,7 +61,7 @@ public class LocalInvoker {
 		FileWriter writer = null;
 		try {
 			writer = new FileWriter(tmpFile);
-			writer.write("echo " + START_FLAG + Constants.LINE_SEPARATOR);			
+			writer.write("echo " + START_FLAG + Constants.LINE_SEPARATOR);
 			writer.write(cmds + Constants.LINE_SEPARATOR);
 			writer.write("echo " + COMP_FLAG + Constants.LINE_SEPARATOR);
 			writer.flush();
@@ -81,7 +81,7 @@ public class LocalInvoker {
 	}
 
 	private static String execPlainShell(String scriptFilename, boolean isWindows) {
-		//System.out.println(scriptFilename);
+		// System.out.println(scriptFilename);
 		Runtime run = Runtime.getRuntime();
 		Process p = null;
 		InputStream in = null;
@@ -131,7 +131,7 @@ public class LocalInvoker {
 class StreamGobbler extends Thread {
 	InputStream in;
 	StringBuffer buffer = new StringBuffer();
-	
+
 	CountDownLatch endLatch;
 
 	StreamGobbler(CountDownLatch endLatch, InputStream in) {

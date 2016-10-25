@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.scheduler.producer;
 
 import java.io.File;
-
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -49,7 +48,7 @@ public class FileProcess {
 	Configure conf;
 	String storeId;
 	String buildId;
-	
+
 	long lastSizeForSingle = -1;
 	long lastTimestampForSingle = -1;
 
@@ -101,46 +100,61 @@ public class FileProcess {
 			sendMessage(Constants.QUEUE_CUBRID_QA_SQL_LINUX, 64, "site", "general");
 
 			sendMessage(Constants.QUEUE_CUBRID_QA_SQL_CCI_LINUX, 64, "sql", "general");
-			
+
 			sendMessage(Constants.QUEUE_CUBRID_QA_SHELL_LINUX, 64, "shell", "general");
-			//sendMessage(Constants.QUEUE_CUBRID_QA_HA_REPL_LINUX, 64, "ha_repl", "general");
+			// sendMessage(Constants.QUEUE_CUBRID_QA_HA_REPL_LINUX, 64,
+			// "ha_repl", "general");
 			sendMessage(Constants.QUEUE_CUBRID_QA_HA_REPL_PERF_LINUX, 64, "ha_repl_perf", "general");
 
 			sendMessage(Constants.QUEUE_CUBRID_QA_YCSB_LINUX, 64, "ycsb", "general");
 			sendMessage(Constants.QUEUE_CUBRID_QA_SYSBENCH_LINUX, 64, "sysbench", "general");
-			//sendMessage(Constants.QUEUE_CUBRID_QA_DOTS_LINUX, 64, "dots", "general");
+			// sendMessage(Constants.QUEUE_CUBRID_QA_DOTS_LINUX, 64, "dots",
+			// "general");
 			sendMessage(Constants.QUEUE_CUBRID_QA_TPCC_LINUX, 64, "tpc-c", "general");
 			sendMessage(Constants.QUEUE_CUBRID_QA_TPCW_LINUX, 64, "tpc-w", "general");
 
 			sendMessage(Constants.QUEUE_CUBRID_QA_MEMORY_LEAK_LINUX, 64, "memoryleak", "general");
-			
+
 			sendMessage(Constants.QUEUE_CUBRID_QA_BASIC_PERF_LINUX, 64, "basic_perf", "general");
-			
+
 			sendMessage(Constants.QUEUE_CUBRID_QA_NBD_LINUX, 64, "nbd", "general");
 
 			sendMessage(Constants.QUEUE_CUBRID_QA_CCI_LINUX, 64, "cci", "general");
 
-			//sendMessage(Constants.QUEUE_CUBRID_QA_SHELL_HA_LINUX, 64, "shell_ha", "general");
-			
+			// sendMessage(Constants.QUEUE_CUBRID_QA_SHELL_HA_LINUX, 64,
+			// "shell_ha", "general");
+
 			sendMessage(Constants.QUEUE_CUBRID_QA_CAS4MYSQL_NTEST, 64, "cas4mysql_ntest", "general");
 			sendMessage(Constants.QUEUE_CUBRID_QA_CAS4ORACLE_NTEST, 64, "cas4oracle_ntest", "general");
 			sendMessage(Constants.QUEUE_CUBRID_QA_CAS4MYSQL_UNITTEST, 64, "cas4mysql_unit", "general");
 			sendMessage(Constants.QUEUE_CUBRID_QA_CAS4ORACLE_UNITTEST, 64, "cas4oracle_unit", "general");
 
-			//sendMessage(Constants.QUEUE_CUBRID_QA_SHARD_LINUX, 64, "shard", "general");
-			
-//			String mainVersion = getVersion(buildId);
-//			
-//			sendI18NMessage(Constants.QUEUE_CUBRID_QA_I18N_LINUX_64, 64, "i18n", "general", "i18n_for_" + mainVersion);
-//			
-//			sendMessage(Constants.QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_DRIVER, 64, "compat_jdbc", "general", "jdbc_compatibility_for_"+mainVersion+"_D");
-//			sendMessage(Constants.QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_SERVER_64, 64, "compat_jdbc", "general", "jdbc_compatibility_for_"+mainVersion+"_S64");
-//
-//			sendMessage(Constants.QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64, 64, "compat_cci", "general", "cci_compatibility_for_"+mainVersion+"_D64");
-//			sendMessage(Constants.QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64, 64, "compat_cci", "general", "cci_compatibility_for_"+mainVersion+"_S64");
-//			
-//			sendDBImageMessage(Constants.QUEUE_CUBRID_QA_COMPAT_DBIMG_SRV, 64, "compat_dbimg", "general", "dbimg_for_"+mainVersion+"_SRV");
-//			sendDBImageMessage(Constants.QUEUE_CUBRID_QA_COMPAT_DBIMG_INS, 64, "compat_dbimg", "general", "dbimg_for_"+mainVersion+"_INS");
+			// sendMessage(Constants.QUEUE_CUBRID_QA_SHARD_LINUX, 64, "shard",
+			// "general");
+
+			// String mainVersion = getVersion(buildId);
+			//
+			// sendI18NMessage(Constants.QUEUE_CUBRID_QA_I18N_LINUX_64, 64,
+			// "i18n", "general", "i18n_for_" + mainVersion);
+			//
+			// sendMessage(Constants.QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_DRIVER, 64,
+			// "compat_jdbc", "general",
+			// "jdbc_compatibility_for_"+mainVersion+"_D");
+			// sendMessage(Constants.QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_SERVER_64,
+			// 64, "compat_jdbc", "general",
+			// "jdbc_compatibility_for_"+mainVersion+"_S64");
+			//
+			// sendMessage(Constants.QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64,
+			// 64, "compat_cci", "general",
+			// "cci_compatibility_for_"+mainVersion+"_D64");
+			// sendMessage(Constants.QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64,
+			// 64, "compat_cci", "general",
+			// "cci_compatibility_for_"+mainVersion+"_S64");
+			//
+			// sendDBImageMessage(Constants.QUEUE_CUBRID_QA_COMPAT_DBIMG_SRV,
+			// 64, "compat_dbimg", "general", "dbimg_for_"+mainVersion+"_SRV");
+			// sendDBImageMessage(Constants.QUEUE_CUBRID_QA_COMPAT_DBIMG_INS,
+			// 64, "compat_dbimg", "general", "dbimg_for_"+mainVersion+"_INS");
 
 			break;
 		}
@@ -158,7 +172,8 @@ public class FileProcess {
 			sendMessage(Constants.QUEUE_CUBRID_QA_SQL_LINUX, 64, "sql", "debug");
 			sendMessage(Constants.QUEUE_CUBRID_QA_SQL_LINUX, 64, "medium", "debug");
 			sendMessage(Constants.QUEUE_CUBRID_QA_SQL_LINUX, 64, "site", "debug");
-//			sendMessage(Constants.QUEUE_CUBRID_QA_SHELL_LINUX, 64, "shell", "debug");
+			// sendMessage(Constants.QUEUE_CUBRID_QA_SHELL_LINUX, 64, "shell",
+			// "debug");
 			sendMessage(Constants.QUEUE_CUBRID_QA_CCI_LINUX, 64, "cci", "debug");
 			break;
 		}
@@ -187,7 +202,7 @@ public class FileProcess {
 			sendMessage(Constants.QUEUE_CUBRID_QA_NBD_WIN32, 32, "nbd", "general");
 			break;
 		}
-		
+
 		case Constants.BUILD_TYPE_SERVER_SH_LINUX_X86_64_AND_JDBC: {
 			sendMessage(Constants.QUEUE_CUBRID_QA_JDBC_UNITTEST_LINUX, 64, "jdbc_unit", "general");
 		}
@@ -206,45 +221,60 @@ public class FileProcess {
 	private void sendMessage(String queue, int bits, String scenarios, String buildType) throws NoSuchAlgorithmException, IOException {
 		sendMessage(queue, bits, scenarios, 4, buildType, null);
 	}
-	
-//	private void sendMessage(String queue, int bits, String scenarios, String buildType, String compatKey) throws NoSuchAlgorithmException, IOException {
-//		ArrayList<Properties> list = Compatibility.getInstance().getMsgProperties(compatKey);
-//		if(list==null) {
-//			System.out.println("[ERROR] queue="+ queue + ", bits=" + bits + ", scenarios=" + scenarios + ", buildType=" + buildType + ", compatKey=" + compatKey);
-//			return;
-//		}
-//		for(Properties props: list){
-//			sendMessage(queue, bits, scenarios, 4, buildType, props);	
-//		}
-//	}
-//	
-//	private void sendDBImageMessage(String queue, int bits, String scenarios, String buildType, String compatKey) throws NoSuchAlgorithmException, IOException {
-//		ArrayList<Properties> list = CompatDatabaseImage.getInstance().getMsgProperties(compatKey);
-//		if(list==null) {
-//			System.out.println("[ERROR] queue="+ queue + ", bits=" + bits + ", scenarios=" + scenarios + ", buildType=" + buildType + ", compatKey=" + compatKey);
-//			return;
-//		}
-//		for(Properties props: list){
-//			sendMessage(queue, bits, scenarios, 4, buildType, props);
-//		}
-//	}
-//	
-//	private void sendI18NMessage(String queue, int bits, String scenarios, String buildType, String i18nKey) throws NoSuchAlgorithmException, IOException {
-//		ArrayList<Properties> list = I18N.getInstance().getMsgProperties(i18nKey);
-//		
-//		if(list==null) return;
-//		
-//		for(Properties props: list){
-//			sendMessage(queue, bits, scenarios, 4, buildType, props);	
-//		}
-//	}
-//	
-//	private void sendMessage(String queue, int bits, String scenarios, String buildType, Properties additionalProps) throws NoSuchAlgorithmException, IOException {
-//		sendMessage(queue, bits, scenarios, 4, buildType, additionalProps);
-//	}
+
+	// private void sendMessage(String queue, int bits, String scenarios, String
+	// buildType, String compatKey) throws NoSuchAlgorithmException, IOException
+	// {
+	// ArrayList<Properties> list =
+	// Compatibility.getInstance().getMsgProperties(compatKey);
+	// if(list==null) {
+	// System.out.println("[ERROR] queue="+ queue + ", bits=" + bits +
+	// ", scenarios=" + scenarios + ", buildType=" + buildType + ", compatKey="
+	// + compatKey);
+	// return;
+	// }
+	// for(Properties props: list){
+	// sendMessage(queue, bits, scenarios, 4, buildType, props);
+	// }
+	// }
+	//
+	// private void sendDBImageMessage(String queue, int bits, String scenarios,
+	// String buildType, String compatKey) throws NoSuchAlgorithmException,
+	// IOException {
+	// ArrayList<Properties> list =
+	// CompatDatabaseImage.getInstance().getMsgProperties(compatKey);
+	// if(list==null) {
+	// System.out.println("[ERROR] queue="+ queue + ", bits=" + bits +
+	// ", scenarios=" + scenarios + ", buildType=" + buildType + ", compatKey="
+	// + compatKey);
+	// return;
+	// }
+	// for(Properties props: list){
+	// sendMessage(queue, bits, scenarios, 4, buildType, props);
+	// }
+	// }
+	//
+	// private void sendI18NMessage(String queue, int bits, String scenarios,
+	// String buildType, String i18nKey) throws NoSuchAlgorithmException,
+	// IOException {
+	// ArrayList<Properties> list =
+	// I18N.getInstance().getMsgProperties(i18nKey);
+	//
+	// if(list==null) return;
+	//
+	// for(Properties props: list){
+	// sendMessage(queue, bits, scenarios, 4, buildType, props);
+	// }
+	// }
+	//
+	// private void sendMessage(String queue, int bits, String scenarios, String
+	// buildType, Properties additionalProps) throws NoSuchAlgorithmException,
+	// IOException {
+	// sendMessage(queue, bits, scenarios, 4, buildType, additionalProps);
+	// }
 
 	private void sendMessage(String queue, int bits, String scenarios, int priority, String buildType, Properties additionalProps) throws NoSuchAlgorithmException, IOException {
-		
+
 		long curTime = System.currentTimeMillis();
 		Message message = new Message(queue, "Test for build " + buildId + " by CUBRID QA Team, China");
 
@@ -257,13 +287,13 @@ public class FileProcess {
 			if (itemList.get(i).getExactFile().lastModified() > maxCreateTime) {
 				maxCreateTime = itemList.get(i).getExactFile().lastModified();
 			}
-			
-			if(i==0) {
+
+			if (i == 0) {
 				message.setProperty(Constants.MSG_BUILD_URLS, urls);
 				message.setProperty(Constants.MSG_BUILD_URLS_KR, urls_kr);
 			} else {
-				message.setProperty(Constants.MSG_BUILD_URLS + "_" + ( i + 1 ), urls);
-				message.setProperty(Constants.MSG_BUILD_URLS_KR + "_" + ( i + 1 ), urls_kr);
+				message.setProperty(Constants.MSG_BUILD_URLS + "_" + (i + 1), urls);
+				message.setProperty(Constants.MSG_BUILD_URLS_KR + "_" + (i + 1), urls_kr);
 			}
 		}
 
@@ -280,8 +310,9 @@ public class FileProcess {
 		message.setProperty(Constants.MSG_BUILD_TYPE, buildType);
 		message.setProperty(Constants.MSG_BUILD_PACKAGE_PATTERN, String.valueOf(this.pkgPattern));
 		message.setProperty(Constants.MSG_BUILD_GENERATE_MSG_WAY, "AUTO");
-		
-		if(additionalProps!=null) message.putAll(additionalProps);
+
+		if (additionalProps != null)
+			message.putAll(additionalProps);
 
 		String pri = conf.getProperty("msg.priority.for_" + CommonUtils.getVersion(this.buildId), "4");
 		message.setPriority(Integer.parseInt(pri));
@@ -320,14 +351,15 @@ public class FileProcess {
 		long currentSize = 0;
 
 		for (File f : files) {
-			//System.out.println("[ALL] " + f.getPath() + " size=" + f.length() + " time_interval(ms)="+ (curTime - f.lastModified()));
+			// System.out.println("[ALL] " + f.getPath() + " size=" + f.length()
+			// + " time_interval(ms)="+ (curTime - f.lastModified()));
 			currentSize += f.length();
 		}
-		
-		if (currentSize == this.lastSizeForAll ) {			
+
+		if (currentSize == this.lastSizeForAll) {
 			return ((curTime - this.lastTimestampForAll) > 120 * 1000);
 		} else {
-			this.lastSizeForAll= currentSize;
+			this.lastSizeForAll = currentSize;
 			this.lastTimestampForAll = curTime;
 			return false;
 		}
@@ -344,17 +376,17 @@ public class FileProcess {
 			file = new File(filename);
 
 			if (!file.exists()) {
-				//System.out.println("[EXACT] " + filename + " not found");
+				// System.out.println("[EXACT] " + filename + " not found");
 				return false;
 			}
-			System.out.println("[EXACT] " + file.getPath() + " size=" + file.length() + " time_interval(ms)="+ (curTime - file.lastModified()));
+			System.out.println("[EXACT] " + file.getPath() + " size=" + file.length() + " time_interval(ms)=" + (curTime - file.lastModified()));
 			item.setExactFile(file);
-			
+
 			currentSize += file.length();
 
 		}
-		
-		if (currentSize == this.lastSizeForSingle ) {			
+
+		if (currentSize == this.lastSizeForSingle) {
 			return ((curTime - this.lastTimestampForSingle) > 120 * 1000);
 		} else {
 			this.lastSizeForSingle = currentSize;
@@ -378,6 +410,5 @@ public class FileProcess {
 	// }
 	// return size;
 	// }
-	
-	
+
 }

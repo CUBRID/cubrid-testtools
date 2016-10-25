@@ -64,17 +64,13 @@ public class ConsumerTimer {
 	private void updateTimeToDatabase(String msgId, String typeOfTimer) {
 		String sql = "";
 		if ("interrupted".equalsIgnoreCase(typeOfTimer.trim())) {
-			sql = "update msg_sended set is_interrupted = 'Y', consume_flag = 'FINISHED', consume_stop_time = CURRENT_TIMESTAMP()  where msg_id ='"
-					+ msgId.trim() + "';";
+			sql = "update msg_sended set is_interrupted = 'Y', consume_flag = 'FINISHED', consume_stop_time = CURRENT_TIMESTAMP()  where msg_id ='" + msgId.trim() + "';";
 		} else {
-			if("start".equalsIgnoreCase(typeOfTimer.trim())){
-				sql = "update msg_sended set consume_start_time = CURRENT_TIMESTAMP() , consume_flag = 'IN PROGRESS' where msg_id ='"
-						+ msgId.trim() + "';";
-			}else if ("stop".equalsIgnoreCase(typeOfTimer.trim()))
-			sql = "update msg_sended set consume_stop_time = CURRENT_TIMESTAMP() , consume_flag = 'FINISHED' where msg_id ='"
-					+ msgId.trim() + "';";
+			if ("start".equalsIgnoreCase(typeOfTimer.trim())) {
+				sql = "update msg_sended set consume_start_time = CURRENT_TIMESTAMP() , consume_flag = 'IN PROGRESS' where msg_id ='" + msgId.trim() + "';";
+			} else if ("stop".equalsIgnoreCase(typeOfTimer.trim()))
+				sql = "update msg_sended set consume_stop_time = CURRENT_TIMESTAMP() , consume_flag = 'FINISHED' where msg_id ='" + msgId.trim() + "';";
 		}
-		
 
 		Statement stat = null;
 		try {
@@ -97,8 +93,7 @@ public class ConsumerTimer {
 
 	}
 
-	private java.sql.Connection createConnection() throws SQLException,
-			ClassNotFoundException {
+	private java.sql.Connection createConnection() throws SQLException, ClassNotFoundException {
 		String url = props.getProperty("qahome_db_url");
 		String user = props.getProperty("qahome_db_user");
 		String pwd = props.getProperty("qahome_db_pwd");
@@ -129,8 +124,7 @@ public class ConsumerTimer {
 	}
 
 	private static void showHelp() {
-		System.out
-				.println("Usage: java com.navercorp.cubridqa.scheduler.consumer.ConsumerTimer <start> <stop> <interrupted> MSGID");
+		System.out.println("Usage: java com.navercorp.cubridqa.scheduler.consumer.ConsumerTimer <start> <stop> <interrupted> MSGID");
 		System.out.println();
 	}
 

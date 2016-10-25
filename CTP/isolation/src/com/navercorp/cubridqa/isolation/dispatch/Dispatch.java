@@ -26,8 +26,6 @@
 package com.navercorp.cubridqa.isolation.dispatch;
 
 import java.io.File;
-
-
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -35,13 +33,12 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.IsolationHelper;
 import com.navercorp.cubridqa.isolation.IsolationScriptInput;
-import com.navercorp.cubridqa.common.CommonUtils;
-import com.navercorp.cubridqa.common.ConfigParameterConstants;
-import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class Dispatch {
@@ -193,7 +190,7 @@ public class Dispatch {
 
 		String envId = context.getEnvList().get(0);
 
-		SSHConnect ssh =  IsolationHelper.createTestNodeConnect(context, envId);
+		SSHConnect ssh = IsolationHelper.createTestNodeConnect(context, envId);
 		IsolationScriptInput script;
 		String result;
 
@@ -230,7 +227,8 @@ public class Dispatch {
 
 		File[] subList = new File(context.getCurrentLogDir()).listFiles();
 		for (File file : subList) {
-			if(file.isFile()) file.delete();
+			if (file.isFile())
+				file.delete();
 		}
 
 		allFile = new File(getFileNameForDispatchAll());

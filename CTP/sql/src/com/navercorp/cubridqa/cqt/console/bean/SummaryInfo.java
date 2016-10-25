@@ -31,7 +31,6 @@ import java.util.List;
 import com.navercorp.cubridqa.cqt.console.util.PropertiesUtil;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-
 @XStreamAlias(value = "summary")
 public class SummaryInfo implements Comparable {
 	public SummaryInfo() {
@@ -177,8 +176,8 @@ public class SummaryInfo implements Comparable {
 
 	public int compareTo(Object o) {
 		SummaryInfo compareObject = (SummaryInfo) o;
-		
-		if (this.getName() == null || compareObject==null || compareObject.getName() == null) {
+
+		if (this.getName() == null || compareObject == null || compareObject.getName() == null) {
 			return 0;
 		}
 		return this.getName().compareTo(compareObject.getName());

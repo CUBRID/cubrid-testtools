@@ -35,9 +35,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
 import java.util.Enumeration;
-
 
 public class EnvironmentCheck {
 	private static int flag = 0;
@@ -77,11 +75,9 @@ public class EnvironmentCheck {
 			Socket s = new Socket(ip, Integer.parseInt(port));
 			return true;
 		} catch (UnknownHostException e) {
-			System.out.println("Cannot connect " + ip + ":" + port
-					+ ", or the port is occupied. ");
+			System.out.println("Cannot connect " + ip + ":" + port + ", or the port is occupied. ");
 		} catch (IOException e) {
-			System.out.println("Cannot connect " + ip + ":" + port
-					+ ", or the port is occupied.");
+			System.out.println("Cannot connect " + ip + ":" + port + ", or the port is occupied.");
 		}
 		return false;
 	}
@@ -107,8 +103,7 @@ public class EnvironmentCheck {
 	 * @param pwd
 	 * @return
 	 */
-	public static boolean isDBCanConnect(String ip, String port, String dbname,
-			String userid, String pwd) {
+	public static boolean isDBCanConnect(String ip, String port, String dbname, String userid, String pwd) {
 		Connection conn = null;
 		try {
 			conn = CubridDBCenter.getConnection(ip, port, dbname, userid, pwd);
@@ -165,14 +160,12 @@ public class EnvironmentCheck {
 	 * @param flag
 	 * @throws Exception
 	 */
-	public static void setFinishedFlag(String ip, String port, String user,
-			String dbname, String password, int flag) throws Exception {
+	public static void setFinishedFlag(String ip, String port, String user, String dbname, String password, int flag) throws Exception {
 		String sql = "update flag set flag = " + flag;
-		Connection conn = CubridDBCenter.getConnection(ip, port, dbname, user,
-				password);
-		
+		Connection conn = CubridDBCenter.getConnection(ip, port, dbname, user, password);
+
 		System.out.println("====:::===" + ip);
-		
+
 		Statement stmt = null;
 		try {
 			conn.setAutoCommit(false);
@@ -200,11 +193,9 @@ public class EnvironmentCheck {
 	 * @return
 	 * @throws Exception
 	 */
-	public static int getFinishedFlag(String ip, String port, String user,
-			String dbname, String password) throws Exception {
+	public static int getFinishedFlag(String ip, String port, String user, String dbname, String password) throws Exception {
 		String sql = "select flag from flag";
-		Connection conn = CubridDBCenter.getConnection(ip, port, dbname, user,
-				password);
+		Connection conn = CubridDBCenter.getConnection(ip, port, dbname, user, password);
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		try {
@@ -242,8 +233,7 @@ public class EnvironmentCheck {
 		try {
 			interfaces = NetworkInterface.getNetworkInterfaces();
 			while (interfaces.hasMoreElements()) {
-				NetworkInterface interfaceN = (NetworkInterface) interfaces
-						.nextElement();
+				NetworkInterface interfaceN = (NetworkInterface) interfaces.nextElement();
 				Enumeration ienum = interfaceN.getInetAddresses();
 				while (ienum.hasMoreElements()) {
 					InetAddress ia = (InetAddress) ienum.nextElement();

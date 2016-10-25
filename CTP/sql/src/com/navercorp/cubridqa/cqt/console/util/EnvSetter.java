@@ -31,8 +31,6 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 
-import com.navercorp.cubridqa.cqt.console.util.SystemUtil;
-
 public abstract class EnvSetter {
 
 	private static boolean USE_EXCEPT = true;
@@ -107,9 +105,8 @@ public abstract class EnvSetter {
 	private static boolean addProfile4Lin(Map<String, String> map) {
 		try {
 			Date date = new Date();
-			
-			String ymd = (date.getYear() + 1900) + "-" + (1 + date.getMonth())
-					+ "-" + date.getDay();
+
+			String ymd = (date.getYear() + 1900) + "-" + (1 + date.getMonth()) + "-" + date.getDay();
 			String old = IOUtils.toString(new FileInputStream(ETC_PRO_LIN));
 			String newContents = old;
 			newContents += "\n#---------------------------------------------";
@@ -143,8 +140,7 @@ public abstract class EnvSetter {
 
 		} catch (Throwable e) {
 			e.printStackTrace();
-			System.out.println("error add in set windows env(key=" + key
-					+ ",value=" + value + ")");
+			System.out.println("error add in set windows env(key=" + key + ",value=" + value + ")");
 			result = false;
 		}
 		return result;

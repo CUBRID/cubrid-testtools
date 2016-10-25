@@ -26,29 +26,28 @@ package com.navercorp.cubridqa.cqt.console.bean;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-
-@XStreamAlias(value="system")
+@XStreamAlias(value = "system")
 public class SystemModel {
 	private String systemIp;
-	
+
 	private String loginId;
-	
+
 	private String loginPasswd;
-	
+
 	private String rootPasswd;
-	
+
 	private boolean useMonitor;
-	
+
 	private String cubridHome;
-	
+
 	private String jdbcPath;
-	
+
 	private boolean queryPlan;
 
 	private boolean cpResultToRemoteHost;
-	
+
 	private boolean errorMessage;
-	
+
 	private String remoteHost;
 
 	private String remoteHostUser;
@@ -119,7 +118,6 @@ public class SystemModel {
 		this.queryPlan = queryPlan;
 	}
 
-
 	public String getRemoteHost() {
 		return remoteHost;
 	}
@@ -167,5 +165,5 @@ public class SystemModel {
 	public void setErrorMessage(boolean errorMessage) {
 		this.errorMessage = errorMessage;
 	}
-	
+
 }

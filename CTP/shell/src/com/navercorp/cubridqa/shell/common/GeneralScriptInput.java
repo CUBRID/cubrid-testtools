@@ -26,7 +26,6 @@
 
 package com.navercorp.cubridqa.shell.common;
 
-import com.navercorp.cubridqa.shell.common.ScriptInput;
 
 public class GeneralScriptInput extends ScriptInput {
 
@@ -35,20 +34,15 @@ public class GeneralScriptInput extends ScriptInput {
 		StringBuffer scripts = new StringBuffer();
 		scripts.append("if [ \"${CTP_HOME}\" == \"\" ]; then").append('\n');
 		scripts.append("  if which ctp.sh >/dev/null 2>&1 ; then").append('\n');
-		scripts.append(
-				"    CTP_HOME=$(dirname $(readlink -f `which ctp.sh`))/..")
-				.append('\n');
-		scripts.append("  elif [ ! \"${init_path}\" == \"\" ]; then").append(
-				'\n');
+		scripts.append("    CTP_HOME=$(dirname $(readlink -f `which ctp.sh`))/..").append('\n');
+		scripts.append("  elif [ ! \"${init_path}\" == \"\" ]; then").append('\n');
 		scripts.append("    CTP_HOME=${init_path}/../..").append('\n');
 		scripts.append("  fi").append('\n');
 		scripts.append("fi").append('\n');
 		scripts.append("ulimit -c unlimited").append('\n');
 		scripts.append("if [ \"${CTP_HOME}\" != \"\" ]; then ").append('\n');
 		scripts.append("  export CTP_HOME=$(cd ${CTP_HOME}; pwd)").append('\n');
-		scripts.append(
-				"  export PATH=${CTP_HOME}/bin:${CTP_HOME}/common/script:$PATH")
-				.append('\n');
+		scripts.append("  export PATH=${CTP_HOME}/bin:${CTP_HOME}/common/script:$PATH").append('\n');
 		scripts.append("fi").append('\n');
 		scripts.append("cd").append('\n');
 		INIT_SCRIPT = scripts.toString();

@@ -37,8 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import com.navercorp.cubridqa.cqt.console.bean.TestCaseSummary;
-
 public class FileUtil {
 
 	/**
@@ -48,17 +46,16 @@ public class FileUtil {
 	 * @return
 	 */
 	public static String readFile(String file) {
-		return readFile(file,TestUtil.DEFAULT_CODESET);	
+		return readFile(file, TestUtil.DEFAULT_CODESET);
 	}
-	
-	
+
 	/**
 	 * read the content of file .
 	 * 
 	 * @param file
 	 * @return
 	 */
-	public static String readFile(String file,String charset) {
+	public static String readFile(String file, String charset) {
 		if (file == null) {
 			return null;
 		}
@@ -107,49 +104,43 @@ public class FileUtil {
 
 		return ret;
 	}
-	
-	public static String AddTab(int num)
-	{
-		StringBuilder sb =new StringBuilder();
-		
-		for(int i = 0; i < num; i ++)
-		{
+
+	public static String AddTab(int num) {
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < num; i++) {
 			sb.append("\t");
 		}
-		
+
 		return sb.toString();
 	}
-	
-	public static String AddSpace(int num)
-	{
-		StringBuilder sb =new StringBuilder();
-		
-		for(int i = 0; i < num; i ++)
-		{
+
+	public static String AddSpace(int num) {
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < num; i++) {
 			sb.append(" ");
 		}
-		
+
 		return sb.toString();
 	}
 
 	public static void writeToFile(String file, String data) {
 		writeToFile(file, data, false);
 	}
-	
-	public static void writeToFile(String file, String data,String charset) {
-		writeToFile(file, data, false,charset);
+
+	public static void writeToFile(String file, String data, String charset) {
+		writeToFile(file, data, false, charset);
 	}
-	
+
 	public static void writeToFile(String file, String data, boolean append) {
-		writeToFile(file, data, append,"UTF-8");
+		writeToFile(file, data, append, "UTF-8");
 	}
-	
-	public static void closeFileHandle(BufferedWriter bw)
-	{
+
+	public static void closeFileHandle(BufferedWriter bw) {
 		try {
-			if(bw != null)
-			{
-			   bw.close();
+			if (bw != null) {
+				bw.close();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -157,66 +148,59 @@ public class FileUtil {
 		}
 	}
 
-	public static void writeDataToFileWithHandle(BufferedWriter bw, String data)
-	{
-		if(bw == null || data == null)
-		{
+	public static void writeDataToFileWithHandle(BufferedWriter bw, String data) {
+		if (bw == null || data == null) {
 			return;
 		}
-		
+
 		try {
-			  bw.write(data);
-			  bw.flush();
+			bw.write(data);
+			bw.flush();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
-	public static void writeHeadForXML(BufferedWriter bw)
-	{
+
+	public static void writeHeadForXML(BufferedWriter bw) {
 		String head = "";
 		String S_FAILSUMMARY = "<results>";
-		head +=  S_FAILSUMMARY + System.getProperty("line.separator");
+		head += S_FAILSUMMARY + System.getProperty("line.separator");
 		writeDataToFileWithHandle(bw, head);
 	}
-	
-	public static void writeFooterForXml(BufferedWriter bw)
-	{
+
+	public static void writeFooterForXml(BufferedWriter bw) {
 		String head = "";
 		String S_FAILSUMMARY = "</results>";
-		head +=  S_FAILSUMMARY + System.getProperty("line.separator");
+		head += S_FAILSUMMARY + System.getProperty("line.separator");
 		writeDataToFileWithHandle(bw, head);
 	}
-	
-	public static void writeSQLFileIntoResultFolder(String source, String target)
-	{
+
+	public static void writeSQLFileIntoResultFolder(String source, String target) {
 		File src = new File(source);
 		File tget = new File(target);
 		FileInputStream in = null;
 		FileOutputStream out = null;
 		FileChannel inC = null;
 		FileChannel outC = null;
-		
-		if(!src.exists())
-		{
-			return ;
+
+		if (!src.exists()) {
+			return;
 		}
-		
+
 		try {
-			 in = new FileInputStream(src);
-			 out = new FileOutputStream(tget);
-			 inC = in.getChannel();
-			 outC = out.getChannel();
-			
+			in = new FileInputStream(src);
+			out = new FileOutputStream(tget);
+			inC = in.getChannel();
+			outC = out.getChannel();
+
 			inC.transferTo(0, inC.size(), outC);
-			
+
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}finally
-		{
+		} finally {
 			try {
 				in.close();
 				inC.close();
@@ -227,17 +211,15 @@ public class FileUtil {
 			}
 		}
 	}
-	
-	public static BufferedWriter openOneFileHandle(String file)
-	{
-		if(file == null)
-		{
+
+	public static BufferedWriter openOneFileHandle(String file) {
+		if (file == null) {
 			return null;
 		}
-		
-		File f = new File(file);				
+
+		File f = new File(file);
 		if (!f.exists()) {
-		try {
+			try {
 				f.createNewFile();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -245,21 +227,21 @@ public class FileUtil {
 		}
 		f.setWritable(true);
 		f.setExecutable(true);
-		
+
 		BufferedWriter writer = null;
-			try {
-				writer = new BufferedWriter(new OutputStreamWriter(
-						new FileOutputStream(f, true), "utf8"));
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
+		try {
+			writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, true), "utf8"));
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		return writer;
 	}
+
 	/**
 	 * write data to file .
 	 * 
@@ -268,14 +250,14 @@ public class FileUtil {
 	 * @param append
 	 *            if append or rewrite .
 	 */
-	public static void writeToFile(String file, String data, boolean append,String charset) {
+	public static void writeToFile(String file, String data, boolean append, String charset) {
 		if (file == null || data == null) {
 			return;
 		}
 
 		BufferedWriter writer = null;
 		try {
-			File f = new File(file);				
+			File f = new File(file);
 			if (!f.exists()) {
 				try {
 					f.createNewFile();
@@ -286,8 +268,7 @@ public class FileUtil {
 			f.setWritable(true);
 			f.setExecutable(true);
 
-			writer = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(f, append), charset));
+			writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, append), charset));
 			writer.write(data);
 			writer.flush();
 		} catch (Exception e) {
@@ -372,7 +353,6 @@ public class FileUtil {
 		CommandUtil.execute("cp " + srcFile + " " + targetFile, null);
 	}
 
-
 	/**
 	 * get the directory by the file name .
 	 * 
@@ -383,7 +363,7 @@ public class FileUtil {
 		if (file == null || file.trim().equals("")) {
 			return null;
 		}
-		
+
 		String ret = StringUtil.replaceSlashBasedSystem(file);
 		int position = ret.lastIndexOf(File.separator);
 		if (position != -1) {

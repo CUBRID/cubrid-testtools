@@ -27,7 +27,6 @@ package com.navercorp.cubridqa.cqt.console.util;
 import java.io.File;
 
 import com.navercorp.cubridqa.cqt.console.Executor;
-import com.navercorp.cubridqa.cqt.console.util.PropertiesUtil;
 
 public class CommandUtil extends Thread {
 	private Object parameter;
@@ -88,8 +87,7 @@ public class CommandUtil extends Thread {
 				String[] temp = commands;
 				commands = new String[envs.length + 1 + commands.length];
 				System.arraycopy(envs, 0, commands, 0, envs.length);
-				System.arraycopy(temp, 0, commands, envs.length + 1,
-						temp.length);
+				System.arraycopy(temp, 0, commands, envs.length + 1, temp.length);
 			}
 		} else {
 			String[] temp = commands;
@@ -98,8 +96,7 @@ public class CommandUtil extends Thread {
 		}
 
 		String ret = "";
-		String id = System.currentTimeMillis() + ""
-				+ ((long) (Math.random() * 100000));
+		String id = System.currentTimeMillis() + "" + ((long) (Math.random() * 100000));
 		String tempFile = "run" + id + ".sh";
 
 		String cmd = "sh";
@@ -108,7 +105,7 @@ public class CommandUtil extends Thread {
 			cmd = "";
 		}
 		tempFile = SystemUtil.getUserHomePath() + "/" + tempFile;
-		
+
 		try {
 			StringBuilder sb = new StringBuilder();
 			if (!os.startsWith("window")) {
@@ -117,9 +114,7 @@ public class CommandUtil extends Thread {
 
 			for (int i = 0; i < commands.length; i++) {
 				String command = commands[i];
-				if (command == null || command.trim().equals("")
-						|| command.indexOf("(") != -1
-						|| command.indexOf("LS_COLORS") != -1) {
+				if (command == null || command.trim().equals("") || command.indexOf("(") != -1 || command.indexOf("LS_COLORS") != -1) {
 					continue;
 				}
 				if ("".equals(firstCommand)) {
@@ -127,19 +122,18 @@ public class CommandUtil extends Thread {
 				}
 				sb.append(command + System.getProperty("line.separator"));
 			}
-			
+
 			FileUtil.writeToFile(tempFile, sb.toString());
 
 			if (listener != null) {
 				listener.setStartTime(System.currentTimeMillis());
 			}
-			CommandExecutor shell = new CommandExecutor(cmd + " " + tempFile,
-					firstCommand, listener);
+			CommandExecutor shell = new CommandExecutor(cmd + " " + tempFile, firstCommand, listener);
 			ret = shell.execute();
 			if (listener != null) {
 				listener.setEndTime(System.currentTimeMillis());
 			}
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			if (listener != null) {
@@ -151,7 +145,7 @@ public class CommandUtil extends Thread {
 		}
 		return ret;
 	}
-	
+
 	/**
 	 * 
 	 * @Title: getExecuteFile
@@ -179,8 +173,7 @@ public class CommandUtil extends Thread {
 				String[] temp = commands;
 				commands = new String[envs.length + 1 + commands.length];
 				System.arraycopy(envs, 0, commands, 0, envs.length);
-				System.arraycopy(temp, 0, commands, envs.length + 1,
-						temp.length);
+				System.arraycopy(temp, 0, commands, envs.length + 1, temp.length);
 			}
 		} else {
 			String[] temp = commands;
@@ -198,9 +191,7 @@ public class CommandUtil extends Thread {
 
 			for (int i = 0; i < commands.length; i++) {
 				String command = commands[i];
-				if (command == null || command.trim().equals("")
-						|| command.indexOf("(") != -1
-						|| command.indexOf("LS_COLORS") != -1) {
+				if (command == null || command.trim().equals("") || command.indexOf("(") != -1 || command.indexOf("LS_COLORS") != -1) {
 					continue;
 				}
 				if ("".equals(firstCommand)) {
@@ -209,16 +200,13 @@ public class CommandUtil extends Thread {
 				sb.append(command + System.getProperty("line.separator"));
 			}
 
-			/*String cmd = "sh";
-			String id = System.currentTimeMillis() + ""
-					+ ((long) (Math.random() * 100000));
-			tempFile = "run" + id + ".sh";
-			if (os.startsWith("window")) {
-				tempFile = "runBat" + id + ".bat";
-				cmd = "";
-			}
-			tempFile = SystemUtil.getUserHomePath() + "/" + tempFile;
-			FileUtil.writeToFile(tempFile, sb.toString());*/
+			/*
+			 * String cmd = "sh"; String id = System.currentTimeMillis() + "" +
+			 * ((long) (Math.random() * 100000)); tempFile = "run" + id + ".sh";
+			 * if (os.startsWith("window")) { tempFile = "runBat" + id + ".bat";
+			 * cmd = ""; } tempFile = SystemUtil.getUserHomePath() + "/" +
+			 * tempFile; FileUtil.writeToFile(tempFile, sb.toString());
+			 */
 		} catch (Exception e) {
 			e.printStackTrace();
 			if (listener != null) {
@@ -227,7 +215,7 @@ public class CommandUtil extends Thread {
 		}
 		return tempFile;
 	}
-	
+
 	/**
 	 * 
 	 * @Title: execute
@@ -246,7 +234,7 @@ public class CommandUtil extends Thread {
 		String[] commands = command.split(System.getProperty("line.separator"));
 		return execute(commands, listener);
 	}
-	
+
 	/**
 	 * 
 	 * @Title: svnSubmitFile
@@ -262,13 +250,10 @@ public class CommandUtil extends Thread {
 		}
 
 		CommandUtil.execute("svn add " + file, listener);
-		CommandUtil.execute("svn commit -m \"\" " + file
-				+ " --non-interactive --username "
-				+ PropertiesUtil.getValue("svnuser") + " --password "
-				+ PropertiesUtil.getValue("svnpassword"), listener);
+		CommandUtil.execute("svn commit -m \"\" " + file + " --non-interactive --username " + PropertiesUtil.getValue("svnuser") + " --password " + PropertiesUtil.getValue("svnpassword"), listener);
 		return;
 	}
-	
+
 	/**
 	 * 
 	 * @Title: svnUpdate
@@ -283,10 +268,7 @@ public class CommandUtil extends Thread {
 			return;
 		}
 
-		CommandUtil.execute("svn update -r HEAD " + file
-				+ " --non-interactive --username "
-				+ PropertiesUtil.getValue("svnuser") + " --password "
-				+ PropertiesUtil.getValue("svnpassword"), listener);
+		CommandUtil.execute("svn update -r HEAD " + file + " --non-interactive --username " + PropertiesUtil.getValue("svnuser") + " --password " + PropertiesUtil.getValue("svnpassword"), listener);
 	}
 
 }

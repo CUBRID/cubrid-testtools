@@ -30,22 +30,22 @@ public class CheckAllStack {
 
 	/**
 	 * @param args
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
 		CoreBO bo = new CoreBO();
 		ArrayList<IssueBean> list = bo.selectAllRows();
-		
+
 		String expected;
 		String current;
-		for(IssueBean bean: list) {
+		for (IssueBean bean : list) {
 			System.out.println("**********************************************************************");
-			
-			try{
+
+			try {
 				current = Analyzer.extractCoreStackDigest(bean.getDetailStack());
 				expected = bean.getDigestStack();
-				
-				if(current.equals(expected)) {
+
+				if (current.equals(expected)) {
 					System.out.println("YES. id=" + bean.getId());
 				} else {
 					System.out.println("NO. id=" + bean.getId());
@@ -54,10 +54,10 @@ public class CheckAllStack {
 					System.out.println("-----------------------------------------");
 					System.out.println(current);
 				}
-			} catch(Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 	}
 

@@ -59,26 +59,22 @@ public class FeedbackFile implements Feedback {
 	int totalSkipNum = 0;
 
 	public FeedbackFile(Context context) {
-		logName = CommonUtils.concatFile(context.getCurrentLogDir(),
-				"feedback.log");
-		statusLogName = CommonUtils.concatFile(context.getCurrentLogDir(),
-				"test_status.data");
+		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
+		statusLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test_status.data");
 		this.context = context;
 	}
 
 	@Override
 	public void onTaskStartEvent(String buildFilename) {
 		feedbackLog = new Log(logName, false, false);
-		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(),
-				"current_task_id"), false, false);
+		Log log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"), false, false);
 		this.task_id = 0;
 		log.println(String.valueOf(task_id));
 		context.setTaskId(task_id);
 		log.close();
 		taskStartTime = System.currentTimeMillis();
 		println("[Task Id] is " + this.task_id);
-		println("[TASK START] Current Time is " + new Date()
-				+ ", start MSG Id is " + this.context.getMsgId());
+		println("[TASK START] Current Time is " + new Date() + ", start MSG Id is " + this.context.getMsgId());
 	}
 
 	@Override
@@ -86,8 +82,7 @@ public class FeedbackFile implements Feedback {
 		feedbackLog = new Log(logName, false, true);
 		String cont = null;
 		try {
-			cont = CommonUtils.getFileContent(CommonUtils.concatFile(
-					context.getCurrentLogDir(), "current_task_id"));
+			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"));
 			this.task_id = Integer.parseInt(cont.trim());
 			context.setTaskId(task_id);
 		} catch (Exception e) {
@@ -106,21 +101,18 @@ public class FeedbackFile implements Feedback {
 		showTestResult();
 
 		long taskStopTime = System.currentTimeMillis();
-		println("[TEST STOP] Current Time is " + new Date(), "Elapse Time:"
-				+ ((taskStopTime - this.taskStartTime)));
+		println("[TEST STOP] Current Time is " + new Date(), "Elapse Time:" + ((taskStopTime - this.taskStartTime)));
 		feedbackLog.close();
 	}
 
 	@Override
-	public void setTotalTestCase(int tbdNum, int macroSkippedNum,
-			int tempSkippedNum) {
+	public void setTotalTestCase(int tbdNum, int macroSkippedNum, int tempSkippedNum) {
 		if (context.isContinueMode())
 			return;
 
 		this.totalCaseNum = tbdNum;
 		this.totalSkipNum = macroSkippedNum + tempSkippedNum;
-		println("The Number of Test Cases: " + tbdNum + " (macro skipped: "
-				+ macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
+		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
 		updateTestingStatistics();
 	}
 
@@ -129,28 +121,18 @@ public class FeedbackFile implements Feedback {
 		System.out.println("============= PRINT SUMMARY ==================");
 		Properties prop;
 		try {
-			prop = com.navercorp.cubridqa.common.CommonUtils
-					.getProperties(this.statusLogName);
+			prop = com.navercorp.cubridqa.common.CommonUtils.getProperties(this.statusLogName);
 
 			println("Total Case:" + prop.getProperty("total_case_count"));
-			println("Total Execution Case:"
-					+ prop.getProperty("total_executed_case_count"));
-			println("Total Success Case:"
-					+ prop.getProperty("total_success_case_count"));
-			println("Total Fail Case:"
-					+ prop.getProperty("total_fail_case_count"));
-			println("Total Skip Case:"
-					+ prop.getProperty("total_skip_case_count"));
-			System.out.println("Total Case:"
-					+ prop.getProperty("total_case_count"));
-			System.out.println("Total Execution Case:"
-					+ prop.getProperty("total_executed_case_count"));
-			System.out.println("Total Success Case:"
-					+ prop.getProperty("total_success_case_count"));
-			System.out.println("Total Fail Case:"
-					+ prop.getProperty("total_fail_case_count"));
-			System.out.println("Total Skip Case:"
-					+ prop.getProperty("total_skip_case_count"));
+			println("Total Execution Case:" + prop.getProperty("total_executed_case_count"));
+			println("Total Success Case:" + prop.getProperty("total_success_case_count"));
+			println("Total Fail Case:" + prop.getProperty("total_fail_case_count"));
+			println("Total Skip Case:" + prop.getProperty("total_skip_case_count"));
+			System.out.println("Total Case:" + prop.getProperty("total_case_count"));
+			System.out.println("Total Execution Case:" + prop.getProperty("total_executed_case_count"));
+			System.out.println("Total Success Case:" + prop.getProperty("total_success_case_count"));
+			System.out.println("Total Fail Case:" + prop.getProperty("total_fail_case_count"));
+			System.out.println("Total Skip Case:" + prop.getProperty("total_skip_case_count"));
 			System.out.println();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -161,27 +143,20 @@ public class FeedbackFile implements Feedback {
 	private void initStatisticsForContinue() {
 		Properties prop;
 		try {
-			prop = com.navercorp.cubridqa.common.CommonUtils
-					.getProperties(this.statusLogName);
+			prop = com.navercorp.cubridqa.common.CommonUtils.getProperties(this.statusLogName);
 		} catch (FileNotFoundException ex) {
 			prop = new Properties();
 		} catch (IOException e) {
-			System.out.println("[WARN] file " + this.statusLogName
-					+ " read fail!");
+			System.out.println("[WARN] file " + this.statusLogName + " read fail!");
 			prop = new Properties();
 			e.printStackTrace();
 		}
 
-		this.totalCaseNum = Integer.parseInt(prop.getProperty(
-				"total_case_count", "0").trim());
-		this.totalSuccNum = Integer.parseInt(prop.getProperty(
-				"total_success_case_count", "0").trim());
-		this.totalFailNum = Integer.parseInt(prop.getProperty(
-				"total_fail_case_count", "0").trim());
-		this.totalSkipNum = Integer.parseInt(prop.getProperty(
-				"total_skip_case_count", "0").trim());
-		this.totalExecutedCaseNum = Integer.parseInt(prop.getProperty(
-				"total_executed_case_count", "0").trim());
+		this.totalCaseNum = Integer.parseInt(prop.getProperty("total_case_count", "0").trim());
+		this.totalSuccNum = Integer.parseInt(prop.getProperty("total_success_case_count", "0").trim());
+		this.totalFailNum = Integer.parseInt(prop.getProperty("total_fail_case_count", "0").trim());
+		this.totalSkipNum = Integer.parseInt(prop.getProperty("total_skip_case_count", "0").trim());
+		this.totalExecutedCaseNum = Integer.parseInt(prop.getProperty("total_executed_case_count", "0").trim());
 	}
 
 	private synchronized void updateTestingStatistics() {
@@ -189,35 +164,24 @@ public class FeedbackFile implements Feedback {
 		this.totalCaseNum = this.totalExecutedCaseNum + this.totalSkipNum;
 		Properties prop = new Properties();
 		prop.setProperty("total_case_count", String.valueOf(this.totalCaseNum));
-		prop.setProperty("total_executed_case_count",
-				String.valueOf(this.totalExecutedCaseNum));
-		prop.setProperty("total_success_case_count",
-				String.valueOf(this.totalSuccNum));
-		prop.setProperty("total_fail_case_count",
-				String.valueOf(this.totalFailNum));
-		prop.setProperty("total_skip_case_count",
-				String.valueOf(this.totalSkipNum));
+		prop.setProperty("total_executed_case_count", String.valueOf(this.totalExecutedCaseNum));
+		prop.setProperty("total_success_case_count", String.valueOf(this.totalSuccNum));
+		prop.setProperty("total_fail_case_count", String.valueOf(this.totalFailNum));
+		prop.setProperty("total_skip_case_count", String.valueOf(this.totalSkipNum));
 		try {
-			com.navercorp.cubridqa.common.CommonUtils.writeProperties(
-					this.statusLogName, prop);
+			com.navercorp.cubridqa.common.CommonUtils.writeProperties(this.statusLogName, prop);
 		} catch (IOException e) {
-			System.out.println("[ERROR]: Update test status into "
-					+ this.statusLogName + " fail!");
-			println("[ERROR]: Update test status into " + this.statusLogName
-					+ " fail!");
+			System.out.println("[ERROR]: Update test status into " + this.statusLogName + " fail!");
+			println("[ERROR]: Update test status into " + this.statusLogName + " fail!");
 			e.printStackTrace();
 		}
 	}
 
 	@Override
-	public void onTestCaseStopEvent(String testCase, boolean flag,
-			long elapseTime, String resultCont, String envIdentify,
-			boolean isTimeOut, boolean hasCore, String skippedType,
-			int retryCount) {
+	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
 		String head;
 		if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
-			head = flag ? "[OK]: " : "[NOK]: " + Constants.RETRY_FLAG + " = "
-					+ retryCount;
+			head = flag ? "[OK]: " : "[NOK]: " + Constants.RETRY_FLAG + " = " + retryCount;
 			if (flag) {
 				this.totalSuccNum++;
 			} else {
@@ -231,21 +195,16 @@ public class FeedbackFile implements Feedback {
 			head = "[UNKNOWN]";
 		}
 
-		println(head + " " + testCase + " " + elapseTime + " " + envIdentify,
-				resultCont, "");
+		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
 		updateTestingStatistics();
 	}
 
 	@Override
-	public void onTestCaseStopEventForRetry(String testCase, boolean flag,
-			long elapseTime, String resultCont, String envIdentify,
-			boolean isTimeOut, boolean hasCore, String skippedType,
+	public void onTestCaseStopEventForRetry(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType,
 			int retryCount) {
 		String head;
 		head = flag ? "[OK]: " : "[NOK]: ";
-		println(head + " " + testCase + " " + elapseTime + " " + envIdentify,
-				resultCont, " (" + Constants.RETRY_FLAG + " = " + retryCount
-						+ ")");
+		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, " (" + Constants.RETRY_FLAG + " = " + retryCount + ")");
 	}
 
 	@Override
@@ -262,8 +221,7 @@ public class FeedbackFile implements Feedback {
 	}
 
 	@Override
-	public void onTestCaseMonitor(String testCase, String action,
-			String envIdentify) {
+	public void onTestCaseMonitor(String testCase, String action, String envIdentify) {
 		println(action + " " + testCase + " " + envIdentify);
 	}
 
@@ -295,32 +253,20 @@ public class FeedbackFile implements Feedback {
 		return 0;
 	}
 
-	private void collectCoverageOnOneNode(Context context, String currEnvId,
-			String host) {
+	private void collectCoverageOnOneNode(Context context, String currEnvId, String host) {
 		SSHConnect ssh = null;
 		println("[Code Coverage] Current Time is " + new Date());
-		feedbackLog
-				.print("[Code Coverage] start code coverage data collection!");
-		String covHost = context.getProperty(
-				ConfigParameterConstants.COVERAGE_CONTROLLER_IP, "").trim();
-		String covUser = context.getProperty(
-				ConfigParameterConstants.COVERAGE_CONTROLLER_USER, "").trim();
-		String covPwd = context.getProperty(
-				ConfigParameterConstants.COVERAGE_CONTROLLER_PASSWORD, "")
-				.trim();
-		String covPort = context.getProperty(
-				ConfigParameterConstants.COVERAGE_CONTROLLER_PORT, "").trim();
-		String covTargetDir = context.getProperty(
-				ConfigParameterConstants.COVERAGE_CONTROLLER_RESULT, "").trim();
+		feedbackLog.print("[Code Coverage] start code coverage data collection!");
+		String covHost = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_IP, "").trim();
+		String covUser = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_USER, "").trim();
+		String covPwd = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_PASSWORD, "").trim();
+		String covPort = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_PORT, "").trim();
+		String covTargetDir = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_RESULT, "").trim();
 		String category = context.getTestCategory();// flag will mark category
 													// as a new for slave node
-		String covParams = "-n " + context.getTestBuild() + " -c " + category
-				+ " -user " + covUser + " -pwd '" + covPwd + "' -host "
-				+ covHost + " -to " + covTargetDir + " -port " + covPort;
+		String covParams = "-n " + context.getTestBuild() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
 
-		String envIdentify = "EnvId=" + currEnvId + "["
-				+ (ShellHelper.getTestNodeTitle(context, currEnvId, host))
-				+ "] with " + context.getServiceProtocolType() + " protocol!";
+		String envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId, host)) + "] with " + context.getServiceProtocolType() + " protocol!";
 		try {
 			ssh = ShellHelper.createTestNodeConnect(context, currEnvId, host);
 
@@ -340,26 +286,20 @@ public class FeedbackFile implements Feedback {
 				ssh.close();
 			}
 
-			println("[Code Coverage] end code coverage collection on "
-					+ envIdentify);
-			feedbackLog
-					.print("[Code Coverage] end code coverage collection on "
-							+ envIdentify);
+			println("[Code Coverage] end code coverage collection on " + envIdentify);
+			feedbackLog.print("[Code Coverage] end code coverage collection on " + envIdentify);
 		}
 	}
 
 	@Override
 	public void onStopEnvEvent(String envIdentify) {
-		String role = context.getProperty(
-				ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
-		String host = context.getInstanceProperty(envIdentify,
-				ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+		String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
+		String host = context.getInstanceProperty(envIdentify, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 
 		if (role.indexOf("coverage") != -1) {
 			collectCoverageOnOneNode(this.context, envIdentify, host);
 
-			ArrayList<String> relatedHosts = context
-					.getRelatedHosts(envIdentify);
+			ArrayList<String> relatedHosts = context.getRelatedHosts(envIdentify);
 			int idx = 0;
 			for (String h : relatedHosts) {
 				collectCoverageOnOneNode(this.context, envIdentify, h);

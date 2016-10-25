@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.shell.deploy;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
-
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
@@ -42,21 +41,19 @@ public class TestCaseGithub {
 
 	public TestCaseGithub(Context context, String currEnvId) throws Exception {
 		this.context = context;
-		this.currEnvId =currEnvId;
+		this.currEnvId = currEnvId;
 
-		
 		envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId)) + "] with " + context.getServiceProtocolType() + " protocol!";
 		this.ssh = ShellHelper.createTestNodeConnect(context, currEnvId);
-		
-		if(context.isWindows()) {
+
+		if (context.isWindows()) {
 			initWindows();
 		}
 	}
-	
-	
-	public void update() throws Exception{
+
+	public void update() throws Exception {
 		context.getFeedback().onSvnUpdateStart(envIdentify);
-		
+
 		while (true) {
 			if (doUpdate()) {
 				break;
@@ -65,7 +62,7 @@ public class TestCaseGithub {
 			System.out.println("==>Retry to do case update after 5 seconds!");
 			CommonUtils.sleep(5);
 		}
-		
+
 		if (!context.getTestCaseWorkspace().equals(context.getTestCaseRoot())) {
 			ShellScriptInput scripts = new ShellScriptInput();
 			String wsRoot = context.getTestCaseWorkspace().replace('\\', '/');
@@ -78,7 +75,7 @@ public class TestCaseGithub {
 				scripts.addCommand("rm -rf " + toStar);
 			}
 			scripts.addCommand("cp -r " + fromStar + " " + wsRoot);
-			
+
 			String result;
 			try {
 				result = ssh.execute(scripts);
@@ -87,20 +84,20 @@ public class TestCaseGithub {
 				System.out.print("[ERROR] " + e.getMessage());
 			}
 		}
-		
+
 		context.getFeedback().onSvnUpdateStop(envIdentify);
 	}
-	
+
 	private boolean doUpdate() {
 		boolean isSucc = true;
 		cleanProcess();
-		if(context.needCleanTestCase()) {
+		if (context.needCleanTestCase()) {
 			ShellScriptInput scripts = new ShellScriptInput();
 			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch() + "  2>&1");
 			String result;
 			try {
 				result = ssh.execute(scripts);
-				if(result!=null && result.indexOf("ERROR") !=-1){
+				if (result != null && result.indexOf("ERROR") != -1) {
 					isSucc = false;
 				}
 				System.out.println(result);
@@ -108,23 +105,21 @@ public class TestCaseGithub {
 				isSucc = false;
 				System.out.print("[ERROR] " + e.getMessage());
 			}
-			
-			System.out.println("UPDATE TEST CASES " + (isSucc? "COMPLETE !":"FAIL !"));
-		}else{
+
+			System.out.println("UPDATE TEST CASES " + (isSucc ? "COMPLETE !" : "FAIL !"));
+		} else {
 			System.out.println("SKIP TEST CASES UPDATE");
 		}
-		
+
 		return isSucc;
- 	}
-	
+	}
+
 	public void cleanProcess() {
 		String result = CommonUtils.resetProcess(ssh, context.isWindows(), context.isExecuteAtLocal());
 		System.out.println("CLEAN PROCESSES:");
 		System.out.println(result);
- 	}
+	}
 
-	
-	
 	private void initWindows() {
 		ShellScriptInput scripts = new ShellScriptInput();
 

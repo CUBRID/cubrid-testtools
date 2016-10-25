@@ -32,7 +32,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class Message implements Cloneable{
+public class Message implements Cloneable {
 
 	String msgId;
 	String queue;
@@ -58,7 +58,7 @@ public class Message implements Cloneable{
 	public String getText() {
 		return this.text;
 	}
-	
+
 	public String getMsgId() {
 		return this.msgId;
 	}
@@ -72,11 +72,11 @@ public class Message implements Cloneable{
 	}
 
 	public void putAll(Properties props) {
-		if(props != null) {
+		if (props != null) {
 			this.props.putAll(props);
 		}
 	}
-	
+
 	@Override
 	public Object clone() {
 		Message obj = new Message(queue, text);
@@ -89,65 +89,65 @@ public class Message implements Cloneable{
 		StringBuffer result = new StringBuffer();
 		result.append("Message Content: ").append(text).append(Constants.LINE_SEPARATOR);
 		result.append("MSG_ID = ").append(this.msgId).append(Constants.LINE_SEPARATOR);
-		result.append("MSG_PRIORITY = ").append(this.priority).append(Constants.LINE_SEPARATOR);		
-		
+		result.append("MSG_PRIORITY = ").append(this.priority).append(Constants.LINE_SEPARATOR);
+
 		Set<String> set = getPropertyKeys();
-		TreeSet<String> tset = new TreeSet<String>(new java.util.Comparator<String>(){
+		TreeSet<String> tset = new TreeSet<String>(new java.util.Comparator<String>() {
 			@Override
 			public int compare(String o1, String o2) {
 				return o1.compareTo(o2);
 			}
-			
+
 		});
-		
+
 		for (String key : set) {
 			tset.add(key + '=' + getProperty(key));
 		}
 		for (String item : tset) {
 			result.append(item).append(Constants.LINE_SEPARATOR);
-		}		
-		
+		}
+
 		return result.toString();
 	}
 
 	public String getMD5() throws NoSuchAlgorithmException {
 		StringBuffer cont = new StringBuffer();
-		cont.append(this.queue).append('\n');		
-		
+		cont.append(this.queue).append('\n');
+
 		Set set = props.keySet();
-		for (Object key: set) {
-			if("BUILD_SEND_DELAY,BUILD_CREATE_TIME,BUILD_SEND_TIME,".indexOf(","+key+",") == -1){
+		for (Object key : set) {
+			if ("BUILD_SEND_DELAY,BUILD_CREATE_TIME,BUILD_SEND_TIME,".indexOf("," + key + ",") == -1) {
 				cont.append(getProperty(key.toString())).append('\n');
 			}
 		}
-		
-//		cont.append(getProperty(Constants.MSG_BUILD_URLS)).append('\n');
-//		cont.append(getProperty(Constants.MSG_BUILD_SCENARIOS)).append('\n');
-//		cont.append(getProperty(Constants.MSG_BUILD_BIT)).append('\n');
-//		
-//		if(getProperty(Constants.MSG_COMPAT_BUILD_ID)!=null) {
-//			cont.append(getProperty(Constants.MSG_COMPAT_BUILD_ID)).append('\n');
-//		}
-//		
-//		if(getProperty(Constants.MSG_COMPAT_TEST_CATAGORY)!=null) {
-//			cont.append(getProperty(Constants.MSG_COMPAT_TEST_CATAGORY)).append('\n');
-//		}
-//		
-//		String i18n_scenario = getProperty("I18N_BUILD_SCENARIOS");
-//		if(i18n_scenario!=null) {
-//			cont.append(i18n_scenario).append('\n');
-//		}
-//		String i18n_charset = getProperty("DB_CHARSET");
-//		if(i18n_charset!=null) {
-//			cont.append(i18n_charset).append('\n');
-//		}
-//		String i18n_xml = getProperty("RESET_CONFIG_FILE");
-//		if(i18n_xml!=null) {
-//			cont.append(i18n_xml).append('\n');
-//		}
-		
+
+		// cont.append(getProperty(Constants.MSG_BUILD_URLS)).append('\n');
+		// cont.append(getProperty(Constants.MSG_BUILD_SCENARIOS)).append('\n');
+		// cont.append(getProperty(Constants.MSG_BUILD_BIT)).append('\n');
+		//
+		// if(getProperty(Constants.MSG_COMPAT_BUILD_ID)!=null) {
+		// cont.append(getProperty(Constants.MSG_COMPAT_BUILD_ID)).append('\n');
+		// }
+		//
+		// if(getProperty(Constants.MSG_COMPAT_TEST_CATAGORY)!=null) {
+		// cont.append(getProperty(Constants.MSG_COMPAT_TEST_CATAGORY)).append('\n');
+		// }
+		//
+		// String i18n_scenario = getProperty("I18N_BUILD_SCENARIOS");
+		// if(i18n_scenario!=null) {
+		// cont.append(i18n_scenario).append('\n');
+		// }
+		// String i18n_charset = getProperty("DB_CHARSET");
+		// if(i18n_charset!=null) {
+		// cont.append(i18n_charset).append('\n');
+		// }
+		// String i18n_xml = getProperty("RESET_CONFIG_FILE");
+		// if(i18n_xml!=null) {
+		// cont.append(i18n_xml).append('\n');
+		// }
+
 		MessageDigest md = MessageDigest.getInstance("MD5");
-		return new BigInteger(1,cont.toString().getBytes()).toString(16);
+		return new BigInteger(1, cont.toString().getBytes()).toString(16);
 	}
 
 	public int getPriority() {
@@ -157,5 +157,5 @@ public class Message implements Cloneable{
 	public void setPriority(int priority) {
 		this.priority = priority;
 	}
-	
+
 }

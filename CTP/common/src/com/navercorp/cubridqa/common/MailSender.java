@@ -26,9 +26,7 @@
 
 package com.navercorp.cubridqa.common;
 
-import java.io.File;
 import java.io.FileInputStream;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -60,9 +58,9 @@ public class MailSender {
 		options.addOption("title", true, "the subject of mail");
 		options.addOption("content", true, "the content of mail");
 		options.addOption("help", false, "List help");
-		
+
 		Properties props = Constants.COMMON_DAILYQA_CONF;
-		
+
 		InternetAddress from = new InternetAddress(props.getProperty("mail_from_address"), props.getProperty("mail_from_nickname"));
 		String dearContent = "";
 
@@ -88,7 +86,7 @@ public class MailSender {
 		}
 
 		if (!cmd.hasOption("title") && !cmd.hasOption("content")) {
-			showHelp("Please give mail subject and content", options); 
+			showHelp("Please give mail subject and content", options);
 			return;
 		}
 
@@ -190,8 +188,9 @@ public class MailSender {
 	public void send(InternetAddress from, ArrayList<InternetAddress> to, ArrayList<InternetAddress> cc, String title, String mailContent) throws Exception {
 		Properties prop = System.getProperties();
 		prop.put("mail.smtp.host", "localhost");
-		MimeMessage message = new  MimeMessage(Session.getDefaultInstance(prop, new Authenticator() {}));
-		//MimeMessage message = Aspirin.createNewMimeMessage();
+		MimeMessage message = new MimeMessage(Session.getDefaultInstance(prop, new Authenticator() {
+		}));
+		// MimeMessage message = Aspirin.createNewMimeMessage();
 		message.setSubject(title);
 		message.setContent(mailContent, "text/html");
 		message.setSentDate(new Date());

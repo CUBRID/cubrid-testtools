@@ -35,16 +35,14 @@ import org.apache.activemq.pool.PooledConnectionFactory;
 public class MQPoolUtil {
 
 	private static PooledConnection conn;
-	private int maxConnections=5;
-	private int idleTimeout=500;
-	private int expiryTimeout=1000;
-	
-	
+	private int maxConnections = 5;
+	private int idleTimeout = 500;
+	private int expiryTimeout = 1000;
+
 	private String Url = "tcp://localhost:61616";
-	private int maxmunActive=1;
-	
-	
-	//default value for below variables
+	private int maxmunActive = 1;
+
+	// default value for below variables
 	private int initialReconnectDelay = 1000;
 	private int timeout = 3000;
 	private int startupMaxReconnectAttempts = 2;
@@ -55,27 +53,22 @@ public class MQPoolUtil {
 
 	public MQPoolUtil(String url) {
 		String tmp = url;
-		this.Url = "failover:(" + tmp + "?initialReconnectDelay="
-				+ this.initialReconnectDelay + "&timeout=" + this.timeout
-				+ "&startupMaxReconnectAttempts=" + startupMaxReconnectAttempts;
+		this.Url = "failover:(" + tmp + "?initialReconnectDelay=" + this.initialReconnectDelay + "&timeout=" + this.timeout + "&startupMaxReconnectAttempts=" + startupMaxReconnectAttempts;
 	}
-	
+
 	public MQPoolUtil(String url, int initialReconnectDelay, int timeout, int startupMaxReconnectAttempts) {
 		String tmp = url;
-		this.Url = "failover:(" + tmp + "?initialReconnectDelay="
-				+ this.initialReconnectDelay + "&timeout=" + this.timeout
-				+ "&startupMaxReconnectAttempts=" + startupMaxReconnectAttempts;
+		this.Url = "failover:(" + tmp + "?initialReconnectDelay=" + this.initialReconnectDelay + "&timeout=" + this.timeout + "&startupMaxReconnectAttempts=" + startupMaxReconnectAttempts;
 	}
 
 	public void init() {
-		String url=getUrl();
+		String url = getUrl();
 		ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
-		
+
 		factory.setMaxThreadPoolSize(getMaxmunActive());
 
 		try {
-			PooledConnectionFactory poolFactory = new PooledConnectionFactory(
-					factory);
+			PooledConnectionFactory poolFactory = new PooledConnectionFactory(factory);
 			conn = (PooledConnection) poolFactory.createConnection();
 			conn.start();
 
@@ -99,7 +92,7 @@ public class MQPoolUtil {
 
 		MQPoolUtil.conn = conn;
 	}
-	
+
 	public int getMaxmunActive() {
 		return maxmunActive;
 	}

@@ -30,11 +30,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.navercorp.cubridqa.cqt.console.ConsoleAgent;
-import com.navercorp.cubridqa.cqt.console.util.SystemConst;
 
 public class StreamGobbler implements Runnable {
 	InputStream iserror, isstdout;
@@ -69,11 +66,11 @@ public class StreamGobbler implements Runnable {
 
 			InputStreamReader irstd = new InputStreamReader(isstdout);
 			BufferedReader stdBr = new BufferedReader(irstd);
-//			line = null;
-//			while ((line = errorBr.readLine()) != null) {
-//				System.out.println("Error.....  " + line);
-//			}
-//			line = null;
+			// line = null;
+			// while ((line = errorBr.readLine()) != null) {
+			// System.out.println("Error.....  " + line);
+			// }
+			// line = null;
 			while ((line = stdBr.readLine()) != null) {
 				list.add(line);
 				System.out.println("OUTPUT ........  " + line);

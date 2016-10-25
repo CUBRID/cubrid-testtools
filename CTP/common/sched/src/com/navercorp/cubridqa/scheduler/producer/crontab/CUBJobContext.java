@@ -25,8 +25,6 @@
  */
 package com.navercorp.cubridqa.scheduler.producer.crontab;
 
-import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -49,22 +47,22 @@ public class CUBJobContext {
 
 	public CUBJobContext(Configure conf, String jobId) {
 		this.conf = conf;
-		Properties props = conf.getProperties();		
+		Properties props = conf.getProperties();
 		this.jobId = jobId;
 		this.service = props.getProperty(jobId + ".service");
 		this.crontab = props.getProperty(jobId + ".crontab");
 		this.acceptversions = props.getProperty(jobId + ".acceptversions");
 		if (this.acceptversions != null) {
 			this.acceptversions = this.acceptversions.trim().toUpperCase();
-			if(this.acceptversions.equals("")) {
+			if (this.acceptversions.equals("")) {
 				this.acceptversions = null;
 			}
 		}
 		this.denyversions = props.getProperty(jobId + ".denyversions");
 		if (this.denyversions != null) {
 			this.denyversions = this.denyversions.trim().toUpperCase();
-			if(this.denyversions.equals("")) {
-				this.denyversions = null;	
+			if (this.denyversions.equals("")) {
+				this.denyversions = null;
 			}
 		}
 		this.listenFilename = props.getProperty(jobId + ".listenfile").trim();
@@ -82,7 +80,7 @@ public class CUBJobContext {
 			this.listenMoreFilenames.add(fname.trim());
 			index++;
 		}
-		
+
 		this.tests = props.getProperty(jobId + ".tests");
 		this.pkgBits = props.getProperty(jobId + ".package_bits");
 		this.pkgType = props.getProperty(jobId + ".package_type");
@@ -90,7 +88,7 @@ public class CUBJobContext {
 			System.out.println("[Scheduler] Error in " + jobId + ". Should enable acceptversions or denyversions. Cannot enable both of them.");
 		}
 	}
-	
+
 	public ArrayList<String> getListenMoreFilenames() {
 		return this.listenMoreFilenames;
 	}
@@ -118,15 +116,15 @@ public class CUBJobContext {
 	public String getTests() {
 		return tests;
 	}
-	
-	public String getJobId(){
+
+	public String getJobId() {
 		return this.jobId;
 	}
-	
+
 	public String toString() {
-		return "service=" + this.service + ", crontab=" + crontab + ", acceptversions=" + acceptversions + ", denyversions= "+ denyversions+ ", listen_file=" + listenFilename + ", tests=" + tests;
+		return "service=" + this.service + ", crontab=" + crontab + ", acceptversions=" + acceptversions + ", denyversions= " + denyversions + ", listen_file=" + listenFilename + ", tests=" + tests;
 	}
-	
+
 	public Configure getMainConfigure() {
 		return this.conf;
 	}
@@ -138,34 +136,34 @@ public class CUBJobContext {
 	public String getPkgType() {
 		return pkgType;
 	}
-	
+
 	public Properties getCommonMKEYProps() {
 		ArrayList<String[]> mlist = conf.filterProps(jobId + ".MKEY_", null, null);
 		Properties props = new Properties();
 		String key, value;
-		for(String[] arr: mlist) {
+		for (String[] arr : mlist) {
 			key = arr[0];
 			value = arr[1];
-			props.put(CommonUtils.replace(key, jobId + ".", ""), value);			
+			props.put(CommonUtils.replace(key, jobId + ".", ""), value);
 		}
 		return props;
 	}
-	
-	public ArrayList<Properties> getTestList(){
+
+	public ArrayList<Properties> getTestList() {
 		ArrayList<String[]> mlist = conf.filterProps(jobId + ".test.", ".queue", null);
 		ArrayList<Properties> testList = new ArrayList<Properties>();
 		ArrayList<String[]> subList;
 		Properties p;
 		String subKey;
-		for(String[] arr: mlist) {
+		for (String[] arr : mlist) {
 			subKey = CommonUtils.replace(arr[0], ".queue", "");
 			subList = conf.filterProps(subKey, null, null);
 			p = new Properties();
-			for(String[] subarr: subList) {
+			for (String[] subarr : subList) {
 				p.put(CommonUtils.replace(subarr[0], subKey + ".", ""), subarr[1]);
 			}
 			testList.add(p);
-		}	
+		}
 		return testList;
 	}
 }

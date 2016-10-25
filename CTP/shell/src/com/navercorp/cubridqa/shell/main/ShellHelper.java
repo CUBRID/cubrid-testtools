@@ -24,7 +24,7 @@ public class ShellHelper {
 
 		return title;
 	}
-	
+
 	public final static SSHConnect createFirstTestNodeConnect(Context context) throws JSchException {
 		String envId = context.getEnvList().get(0);
 		return createTestNodeConnect(context, envId);
@@ -43,8 +43,8 @@ public class ShellHelper {
 			String port = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
 			String user = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
 			String pwd = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
-			
-			ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());			
+
+			ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
 		}
 		return ssh;
 	}

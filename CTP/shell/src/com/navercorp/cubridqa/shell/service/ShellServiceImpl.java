@@ -58,13 +58,13 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 		this.requiredPwd = value;
 
 		userHome = props.getProperty(ConfigParameterConstants.AGENT_LOGIN_HOME_DIR);
-//		if (userHome == null || userHome.trim().equals("")) {
-//			userHome = System.getenv("HOME");
-//		}		
+		// if (userHome == null || userHome.trim().equals("")) {
+		// userHome = System.getenv("HOME");
+		// }
 		if (userHome == null || userHome.trim().equals("") || userHome.toUpperCase().equals("NULL")) {
 			userHome = new File(System.getenv("init_path")).getParentFile().getParentFile().getParentFile().getAbsolutePath();
 		}
-		
+
 		File userHomeFile = new File(userHome);
 		if (userHomeFile.exists() == false) {
 			throw new Exception("Not found " + userHomeFile.getAbsolutePath() + ". Please check 'agent_login_home_dir' property");
@@ -89,7 +89,7 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 		String preScript;
 
 		if (requiredUser.equals(user) && requiredPwd.equals(pwd) && requiredHosts.indexOf("," + clientHost + ",") != -1) {
-			if(scripts.equals("PLEASE_RESTART_AGENT")) {
+			if (scripts.equals("PLEASE_RESTART_AGENT")) {
 				System.out.println("Service will restart. Quit.");
 				System.exit(0);
 			}
@@ -102,7 +102,7 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 				preScript = "export HOME=" + userHome + ";";
 				preScript = preScript + "export USER=" + user + ";";
 				preScript = preScript + "cd $HOME;";
-				
+
 				String initPathforShell = System.getenv("init_path");
 				if (initPathforShell != null && initPathforShell.trim().equals("") == false) {
 					if (com.navercorp.cubridqa.common.CommonUtils.isWindowsPlatform()) {
@@ -110,7 +110,8 @@ public class ShellServiceImpl extends UnicastRemoteObject implements ShellServic
 						preScript = preScript + "export init_path=" + initPathforShell + "; ";
 					}
 				}
-				//preScript = preScript + "if  [ -f ~/.bash_profile ]; then . ~/.bash_profile; fi; ";
+				// preScript = preScript +
+				// "if  [ -f ~/.bash_profile ]; then . ~/.bash_profile; fi; ";
 			}
 
 			scripts = preScript + scripts;

@@ -43,9 +43,6 @@ import org.apache.commons.dbcp.SQLNestedException;
 import org.apache.commons.pool.impl.GenericKeyedObjectPoolFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 
-import com.navercorp.cubridqa.cqt.console.util.SystemModel;
-
-
 @SuppressWarnings("deprecation")
 public class MyDataSource extends BasicDataSource {
 
@@ -63,8 +60,7 @@ public class MyDataSource extends BasicDataSource {
 			try {
 				Class.forName(driverClassName);
 			} catch (Throwable t) {
-				String message = "Cannot load JDBC driver class '"
-						+ driverClassName + "'";
+				String message = "Cannot load JDBC driver class '" + driverClassName + "'";
 				logWriter.println(message);
 				t.printStackTrace(logWriter);
 				throw new SQLNestedException(message, t);
@@ -72,20 +68,15 @@ public class MyDataSource extends BasicDataSource {
 		}
 		Driver driver = null;
 		try {
-			SystemModel systemModel = (SystemModel) XstreamHelper
-					.fromXml(PropertiesUtil.getValue("local.path")
-							+ "/configuration/System.xml");
+			SystemModel systemModel = (SystemModel) XstreamHelper.fromXml(PropertiesUtil.getValue("local.path") + "/configuration/System.xml");
 			String path = systemModel.getJdbcPath();
 			File file = new File(path);
 			URL url = file.toURL();
 			URLClassLoader classLoader = new URLClassLoader(new URL[] { url });
-			Class driverClass = Class.forName(driverClassName, true,
-					classLoader);
+			Class driverClass = Class.forName(driverClassName, true, classLoader);
 			driver = (Driver) driverClass.newInstance();
 		} catch (Throwable t) {
-			String message = "Cannot create JDBC driver of class '"
-					+ (driverClassName == null ? "" : driverClassName)
-					+ "' for connect URL '" + url + "'";
+			String message = "Cannot create JDBC driver of class '" + (driverClassName == null ? "" : driverClassName) + "' for connect URL '" + url + "'";
 			logWriter.println(message);
 			t.printStackTrace(logWriter);
 			throw new SQLNestedException(message, t);
@@ -106,58 +97,45 @@ public class MyDataSource extends BasicDataSource {
 		connectionPool.setMaxWait(maxWait);
 		connectionPool.setTestOnBorrow(testOnBorrow);
 		connectionPool.setTestOnReturn(testOnReturn);
-		connectionPool
-				.setTimeBetweenEvictionRunsMillis(timeBetweenEvictionRunsMillis);
+		connectionPool.setTimeBetweenEvictionRunsMillis(timeBetweenEvictionRunsMillis);
 		connectionPool.setNumTestsPerEvictionRun(numTestsPerEvictionRun);
-		connectionPool
-				.setMinEvictableIdleTimeMillis(minEvictableIdleTimeMillis);
+		connectionPool.setMinEvictableIdleTimeMillis(minEvictableIdleTimeMillis);
 		connectionPool.setTestWhileIdle(testWhileIdle);
 		GenericKeyedObjectPoolFactory statementPoolFactory = null;
 		if (isPoolPreparedStatements()) {
-			statementPoolFactory = new GenericKeyedObjectPoolFactory(null, -1,
-					(byte) 0, 0L, 1, maxOpenPreparedStatements);
+			statementPoolFactory = new GenericKeyedObjectPoolFactory(null, -1, (byte) 0, 0L, 1, maxOpenPreparedStatements);
 		}
 		if (username != null) {
 			connectionProperties.put("user", username);
 		} else {
-			logWriter
-					.println("DBCP DataSource configured without a 'username'");
+			logWriter.println("DBCP DataSource configured without a 'username'");
 		}
 		if (password != null) {
 			connectionProperties.put("password", password);
 		} else {
-			logWriter
-					.println("DBCP DataSource configured without a 'password'");
+			logWriter.println("DBCP DataSource configured without a 'password'");
 		}
-		DriverConnectionFactory driverConnectionFactory = new DriverConnectionFactory(
-				driver, url, connectionProperties);
+		DriverConnectionFactory driverConnectionFactory = new DriverConnectionFactory(driver, url, connectionProperties);
 		PoolableConnectionFactory connectionFactory = null;
 		try {
-			connectionFactory = new PoolableConnectionFactory(
-					driverConnectionFactory, connectionPool,
-					statementPoolFactory, validationQuery, defaultReadOnly,
-					defaultAutoCommit, defaultTransactionIsolation,
-					defaultCatalog, abandonedConfig);
+			connectionFactory = new PoolableConnectionFactory(driverConnectionFactory, connectionPool, statementPoolFactory, validationQuery, defaultReadOnly, defaultAutoCommit,
+					defaultTransactionIsolation, defaultCatalog, abandonedConfig);
 			if (connectionFactory == null) {
-				throw new SQLException(
-						"Cannot create PoolableConnectionFactory");
+				throw new SQLException("Cannot create PoolableConnectionFactory");
 			}
 			validateConnectionFactory(connectionFactory);
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new SQLNestedException(
-					"Cannot create PoolableConnectionFactory", e);
+			throw new SQLNestedException("Cannot create PoolableConnectionFactory", e);
 		}
 		dataSource = new PoolingDataSource(connectionPool);
-		((PoolingDataSource) dataSource)
-				.setAccessToUnderlyingConnectionAllowed(isAccessToUnderlyingConnectionAllowed());
+		((PoolingDataSource) dataSource).setAccessToUnderlyingConnectionAllowed(isAccessToUnderlyingConnectionAllowed());
 		dataSource.setLogWriter(logWriter);
 		return dataSource;
 	}
 
-	private void validateConnectionFactory(
-			PoolableConnectionFactory connectionFactory) throws Exception {
+	private void validateConnectionFactory(PoolableConnectionFactory connectionFactory) throws Exception {
 		Connection conn = null;
 		try {
 			conn = (Connection) connectionFactory.makeObject();
