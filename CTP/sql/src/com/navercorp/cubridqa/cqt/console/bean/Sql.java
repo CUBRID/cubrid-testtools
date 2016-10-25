@@ -26,7 +26,6 @@ package com.navercorp.cubridqa.cqt.console.bean;
 
 import java.util.List;
 
-
 public class Sql {
 	public static final int TYPE_STMT = 0;
 
@@ -37,12 +36,12 @@ public class Sql {
 	private String script;
 
 	private List<SqlParam> paramList;
-	
-	//add query plan for single sql statement
+
+	// add query plan for single sql statement
 	private boolean isQueryplan = false;
 
 	private int type;
-	
+
 	private String result = "";
 
 	private boolean isSuccessful = true;
@@ -51,8 +50,7 @@ public class Sql {
 
 	private String connId = "";
 
-	public Sql(String connId, String src, List<SqlParam> paramList,
-			boolean isCall) {
+	public Sql(String connId, String src, List<SqlParam> paramList, boolean isCall) {
 		setConnId(connId);
 		setScript(src);
 		setParamList(paramList);
@@ -163,6 +161,5 @@ public class Sql {
 	public void setQueryplan(boolean isQueryplan) {
 		this.isQueryplan = isQueryplan;
 	}
-	
-	
+
 }

@@ -27,33 +27,28 @@
 package com.navercorp.cubridqa.scheduler.common;
 
 import javax.jms.Connection;
-
-
-import javax.jms.JMSException;
 import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
-import javax.jms.TextMessage;
-
 import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
 
 public class ActiveMQFactory {
-	
-	
+
 	private String user = null;
 	private String pwd = null;
 	private String url = null;
 	private int ackMode = Session.AUTO_ACKNOWLEDGE;
 	private boolean trans = false;
-	private Connection conn=null;
-	private RedeliveryPolicy redeliveryPolicy=null;
-
+	private Connection conn = null;
+	private RedeliveryPolicy redeliveryPolicy = null;
 
 	public RedeliveryPolicy getRedeliveryPolicy() {
-		
+
 		return redeliveryPolicy;
 	}
 
@@ -64,12 +59,12 @@ public class ActiveMQFactory {
 	public ActiveMQFactory() {
 		super();
 	}
-	
+
 	public ActiveMQFactory(String user, String password, String url) throws JMSException, Exception {
-		this.user=user;
-		this.pwd=password;
-		this.url=url;
-		this.conn=createConnectionWithParameters(user, password, url);
+		this.user = user;
+		this.pwd = password;
+		this.url = url;
+		this.conn = createConnectionWithParameters(user, password, url);
 	}
 
 	public boolean isTrans() {
@@ -115,11 +110,11 @@ public class ActiveMQFactory {
 	public void setClientID(String clientID) {
 		this.clientID = clientID;
 	}
-	
+
 	public Connection getConn() {
 		return conn;
 	}
-	
+
 	public Session getSec() throws JMSException {
 		return createSessionWithParameters(this.conn, this.trans, this.ackMode);
 	}
@@ -142,18 +137,15 @@ public class ActiveMQFactory {
 	private String clientID = null;
 
 	protected Connection createConnection() throws JMSException, Exception {
-		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
-				user, pwd, url);
-		
+		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(user, pwd, url);
+
 		Connection connection = connectionFactory.createConnection();
 		connection.start();
 		return connection;
 	}
 
-	protected Connection createConnectionWithID(String id) throws JMSException,
-			Exception {
-		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
-				user, pwd, url);
+	protected Connection createConnectionWithID(String id) throws JMSException, Exception {
+		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(user, pwd, url);
 		Connection connection = connectionFactory.createConnection();
 		if (id != null) {
 			connection.setClientID(id);
@@ -162,33 +154,29 @@ public class ActiveMQFactory {
 		return connection;
 	}
 
-	protected Connection createConnectionWithParameters(String user, String password, String url)
-			throws JMSException, Exception {
+	protected Connection createConnectionWithParameters(String user, String password, String url) throws JMSException, Exception {
 
-		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
-				user, password, url);
-		RedeliveryPolicy policy=connectionFactory.getRedeliveryPolicy();
+		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(user, password, url);
+		RedeliveryPolicy policy = connectionFactory.getRedeliveryPolicy();
 		policy.setMaximumRedeliveries(-1);
 		Connection connection = connectionFactory.createConnection();
 		connection.start();
 		return connection;
 	}
 
-	protected Session createSession(Connection connection, boolean trans,
-			int actMode) throws JMSException {
+	protected Session createSession(Connection connection, boolean trans, int actMode) throws JMSException {
 		Session session = connection.createSession(trans, ackMode);
 
 		return session;
 	}
-	
+
 	protected Session createSessionWithParameters(Connection connection, boolean tranctions, int ackMode) throws JMSException {
 		Session session = connection.createSession(trans, ackMode);
 
 		return session;
 	}
 
-	protected MessageProducer createProducer(Session session, String qunuename,
-			int deMode, int tToLive) throws Exception {
+	protected MessageProducer createProducer(Session session, String qunuename, int deMode, int tToLive) throws Exception {
 		Destination destination = session.createQueue(qunuename);
 		MessageProducer producer = session.createProducer(destination);
 		producer.setDeliveryMode(deMode);
@@ -198,14 +186,12 @@ public class ActiveMQFactory {
 		return producer;
 	}
 
-	protected void commitTasks(Session session, MessageProducer producer,
-			String taskname) throws JMSException {
+	protected void commitTasks(Session session, MessageProducer producer, String taskname) throws JMSException {
 		TextMessage message = session.createTextMessage(taskname);
 		producer.send(message);
 	}
 
-	protected MessageConsumer createMessageConsumer(Destination dest,
-			Session session) throws JMSException {
+	protected MessageConsumer createMessageConsumer(Destination dest, Session session) throws JMSException {
 
 		MessageConsumer mc = session.createConsumer(dest);
 

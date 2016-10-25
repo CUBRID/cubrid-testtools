@@ -76,8 +76,7 @@ public class LogUtil {
 		sb.append(e.toString() + System.getProperty("line.separator"));
 		StackTraceElement[] elems = e.getStackTrace();
 		for (int i = 0; i < elems.length; i++) {
-			sb.append(elems[i].toString()
-					+ System.getProperty("line.separator"));
+			sb.append(elems[i].toString() + System.getProperty("line.separator"));
 		}
 
 		return sb.toString();

@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.common.grepo;
 
 import java.io.File;
-
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -42,10 +41,9 @@ import org.apache.commons.cli.PosixParser;
 import com.navercorp.cubridqa.common.CommonUtils;
 
 public class UpgradeMain {
-	
 
 	public static void main(String[] args) throws Exception {
-		
+
 		Options options = new Options();
 		options.addOption("r", "repo", true, "Repository name");
 		options.addOption("b", "branch", true, "Branch name in repository");

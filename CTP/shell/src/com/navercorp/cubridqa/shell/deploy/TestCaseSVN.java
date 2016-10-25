@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.shell.deploy;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
-
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
@@ -42,28 +41,28 @@ public class TestCaseSVN {
 
 	public TestCaseSVN(Context context, String currEnvId) throws Exception {
 		this.context = context;
-		this.currEnvId =currEnvId;
+		this.currEnvId = currEnvId;
 
 		envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId)) + "] with " + context.getServiceProtocolType() + " protocol!";
 		this.ssh = ShellHelper.createTestNodeConnect(context, currEnvId);
-		
-		if(context.isWindows()) {
+
+		if (context.isWindows()) {
 			initWindows();
 		}
 	}
-	
-	public void update() throws Exception{
+
+	public void update() throws Exception {
 		context.getFeedback().onSvnUpdateStart(envIdentify);
-		
-		while(true){
-			if(doUpdate()){
+
+		while (true) {
+			if (doUpdate()) {
 				break;
 			}
-			
+
 			System.out.println("==>Retry to do case update after 5 seconds!");
 			CommonUtils.sleep(5);
 		}
-		
+
 		if (!context.getTestCaseWorkspace().equals(context.getTestCaseRoot())) {
 			ShellScriptInput scripts = new ShellScriptInput();
 			String wsRoot = context.getTestCaseWorkspace().replace('\\', '/');
@@ -76,7 +75,7 @@ public class TestCaseSVN {
 				scripts.addCommand("rm -rf " + toStar);
 			}
 			scripts.addCommand("cp -r " + fromStar + " " + wsRoot);
-			
+
 			String result;
 			try {
 				result = ssh.execute(scripts);
@@ -85,24 +84,24 @@ public class TestCaseSVN {
 				System.out.print("[ERROR] " + e.getMessage());
 			}
 		}
-		
+
 		context.getFeedback().onSvnUpdateStop(envIdentify);
 	}
-	
+
 	public boolean doUpdate() throws Exception {
 		boolean isSucc = true;
 		boolean needUpdateScenario = context.needCleanTestCase();
 		cleanProcess();
-		
+
 		ShellScriptInput scripts = new ShellScriptInput();
 		String sedCmds;
-		if(context.isWindows()) {
+		if (context.isWindows()) {
 			sedCmds = "sed 's;\\\\;/;g'|";
 		} else {
 			sedCmds = "";
 		}
-		
-		if(needUpdateScenario) {
+
+		if (needUpdateScenario) {
 			scripts.addCommand("cd ");
 			scripts.addCommand("cd " + context.getTestCaseRoot());
 			scripts.addCommand("svn st " + context.getSVNUserInfo() + " | grep '~' | awk '{print $NF}' | " + sedCmds + " xargs -i rm -rf {} ");
@@ -111,7 +110,7 @@ public class TestCaseSVN {
 
 			scripts.addCommand("svn cleanup .");
 			scripts.addCommand("svn revert -R -q .");
-			scripts.addCommand("svn st " + context.getSVNUserInfo() + " | grep '?' | awk '{print $NF}' | " + sedCmds + "  xargs -i rm -rf {} " );
+			scripts.addCommand("svn st " + context.getSVNUserInfo() + " | grep '?' | awk '{print $NF}' | " + sedCmds + "  xargs -i rm -rf {} ");
 			scripts.addCommand("svn up " + context.getSVNUserInfo());
 
 			scripts.addCommand("cd ");
@@ -122,13 +121,13 @@ public class TestCaseSVN {
 			scripts.addCommand("svn revert -R -q .");
 			scripts.addCommand("svn up " + context.getSVNUserInfo());
 		}
-		
+
 		scripts.addCommand("cd ");
 		scripts.addCommand("cd " + context.getTestCaseRoot());
 		scripts.addCommand("echo 'EXPECT NOTHING FOR BELOW (" + this.currEnvId + ")'");
 		scripts.addCommand("svn st " + context.getSVNUserInfo());
 		scripts.addCommand("echo Above EnvId is " + this.currEnvId);
-		
+
 		String result;
 		try {
 			result = ssh.execute(scripts);
@@ -137,24 +136,22 @@ public class TestCaseSVN {
 			isSucc = false;
 			System.out.print("[ERROR] " + e.getMessage());
 		}
-		
-		if(needUpdateScenario){
+
+		if (needUpdateScenario) {
 			System.out.println("UPDATE TEST CASES " + (isSucc ? "COMPLETE !" : " FAIL!"));
-		}else{
+		} else {
 			System.out.println("SKIP TEST CASES UPDATE");
 		}
-		
+
 		return isSucc;
- 	}
-	
+	}
+
 	public void cleanProcess() {
 		String result = CommonUtils.resetProcess(ssh, context.isWindows(), context.isExecuteAtLocal());
 		System.out.println("CLEAN PROCESSES:");
 		System.out.println(result);
- 	}
+	}
 
-	
-	
 	private void initWindows() {
 		ShellScriptInput scripts = new ShellScriptInput();
 

@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.common.grepo;
 
 import java.io.ByteArrayInputStream;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -57,7 +56,7 @@ public class RepoUtil {
 			}
 			return;
 		}
-		
+
 		boolean succ = true;
 
 		byte[] buffer = new byte[2048];
@@ -84,8 +83,8 @@ public class RepoUtil {
 				e1.printStackTrace();
 			}
 		}
-		
-		if(succ == false) {
+
+		if (succ == false) {
 			throw new RuntimeException("error. save as to " + file.getAbsolutePath());
 		}
 	}

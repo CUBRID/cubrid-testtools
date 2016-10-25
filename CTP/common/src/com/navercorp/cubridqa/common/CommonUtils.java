@@ -66,8 +66,7 @@ public class CommonUtils {
 		strDest = strDest + strSource;
 		return strDest;
 	}
-	
-	
+
 	public static boolean isEmpty(String s) {
 		if (s == null) {
 			return true;
@@ -113,39 +112,40 @@ public class CommonUtils {
 		return list;
 
 	}
-	
-	public static void main(String[] args){
+
+	public static void main(String[] args) {
 		String file = "conf/shell.conf";
 		String lst = parseInstanceParametersByRole(getConfig(file), "env.instance2", "broker1");
 		System.out.println(lst);
 	}
-	
-	public static Properties parsePropertiesByPrefix(Properties config, String prefix){
+
+	public static Properties parsePropertiesByPrefix(Properties config, String prefix) {
 		Properties prop = new Properties();
 		final Iterator<Object> keyIterator = config.keySet().iterator();
-		while(keyIterator.hasNext()){
+		while (keyIterator.hasNext()) {
 			String key = keyIterator.next().toString();
-			if(key.startsWith(prefix)){
+			if (key.startsWith(prefix)) {
 				prop.setProperty(key.substring(prefix.length() + 1), config.getProperty(key));
 			}
 		}
-		
+
 		return prop;
 	}
-	
+
 	public static Properties parsePropertiesByPrefix(Properties config, String prefix, String defaultPrefix) {
-	    Properties prop1 = parsePropertiesByPrefix(config, prefix);
-	    Properties prop2 = parsePropertiesByPrefix(config, defaultPrefix);
-        prop2.putAll(prop1);
-        
-	    return prop2;
+		Properties prop1 = parsePropertiesByPrefix(config, prefix);
+		Properties prop2 = parsePropertiesByPrefix(config, defaultPrefix);
+		prop2.putAll(prop1);
+
+		return prop2;
 	}
-	
+
 	public static String parsePropertiesStringByPrefix(Properties config, String prefix, String defaultPrefix) {
-	    Properties prop = parsePropertiesByPrefix(config, prefix, defaultPrefix);
-	    if(prop == null) return "";
-	    
-	    Set<Object> set = prop.keySet();
+		Properties prop = parsePropertiesByPrefix(config, prefix, defaultPrefix);
+		if (prop == null)
+			return "";
+
+		Set<Object> set = prop.keySet();
 		Iterator<Object> it = set.iterator();
 		String resultList = "";
 		String key;
@@ -155,19 +155,19 @@ public class CommonUtils {
 			val = prop.getProperty(key);
 			resultList += key + "=" + val + "||";
 		}
-		
+
 		return resultList;
 	}
-	
-	public static String parseInstanceParametersByRole(Properties config, String instancePrefix, String role){
+
+	public static String parseInstanceParametersByRole(Properties config, String instancePrefix, String role) {
 		String prefix = instancePrefix + "." + role;
 		String defaultPrefix = "default." + role;
 		return parsePropertiesStringByPrefix(config, prefix, defaultPrefix);
 	}
-	
-	public static String concatFile(String p1, String p2){
+
+	public static String concatFile(String p1, String p2) {
 		String p;
-		
+
 		if (p1 == null)
 			p1 = "";
 		if (p2 == null)
@@ -175,15 +175,15 @@ public class CommonUtils {
 
 		p1 = p1.trim().replace('\\', '/');
 		p2 = p2.trim().replace('\\', '/');
-		
+
 		if (p1.equals("")) {
 			p = p2;
 		} else if (p2.equals("")) {
 			p = p1;
 		} else {
 			p = p1 + "/" + p2;
-		}  
-		
+		}
+
 		String t;
 		while (true) {
 			t = replace(p, "//", "/");
@@ -193,11 +193,11 @@ public class CommonUtils {
 				p = t;
 			}
 		}
-		
+
 		return p.replace('/', File.separatorChar);
 	}
 
-	public static boolean isAvailableURL(String urlStr){
+	public static boolean isAvailableURL(String urlStr) {
 		if (isEmpty(urlStr))
 			return false;
 		boolean res = false;
@@ -210,7 +210,7 @@ public class CommonUtils {
 		} catch (Exception e1) {
 			res = false;
 			url = null;
-		}finally{
+		} finally {
 			try {
 				if (in != null)
 					in.close();
@@ -221,6 +221,7 @@ public class CommonUtils {
 
 		return res;
 	}
+
 	public static String getFileContent(String filename) throws IOException {
 		File file = new File(filename);
 		if (!file.exists()) {
@@ -284,21 +285,21 @@ public class CommonUtils {
 		return props;
 	}
 
-	public static void writeProperties(String filename,Properties props) throws IOException {
-        File f = new File(filename);
-        
+	public static void writeProperties(String filename, Properties props) throws IOException {
+		File f = new File(filename);
+
 		if (!f.exists()) {
 			f.getParentFile().mkdirs();
 			f.createNewFile();
 		}
 
-        OutputStream out = null;
+		OutputStream out = null;
 		try {
 			out = new FileOutputStream(f);
 			props.store(out, "");
 			out.flush();
-		}finally{
-			if(out!=null){
+		} finally {
+			if (out != null) {
 				try {
 					out.close();
 				} catch (IOException e) {
@@ -382,7 +383,7 @@ public class CommonUtils {
 	public static String getLinuxStylePath(String path) {
 		return getLinuxStylePath(path, isCygwinPlatform());
 	}
-	
+
 	public static String getLinuxStylePath(String path, boolean useCygPath) {
 		path = path.trim();
 		if (useCygPath) {
@@ -465,8 +466,7 @@ public class CommonUtils {
 			}
 		}
 	}
-	
-	
+
 	public static Properties getConfig(InputStream is) {
 		try {
 			Properties props = new Properties();
@@ -533,7 +533,7 @@ public class CommonUtils {
 		}
 		return defaultValue;
 	}
-	
+
 	public static int getShellType(boolean supportPureWindows) {
 		int shellType;
 		if (CommonUtils.isWindowsPlatform()) {
@@ -547,7 +547,7 @@ public class CommonUtils {
 		}
 		return shellType;
 	}
-	
+
 	public static String getSimplifiedBuildId(String cubridPackageUrl) {
 		// get test build number
 		String sBuildId = null;
@@ -558,7 +558,7 @@ public class CommonUtils {
 		}
 		return sBuildId;
 	}
-	
+
 	public static boolean isNewBuildNumberSystem(String simplifiedBuildId) {
 		if (simplifiedBuildId == null) {
 			return false;
@@ -567,7 +567,7 @@ public class CommonUtils {
 		String stdValue = convertNumberSystemToFixedLength("10.1.0.6858");
 		return curValue.compareTo(stdValue) >= 0;
 	}
-	
+
 	public static String convertNumberSystemToFixedLength(String simplifiedBuildId) {
 		if (simplifiedBuildId == null) {
 			return simplifiedBuildId;
@@ -576,7 +576,7 @@ public class CommonUtils {
 		String[] items = simplifiedBuildId.split("\\.");
 		return toFixedLength(items[0], 3, '0') + toFixedLength(items[1], 3, '0') + toFixedLength(items[2], 3, '0') + toFixedLength(items[3], 10, '0');
 	}
-	
+
 	public static String toFixedLength(String str, int len, char fillChar) {
 
 		if (str == null)
@@ -587,7 +587,7 @@ public class CommonUtils {
 		}
 		return result.substring(result.length() - len);
 	}
-	
+
 	public static String getBuildId(String cubridPackageUrl) {
 		String simplifiedBuild = getSimplifiedBuildId(cubridPackageUrl);
 
@@ -597,7 +597,7 @@ public class CommonUtils {
 			int p1 = cubridPackageUrl.lastIndexOf(simplifiedBuild);
 			int p2 = cubridPackageUrl.indexOf("-", p1 + simplifiedBuild.length() + 1);
 			int p3 = p2 == -1 ? cubridPackageUrl.indexOf(")", p1 + simplifiedBuild.length() + 1) : p2;
-			
+
 			if (p3 == -1) {
 				p3 = cubridPackageUrl.indexOf(".", p1 + simplifiedBuild.length() + 1);
 			}
@@ -608,14 +608,14 @@ public class CommonUtils {
 			return simplifiedBuild;
 		}
 	}
-	
+
 	public static String getBuildBits(String cubridPackageUrl) {
 		String version = null;
 		int idx1 = cubridPackageUrl.indexOf("_64");
 		int idx2 = cubridPackageUrl.indexOf("x64");
 		int idx3 = cubridPackageUrl.indexOf("ppc64"); // AIX BUILD.
 														// CUBRID-8.4.4.0136-AIX-ppc64.sh
-		int idx4 = cubridPackageUrl.indexOf("64bit"); //Parse cubrid_rel result
+		int idx4 = cubridPackageUrl.indexOf("64bit"); // Parse cubrid_rel result
 
 		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0 || idx4 >= 0) {
 			version = "64bits";
@@ -624,7 +624,7 @@ public class CommonUtils {
 		}
 		return version;
 	}
-	
+
 	public static boolean containToken(String filename, String token) throws IOException {
 
 		File file = new File(filename);
@@ -651,9 +651,9 @@ public class CommonUtils {
 		fis.close();
 		return hasToken;
 	}
-	
+
 	public static String getFileMD5(File file) throws Exception {
-		if (!file.isFile() || file.exists() == false ) {
+		if (!file.isFile() || file.exists() == false) {
 			return null;
 		}
 		MessageDigest digest = null;
@@ -676,18 +676,18 @@ public class CommonUtils {
 			}
 		}
 	}
-	
-	public static void cleanFilesByDirectory(String dir)
-	{
-		if(isEmpty(dir)) return;
-		
+
+	public static void cleanFilesByDirectory(String dir) {
+		if (isEmpty(dir))
+			return;
+
 		File[] subList = new File(dir).listFiles();
 		for (File file : subList) {
 			if (file.isFile())
 				file.delete();
 		}
 	}
-	
+
 	public static int greaterThanVersion(String v1, String v2) {
 		String[] a1 = v1.split("\\.");
 		String[] a2 = v2.split("\\.");
@@ -716,12 +716,12 @@ public class CommonUtils {
 			return false;
 		}
 	}
-	
+
 	public static boolean supportInquireOnExit(String buildId) {
 		String arr[] = buildId.split("\\.");
 		return Integer.parseInt(arr[0]) >= 10;
 	}
-	
+
 	public static String translateVariable(String value) {
 		if (value == null)
 			return value;

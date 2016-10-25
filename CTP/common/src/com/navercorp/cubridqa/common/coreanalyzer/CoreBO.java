@@ -24,9 +24,7 @@
  */
 package com.navercorp.cubridqa.common.coreanalyzer;
 
-import java.io.File;
 import java.io.IOException;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -36,14 +34,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Properties;
 
-import com.navercorp.cubridqa.common.CommonUtils;
-
 public class CoreBO {
 
 	Properties props;
 
 	public CoreBO() throws IOException, ClassNotFoundException {
-		
+
 		props = com.navercorp.cubridqa.common.Constants.COMMON_DAILYQA_CONF;
 
 		Class.forName(props.getProperty("qahome_db_driver"));

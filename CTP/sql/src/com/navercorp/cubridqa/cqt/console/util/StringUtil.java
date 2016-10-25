@@ -31,9 +31,6 @@ import java.io.StringReader;
 import java.util.StringTokenizer;
 
 import com.navercorp.cubridqa.cqt.console.bean.SystemModel;
-import com.navercorp.cubridqa.cqt.console.util.PropertiesUtil;
-import com.navercorp.cubridqa.cqt.console.util.XstreamHelper;
-
 
 public class StringUtil {
 
@@ -116,9 +113,7 @@ public class StringUtil {
 			if (position1 != -1) {
 				int position2 = message.indexOf(")");
 				if (position2 != -1 && position2 > position1) {
-					message = message.substring(0, position1)
-							+ "Your transaction (?"
-							+ message.substring(position2);
+					message = message.substring(0, position1) + "Your transaction (?" + message.substring(position2);
 				}
 				return message;
 			} else {
@@ -126,13 +121,14 @@ public class StringUtil {
 			}
 		}
 	}
-	
-	public static String replaceSlashBasedSystem(String src){
-		if(src == null) return null;
-	
+
+	public static String replaceSlashBasedSystem(String src) {
+		if (src == null)
+			return null;
+
 		String p;
 		p = src.trim().replace('\\', '/');
-		
+
 		return p.replace('/', File.separatorChar);
 	}
 
@@ -146,9 +142,7 @@ public class StringUtil {
 		if (queryPlan == null) {
 			return null;
 		}
-		SystemModel systemModel = (SystemModel) XstreamHelper
-				.fromXml(EnvGetter.getenv("CTP_HOME") + File.separator
-						+ "sql/configuration/System.xml");
+		SystemModel systemModel = (SystemModel) XstreamHelper.fromXml(EnvGetter.getenv("CTP_HOME") + File.separator + "sql/configuration/System.xml");
 		if (!systemModel.isQueryPlan()) {
 			queryPlan = queryPlan.replaceAll("[0-9]+", "?");
 		}
@@ -212,6 +206,7 @@ public class StringUtil {
 
 	/**
 	 * translate byte array to Hex String .
+	 * 
 	 * @param b
 	 * @return
 	 */
@@ -222,26 +217,27 @@ public class StringUtil {
 		}
 		return buffer.toString();
 	}
-	
+
 	/**
 	 * replace dir for Windows OS which using cygwin.
+	 * 
 	 * @param filename
 	 * @return
 	 */
-	public static String replaceForCygwin(String filename){
-		LogUtil.log("ScheduleBO", "=== old filename: "+filename);
-		System.out.println("=== old filename: "+filename);
-		while(filename.indexOf("C:") != -1 || filename.indexOf("c:") != -1){
+	public static String replaceForCygwin(String filename) {
+		LogUtil.log("ScheduleBO", "=== old filename: " + filename);
+		System.out.println("=== old filename: " + filename);
+		while (filename.indexOf("C:") != -1 || filename.indexOf("c:") != -1) {
 			filename = filename.replaceAll("C:", "/cygdrive/c");
 			filename = filename.replaceAll("c:", "/cygdrive/c");
 		}
-		while(filename.indexOf("D:") != -1 || filename.indexOf("d:") != -1){
+		while (filename.indexOf("D:") != -1 || filename.indexOf("d:") != -1) {
 			filename = filename.replaceAll("D:", "/cygdrive/d");
 			filename = filename.replaceAll("d:", "/cygdrive/d");
 		}
 		filename = filename.replaceAll("\\\\", "/");
-		LogUtil.log("ScheduleBO", "=== new filename: "+filename);
-		System.out.println("=== new filename: "+filename);
+		LogUtil.log("ScheduleBO", "=== new filename: " + filename);
+		System.out.println("=== new filename: " + filename);
 		return filename;
 	}
 

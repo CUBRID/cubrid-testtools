@@ -27,7 +27,6 @@ package com.navercorp.cubridqa.scheduler.producer.crontab;
 
 import java.util.ArrayList;
 
-
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;

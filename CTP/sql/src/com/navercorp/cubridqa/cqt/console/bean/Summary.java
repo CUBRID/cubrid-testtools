@@ -32,7 +32,6 @@ import java.util.Map;
 
 import com.navercorp.cubridqa.cqt.console.util.EnvGetter;
 
-
 public class Summary {
 
 	public static final int TYPE_BOTTOM = 1;
@@ -99,17 +98,12 @@ public class Summary {
 
 	public String toString() {
 		StringBuilder ret = new StringBuilder();
-		ret
-				.append("total:" + totalCount
-						+ System.getProperty("line.separator"));
-		ret.append("success:" + successCount
-				+ System.getProperty("line.separator"));
+		ret.append("total:" + totalCount + System.getProperty("line.separator"));
+		ret.append("success:" + successCount + System.getProperty("line.separator"));
 		ret.append("fail:" + failCount + System.getProperty("line.separator"));
-		ret.append("totalTime:" + (totalTime) + "ms"
-				+ System.getProperty("line.separator"));
-		ret.append("SiteRunTimes:" + (siteRunTimes) + "times"
-				+ System.getProperty("line.separator"));
-		if(EnvGetter.getenv("MSG_ID") != null && EnvGetter.getenv("MSG_ID").length() > 0)
+		ret.append("totalTime:" + (totalTime) + "ms" + System.getProperty("line.separator"));
+		ret.append("SiteRunTimes:" + (siteRunTimes) + "times" + System.getProperty("line.separator"));
+		if (EnvGetter.getenv("MSG_ID") != null && EnvGetter.getenv("MSG_ID").length() > 0)
 			ret.append("msg_id:" + EnvGetter.getenv("MSG_ID") + System.getProperty("line.separator"));
 		if (this.getType() == Summary.TYPE_BOTTOM) {
 			for (int i = 0; i < caseList.size(); i++) {
@@ -119,19 +113,14 @@ public class Summary {
 				if (caseResult.isShouldRun()) {
 					ok = caseResult.isSuccessFul() ? "ok" : "nok";
 				}
-				ret.append(caseFile + ":" + ok + "    "
-						+ caseResult.getTotalTime() + "ms"
-						+ System.getProperty("line.separator"));
+				ret.append(caseFile + ":" + ok + "    " + caseResult.getTotalTime() + "ms" + System.getProperty("line.separator"));
 			}
 		} else {
 			Iterator<Summary> iter = childSummaryMap.values().iterator();
 			while (iter.hasNext()) {
 				Summary childSummary = (Summary) iter.next();
 				String resultDir = childSummary.getCatPath() + "/";
-				ret.append(resultDir + ":" + childSummary.getTotalCount()
-						+ "    " + childSummary.getSuccessCount() + "    "
-						+ childSummary.getFailCount()
-						+ System.getProperty("line.separator"));
+				ret.append(resultDir + ":" + childSummary.getTotalCount() + "    " + childSummary.getSuccessCount() + "    " + childSummary.getFailCount() + System.getProperty("line.separator"));
 			}
 		}
 		return ret.toString();

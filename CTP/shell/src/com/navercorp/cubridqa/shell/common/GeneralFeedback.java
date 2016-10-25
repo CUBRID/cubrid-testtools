@@ -23,12 +23,12 @@ public class GeneralFeedback {
 		this.context = new Context(configFilename);
 		this.messageFilename = messageFilename;
 		String category = context.getProperty(ConfigParameterConstants.TEST_CATEGORY, "TEST_CATEGORY", false);
-		if(CommonUtils.isEmpty(category)) {
+		if (CommonUtils.isEmpty(category)) {
 			category = "general";
 		}
 		context.setTestCategory(category);
-		this.context.setLogDir(category);	
-		
+		this.context.setLogDir(category);
+
 		keyData = new HashMap<String, String>();
 
 		String buildId = context.getProperty(ConfigParameterConstants.TEST_BUILD_ID, "BUILD_ID", false);
@@ -84,7 +84,7 @@ public class GeneralFeedback {
 						System.out.println("[%]DDOONNEE");
 					}
 					System.out.println(line);
-					
+
 				} else {
 					try {
 						Thread.sleep(1);

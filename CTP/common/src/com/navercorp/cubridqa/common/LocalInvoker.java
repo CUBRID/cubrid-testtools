@@ -25,14 +25,11 @@
 package com.navercorp.cubridqa.common;
 
 import java.io.BufferedReader;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
-import com.navercorp.cubridqa.common.CommonUtils;
 
 public class LocalInvoker {
 
@@ -45,7 +42,8 @@ public class LocalInvoker {
 	public static final String COMP_FLAG = "ALL_LOCAL_COMPLETED";
 
 	public static String exec(String cmds, int shellType, boolean showInConsole) {
-		// System.out.println("commands: " + cmds + ", " + shellType + "," + showInConsole);
+		// System.out.println("commands: " + cmds + ", " + shellType + "," +
+		// showInConsole);
 		File tmpFile;
 		try {
 			tmpFile = File.createTempFile(".localexec", shellType == SHELL_TYPE_WINDOWS ? ".bat" : ".sh");

@@ -47,8 +47,7 @@ public class CommonFileUtile {
 
 	private static String localPath = PropertiesUtil.getValue("local.path");
 
-	private static String rootNodeName = PropertiesUtil
-			.getValue("rootnode.name");
+	private static String rootNodeName = PropertiesUtil.getValue("rootnode.name");
 
 	/**
 	 * replace file separation character "\" to "/"
@@ -59,7 +58,6 @@ public class CommonFileUtile {
 	public static String changeFilePath(String filePath) {
 		return filePath.replaceAll("\\\\", "/");
 	}
-
 
 	/**
 	 * generate the element of special directory Recursively.
@@ -77,11 +75,7 @@ public class CommonFileUtile {
 			File[] files = f.listFiles();
 			Arrays.sort(files);
 			for (File file : files) {
-				if (file.isDirectory()
-						&& file.getAbsolutePath().indexOf(".svn") < 0
-						&& !file.getName().startsWith(".")
-						&& !pattern.matcher(file.getName().substring(0, 1))
-								.matches()) {
+				if (file.isDirectory() && file.getAbsolutePath().indexOf(".svn") < 0 && !file.getName().startsWith(".") && !pattern.matcher(file.getName().substring(0, 1)).matches()) {
 					e.add(createDesc(file));
 				}
 			}
@@ -115,7 +109,6 @@ public class CommonFileUtile {
 	public static boolean isDirectory(String path) {
 		return new File(path).isDirectory();
 	}
-
 
 	/**
 	 * get the absolute path of the string through the resource.
@@ -159,8 +152,7 @@ public class CommonFileUtile {
 		try {
 			File file = new File(filePath);
 			if (file != null && file.exists() && file.isFile()) {
-				reader = new BufferedReader(new InputStreamReader(
-						new FileInputStream(filePath), "utf-8"));
+				reader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "utf-8"));
 				StringBuffer buffer = new StringBuffer();
 				int n;
 				while ((n = reader.read()) != -1) {
@@ -198,13 +190,10 @@ public class CommonFileUtile {
 		filePath = filePath.replaceAll(" ", "");
 		File file = new File(filePath);
 		List<Object> list = new ArrayList<Object>();
-		if (file != null && file.getAbsolutePath() != null
-				&& !file.getAbsolutePath().equals("") && file.exists()
-				&& !file.isDirectory()) {
+		if (file != null && file.getAbsolutePath() != null && !file.getAbsolutePath().equals("") && file.exists() && !file.isDirectory()) {
 			BufferedReader bufferedReader = null;
 			try {
-				bufferedReader = new BufferedReader(new InputStreamReader(
-						new FileInputStream(filePath), "utf-8"));
+				bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "utf-8"));
 				String buffer = "";
 				while ((buffer = bufferedReader.readLine()) != null) {
 					list.add(buffer);
@@ -245,26 +234,20 @@ public class CommonFileUtile {
 		filePath = filePath.replaceAll(" ", "");
 		File file = new File(filePath);
 		List<Object> list = new ArrayList<Object>();
-		if (file != null && file.getAbsolutePath() != null
-				&& !file.getAbsolutePath().equals("") && file.exists()
-				&& !file.isDirectory()) {
+		if (file != null && file.getAbsolutePath() != null && !file.getAbsolutePath().equals("") && file.exists() && !file.isDirectory()) {
 			BufferedReader bufferedReader = null;
 			try {
-				bufferedReader = new BufferedReader(new InputStreamReader(
-						new FileInputStream(filePath), "utf-8"));
+				bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "utf-8"));
 				String buffer = "";
 				int lineNumber = 1;
 				while ((buffer = bufferedReader.readLine()) != null) {
 					if (buffer.startsWith("==========")) {
 						if (lineNumber < 10) {
-							buffer = buffer.replaceFirst("=", "[  "
-									+ lineNumber + "  ]  ");
+							buffer = buffer.replaceFirst("=", "[  " + lineNumber + "  ]  ");
 						} else if (lineNumber < 100) {
-							buffer = buffer.replaceFirst("=", "[  "
-									+ lineNumber + " ]  ");
+							buffer = buffer.replaceFirst("=", "[  " + lineNumber + " ]  ");
 						} else {
-							buffer = buffer.replaceFirst("=", "[ " + lineNumber
-									+ " ]  ");
+							buffer = buffer.replaceFirst("=", "[ " + lineNumber + " ]  ");
 						}
 						lineNumber++;
 					}
@@ -308,31 +291,24 @@ public class CommonFileUtile {
 		filePath = filePath.replaceAll(" ", "");
 		File file = new File(filePath);
 		StringBuffer stringBuffer = new StringBuffer("");
-		if (file != null && file.getAbsolutePath() != null
-				&& !file.getAbsolutePath().equals("") && file.exists()
-				&& !file.isDirectory()) {
+		if (file != null && file.getAbsolutePath() != null && !file.getAbsolutePath().equals("") && file.exists() && !file.isDirectory()) {
 			BufferedReader bufferedReader = null;
 			try {
-				bufferedReader = new BufferedReader(new InputStreamReader(
-						new FileInputStream(filePath), "utf-8"));
+				bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "utf-8"));
 				String buffer = "";
 				int lineNumber = 1;
 				while ((buffer = bufferedReader.readLine()) != null) {
 					if (buffer.startsWith("==========")) {
 						if (lineNumber < 10) {
-							buffer = buffer.replaceFirst("=", "[  "
-									+ lineNumber + "  ]  ");
+							buffer = buffer.replaceFirst("=", "[  " + lineNumber + "  ]  ");
 						} else if (lineNumber < 100) {
-							buffer = buffer.replaceFirst("=", "[  "
-									+ lineNumber + " ]  ");
+							buffer = buffer.replaceFirst("=", "[  " + lineNumber + " ]  ");
 						} else {
-							buffer = buffer.replaceFirst("=", "[ " + lineNumber
-									+ " ]  ");
+							buffer = buffer.replaceFirst("=", "[ " + lineNumber + " ]  ");
 						}
 						lineNumber++;
 					}
-					stringBuffer.append(buffer
-							+ System.getProperty("line.separator"));
+					stringBuffer.append(buffer + System.getProperty("line.separator"));
 				}
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
@@ -364,13 +340,10 @@ public class CommonFileUtile {
 		filePath = filePath.replaceAll(" ", "");
 		File file = new File(filePath);
 		List<String> list = new ArrayList<String>();
-		if (file != null && file.getAbsolutePath() != null
-				&& !file.getAbsolutePath().equals("") && file.exists()
-				&& !file.isDirectory()) {
+		if (file != null && file.getAbsolutePath() != null && !file.getAbsolutePath().equals("") && file.exists() && !file.isDirectory()) {
 			BufferedReader bufferedReader = null;
 			try {
-				bufferedReader = new BufferedReader(new InputStreamReader(
-						new FileInputStream(filePath), "utf-8"));
+				bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "utf-8"));
 				String buffer = "";
 				while ((buffer = bufferedReader.readLine()) != null) {
 					list.add(buffer);
@@ -416,7 +389,6 @@ public class CommonFileUtile {
 		return list;
 	}
 
-
 	/**
 	 * write the content to file .
 	 * 
@@ -443,8 +415,7 @@ public class CommonFileUtile {
 		}
 		BufferedWriter bw = null;
 		try {
-			bw = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(f), "utf-8"));
+			bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "utf-8"));
 			bw.write(content);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -476,8 +447,7 @@ public class CommonFileUtile {
 		if (!f.exists() && lines.size() > 0) {
 			try {
 				f.createNewFile();
-				bw = new BufferedWriter(new OutputStreamWriter(
-						new FileOutputStream(f), "utf-8"));
+				bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), "utf-8"));
 				for (String line : lines) {
 					bw.write(line + separator);
 				}
@@ -496,7 +466,6 @@ public class CommonFileUtile {
 			}
 		}
 	}
-
 
 	/**
 	 * determine if the os is linux or not .
@@ -522,8 +491,7 @@ public class CommonFileUtile {
 	 * @param aimFile
 	 * @return
 	 */
-	public static List<File> getYourWantFiles(String srcDirectory,
-			String aimFile) {
+	public static List<File> getYourWantFiles(String srcDirectory, String aimFile) {
 		List<File> list = new ArrayList<File>();
 		File src = new File(srcDirectory);
 		if (src.exists() && src.isDirectory()) {
@@ -541,8 +509,7 @@ public class CommonFileUtile {
 	 *            the reference to the file result .
 	 * @param aimFile
 	 */
-	private static void getChildrenFiles(File file, List<File> list,
-			String aimFile) {
+	private static void getChildrenFiles(File file, List<File> list, String aimFile) {
 		if (file.exists() && file.isDirectory()) {
 			File[] listFiles = file.listFiles();
 			for (File child : listFiles) {
@@ -564,8 +531,7 @@ public class CommonFileUtile {
 	 * @param contents
 	 * @return
 	 */
-	public static List<File> getYourWantFilesByContents(String srcDirectory,
-			String contents) {
+	public static List<File> getYourWantFilesByContents(String srcDirectory, String contents) {
 		List<File> list = new ArrayList<File>();
 		File src = new File(srcDirectory);
 		if (src.exists() && src.isDirectory()) {
@@ -581,19 +547,15 @@ public class CommonFileUtile {
 	 * @param list
 	 * @param contents
 	 */
-	private static void getChildrenFilesByContents(File file, List<File> list,
-			String contents) {
+	private static void getChildrenFilesByContents(File file, List<File> list, String contents) {
 		if (file.exists() && file.isDirectory()) {
 			File[] listFiles = file.listFiles();
 			for (File child : listFiles) {
 				if (child.isDirectory()) {
 					getChildrenFilesByContents(child, list, contents);
 				} else {
-					String readFileContent = readFileContent(child
-							.getAbsolutePath());
-					if (readFileContent.contains(contents)
-							&& !child.getAbsolutePath().endsWith(".class")
-							&& !child.getAbsolutePath().endsWith(".svn-base")) {
+					String readFileContent = readFileContent(child.getAbsolutePath());
+					if (readFileContent.contains(contents) && !child.getAbsolutePath().endsWith(".class") && !child.getAbsolutePath().endsWith(".svn-base")) {
 						list.add(child);
 					}
 				}

@@ -27,8 +27,6 @@ package com.navercorp.cubridqa.cqt.console.util;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import com.navercorp.cubridqa.cqt.console.util.MyDriverManager;
-
 public class CubridDBCenter {
 	private String ip;
 	private String port;
@@ -44,15 +42,13 @@ public class CubridDBCenter {
 	 * @param userid
 	 * @param userpwd
 	 */
-	public CubridDBCenter(String ip, String port, String dbname, String userid,
-			String userpwd) {
+	public CubridDBCenter(String ip, String port, String dbname, String userid, String userpwd) {
 		this.ip = ip;
 		this.port = port;
 		this.dbname = dbname;
 		this.userid = userid;
 		this.userpwd = userpwd;
 	}
-
 
 	/**
 	 * 
@@ -62,8 +58,7 @@ public class CubridDBCenter {
 
 		try {
 
-			this.connection = CubridDBCenter.getConnection(ip, port, dbname,
-					userid, userpwd);
+			this.connection = CubridDBCenter.getConnection(ip, port, dbname, userid, userpwd);
 
 			return this.connection;
 
@@ -84,12 +79,10 @@ public class CubridDBCenter {
 	 * @return
 	 * @throws SQLException
 	 */
-	public static Connection getConnection(String ip, String port,
-			String dbname, String userid, String userpwd) throws SQLException {
+	public static Connection getConnection(String ip, String port, String dbname, String userid, String userpwd) throws SQLException {
 
 		String url = "jdbc:cubrid:" + ip + ":" + port + ":" + dbname + ":::";
-		Connection conn = MyDriverManager.giveConnection(
-				"cubrid.jdbc.driver.CUBRIDDriver", url, userid, userpwd);
+		Connection conn = MyDriverManager.giveConnection("cubrid.jdbc.driver.CUBRIDDriver", url, userid, userpwd);
 
 		return conn;
 

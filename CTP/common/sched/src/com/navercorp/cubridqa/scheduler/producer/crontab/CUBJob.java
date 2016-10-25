@@ -26,12 +26,10 @@
 package com.navercorp.cubridqa.scheduler.producer.crontab;
 
 import java.io.File;
-
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
@@ -58,9 +56,9 @@ public class CUBJob implements Job {
 	public void execute(JobExecutionContext ctx) throws JobExecutionException {
 		CUBJobContext jctx = (CUBJobContext) ctx.getJobDetail().getJobDataMap().get("jctx");
 		System.out.println("[INFO] Start (job_id=" + jctx.getJobId() + ") " + new java.util.Date());
-		
+
 		Collection<File> freshList = getAllMaxBuild(jctx);
-		
+
 		String lastPropsFilename = CommonUtils.concatFile(CommonUtils.concatFile(Constants.CTP_HOME + File.separator + "conf", "producer"), "scheduler_" + jctx.getJobId() + ".m");
 		Properties lastProps;
 		try {
@@ -96,7 +94,9 @@ public class CUBJob implements Job {
 			autoKey = "build_id_for_" + versionId + "_" + queue + "_" + scenario;
 			lastSimplifiedBuildId = lastProps.getProperty(autoKey);
 			if (lastSimplifiedBuildId == null || (lastSimplifiedBuildId != null && CommonUtils.isGreaterThan_For_BuildId(simpliedBuildId, lastSimplifiedBuildId))) {
-				//System.out.println("[INFO] Build Id: " + buildId + "(job_id=" + jctx.getJobId() + ", " + autoKey + "=" + lastSimplifiedBuildId + ", " + new Date());
+				// System.out.println("[INFO] Build Id: " + buildId + "(job_id="
+				// + jctx.getJobId() + ", " + autoKey + "=" +
+				// lastSimplifiedBuildId + ", " + new Date());
 				if (resetCache == false) {
 					GeneralExtendedSuite.getInstance(jctx.getMainConfigure(), null, true);
 					resetCache = true;
@@ -120,17 +120,17 @@ public class CUBJob implements Job {
 			}
 		}
 	}
-	
+
 	private File waitOneFile(CUBJobContext jctx, File buildRootFile, Properties testProps, String listenFilename) {
 		String filename = CommonUtils.concatFile(buildRootFile.getAbsolutePath(), "drop");
-		
+
 		String buildId = buildRootFile.getName();
 		String simplifiedBuildId = CommonUtils.toSimplifiedBuildId(buildId);
 		listenFilename = CommonUtils.replace(listenFilename, "{1}", buildId);
 		listenFilename = CommonUtils.replace(listenFilename, "{1:s}", simplifiedBuildId);
-		
+
 		filename = CommonUtils.concatFile(filename, listenFilename);
-		
+
 		File exactFile = new File(filename);
 		FileReady fready = new FileReady(exactFile, true);
 		try {
@@ -147,7 +147,7 @@ public class CUBJob implements Job {
 	}
 
 	private boolean processTest(CUBJobContext jctx, File buildRootFile, Properties testProps) {
-		
+
 		File exactFile = waitOneFile(jctx, buildRootFile, testProps, CommonUtils.fixListenFilename(jctx.getListenFilename(), buildRootFile.getName(), false));
 		if (exactFile == null) {
 			return false;
@@ -193,7 +193,7 @@ public class CUBJob implements Job {
 				msgProps.put(key, value);
 			}
 		}
-		
+
 		FileProcess fp = new FileProcess(jctx.getMainConfigure(), exactFile, exactMoreFiles, jctx.getListenFilename(), pkgBits, pkgType, queue, scenario, delay, extConfig, extKeys, msgProps);
 
 		try {
@@ -291,5 +291,5 @@ public class CUBJob implements Job {
 		}
 		return versionVsFileMap.values();
 	}
-	
+
 }

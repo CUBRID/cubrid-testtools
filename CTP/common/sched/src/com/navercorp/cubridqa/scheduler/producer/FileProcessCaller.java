@@ -43,7 +43,7 @@ public class FileProcessCaller implements Callable<Boolean> {
 		this.itemList.add(new FileItem(fileFM));
 		this.buildType = buildType;
 	}
-	
+
 	public FileProcessCaller(Configure conf, File buildFileRoot, String filePrefix, String fileSurfix, int buildType) {
 		this.conf = conf;
 		this.buildFileRoot = buildFileRoot;

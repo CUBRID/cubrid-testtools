@@ -40,7 +40,7 @@ public class DatabaseXMLReader extends XMLReader {
 
 	public DatabaseXMLReader(String filename) {
 		super(filename);
-		
+
 	}
 
 	public DatabaseXMLReader(File file) {

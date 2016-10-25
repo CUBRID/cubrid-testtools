@@ -29,25 +29,25 @@ package com.navercorp.cubridqa.shell.common;
 public class Constants {
 	public static final String LINE_SEPARATOR = System.getProperty("line.separator");;
 
-	public static final int TYPE_MASTER = 1; 
-	public static final int TYPE_SLAVE = 2; 
+	public static final int TYPE_MASTER = 1;
+	public static final int TYPE_SLAVE = 2;
 	public static final int TYPE_REPLICA = 3;
-	
-	public final static String FM_DATE_COREDIR="yyyyMMdd";
-	
+
+	public final static String FM_DATE_COREDIR = "yyyyMMdd";
+
 	public static final String TC_RESULT_OK = "OK";
 	public static final String TC_RESULT_NOK = "NOK";
-	
+
 	public static final String RETRY_FLAG = "TRY->";
-	
+
 	public static final String RUNTIME_ROOT_LOG_DIR = "result/shell";
 	public static final String CURRENT_LOG_DIR = RUNTIME_ROOT_LOG_DIR + "/" + "current_runtime_logs";
-	public static final String ENV_CTP_HOME_KEY="CTP_HOME";
-	
+	public static final String ENV_CTP_HOME_KEY = "CTP_HOME";
+
 	public static final String SKIP_TYPE_NO = "0";
 	public static final String SKIP_TYPE_BY_MACRO = "1";
 	public static final String SKIP_TYPE_BY_TEMP = "2";
-	
+
 	public static final String WIN_KILL_PROCESS_NATIVE = createWinKillNativeScripts(false);
 	public static final ShellScriptInput WIN_KILL_PROCESS = createWinKillScripts(false);
 	public static final ShellScriptInput LIN_KILL_PROCESS = createLinKillScripts(false);
@@ -55,13 +55,12 @@ public class Constants {
 	public static final String WIN_KILL_PROCESS_NATIVE_LOCAL = createWinKillNativeScripts(true);
 	public static final ShellScriptInput WIN_KILL_PROCESS_LOCAL = createWinKillScripts(true);
 	public static final ShellScriptInput LIN_KILL_PROCESS_LOCAL = createLinKillScripts(true);
-	
+
 	public static final ShellScriptInput GET_VERSION_SCRIPT = craeteGetVersionScript();
 
-	
-	private static ShellScriptInput createWinKillScripts (boolean inLocal){
+	private static ShellScriptInput createWinKillScripts(boolean inLocal) {
 		ShellScriptInput scripts = new ShellScriptInput();
-		if(inLocal == false) {
+		if (inLocal == false) {
 			scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' \\) DELETE");
 		}
 		scripts.addCommand("$CUBRID/bin/cubrid.exe service stop ");
@@ -85,7 +84,7 @@ public class Constants {
 		scripts.addCommand("taskkill /F /IM cub_server.exe");
 		scripts.addCommand("taskkill /F /IM cub_cas.exe");
 		scripts.addCommand("taskkill /F /IM cub_broker.exe");
-		if(inLocal == false) {
+		if (inLocal == false) {
 			scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' AND NOT CommandLine LIKE '%%com.navercorp.cubridqa%%') DELETE");
 		}
 		scripts.addCommand("taskkill /F /IM cat.exe");
@@ -94,21 +93,20 @@ public class Constants {
 		scripts.addCommand("taskkill /F /IM awk.exe");
 		return scripts;
 	}
-	
-	private static ShellScriptInput craeteGetVersionScript()
-	{
+
+	private static ShellScriptInput craeteGetVersionScript() {
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("cubrid_rel");
-		
+
 		return scripts;
 	}
-	
+
 	private static String createWinKillNativeScripts(boolean inLocal) {
 		StringBuffer sb = new StringBuffer();
-		if(inLocal == false) {
+		if (inLocal == false) {
 			sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%') DELETE").append(LINE_SEPARATOR);
 		}
-		sb.append("%CUBRID%/bin/cubrid service stop").append(LINE_SEPARATOR);		
+		sb.append("%CUBRID%/bin/cubrid service stop").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM broker_changer.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM broker_log_converter.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM broker_log_runner.exe").append(LINE_SEPARATOR);
@@ -143,8 +141,8 @@ public class Constants {
 		sb.append("taskkill /T /F /IM loadjava.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM migrate_91_to_92.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM setupmanage.exe").append(LINE_SEPARATOR);
-		sb.append("taskkill /T /F /IM make_locale.bat").append(LINE_SEPARATOR);		
-		if(inLocal == false) {
+		sb.append("taskkill /T /F /IM make_locale.bat").append(LINE_SEPARATOR);
+		if (inLocal == false) {
 			sb.append("taskkill /T /F /IM bash.exe").append(LINE_SEPARATOR);
 			sb.append("taskkill /T /F /IM sh.exe").append(LINE_SEPARATOR);
 			sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%' AND NOT CommandLine LIKE '%%com.navercorp.cubridqa%%') DELETE").append(LINE_SEPARATOR);
@@ -156,8 +154,8 @@ public class Constants {
 		sb.append("taskkill /T /F /IM awk.exe").append(LINE_SEPARATOR);
 		return sb.toString();
 	}
-	
-	private static ShellScriptInput createLinKillScripts (boolean inLocal){
+
+	private static ShellScriptInput createLinKillScripts(boolean inLocal) {
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("cubrid service stop");
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep cub_admin | awk '{print $1}'"));
@@ -181,17 +179,17 @@ public class Constants {
 		scripts.addCommand(bothKill("echo ${final_list}"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i sleep | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i expect | awk '{print $1}'"));
-		if(inLocal == false) {
+		if (inLocal == false) {
 			scripts.addCommand(bothKill("ps -u $USER -o pid,cmd| grep -v grep | grep -i '\\.sh' | awk '{print $1}'"));
 		}
 		scripts.addCommand("ps -u $USER -f");
 		return scripts;
 	}
-	
+
 	private static String bothKill(String k) {
 		return k + " | xargs -i kill -9 {} " + ScriptInput.LINE_SEPARATOR + "kill -9 `" + k + "`";
 	}
-	
+
 	public static void main(String args[]) {
 		System.out.println(LIN_KILL_PROCESS);
 	}

@@ -61,24 +61,15 @@ public class ScriptInput {
 	}
 
 	public void addCommand(String cmd) {
-		cmds.append(cmd).append(
-				isPureWindows ? LINE_SEPARATOR_WIN : LINE_SEPARATOR);
+		cmds.append(cmd).append(isPureWindows ? LINE_SEPARATOR_WIN : LINE_SEPARATOR);
 	}
 
 	public String getCommands() {
 		if (isPureWindows) {
-			return "echo " + START_FLAG_MOCK_WIN + LINE_SEPARATOR_WIN
-					+ cmds.toString() + "@ECHO OFF" + LINE_SEPARATOR_WIN
-					+ "echo " + COMP_FLAG_MOCK_WIN + LINE_SEPARATOR_WIN;
+			return "echo " + START_FLAG_MOCK_WIN + LINE_SEPARATOR_WIN + cmds.toString() + "@ECHO OFF" + LINE_SEPARATOR_WIN + "echo " + COMP_FLAG_MOCK_WIN + LINE_SEPARATOR_WIN;
 		} else {
-			return "pri_ctp_home=$CTP_HOME; if  [ -f ~/.bash_profile ]; then . ~/.bash_profile; fi; if [ \"$pri_ctp_home\" != \"\" ];then export CTP_HOME=${pri_ctp_home}; fi; "
-					+ LINE_SEPARATOR
-					+ "echo "
-					+ START_FLAG_MOCK
-					+ LINE_SEPARATOR
-					+ cmds.toString()
-					+ "echo "
-					+ COMP_FLAG_MOCK + LINE_SEPARATOR;
+			return "pri_ctp_home=$CTP_HOME; if  [ -f ~/.bash_profile ]; then . ~/.bash_profile; fi; if [ \"$pri_ctp_home\" != \"\" ];then export CTP_HOME=${pri_ctp_home}; fi; " + LINE_SEPARATOR
+					+ "echo " + START_FLAG_MOCK + LINE_SEPARATOR + cmds.toString() + "echo " + COMP_FLAG_MOCK + LINE_SEPARATOR;
 		}
 	}
 

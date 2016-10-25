@@ -33,7 +33,7 @@ import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 
 public class Server {
-	
+
 	public static void main(String[] args) {
 		try {
 

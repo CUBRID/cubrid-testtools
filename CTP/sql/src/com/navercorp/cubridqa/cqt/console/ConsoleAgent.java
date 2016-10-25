@@ -41,13 +41,11 @@ import com.navercorp.cubridqa.cqt.console.util.StdOutJob;
 import com.navercorp.cubridqa.cqt.console.util.SystemUtil;
 import com.navercorp.cubridqa.cqt.console.util.TestUtil;
 
-
 public class ConsoleAgent {
 	private static final int COME_FROM_CQT_32 = 32;
 	private static final int COME_FROM_CQT_64 = 64;
 
 	private static List<String> messageList = new ArrayList<String>();
-
 
 	private static ConsoleBO Innerbo;
 
@@ -76,17 +74,16 @@ public class ConsoleAgent {
 	 * @return
 	 */
 	@SuppressWarnings("deprecation")
-	public static void runTest(String[] files, String testType, String typeAlias,
-			boolean printResult, int comefrom, String charset_file) {
+	public static void runTest(String[] files, String testType, String typeAlias, boolean printResult, int comefrom, String charset_file) {
 		if (files == null) {
-			return ;
+			return;
 		}
 
 		boolean useMonitor = false;
 		boolean saveEveryone = true;
 		String bit = "";
 		String testCategory = "";
-		
+
 		StdOutJob stdOutJob = null;
 		String codeset = TestUtil.DEFAULT_CODESET;
 		try {
@@ -94,7 +91,7 @@ public class ConsoleAgent {
 			stdOutJob.start();
 			ConsoleBO bo = new ConsoleBO(useMonitor, saveEveryone);
 			Innerbo = bo;
-			
+
 			String scenarioTypeName = null;
 			if (comefrom == COME_FROM_CQT_32) {
 				scenarioTypeName = "schedule";
@@ -117,34 +114,26 @@ public class ConsoleAgent {
 			test.setTestBit(bit);
 			test.setCharset_file(charset_file);
 			PropertiesUtil.initConfig(charsetfile, test);
-			if (Boolean.parseBoolean(PropertiesUtil.getValueWithDefault(
-					"isdebug", "false").trim())) {
+			if (Boolean.parseBoolean(PropertiesUtil.getValueWithDefault("isdebug", "false").trim())) {
 				test.setDebug(true);
 			} else {
 				test.setDebug(false);
 			}
 			// set qaview from local.properties
 			try {
-				if (Boolean.parseBoolean(PropertiesUtil.getValueWithDefault(
-						"qaview", "false").trim())) {
+				if (Boolean.parseBoolean(PropertiesUtil.getValueWithDefault("qaview", "false").trim())) {
 					test.setQaview(true);
 				}
 			} catch (Exception e) {
-				System.err
-						.println("There is an exception "
-								+ "when getting variable 'qaview' from local.properties:  "
-								+ "\n" + e.getMessage());
+				System.err.println("There is an exception " + "when getting variable 'qaview' from local.properties:  " + "\n" + e.getMessage());
 			}
-			
 
 			String testOs = SystemUtil.getOS();
 			if (comefrom == COME_FROM_CQT_32) {
 				test.setVersion("32bits");
-			}else if(comefrom == COME_FROM_CQT_64 && "windows".equalsIgnoreCase(testOs))
-			{
+			} else if (comefrom == COME_FROM_CQT_64 && "windows".equalsIgnoreCase(testOs)) {
 				test.setVersion("64bits");
-			}
-			else {
+			} else {
 				test.setVersion("Main");
 			}
 
@@ -154,45 +143,38 @@ public class ConsoleAgent {
 			System.out.println("Result Root Dir:" + test.getResult_dir());
 			LogUtil.log(bo.logId, "Result Root Dir:" + test.getResult_dir());
 
-			bo.setPrintType(printResult ? Executor.PRINT_STDOUT
-					: Executor.PRINT_UI);
+			bo.setPrintType(printResult ? Executor.PRINT_STDOUT : Executor.PRINT_UI);
 			Summary summary = bo.runTest(test);
-			if(test.isNeedSummaryXML())
+			if (test.isNeedSummaryXML())
 				TestUtil.saveSummaryMainInfo(test, summary);
 			if (summary != null) {
 				if (printResult) {
 					System.out.println("total:" + summary.getTotalCount());
 					System.out.println("success:" + summary.getSuccessCount());
 					System.out.println("fail:" + summary.getFailCount());
-					System.out.println("SiteRunTimes:"
-							+ summary.getSiteRunTimes());
-					System.out.println("totalTime:" + summary.getTotalTime()
-							+ "ms");
+					System.out.println("SiteRunTimes:" + summary.getSiteRunTimes());
+					System.out.println("totalTime:" + summary.getTotalTime() + "ms");
 				}
 				Map caseMap = new HashMap();
 				List caseFileList = test.getCaseFileList();
 				for (int i = 0; i < caseFileList.size(); i++) {
 					String caseFile = (String) caseFileList.get(i);
-					CaseResult caseResult = (CaseResult) test
-							.getCaseResultFromMap(caseFile);
+					CaseResult caseResult = (CaseResult) test.getCaseResultFromMap(caseFile);
 					if (!caseResult.isShouldRun()) {
 						caseMap.put(caseResult.getCaseFile(), "");
 					} else {
-						caseMap.put(caseResult.getCaseFile(), (caseResult
-								.isSuccessFul() ? "ok" : "nok"));
+						caseMap.put(caseResult.getCaseFile(), (caseResult.isSuccessFul() ? "ok" : "nok"));
 					}
 
 					String ret = (String) caseMap.get(caseResult.getCaseFile());
 					if (printResult) {
-						System.out.println(caseResult.getCaseFile() + "    "
-								+ ret);
+						System.out.println(caseResult.getCaseFile() + "    " + ret);
 					}
 				}
 				List SiteRunTimesList = new ArrayList();
 				for (int i = 0; i < caseFileList.size(); i++) {
 					String caseFile = (String) caseFileList.get(i);
-					CaseResult caseResult = (CaseResult) test
-							.getCaseResultFromMap(caseFile);
+					CaseResult caseResult = (CaseResult) test.getCaseResultFromMap(caseFile);
 					SiteRunTimesList.add(caseResult.getSiteRunTimes());
 
 				}
@@ -265,18 +247,17 @@ public class ConsoleAgent {
 	}
 
 	public static void main2(String[] args) {
-		String charset_xml="test_default.xml";
-		String command="runCQT";
-		String typeAlias="sql_ext_ccc";
-		String type="sql";
-		String version="64";
+		String charset_xml = "test_default.xml";
+		String command = "runCQT";
+		String typeAlias = "sql_ext_ccc";
+		String type = "sql";
+		String version = "64";
 		String[] files = { "G:/dailyqa/trunk/scenario2/sql_ext/_01_object/_01_type/?db=basic_qa" };
-		int comefrom = "32".equalsIgnoreCase(version) ? COME_FROM_CQT_32
-				: COME_FROM_CQT_64;
+		int comefrom = "32".equalsIgnoreCase(version) ? COME_FROM_CQT_32 : COME_FROM_CQT_64;
 		runTest(files, type, typeAlias, true, comefrom, charset_xml);
 
 	}
-	
+
 	/**
 	 * @deprecated
 	 * @param args
@@ -291,8 +272,7 @@ public class ConsoleAgent {
 		String command = args[0];
 		if ("runCQT".equals(command)) {
 			if (args.length < 6) {
-				System.out
-						.println("There should be more than five arguments for the command runCQT.");
+				System.out.println("There should be more than five arguments for the command runCQT.");
 				return;
 			}
 
@@ -311,9 +291,8 @@ public class ConsoleAgent {
 			if (type != null) {
 				testInfoMap.put("type", type);
 			}
-			int comefrom = "32".equalsIgnoreCase(version) ? COME_FROM_CQT_32
-					: COME_FROM_CQT_64;
-			runTest(files, type, typeAlias,  true, comefrom, charset_xml);
+			int comefrom = "32".equalsIgnoreCase(version) ? COME_FROM_CQT_32 : COME_FROM_CQT_64;
+			runTest(files, type, typeAlias, true, comefrom, charset_xml);
 		}
 	}
 }
