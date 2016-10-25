@@ -66,29 +66,35 @@ public class InstanceManager {
 	private SSHConnect addHost(String role, int num) throws Exception {
 		String hostId = role + (num < 1 ? "" : num);
 		String host = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
-		if(CommonUtils.isEmpty(host)) {
-			throw new Exception("Not Found More Hosts");
-		}
 		String port = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
-		if(CommonUtils.isEmpty(port)) {
-			port = context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
-		}
 		String user = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
-		if(CommonUtils.isEmpty(user)){
-			user = context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
-		}
-		
 		String pwd = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
-		if(CommonUtils.isEmpty(pwd)) {
-			pwd = context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
-		}
 		return addHost(hostId, host, port, user, pwd);
 	}
 	
-	public String getInstanceProperty(String key) {
-		return context.getInstanceProperty(this.currEnvId, key);
+	public String getUserNameForMasterInstance(){
+		return getInstanceProperty("master", ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
 	}
 	
+	public String getInstanceProperty(String roleId, String key) {
+		String val = getInstanceProperty(roleId + "." + key);
+		if (CommonUtils.isEmpty(val)) {
+			return context.getProperty("default." + key);
+		} else {
+			return val;
+		}
+	}
+	
+	public String getInstanceProperty(String key) {
+		String value = context
+				.getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX
+						+ currEnvId + "." + key);
+		if (CommonUtils.isEmpty(value)) {
+			value = context.getProperty("default." + key);
+		}
+		return value;
+	}
+
 	public String getTestDb() {
 		return this.testDb;
 	}

@@ -683,7 +683,7 @@ public class Test {
 
 	private Connection getDBConnection() throws SQLException {
 		if (connection == null || connection.isClosed()) {
-			String host = hostManager.getInstanceProperty(ConfigParameterConstants.TEST_INSTANCE_MASTER_HOST_SUFFIX);
+			String host = hostManager.getInstanceProperty("master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 			String port = hostManager.getInstanceProperty("broker.BROKER_PORT");
 			String url = "jdbc:cubrid:" + host + ":" + port + ":" + hostManager.getTestDb() + ":::";
 			connection = DriverManager.getConnection(url, "dba", "");
