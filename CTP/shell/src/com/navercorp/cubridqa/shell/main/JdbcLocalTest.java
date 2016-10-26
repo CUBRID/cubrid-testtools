@@ -30,7 +30,7 @@ public class JdbcLocalTest {
 	public JdbcLocalTest(Context context) {
 		this.context = context;
 
-		category = context.getTestCategory();
+		category = context.getProperty(ConfigParameterConstants.TEST_CATEGORY, "jdbc").trim();;
 		if (CommonUtils.isEmpty(category)) {
 			category = "jdbc";
 		}

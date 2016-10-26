@@ -185,19 +185,20 @@ public class TestFactory {
 				}
 			});
 
-			final TestMonitor monitor = new TestMonitor(context, test);
-			testPool.execute(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						monitor.startMonitor();
-					} catch (Exception e) {
-						e.printStackTrace();
-					} finally {
-						monitor.close();
-					}
-				}
-			});
+			// comment out monitor for isolation since ctl will trace the status and resolve timeout case
+//			final TestMonitor monitor = new TestMonitor(context, test);
+//			testPool.execute(new Runnable() {
+//				@Override
+//				public void run() {
+//					try {
+//						monitor.startMonitor();
+//					} catch (Exception e) {
+//						e.printStackTrace();
+//					} finally {
+//						monitor.close();
+//					}
+//				}
+//			});
 		}
 	}
 
