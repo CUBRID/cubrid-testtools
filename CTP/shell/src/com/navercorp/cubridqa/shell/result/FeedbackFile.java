@@ -112,8 +112,8 @@ public class FeedbackFile implements Feedback {
 
 		this.totalCaseNum = tbdNum;
 		this.totalSkipNum = macroSkippedNum + tempSkippedNum;
-		println("The Category:" + context.getTestCategory());
-		System.out.println("The Category:" + context.getTestCategory());
+		println("Test Category:" + context.getTestCategory());
+		System.out.println("Test Category:" + context.getTestCategory());
 		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
 		System.out.println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
 		updateTestingStatistics();
