@@ -63,6 +63,8 @@ public class TestCaseGithub {
 
 	public boolean doUpdate() {
 		boolean isSucc = true;
+		boolean needUpdateScenario = context.shouldUpdateTestCase();
+		String msg = "SKIP TEST CASE UPDATE";
 		cleanProcess();
 
 		IsolationScriptInput scripts = new IsolationScriptInput();
@@ -87,9 +89,10 @@ public class TestCaseGithub {
 		scripts.addCommand("chmod u+x upgrade.sh");
 		scripts.addCommand("./upgrade.sh");
 
-		if (context.shouldUpdateTestCase()) {
+		if (needUpdateScenario) {
 			scripts.addCommand("cd ");
 			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
+			msg = "TEST CASE UPDATE";
 		}
 		scripts.addCommand("cd ${CTP_HOME}/isolation/ctltool");
 		scripts.addCommand("chmod u+x *.sh");
@@ -108,9 +111,9 @@ public class TestCaseGithub {
 		}
 
 		if (isSucc) {
-			System.out.println("TEST CASES AND CTLTOOL UPDATE COMPLETE!");
+				System.out.println(msg + " AND CTLTOOL UPDATE COMPLETE!");
 		} else {
-			System.out.println("TEST CASES AND CTLTOOL UPDATE FAIL!");
+				System.out.println(msg + " AND CTLTOOL UPDATE FAIL!");
 		}
 
 		return isSucc;
