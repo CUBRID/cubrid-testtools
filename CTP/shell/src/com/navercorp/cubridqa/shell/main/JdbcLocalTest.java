@@ -31,7 +31,7 @@ public class JdbcLocalTest {
 		this.context = context;
 
 		category = context.getTestCategory();
-		if (CommonUtils.isEmpty(category)) {
+		if (CommonUtils.isEmpty(category) || category.indexOf("shell") != -1) {
 			category = "jdbc";
 		}
 

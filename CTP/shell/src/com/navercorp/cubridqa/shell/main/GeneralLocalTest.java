@@ -21,7 +21,12 @@ public class GeneralLocalTest {
 			category = "general";
 		}
 		context.setTestCategory(category);
-		this.context.setLogDir(category);
+		
+		String logDirname = System.getProperty("TEST_TYPE");
+		if (CommonUtils.isEmpty(logDirname)) {
+			logDirname = "general";
+		}
+		this.context.setLogDir(logDirname);
 
 		String buildId = context.getProperty(ConfigParameterConstants.TEST_BUILD_ID, (ConfigParameterConstants.TEST_BUILD_ID).toUpperCase(), false);
 		if (!CommonUtils.isEmpty(buildId)) {
