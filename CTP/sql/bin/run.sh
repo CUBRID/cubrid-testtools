@@ -150,10 +150,10 @@ function do_init()
     scenario_repo_root=`ini -s sql ${config_file_main} scenario`
     [ ! -d "$scenario_repo_root" -a ! -f "$scenario_repo_root" ] && echo "please make sure your scenario directory" && exit 1
 
-    scenario_alias=`ini -s sql ${config_file_main} category_alias`
+    scenario_alias=`ini -s sql ${config_file_main} test_category`
     if [ -z "$scenario_alias" ]
     then
-	scenario_alias=${scenario_category}
+	     scenario_alias=${scenario_category}
     fi
 
     need_make_locale=`ini -s sql ${config_file_main} need_make_locale`

@@ -75,7 +75,7 @@ function run_sql {
 
     ini.sh -s sql ${ctp_test_conf} scenario '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario
     ini.sh -s sql ${ctp_test_conf} data_file '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario/files
-    ini.sh -s sql ${ctp_test_conf} category_alias $BUILD_SCENARIOS
+    ini.sh -s sql ${ctp_test_conf} test_category $BUILD_SCENARIOS
 
     #set supported param
     ini.sh -s "sql/cubrid.conf" ${ctp_test_conf} | util_filter_supported_parameters.sh > $tmptxt
