@@ -143,7 +143,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   # If this parameter is not set or commented out, CTP will execute testing without build installation.
 	   cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
 	   ```
-        * A single instance local test
+        * The multiple instances test
 	   * Prepare at least two accounts for the multiple test instances (e.g., one account ``controller`` as controller, another account ``shell_instance1`` as test instance)
 	   * Check out CTP for each account and configure environment variables for CTP ``controller`` and test instance ``shell_instance1``
 	    ```
