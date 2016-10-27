@@ -26,7 +26,7 @@ package com.navercorp.cubridqa.ctp;
 
 public class Version {
 
-	private final static String CTP_VERSION = "0.9.2.001";
+	private final static String CTP_VERSION = "0.9.2.002";
 
 	public static String getVersion() {
 		return CTP_VERSION;

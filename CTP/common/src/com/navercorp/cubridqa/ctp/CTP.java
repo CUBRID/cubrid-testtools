@@ -25,6 +25,7 @@
 package com.navercorp.cubridqa.ctp;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -172,11 +173,13 @@ public class CTP {
 					executeJdbc(getConfigData(taskLabel, configFilename, "jdbc"), "jdbc");
 					break;
 				case UNITTEST:
-					if (CommonUtils.isEmpty(configFilename)) {
-						executeUnitTest(null, "unittest");
-					} else {
-						executeUnitTest(getConfigData(taskLabel, configFilename, "unittest"), "unittest");
+					IniData configData = null;
+					try {
+						configData = getConfigData(taskLabel, configFilename, "unittest");
+					} catch (FileNotFoundException e1) {
+						configData = null;
 					}
+					executeUnitTest(configData, "unittest");
 					break;
 				}
 
@@ -298,16 +301,16 @@ public class CTP {
 
 	private static IniData getConfigData(String taskLable, String configFilename, String suite) throws Exception {
 		File configFile;
-		if (configFilename == null) {
+		if (CommonUtils.isEmpty(configFilename)) {
 			configFile = new File(CommonUtils.concatFile(CommonUtils.concatFile(ctpHome, "conf"), suite + ".conf"));
 		} else {
 			configFile = new File(configFilename);
 		}
 
-		System.out.println("[" + taskLable + "] CONFIG FILE: " + configFile.getCanonicalPath());
 		if (configFile.exists() == false) {
-			throw new Exception("Not found configuration file");
+			throw new FileNotFoundException("Not found configuration file");
 		}
+		System.out.println("[" + taskLable + "] CONFIG FILE: " + configFile.getCanonicalPath());
 
 		IniData config = null;
 		try {
@@ -328,7 +331,7 @@ public class CTP {
 			System.out.println("Welcome to use CUBRID Test Program (CTP)");
 		}
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("ctp.sh <sql|medium> -c <config_file>", OPTIONS);
+		formatter.printHelp("ctp.sh <sql|medium|shell|ha_repl|isolation|jdbc|unittest> -c <config_file>", OPTIONS);
 		System.out.println();
 		System.out.println("utility: ctp.sh webconsole <start|stop>");
 		System.out.println();
@@ -345,6 +348,7 @@ public class CTP {
 		System.out.println("	ctp.sh ha_repl		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "ha_repl.conf");
 		System.out.println("	ctp.sh isolation		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "isolation.conf");
 		System.out.println("	ctp.sh jdbc		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "jdbc.conf");
+		System.out.println("	ctp.sh unittest #use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "unittest.conf");		
 		System.out.println("	ctp.sh sql medium  	#run both sql and medium with default configuration");
 		System.out.println("	ctp.sh medium medium 	#execute medium twice");
 		System.out.println("	ctp.sh webconsole start	#start web console to view sql test results");
