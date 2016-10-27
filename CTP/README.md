@@ -121,29 +121,18 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* Please open the ``URL`` with your browser
   
 - **SHELL**
-  - Prepare
-	* Prepare at least two accounts (e.g., one account ``controller`` as controller, another account ``shell_instance1`` as test instance)
-	* Check out CTP for each account and configure environment variables for CTP ``controller`` and test instance ``shell_instance1``
-	
-	  ```
-	   // on controller node
-	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-
-	   // on test instance node
-	   CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
-	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-	  ```
-	* **Example** ``shell.conf`` for test instance, scenario and test build:
-	
+  - A single instance local test
+        * Prepare
+	   * Prepare one account will be used for controller and test instance
+	   * CTP and test scenario should be checked out on it, and configure JAVA_HOME
 	   ```
-	   # Test instance information:
-	   env.instance1.ssh.host=192.168.1.10
-	   env.instance1.ssh.port=22
-	   env.instance1.ssh.user=shell_instance1
-	   env.instance1.ssh.pwd=123456
-	   env.instance1.cubrid.cubrid_port_id=11523
-	   env.instance1.broker1.BROKER_PORT=35000
-	   env.instance1.broker2.BROKER_PORT=35500
+	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+	   ```
+	   * **Example** ``shell.conf`` for a single instance, scenario and test build:
+	   ```
+	   default.cubrid.<property> //configure parameters for cubrid.conf
+	   default.broker1.<property> //configure parameters for cubrid_broker.conf
+	   default.broker2.<property>
 	   ```
 	   ```
 	   # Define the path of test cases used for testing, it should be checked out on test node
@@ -153,9 +142,43 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   # Define the URL of test build which will be used to test.
 	   # If this parameter is not set or commented out, CTP will execute testing without build installation.
 	   cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
-	   ```				
+	   ```
+  - The multiple instances test 
+        * Prepare
+	   * Prepare at least two accounts for the multiple test instances (e.g., one account ``controller`` as controller, another account ``shell_instance1`` as test instance)
+	   * Check out CTP for each account and configure environment variables for CTP ``controller`` and test instance ``shell_instance1``
+	    ```
+	   // on controller node
+	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+
+	   // on test instance node
+	   CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
+	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+	    ```
+	   * **Example** ``shell.conf`` for the multiple instances, scenario and test build:
+	
+	    ```
+	   # Test instance information
+	   env.instance1.ssh.host=192.168.1.10
+	   env.instance1.ssh.port=22
+	   env.instance1.ssh.user=shell_instance1
+	   env.instance1.ssh.pwd=123456
+	   env.instance1.cubrid.cubrid_port_id=11523
+	   env.instance1.broker1.BROKER_PORT=35000
+	   env.instance1.broker2.BROKER_PORT=35500
+	    ```
+	    ``` 
+	   
+	   # Define the path of test cases used for testing, it should be checked out on test node
+	   scenario=${HOME}/cubrid-testcases/shell
+	    ```
+	    ```
+	   # Define the URL of test build which will be used to test.
+	   # If this parameter is not set or commented out, CTP will execute testing without build installation.
+	   cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+	    ```				
  
-	  More parameters setting and parameters explanation within ``shell.conf``, please refer to [CTP/conf/shell.conf](conf/shell.conf)
+	   More parameters setting and parameters explanation within ``shell.conf``, please refer to [CTP/conf/shell.conf](conf/shell.conf)
 
   - Run Tests 
 	* For **Shell** test:
@@ -171,40 +194,62 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 	
 - **Isolation**
-  - Prepare
-    * Prepare environments (e.g., one account ``controller`` as controller, another account ``isolation_instance1`` as test instance)
-    * Check out CTP for each account and configure environment variables for CTP ``controller`` and test instance ``isolation_instance1``
+  - A single instance local test
+        * Prepare
+	   * Prepare one account will be used for controller and test instance
+	   * CTP and test scenario should be checked out on it, and configure JAVA_HOME
+	   ```
+	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+	   ```
+	   * **Example** ``isolation.conf`` for a single instance, scenario and test build:
+	   ```
+	   default.cubrid.<property> //configure parameters for cubrid.conf
+	   default.broker1.<property> //configure parameters for cubrid_broker.conf
+	   default.broker2.<property>
+	   ```
+	   ```
+	   # Define the path of test cases used for testing, it should be checked out on test node
+	   scenario=${HOME}/cubrid-testcases/shell
+	   ```
+	   ```
+	   # Define the URL of test build which will be used to test.
+	   # If this parameter is not set or commented out, CTP will execute testing without build installation.
+	   cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+	   ```
+  - The multiple instances test 
+        * Prepare
+	   * Prepare environments (e.g., one account ``controller`` as controller, another account ``isolation_instance1`` as test instance)
+	   * Check out CTP for each account and configure environment variables for CTP ``controller`` and test instance ``isolation_instance1``
 
-      ```
-	  // on controller node
-	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+	   ```
+	   // on controller node
+	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 
-	  // on test instance node
-	  CTP_HOME (e.g., export CTP_HOME=$HOME/CTP)
-	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-      ```
-    * **Example** ``isolation.conf`` for test instance, scenario and test build:
+	   // on test instance node
+	   CTP_HOME (e.g., export CTP_HOME=$HOME/CTP)
+	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+	   ```
+	   * **Example** ``isolation.conf`` for test instance, scenario and test build:
       
-      ```
-	  # Test instance information:
-	  env.instance1.ssh.host=192.168.1.10
-	  env.instance1.ssh.port=22
-	  env.instance1.ssh.user=isolation_instance1
-	  env.instance1.ssh.pwd=12345
-	  env.instance1.broker1.BROKER_PORT=30093
-	  env.instance1.broker2.BROKER_PORT=30094
-      ```
-      ```
-	  # Define the path of test cases used for testing, it should be checked out on test node
-	  scenario=${HOME}/cubrid-testcases/isolation
-      ```
-      ```
-	  # Define the URL of test build which will be used to test
-	  # If this parameter is not set or commented out, CTP will execute testing without build installation.
-	  cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
-      ```	
-	
-	More parameters setting and parameters explanation within ``isolation.conf``, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
+	   ```
+	   # Test instance information:
+	   env.instance1.ssh.host=192.168.1.10
+	   env.instance1.ssh.port=22
+	   env.instance1.ssh.user=isolation_instance1
+	   env.instance1.ssh.pwd=12345
+	   env.instance1.broker1.BROKER_PORT=30093
+	   env.instance1.broker2.BROKER_PORT=30094
+	   ```
+	   ```
+	   # Define the path of test cases used for testing, it should be checked out on test node
+	   scenario=${HOME}/cubrid-testcases/isolation
+	   ```
+	   ```
+	   # Define the URL of test build which will be used to test
+	   # If this parameter is not set or commented out, CTP will execute testing without build installation.
+	   cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+	   ```	
+	   More parameters setting and parameters explanation within ``isolation.conf``, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
 
  - Run Tests 
 	* For **Isolation** test:
