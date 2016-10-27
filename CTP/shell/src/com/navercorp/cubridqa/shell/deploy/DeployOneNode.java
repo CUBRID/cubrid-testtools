@@ -187,6 +187,7 @@ public class DeployOneNode {
 		scripts.addCommand("echo 'BEGIN TO UPGRADE CTP'");
 		scripts.addCommand("export CTP_BRANCH_NAME=" + branchName);
 		if (context.isExecuteAtLocal()) {
+			scripts.addCommand("echo 'SKIP CTP UPDATE FOR LOCAL TEST!'");
 			scripts.addCommand("export CTP_SKIP_UPDATE=1");
 		} else {
 			scripts.addCommand("export CTP_SKIP_UPDATE=" + enableSkipUpgrade);
