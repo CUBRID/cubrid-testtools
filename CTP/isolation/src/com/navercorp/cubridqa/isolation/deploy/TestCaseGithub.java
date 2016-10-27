@@ -55,7 +55,7 @@ public class TestCaseGithub {
 				break;
 			}
 
-			System.out.println("==>Retry to do case update after 5 seconds!");
+			System.out.println("[Info] Retry to do case update after 5 seconds!");
 			CommonUtils.sleep(5);
 		}
 		context.getFeedback().onTestCaseUpdateStop(envIdentify);
@@ -68,25 +68,25 @@ public class TestCaseGithub {
 
 		IsolationScriptInput scripts = new IsolationScriptInput();
 
-		scripts.addCommand("cd ");
-		scripts.addCommand("cd ${CTP_HOME}/common/script");
+		if(!context.isExecuteAtLocal()){
+			scripts.addCommand("cd ");
+			scripts.addCommand("cd ${CTP_HOME}/common/script");
 
-		String ctpBranchName = System.getenv(ConfigParameterConstants.CTP_BRANCH_NAME);
-		if (!CommonUtils.isEmpty(ctpBranchName)) {
-			scripts.addCommand("export CTP_BRANCH_NAME=" + ctpBranchName);
-		}
+			String ctpBranchName = System.getenv(ConfigParameterConstants.CTP_BRANCH_NAME);
+			if (!CommonUtils.isEmpty(ctpBranchName)) {
+				scripts.addCommand("export CTP_BRANCH_NAME=" + ctpBranchName);
+			}
 
-		if (context.isExecuteAtLocal()) {
-			scripts.addCommand("export CTP_SKIP_UPDATE=1");
-		} else {
 			String skipUpgrade = System.getenv(ConfigParameterConstants.CTP_SKIP_UPDATE);
 			if (!CommonUtils.isEmpty(ctpBranchName)) {
 				scripts.addCommand("export CTP_SKIP_UPDATE=" + skipUpgrade);
 			}
-		}
 
-		scripts.addCommand("chmod u+x upgrade.sh");
-		scripts.addCommand("./upgrade.sh");
+			scripts.addCommand("chmod u+x upgrade.sh");
+			scripts.addCommand("./upgrade.sh");
+		}else{
+			System.out.println("[Info] SKIP CTP UPDATE FOR LOCAL TEST!");
+		}
 
 		if (needUpdateScenario) {
 			scripts.addCommand("cd ");
@@ -110,12 +110,12 @@ public class TestCaseGithub {
 
 		if (needUpdateScenario) {
 			if (isSucc) {
-				System.out.println("TEST CASE UPDATE COMPLETE!");
+				System.out.println("[Info] TEST CASE UPDATE COMPLETE!");
 			} else {
-				System.out.println("TEST CASE UPDATE FAIL!");
+				System.out.println("[Info] TEST CASE UPDATE FAIL!");
 			}
 		} else {
-			System.out.println("SKIP TEST CASE UPDATE!");
+			System.out.println("[Info] SKIP TEST CASE UPDATE!");
 		}
 
 		return isSucc;

@@ -59,7 +59,7 @@ public class TestCaseGithub {
 				break;
 			}
 
-			System.out.println("==>Retry to do case update after 5 seconds!");
+			System.out.println("[Info] Retry to do case update after 5 seconds!");
 			CommonUtils.sleep(5);
 		}
 
@@ -106,9 +106,9 @@ public class TestCaseGithub {
 				System.out.print("[ERROR] " + e.getMessage());
 			}
 
-			System.out.println("UPDATE TEST CASES " + (isSucc ? "COMPLETE !" : "FAIL !"));
+			System.out.println("[Info] UPDATE TEST CASES " + (isSucc ? "COMPLETE !" : "FAIL !"));
 		} else {
-			System.out.println("SKIP TEST CASES UPDATE");
+			System.out.println("[Info] SKIP TEST CASES UPDATE");
 		}
 
 		return isSucc;
