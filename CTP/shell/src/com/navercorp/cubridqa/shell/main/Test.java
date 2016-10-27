@@ -547,7 +547,7 @@ public class Test {
 		scripts.addCommand("`grep -E \"SKIP_CHECK_FATAL_ERROR\" " + this.testCaseFullName + " `");
 		scripts.addCommand("EOF");
 
-		String excludedCoresByAssertLine = context.getProperty("ignore_core_by_keywords");
+		String excludedCoresByAssertLine = context.getProperty(ConfigParameterConstants.IGNORE_CORE_BY_KEYWORDS);
 		if (excludedCoresByAssertLine != null && excludedCoresByAssertLine.trim().equals("") == false) {
 			scripts.addCommand("export EXCLUDED_CORES_BY_ASSERT_LINE=\"" + excludedCoresByAssertLine + "\"");
 		}

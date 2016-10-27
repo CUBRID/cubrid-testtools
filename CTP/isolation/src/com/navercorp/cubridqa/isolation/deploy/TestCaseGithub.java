@@ -77,6 +77,7 @@ public class TestCaseGithub {
 		}
 
 		if (context.isExecuteAtLocal()) {
+			scripts.addCommand("echo 'SKIP CTP UPDATE FOR LOCAL TEST!'");
 			scripts.addCommand("export CTP_SKIP_UPDATE=1");
 		} else {
 			String skipUpgrade = System.getenv(ConfigParameterConstants.CTP_SKIP_UPDATE);
