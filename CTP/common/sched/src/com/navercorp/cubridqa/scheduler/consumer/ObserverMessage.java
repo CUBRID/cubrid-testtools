@@ -250,9 +250,9 @@ public class ObserverMessage extends Thread {
 
 	public void viewQueueMessage(String queueType) throws JMSException {
 
-		String user = this.conf.getProperty("activemq.user");
-		String passwd = this.conf.getProperty("activemq.pwd");
-		String url = this.conf.getProperty("activemq.url");
+		String user = this.conf.getProperty("activemq_user");
+		String passwd = this.conf.getProperty("activemq_pwd");
+		String url = this.conf.getProperty("activemq_url");
 
 		try {
 			mq = new ActiveMQFactory(user, passwd, url);
