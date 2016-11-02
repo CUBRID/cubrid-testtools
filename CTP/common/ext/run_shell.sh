@@ -109,9 +109,13 @@ function run_shell_continue()
 function run_shell_legacy()
 {
     category=$BUILD_SCENARIOS
+    scenario=`ini.sh $HOME/cubrid_shell_fm/conf/main.properties main.testcase.root`
+    testcase_excluded_list=`ini.sh $HOME/cubrid_shell_fm/conf/main.properties main.testcase.excluded`
+    eval scenario=$scenario
+    eval testcase_excluded_list=$testcase_excluded_list
     cd $HOME/cubrid_shell_fm
     sh upgrade.sh
-    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false
+    sh run.sh -Dmain.testcase.root=${scenario} -Dmain.testcase.excluded=${testcase_excluded_list} -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false
     cd -
 }
 
