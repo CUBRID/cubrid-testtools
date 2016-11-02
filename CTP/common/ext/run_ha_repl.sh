@@ -133,6 +133,9 @@ function run_ha_repl_continue()
 function run_ha_repl_legacy()
 {
     category=$BUILD_SCENARIOS
+    db_charset=`getMsgValue $MKEY_TESTING_DB_CHARSET en_US`
+    test_case_root=`getMsgValue $MKEY_TESTCASE_ROOT $HOME/dailyqa/$BUILD_SVN_BRANCH/`
+    prefetch_mode=`getMsgValue $MKEY_TESTING_PREFETCH false`  
     # Disk checking
     if [ -f $CTP_HOME/conf/ha_repl_legacy.act ];then
     	runAction ha_repl_legacy.act
@@ -146,7 +149,7 @@ function run_ha_repl_legacy()
     run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/config
     cd $HOME/ha_repl_test
     sh upgrade.sh
-    sh run.sh -Dmain.testcase.root=$HOME/dailyqa/$BUILD_SVN_BRANCH  -Dmain.testcase.excluded=$HOME/dailyqa/$BUILD_SVN_BRANCH/config/ha_replication_excluded_list -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false
+    sh run.sh -Dmain.db.charset=${db_charset} -Dmain.testbuild.url=$url -Dmain.testcase.root=${test_case_root}  -Dmain.testcase.excluded=$HOME/dailyqa/$BUILD_SVN_BRANCH/config/ha_replication_excluded_list -Dmain.testing.category=$category -Dmain.testing.prefetch=${prefetch_mode} -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=file";fi`
     cd -
 }
 
