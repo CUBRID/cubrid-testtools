@@ -62,9 +62,8 @@ function run_shell()
    branch=$BUILD_SCENARIO_BRANCH_GIT
    category=$BUILD_SCENARIOS
    # Disk checking
-   if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
-      runAction ${BUILD_SCENARIOS}.act
-   elif [ -f $CTP_HOME/conf/shell.act ];then
+   # Disk checking
+   if [ -f $CTP_HOME/conf/shell.act ];then
       runAction shell.act
    else
       echo "Skip Disk Checking!"
@@ -104,9 +103,7 @@ function run_shell()
 function run_shell_continue()
 {
    # Disk checking
-   if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
-      runAction ${BUILD_SCENARIOS}.act
-   elif [ -f $CTP_HOME/conf/shell.act ];then
+   if [ -f $CTP_HOME/conf/shell.act ];then
       runAction shell.act
    else
       echo "Skip Disk Checking!"
@@ -127,10 +124,8 @@ function run_shell_legacy()
 {
     category=$BUILD_SCENARIOS
     # Disk checking
-    if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
-    	runAction ${BUILD_SCENARIOS}.act
-    elif [ -f $CTP_HOME/conf/shell.act ];then
-    	runAction shell.act
+    if [ -f $CTP_HOME/conf/shell_legacy.act ];then
+    	runAction shell_legacy.act
     else
     	echo "Skip Disk Checking!"
     fi
@@ -150,10 +145,8 @@ function run_shell_legacy()
 function run_shell_legacy_continue()
 {
     # Disk checking
-    if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
-    	runAction ${BUILD_SCENARIOS}.act
-    elif [ -f $CTP_HOME/conf/shell.act ];then
-    	runAction shell.act
+    if [ -f $CTP_HOME/conf/shell_legacy.act ];then
+    	runAction shell_legacy.act
     else
     	echo "Skip Disk Checking!"
     fi
