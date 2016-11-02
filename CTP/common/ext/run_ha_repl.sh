@@ -61,7 +61,7 @@ function run_ha_repl()
    # Disk checking
    if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
        runAction ${BUILD_SCENARIOS}.act
-   elif [ -f $CTP_HOME/conf/ha_repl.act ]
+   elif [ -f $CTP_HOME/conf/ha_repl.act ];then
        runAction ha_repl.act
    else
        echo "Skip Disk Checking!"
@@ -117,7 +117,7 @@ function run_ha_repl_continue()
    # Disk checking
    if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
        runAction ${BUILD_SCENARIOS}.act
-   elif [ -f $CTP_HOME/conf/ha_repl.act ]
+   elif [ -f $CTP_HOME/conf/ha_repl.act ];then
        runAction ha_repl.act
    else
        echo "Skip Disk Checking!"
@@ -140,7 +140,7 @@ function run_ha_repl_legacy()
     # Disk checking
     if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
     	runAction ${BUILD_SCENARIOS}.act
-    elif [ -f $CTP_HOME/conf/ha_repl.act ]
+    elif [ -f $CTP_HOME/conf/ha_repl.act ];then
     	runAction ha_repl.act
     else
     	echo "Skip Disk Checking!"
@@ -162,7 +162,7 @@ function run_ha_repl_lagacy_continue()
 	# Disk checking
     if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
     	runAction ${BUILD_SCENARIOS}.act
-    elif [ -f $CTP_HOME/conf/ha_repl.act ]
+    elif [ -f $CTP_HOME/conf/ha_repl.act ];then
     	runAction ha_repl.act
     else
     	echo "Skip Disk Checking!"
