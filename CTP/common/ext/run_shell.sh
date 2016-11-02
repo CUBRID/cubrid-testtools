@@ -61,7 +61,15 @@ function run_shell()
    cp -f ${shell_config_template} ${shell_fm_test_conf}
    branch=$BUILD_SCENARIO_BRANCH_GIT
    category=$BUILD_SCENARIOS
-  
+   # Disk checking
+   if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
+      runAction ${BUILD_SCENARIOS}.act
+   elif [ -f $CTP_HOME/conf/shell.act ];then
+      runAction shell.act
+   else
+      echo "Skip Disk Checking!"
+   fi
+    
    #init and clean log
    tmplog=$CTP_HOME/result/shell/current_runtime_logs/runtime.log
    if [ -d "$CTP_HOME/result/shell/current_runtime_logs" ];then
@@ -95,6 +103,15 @@ function run_shell()
 
 function run_shell_continue()
 {
+   # Disk checking
+   if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
+      runAction ${BUILD_SCENARIOS}.act
+   elif [ -f $CTP_HOME/conf/shell.act ];then
+      runAction shell.act
+   else
+      echo "Skip Disk Checking!"
+   fi
+   
    #init and clean log
    tmplog=$CTP_HOME/result/shell/current_runtime_logs/runtime.log
    if [ ! -f $tmplog ];then
@@ -109,6 +126,16 @@ function run_shell_continue()
 function run_shell_legacy()
 {
     category=$BUILD_SCENARIOS
+    # Disk checking
+    if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
+    	runAction ${BUILD_SCENARIOS}.act
+    elif [ -f $CTP_HOME/conf/shell.act ];then
+    	runAction shell.act
+    else
+    	echo "Skip Disk Checking!"
+    fi
+    
+    
     scenario=`ini.sh $HOME/cubrid_shell_fm/conf/main.properties main.testcase.root`
     testcase_excluded_list=`ini.sh $HOME/cubrid_shell_fm/conf/main.properties main.testcase.excluded`
     eval scenario=$scenario
@@ -122,6 +149,15 @@ function run_shell_legacy()
 
 function run_shell_legacy_continue()
 {
+    # Disk checking
+    if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
+    	runAction ${BUILD_SCENARIOS}.act
+    elif [ -f $CTP_HOME/conf/shell.act ];then
+    	runAction shell.act
+    else
+    	echo "Skip Disk Checking!"
+    fi
+    
     cd $HOME/cubrid_shell_fm
     #execute testing
     sh upgrade.sh

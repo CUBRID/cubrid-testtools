@@ -58,6 +58,15 @@ function run_ha_repl()
    branch=$BUILD_SCENARIO_BRANCH_GIT
    category=$BUILD_SCENARIOS
   
+   # Disk checking
+   if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
+       runAction ${BUILD_SCENARIOS}.act
+   elif [ -f $CTP_HOME/conf/ha_repl.act ]
+       runAction ha_repl.act
+   else
+       echo "Skip Disk Checking!"
+   fi
+    
    #init and clean log
    tmplog=$CTP_HOME/result/ha_repl/current_runtime_logs/runtime.log
    if [ -d "$CTP_HOME/result/ha_repl/current_runtime_logs" ];then
@@ -105,6 +114,15 @@ function run_ha_repl()
 
 function run_ha_repl_continue()
 {
+   # Disk checking
+   if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
+       runAction ${BUILD_SCENARIOS}.act
+   elif [ -f $CTP_HOME/conf/ha_repl.act ]
+       runAction ha_repl.act
+   else
+       echo "Skip Disk Checking!"
+   fi
+   
    #init and clean log
    tmplog=$CTP_HOME/result/ha_repl/current_runtime_logs/runtime.log
    if [ ! -f $tmplog ];then
@@ -119,6 +137,14 @@ function run_ha_repl_continue()
 function run_ha_repl_legacy()
 {
     category=$BUILD_SCENARIOS
+    # Disk checking
+    if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
+    	runAction ${BUILD_SCENARIOS}.act
+    elif [ -f $CTP_HOME/conf/ha_repl.act ]
+    	runAction ha_repl.act
+    else
+    	echo "Skip Disk Checking!"
+    fi
     
     # Update case from svn repository
     run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/sql
@@ -133,6 +159,15 @@ function run_ha_repl_legacy()
 
 function run_ha_repl_lagacy_continue()
 {
+	# Disk checking
+    if [ -f $CTP_HOME/conf/${BUILD_SCENARIOS}.act ];then
+    	runAction ${BUILD_SCENARIOS}.act
+    elif [ -f $CTP_HOME/conf/ha_repl.act ]
+    	runAction ha_repl.act
+    else
+    	echo "Skip Disk Checking!"
+    fi
+    
     cd $HOME/ha_repl_test
     #execute testing
     sh upgrade.sh
