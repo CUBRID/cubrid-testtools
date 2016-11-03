@@ -211,7 +211,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   ```
 	   ```
 	   # Define the path of test cases used for testing, it should be checked out on test node
-	   scenario=${HOME}/cubrid-testcases/shell
+	   scenario=${HOME}/cubrid-testcases/isolation
 	   ```
 	   ```
 	   # Define the URL of test build which will be used to test.
