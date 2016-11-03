@@ -68,7 +68,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  # Path of the data file for initial loading
 	  data_file=${HOME}/cubrid-testcases/medium/files/mdb.tar.gz
  	  ```   	
-	Regarding more explanation for parameters setting of ``sql``,``medium``, please refer to [CTP/conf/sql.conf](conf/sql.conf) for SQL, [CTP/conf/medium.conf](conf/medium.conf) for Medium and [CTP/conf/sql_by_cci.conf](conf/sql_by_cci.conf) for SQL_By_CCI
+	Regarding more explanation for parameters setting, please refer to [CTP/conf/sql.conf](conf/sql.conf) for SQL, [CTP/conf/medium.conf](conf/medium.conf) for Medium and [CTP/conf/sql_by_cci.conf](conf/sql_by_cci.conf) for SQL_By_CCI
 
   - Run Tests
 	* For **SQL** test:
@@ -130,10 +130,12 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   ```
 	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 	   ```
-	   * **Example** ``shell.conf`` for a single instance, scenario and test build:
+	   * **Example** ``shell.conf`` for local instance, scenario and test build:
 	   ```
-	   default.cubrid.<property> //configure parameters for cubrid.conf
-	   default.broker1.<property> //configure parameters for cubrid_broker.conf
+	   # Configure parameters for cubrid.conf
+	   default.cubrid.<property> 
+	   # Configure parameters for cubrid_broker.conf
+	   default.broker1.<property> 
 	   default.broker2.<property>
 	   ```
 	   ```
@@ -149,10 +151,10 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   * Prepare at least two accounts for the multiple test instances (e.g., one account ``controller`` as controller, another account ``shell_instance1`` as test instance)
 	   * Check out CTP for each account and configure environment variables for CTP ``controller`` and test instance ``shell_instance1``
 	    ```
-	   // on controller node
+	   # On controller node
 	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 
-	   // on test instance node
+	   # On test instance node
 	   CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
 	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 	    ```
@@ -180,7 +182,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
 	    ```				
  
-	   Regarding more explanation for parameters setting of ``shell`` test, please refer to [CTP/conf/shell.conf](conf/shell.conf)
+	   Regarding more explanation for parameters setting, please refer to [CTP/conf/shell.conf](conf/shell.conf)
 
   - Run Tests 
 	* For **Shell** test:
@@ -203,10 +205,12 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   ```
 	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 	   ```
-	   * **Example** ``isolation.conf`` for a single instance, scenario and test build:
+	   * **Example** ``isolation.conf`` for local instance, scenario and test build:
 	   ```
-	   default.cubrid.<property> //configure parameters for cubrid.conf
-	   default.broker1.<property> //configure parameters for cubrid_broker.conf
+	   # Configure parameters for cubrid.conf
+	   default.cubrid.<property> 
+	   # Configure parameters for cubrid_broker.conf
+	   default.broker1.<property> 
 	   default.broker2.<property>
 	   ```
 	   ```
@@ -223,10 +227,10 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   * Check out CTP for each account and configure environment variables for CTP ``controller`` and test instance ``isolation_instance1``
 
 	   ```
-	   // on controller node
+	   # On controller node
 	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 
-	   // on test instance node
+	   # On test instance node
 	   CTP_HOME (e.g., export CTP_HOME=$HOME/CTP)
 	   JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 	   ```
@@ -250,7 +254,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   # If this parameter is not set or commented out, CTP will execute testing without build installation.
 	   cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
 	   ```	
-	   Regarding more explanation for parameters setting of ``isolation`` test, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
+	   Regarding more explanation for parameters setting, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
 
  - Run Tests 
 	* For **Isolation** test:
@@ -270,10 +274,10 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	* Prepare environments (e.g., one account ``controller`` as controller, one account ``ha_repl_instance1`` as a master test instance, one same account name ``ha_repl_instance1`` on the other machines as a slave test instance)
 	* Check out CTP for each account and configure environment variables for CTP ``controller`` and test instances ``ha_repl_instance1`` (both master and slave)
       ```
-	  // on controller node
+	  # On controller node
 	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 
-	  // on test instance nodes (master and slave)
+	  # On test instance nodes (master and slave)
 	  CTP_HOME (e.g., export CTP_HOME=$HOME/CTP)
 	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
       ```	
@@ -301,7 +305,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh 
 	  ```
 
-	 Regarding more explanation for parameters setting of ``ha_repl`` test, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)	
+	 Regarding more explanation for parameters setting, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)	
 	  
  - Run Tests 
 	* For **HA Replication** test:
@@ -330,17 +334,17 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  # Define the path of test cases used for testing, it should be checked out in advance
 	  scenario = ${HOME}/cubrid-testcases/interface/JDBC/test_jdbc
 	
-	  # SQL cubrid.conf section - a section for cubrid.conf configuration
+	  # JDBC cubrid.conf section - a section for cubrid.conf configuration
 	  [jdbc/cubrid.conf]
 	  # Define the port of cubrid_port_id to avoid port conflict
 	  cubrid_port_id = 1822
 	
-	  # jdbc cubrid_broker.conf query editor section - a section to change parameters under query_editor
+	  # JDBC cubrid_broker.conf query editor section - a section to change parameters under query_editor
 	  [jdbc/cubrid_broker.conf/%query_editor]
 	  # Close one service to avoid port conflict and reduce configuration complexity
 	  SERVICE = OFF
 	
-	  # jdbc cubrid_broker.conf broker1 section - a section to change parameters under broker1
+	  # JDBC cubrid_broker.conf broker1 section - a section to change parameters under broker1
 	  [jdbc/cubrid_broker.conf/%BROKER1]
 	  # Define the port of broker to avoid conflict
 	  BROKER_PORT = 33120
@@ -348,13 +352,13 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  # Define ID of shared memory used by CAS
 	  APPL_SERVER_SHM_ID = 33120
 	
-	  # jdbc cubrid_broker.conf broker section - a section to configure parameters under broker section
+	  # JDBC cubrid_broker.conf broker section - a section to configure parameters under broker section
 	  [jdbc/cubrid_broker.conf/broker]
 	  # Define the identifier of shared memory to avoid conflict
 	  MASTER_SHM_ID = 33122
       ```
 
-	Regarding more explanation for parameters setting of ``jdbc`` test, please refer to [CTP/conf/jdbc.conf](conf/jdbc.conf)	
+	Regarding more explanation for parameters setting, please refer to [CTP/conf/jdbc.conf](conf/jdbc.conf)	
 	  
  - Run Tests 
 	* For **Jdbc** test:
