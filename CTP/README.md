@@ -124,7 +124,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
   
 - **SHELL**
   - Prepare
-        * For local test
+        * For local instance test
 	   * Prepare one account to use for controller and test instance
 	   * CTP and test scenario should be checked out on it, and configure JAVA_HOME
 	   ```
@@ -132,11 +132,11 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   ```
 	   * **Example** ``shell.conf`` for local instance, scenario and test build:
 	   ```
-	   # Configure parameters for cubrid.conf
-	   default.cubrid.<property> 
-	   # Configure parameters for cubrid_broker.conf
-	   default.broker1.<property> 
-	   default.broker2.<property>
+	   # Configure parameters for cubrid.conf following the format outlined below, ie, default.cubrid.cubrid_port_id=1523
+	   default.cubrid.<property>=<property value> 
+	   # Configure parameters for cubrid_broker.conf following the format outlined below
+	   default.broker1.<property>=<property value> 
+	   default.broker2.<property>=<property value>
 	   ```
 	   ```
 	   # Define the path of test cases used for testing, it should be checked out on test node
@@ -199,7 +199,7 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	
 - **Isolation**
   - Prepare
-        * For local test
+        * For local instance test
 	   * Prepare one account to use for controller and test instance
 	   * CTP and test scenario should be checked out on it, and configure JAVA_HOME
 	   ```
@@ -207,11 +207,11 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	   ```
 	   * **Example** ``isolation.conf`` for local instance, scenario and test build:
 	   ```
-	   # Configure parameters for cubrid.conf
-	   default.cubrid.<property> 
-	   # Configure parameters for cubrid_broker.conf
-	   default.broker1.<property> 
-	   default.broker2.<property>
+	   # Configure parameters for cubrid.conf following the format outlined below, ie, default.cubrid.cubrid_port_id=1523
+	   default.cubrid.<property>=<property value> 
+	   # Configure parameters for cubrid_broker.conf following the format outlined below
+	   default.broker1.<property>=<property value> 
+	   default.broker2.<property>=<property value>
 	   ```
 	   ```
 	   # Define the path of test cases used for testing, it should be checked out on test node
@@ -286,8 +286,8 @@ This ``Quick Start`` is only for user for reference about how to use ``CTP`` to 
 	  # Test instance information:
 	  env.instance1.master.ssh.host=192.168.1.10
 	  env.instance1.master.ssh.user=ha_repl_instance1
-	  env.instance1.slave1.ssh.host=192.168.1.11
-	  env.instance1.slave1.ssh.user=ha_repl_instance1
+	  env.instance1.slave.ssh.host=192.168.1.11
+	  env.instance1.slave.ssh.user=ha_repl_instance1
 	  env.instance1.cubrid.cubrid_port_id=1137
 	  env.instance1.ha.ha_port_id=59001
 	  env.instance1.broker.BROKER_PORT=35000
