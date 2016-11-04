@@ -151,7 +151,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		```
 
 	* For multi-instance test
-	  Multi-instance test requires one controller and one or more test instances.
+	Multi-instance test requires one controller and one or more test instances.
 		* Prepare at least two accounts for the multiple test instances (e.g., one account named as ``controller``, another account named as ``shell_instance1``)
 		* On ``controller`` account
 			* Configure environment variables
@@ -211,8 +211,10 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		```
 		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
+		
 		* Checkout shell test cases (e.g., checkout or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)
 		* Checkout CTP and configure CTP/conf/isolation.conf for testing
+		
 		```
 		# Configure parameters for cubrid.conf following the format outlined below, ie, default.cubrid.cubrid_port_id=1523
 		# The port configured will be updated into CUBRID conf for testing
@@ -226,7 +228,8 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		scenario=${HOME}/cubrid-testcases/isolation
 		```
         * For multi-instance test
-	  Multi-instance test requires one controller and one or more test instances.
+	Multi-instance test requires one controller and one or more test instances.
+	
 		* Prepare at least two accounts for the multiple test instances (e.g., one account named as ``controller``, another account named as ``isolation_instance1``)
 		* On ``controller`` account
 			* Configure environment variables
