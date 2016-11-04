@@ -39,7 +39,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 - **SQL**
  - Prepare
  	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
- 	* Check out scenarios from [cubrid-testcases](https://github.com/CUBRID/cubrid-testcases) project or prepare your own test cases for testing
+ 	* Check out the scenarios from [cubrid-testcases](https://github.com/CUBRID/cubrid-testcases) project or prepare your own test cases for testing
  	* Check out CTP and update the value of ``scenario`` parameter within ``CTP/conf/sql.conf`` to point to the path of your scenarios. For the current existing ``SQL`` test, you need to make sure the parameters `` java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are configured
  	* **Example** ``sql.conf`` for scenario, data file and some important parameters changes
  	* 
@@ -135,8 +135,8 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		```
 		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
-		* Checkout shell test cases (e.g., checkout or create the test cases at the ${HOME}/cubrid-testcases/shell directory)
-		* Checkout CTP and configure CTP/conf/shell.conf for testing
+		* Check out the shell test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)
+		* Check out CTP and configure CTP/conf/shell.conf for testing
 		```
 		# Configure parameters for cubrid.conf following the format outlined below, ie, default.cubrid.cubrid_port_id=1523
 		# The port configured will be updated into CUBRID conf for testing
@@ -146,7 +146,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		default.broker2.BROKER_PORT=35500
 		```
 		```
-		# Define the path of test cases used for testing, it should be checked out on test node
+		# Define the path of test cases used for testing
 		scenario=${HOME}/cubrid-testcases/shell
 		```
 
@@ -157,7 +157,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			```
 			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
-			* Checkout CTP and configure CTP/conf/shell.conf for testing
+			* Check out CTP and configure CTP/conf/shell.conf for testing
 			```
 			# Test instance information. For ha shell, relatedhosts must be configured for slave
 			# The port configured will be updated into CUBRID conf for testing
@@ -182,13 +182,13 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			Regarding more explanation for parameters setting, please refer to [CTP/conf/shell.conf](conf/shell.conf)
 
 		* On ``shell_instance1`` account
-			* Checkout CTP
+			* Check out CTP
 			* Configure environment variables
 			```
 			CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
 			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
-			* Checkout shell test cases (e.g., checkout or create the test cases at the ${HOME}/cubrid-testcases/shell directory)				
+			* Check out the shell test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)				
 
   - Run Tests 
 	* For **Shell** test:
@@ -210,8 +210,8 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		```
 		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
-		* Checkout isolation test cases (e.g., checkout or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)
-		* Checkout CTP and configure CTP/conf/isolation.conf for testing
+		* Check out isolation test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)
+		* Check out CTP and configure CTP/conf/isolation.conf for testing
 		```
 		# Configure parameters for cubrid.conf following the format outlined below, ie, default.cubrid.cubrid_port_id=1523
 		# The port configured will be updated into CUBRID conf for testing
@@ -221,7 +221,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		default.broker2.BROKER_PORT=35500
 		```
 		```
-		# Define the path of test cases used for testing, it should be checked out on test node
+		# Define the path of test cases used for testing
 		scenario=${HOME}/cubrid-testcases/isolation
 		```
 
@@ -232,7 +232,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			```
 			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
-			* Checkout CTP and configure CTP/conf/isolation.conf for testing
+			* Check out CTP and configure CTP/conf/isolation.conf for testing
 			```
 			# Test instance information. For ha shell, relatedhosts must be configured for slave
 			# The port configured will be updated into CUBRID conf for testing
@@ -257,13 +257,13 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			Regarding more explanation for parameters setting, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
 
 		* On ``isolation_instance1`` account
-			* Checkout CTP
+			* Check out CTP
 			* Configure environment variables
 			```
 			CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
 			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
-			* Checkout isolation test cases (e.g., checkout or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)				
+			* Check out the isolation test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)				
 
  - Run Tests 
 	* For **Isolation** test:
@@ -281,42 +281,42 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 - **HA Replication**
   - Prepare
 	* Prepare at least two accounts for the multiple test instances (e.g., one account named as ``controller``, another account named as ``ha_repl_instance1``)
-		* On ``controller`` account
-			* Configure environment variables
-			```
-			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-			```
-			* Checkout CTP and configure CTP/conf/ha_repl.conf for testing
-			```
-			# Test instance information:
-			# The port configured will be updated into CUBRID conf for testing
-			env.instance1.master.ssh.host=192.168.1.10
-			env.instance1.master.ssh.user=ha_repl_instance1
-			env.instance1.slave.ssh.host=192.168.1.11
-			env.instance1.slave.ssh.user=ha_repl_instance1
-			env.instance1.cubrid.cubrid_port_id=1137
-			env.instance1.ha.ha_port_id=59001
-			env.instance1.broker.BROKER_PORT=35000
-			```
-			``` 	   
-			# Define the path of test cases used for testing, it should be checked out on test node
-			scenario=${HOME}/cubrid-testcases/sql
-			```
-			```
-			# Define the URL of test build which will be used to test.
-			# If this parameter is not set or commented out, CTP will execute testing without build installation.
-			cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
-			```
-			Regarding more explanation for parameters setting, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)
+	* On ``controller`` account
+		* Configure environment variables
+		```
+		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+		```
+		* Check out CTP and configure CTP/conf/ha_repl.conf for testing
+		```
+		# Test instance information:
+		# The port configured will be updated into CUBRID conf for testing
+		env.instance1.master.ssh.host=192.168.1.10
+		env.instance1.master.ssh.user=ha_repl_instance1
+		env.instance1.slave.ssh.host=192.168.1.11
+		env.instance1.slave.ssh.user=ha_repl_instance1
+		env.instance1.cubrid.cubrid_port_id=1137
+		env.instance1.ha.ha_port_id=59001
+		env.instance1.broker.BROKER_PORT=35000
+		```
+		``` 	   
+		# Define the path of test cases used for testing, it should be checked out on test node
+		scenario=${HOME}/cubrid-testcases/sql
+		```
+		```
+		# Define the URL of test build which will be used to test.
+		# If this parameter is not set or commented out, CTP will execute testing without build installation.
+		cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+		```
+		Regarding more explanation for parameters setting, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)
 
-		* On ``ha_repl_instance1`` account
-			* Checkout CTP
-			* Configure environment variables
-			```
-			CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
-			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-			```
-			* Checkout sql test cases (e.g., checkout or create the test cases at the ${HOME}/cubrid-testcases/sql directory)
+	* On ``ha_repl_instance1`` account
+		* Check out CTP
+		* Configure environment variables
+		```
+		CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
+		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
+		```
+		* Check out the sql test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/sql directory)
 	  
  - Run Tests 
 	* For **HA Replication** test:
