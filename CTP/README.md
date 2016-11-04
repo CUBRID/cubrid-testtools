@@ -139,7 +139,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		* Check out CTP and configure CTP/conf/shell.conf for testing
 		```
 		# Configure parameters for cubrid.conf following the format outlined below, ie, default.cubrid.cubrid_port_id=1523
-		# The port configured will be updated into CUBRID conf for testing
+		# The property values configured will be updated into CUBRID conf for testing
 		default.cubrid.cubrid_port_id=1523 
 		# Configure parameters for cubrid_broker.conf following the format outlined below
 		default.broker1.BROKER_PORT=35000 
@@ -160,7 +160,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			* Check out CTP and configure CTP/conf/shell.conf for testing
 			```
 			# Test instance information. For ha shell, relatedhosts must be configured for slave
-			# The port configured will be updated into CUBRID conf for testing
+			# The property values configured will be updated into CUBRID conf for testing
 			env.instance1.ssh.host=192.168.1.10
 			#env.instance1.ssh.relatedhosts=192.168.1.11
 			env.instance1.ssh.port=22
@@ -214,7 +214,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		* Check out CTP and configure CTP/conf/isolation.conf for testing
 		```
 		# Configure parameters for cubrid.conf following the format outlined below, ie, default.cubrid.cubrid_port_id=1523
-		# The port configured will be updated into CUBRID conf for testing
+		# The property values configured will be updated into CUBRID conf for testing
 		default.cubrid.cubrid_port_id=1523 
 		# Configure parameters for cubrid_broker.conf following the format outlined below
 		default.broker1.BROKER_PORT=35000 
@@ -235,11 +235,10 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			* Check out CTP and configure CTP/conf/isolation.conf for testing
 			```
 			# Test instance information. For ha shell, relatedhosts must be configured for slave
-			# The port configured will be updated into CUBRID conf for testing
+			# The property values configured will be updated into CUBRID conf for testing
 			env.instance1.ssh.host=192.168.1.10
-			#env.instance1.ssh.relatedhosts=192.168.1.11
 			env.instance1.ssh.port=22
-			env.instance1.ssh.user=shell_instance1
+			env.instance1.ssh.user=isolation_instance1
 			env.instance1.ssh.pwd=123456
 			env.instance1.cubrid.cubrid_port_id=11523
 			env.instance1.broker1.BROKER_PORT=35000
@@ -286,10 +285,11 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		```
 		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
+		* Check out the sql test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/sql directory)
 		* Check out CTP and configure CTP/conf/ha_repl.conf for testing
 		```
 		# Test instance information:
-		# The port configured will be updated into CUBRID conf for testing
+		# The property values configured will be updated into CUBRID conf for testing
 		env.instance1.master.ssh.host=192.168.1.10
 		env.instance1.master.ssh.user=ha_repl_instance1
 		env.instance1.slave.ssh.host=192.168.1.11
@@ -316,8 +316,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
 		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
-		* Check out the sql test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/sql directory)
-	  
+			  
  - Run Tests 
 	* For **HA Replication** test:
 
