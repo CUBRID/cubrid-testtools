@@ -204,16 +204,14 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 	
 - **Isolation**
-  - Prepare
-        * For local test
+ - Prepare
+	* For local test
 		* Configure environment variables
 		```
 		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
-		
 		* Checkout isolation test cases (e.g., checkout or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)
 		* Checkout CTP and configure CTP/conf/isolation.conf for testing
-		
 		```
 		# Configure parameters for cubrid.conf following the format outlined below, ie, default.cubrid.cubrid_port_id=1523
 		# The port configured will be updated into CUBRID conf for testing
@@ -226,7 +224,8 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		# Define the path of test cases used for testing, it should be checked out on test node
 		scenario=${HOME}/cubrid-testcases/isolation
 		```
-        * For multi-instance test
+
+	* For multi-instance test
 		* Prepare at least two accounts for the multiple test instances (e.g., one account named as ``controller``, another account named as ``isolation_instance1``)
 		* On ``controller`` account
 			* Configure environment variables
@@ -235,14 +234,16 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			```
 			* Checkout CTP and configure CTP/conf/isolation.conf for testing
 			```
-			# Test instance information:
+			# Test instance information. For ha shell, relatedhosts must be configured for slave
 			# The port configured will be updated into CUBRID conf for testing
 			env.instance1.ssh.host=192.168.1.10
+			#env.instance1.ssh.relatedhosts=192.168.1.11
 			env.instance1.ssh.port=22
-			env.instance1.ssh.user=isolation_instance1
-			env.instance1.ssh.pwd=12345
-			env.instance1.broker1.BROKER_PORT=30093
-			env.instance1.broker2.BROKER_PORT=30094
+			env.instance1.ssh.user=shell_instance1
+			env.instance1.ssh.pwd=123456
+			env.instance1.cubrid.cubrid_port_id=11523
+			env.instance1.broker1.BROKER_PORT=35000
+			env.instance1.broker2.BROKER_PORT=35500
 			```
 			``` 	   
 			# Define the path of test cases used for testing, it should be checked out on test node
@@ -262,7 +263,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
 			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
-			* Checkout isolation test cases (e.g., checkout or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)
+			* Checkout isolation test cases (e.g., checkout or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)				
 
  - Run Tests 
 	* For **Isolation** test:
