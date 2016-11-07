@@ -7,7 +7,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 ## Requirements
 * It supports Linux and Windows (Cygwin is required)
 * Install Java 6 or higher version, and you also need to set ``JAVA_HOME`` environment variable to point to the installation directory
-* CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configurations
+* CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configuration guides
 
 ## Quick Start
 Get up and running with CTP in just a few minutes with the ``Quick Start``. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``SQL_By_CCI``, ``Jdbc`` and so on. Regarding more information please refer to the related sections
@@ -100,14 +100,14 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
     
   - Examine the results
 
-	* When it is completed, CTP will print the summary result message
+	* When the test is completed, CTP will print the summary result message, please see the example of SQL result for reference
 	    ```
 	    -----------------------
 	    Fail:0
 	    Success:1
 	    Total:1
 	    Elapse Time:193
-	    Test Result Directory:/home/user/CTP/{sql|medium|sql_by_cci}/result/y2016/m3/schedule_linux_sql_64bit_24202122_10.0.0_1376
+	    Test Result Directory:/home/user/CTP/sql/result/y2016/m3/schedule_linux_sql_64bit_24202122_10.0.0_1376
 	    Test Log:/home/user/CTP/sql/log/sql_10.0.0.1376_1458818452.log
 	    -----------------------
 		
@@ -115,9 +115,9 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 	    Testing End!
 	    -----------------------
 	    ```
-	* You can find the details of the test result from ``Test Result Directory``
-	* You can also use your web browser to examine the result with webconsole service of CTP (the current webconsole feature does not support SQL_By_CCI)
-	* ``bin/ctp.sh webconsole start`` shows you the URL of the result as follows:
+	* Start webconsole to see the comparison between result and answer of failures (the current webconsole feature only support SQL and Medium)
+	  ```
+	   $ bin/ctp.sh webconsole start
 	  ```
 	  Config: /home/user/CTP/conf/webconsole.conf
 	  Web Root: /home/user/CTP/sql/webconsole
@@ -126,7 +126,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 	  Done
 	  URL:  http://127.0.0.1:8888
 	  ```
-	* Please open the ``URL`` with your browser
+	* Please open the ``URL`` with your browser to see the details
   
 - **SHELL**
  - Prepare
@@ -234,7 +234,6 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			```
 			* Check out CTP and configure CTP/conf/isolation.conf for testing
 			```
-			# Test instance information. For ha shell, relatedhosts must be configured for slave
 			# The property values configured will be updated into CUBRID conf for testing
 			env.instance1.ssh.host=192.168.1.10
 			env.instance1.ssh.port=22
@@ -565,7 +564,7 @@ It's not required that you execute the build for CTP, unless you make some chang
      
 - **Jdbc**
    * Test cases: Since ``Jdbc`` unit test cases are designed based on junit framework, so all cases need follow junit syntax and rule 
-   * The current CTP identifies case according to the @Test annotation and keywords 'test' on test method name, and ignore the case according to the @ignore annotation on test method
+   * The current CTP identifies case according to the @Test annotation and keywords 'test' on test method name, and ignore the case according to the @Ignore annotation on test method
    * Example for reference
     
      ```
