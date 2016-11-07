@@ -10,9 +10,9 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configuration guides
 
 ## Quick Start
-Get up and running with CTP in just a few minutes with the ``Quick Start``. But CTP supports more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``SQL_By_CCI``, ``Jdbc`` and so on. Regarding more information please refer to the related sections
+This section simply explains how to start sql test with CTP. For more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``SQL_By_CCI``, ``Jdbc`` and so on, please refer to the related sections
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly
-* Execute a example test as follows:
+* Execute an example test as follows:
 
     ``` 
     $ bin/ctp.sh sql -c ./conf/sample.conf
@@ -62,19 +62,19 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 	  # In order to simulate the scenario customer uses
 	  ha_mode=yes
 	  ```
- 	* For ``Medium`` test, ``data_file`` must be configured into the [sql] section of conf file with the path of the initial data file
+ 	* For ``Medium`` test, ``data_file`` must be configured into the [sql] section of the conf file with the path of the initial data file
  	
 	  ```
 	  # Path of the data file for initial loading
 	  data_file=${HOME}/cubrid-testcases/medium/files/mdb.tar.gz
  	  ```   
- 	* For ``SQL_By_CCI`` test, ``sql_interface_type=cci`` must be configured into the [sql] section of conf file
+ 	* For ``SQL_By_CCI`` test, ``sql_interface_type=cci`` must be configured into the [sql] section of the conf file
  	
 	  ```
 	  # Define the interface type of SQL testing
 	  sql_interface_type=cci
  	  ```   
-	Regarding more explanation for parameters setting, please refer to [CTP/conf/sql.conf](conf/sql.conf) for SQL, [CTP/conf/medium.conf](conf/medium.conf) for Medium
+	Regarding more explanations for parameters setting, please refer to [CTP/conf/sql.conf](conf/sql.conf) for SQL, [CTP/conf/medium.conf](conf/medium.conf) for Medium
 
   - Run Tests
 	* For **SQL** test:
@@ -115,7 +115,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 	    Testing End!
 	    -----------------------
 	    ```
-	* Start webconsole to see the comparison between result and answer of failures (the current webconsole feature only support SQL and Medium)
+	* Alternatively, you can use the webconsole of CTP to check results(the current webconsole feature only support SQL and Medium)
 	  ```
 	   $ bin/ctp.sh webconsole start
 	  ```
@@ -138,7 +138,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		* Check out the shell test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)
 		* Check out CTP and configure CTP/conf/shell.conf for testing
 		```
-		# Configure parameters for cubrid.conf following the format outlined below, ie, default.cubrid.cubrid_port_id=1523
+		# Configure parameters for cubrid.conf following the format outlined below, e.g., default.cubrid.cubrid_port_id=1523
 		# The property values configured will be updated into CUBRID conf for testing
 		default.cubrid.cubrid_port_id=1523 
 		# Configure parameters for cubrid_broker.conf following the format outlined below
@@ -179,7 +179,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			# If this parameter is not set or commented out, CTP will execute testing without build installation.
 			cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
 			```
-			Regarding more explanation for parameters setting, please refer to [CTP/conf/shell.conf](conf/shell.conf)
+			Regarding more explanations for parameters setting, please refer to [CTP/conf/shell.conf](conf/shell.conf)
 
 		* On ``shell_instance1`` account
 			* Check out CTP
@@ -198,7 +198,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 	  ```   
     
   - Examine the results
-	* When test is completed, you can find the results and logs from ``CTP/result/shell/current_runtime_logs``
+	* When the test is completed, you can find the results and logs from ``CTP/result/shell/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the case list which is executed on this instance
 	* ``main_snapshot.properties`` saves all values of parameters configured during testing
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
@@ -213,7 +213,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		* Check out isolation test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)
 		* Check out CTP and configure CTP/conf/isolation.conf for testing
 		```
-		# Configure parameters for cubrid.conf following the format outlined below, ie, default.cubrid.cubrid_port_id=1523
+		# Configure parameters for cubrid.conf following the format outlined below, e.g., default.cubrid.cubrid_port_id=1523
 		# The property values configured will be updated into CUBRID conf for testing
 		default.cubrid.cubrid_port_id=1523 
 		# Configure parameters for cubrid_broker.conf following the format outlined below
@@ -252,7 +252,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 			# If this parameter is not set or commented out, CTP will execute testing without build installation.
 			cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
 			```
-			Regarding more explanation for parameters setting, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
+			Regarding more explanations for parameters setting, please refer to [CTP/conf/isolation.conf](conf/isolation.conf)
 
 		* On ``isolation_instance1`` account
 			* Check out CTP
@@ -271,14 +271,14 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
       ```   
         
  - Examine the results
-	* When test is completed, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
+	* When the test is completed, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the case list which is executed on this instance
 	* ``main_snapshot.properties`` saves all values of parameters configured during testing
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 
 - **HA Replication**
   - Prepare
-	* Prepare at least two accounts for the multiple test instances (e.g., one account named as ``controller``, another account named as ``ha_repl_instance1``)
+	* Prepare at least three accounts for the multiple test instances (e.g., one account named as ``controller`` will be used as controller, the another accounts named as ``ha_repl_instance1`` will be used as HA pairs accounts)
 	* On ``controller`` account
 		* Configure environment variables
 		```
@@ -306,7 +306,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 		# If this parameter is not set or commented out, CTP will execute testing without build installation.
 		cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
 		```
-		Regarding more explanation for parameters setting, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)
+		Regarding more explanations for parameters setting, please refer to [CTP/conf/ha_repl.conf](conf/ha_repl.conf)
 
 	* On ``ha_repl_instance1`` account
 		* Check out CTP
@@ -324,7 +324,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
       ```   
     
  - Examine the results
-	* When test is completed, you can find the results and logs from ``CTP/result/ha_repl/current_runtime_logs``
+	* When the test is completed, you can find the results and logs from ``CTP/result/ha_repl/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the cases which are executed on this instance
 	* ``main_snapshot.properties`` saves all values of parameters configured during testing
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
@@ -367,7 +367,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
 	  MASTER_SHM_ID = 33122
       ```
 
-	Regarding more explanation for parameters setting, please refer to [CTP/conf/jdbc.conf](conf/jdbc.conf)	
+	Regarding more explanations for parameters setting, please refer to [CTP/conf/jdbc.conf](conf/jdbc.conf)	
 	  
  - Run Tests 
 	* For **Jdbc** test:
@@ -377,7 +377,7 @@ Get up and running with CTP in just a few minutes with the ``Quick Start``. But 
       ```   
     
  - Examine the results
-	* When test is completed, you can find the results and logs from ``CTP/result/jdbc/current_runtime_logs``
+	* When the test is completed, you can find the results and logs from ``CTP/result/jdbc/current_runtime_logs``
 	* ``run_case_details.log`` shows all the details of case running
 	
 
