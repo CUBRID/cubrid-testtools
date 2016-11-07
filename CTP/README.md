@@ -10,7 +10,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configuration guides
 
 ## Quick Start
-This section simply explains how to start sql test with CTP. For more categories testing than this section mentioned, such as ``Shell``, ``CCI``, ``HA Shell``, ``Isolation``, ``HA Replication``, ``SQL_By_CCI``, ``Jdbc`` and so on, please refer to the related sections
+The section guides users to quickly start sql test with CTP, for the more categories of testing , please refer to the related sections
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly
 * Execute an example test as follows:
 
@@ -118,8 +118,6 @@ This section simply explains how to start sql test with CTP. For more categories
 	* Alternatively, you can use the webconsole of CTP to check results(the current webconsole feature only support SQL and Medium)
 	    ```
 	    $ bin/ctp.sh webconsole start
-	    ```
-	    ```
 	    Config: /home/user/CTP/conf/webconsole.conf
 	    Web Root: /home/user/CTP/sql/webconsole
 	    Begin to start ...
@@ -172,7 +170,7 @@ This section simply explains how to start sql test with CTP. For more categories
 			env.instance1.broker2.BROKER_PORT=35500
 			```
 			``` 	   
-			# Define the path of test cases used for testing, it should be checked out on test node. For shell heavy, shell long and ha shell, scenario should be configured accordingly.
+			# Define the path of test cases used for testing, it should be checked out on test instance node. For shell heavy, shell long and ha shell, scenario should be configured accordingly.
 			scenario=${HOME}/cubrid-testcases/shell
 			```
 			```
@@ -201,7 +199,7 @@ This section simply explains how to start sql test with CTP. For more categories
   - Examine the results
 	* When the test is completed, you can find the results and logs from ``CTP/result/shell/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the case list which is executed on this instance
-	* ``main_snapshot.properties`` saves all values of parameters configured during testing
+	* ``main_snapshot.properties`` contains all the values of parameters configured during testing
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 	
 - **Isolation**
@@ -245,7 +243,7 @@ This section simply explains how to start sql test with CTP. For more categories
 			env.instance1.broker2.BROKER_PORT=35500
 			```
 			``` 	   
-			# Define the path of test cases used for testing, it should be checked out on test node
+			# Define the path of test cases used for testing, it should be checked out on test instance node
 			scenario=${HOME}/cubrid-testcases/isolation
 			```
 			```
@@ -274,12 +272,12 @@ This section simply explains how to start sql test with CTP. For more categories
  - Examine the results
 	* When the test is completed, you can find the results and logs from ``CTP/result/isolation/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the case list which is executed on this instance
-	* ``main_snapshot.properties`` saves all values of parameters configured during testing
+	* ``main_snapshot.properties`` contains all the values of parameters configured during testing
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 
 - **HA Replication**
   - Prepare
-	* Prepare at least three accounts for the multiple test instances (e.g., one account named as ``controller`` will be used as controller, the another accounts named as ``ha_repl_instance1`` will be used as HA pairs accounts)
+	* Prepare at least three accounts for the multiple test instances (e.g., one account named as ``controller`` will be used as controller, another accounts named as ``ha_repl_instance1`` will be used as HA pairs accounts)
 	* On ``controller`` account
 		* Configure environment variables
 		```
@@ -299,7 +297,7 @@ This section simply explains how to start sql test with CTP. For more categories
 		env.instance1.broker.BROKER_PORT=35000
 		```
 		``` 	   
-		# Define the path of test cases used for testing, it should be checked out on test node
+		# Define the path of test cases used for testing, it should be checked out on test instance node
 		scenario=${HOME}/cubrid-testcases/sql
 		```
 		```
@@ -327,7 +325,7 @@ This section simply explains how to start sql test with CTP. For more categories
  - Examine the results
 	* When the test is completed, you can find the results and logs from ``CTP/result/ha_repl/current_runtime_logs``
 	* ``dispatch_tc_ALL.txt`` shows the total case list, and ``dispatch_tc_FIN_${Node_Name}.txt`` shows the cases which are executed on this instance
-	* ``main_snapshot.properties`` saves all values of parameters configured during testing
+	* ``main_snapshot.properties`` contains all the values of parameters configured during testing
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 
 - **Jdbc**
@@ -383,7 +381,7 @@ This section simply explains how to start sql test with CTP. For more categories
 	
 
 ## How To Build CTP
-It's not required that you execute the build for CTP, unless you make some changes within source codes. To build CTP from source code, you'll need ant installation and change to the directory CTP, execute ant command as the below:
+It's not required that you execute the build for CTP, unless you make some changes within source codes. In order to build CTP from source code, you must need install Apache Ant on your environment, and then change to the CTP directory, executing ant command as the below:
 
 ```
     $ ant clean dist
@@ -423,7 +421,7 @@ It's not required that you execute the build for CTP, unless you make some chang
    * You can add "autocommit off;", "autocommit on;" to change autocommit mode 
 
 - **SHELL**
-   * Test cases: the file extension is ``.sh``, and it is located in ``cases`` subdirectory, naming rule: ``/path/to/test_name/cases/test_name.sh``
+   * Test cases: The file extension is ``.sh``, and it is located in ``cases`` subdirectory, naming rule: ``/path/to/test_name/cases/test_name.sh``
    * Example for reference
     
      ```
@@ -455,7 +453,7 @@ It's not required that you execute the build for CTP, unless you make some chang
 	  ```
 
 - **Isolation**
-   * Test cases: the file extension is ``.ctl``
+   * Test cases: The file extension is ``.ctl``
    * Example for reference
    
      ```
@@ -540,8 +538,8 @@ It's not required that you execute the build for CTP, unless you make some chang
 
 
 - **HA Replication**
-   * Test cases: Since ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data replication between an active server and a standby server, so the cases are same as ``SQL``
-   * CTP will transform case file to be ``case_name.test`` format with some checking statement flags around the SQL statements. And If the SQL does not contain primary key, CTP will add primary key on column
+   * Test cases: Since ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data replication between an active server and a standby server, so the cases are the same as ``SQL``
+   * CTP will transform case file to be ``case_name.test`` format with some checking statement flags around the SQL statements. And If the SQL does not contain primary key, CTP will add primary key on one column
    * Example for reference
     
      ```
@@ -564,8 +562,8 @@ It's not required that you execute the build for CTP, unless you make some chang
      ``` 
      
 - **Jdbc**
-   * Test cases: Since ``Jdbc`` unit test cases are designed based on junit framework, so all cases need follow junit syntax and rule 
-   * The current CTP identifies case according to the @Test annotation and keywords 'test' on test method name, and ignore the case according to the @Ignore annotation on test method
+   * Test cases: Since ``Jdbc`` unit test cases are designed based on junit framework, so all the cases need follow junit syntax and rule 
+   * The current CTP identifies the case according to the @Test annotation and keywords 'test' on test method name, and ignore the case according to the @Ignore annotation on test method
    * Example for reference
     
      ```
