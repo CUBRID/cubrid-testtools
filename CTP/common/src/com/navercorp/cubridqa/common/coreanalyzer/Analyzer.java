@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.common.coreanalyzer;
 
 import java.io.File;
-
 import java.util.ArrayList;
 
 public class Analyzer {
@@ -98,7 +97,7 @@ public class Analyzer {
 
 		this.digestStack = extractCoreStackDigest(this.detailStack);
 	}
-	
+
 	private static String extractCoreProcessName(String desc) {
 		// core.27788: ELF 64-bit LSB core file AMD x86-64, version 1 (SYSV),
 		// SVR4-style, from 'cub_server'
@@ -107,9 +106,9 @@ public class Analyzer {
 		if (p1 == -1) {
 			return null;
 		}
-		
+
 		int p2 = desc.indexOf("'", p1 + 6);
-		
+
 		String processName = (p2 == -1) ? desc.substring(p1 + 6) : desc.substring(p1 + 6, p2);
 
 		if (processName.indexOf("cub_cas") != -1) {
@@ -125,7 +124,7 @@ public class Analyzer {
 		}
 		return processName;
 	}
-	
+
 	private String extractCoreStack(String desc) {
 		String searchKey = "(gdb)";
 		int p1 = desc.lastIndexOf(searchKey);
@@ -176,13 +175,13 @@ public class Analyzer {
 			arr = itemText.split(" ");
 
 			if (arr != null && arr.length > 0) {
-				
-				if(arr[1].startsWith("0x") == false) {
-					methodCodes = arr[1];	
+
+				if (arr[1].startsWith("0x") == false) {
+					methodCodes = arr[1];
 				} else {
 					methodCodes = arr[3];
 				}
-				
+
 				if (arr[arr.length - 2].equals("at") || arr[arr.length - 2].equals("from")) {
 					fileCodes = arr[arr.length - 1];
 				} else {

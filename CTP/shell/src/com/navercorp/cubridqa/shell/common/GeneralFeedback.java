@@ -1,13 +1,13 @@
 package com.navercorp.cubridqa.shell.common;
 
 import java.io.File;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.HashMap;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.main.Context;
 
 public class GeneralFeedback {
@@ -22,21 +22,21 @@ public class GeneralFeedback {
 	public GeneralFeedback(String configFilename, String messageFilename) throws IOException {
 		this.context = new Context(configFilename);
 		this.messageFilename = messageFilename;
-		String category = context.getProperty("main.testing.category", "TEST_CATEGORY", false);
-		if(CommonUtils.isEmpty(category)) {
+		String category = context.getProperty(ConfigParameterConstants.TEST_CATEGORY, "TEST_CATEGORY", false);
+		if (CommonUtils.isEmpty(category)) {
 			category = "general";
 		}
 		context.setTestCategory(category);
-		this.context.setLogDir(category);	
-		
+		this.context.setLogDir(category);
+
 		keyData = new HashMap<String, String>();
 
-		String buildId = context.getProperty("main.testing.build_id", "BUILD_ID", false);
+		String buildId = context.getProperty(ConfigParameterConstants.TEST_BUILD_ID, "BUILD_ID", false);
 		if (!CommonUtils.isEmpty(buildId)) {
 			context.setTestBuild(buildId);
 		}
 
-		String buildBit = context.getProperty("main.testing.build_bits", "BUILD_BITS", false);
+		String buildBit = context.getProperty(ConfigParameterConstants.TEST_BUILD_BITS, "BUILD_BITS", false);
 		if (!CommonUtils.isEmpty(buildBit)) {
 			context.setVersion(buildBit);
 		}
@@ -84,7 +84,7 @@ public class GeneralFeedback {
 						System.out.println("[%]DDOONNEE");
 					}
 					System.out.println(line);
-					
+
 				} else {
 					try {
 						Thread.sleep(1);

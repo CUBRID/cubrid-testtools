@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.LocalInvoker;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
@@ -14,20 +15,25 @@ public class GeneralLocalTest {
 
 	public GeneralLocalTest(Context context) {
 		this.context = context;
-		
-		String category = context.getProperty("main.testing.category", "TEST_CATEGORY", false);
-		if(CommonUtils.isEmpty(category)) {
+
+		String category = context.getProperty(ConfigParameterConstants.TEST_CATEGORY, (ConfigParameterConstants.TEST_CATEGORY).toUpperCase(), false);
+		if (CommonUtils.isEmpty(category)) {
 			category = "general";
 		}
 		context.setTestCategory(category);
-		this.context.setLogDir(category);
+		
+		String logDirname = System.getProperty("TEST_TYPE");
+		if (CommonUtils.isEmpty(logDirname)) {
+			logDirname = "general";
+		}
+		this.context.setLogDir(logDirname);
 
-		String buildId = context.getProperty("main.testing.build_id", "BUILD_ID", false);
+		String buildId = context.getProperty(ConfigParameterConstants.TEST_BUILD_ID, (ConfigParameterConstants.TEST_BUILD_ID).toUpperCase(), false);
 		if (!CommonUtils.isEmpty(buildId)) {
 			context.setTestBuild(buildId);
 		}
-		
-		String buildBit = context.getProperty("main.testing.build_bits", "BUILD_BITS", false);
+
+		String buildBit = context.getProperty(ConfigParameterConstants.TEST_BUILD_BITS, (ConfigParameterConstants.TEST_BUILD_BITS).toUpperCase(), false);
 		if (!CommonUtils.isEmpty(buildBit)) {
 			context.setVersion(buildBit);
 		}
@@ -90,8 +96,8 @@ public class GeneralLocalTest {
 	private Result invoke(String scripts, String... keys) {
 		if (scripts == null)
 			return null;
-		
-		String testType = context.getProperty("main.testing.type", "TEST_TYPE", false);
+
+		String testType = context.getProperty("TEST_TYPE", "TEST_TYPE", false);
 
 		scripts = "cd ${CTP_HOME}; source shell/local/" + testType + ".sh; " + scripts;
 		if (keys != null && keys.length > 0) {
@@ -127,7 +133,6 @@ public class GeneralLocalTest {
 		}
 		return new Result(output, props);
 	}
-	
 
 	class Result {
 		String output;

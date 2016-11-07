@@ -25,7 +25,6 @@
 package com.navercorp.cubridqa.common.coreanalyzer;
 
 import java.io.File;
-
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
@@ -66,17 +65,17 @@ public class AnalyzerMain {
 		}
 
 		if (args.length == 1 && args1.length == 1) {
-			//do show
+			// do show
 			showCore(coreFile);
 			return;
 		}
 
 		if (cmd.hasOption("s")) {
-			if(args1.length != 2) {
+			if (args1.length != 2) {
 				showHelp("Please input core file and BTS issue key.", options);
 				return;
 			} else {
-				//do save
+				// do save
 				String issueKey = args1[1];
 				issueKey = CommonUtil.replace(issueKey.trim().toUpperCase(), " ", "");
 				if (issueKey.startsWith("CUBRIDSUS-") == false && issueKey.startsWith("CBRD-") == false) {
@@ -87,7 +86,7 @@ public class AnalyzerMain {
 				return;
 			}
 		}
-		
+
 		showHelp("Invalid parameters.", options);
 	}
 

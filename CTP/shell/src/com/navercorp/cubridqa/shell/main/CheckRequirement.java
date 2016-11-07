@@ -25,9 +25,10 @@
 package com.navercorp.cubridqa.shell.main;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 
 public class CheckRequirement {
 
@@ -45,7 +46,7 @@ public class CheckRequirement {
 		this.envId = envId;
 		this.isRelated = isRelated;
 		this.host = host;
-		
+
 		this.sshTitle = ShellHelper.getTestNodeTitle(context, envId, host);
 
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "check_" + envId + ".log"), true, context.isContinueMode());
@@ -77,19 +78,19 @@ public class CheckRequirement {
 		if (context.needCleanTestCase()) {
 			checkCommand("git");
 		}
-		
+
 		checkDirectory("${CTP_HOME}/bin");
 		checkDirectory("${CTP_HOME}/common/script");
 
 		if (!isRelated) {
 			checkDirectory(context.getTestCaseRoot());
 		}
-		
+
 		if (context.isWindows()) {
 			checkCommand("unzip");
 		}
-		
-		String excludedFilename = context.getProperty("main.testcase.excluded");
+
+		String excludedFilename = context.getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE);
 		if (!CommonUtils.isEmpty(excludedFilename) && isRelated == false) {
 			checkFile(excludedFilename);
 		}
@@ -113,7 +114,7 @@ public class CheckRequirement {
 	private void checkSSH() throws Exception {
 		try {
 			this.log.print("==> Check connection(" + context.getServiceProtocolType() + ") ");
-			this.ssh = ShellHelper.createTestNodeConnect(context, envId, host);			
+			this.ssh = ShellHelper.createTestNodeConnect(context, envId, host);
 			log.print("...... PASS");
 		} catch (Exception e) {
 			log.print("...... FAIL: " + e.getMessage());
@@ -205,7 +206,7 @@ public class CheckRequirement {
 
 		log.println("");
 	}
-	
+
 	private void checkFile(String file) {
 		this.log.print("==> Check file '" + file + "' ");
 

@@ -36,7 +36,6 @@ import com.navercorp.cubridqa.cqt.console.util.LogUtil;
 import com.navercorp.cubridqa.cqt.console.util.StringUtil;
 import com.navercorp.cubridqa.cqt.console.util.SystemUtil;
 
-
 public abstract class Executor {
 
 	public static final int PRINT_STDOUT = 0;
@@ -75,26 +74,14 @@ public abstract class Executor {
 		envList.add(cmd + " CUBRID_MANAGER=" + cubridHome + "/cubridmanager");
 		envList.add(cmd + " CUBRID_MODE=client");
 		envList.add(cmd + " CUBRID_LANG=En_US");
-		String shLibPath = StringUtil.nullToEmpty(EnvGetter
-				.getenv("SHLIB_PATH"));
-		envList.add(cmd + " SHLIB_PATH=" + shLibPath
-				+ (("".equals(shLibPath)) ? "" : pathSeparator) + "."
-				+ pathSeparator + cubridHome + "/lib" + pathSeparator
-				+ cubridHome + "/lib" + pathSeparator);
+		String shLibPath = StringUtil.nullToEmpty(EnvGetter.getenv("SHLIB_PATH"));
+		envList.add(cmd + " SHLIB_PATH=" + shLibPath + (("".equals(shLibPath)) ? "" : pathSeparator) + "." + pathSeparator + cubridHome + "/lib" + pathSeparator + cubridHome + "/lib" + pathSeparator);
 		String path = StringUtil.nullToEmpty(EnvGetter.getenv("PATH"));
-		envList.add(cmd + " PATH=" + path
-				+ (("".equals(path)) ? "" : pathSeparator) + cubridHome
-				+ "/bin" + pathSeparator + cubridHome + "/cubridmanager"
-				+ pathSeparator + System.getenv("PATH"));
+		envList.add(cmd + " PATH=" + path + (("".equals(path)) ? "" : pathSeparator) + cubridHome + "/bin" + pathSeparator + cubridHome + "/cubridmanager" + pathSeparator + System.getenv("PATH"));
 		String libPath = StringUtil.nullToEmpty(EnvGetter.getenv("LIBPATH"));
-		envList.add(cmd + " LIBPATH=" + libPath
-				+ (("".equals(libPath)) ? "" : pathSeparator) + cubridHome
-				+ "/lib" + pathSeparator);
-		String ldLibPath = StringUtil.nullToEmpty(System
-				.getenv("LD_LIBRARY_PATH"));
-		envList.add(cmd + " LD_LIBRARY_PATH=" + ldLibPath
-				+ (("".equals(ldLibPath)) ? "" : pathSeparator) + cubridHome
-				+ "/lib" + pathSeparator);
+		envList.add(cmd + " LIBPATH=" + libPath + (("".equals(libPath)) ? "" : pathSeparator) + cubridHome + "/lib" + pathSeparator);
+		String ldLibPath = StringUtil.nullToEmpty(System.getenv("LD_LIBRARY_PATH"));
+		envList.add(cmd + " LD_LIBRARY_PATH=" + ldLibPath + (("".equals(ldLibPath)) ? "" : pathSeparator) + cubridHome + "/lib" + pathSeparator);
 		if (!CommonFileUtile.isLinux()) {
 			for (int i = 0; i < envList.size(); i++) {
 				String env = envList.get(i);
@@ -124,8 +111,7 @@ public abstract class Executor {
 			System.out.println(message);
 			break;
 		case PRINT_UI:
-			ConsoleAgent.addMessage(message
-					+ System.getProperty("line.separator"));
+			ConsoleAgent.addMessage(message + System.getProperty("line.separator"));
 			break;
 		case PRINT_LOG:
 			LogUtil.log(logId, message);

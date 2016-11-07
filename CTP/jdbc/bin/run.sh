@@ -96,6 +96,8 @@ function get_curr_timestamp()
 
 function init_cubrid_version()
 {
+     ${CUBRID}/bin/cubrid_rel
+     [ $? -ne 0 ] && echo "please confirm CUBRID build is installed on your environment!" && exit 1
      cubrid_ver=`cubrid_rel | grep CUBRID | awk -F'(' '{print $2}' |  awk -F')' '{print $1}'`
      version_type=`cubrid_rel | grep debug | wc -l`
      cubrid_bits=`cubrid_rel | grep CUBRID|awk -F'(' '{print $3}'|awk  '{print $1}'`
@@ -241,7 +243,10 @@ function do_prepare()
      
      echo "CLASSPATH ===> .:${CPCLASSES}"  
      find ${scenario} -type f -name "*.java"|xargs -t javac -cp ".:${CPCLASSES}"  
-
+	 if [ $? -ne 0 ];then
+        echo "JDBC source code compile fail!"
+        exit
+     fi
      cd $curDir
 }
 

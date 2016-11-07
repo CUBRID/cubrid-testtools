@@ -34,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.deploy.Deploy;
@@ -57,30 +58,42 @@ public class Main {
 		
 		String testRoot = context.getTestCaseRoot();
 		boolean hasError = false;
-		if (testRoot == null || testRoot.trim().equals("")) {
+		if (com.navercorp.cubridqa.common.CommonUtils.isEmpty(testRoot)) {
 			hasError = true;
 		} else {
 			testRoot = testRoot.trim();
 			File file = new File(testRoot);
 			hasError = !file.exists();
 		}
-		if (hasError)
-			throw new Exception("Not found test cases directory. Please check 'scenario' in test configuration file.");
+		if (hasError){
+			System.out.println("[ERROR] Not found test cases directory. Please check 'scenario' in test configuration file.");
+			System.exit(-1);
+		}
+			
 
 		String cubridPackageUrl = context.getCubridPackageUrl();
-		if (cubridPackageUrl != null && cubridPackageUrl.trim().length() > 0) {
+		if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(cubridPackageUrl)) {
+			if(!CommonUtils.isAvailableURL(cubridPackageUrl)){
+				System.out.println();
+				System.out.println("[ERROR]: Please confirm " + cubridPackageUrl + " url is available!");
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
 			context.setBuildId(CommonUtils.getBuildId(cubridPackageUrl));
 			context.setBuildBits(CommonUtils.getBuildBits(cubridPackageUrl));
 			context.setReInstallTestBuildYn(true);
 		} else {
-
 			String envId = context.getTestEnvList().get(0);
-			String host = context.getInstanceProperty(envId, "ssh.host");
-			String port = context.getInstanceProperty(envId, "ssh.port");
-			String user = context.getInstanceProperty(envId, "ssh.user");
-			String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-			SSHConnect ssh = new SSHConnect(host, port, user, pwd, "ssh"); 
+			InstanceManager hostManager = new InstanceManager(context, envId);
+			SSHConnect ssh = hostManager.getHost("master");
 			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
+			if(CommonUtils.isEmpty(buildInfo)){
+				System.out.println("[ERROR]: Please confirm your build installation for local test!");
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
+			
+			hostManager.close();
 			context.setBuildId(CommonUtils.getBuildId(buildInfo));
 			context.setBuildBits(CommonUtils.getBuildBits(buildInfo));
 			context.setReInstallTestBuildYn(false);
@@ -91,9 +104,6 @@ public class Main {
 		System.out.println("BUILD ID: " + context.getBuildId());
 		System.out.println("BUILD BITS: " + context.getBuildBits());		
 		System.out.println("Continue Mode: " + context.isContinueMode());
-
-
-		
 		checkRequirement(context);
 
 		Properties props = context.getProperties();
@@ -109,6 +119,7 @@ public class Main {
 		if (context.isContinueMode()) {
 			context.getFeedback().onTaskContinueEvent();
 		} else {
+			com.navercorp.cubridqa.common.CommonUtils.cleanFilesByDirectory(context.getCurrentLogDir());
 			context.getFeedback().onTaskStartEvent();
 			context.getFeedback().onConvertEventStart();
 			Convert c = new Convert(testRoot);
@@ -183,6 +194,7 @@ public class Main {
 				}
 			});
 		}
+		
 		pool.shutdown();
 		pool.awaitTermination(Integer.MAX_VALUE, TimeUnit.DAYS);
 		pool = null;
@@ -242,7 +254,7 @@ public class Main {
 		String curTimestamp = year + "." + month + "." + day + "_" + hour + "." + minute + "." + second;
 
 		backupFileName = "ha_repl_result_" + context.getBuildId() + "_" + context.getBuildBits() + "_" + context.getFeedback().getTaskId() + "_" + curTimestamp + ".tar.gz";
-		LocalInvoker.exec("mkdir -p " + context.getCurrentLogDir() + " >/dev/null 2>&1 ; cd " + context.getCurrentLogDir() + "; tar zvcf ../" + backupFileName + " . " + " `cat "
+		LocalInvoker.exec("mkdir -p " + context.getCurrentLogDir() + " >/dev/null 2>&1 ; cd " + context.getCurrentLogDir() + "; tar zvcPf ../" + backupFileName + " . " + " `cat "
 				+ context.getCurrentLogDir() + "/test*.log | grep \"\\[FAIL\\]\" | awk '{print $2}' |sed 's/test$/*/'` ", false, true);
 	}
 	

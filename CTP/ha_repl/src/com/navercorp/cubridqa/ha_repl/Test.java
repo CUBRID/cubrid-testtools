@@ -37,6 +37,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
@@ -84,14 +85,13 @@ public class Test {
 			filename = dispatch.nextTestFile();
 			this.hostManager.refreshConnection();
 			if (filename == null) {
-				this.testCompleted = true;
-
 				context.getFeedback().onStopEnvEvent(hostManager, mlog);
 
 				if (context.shouldCleanupAfterQuit()) {
 					cleanAfterQuit();
 				}
 
+				this.testCompleted = true;
 				break;
 			}
 
@@ -122,7 +122,9 @@ public class Test {
 		this.mlog.close();
 		this.hostManager.close();
 		try {
-			this.connection.close();
+			if(this.connection!=null && !this.connection.isClosed()){
+				this.connection.close();
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -383,7 +385,7 @@ public class Test {
 
 	private void clearDatabaseLog() {
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
-		String cmd = "find ~/CUBRID/log -type f -print | xargs -i sh -c 'cat /dev/null > {}'";
+		String cmd = "find ${CUBRID}/log -type f -print | xargs -i sh -c 'cat /dev/null > {}'";
 		for (SSHConnect ssh : allNodeList) {
 			try {
 				mlog.print("clear database log on " + ssh.toString() + " ... ");
@@ -484,7 +486,7 @@ public class Test {
 
 		for (SSHConnect ssh : allNodeList) {
 			try {
-				checkScript = new GeneralScriptInput("find $CUBRID -name \"core.*\" -exec rm -rf {} \\; ");
+				checkScript = new GeneralScriptInput("if [ -d \"${CUBRID}\" ];then find ${CUBRID} -name \"core.*\" -exec rm -rf {} \\; ;fi");
 				result = ssh.execute(checkScript);
 				mlog.println("clean core files: " + ssh.toString());
 			} catch (Exception e) {
@@ -527,7 +529,7 @@ public class Test {
 	}
 
 	private void checkCUBRIDLogFile() {
-		String cmd = "grep -s -Ri 'Internal error' ~/CUBRID/log | wc -l";
+		String cmd = "grep -s -Ri 'Internal error' ${CUBRID}/log | wc -l";
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
 		String result;
 		for (SSHConnect ssh : allNodeList) {
@@ -681,7 +683,7 @@ public class Test {
 
 	private Connection getDBConnection() throws SQLException {
 		if (connection == null || connection.isClosed()) {
-			String host = hostManager.getInstanceProperty("master.ssh.host");
+			String host = hostManager.getInstanceProperty("master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 			String port = hostManager.getInstanceProperty("broker.BROKER_PORT");
 			String url = "jdbc:cubrid:" + host + ":" + port + ":" + hostManager.getTestDb() + ":::";
 			connection = DriverManager.getConnection(url, "dba", "");

@@ -26,7 +26,6 @@ package com.navercorp.cubridqa.cqt.console.bean;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-
 @XStreamAlias(value = "caseresult")
 public class CaseResult {
 	public static final String ALIAS = "caseresult";
@@ -37,7 +36,6 @@ public class CaseResult {
 
 	public static final int TYPE_GROOVY = 2;
 	private int siteRunTimes = 1;
-
 
 	private boolean printQueryPlan = false;
 
@@ -158,7 +156,7 @@ public class CaseResult {
 	public void setShouldRun(boolean shouldRun) {
 		this.shouldRun = shouldRun;
 	}
-	
+
 	public int getSiteRunTimes() {
 		return siteRunTimes;
 	}

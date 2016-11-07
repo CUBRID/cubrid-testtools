@@ -65,8 +65,7 @@ public class CommandExecutor {
 
 	private String os = SystemUtil.getOS();
 
-	public CommandExecutor(String command, String firstLine,
-			Executor listener) {
+	public CommandExecutor(String command, String firstLine, Executor listener) {
 		this.firstLine = firstLine;
 		this.listener = listener;
 		try {
@@ -76,7 +75,7 @@ public class CommandExecutor {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @Title: execute
@@ -102,12 +101,13 @@ public class CommandExecutor {
 
 		return message.toString();
 	}
-	
+
 	/**
 	 * 
 	 * @Title: init
-	 * @Description:Init input reader and error reader which is used to obtain execute information.
-	 * @param 
+	 * @Description:Init input reader and error reader which is used to obtain
+	 *                   execute information.
+	 * @param
 	 * @return void
 	 * @throws
 	 */
@@ -117,15 +117,13 @@ public class CommandExecutor {
 
 		if (startError) {
 			try {
-				errorReader = new BufferedReader(new InputStreamReader(
-						errorStream));
+				errorReader = new BufferedReader(new InputStreamReader(errorStream));
 				threadError = new Thread() {
 					@Override
 					public void run() {
 						try {
 							String line = null;
-							while (!endFlag
-									&& (line = errorReader.readLine()) != null) {
+							while (!endFlag && (line = errorReader.readLine()) != null) {
 								appendMessage(line);
 							}
 						} catch (Exception e) {
@@ -138,15 +136,13 @@ public class CommandExecutor {
 		}
 		if (startOut) {
 			try {
-				outReader = new BufferedReader(new InputStreamReader(
-						inputStream));
+				outReader = new BufferedReader(new InputStreamReader(inputStream));
 				threadOut = new Thread() {
 					@Override
 					public void run() {
 						try {
 							String line = null;
-							while (!endFlag
-									&& (line = outReader.readLine()) != null) {
+							while (!endFlag && (line = outReader.readLine()) != null) {
 								appendMessage(line);
 							}
 						} catch (Exception e) {
@@ -158,7 +154,7 @@ public class CommandExecutor {
 			}
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @Title: appendMessage

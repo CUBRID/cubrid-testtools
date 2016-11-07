@@ -27,6 +27,7 @@ package com.navercorp.cubridqa.ha_repl.deploy;
 import java.util.ArrayList;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.Context;
 import com.navercorp.cubridqa.ha_repl.InstanceManager;
@@ -53,7 +54,14 @@ public class DeployNode {
 		updateCTP();
 		clean();
 		if (context.isReInstallTestBuildYn()) {
-			installCUBRID();
+			while (true) {
+				if (installCUBRID()) {
+					break;
+				}
+
+				System.out.println("[INFO]: Retry to install build!");
+				CommonUtils.sleep(5);
+			}
 		}
 		configCUBRID();
 	}
@@ -62,10 +70,6 @@ public class DeployNode {
 		StringBuffer s = new StringBuffer();
 		s.append("cubrid service stop;");
 		s.append("pkill cub").append(";");
-		s.append("rm -rf ~/CUBRID").append(";");
-		if (CommonUtils.isEmpty(hostManager.getTestDb()) == false) {
-			s.append("rm -rf ~/" + hostManager.getTestDb()).append(";");
-		}
 		s.append("ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {}").append(";");
 		GeneralScriptInput script = new GeneralScriptInput(s.toString());
 		script.addCommand("source ${CTP_HOME}/common/script/util_common.sh; clean_processes");
@@ -83,14 +87,14 @@ public class DeployNode {
 		GeneralScriptInput scripts = new GeneralScriptInput();
 		scripts.addCommand("cd ${CTP_HOME}/common/script");
 
-		String ctpBranchName = System.getenv("CTP_BRANCH_NAME");
+		String ctpBranchName = System.getenv(ConfigParameterConstants.CTP_BRANCH_NAME);
 		if (!CommonUtils.isEmpty(ctpBranchName)) {
 			scripts.addCommand("export CTP_BRANCH_NAME=" + ctpBranchName);
 		}
 		
-		String skipUpgrade = System.getenv("SKIP_UPGRADE");
+		String skipUpgrade = System.getenv(ConfigParameterConstants.CTP_SKIP_UPDATE);
 		if (!CommonUtils.isEmpty(ctpBranchName)) {
-			scripts.addCommand("export SKIP_UPGRADE=" + skipUpgrade);
+			scripts.addCommand("export CTP_SKIP_UPDATE=" + skipUpgrade);
 		}
 		scripts.addCommand("chmod u+x upgrade.sh");
 		scripts.addCommand("./upgrade.sh");
@@ -106,67 +110,143 @@ public class DeployNode {
 		}
 	}
 	
-	private void installCUBRID() throws Exception {
-		String role = context.getProperty("main.testing.role", "").trim();
+	private boolean installCUBRID() throws Exception {
+		boolean isSucc = true;
+		String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
 		GeneralScriptInput scripts = new GeneralScriptInput();
 		scripts.addCommand("chmod u+x ${CTP_HOME}/common/script/run_cubrid_install");
-		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty("main.testbuild.collaborate.url", "").trim() + " 2>&1");
+		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty(ConfigParameterConstants.CUBRID_ADDITIONAL_DOWNLOAD_URL, "").trim() + " 2>&1");
 
 		String result;
 		try {
 			log.log("==> Begin to install CUBRID on " + ssh.toString() + ":");
 			result = ssh.execute(scripts);
+			if(!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && (result.indexOf("ERROR") != -1)){
+				isSucc = false;
+				log.println("[ERROR] build install fail!");
+			}
 			log.log(result);
 			log.log("DONE.");
 		} catch (Exception e) {
+			isSucc = false;
 			throw new Exception("Fail to install CUBRID on " + ssh.toString() + ":" + e.getMessage());
 		}
+		
+		return isSucc;
 	}
 
 	private void configCUBRID() throws Exception {
 		GeneralScriptInput scripts = new GeneralScriptInput();
 		// configure cubrid.conf
-		String cubridPortId = this.hostManager.getInstanceProperty("cubrid.cubrid_port_id");
-		String brokerPort = this.hostManager.getInstanceProperty("broker.BROKER_PORT");
-		String haPortId = this.hostManager.getInstanceProperty("ha.ha_port_id");
-		if (CommonUtils.isEmpty(haPortId)) {
-			haPortId = "59901";
+		String cubridEnginParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.hostManager.getEnvId(),
+						ConfigParameterConstants.ROLE_ENGINE);
+		String cubridHAParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.hostManager.getEnvId(),
+						ConfigParameterConstants.ROLE_HA);
+		String cubridCMParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.hostManager.getEnvId(),
+						ConfigParameterConstants.ROLE_CM);
+		String cubridBrokerCommonParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.hostManager.getEnvId(),
+						ConfigParameterConstants.ROLE_BROKER_COMMON);
+		String cubridBroker1ParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX
+								+ this.hostManager.getEnvId(),
+						ConfigParameterConstants.ROLE_BROKER1);
+		String cubridBroker2ParamsList = com.navercorp.cubridqa.common.CommonUtils
+				.parseInstanceParametersByRole(this.context.getProperties(),
+						ConfigParameterConstants.TEST_INSTANCE_PREFIX + this.hostManager.getEnvId(), ConfigParameterConstants.ROLE_BROKER2);
+		
+		if (CommonUtils.isEmpty(cubridEnginParamsList)
+				&& CommonUtils.isEmpty(cubridHAParamsList)
+				&& CommonUtils.isEmpty(cubridCMParamsList)
+				&& CommonUtils.isEmpty(cubridBroker1ParamsList)
+				&& CommonUtils.isEmpty(cubridBroker2ParamsList)) {
+			return;
+		}
+		
+		
+		if (!CommonUtils.isEmpty(cubridEnginParamsList)) {
+			scripts.addCommand("ini.sh -s 'common' --separator '||' -u '"
+					+ cubridEnginParamsList + "' $CUBRID/conf/cubrid.conf");
+		}
+		
+		if (!CommonUtils.isEmpty(cubridCMParamsList)) {
+			scripts.addCommand("ini.sh -s 'cm' --separator '||' -u '"
+					+ cubridCMParamsList + "' $CUBRID/conf/cm.conf");
+		}
+		
+		if (!CommonUtils.isEmpty(cubridBroker1ParamsList)) {
+			scripts.addCommand("ini.sh -s '%query_editor' --separator '||' -u '"
+					+ cubridBroker1ParamsList
+					+ "' $CUBRID/conf/cubrid_broker.conf");
 		}
 
-		if (!CommonUtils.isEmpty(cubridPortId)) {
-			scripts.addCommand("ini.sh -s 'common' $CUBRID/conf/cubrid.conf cubrid_port_id " + cubridPortId);
-			scripts.addCommand("ini.sh -s 'broker' $CUBRID/conf/cubrid_broker.conf MASTER_SHM_ID " + cubridPortId);
+		if (!CommonUtils.isEmpty(cubridBroker2ParamsList)) {
+			scripts.addCommand("ini.sh -s '%BROKER1' --separator '||' -u '"
+					+ cubridBroker2ParamsList
+					+ "' $CUBRID/conf/cubrid_broker.conf");
 		}
-		scripts.addCommand("ini.sh -s 'common' $CUBRID/conf/cubrid.conf test_mode yes");
-		scripts.addCommand("ini.sh -s 'common' $CUBRID/conf/cubrid.conf ha_mode on");
+
+		if (!CommonUtils.isEmpty(cubridBrokerCommonParamsList)) {
+			scripts.addCommand("ini.sh -s 'broker' --separator '||' -u '"
+					+ cubridBrokerCommonParamsList
+					+ "' $CUBRID/conf/cubrid_broker.conf");
+		}
+		
+		String cubridBrokerSHMId = hostManager.getInstanceProperty(ConfigParameterConstants.ROLE_BROKER_COMMON
+						+ "." + "MASTER_SHM_ID");
+		if (CommonUtils.isEmpty(cubridBrokerSHMId)) {
+			String cubridPortId = hostManager.getInstanceProperty(ConfigParameterConstants.ROLE_ENGINE
+							+ "." + "cubrid_port_id");
+			if (!CommonUtils.isEmpty(cubridPortId)) {
+				scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID="
+						+ cubridPortId + " ${CUBRID}/conf/cubrid_broker.conf");
+			}
+		}else{
+			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridBrokerSHMId + " $CUBRID/conf/cubrid_broker.conf");
+		}
 
 		if (CommonUtils.supportInquireOnExit(context.getBuildId())) {
 			scripts.addCommand("ini.sh -s 'common' $CUBRID/conf/cubrid.conf inquire_on_exit 3");
 		}
 
-		scripts.addCommand("ini.sh -s '%query_editor' $CUBRID/conf/cubrid_broker.conf SERVICE OFF");
-
-		if (!CommonUtils.isEmpty(brokerPort)) {
-			scripts.addCommand("ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf BROKER_PORT " + brokerPort);
-			scripts.addCommand("ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID " + brokerPort);
-		}
-
-		scripts.addCommand("ini.sh -s '%BROKER1' -d CCI_DEFAULT_AUTOCOMMIT $CUBRID/conf/cubrid_broker.conf");
-
-		scripts.addCommand("echo '[common]' > ~/CUBRID/conf/cubrid_ha.conf");
-		scripts.addCommand("echo 'ha_mode=on' >> ~/CUBRID/conf/cubrid_ha.conf");
-		scripts.addCommand("echo 'ha_port_id=" + haPortId + "' >> ~/CUBRID/conf/cubrid_ha.conf");
-		scripts.addCommand("echo 'ha_node_list=" + calcHaNodeList() + "' >> ~/CUBRID/conf/cubrid_ha.conf");
 		if (this.hostManager.supportReplica()) {
-			scripts.addCommand("echo 'ha_replica_list=" + calcHaReplicaList() + "' >> ~/CUBRID/conf/cubrid_ha.conf");
+			scripts.addCommand("ini.sh -s 'common' ${CUBRID}/conf/cubrid_ha.conf ha_replica_list " + calcHaReplicaList());
 		}
-		scripts.addCommand("echo 'ha_db_list=" + hostManager.getTestDb() + "' >> ~/CUBRID/conf/cubrid_ha.conf");
-		scripts.addCommand("echo 'ha_apply_max_mem_size=300'  >> ~/CUBRID/conf/cubrid_ha.conf");
-		scripts.addCommand("echo 'ha_copy_sync_mode=sync:sync'  >> ~/CUBRID/conf/cubrid_ha.conf");
-
-		scripts.addCommand("cp ~/CUBRID/conf/cubrid_locales.all.txt ~/CUBRID/conf/cubrid_locales.txt");
-		scripts.addCommand("~/CUBRID/bin/make_locale.sh -t 64bit");
-
+		
+		if (!CommonUtils.isEmpty(cubridHAParamsList)) {
+			scripts.addCommand("ini.sh -s 'common' --separator '||' -u '"
+					+ cubridHAParamsList + "' $CUBRID/conf/cubrid_ha.conf");
+		}else{
+			
+			String cubridHaPortId = hostManager.getInstanceProperty(ConfigParameterConstants.ROLE_HA
+							+ "." + "ha_port_id");
+			if(!CommonUtils.isEmpty(cubridHaPortId)){
+				cubridHaPortId = "59901";
+			}
+			scripts.addCommand("ini.sh -s 'common' ${CUBRID}/conf/cubrid_ha.conf ha_port_id " + cubridHaPortId);
+		}
+		
+		scripts.addCommand("ini.sh -s 'common' ${CUBRID}/conf/cubrid.conf test_mode yes");
+		scripts.addCommand("ini.sh -s 'common' ${CUBRID}/conf/cubrid.conf ha_mode on");
+		scripts.addCommand("ini.sh -s 'common' ${CUBRID}/conf/cubrid_ha.conf ha_node_list " + calcHaNodeList());
+		scripts.addCommand("ini.sh -s 'common' ${CUBRID}/conf/cubrid_ha.conf ha_db_list " + hostManager.getTestDb());
+		if (!context.enableSkipMakeLocale()) {
+			scripts.addCommand("cp ${CUBRID}/conf/cubrid_locales.all.txt ${CUBRID}/conf/cubrid_locales.txt");
+			scripts.addCommand("${CUBRID}/bin/make_locale.sh -t 64bit");
+		}
+		
 		String result;
 		try {
 			log.log("==> Begin to config HA on " + ssh.toString() + ": ");
@@ -182,7 +262,7 @@ public class DeployNode {
 	private String calcHaNodeList() throws Exception {
 		StringBuffer haNodeList = new StringBuffer();
 
-		String userName = hostManager.getInstanceProperty("master.ssh.user");
+		String userName = hostManager.getUserNameForMasterInstance();
 		haNodeList.append(userName).append('@');
 		haNodeList.append(hostManager.getHost("master").execute("hostname").trim());
 
@@ -197,7 +277,7 @@ public class DeployNode {
 	private String calcHaReplicaList() throws Exception {
 		StringBuffer haNodeList = new StringBuffer();
 
-		String userName = hostManager.getInstanceProperty("master.ssh.user");
+		String userName = hostManager.getUserNameForMasterInstance();
 		haNodeList.append(userName).append('@');
 
 		ArrayList<SSHConnect> sshList = hostManager.getAllHost("replica");

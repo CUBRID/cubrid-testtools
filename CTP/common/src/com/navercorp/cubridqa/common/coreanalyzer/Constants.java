@@ -26,13 +26,13 @@ package com.navercorp.cubridqa.common.coreanalyzer;
 
 public class Constants {
 
-	public static final String SECOND_LOG="yyyy-MM-dd hh:mm:ss";
-	public static final String MISECOND_LOG="yyyy-MM-dd hh:mm:ss.SSS";
+	public static final String SECOND_LOG = "yyyy-MM-dd hh:mm:ss";
+	public static final String MISECOND_LOG = "yyyy-MM-dd hh:mm:ss.SSS";
 	public static final String LINE_SEPARATOR = System.getProperty("line.separator");;
-	
+
 	public static final String ALLNUMBERS = "0123456789";
-	
-	public static final String ISSUE_STATUS_FIX="FIX";
-	public static final String ISSUE_STATUS_OPEN="OPEN";
+
+	public static final String ISSUE_STATUS_FIX = "FIX";
+	public static final String ISSUE_STATUS_OPEN = "OPEN";
 
 }

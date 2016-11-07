@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.scheduler.producer;
 
 import java.io.File;
-
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -60,7 +59,7 @@ public class GeneralExtendedSuite extends AbstractExtendedSuite {
 
 		return instance.get(extendedConfig);
 	}
-	
+
 	/**
 	 * for example: EXT_KEY_FOR_FIX_MAX=COMPAT_BUILD_ID
 	 * EXT_KEY_FOR_FIX_MAX_FOLLOW=COMPAT_BUILD_URLS
@@ -96,7 +95,7 @@ public class GeneralExtendedSuite extends AbstractExtendedSuite {
 					String urls = null;
 					String urls_kr = null;
 					compatBuildUrls = CommonUtils.replace(compatBuildUrls, "{BUILD_ID}", compatBuildId);
-					
+
 					urls = conf.getWebBaseUrl() + "/" + storeId + "/" + compatBuildId + "/drop/" + compatBuildUrls;
 					urls_kr = conf.getWebBaseUrl_Kr() + "/" + compatBuildId + "/drop/" + compatBuildUrls;
 					props.put(ext_KEY_FOR_FIX_MAX_FOLLOW, urls);

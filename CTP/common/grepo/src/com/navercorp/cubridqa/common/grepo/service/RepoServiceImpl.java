@@ -42,6 +42,7 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Constants;
 import com.navercorp.cubridqa.common.grepo.GeneralEntryListener;
 import com.nhncorp.cubrid.common.grepo.RepoService;
@@ -57,14 +58,14 @@ public class RepoServiceImpl extends UnicastRemoteObject implements RepoService 
 		this.props = props;
 		this.dataRoot = props.getProperty("grepo_srv_data_root", "");
 		this.repoRoot = props.getProperty("grepo_srv_repo_root", "");
-		String gitUser = props.getProperty("git.user", "");
-		String gitPwd = props.getProperty("git.pwd", "");
+		String gitUser = props.getProperty(ConfigParameterConstants.GIT_USER, "");
+		String gitPwd = props.getProperty(ConfigParameterConstants.GIT_PASSWORD, "");
 
 		System.out.println("grepo_srv_data_root: " + this.dataRoot);
 		System.out.println("grepo_srv_repo_root: " + this.repoRoot);
 		System.out.println("grepo_srv_port: " + props.getProperty("grepo_srv_port"));
-		System.out.println("git.user: " + gitUser);
-		System.out.println("git.pwd: (" + gitPwd.length() + ")");
+		System.out.println("git_user: " + gitUser);
+		System.out.println("git_pwd: (" + gitPwd.length() + ")");
 
 		boolean enableFetchThread = CommonUtils.convertBoolean(props.getProperty("grepo_srv_enable_fetch_thread"), false);
 		System.out.println("grepo_srv_enable_fetch_thread: " + enableFetchThread);

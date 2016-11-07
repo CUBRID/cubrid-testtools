@@ -54,20 +54,20 @@ public class Deploy {
 
 		ssh = hostManager.getHost("master");
 		deployOne(Constants.TYPE_MASTER, ssh);
-		log.log("envId is " + envId + ". Master delployment finished." + ssh.getTitle());
+		log.log("envId is " + envId + ". Master deployment finished." + ssh.getTitle());
 
 		ArrayList<SSHConnect> list;
 
 		list = hostManager.getAllHost("slave");
 		for (SSHConnect slave : list) {
 			deployOne(Constants.TYPE_SLAVE, slave);
-			log.log("envId is " + envId + ". Slave delployment finished." + slave.getTitle());
+			log.log("envId is " + envId + ". Slave deployment finished." + slave.getTitle());
 		}
 
 		list = hostManager.getAllHost("replica");
 		for (final SSHConnect replica : list) {
 			deployOne(Constants.TYPE_REPLICA, replica);
-			log.log("envId is " + envId + ". Reolica delployment finished." + replica.getTitle());
+			log.log("envId is " + envId + ". Replica deployment finished." + replica.getTitle());
 		}
 	}
 

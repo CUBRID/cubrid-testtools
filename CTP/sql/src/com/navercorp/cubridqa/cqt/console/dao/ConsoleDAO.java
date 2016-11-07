@@ -60,12 +60,10 @@ import com.navercorp.cubridqa.cqt.console.util.CubridConnection;
 import com.navercorp.cubridqa.cqt.console.util.EnvGetter;
 import com.navercorp.cubridqa.cqt.console.util.MyDataSource;
 import com.navercorp.cubridqa.cqt.console.util.MyDriverManager;
-import com.navercorp.cubridqa.cqt.console.util.PropertiesUtil;
 import com.navercorp.cubridqa.cqt.console.util.StringUtil;
 import com.navercorp.cubridqa.cqt.console.util.SystemUtil;
 import com.navercorp.cubridqa.cqt.console.util.TestUtil;
 import com.navercorp.cubridqa.cqt.console.util.XstreamHelper;
-
 
 public class ConsoleDAO extends Executor {
 	private final static String driver = "cubrid.jdbc.driver.CUBRIDDriver";
@@ -175,9 +173,9 @@ public class ConsoleDAO extends Executor {
 	 */
 	public void init() {
 		try {
-//			SystemModel systemModel = (SystemModel) XstreamHelper
-//					.fromXml(PropertiesUtil.getValue("local.path")
-//							+ "/configuration/System.xml");
+			// SystemModel systemModel = (SystemModel) XstreamHelper
+			// .fromXml(PropertiesUtil.getValue("local.path")
+			// + "/configuration/System.xml");
 			this.classLoader = MyDriverManager.getURLClassLoader();
 			this.oid = classLoader.loadClass("cubrid.sql.CUBRIDOID");
 			this.stringType = new Class[] { String.class };
@@ -185,8 +183,7 @@ public class ConsoleDAO extends Executor {
 			this.intType = new Class[] { int.class };
 			this.objects = new Object[] {};
 			classLoader.loadClass(driver);
-			dbPath = EnvGetter.getenv("CTP_HOME") + File.separator
-					+ TestUtil.CONFIG_NAME + File.separator + "Function_Db";
+			dbPath = EnvGetter.getenv("CTP_HOME") + File.separator + TestUtil.CONFIG_NAME + File.separator + "Function_Db";
 			ConnThread connThread = new ConnThread(this);
 			Thread thread = new Thread(connThread);
 			thread.start();
@@ -206,8 +203,7 @@ public class ConsoleDAO extends Executor {
 	 * @return CubridConnection
 	 * @throws
 	 */
-	public CubridConnection getCubridConnection(String connGroup,
-			String connName, int type) {
+	public CubridConnection getCubridConnection(String connGroup, String connName, int type) {
 
 		return getCubridConnection(connGroup, connName, -1, type);
 	}
@@ -224,11 +220,9 @@ public class ConsoleDAO extends Executor {
 	 * @return CubridConnection
 	 * @throws
 	 */
-	public CubridConnection getCubridConnection(String connGroup,
-			String connName, int seq, int type) {
+	public CubridConnection getCubridConnection(String connGroup, String connName, int seq, int type) {
 
-		return CubridConnManager.getDbmsConnection(connGroup, connName, seq,
-				type);
+		return CubridConnManager.getDbmsConnection(connGroup, connName, seq, type);
 
 	}
 
@@ -275,15 +269,12 @@ public class ConsoleDAO extends Executor {
 		Connection conn = null;
 		try {
 			DefTestDB dbConf = dbMap.get(db);
-			boolean usePool = "dbcp".equalsIgnoreCase(dbConf
-					.getConnectionType());
+			boolean usePool = "dbcp".equalsIgnoreCase(dbConf.getConnectionType());
 			if (!usePool) {
-				String url = dbConf.getDburl() + "?charset="
-						+ dbConf.getCharSet();
+				String url = dbConf.getDburl() + "?charset=" + dbConf.getCharSet();
 				String user = dbConf.getDbuser();
 				String password = dbConf.getDbpassword();
-				conn = MyDriverManager.giveConnection(driver, url, user,
-						password);
+				conn = MyDriverManager.giveConnection(driver, url, user, password);
 			} else {
 				dataSource = dataSourceMap.get(db);
 				if (dataSource != null) {
@@ -338,8 +329,7 @@ public class ConsoleDAO extends Executor {
 				return;
 		}
 
-		if (null != dbConf.getVersion()
-				&& "32bits".equalsIgnoreCase(dbConf.getVersion())) {
+		if (null != dbConf.getVersion() && "32bits".equalsIgnoreCase(dbConf.getVersion())) {
 			TestUtil.OTHER_ANSWERS_32 = "answers32";
 		} else {
 			TestUtil.OTHER_ANSWERS_32 = "answers";
@@ -554,8 +544,7 @@ public class ConsoleDAO extends Executor {
 	 * @return void
 	 * @throws
 	 */
-	private void executePrepareStatement(Connection conn, Sql sql,
-			boolean isPrintQueryPlan) {
+	private void executePrepareStatement(Connection conn, Sql sql, boolean isPrintQueryPlan) {
 		PreparedStatement ps = null;
 		try {
 			ps = conn.prepareStatement(sql.getScript());
@@ -609,8 +598,7 @@ public class ConsoleDAO extends Executor {
 								ps.setTime(index, Time.valueOf((String) value));
 								break;
 							case Types.TIMESTAMP:
-								ps.setTimestamp(index, Timestamp
-										.valueOf((String) value));
+								ps.setTimestamp(index, Timestamp.valueOf((String) value));
 								break;
 							default:
 								ps.setObject(index, value);
@@ -621,18 +609,14 @@ public class ConsoleDAO extends Executor {
 				}
 			}
 			String script = sql.getScript().trim().toUpperCase();
-			if ((isPrintQueryPlan && script.startsWith("SELECT"))
-					|| sql.isQueryplan()) {
-				Method method2 = ps.getClass().getMethod("setQueryInfo",
-						new Class[] { boolean.class });
+			if ((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) {
+				Method method2 = ps.getClass().getMethod("setQueryInfo", new Class[] { boolean.class });
 				method2.invoke(ps, new Object[] { true });
 			}
 			boolean isRs = ps.execute();
 			getAllResult(ps, isRs, sql);
-			if ((isPrintQueryPlan && script.startsWith("SELECT"))
-					|| sql.isQueryplan()) {
-				Method method = ps.getClass().getMethod("getQueryplan",
-						new Class[] {});
+			if ((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) {
+				Method method = ps.getClass().getMethod("getQueryplan", new Class[] {});
 				String queryPlan = (String) method.invoke(ps, new Object[] {});
 				queryPlan = queryPlan + System.getProperty("line.separator");
 				queryPlan = StringUtil.replaceQureyPlan(queryPlan);
@@ -646,8 +630,7 @@ public class ConsoleDAO extends Executor {
 			sql.setResult(getExceptionMessage(e, test.isEditorExecute()));
 		} catch (Exception e2) {
 			e2.printStackTrace();
-			sql.setResult("Error:-" + 10000
-					+ System.getProperty("line.separator"));
+			sql.setResult("Error:-" + 10000 + System.getProperty("line.separator"));
 		} finally {
 			try {
 				if (ps != null) {
@@ -669,8 +652,7 @@ public class ConsoleDAO extends Executor {
 	 * @return void
 	 * @throws
 	 */
-	private void executeStatement(Connection conn, Sql sql,
-			boolean isPrintQueryPlan) {
+	private void executeStatement(Connection conn, Sql sql, boolean isPrintQueryPlan) {
 		Statement st = null;
 		try {
 			st = conn.createStatement();
@@ -678,12 +660,9 @@ public class ConsoleDAO extends Executor {
 			boolean isRs = st.execute(sql.getScript());
 			getAllResult(st, isRs, sql);
 			String script = sql.getScript().trim().toUpperCase();
-			if ((isPrintQueryPlan && script.startsWith("SELECT"))
-					|| sql.isQueryplan()) {
-				Method method = st.getClass().getMethod("getQueryplan",
-						stringType);
-				String queryPlan = (String) method.invoke(st,
-						new Object[] { sql.getScript() });
+			if ((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) {
+				Method method = st.getClass().getMethod("getQueryplan", stringType);
+				String queryPlan = (String) method.invoke(st, new Object[] { sql.getScript() });
 				queryPlan = queryPlan + System.getProperty("line.separator");
 				queryPlan = StringUtil.replaceQureyPlan(queryPlan);
 				sql.setResult(sql.getResult() + queryPlan);
@@ -734,18 +713,13 @@ public class ConsoleDAO extends Executor {
 		StringBuilder message = new StringBuilder();
 		String errorMessage = StringUtil.replaceExceptionMessage(e.toString());
 		if (editorExecute) {
-			message.append(e.getErrorCode() + ":" + errorMessage
-					+ System.getProperty("line.separator"));
+			message.append(e.getErrorCode() + ":" + errorMessage + System.getProperty("line.separator"));
 		} else {
-			SystemModel systemModel = (SystemModel) XstreamHelper
-					.fromXml( EnvGetter.getenv("CTP_HOME") + File.separator
-							+ "sql/configuration/System.xml");
+			SystemModel systemModel = (SystemModel) XstreamHelper.fromXml(EnvGetter.getenv("CTP_HOME") + File.separator + "sql/configuration/System.xml");
 			if (systemModel.isErrorMessage()) {
-				message.append(e.getErrorCode() + ":" + errorMessage
-						+ System.getProperty("line.separator"));
+				message.append(e.getErrorCode() + ":" + errorMessage + System.getProperty("line.separator"));
 			} else {
-				message.append("Error:" + e.getErrorCode()
-						+ System.getProperty("line.separator"));
+				message.append("Error:" + e.getErrorCode() + System.getProperty("line.separator"));
 			}
 		}
 		return message.toString();
@@ -764,27 +738,21 @@ public class ConsoleDAO extends Executor {
 	 * @return void
 	 * @throws
 	 */
-	private void getAllResult(Statement st, boolean isRs, Sql sql)
-			throws SQLException {
+	private void getAllResult(Statement st, boolean isRs, Sql sql) throws SQLException {
 		int updateCount = -1;
-		while(true)
-		{
-			if(isRs)
-			{
+		while (true) {
+			if (isRs) {
 				ResultSet rs = st.getResultSet();
 				getResult(rs, sql);
-			}else
-			{
+			} else {
 				updateCount = st.getUpdateCount();
 				if (updateCount == -1) {
 					break;
-				}else
-				{
-					sql.setResult(sql.getResult() + updateCount
-							+ System.getProperty("line.separator"));
+				} else {
+					sql.setResult(sql.getResult() + updateCount + System.getProperty("line.separator"));
 				}
 			}
-			
+
 			isRs = st.getMoreResults();
 		}
 	}
@@ -816,17 +784,14 @@ public class ConsoleDAO extends Executor {
 					String columnTypeName = meta.getColumnTypeName(index);
 					int columnType = meta.getColumnType(index);
 					Object data = rs.getObject(index);
-					String value = getColumnValue(columnType, columnTypeName,
-							data, rs, index);
+					String value = getColumnValue(columnType, columnTypeName, data, rs, index);
 					ret.append(value + "     ");
 				}
 				ret.append(System.getProperty("line.separator"));
 			}
-			System.out
-					.println("+++++++++++++++++++record begin++++++++++++++++++++");
+			System.out.println("+++++++++++++++++++record begin++++++++++++++++++++");
 			System.out.println(ret);
-			System.out
-					.println("+++++++++++++++++++record end++++++++++++++++++++");
+			System.out.println("+++++++++++++++++++record end++++++++++++++++++++");
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -839,16 +804,12 @@ public class ConsoleDAO extends Executor {
 		}
 
 		String script = sql.getScript().trim().toUpperCase();
-		if(script.startsWith("SHOW TRACE"))
-		{
+		if (script.startsWith("SHOW TRACE")) {
 			String res = ret.toString();
 			res = res.replaceAll("[0-9]+", "?");
-			sql.setResult(sql.getResult() + res
-					+ System.getProperty("line.separator"));
-		}else
-		{
-			sql.setResult(sql.getResult() + ret.toString()
-				+ System.getProperty("line.separator"));
+			sql.setResult(sql.getResult() + res + System.getProperty("line.separator"));
+		} else {
+			sql.setResult(sql.getResult() + ret.toString() + System.getProperty("line.separator"));
 		}
 	}
 
@@ -865,42 +826,33 @@ public class ConsoleDAO extends Executor {
 	 * @return String
 	 * @throws
 	 */
-	private String getColumnValue(int colType, String colTypeName,
-			Object value, ResultSet rs, int index) {
+	private String getColumnValue(int colType, String colTypeName, Object value, ResultSet rs, int index) {
 		if (value == null) {
 			return null;
 		}
 
 		StringBuilder sb = new StringBuilder();
 		try {
-			if (colType == Types.VARBINARY
-					&& colTypeName.equalsIgnoreCase("BIT VARYING")) {
+			if (colType == Types.VARBINARY && colTypeName.equalsIgnoreCase("BIT VARYING")) {
 				byte[] bytes = (byte[]) value;
 				sb.append(StringUtil.toHexString(bytes));
-			} else if (colType == Types.BINARY
-					&& colTypeName.equalsIgnoreCase("BIT")) {
+			} else if (colType == Types.BINARY && colTypeName.equalsIgnoreCase("BIT")) {
 				byte[] bytes = (byte[]) value;
 				sb.append(StringUtil.toHexString(bytes));
 			} else if (colType == Types.OTHER) {
-				if ("CLASS".equalsIgnoreCase(colTypeName)
-						|| "".equalsIgnoreCase(colTypeName)) {
+				if ("CLASS".equalsIgnoreCase(colTypeName) || "".equalsIgnoreCase(colTypeName)) {
 					try {
-						Method method = rs.getClass().getMethod("getOID",
-								intType);
+						Method method = rs.getClass().getMethod("getOID", intType);
 						Object oid = method.invoke(rs, index);
-						Method method2 = oid.getClass().getMethod(
-								"getTableName", classType);
-						String tableName = (String) method2
-								.invoke(oid, objects);
+						Method method2 = oid.getClass().getMethod("getTableName", classType);
+						String tableName = (String) method2.invoke(oid, objects);
 						sb.append(tableName);
 					} catch (Exception e) {
 						sb.append(value.toString());
 					}
 				} else {
-					Method method = rs.getClass().getMethod("getCollection",
-							intType);
-					Object[] set = (Object[]) method.invoke(rs,
-							new Object[] { index });
+					Method method = rs.getClass().getMethod("getCollection", intType);
+					Object[] set = (Object[]) method.invoke(rs, new Object[] { index });
 					for (int i = 0; i < set.length; i++) {
 						Object o = set[i];
 						boolean isInstance = true;
@@ -917,10 +869,8 @@ public class ConsoleDAO extends Executor {
 							}
 						}
 						if (isInstance) {
-							Method method2 = o.getClass().getMethod(
-									"getTableName", classType);
-							String tableName = (String) method2.invoke(o,
-									objects);
+							Method method2 = o.getClass().getMethod("getTableName", classType);
+							String tableName = (String) method2.invoke(o, objects);
 							sb.append(tableName + ",");
 						} else if (o != null && o instanceof byte[]) {
 							byte[] bytes = (byte[]) o;

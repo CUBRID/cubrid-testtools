@@ -190,7 +190,7 @@ function config_cci_test_environment()
         #config file in lib folder
         cd $CUBRID/lib
         rm libcascci.*
-        cp -d ~/CUBRID_${dirver_bk}/lib/libcascci.* .
+        cp -d ${CUBRID}_${dirver_bk}/lib/libcascci.* .
         exactfile=`find . -type f -name "libcascci.so.*" |uniq|sort -r| head -n 1`
         if [ ! -e libcascci.so ]
         then
@@ -215,8 +215,8 @@ function config_cci_test_environment()
         #config include file
         cd $CUBRID/include
         rm -f cas_cci.h cas_error.h
-        cp ~/CUBRID_${dirver_bk}/include/cas_cci.h .
-        cp ~/CUBRID_${dirver_bk}/include/cas_error.h .
+        cp ${CUBRID}_${dirver_bk}/include/cas_cci.h .
+        cp ${CUBRID}_${dirver_bk}/include/cas_error.h .
 	
         #save driver and server info
         echo "CCI_Version=${the1st}" >$CUBRID/qa.conf

@@ -38,8 +38,6 @@
  */
 package com.navercorp.cubridqa.cqt.console.bean;
 
-
-
 public class ProcessMonitor {
 	public static final int Status_Stoped = 0;
 	public static final int Status_Stoping = 1;

@@ -28,7 +28,7 @@ package com.navercorp.cubridqa.shell.deploy;
 
 import java.util.ArrayList;
 
-
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.main.Context;
@@ -40,46 +40,46 @@ public class Deploy {
 	String currEnvId;
 	String cubridPackageUrl;
 	String host;
-	
+
 	String envIdentify;
-	
+
 	Log log;
-	
+
 	public Deploy(Context context, String currEnvId, boolean laterJoined) throws Exception {
 		this.context = context;
 		this.currEnvId = currEnvId;
 
-		this.host = context.getInstanceProperty(currEnvId, "ssh.host");
+		this.host = context.getInstanceProperty(currEnvId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 		envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId, host)) + "]";
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, laterJoined ? true : context.isContinueMode());
 	}
-	
+
 	public void deploy() throws Exception {
 		context.getFeedback().onDeployStart(envIdentify);
 		DeployOneNode d = new DeployOneNode(context, currEnvId, host, log);
 		d.deploy();
 		d.close();
-		
+
 		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
-		for(String h: relatedHosts) {
+		for (String h : relatedHosts) {
 			d = new DeployOneNode(context, currEnvId, h, log);
 			d.deploy();
 			d.close();
 		}
-		
+
 		if (relatedHosts != null && relatedHosts.size() > 0) {
-			DeployHA  dHa = new DeployHA (context, currEnvId, relatedHosts.get(0), log);
+			DeployHA dHa = new DeployHA(context, currEnvId, relatedHosts.get(0), log);
 			dHa.deploy();
-		    dHa.close();
+			dHa.close();
 		}
-		
+
 		context.getFeedback().onDeployStop(envIdentify);
 	}
 
 	public void close() {
 		this.log.close();
 	}
-	
+
 }

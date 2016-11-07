@@ -24,7 +24,6 @@
  */
 package com.navercorp.cubridqa.cqt.console.bean;
 
-
 public class SqlParam {
 
 	private Object value;

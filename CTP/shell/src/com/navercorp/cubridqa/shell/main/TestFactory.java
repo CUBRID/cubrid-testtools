@@ -27,15 +27,14 @@
 package com.navercorp.cubridqa.shell.main;
 
 import java.util.ArrayList;
-
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.deploy.Deploy;
@@ -50,7 +49,7 @@ public class TestFactory {
 	ExecutorService testPool, configPool;
 
 	HashMap<String, Test> testMap;
-	
+
 	Feedback feedback;
 
 	public TestFactory(Context context) {
@@ -60,9 +59,9 @@ public class TestFactory {
 		this.testMap = new HashMap<String, Test>();
 		this.feedback = context.getFeedback();
 	}
-	
+
 	private void addSkippedTestCases(ArrayList<String> list, String skippedType) {
-		if(list==null) {
+		if (list == null) {
 			return;
 		}
 		for (String tc : list) {
@@ -75,26 +74,26 @@ public class TestFactory {
 		if (context.isContinueMode) {
 			System.out.println("============= FETCH TEST CASES ==================");
 			Dispatch.init(context);
-			if(Dispatch.getInstance().getTotalTbdSize() == 0){
+			if (Dispatch.getInstance().getTotalTbdSize() == 0) {
 				System.out.println("NO TEST CASE TO TEST WITH CONTINUE MODE!");
 				return;
 			}
-			
+
 			checkRequirement(context);
 			feedback.onTaskContinueEvent();
-			
+
 			System.out.println("============= UPDATE TEST CASES ==================");
 			concurrentSVNUpdate(stableEnvList);
 			System.out.println("DONE");
-			
+
 		} else {
 			checkRequirement(context);
-			
+
 			feedback.onTaskStartEvent(context.getCubridPackageUrl());
 			System.out.println("============= UPDATE TEST CASES ==================");
 			concurrentSVNUpdate(stableEnvList);
 			System.out.println("DONE");
-			
+
 			System.out.println("============= FETCH TEST CASES ==================");
 			Dispatch.init(context);
 			if (Dispatch.getInstance().getTotalTbdSize() == 0) {
@@ -102,46 +101,45 @@ public class TestFactory {
 				return;
 			}
 		}
-		
+
 		feedback.setTotalTestCase(Dispatch.getInstance().getTotalTbdSize(), Dispatch.getInstance().getMacroSkippedSize(), Dispatch.getInstance().getTempSkippedSize());
 		if (context.isContinueMode() == false) {
 			addSkippedTestCases(Dispatch.getInstance().getMacroSkippedList(), Constants.SKIP_TYPE_BY_MACRO);
 			addSkippedTestCases(Dispatch.getInstance().getTempSkippedList(), Constants.SKIP_TYPE_BY_TEMP);
 		}
-		
+
 		System.out.println("The Number of Test Case : " + Dispatch.getInstance().getTotalTbdSize());
-		
+
 		System.out.println("============= DEPLOY ==================");
 		concurrentDeploy(stableEnvList, false);
 		System.out.println("DONE");
-		
+
 		System.out.println("============= TEST ==================");
 		concurrentTest(stableEnvList, false);
 		System.out.println("STARTED");
 
 		startConfigMonitor();
-		
+
 		while (!isAllTestsFinished()) {
 			CommonUtils.sleep(1);
 		}
 		this.testPool.shutdown();
 		this.configPool.shutdown();
-		
+
 		feedback.onTaskStopEvent();
-		
 		CommonUtils.generateFailBackupPackage(context);
 		System.out.println("TEST COMPLETE");
 	}
 
 	private void joinTest(ArrayList<String> envList) throws Exception {
-		
+
 		ArrayList<String> stableEnvList = (ArrayList<String>) envList.clone();
 		concurrentSVNUpdate(stableEnvList);
-		
+
 		System.out.println("============= DEPLOY ==================");
-		concurrentDeploy(stableEnvList, true); //later join
+		concurrentDeploy(stableEnvList, true); // later join
 		System.out.println("DONE");
-		
+
 		System.out.println("============= TEST ==================");
 		concurrentTest(stableEnvList, true);
 		System.out.println("STARTED");
@@ -183,21 +181,21 @@ public class TestFactory {
 	private void startConfigMonitor() throws Exception {
 		configPool.execute(new Runnable() {
 			@Override
-			public void run() {				
+			public void run() {
 				ArrayList<String> newEnvList, oldEnvList, addedList, deletedList;
 				Test test;
 				while (!Dispatch.getInstance().isFinished()) {
 
 					CommonUtils.sleep(5);
-					
+
 					oldEnvList = (ArrayList<String>) context.getEnvList().clone();
-					
-					try{
+
+					try {
 						context.reload();
-					}catch(Exception e) {
+					} catch (Exception e) {
 						System.out.println("[ERROR] fail to reload context ( " + e.getMessage() + ")");
 					}
-					
+
 					if (context.isExecuteAtLocal()) {
 						continue;
 					}
@@ -206,7 +204,7 @@ public class TestFactory {
 
 					deletedList = (ArrayList<String>) oldEnvList.clone();
 					deletedList.removeAll(newEnvList);
-					
+
 					if (deletedList.size() > 0) {
 						System.out.println("[ENV DELETE] " + deletedList + " ...");
 
@@ -242,9 +240,9 @@ public class TestFactory {
 							System.out.println("[ENV CHECK] " + envId + " REMOVE");
 						}
 					}
-					
+
 					if (addedList.size() > 0) {
-						System.out.println("[ENV ADD] " + addedList + " ...");						
+						System.out.println("[ENV ADD] " + addedList + " ...");
 						try {
 							joinTest(addedList);
 						} catch (Exception e) {
@@ -272,25 +270,25 @@ public class TestFactory {
 						deploy.deploy();
 					} catch (Exception e) {
 						return false;
-					} finally{
-						if(deploy!=null) deploy.close();						
+					} finally {
+						if (deploy != null)
+							deploy.close();
 					}
 					return true;
-					
+
 				}
 			});
 		}
 		deployPool.invokeAll(callers);
 		deployPool.shutdown();
 	}
-	
+
 	private void concurrentSVNUpdate(final ArrayList<String> envList) throws InterruptedException {
 		ExecutorService pool = Executors.newCachedThreadPool();
 		ArrayList<Callable<Boolean>> callers = new ArrayList<Callable<Boolean>>();
 
 		for (final String envId : envList) {
 			callers.add(new Callable<Boolean>() {
-
 				@Override
 				public Boolean call() throws Exception {
 					TestCaseGithub git = null;
@@ -299,6 +297,7 @@ public class TestFactory {
 						if (context.isScenarioInGit()) {
 							git = new TestCaseGithub(context, envId);
 							git.update();
+
 						} else {
 							svn = new TestCaseSVN(context, envId);
 							svn.update();
@@ -306,9 +305,11 @@ public class TestFactory {
 					} catch (Exception e) {
 						e.printStackTrace();
 						return false;
-					} finally{
-						if(git!=null) git.close();
-						if(svn!=null) svn.close();
+					} finally {
+						if (git != null)
+							git.close();
+						if (svn != null)
+							svn.close();
 					}
 					return true;
 				}
@@ -334,10 +335,10 @@ public class TestFactory {
 		}
 		return true;
 	}
-	
+
 	private static void checkRequirement(Context context) throws Exception {
 		System.out.println("BEGIN TO CHECK: ");
-		
+
 		boolean pass = true;
 
 		for (String envId : context.getEnvList()) {
@@ -354,13 +355,13 @@ public class TestFactory {
 			System.exit(-1);
 		}
 	}
-	
+
 	private static boolean checkRequirement(Context context, String envId) throws Exception {
 		CheckRequirement check;
 		ArrayList<String> relatedHosts;
 		boolean pass = true;
-		
-		check = new CheckRequirement(context, envId, context.getInstanceProperty(envId, "ssh.host"), false);
+
+		check = new CheckRequirement(context, envId, context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX), false);
 		if (!check.check()) {
 			pass = false;
 		}

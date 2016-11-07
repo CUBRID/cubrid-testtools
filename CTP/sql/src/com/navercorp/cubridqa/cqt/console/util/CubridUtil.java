@@ -26,10 +26,6 @@ package com.navercorp.cubridqa.cqt.console.util;
 
 import java.sql.Types;
 
-import org.apache.avalon.framework.configuration.Configuration;
-
-import com.navercorp.cubridqa.cqt.console.util.PropertiesUtil;
-
 public class CubridUtil {
 
 	/**
@@ -137,8 +133,7 @@ public class CubridUtil {
 			return Types.VARCHAR;
 		} else if (cubridType.equals("FLOAT") || cubridType.equals("REAL")) {
 			return Types.FLOAT;
-		} else if (cubridType.equals("DOUBLE PRECISION")
-				|| cubridType.equals("DOUBLE")) {
+		} else if (cubridType.equals("DOUBLE PRECISION") || cubridType.equals("DOUBLE")) {
 			return Types.DOUBLE;
 		} else if (cubridType.equals("DATE")) {
 			return Types.DATE;

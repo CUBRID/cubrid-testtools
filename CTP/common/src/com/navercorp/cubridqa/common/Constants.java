@@ -27,27 +27,30 @@ package com.navercorp.cubridqa.common;
 import java.io.File;
 import java.util.Properties;
 
-import com.navercorp.cubridqa.common.CommonUtils;
-
 public class Constants {
 
 	public static final String ENV_CTP_HOME_KEY = "CTP_HOME";
 	public static final String ENV_HOME_KEY = "HOME";
-	
+
 	public static final String ENV_CTP_HOME = CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY);
 	public static final String ENV_HOME = CommonUtils.getEnvInFile(ENV_HOME_KEY);
 
 	public final static String LINE_SEPARATOR = System.getProperty("line.separator");
 
-	public final static Properties COMMON_DAILYQA_CONF;
+	public static Properties COMMON_DAILYQA_CONF;
 	static {
-		COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY) + File.separator + "conf" + File.separator + "dailyqa.conf");
+		try {
+			COMMON_DAILYQA_CONF = CommonUtils.getConfig(CommonUtils.getEnvInFile(ENV_CTP_HOME_KEY) + File.separator + "conf" + File.separator + "common.conf");
+		} catch (Exception ex) {
+			System.out.println("==> Skip common properties initialization");
+			COMMON_DAILYQA_CONF = new Properties();
+		}
 	}
 
 	public final static String MAIL_FROM;
 	static {
-		String nick = COMMON_DAILYQA_CONF.getProperty("mail.from.nickname", "").trim();
-		String mail = COMMON_DAILYQA_CONF.getProperty("mail.from.address", "").trim();
+		String nick = COMMON_DAILYQA_CONF.getProperty("mail_from_nickname", "").trim();
+		String mail = COMMON_DAILYQA_CONF.getProperty("mail_from_address", "").trim();
 		if (mail.indexOf("<") != -1) {
 			MAIL_FROM = mail;
 		} else {

@@ -57,8 +57,8 @@ done
 
 
 # Get svn account permission
-svnUser=`ini.sh $CTP_HOME/conf/dailyqa.conf "svn.user"`
-svnPwd=`ini.sh $CTP_HOME/conf/dailyqa.conf "svn.pwd"`
+svnUser=`ini.sh $CTP_HOME/conf/common.conf "svn_user"`
+svnPwd=`ini.sh $CTP_HOME/conf/common.conf "svn_pwd"`
 svnAccountParameters="--username $svnUser --password $svnPwd --no-auth-cache --non-interactive "
 
 # Clean up

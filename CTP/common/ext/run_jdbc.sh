@@ -65,7 +65,7 @@ function run_jdbc {
     run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT}
 
     #STEP 4: CONFIG CTP
-    ini.sh -s common -u "main.testing.category=${BUILD_SCENARIOS}" $ctp_jdbc_test_conf
+    ini.sh -s common -u "test_category=${BUILD_SCENARIOS}" $ctp_jdbc_test_conf
 
     #STEP 5: EXECUTE
     ctp.sh jdbc -c $ctp_jdbc_test_conf | tee $tmplog
@@ -79,7 +79,9 @@ function run_jdbc {
     cp -rf current_runtime_logs $backup_file
     cp $ctp_jdbc_test_conf $backup_file
     tar zvcf ${backup_file}.tar.gz $backup_file
-    rm -rf $backup_file
+    if [ "${backup_file}" ];then
+    	rm -rf $backup_file
+    fi
 }
 
 

@@ -50,7 +50,13 @@ public class Main {
 		}
 		
 		String buildUrl = context.getCubridPackageUrl();
-		if (buildUrl != null && buildUrl.trim().length() > 0) {
+		if (!CommonUtils.isEmpty(buildUrl)) {
+			if(!CommonUtils.isAvailableURL(buildUrl)){
+				System.out.println();
+				System.out.println("[ERROR]: Please confirm " + buildUrl + " url is available!");
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
 			context.setBuildId(CommonUtils.getBuildId(context
 					.getCubridPackageUrl()));
 			context.setBuildBits(CommonUtils.getBuildBits(context
@@ -60,10 +66,15 @@ public class Main {
 			String envId = context.getEnvList().get(0);
 			SSHConnect ssh = IsolationHelper.createTestNodeConnect(context, envId);
 			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
+			if(CommonUtils.isEmpty(buildInfo)){
+				System.out.println("[ERROR]: Please confirm your build installation for local test!");
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
+			
 			context.setBuildId(CommonUtils.getBuildId(buildInfo));
 			context.setBuildBits(CommonUtils.getBuildBits(buildInfo));
 			context.setReInstallTestBuildYn(false);
-			
 			if(ssh != null) ssh.close();
 		}
 		

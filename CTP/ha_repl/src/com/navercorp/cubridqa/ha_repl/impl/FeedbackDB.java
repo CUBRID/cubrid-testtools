@@ -44,6 +44,7 @@ import com.navercorp.cubridqa.ha_repl.InstanceManager;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.shell.common.HttpUtil;
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 
 public class FeedbackDB implements Feedback {
@@ -138,7 +139,7 @@ public class FeedbackDB implements Feedback {
 
 		shutdownDataSource();
 
-		String noticeUrl = context.getProperty("feedback.qahome.notice_load");
+		String noticeUrl = context.getProperty(ConfigParameterConstants.FEEDBACK_NOTICE_QAHOME_URL);
 		if (noticeUrl != null && noticeUrl.trim().length() > 0) {
 			try {
 				noticeUrl = CommonUtils.replace(noticeUrl, "<MAINID>", String.valueOf(task_id));

@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.scheduler.producer;
 
 import java.io.File;
-
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,14 +45,15 @@ public class Observer {
 		this.conf = conf;
 		this.finishedFilename = CommonUtils.concatFile(Constants.CTP_HOME + File.separator + "conf", "producer_finished.txt");
 		File finishedFile = new File(finishedFilename);
-		if(finishedFile.exists() == false) finishedFile.createNewFile();
+		if (finishedFile.exists() == false)
+			finishedFile.createNewFile();
 		this.finishedList = this.getFinishedBuilds();
 	}
 
 	public ArrayList<File> getFreshBuilds() {
-		
+
 		ArrayList<File> freshList = new ArrayList<File>();
-		
+
 		String root = conf.getRepoRoot();
 
 		File rootFile = new File(root);
@@ -71,13 +71,15 @@ public class Observer {
 			buildList = storeList[i].listFiles();
 			for (int j = 0; j < buildList.length; j++) {
 				dropFile = new File(CommonUtils.concatFile(buildList[j].getPath(), "drop"));
-				if(!dropFile.exists()) continue;
-				
+				if (!dropFile.exists())
+					continue;
+
 				buildName = buildList[j].getName();
-				
-				if(isBuildFinished(buildName)) continue;
-				
-				//buildName is fresh build.
+
+				if (isBuildFinished(buildName))
+					continue;
+
+				// buildName is fresh build.
 				freshList.add(buildList[j]);
 			}
 		}
@@ -88,15 +90,15 @@ public class Observer {
 		ArrayList<String> finishedList = CommonUtils.getLineList(finishedFilename);
 		return finishedList;
 	}
-	
+
 	public boolean isBuildFinished(String buildName) {
 		return this.finishedList.contains(buildName);
 	}
-	
+
 	public void finishedBuild(boolean delivered, String buildName) {
 		finishedList.add(buildName);
-		
-		if(delivered) {
+
+		if (delivered) {
 			String url = conf.getProperty("url.notice_new_build");
 			if (url != null) {
 				try {
@@ -107,7 +109,7 @@ public class Observer {
 				}
 			}
 		}
-		
+
 		Log log = new Log(this.finishedFilename, false, true);
 		log.println(buildName);
 		log.close();

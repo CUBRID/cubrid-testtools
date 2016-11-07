@@ -35,7 +35,6 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import com.navercorp.cubridqa.cqt.console.ConsoleAgent;
-import com.navercorp.cubridqa.cqt.console.bean.SystemModel;
 
 public class MyDriverManager {
 
@@ -63,8 +62,7 @@ public class MyDriverManager {
 	 * @param password
 	 * @return
 	 */
-	public static Connection giveConnection(String drivers, String dbUrl,
-			String user, String password) {
+	public static Connection giveConnection(String drivers, String dbUrl, String user, String password) {
 		try {
 			driverClass = Class.forName(drivers, true, getURLClassLoader());
 			driver = null;
@@ -84,20 +82,16 @@ public class MyDriverManager {
 			ConsoleAgent.addMessage(e.getMessage());
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
-			ConsoleAgent.addMessage("-10002"
-					+ System.getProperty("line.separator"));
+			ConsoleAgent.addMessage("-10002" + System.getProperty("line.separator"));
 		} catch (InstantiationException e) {
 			e.printStackTrace();
-			ConsoleAgent.addMessage("-10002"
-					+ System.getProperty("line.separator"));
+			ConsoleAgent.addMessage("-10002" + System.getProperty("line.separator"));
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
-			ConsoleAgent.addMessage("-10002"
-					+ System.getProperty("line.separator"));
+			ConsoleAgent.addMessage("-10002" + System.getProperty("line.separator"));
 		} catch (Exception e) {
 			e.printStackTrace();
-			ConsoleAgent.addMessage("cubrid exception"
-					+ System.getProperty("line.separator"));
+			ConsoleAgent.addMessage("cubrid exception" + System.getProperty("line.separator"));
 		}
 		return connection;
 	}
@@ -113,7 +107,7 @@ public class MyDriverManager {
 	 */
 	public static URLClassLoader getURLClassLoader() {
 		try {
-			String path = EnvGetter.getenv("CUBRID") + File.separator + "jdbc/cubrid_jdbc.jar" ;
+			String path = EnvGetter.getenv("CUBRID") + File.separator + "jdbc/cubrid_jdbc.jar";
 			File file = new File(path);
 			@SuppressWarnings("deprecation")
 			URL url = file.toURL();
@@ -123,10 +117,9 @@ public class MyDriverManager {
 				filePath = path;
 			}
 		} catch (MalformedURLException e) {
-			ConsoleAgent.addMessage("-10002"
-					+ System.getProperty("line.separator"));
+			ConsoleAgent.addMessage("-10002" + System.getProperty("line.separator"));
 			e.printStackTrace();
-		} catch (Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		return classLoader;

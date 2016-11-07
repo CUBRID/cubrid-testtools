@@ -27,11 +27,10 @@
 package com.navercorp.cubridqa.shell.main;
 
 import java.util.ArrayList;
-
-
 import java.util.Date;
 
 import com.jcraft.jsch.JSchException;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -90,7 +89,7 @@ public class Test {
 		String testCase;
 		Long endTime;
 		String consoleOutput;
-		
+
 		int p;
 		while (!shouldStop && !Dispatch.getInstance().isFinished()) {
 
@@ -126,7 +125,7 @@ public class Test {
 
 			boolean needRetry = true;
 			int retryCount = 0;
-			
+
 			do {
 				/*
 				 * Reset test environment Kill CUBRID process, clear SSH and
@@ -139,7 +138,7 @@ public class Test {
 				if (this.context.enableCheckDiskSpace()) {
 					checkDiskSpace();
 				}
-				
+
 				resultItemList.clear();
 				startTime = System.currentTimeMillis();
 				this.isTimeOut = false;
@@ -148,7 +147,7 @@ public class Test {
 
 				try {
 					consoleOutput = runTestCase();
-					doFinalCheck();					
+					doFinalCheck();
 					collectGeneralResult();
 				} catch (Exception e) {
 					this.addResultItem("NOK", "Runtime error (" + e.getMessage() + ")");
@@ -171,60 +170,64 @@ public class Test {
 						workerLog.println(item);
 						resultCont.append(item).append(Constants.LINE_SEPARATOR);
 					}
-					
-					if (testCaseSuccess == false && hasCore == false && context.getEnableSaveNormalErrorLog()== true){
+
+					if (testCaseSuccess == false && hasCore == false && context.getEnableSaveNormalErrorLog() == true) {
 						String saveErrorLogResult = doSaveNormalErrorLog();
 						resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
-					}	
+					}
 					if (testCaseSuccess == false) {
-						System.out.println("Execute retry Time - " + retryCount + ", Max retry count - " + maxRetryCount);
-						workerLog.println("Execute retry Time - " + retryCount + ", Max retry count - " + maxRetryCount);
+						// System.out.println("Execute retry Time - " +
+						// retryCount + ", Max retry count - " + maxRetryCount);
+						// workerLog.println("Execute retry Time - " +
+						// retryCount + ", Max retry count - " + maxRetryCount);
 						if (hasCore) {
 							needRetry = false;
 						} else {
 							needRetry = true;
 						}
-						
+
 						resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
 						resultCont.append(consoleOutput);
 
 					} else {
 						needRetry = false;
 					}
-					//If retryCount already reach the maxRetryCount, tool need stop retry
-					if(retryCount >= maxRetryCount)
-					{
+					// If retryCount already reach the maxRetryCount, tool need
+					// stop retry
+					if (retryCount >= maxRetryCount) {
 						needRetry = false;
 					}
-					
+
 					if (needRetry) {
 						/*
-						 * For each testing, the retry count just will be updated as 1.
+						 * For each testing, the retry count just will be
+						 * updated as 1.
 						 */
 						context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
-								Constants.SKIP_TYPE_NO, 1);
+								Constants.SKIP_TYPE_NO, retryCount);
 					} else {
 						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
 								Constants.SKIP_TYPE_NO, retryCount);
-						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " " + (testCaseSuccess ? "[OK]" : "[NOK]"));
-					}					
-					
+						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
+								+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + retryCount : "")));
+					}
+
 					workerLog.println("");
 					retryCount++;
 
 				}
-			} while(needRetry);
-			
+			} while (needRetry);
+
 			if (needDropTestCase) {
 				dropTestCaseAfterTest();
-			}			
+			}
 			dispatchLog.println(this.testCaseFullName);
 		}
 
-		isStopped = true;
 		close();
 		context.getFeedback().onStopEnvEvent(currEnvId);
 		System.out.println("[ENV STOP] " + currEnvId);
+		isStopped = true;
 	}
 
 	public String runTestCase() throws Exception {
@@ -256,8 +259,9 @@ public class Test {
 		result = ssh.execute(script);
 
 		workerLog.println(result);
-		
-		waitNetReady();//to make sure the TCP connection of  next case and result collection will be established
+
+		waitNetReady();// to make sure the TCP connection of next case and
+						// result collection will be established
 
 		return result;
 	}
@@ -282,7 +286,7 @@ public class Test {
 
 		String excludedCoresByAssertLine = context.getExcludedCoresByAssertLine();
 		if (excludedCoresByAssertLine != null && excludedCoresByAssertLine.trim().equals("") == false) {
-			script.addCommand("export EXCLUDED_CORES_BY_ASSERT_LINE=\"" + excludedCoresByAssertLine + "\"" );
+			script.addCommand("export EXCLUDED_CORES_BY_ASSERT_LINE=\"" + excludedCoresByAssertLine + "\"");
 		}
 
 		script.addCommand("echo > " + testCaseResultName);
@@ -290,7 +294,7 @@ public class Test {
 		result = ssh.execute(script);
 
 		workerLog.println(result);
-        
+
 		return result;
 	}
 
@@ -301,15 +305,15 @@ public class Test {
 		long startTime = System.currentTimeMillis();
 		long currentTime;
 		long len;
-		
-		String cubridPortId = context.getInstanceProperty(this.currEnvId, "cubrid.cubrid_port_id", "1523");
-		String brokerFirstPort = context.getInstanceProperty(this.currEnvId, "broker1.BROKER_PORT", "30000");
-		String brokerSecondPort = context.getInstanceProperty(this.currEnvId, "broker2.BROKER_PORT", "33000");
-		String haPortId = context.getInstanceProperty(this.currEnvId, "ha.ha_port_id", "59901");
-		String cmPortId = context.getInstanceProperty(this.currEnvId, "cm.cm_port", "8001");
 
-		ShellScriptInput script = new ShellScriptInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':" + brokerFirstPort + "|:" + brokerSecondPort + "|:" + cubridPortId + "|:"
-				+ haPortId + "|:" + cmPortId + "' | wc -l");
+		String cubridPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_ENGINE + "." + "cubrid_port_id", "1523");
+		String brokerFirstPort = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_BROKER1 + "." + "BROKER_PORT", "30000");
+		String brokerSecondPort = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_BROKER2 + "." + "BROKER_PORT", "33000");
+		String haPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_HA + "." + "ha_port_id", "59901");
+		String cmPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_CM + "." + "cm_port", "8001");
+
+		ShellScriptInput script = new ShellScriptInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':" + brokerFirstPort + "|:" + brokerSecondPort + "|:"
+				+ cubridPortId + "|:" + haPortId + "|:" + cmPortId + "' | wc -l");
 		while (true) {
 			currentTime = System.currentTimeMillis();
 			len = (currentTime - startTime) / 1000;
@@ -379,7 +383,7 @@ public class Test {
 
 	public String resetCUBRID_windows() {
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("cd $CUBRID/..");
+		scripts.addCommand("cd ${CUBRID}/..");
 		scripts.addCommand("rm -rf CUBRID/conf/*");
 		scripts.addCommand("cp -rf .CUBRID_SHELL_FM/conf/* CUBRID/conf/");
 		scripts.addCommand("rm -rf CUBRID/databases/*");
@@ -402,17 +406,17 @@ public class Test {
 
 	public void resetCUBRID_linux() {
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("rm -rf ~/CUBRID/conf/*");
-		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/conf/* ~/CUBRID/conf/");
-		scripts.addCommand("rm -rf ~/CUBRID/databases/*");
-		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/databases/* ~/CUBRID/databases/");
-		scripts.addCommand("rm -rf ~/CUBRID/lib/libcubrid_??_??.so");
-		scripts.addCommand("rm -rf ~/CUBRID/lib/libcubrid_all_locales.so");
-		scripts.addCommand("find ~/CUBRID/log -type f -print | xargs -i rm -rf {} ");
-        scripts.addCommand("find ~/CUBRID/ -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
-        scripts.addCommand("find ~/CUBRID/ -name \"core\" | xargs -i rm -rf {} ");
-        
-		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);		
+		scripts.addCommand("rm -rf ${CUBRID}/conf/*");
+		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/conf/* ${CUBRID}/conf/");
+		scripts.addCommand("rm -rf ${CUBRID}/databases/*");
+		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/databases/* ${CUBRID}/databases/");
+		scripts.addCommand("rm -rf ${CUBRID}/lib/libcubrid_??_??.so");
+		scripts.addCommand("rm -rf ${CUBRID}/lib/libcubrid_all_locales.so");
+		scripts.addCommand("find ${CUBRID}/log -type f -print | xargs -i rm -rf {} ");
+		scripts.addCommand("find ${CUBRID}/ -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
+		scripts.addCommand("find ${CUBRID}/ -name \"core\" | xargs -i rm -rf {} ");
+
+		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
@@ -432,8 +436,8 @@ public class Test {
 			}
 		}
 
-        scripts.addCommand("find " + this.testCaseDir + " -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
-        scripts.addCommand("find " + this.testCaseDir + " -name \"core\" | xargs -i rm -rf {} ");
+		scripts.addCommand("find " + this.testCaseDir + " -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
+		scripts.addCommand("find " + this.testCaseDir + " -name \"core\" | xargs -i rm -rf {} ");
 
 		String result;
 		try {
@@ -457,12 +461,12 @@ public class Test {
 	public void resetProcess() {
 		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
 		workerLog.println("[INFO] CLEAN PROCESSES: " + result);
-		
+
 		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
 		if (relatedHosts == null || relatedHosts.size() == 0) {
 			return;
 		}
-		
+
 		SSHConnect sshRelated;
 		for (String h : relatedHosts) {
 			sshRelated = null;
@@ -482,9 +486,9 @@ public class Test {
 
 	public void collectGeneralResult() {
 
-		String result = "";		
+		String result = "";
 		ShellScriptInput scripts;
-		
+
 		scripts = new ShellScriptInput();
 		scripts.addCommand("cd ");
 		scripts.addCommand("cd " + testCaseDir);
@@ -519,11 +523,11 @@ public class Test {
 	}
 
 	public void dropTestCaseAfterTest() {
-		
+
 		if (testCaseDir == null || testCaseDir.trim().equals("")) {
 			return;
 		}
-		
+
 		String result;
 		ShellScriptInput scripts;
 		scripts = new ShellScriptInput();
@@ -535,25 +539,25 @@ public class Test {
 			workerLog.println("[ERROR] fail to drop files after test. " + e.getMessage());
 		}
 	}
-	
+
 	private void doFinalCheck() {
 		String result = null;
 
 		ShellScriptInput scripts = new ShellScriptInput("source /dev/stdin <<EOF");
 		scripts.addCommand("`grep -E \"SKIP_CHECK_FATAL_ERROR\" " + this.testCaseFullName + " `");
 		scripts.addCommand("EOF");
-		
-		String excludedCoresByAssertLine = context.getProperty("main.testing.excluded_cores_by_assert_line");
+
+		String excludedCoresByAssertLine = context.getProperty(ConfigParameterConstants.IGNORE_CORE_BY_KEYWORDS);
 		if (excludedCoresByAssertLine != null && excludedCoresByAssertLine.trim().equals("") == false) {
-			scripts.addCommand("export EXCLUDED_CORES_BY_ASSERT_LINE=\"" + excludedCoresByAssertLine + "\"" );
+			scripts.addCommand("export EXCLUDED_CORES_BY_ASSERT_LINE=\"" + excludedCoresByAssertLine + "\"");
 		}
-		
+
 		scripts.addCommand("source $init_path/shell_utils.sh && do_check_more_errors \"" + this.testCaseDir + "\"");
 		if (context.isWindows == false) {
 			try {
 				result = ssh.execute(scripts);
 			} catch (Exception e) {
-				String host = context.getInstanceProperty(currEnvId, "ssh.host");
+				String host = context.getInstanceProperty(currEnvId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 				addResultItem("NOK", "Runtime error. Fail to check more errors on main host " + host + ": " + e.getMessage());
 			}
 		}
@@ -604,10 +608,10 @@ public class Test {
 	public String getCurrentEnvId() {
 		return this.currEnvId;
 	}
-	
+
 	public void checkDiskSpace() throws JSchException {
 		checkDiskSpace(ssh, false);
-			
+
 		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
@@ -617,9 +621,9 @@ public class Test {
 			}
 		}
 	}
-	
+
 	private void checkDiskSpace(SSHConnect ssh1, boolean closeSSH) {
-		
+
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
 		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
@@ -631,16 +635,16 @@ public class Test {
 			workerLog.println("[FAIL] Check disk space FAIL on " + ssh1.toString());
 			workerLog.println(e.getMessage());
 		} finally {
-			if(closeSSH) {
+			if (closeSSH) {
 				if (ssh1 != null) {
 					ssh1.close();
 				}
 			}
 		}
 	}
-	
+
 	public String doSaveNormalErrorLog() throws JSchException {
-		String ret = "";		
+		String ret = "";
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("source $init_path/shell_utils.sh && do_save_normal_error_logs \"" + this.testCaseDir + "\"");
 		StringBuffer sb = new StringBuffer();
@@ -653,7 +657,7 @@ public class Test {
 		} catch (Exception e) {
 			workerLog.println("[ERROR] fail to save log on " + e.getMessage());
 		}
-			
+
 		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
@@ -662,7 +666,7 @@ public class Test {
 				try {
 					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
 					sshRelated.execute(scripts);
-				    sb.append("[INFO] Normal error log locations on related server:" + result).append(Constants.LINE_SEPARATOR);
+					sb.append("[INFO] Normal error log locations on related server:" + result).append(Constants.LINE_SEPARATOR);
 					workerLog.println("[INFO] finish save log successfully on " + h + ".");
 				} catch (Exception e) {
 					workerLog.println("[ERROR] fail to save log on " + h + ":" + e.getMessage());
@@ -676,6 +680,5 @@ public class Test {
 		ret = sb.toString();
 		return ret;
 	}
-	
 
 }

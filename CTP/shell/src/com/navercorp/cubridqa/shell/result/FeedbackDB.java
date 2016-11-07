@@ -36,6 +36,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.HttpUtil;
@@ -138,7 +139,7 @@ public class FeedbackDB implements Feedback {
 
 		shutdownDataSource();
 
-		String noticeUrl = context.getProperty("feedback.qahome.notice_load");
+		String noticeUrl = context.getProperty(ConfigParameterConstants.FEEDBACK_NOTICE_QAHOME_URL);
 		if (noticeUrl != null && noticeUrl.trim().length() > 0) {
 			try {
 				noticeUrl = CommonUtils.replace(noticeUrl, "<MAINID>", String.valueOf(task_id));
@@ -175,7 +176,7 @@ public class FeedbackDB implements Feedback {
 			rs = stmt.executeQuery();
 			rs.next();
 			succ_num = rs.getInt(1);
-			fail_num= rs.getInt(2);
+			fail_num = rs.getInt(2);
 			testError = rs.getString(3);
 			rs.close();
 		} catch (Exception e) {
@@ -184,17 +185,17 @@ public class FeedbackDB implements Feedback {
 			close(rs);
 			close(stmt);
 		}
-		
-		if(newSucc) {
+
+		if (newSucc) {
 			succ_num = succ_num + 1;
 		} else {
 			fail_num = fail_num + 1;
 		}
-		
-		if(newCore) {
+
+		if (newCore) {
 			testError = "Y";
 		} else {
-			testError = testError == null || testError.trim().equals("Y") == false ? "N": "Y";
+			testError = testError == null || testError.trim().equals("Y") == false ? "N" : "Y";
 		}
 
 		executed_num = fail_num + succ_num;
@@ -222,7 +223,7 @@ public class FeedbackDB implements Feedback {
 			close(conn);
 		}
 	}
-	
+
 	public void showTestResult() {
 		Connection conn = null;
 
@@ -260,7 +261,7 @@ public class FeedbackDB implements Feedback {
 		System.out.println("Test Rate: " + execute_rate + "%");
 		System.out.println("Success Rate: " + success_rate + "%");
 	}
-	
+
 	@Override
 	public void setTotalTestCase(int tbdNum, int macroSkippedNum, int tempSkippedNum) {
 		Connection conn = null;
@@ -315,30 +316,31 @@ public class FeedbackDB implements Feedback {
 
 	@Override
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
-		
-		if(context.isSkipToSaveSuccCase() == false || flag == false ) {
+
+		if (context.isSkipToSaveSuccCase() == false || flag == false) {
 			Connection conn = null;
 			int resultContSize = 0;
-	
+
 			PreparedStatement stmt = null;
 			String sql;
-	
+
 			long caseStopTime = System.currentTimeMillis();
 			Timestamp d = new Timestamp(caseStopTime);
-	        if(resultCont!=null){
-	        	resultContSize = resultCont.length();
-	        	if(resultContSize > MAX_CONTENT_SIZE){
-	        		String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE/2);
-	        		String resultContSuffer = resultCont.substring(resultContSize - MAX_CONTENT_SIZE/2, resultContSize);
-	        		resultCont = resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********" + System.getProperty("line.separator") + resultContSuffer;
-	        	}
-	        }
-	        
+			if (resultCont != null) {
+				resultContSize = resultCont.length();
+				if (resultContSize > MAX_CONTENT_SIZE) {
+					String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE / 2);
+					String resultContSuffer = resultCont.substring(resultContSize - MAX_CONTENT_SIZE / 2, resultContSize);
+					resultCont = resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********"
+							+ System.getProperty("line.separator") + resultContSuffer;
+				}
+			}
+
 			sql = "insert into shell_items(main_id, case_file, env_node, elapse_time, test_result, is_timeout, has_core, result_cont, end_time, is_skipped, retry_count) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-	
+
 			try {
 				conn = ds.getConnection();
-	
+
 				stmt = conn.prepareStatement(sql);
 				stmt.setInt(1, task_id);
 				stmt.setString(2, testCase);
@@ -356,7 +358,7 @@ public class FeedbackDB implements Feedback {
 				stmt.setString(10, skippedType);
 				stmt.setInt(11, retryCount);
 				stmt.executeUpdate();
-	
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
@@ -371,7 +373,8 @@ public class FeedbackDB implements Feedback {
 	}
 
 	@Override
-	public void onTestCaseStopEventForRetry(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
+	public void onTestCaseStopEventForRetry(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType,
+			int retryCount) {
 		Connection conn = null;
 		int resultContSize = 0;
 
@@ -380,14 +383,15 @@ public class FeedbackDB implements Feedback {
 
 		long caseStopTime = System.currentTimeMillis();
 		Timestamp d = new Timestamp(caseStopTime);
-		if(resultCont!=null){
-        	resultContSize = resultCont.length();
-        	if(resultContSize > MAX_CONTENT_SIZE){
-        		String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE/2);
-        		String resultContSuffer = resultCont.substring(resultContSize - MAX_CONTENT_SIZE/2, resultContSize);
-        		resultCont = resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********" + System.getProperty("line.separator") + resultContSuffer;
-        	}
-        }
+		if (resultCont != null) {
+			resultContSize = resultCont.length();
+			if (resultContSize > MAX_CONTENT_SIZE) {
+				String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE / 2);
+				String resultContSuffer = resultCont.substring(resultContSize - MAX_CONTENT_SIZE / 2, resultContSize);
+				resultCont = resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********"
+						+ System.getProperty("line.separator") + resultContSuffer;
+			}
+		}
 
 		sql = "insert into shell_retry_log(main_id, case_file, env_node, elapse_time, test_result, is_timeout, has_core, result_cont, end_time, is_skipped, retry_count) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -510,7 +514,7 @@ public class FeedbackDB implements Feedback {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Override
 	public int getTestId() {
 		return this.task_id;
@@ -518,6 +522,6 @@ public class FeedbackDB implements Feedback {
 
 	@Override
 	public void onStopEnvEvent(String envIdentify) {
-		// TODO Auto-generated method stub		
+		// TODO Auto-generated method stub
 	}
 }

@@ -27,7 +27,6 @@ package com.navercorp.cubridqa.scheduler.producer;
 
 import java.io.File;
 
-
 import com.navercorp.cubridqa.scheduler.common.CommonUtils;
 
 public class FileItem {
@@ -46,9 +45,9 @@ public class FileItem {
 		this.suffix = suffix;
 		isExact = false;
 	}
-	
+
 	public String getFilePattern() {
-		if(isExact) {
+		if (isExact) {
 			return this.fileFM;
 		} else {
 			return this.prefix + "|" + this.suffix;
@@ -63,8 +62,8 @@ public class FileItem {
 			String fn;
 			for (File f : subList) {
 				fn = f.getName();
-				if(match(actualBuildId, fn)) {
-					return fn;					
+				if (match(actualBuildId, fn)) {
+					return fn;
 				}
 			}
 		}
@@ -88,13 +87,13 @@ public class FileItem {
 	public File getExactFile() {
 		return this.file;
 	}
-	
+
 	@Override
 	public String toString() {
-		if(this.file == null) {
+		if (this.file == null) {
 			return fileFM;
 		} else {
-			return this.file.getAbsolutePath();			
+			return this.file.getAbsolutePath();
 		}
 	}
 }

@@ -47,11 +47,11 @@ public class CommitConfigFileIntoDB {
 
 	public CommitConfigFileIntoDB() {
 		props = Constants.COMMON_DAILYQA_CONF;
-		String driver = props.getProperty("dailydb.driver");
+		String driver = props.getProperty("qahome_db_driver");
 		try {
 			Class.forName(driver);
 		} catch (Exception e) {
-			System.out.println("[ERROR] fail to load JDBC Driver, please refer to dailydb.driver parameter in conf/dailyqa.conf file.");
+			System.out.println("[ERROR] fail to load JDBC Driver, please refer to qahome_db_driver parameter in conf/common.conf file.");
 		}
 	}
 
@@ -133,9 +133,9 @@ public class CommitConfigFileIntoDB {
 	}
 
 	private java.sql.Connection createConnection() throws SQLException, ClassNotFoundException {
-		String url = props.getProperty("dailydb.url");
-		String user = props.getProperty("dailydb.user");
-		String pwd = props.getProperty("dailydb.pwd");
+		String url = props.getProperty("qahome_db_url");
+		String user = props.getProperty("qahome_db_user");
+		String pwd = props.getProperty("qahome_db_pwd");
 		return DriverManager.getConnection(url, user, pwd);
 	}
 

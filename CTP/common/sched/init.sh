@@ -93,20 +93,20 @@ function upload_to_dailysrv () {
 
 function check_local_disk_space () {
     (source ${CTP_HOME}/common/script/util_common.sh
-     cc=`ini.sh ${CTP_HOME}/conf/dailyqa.conf mail.from.address`
+     cc=`ini.sh ${CTP_HOME}/conf/common.conf mail_from_address`
      check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G "$1" "$cc"
     )
 }
 
-export DAILYQA_DAILYSRV_HOST=`ini.sh conf/dailyqa.conf dailysrv.host`
-export DAILYQA_DAILYSRV_USER=`ini.sh conf/dailyqa.conf dailysrv.user`
-export DAILYQA_DAILYSRV_PWD=`ini.sh conf/dailyqa.conf dailysrv.pwd`
-export DAILYQA_DAILYSRV_PORT=`ini.sh conf/dailyqa.conf dailysrv.port`
-export DAILYQA_GIT_USER=`ini.sh conf/dailyqa.conf git.user`
-export DAILYQA_GIT_PWD=`ini.sh conf/dailyqa.conf git.pwd`
-export DAILYQA_GIT_EMAIL=`ini.sh conf/dailyqa.conf git.email`
-export DAILYQA_SSH_PWD_DEFAULT=`ini.sh conf/dailyqa.conf ssh.pwd.default`
-export DAILYQA_SSH_PORT_DEFAULT=`ini.sh conf/dailyqa.conf ssh.port.default`
+export DAILYQA_DAILYSRV_HOST=`ini.sh conf/common.conf qahome_server_host`
+export DAILYQA_DAILYSRV_USER=`ini.sh conf/common.conf qahome_server_user`
+export DAILYQA_DAILYSRV_PWD=`ini.sh conf/common.conf qahome_server_pwd`
+export DAILYQA_DAILYSRV_PORT=`ini.sh conf/common.conf qahome_server_port`
+export DAILYQA_GIT_USER=`ini.sh conf/common.conf git_user`
+export DAILYQA_GIT_PWD=`ini.sh conf/common.conf git_pwd`
+export DAILYQA_GIT_EMAIL=`ini.sh conf/common.conf git_email`
+export DAILYQA_SSH_PWD_DEFAULT=`ini.sh conf/common.conf default_ssh_pwd`
+export DAILYQA_SSH_PORT_DEFAULT=`ini.sh conf/common.conf default_ssh_port`
 
 analyzeMessageInfo $1
 export -f getMsgValue

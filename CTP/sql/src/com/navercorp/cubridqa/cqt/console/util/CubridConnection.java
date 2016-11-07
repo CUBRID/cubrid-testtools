@@ -46,8 +46,6 @@ import org.apache.commons.dbcp.BasicDataSource;
 
 import com.navercorp.cubridqa.cqt.console.bean.DefTestDB;
 import com.navercorp.cubridqa.cqt.console.bean.Test;
-import com.navercorp.cubridqa.cqt.console.util.MyDataSource;
-import com.navercorp.cubridqa.cqt.console.util.MyDriverManager;
 
 public class CubridConnection {
 
@@ -76,8 +74,7 @@ public class CubridConnection {
 	 * @param _obj
 	 * @param seq
 	 */
-	public CubridConnection(String connName, String connGroup, Object _obj,
-			int seq) {
+	public CubridConnection(String connName, String connGroup, Object _obj, int seq) {
 		if (connName == null || connName.trim().length() == 0) {
 			connName = "default";
 		}
@@ -97,8 +94,7 @@ public class CubridConnection {
 	 * @param autocreate
 	 */
 
-	public CubridConnection(String connName, String connGroup, Object _obj,
-			int seq, boolean autocreate) {
+	public CubridConnection(String connName, String connGroup, Object _obj, int seq, boolean autocreate) {
 
 		if (connName == null || connName.trim().length() == 0) {
 			connName = "default";
@@ -161,19 +157,16 @@ public class CubridConnection {
 			String url = dbConf.getDburl() + "?charset=" + dbConf.getCharSet();
 			String user = dbConf.getDbuser();
 			String password = dbConf.getDbpassword();
-			if(Test.urlProperties != null && Test.urlProperties.length()!=0){
+			if (Test.urlProperties != null && Test.urlProperties.length() != 0) {
 				url += "&" + Test.urlProperties;
 			}
-			Conn = MyDriverManager.giveConnection(CubridConnManager.driver,
-					url, user, password);
+			Conn = MyDriverManager.giveConnection(CubridConnManager.driver, url, user, password);
 		} else {
 			if (dataSource != null) {
 				try {
 					Conn = dataSource.getConnection();
 				} catch (SQLException e) {
-					System.out
-							.println("Error:Create Connection with  dataSource Failed !!!  ConnName :"
-									+ this.connName);
+					System.out.println("Error:Create Connection with  dataSource Failed !!!  ConnName :" + this.connName);
 
 				}
 			}

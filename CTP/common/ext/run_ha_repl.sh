@@ -58,6 +58,13 @@ function run_ha_repl()
    branch=$BUILD_SCENARIO_BRANCH_GIT
    category=$BUILD_SCENARIOS
   
+   # Disk checking
+   if [ -f $CTP_HOME/conf/ha_repl.act ];then
+       runAction ha_repl.act
+   else
+       echo "Skip Disk Checking!"
+   fi
+    
    #init and clean log
    tmplog=$CTP_HOME/result/ha_repl/current_runtime_logs/runtime.log
    if [ -d "$CTP_HOME/result/ha_repl/current_runtime_logs" ];then
@@ -69,20 +76,20 @@ function run_ha_repl()
    
    cd $CTP_HOME
    #update configuration file
-   ini.sh -u "main.testcase.branch_git=$branch" $ha_repl_fm_test_conf
-   ini.sh -u "main.testing.category=$category" $ha_repl_fm_test_conf
-   ini.sh -u "main.testing.role=$role" $ha_repl_fm_test_conf
-   ini.sh -u "main.collaborate.url=$coverage_collaborate_url" $ha_repl_fm_test_conf
-   ini.sh -u "main.coverage.controller.ip=$coverage_controller_ip" $ha_repl_fm_test_conf
-   ini.sh -u "main.coverage.controller.user=$coverage_controller_user" $ha_repl_fm_test_conf 
-   ini.sh -u "main.coverage.controller.pwd=$coverage_controller_pwd" $ha_repl_fm_test_conf 
-   ini.sh -u "main.coverage.controller.port=$coverage_controller_port" $ha_repl_fm_test_conf 
-   ini.sh -u "main.coverage.controller.result=$coverage_controller_target_dir" $ha_repl_fm_test_conf 
+   ini.sh -u "testcase_git_branch=$branch" $ha_repl_fm_test_conf
+   ini.sh -u "test_category=$category" $ha_repl_fm_test_conf
+   ini.sh -u "cubrid_install_role=$role" $ha_repl_fm_test_conf
+   ini.sh -u "cubrid_additional_download_url=$coverage_collaborate_url" $ha_repl_fm_test_conf
+   ini.sh -u "coverage_controller_ip=$coverage_controller_ip" $ha_repl_fm_test_conf
+   ini.sh -u "coverage_controller_user=$coverage_controller_user" $ha_repl_fm_test_conf 
+   ini.sh -u "coverage_controller_pwd=$coverage_controller_pwd" $ha_repl_fm_test_conf 
+   ini.sh -u "coverage_controller_port=$coverage_controller_port" $ha_repl_fm_test_conf 
+   ini.sh -u "coverage_controller_result=$coverage_controller_target_dir" $ha_repl_fm_test_conf 
    if [ "$BUILD_TYPE" == "coverage" ];then
-   		ini.sh -u "main.feedback.type=file" $ha_repl_fm_test_conf
+   		ini.sh -u "feedback_type=file" $ha_repl_fm_test_conf
    fi 
-   ini.sh -u "main.testbuild.url=$url" $ha_repl_fm_test_conf
-   ini.sh -u "main.mode.continue=false" $ha_repl_fm_test_conf
+   ini.sh -u "cubrid_download_url=$url" $ha_repl_fm_test_conf
+   ini.sh -u "test_continue_yn=false" $ha_repl_fm_test_conf
    
    #Get branch of case
    testcase_path=""
@@ -95,7 +102,7 @@ function run_ha_repl()
    if [ "x${testcase_path}" != "x" ];then
 	    run_git_update -f $testcase_path  -b $BUILD_SCENARIO_BRANCH_GIT
 	    ini.sh -u "scenario=$testcase_path" $ha_repl_fm_test_conf
-	    ini.sh -u "main.testcase.excluded=${testcase_path}/config/daily_regression_test_exclude_list_ha_repl.conf" $ha_repl_fm_test_conf
+	    ini.sh -u "testcase_exclude_from_file=${testcase_path}/config/daily_regression_test_exclude_list_ha_repl.conf" $ha_repl_fm_test_conf
    fi
 
    #execute testing
@@ -105,13 +112,20 @@ function run_ha_repl()
 
 function run_ha_repl_continue()
 {
+   # Disk checking
+   if [ -f $CTP_HOME/conf/ha_repl.act ];then
+       runAction ha_repl.act
+   else
+       echo "Skip Disk Checking!"
+   fi
+   
    #init and clean log
    tmplog=$CTP_HOME/result/ha_repl/current_runtime_logs/runtime.log
    if [ ! -f $tmplog ];then
        mkdir -p $CTP_HOME/result/ha_repl/current_runtime_logs
    fi
    
-   ini.sh -u "main.mode.continue=true" ${ha_repl_fm_test_conf}
+   ini.sh -u "test_continue_yn=true" ${ha_repl_fm_test_conf}
    $CTP_HOME/bin/ctp.sh ha_repl -c ${ha_repl_fm_test_conf} 2>&1 | tee -a $tmplog
 }
 
@@ -119,6 +133,15 @@ function run_ha_repl_continue()
 function run_ha_repl_legacy()
 {
     category=$BUILD_SCENARIOS
+    db_charset=`getMsgValue $MKEY_TESTING_DB_CHARSET en_US`
+    test_case_root=`getMsgValue $MKEY_TESTCASE_ROOT $HOME/dailyqa/$BUILD_SVN_BRANCH/`
+    prefetch_mode=`getMsgValue $MKEY_TESTING_PREFETCH false`  
+    # Disk checking
+    if [ -f $CTP_HOME/conf/ha_repl_legacy.act ];then
+    	runAction ha_repl_legacy.act
+    else
+    	echo "Skip Disk Checking!"
+    fi
     
     # Update case from svn repository
     run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/sql
@@ -126,13 +149,20 @@ function run_ha_repl_legacy()
     run_svn_update -f $HOME/dailyqa/$BUILD_SVN_BRANCH/config
     cd $HOME/ha_repl_test
     sh upgrade.sh
-    sh run.sh -Dmain.testing.category=$category -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=$feedback_type";fi` $url false
+    sh run.sh -Dmain.db.charset=${db_charset} -Dmain.testbuild.url=$url -Dmain.testcase.root=${test_case_root}  -Dmain.testcase.excluded=$HOME/dailyqa/$BUILD_SVN_BRANCH/config/ha_replication_excluded_list -Dmain.testing.category=$category -Dmain.testing.prefetch=${prefetch_mode} -Dmain.testing.role=$role -Dmain.collaborate.url=$coverage_collaborate_url -Dmain.coverage.controller.ip=$coverage_controller_ip -Dmain.coverage.controller.user=$coverage_controller_user -Dmain.coverage.controller.pwd=$coverage_controller_pwd -Dmain.coverage.controller.result=$coverage_controller_target_dir `if [ "$BUILD_TYPE" == "coverage" ];then echo "-Dmain.feedback.type=file";fi`
     cd -
 }
 
 
 function run_ha_repl_lagacy_continue()
 {
+    # Disk checking
+    if [ -f $CTP_HOME/conf/ha_repl_legacy.act ];then
+    	runAction ha_repl_legacy.act
+    else
+    	echo "Skip Disk Checking!"
+    fi
+    
     cd $HOME/ha_repl_test
     #execute testing
     sh upgrade.sh

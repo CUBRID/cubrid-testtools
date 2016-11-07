@@ -42,7 +42,7 @@ public class Configure {
 	public Configure() throws IOException {
 		props = new Properties();
 
-		File file = new File(Constants.CTP_HOME + File.separator + "conf" + File.separator + "dailyqa.conf");
+		File file = new File(Constants.CTP_HOME + File.separator + "conf" + File.separator + "common.conf");
 		if (file.exists()) {
 			props.putAll(CommonUtils.getProperties(file));
 		}
@@ -51,11 +51,11 @@ public class Configure {
 			props.putAll(CommonUtils.getProperties(file));
 		}
 
-		String driver = props.getProperty("dailydb.driver");
+		String driver = props.getProperty("qahome_db_driver");
 		try {
 			Class.forName(driver);
 		} catch (Exception e) {
-			System.out.println("[ERROR] fail to load JDBC Driver, please refer to dailydb.driver parameter in dailyqa.conf file.");
+			System.out.println("[ERROR] fail to load JDBC Driver, please refer to qahome_db_driver parameter in common.conf file.");
 		}
 	}
 

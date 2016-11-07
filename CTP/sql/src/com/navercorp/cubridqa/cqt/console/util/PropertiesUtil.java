@@ -40,16 +40,13 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import com.navercorp.cubridqa.cqt.console.bean.Test;
-import com.navercorp.cubridqa.cqt.console.util.TestUtil;
 
 public class PropertiesUtil {
 
-	private static String propertiesFilePath = EnvGetter
-			.getenv("CTP_HOME") + File.separator + TestUtil.CONFIG_NAME + File.separator + "local.properties";
+	private static String propertiesFilePath = EnvGetter.getenv("CTP_HOME") + File.separator + TestUtil.CONFIG_NAME + File.separator + "local.properties";
 
 	public static String getValue(String key) {
-		if (propertiesFilePath != null && new File(propertiesFilePath) != null
-				&& new File(propertiesFilePath).exists()) {
+		if (propertiesFilePath != null && new File(propertiesFilePath) != null && new File(propertiesFilePath).exists()) {
 			return getValue(key, propertiesFilePath);
 		} else {
 			return "";
@@ -62,113 +59,93 @@ public class PropertiesUtil {
 	}
 
 	public static void setValue(String key, String value) {
-		if (propertiesFilePath != null && new File(propertiesFilePath) != null
-				&& new File(propertiesFilePath).exists()) {
+		if (propertiesFilePath != null && new File(propertiesFilePath) != null && new File(propertiesFilePath).exists()) {
 			setValue(key, value, propertiesFilePath);
 		}
 	}
 
-	public static void initConfig(String configFile, Test test)
-			throws Exception {
+	public static void initConfig(String configFile, Test test) throws Exception {
 		SAXReader reader = new SAXReader();
 		String val = "";
 		String script = "";
 		if (configFile == null || test == null) {
-			throw new Exception(
-					"Test configuration file is null or Test object creation fail!");
+			throw new Exception("Test configuration file is null or Test object creation fail!");
 		}
 
 		Document document = reader.read(configFile);
 		Element root = document.getRootElement();
-		List rmd = root.selectNodes(
-				TestUtil.ROOT_NODE + TestUtil.RUN_MODE);
-		if(!rmd.isEmpty())
-		{
-			Element run_mode = (Element)rmd.get(0);
+		List rmd = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.RUN_MODE);
+		if (!rmd.isEmpty()) {
+			Element run_mode = (Element) rmd.get(0);
 			val = run_mode.getText();
 			test.setRun_mode(val);
 		}
-		
-		List rmdSuffix = root.selectNodes(
-				TestUtil.ROOT_NODE + TestUtil.RUN_MODE_SECONDARY);
-		if(!rmdSuffix.isEmpty())
-		{
-			Element run_mode_suffix = (Element)rmdSuffix.get(0);
+
+		List rmdSuffix = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.RUN_MODE_SECONDARY);
+		if (!rmdSuffix.isEmpty()) {
+			Element run_mode_suffix = (Element) rmdSuffix.get(0);
 			val = run_mode_suffix.getText();
 			test.setRunModeSecondary(val);
 		}
-		
-		
-		List ac = root.selectNodes(
-				TestUtil.ROOT_NODE + TestUtil.AUTOCOMMIT);
-		if(!ac.isEmpty())
-		{
-			Element autocommit = (Element)ac.get(0);
+
+		List ac = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.AUTOCOMMIT);
+		if (!ac.isEmpty()) {
+			Element autocommit = (Element) ac.get(0);
 			val = autocommit.getText();
 			test.setAutocommit(val);
 		}
-		
-		List hc = root.selectNodes(
-				TestUtil.ROOT_NODE + TestUtil.HOLDCAS);
-		if(!hc.isEmpty())
-		{
-			Element autocommit = (Element)hc.get(0);
+
+		List hc = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.HOLDCAS);
+		if (!hc.isEmpty()) {
+			Element autocommit = (Element) hc.get(0);
 			val = autocommit.getText();
 			test.setHoldcas(val);
 		}
-		
+
 		List checkAlive = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.CHECK_SERVER_STATUS);
-		if(!checkAlive.isEmpty())
-		{
+		if (!checkAlive.isEmpty()) {
 			Element serverStatus = (Element) checkAlive.get(0);
 			val = serverStatus.getText();
 			test.setNeedCheckServerStatus(Boolean.parseBoolean(val));
 		}
-		
+
 		List urlProperties = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.URL_PROPERTIES);
-		if(!urlProperties.isEmpty())
-		{
+		if (!urlProperties.isEmpty()) {
 			Element urlProp = (Element) urlProperties.get(0);
 			val = urlProp.getText();
 			test.setUrlProperties(val);
 		}
-		
+
 		List needXmlSummary = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.NEED_XML_SUMMARY);
-		if(!needXmlSummary.isEmpty())
-		{
+		if (!needXmlSummary.isEmpty()) {
 			Element needXml = (Element) needXmlSummary.get(0);
 			val = needXml.getText();
 			test.setNeedSummaryXML(Boolean.parseBoolean(val));
 		}
-		
+
 		List needAnswerInSummary = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.NEED_ANSWER_In_Summary);
-		if(!needAnswerInSummary.isEmpty())
-		{
+		if (!needAnswerInSummary.isEmpty()) {
 			Element needAnswer = (Element) needAnswerInSummary.get(0);
 			val = needAnswer.getText();
 			test.setNeedAnswerInSummary(Boolean.parseBoolean(val));
 		}
-		
+
 		List addHint = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.ADD_DEBUG_HINT);
-		if(!addHint.isEmpty())
-		{
+		if (!addHint.isEmpty()) {
 			Element serverStatus = (Element) addHint.get(0);
 			val = serverStatus.getText();
 			test.setNeedDebugHint(Boolean.parseBoolean(val));
 		}
-		
-		List rt = root.selectNodes(
-				TestUtil.ROOT_NODE + TestUtil.RESET);
-		if(!rt.isEmpty())
-		{
-			Element el = (Element)rt.get(0);
+
+		List rt = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.RESET);
+		if (!rt.isEmpty()) {
+			Element el = (Element) rt.get(0);
 			List nodes = el.elements();
 			for (Iterator iters = nodes.iterator(); iters.hasNext();) {
 				Element item = (Element) iters.next();
-				script += item.getTextTrim() + TestUtil.SQL_END
-						+ System.getProperty("line.separator");
+				script += item.getTextTrim() + TestUtil.SQL_END + System.getProperty("line.separator");
 			}
-		
+
 		}
 		test.setReset_scripts(script);
 	}

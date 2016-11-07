@@ -26,9 +26,8 @@
 package com.navercorp.cubridqa.isolation.deploy;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.isolation.Constants;
-
-
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.IsolationHelper;
 import com.navercorp.cubridqa.isolation.IsolationScriptInput;
@@ -49,51 +48,77 @@ public class TestCaseGithub {
 
 	}
 
-	public void update() throws Exception {
+	public void update() {
 		context.getFeedback().onTestCaseUpdateStart(envIdentify);
+		while (true) {
+			if (doUpdate()) {
+				break;
+			}
 
+			System.out.println("==>Retry to do case update after 5 seconds!");
+			CommonUtils.sleep(5);
+		}
+		context.getFeedback().onTestCaseUpdateStop(envIdentify);
+	}
+
+	public boolean doUpdate() {
+		boolean isSucc = true;
+		boolean needUpdateScenario = context.shouldUpdateTestCase();
 		cleanProcess();
 
 		IsolationScriptInput scripts = new IsolationScriptInput();
 
 		scripts.addCommand("cd ");
 		scripts.addCommand("cd ${CTP_HOME}/common/script");
-		
-		String ctpBranchName = System.getenv("CTP_BRANCH_NAME");
+
+		String ctpBranchName = System.getenv(ConfigParameterConstants.CTP_BRANCH_NAME);
 		if (!CommonUtils.isEmpty(ctpBranchName)) {
 			scripts.addCommand("export CTP_BRANCH_NAME=" + ctpBranchName);
 		}
-		
-		if(context.isExecuteAtLocal()) {
-			scripts.addCommand("export SKIP_UPGRADE=1");
+
+		if (context.isExecuteAtLocal()) {
+			scripts.addCommand("echo 'SKIP CTP UPDATE FOR LOCAL TEST!'");
+			scripts.addCommand("export CTP_SKIP_UPDATE=1");
 		} else {
-			String skipUpgrade = System.getenv("SKIP_UPGRADE");
+			String skipUpgrade = System.getenv(ConfigParameterConstants.CTP_SKIP_UPDATE);
 			if (!CommonUtils.isEmpty(ctpBranchName)) {
-				scripts.addCommand("export SKIP_UPGRADE=" + skipUpgrade);
+				scripts.addCommand("export CTP_SKIP_UPDATE=" + skipUpgrade);
 			}
 		}
 
 		scripts.addCommand("chmod u+x upgrade.sh");
 		scripts.addCommand("./upgrade.sh");
-		
-		if (context.shouldUpdateTestCase()) {
-			scripts.addCommand("cd; ${CTP_HOME}/common/script/run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
+		if (needUpdateScenario) {
+			scripts.addCommand("cd ");
+			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
 		}
 		scripts.addCommand("cd ${CTP_HOME}/isolation/ctltool");
 		scripts.addCommand("chmod u+x *.sh");
-		
+
 		scripts.addCommand("echo Above EnvId is " + this.currEnvId);
 		String result;
 		try {
 			result = ssh.execute(scripts);
+			if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && result.indexOf("ERROR") != -1) {
+				isSucc = false;
+			}
 			System.out.println(result);
 		} catch (Exception e) {
+			isSucc = false;
 			System.out.print("[ERROR] " + e.getMessage());
-			throw e;
 		}
-		System.out.println("TEST CASES AND CTLTOOL UPDATE COMPLETE");
 
-		context.getFeedback().onTestCaseUpdateStop(envIdentify);
+		if (needUpdateScenario) {
+			if (isSucc) {
+				System.out.println("TEST CASE UPDATE COMPLETE!");
+			} else {
+				System.out.println("TEST CASE UPDATE FAIL!");
+			}
+		} else {
+			System.out.println("SKIP TEST CASE UPDATE!");
+		}
+
+		return isSucc;
 	}
 
 	public void cleanProcess() {

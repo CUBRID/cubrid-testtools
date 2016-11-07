@@ -25,7 +25,6 @@
 package com.navercorp.cubridqa.cqt.console.bean;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -33,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-
 
 public class Test {
 	public static final int MODE_RUN = 0;
@@ -47,17 +45,17 @@ public class Test {
 	public static final int TYPE_FUNCTION = 0;
 
 	public static final int TYPE_PERFORMANCE = 1;
-	
+
 	public static String urlProperties = "";
 
 	private String testId;
-	
+
 	private String testType;
-	
+
 	private String testTypeAlias;
-	
+
 	private String testBit;
-	
+
 	private String path;
 
 	private int siteRunTimes;
@@ -71,7 +69,7 @@ public class Test {
 	private String language = "";
 
 	private String collation = "";
-	
+
 	private String result_dir = "";
 
 	private boolean i18n;
@@ -81,25 +79,25 @@ public class Test {
 	private boolean isFirstTime = true;
 
 	private String run_mode = null;
-	
-	private String runModeSecondary = null; 
-	
+
+	private String runModeSecondary = null;
+
 	private String holdcas = "";
 
 	private String reset_scripts = "";
 
 	private String autocommit = "";
-	
+
 	private boolean needSummaryXML = false;
-	
+
 	private boolean needAnswerInSummary = false;
-	
+
 	private boolean needCheckServerStatus = false;
-	
+
 	private boolean needDebugHint = false;
-	
+
 	private String scenarioRootPath = "";
-	
+
 	public String getScenarioRootPath() {
 		return scenarioRootPath;
 	}
@@ -115,7 +113,7 @@ public class Test {
 	public void setUrlProperties(String urlProperties) {
 		this.urlProperties = urlProperties;
 	}
-	
+
 	public boolean isNeedDebugHint() {
 		return needDebugHint;
 	}
@@ -141,7 +139,7 @@ public class Test {
 	}
 
 	private BufferedWriter fileHandle = null;
-	
+
 	public BufferedWriter getFileHandle() {
 		return fileHandle;
 	}
@@ -159,9 +157,8 @@ public class Test {
 	public void setFailList(TestCaseSummary[] failList) {
 		this.failList = failList;
 	}
-	
-	public void initFailSummary()
-	{
+
+	public void initFailSummary() {
 		failList = new TestCaseSummary[100];
 		this.setFailList(failList);
 	}
@@ -174,7 +171,6 @@ public class Test {
 		this.autocommit = autocommit;
 	}
 
-
 	public String getHoldcas() {
 		return holdcas;
 	}
@@ -182,7 +178,7 @@ public class Test {
 	public void setHoldcas(String holdcas) {
 		this.holdcas = holdcas;
 	}
-	
+
 	public String getReset_scripts() {
 		return reset_scripts;
 	}
@@ -264,8 +260,8 @@ public class Test {
 	private int type = 0;
 
 	private boolean isDebug;
-	
-	private Map<String, Object> connIDList  = new Hashtable<String, Object>();
+
+	private Map<String, Object> connIDList = new Hashtable<String, Object>();
 
 	private Set<String> resultDirSet = new HashSet();
 
@@ -300,7 +296,7 @@ public class Test {
 	public void setNeedAnswerInSummary(boolean needAnswerInSummary) {
 		this.needAnswerInSummary = needAnswerInSummary;
 	}
-	
+
 	public List<String> getDirPath() {
 		return dirPath;
 	}
@@ -312,7 +308,7 @@ public class Test {
 	public void setRunMode(int runMode) {
 		this.runMode = runMode;
 	}
-	
+
 	public String getRunModeSecondary() {
 		return runModeSecondary;
 	}
@@ -420,7 +416,7 @@ public class Test {
 	public void setType(int type) {
 		this.type = type;
 	}
-	
+
 	public String getTestTypeAlias() {
 		return testTypeAlias;
 	}
@@ -520,7 +516,7 @@ public class Test {
 	public void setCharset_file(String charset_file) {
 		this.charset_file = charset_file;
 	}
-	
+
 	public String getResult_dir() {
 		return result_dir;
 	}
@@ -528,7 +524,7 @@ public class Test {
 	public void setResult_dir(String result_dir) {
 		this.result_dir = result_dir;
 	}
-	
+
 	public Map<String, Object> getConnIDList() {
 		return connIDList;
 	}
@@ -544,7 +540,7 @@ public class Test {
 	public void setTestType(String testType) {
 		this.testType = testType;
 	}
-	
+
 	public String getTestBit() {
 		return testBit;
 	}

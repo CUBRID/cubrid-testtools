@@ -26,13 +26,11 @@
 package com.navercorp.cubridqa.scheduler.consumer;
 
 import java.io.IOException;
-
 import java.util.Properties;
 
 import javax.jms.JMSException;
 
 import com.navercorp.cubridqa.scheduler.common.ConsumerContext;
-import com.navercorp.cubridqa.scheduler.consumer.Configure;
 
 public class Consumer {
 	Configure conf;
@@ -49,6 +47,4 @@ public class Consumer {
 
 	}
 
-	
-	
 }

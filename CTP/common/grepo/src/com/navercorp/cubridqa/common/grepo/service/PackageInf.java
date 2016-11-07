@@ -27,14 +27,11 @@
 package com.navercorp.cubridqa.common.grepo.service;
 
 import java.io.File;
-
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Properties;
 
-import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Constants;
 
 public class PackageInf {

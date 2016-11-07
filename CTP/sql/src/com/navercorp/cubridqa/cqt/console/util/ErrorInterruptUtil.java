@@ -31,9 +31,8 @@ import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.Test;
 import com.navercorp.cubridqa.cqt.console.bo.ConsoleBO;
 
-
 public abstract class ErrorInterruptUtil {
-	
+
 	/**
 	 * 
 	 * @Title: isCaseRunError
@@ -45,35 +44,35 @@ public abstract class ErrorInterruptUtil {
 	 * @throws
 	 */
 	@SuppressWarnings("deprecation")
-	public static boolean isCaseRunError(ConsoleBO bo,String caseFile){
-		if(!ErrorInterrupt.ERROR_INTER){
+	public static boolean isCaseRunError(ConsoleBO bo, String caseFile) {
+		if (!ErrorInterrupt.ERROR_INTER) {
 			System.out.println("do nothing for no error int");
 			return false;
 		}
 
-	   Test test=bo.getTest();
-	   CaseResult caseResult=test.getCaseResultFromMap(caseFile);
-	   boolean runResult=caseResult.isSuccessFul();
-	   if(!runResult){
-		  bo.getProcessMonitor().setCompleteFile( bo.getProcessMonitor().getAllFile());
-	       String resultDir=caseResult.getResultDir();
-	       Date now=new Date();
-	       String month="m"+(now.getMonth()+1);
-	       String realResult=realResult(resultDir,month);
-	       ErrorInterrupt.DELETE_RESULT_PATH=realResult;
-		   return true;
-	   }
-	    return false;
+		Test test = bo.getTest();
+		CaseResult caseResult = test.getCaseResultFromMap(caseFile);
+		boolean runResult = caseResult.isSuccessFul();
+		if (!runResult) {
+			bo.getProcessMonitor().setCompleteFile(bo.getProcessMonitor().getAllFile());
+			String resultDir = caseResult.getResultDir();
+			Date now = new Date();
+			String month = "m" + (now.getMonth() + 1);
+			String realResult = realResult(resultDir, month);
+			ErrorInterrupt.DELETE_RESULT_PATH = realResult;
+			return true;
+		}
+		return false;
 	}
-	
-	private static String realResult(String resultDir,String month ){
+
+	private static String realResult(String resultDir, String month) {
 		try {
-			File now=new File(resultDir);
-			File parent=now.getParentFile();
-			if(parent.getAbsolutePath().endsWith(month)){
+			File now = new File(resultDir);
+			File parent = now.getParentFile();
+			if (parent.getAbsolutePath().endsWith(month)) {
 				return resultDir;
-			}else{
-				return realResult(parent.getAbsolutePath(),month);
+			} else {
+				return realResult(parent.getAbsolutePath(), month);
 			}
 		} catch (Throwable t) {
 			return null;

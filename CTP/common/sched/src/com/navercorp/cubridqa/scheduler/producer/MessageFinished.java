@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.scheduler.producer;
 
 import java.io.File;
-
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -35,35 +34,36 @@ import com.navercorp.cubridqa.scheduler.common.Constants;
 import com.navercorp.cubridqa.scheduler.common.Log;
 
 public class MessageFinished {
-	
+
 	private static MessageFinished instance;
-	
+
 	String fileName;
 	ArrayList<String> list;
-	
-	private MessageFinished() throws IOException{
+
+	private MessageFinished() throws IOException {
 		fileName = CommonUtils.concatFile(Constants.CTP_HOME + File.separator + "conf", "message_finished.txt");
 		this.list = CommonUtils.getLineList(fileName);
-		if(this.list == null) this.list = new ArrayList<String>();
+		if (this.list == null)
+			this.list = new ArrayList<String>();
 	}
-	
+
 	public static MessageFinished getInstantce() throws IOException {
-		if(instance == null) {
+		if (instance == null) {
 			instance = new MessageFinished();
 		}
 		return instance;
 	}
-	
-	public boolean exists(String md5){
-		return this.list.contains(md5);		
+
+	public boolean exists(String md5) {
+		return this.list.contains(md5);
 	}
-	
+
 	public synchronized void add(String md5) {
 		this.list.add(md5);
 		Log log = new Log(fileName, false, true);
 		log.println(md5);
 	}
-	
+
 	public void clear() throws IOException {
 		File f = new File(fileName);
 		f.delete();
