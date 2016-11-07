@@ -116,16 +116,17 @@ This section simply explains how to start sql test with CTP. For more categories
 	    -----------------------
 	    ```
 	* Alternatively, you can use the webconsole of CTP to check results(the current webconsole feature only support SQL and Medium)
-	  ```
-	   $ bin/ctp.sh webconsole start
-	  ```
-	  Config: /home/user/CTP/conf/webconsole.conf
-	  Web Root: /home/user/CTP/sql/webconsole
-	  Begin to start ...
+	    ```
+	    $ bin/ctp.sh webconsole start
+	    ```
+	    ```
+	    Config: /home/user/CTP/conf/webconsole.conf
+	    Web Root: /home/user/CTP/sql/webconsole
+	    Begin to start ...
 	         
-	  Done
-	  URL:  http://127.0.0.1:8888
-	  ```
+	    Done
+	    URL:  http://127.0.0.1:8888
+	    ```
 	* Please open the ``URL`` with your browser to see the details
   
 - **SHELL**
