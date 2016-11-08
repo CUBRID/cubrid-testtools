@@ -10,7 +10,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configuration guides
 
 ## Quick Start
-The section guides users to quickly start sql test with CTP, for the more categories of testing , please refer to the related sections
+The section guides users to quickly start SQL test with CTP, for the more categories of testing , please refer to the related sections
 * Install a CUBRID build and make sure ``CUBRID`` environment variable is set correctly
 * Execute an example test as follows:
 
@@ -38,13 +38,13 @@ The section guides users to quickly start sql test with CTP, for the more catego
 ## How To Execute
 - **SQL**
  - Prepare
- 	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
+	* Make sure to set JAVA_HOME and the required environment variables correctly
  	* Check out the scenarios from [cubrid-testcases](https://github.com/CUBRID/cubrid-testcases) project or prepare your own test cases for testing
  	* Check out CTP and update the value of ``scenario`` parameter within ``CTP/conf/sql.conf`` to point to the path of your scenarios. For the current existing ``SQL`` test, you need to make sure the parameters `` java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are configured
  	* **Example** ``sql.conf`` for scenario, data file and some important parameters changes
  	* 
 	  ```
-	  # SQL section - a section for CTP tool configuration when executing sql/medium testing
+	  # SQL section - a section for CTP tool configuration when executing SQL/MEDIUM testing
 	  [sql]
 
 	  # The location of your testing scenario
@@ -62,19 +62,19 @@ The section guides users to quickly start sql test with CTP, for the more catego
 	  # In order to simulate the scenario customer uses
 	  ha_mode=yes
 	  ```
- 	* For ``Medium`` test, ``data_file`` must be configured into the [sql] section of the conf file with the path of the initial data file
+ 	* For ``MEDIUM`` test, ``data_file`` must be configured into the [sql] section of the conf file with the path of the initial data file
  	
 	  ```
 	  # Path of the data file for initial loading
 	  data_file=${HOME}/cubrid-testcases/medium/files/mdb.tar.gz
  	  ```   
- 	* For ``SQL_By_CCI`` test, ``sql_interface_type=cci`` must be configured into the [sql] section of the conf file
+ 	* For ``SQL_BY_CCI`` test, ``sql_interface_type=cci`` must be configured into the [sql] section of the conf file
  	
 	  ```
 	  # Define the interface type of SQL testing
 	  sql_interface_type=cci
  	  ```   
-	Regarding more explanations for parameters setting, please refer to [CTP/conf/sql.conf](conf/sql.conf) for SQL, [CTP/conf/medium.conf](conf/medium.conf) for Medium
+	Regarding more explanations for parameters setting, please refer to [CTP/conf/sql.conf](conf/sql.conf) for SQL, [CTP/conf/medium.conf](conf/medium.conf) for MEDIUM
 
   - Run Tests
 	* For **SQL** test:
@@ -82,17 +82,17 @@ The section guides users to quickly start sql test with CTP, for the more catego
 	    $ bin/ctp.sh sql -c ./conf/sql.conf
 	    ```
 	    
-	* For **Medium** test:
+	* For **MEDIUM** test:
 	    ```
 	    $ bin/ctp.sh medium -c ./conf/medium.conf
 	    ```
 
-	* For **SQL_By_CCI** test:
+	* For **SQL_BY_CCI** test:
 	    ```
 	    $ bin/ctp.sh sql_by_cci -c ./conf/sql.conf
 	    ``` 
 
-	* Use interactive mode to debug your **SQL/Medium** case (this feature does not support SQL_By_CCI)          
+	* Use interactive mode to debug your **SQL/MEDIUM** case (this feature does not support SQL_BY_CCI)          
 	    ```
 	    $ bin/ctp.sh sql --interactive
 	    ```
@@ -115,7 +115,7 @@ The section guides users to quickly start sql test with CTP, for the more catego
 	    Testing End!
 	    -----------------------
 	    ```
-	* Alternatively, you can use the webconsole of CTP to check results(the current webconsole feature only support SQL and Medium)
+	* Alternatively, you can use the webconsole of CTP to check results(the current webconsole feature only support SQL and MEDIUM)
 	    ```
 	    $ bin/ctp.sh webconsole start
 	    Config: /home/user/CTP/conf/webconsole.conf
@@ -130,11 +130,11 @@ The section guides users to quickly start sql test with CTP, for the more catego
 - **SHELL**
  - Prepare
 	* For local test
-		* Configure environment variables
+		* Make sure to set JAVA_HOME and the required environment variables correctly
 		```
 		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
-		* Check out the shell test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)
+		* Check out the SHELL test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)
 		* Check out CTP and configure CTP/conf/shell.conf for testing
 		```
 		# Configure parameters for cubrid.conf following the format outlined below, e.g., default.cubrid.cubrid_port_id=1523
@@ -152,13 +152,13 @@ The section guides users to quickly start sql test with CTP, for the more catego
 	* For multi-instance test
 		* Prepare at least two accounts for the multiple test instances (e.g., one account named as ``controller``, another account named as ``shell_instance1``)
 		* On ``controller`` account
-			* Configure environment variables
+			* Make sure to set JAVA_HOME and the required environment variables correctly
 			```
 			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
 			* Check out CTP and configure CTP/conf/shell.conf for testing
 			```
-			# Test instance information. For ha shell, relatedhosts must be configured for slave
+			# Test instance information. For HA SHELL, relatedhosts must be configured for slave
 			# The property values configured will be updated into CUBRID conf for testing
 			env.instance1.ssh.host=192.168.1.10
 			#env.instance1.ssh.relatedhosts=192.168.1.11
@@ -170,7 +170,7 @@ The section guides users to quickly start sql test with CTP, for the more catego
 			env.instance1.broker2.BROKER_PORT=35500
 			```
 			``` 	   
-			# Define the path of test cases used for testing, it should be checked out on test instance node. For shell heavy, shell long and ha shell, scenario should be configured accordingly.
+			# Define the path of test cases used for testing, it should be checked out on test instance node. For SHELL HEAVY, SHELL LONG and HA SHELL, scenario should be configured accordingly.
 			scenario=${HOME}/cubrid-testcases/shell
 			```
 			```
@@ -182,15 +182,15 @@ The section guides users to quickly start sql test with CTP, for the more catego
 
 		* On ``shell_instance1`` account
 			* Check out CTP
-			* Configure environment variables
+			* Make sure to set JAVA_HOME and the required environment variables correctly
 			```
 			CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
 			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
-			* Check out the shell test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)				
+			* Check out the SHELL test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)				
 
   - Run Tests 
-	* For **Shell** test:
+	* For **SHELL** test:
 	
 	  ```
 	  $ bin/ctp.sh shell -c ./conf/shell.conf
@@ -202,14 +202,14 @@ The section guides users to quickly start sql test with CTP, for the more catego
 	* ``main_snapshot.properties`` contains all the values of parameters configured during testing
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 	
-- **Isolation**
+- **ISOLATION**
  - Prepare
 	* For local test
-		* Configure environment variables
+		* Make sure to set JAVA_HOME and the required environment variables correctly
 		```
 		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
-		* Check out isolation test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)
+		* Check out ISOLATION test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)
 		* Check out CTP and configure CTP/conf/isolation.conf for testing
 		```
 		# Configure parameters for cubrid.conf following the format outlined below, e.g., default.cubrid.cubrid_port_id=1523
@@ -227,7 +227,7 @@ The section guides users to quickly start sql test with CTP, for the more catego
 	* For multi-instance test
 		* Prepare at least two accounts for the multiple test instances (e.g., one account named as ``controller``, another account named as ``isolation_instance1``)
 		* On ``controller`` account
-			* Configure environment variables
+			* Make sure to set JAVA_HOME and the required environment variables correctly
 			```
 			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
@@ -255,15 +255,15 @@ The section guides users to quickly start sql test with CTP, for the more catego
 
 		* On ``isolation_instance1`` account
 			* Check out CTP
-			* Configure environment variables
+			* Make sure to set JAVA_HOME and the required environment variables correctly
 			```
 			CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
 			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
-			* Check out the isolation test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)				
+			* Check out the ISOLATION test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)				
 
  - Run Tests 
-	* For **Isolation** test:
+	* For **ISOLATION** test:
 
       ```
 	  $ bin/ctp.sh isolation -c ./conf/isolation.conf
@@ -275,15 +275,15 @@ The section guides users to quickly start sql test with CTP, for the more catego
 	* ``main_snapshot.properties`` contains all the values of parameters configured during testing
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 
-- **HA Replication**
+- **HA REPLICATION**
   - Prepare
 	* Prepare at least three accounts for the multiple test instances (e.g., one account named as ``controller`` will be used as controller, another accounts named as ``ha_repl_instance1`` will be used as HA pairs accounts)
 	* On ``controller`` account
-		* Configure environment variables
+		* Make sure to set JAVA_HOME and the required environment variables correctly
 		```
 		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
-		* Check out the sql test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/sql directory)
+		* Check out the SQL test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/sql directory)
 		* Check out CTP and configure CTP/conf/ha_repl.conf for testing
 		```
 		# Test instance information:
@@ -309,14 +309,14 @@ The section guides users to quickly start sql test with CTP, for the more catego
 
 	* On ``ha_repl_instance1`` account
 		* Check out CTP
-		* Configure environment variables
+		* Make sure to set JAVA_HOME and the required environment variables correctly
 		```
 		CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
 		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
 			  
  - Run Tests 
-	* For **HA Replication** test:
+	* For **HA REPLICATION** test:
 
       ```
 	  $ bin/ctp.sh ha_repl -c ./conf/ha_repl.conf
@@ -328,10 +328,9 @@ The section guides users to quickly start sql test with CTP, for the more catego
 	* ``main_snapshot.properties`` contains all the values of parameters configured during testing
 	* ``test_${Node_Name}.log`` shows the logs of testing based on this instance
 
-- **Jdbc**
+- **JDBC**
   - Prepare
-	* Install CUBRID and make sure your environment variable of ``CUBRID`` is set correctly
- 	* Configure environment for JAVA
+	* Make sure to set JAVA_HOME and the required environment variables correctly
 
       ```
 	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
@@ -369,7 +368,7 @@ The section guides users to quickly start sql test with CTP, for the more catego
 	Regarding more explanations for parameters setting, please refer to [CTP/conf/jdbc.conf](conf/jdbc.conf)	
 	  
  - Run Tests 
-	* For **Jdbc** test:
+	* For **JDBC** test:
 
       ```
 	  $ bin/ctp.sh jdbc -c ./conf/jdbc.conf
@@ -388,7 +387,7 @@ It's not required that you execute the build for CTP, unless you make some chang
 ```
     
 ## How To Write Testcase
- - **SQL/Medium/SQL_By_CCI**
+ - **SQL/MEDIUM/SQL_BY_CCI**
     
    When you want to write your own test case, please follow the following rules
    * Test cases: The file extension is ``.sql`` and it is located in ``cases`` subdirectory
@@ -452,7 +451,7 @@ It's not required that you execute the build for CTP, unless you make some chang
      finish
 	  ```
 
-- **Isolation**
+- **ISOLATION**
    * Test cases: The file extension is ``.ctl``
    * Example for reference
    
@@ -537,8 +536,8 @@ It's not required that you execute the build for CTP, unless you make some chang
       - MC means main controller, it controls and coordinates the order of all transaction clients
 
 
-- **HA Replication**
-   * Test cases: Since ``HA Replication`` is using ``SQL`` scenarios to test on HA mode to verify the data replication between an active server and a standby server, so the cases are the same as ``SQL``
+- **HA REPLICATION**
+   * Test cases: Since ``HA REPLICATION`` is using ``SQL`` scenarios to test on HA mode to verify the data replication between an active server and a standby server, so the cases are the same as ``SQL``
    * CTP will transform case file to be ``case_name.test`` format with some checking statement flags around the SQL statements. And If the SQL does not contain primary key, CTP will add primary key on one column
    * Example for reference
     
@@ -561,8 +560,8 @@ It's not required that you execute the build for CTP, unless you make some chang
        --test
      ``` 
      
-- **Jdbc**
-   * Test cases: Since ``Jdbc`` unit test cases are designed based on junit framework, so all the cases need follow junit syntax and rule 
+- **JDBC**
+   * Test cases: Since ``JDBC`` unit test cases are designed based on junit framework, so all the cases need follow junit syntax and rule 
    * The current CTP identifies the case according to the @Test annotation and keywords 'test' on test method name, and ignore the case according to the @Ignore annotation on test method
    * Example for reference
     
