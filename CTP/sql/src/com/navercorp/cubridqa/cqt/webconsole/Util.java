@@ -23,6 +23,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 package com.navercorp.cubridqa.cqt.webconsole;
+
 import java.io.BufferedReader;
 
 import java.io.File;
@@ -35,7 +36,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 public class Util {
-	
+
 	public static String replace(String strSource, String strFrom, String strTo) {
 		if (strFrom == null || strFrom.equals(""))
 			return strSource;
@@ -52,9 +53,8 @@ public class Util {
 		return strDest;
 	}
 
-	public static ArrayList<String> getLineList(String filename1)
-			throws IOException {
-		
+	public static ArrayList<String> getLineList(String filename1) throws IOException {
+
 		File f = new File(filename1);
 		if (!f.exists())
 			return new ArrayList<String>();
@@ -69,81 +69,97 @@ public class Util {
 			reader1 = new BufferedReader(fsr);
 			String line;
 
-			
 			while ((line = reader1.readLine()) != null) {
 				list.add(line);
 			}
 		} finally {
-			try{
-				if(reader1!=null) reader1.close();
-			} catch(Exception e) {e.printStackTrace();}
-			
 			try {
-				if(fsr!=null) fsr.close();
-			} catch(Exception e) {e.printStackTrace();}
-			
+				if (reader1 != null)
+					reader1.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 			try {
-				if(fis!=null) fis.close();
-			} catch(Exception e) {e.printStackTrace();}
+				if (fsr != null)
+					fsr.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			try {
+				if (fis != null)
+					fis.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		return list;
 	}
-	
+
 	public static void writeFile(String filename, String content) throws IOException {
 		File file = new File(filename);
-		if(!file.exists()) {
+		if (!file.exists()) {
 			file.createNewFile();
 		}
 		FileOutputStream fos = new FileOutputStream(file);
 		OutputStreamWriter writer = null;
-		
-		try{
+
+		try {
 			writer = new OutputStreamWriter(fos, "UTF-8");
 			writer.write(content);
-			writer.flush();			
-		} finally{
-			if(writer!=null) writer.close();
-		}		
+			writer.flush();
+		} finally {
+			if (writer != null)
+				writer.close();
+		}
 	}
-	
+
 	public static String readFile(String filename1) throws IOException {
-		
+
 		File f = new File(filename1);
 		if (!f.exists())
 			return null;
 
 		FileInputStream fis = null;
 		InputStreamReader fsr = null;
-		
+
 		StringBuilder out = new StringBuilder();
-		
+
 		int len;
 		char[] buffer = new char[1024];
-		
+
 		try {
 			fis = new FileInputStream(filename1);
 			fsr = new InputStreamReader(fis, "UTF-8");
-			
+
 			while (true) {
 				len = fsr.read(buffer);
-				if(len == -1) break;
+				if (len == -1)
+					break;
 				out.append(buffer, 0, len);
 			}
 		} finally {
-			
+
 			try {
-				if(fsr!=null) fsr.close();
-			} catch(Exception e) {e.printStackTrace();}
-			
+				if (fsr != null)
+					fsr.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 			try {
-				if(fis!=null) fis.close();
-			} catch(Exception e) {e.printStackTrace();}
+				if (fis != null)
+					fis.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		return out.toString();
 	}
-	
+
 	public static String readFileOneLine(String filename, String keyInLine) throws Exception {
 		File f = new File(filename);
 		if (!f.exists())
@@ -158,59 +174,69 @@ public class Util {
 			fis = new FileInputStream(filename);
 			fsr = new InputStreamReader(fis, "UTF-8");
 			reader1 = new BufferedReader(fsr);
-			
 
 			while ((line = reader1.readLine()) != null) {
-				if(line.indexOf(keyInLine) != -1) {					
+				if (line.indexOf(keyInLine) != -1) {
 					break;
 				}
 			}
 		} finally {
-			try{
-				if(reader1!=null) reader1.close();
-			} catch(Exception e) {e.printStackTrace();}
-			
 			try {
-				if(fsr!=null) fsr.close();
-			} catch(Exception e) {e.printStackTrace();}
-			
+				if (reader1 != null)
+					reader1.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 			try {
-				if(fis!=null) fis.close();
-			} catch(Exception e) {e.printStackTrace();}
+				if (fsr != null)
+					fsr.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			try {
+				if (fis != null)
+					fis.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
-		return line;		
+		return line;
 	}
-	
+
 	public static String getFirstFileWithRecusive(String dirName, String fileName) {
 		File file = new File(dirName + File.separator + fileName);
-		if(file.exists()) return file.getAbsolutePath();
-		if(!file.getParentFile().exists()) return null;
-		
+		if (file.exists())
+			return file.getAbsolutePath();
+		if (!file.getParentFile().exists())
+			return null;
+
 		File[] subList = file.getParentFile().listFiles(new FilenameFilter() {
 
 			public boolean accept(File dir, String name) {
 				File f = new File(dir + File.separator + name);
 				return f.isDirectory();
-			}			
+			}
 		});
-		
+
 		String result;
-		for(File f: subList) {
+		for (File f : subList) {
 			result = getFirstFileWithRecusive(f.getAbsolutePath(), fileName);
-			if(result != null) {
+			if (result != null) {
 				return result;
 			}
 		}
 		return null;
 	}
-	
+
 	public static File[] getSubDirList(String dirFilename) {
 		return getSubDirList(new File(dirFilename));
 	}
-	
+
 	public static File[] getSubDirList(File dirFile) {
-				
+
 		File[] subFiles = dirFile.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -220,9 +246,9 @@ public class Util {
 		});
 		return subFiles;
 	}
-	
+
 	public static File[] getFileList(File dirFile, final String filenamePrefix) {
-		
+
 		File[] subFiles = dirFile.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -232,28 +258,30 @@ public class Util {
 		});
 		return subFiles;
 	}
-	
+
 	public static boolean isExist(String filename) {
 		File file = new File(filename);
 		return file.exists();
 	}
-	
+
 	public static File searchFile(String scenarioRoot, String testPath) {
 		File file = new File(testPath);
-		if(file.exists()) return file;
+		if (file.exists())
+			return file;
 		testPath = replace(testPath, "\\", "/");
 		String[] arr = testPath.split("/");
 		String subFilename = null;
-		
+
 		file = null;
-		for(int i=arr.length -1; i>=0;i--) {
-			subFilename = subFilename == null ? arr[i] :  arr[i] + File.separator + subFilename;
-			
+		for (int i = arr.length - 1; i >= 0; i--) {
+			subFilename = subFilename == null ? arr[i] : arr[i] + File.separator + subFilename;
+
 			file = new File(scenarioRoot + File.separator + subFilename);
-			//System.out.println("subFilename:" + file.getAbsolutePath());
-			if(file.exists() ) return file;
+			// System.out.println("subFilename:" + file.getAbsolutePath());
+			if (file.exists())
+				return file;
 		}
 		return null;
-		
+
 	}
 }

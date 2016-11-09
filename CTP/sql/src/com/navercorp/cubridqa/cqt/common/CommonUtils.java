@@ -124,22 +124,24 @@ public class CommonUtils {
 		String timeStamp = f.format(new Date());
 		return timeStamp;
 	}
-	
+
 	public static ArrayList<String> getLineList(String filename) throws IOException {
-		if(filename==null) return null;
+		if (filename == null)
+			return null;
 		File file = new File(filename);
-		if(!file.exists()) {
+		if (!file.exists()) {
 			return null;
 		}
 		ArrayList<String> resultList = new ArrayList<String>();
 		FileInputStream fis = new FileInputStream(file);
 		InputStreamReader reader = new InputStreamReader(fis, "UTF-8");
-		
+
 		LineNumberReader lineReader = new LineNumberReader(reader);
 		String line;
-		
-		while((line = lineReader.readLine()) != null) {
-			if(line.trim().equals("")) continue;
+
+		while ((line = lineReader.readLine()) != null) {
+			if (line.trim().equals(""))
+				continue;
 			resultList.add(line.trim());
 		}
 		lineReader.close();

@@ -42,7 +42,7 @@ public class Deploy {
 
 	public Deploy(Context context, String envId) throws Exception {
 		this.envId = envId;
-		this.context = context;		
+		this.context = context;
 		this.hostManager = new InstanceManager(context, envId);
 		this.log = new Log(context.getCurrentLogDir() + "/deploy_" + envId + ".log", true, context.isContinueMode());
 	}

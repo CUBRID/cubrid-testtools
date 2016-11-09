@@ -36,14 +36,13 @@ import java.util.Map;
 
 import org.w3c.dom.Element;
 
-
 public class XMLReader {
 
 	private String filename;
 	private File file;
 
 	public XMLReader() {
-		
+
 	}
 
 	public XMLReader(String filename) {
@@ -53,7 +52,7 @@ public class XMLReader {
 	}
 
 	public XMLReader(File file) {
-		
+
 		this.file = file;
 	}
 
@@ -104,8 +103,7 @@ public class XMLReader {
 	 * @param attrName
 	 * @return
 	 */
-	protected String getAttributeOfElement(Element root, String tagName,
-			String attrName) {
+	protected String getAttributeOfElement(Element root, String tagName, String attrName) {
 		Element element = XMLDocument.getElementByTagName(root, tagName);
 		return XMLDocument.getAttributeOfElement(element, attrName);
 	}

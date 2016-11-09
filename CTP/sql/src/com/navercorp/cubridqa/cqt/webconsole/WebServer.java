@@ -34,7 +34,7 @@ import com.navercorp.cubridqa.common.ShareMemory;
 public class WebServer {
 
 	public static void main(String[] args) throws Exception {
-		
+
 		int port = Integer.parseInt(args[0]);
 		String webRoot = args[1];
 
@@ -42,24 +42,24 @@ public class WebServer {
 		WebModel.SCENARIO_ROOT = args.length >= 4 ? args[3] : null;
 		if (WebModel.SCENARIO_ROOT == null)
 			WebModel.SCENARIO_ROOT = System.getenv("HOME");
-		
+
 		WebAppContext context = new WebAppContext(webRoot, "/");
 		context.setAttribute("DAILYQA_ROOT", dailyqaRoot);
-		
+
 		ShareMemory sm = new ShareMemory(webRoot + File.separator + "." + port + ".txt", 100);
 
 		Server server = null;
-		try{		
+		try {
 			sm.write(Constants.SM_STARTING);
 			server = new Server(port);
 			server.setHandler(context);
 			server.setStopAtShutdown(true);
 			server.setSendServerVersion(true);
 			server.start();
-		} catch(Exception e ) {
+		} catch (Exception e) {
 			System.out.println("Error: " + e.getMessage());
 			System.exit(1);
-		}	
+		}
 		sm.write(Constants.SM_STARTED);
 		new WebServer().new CheckForStop(server, sm).start();
 
@@ -85,17 +85,17 @@ public class WebServer {
 
 				try {
 					order = sm.read();
-				} catch (Exception e) {					
+				} catch (Exception e) {
 				}
 				if (order != null && order.equals(Constants.SM_PLEASE_STOP)) {
 					try {
 						server.stop();
-						
-					} catch (Exception e) {						
+
+					} catch (Exception e) {
 					}
-					try{
+					try {
 						sm.write(Constants.SM_STOPPED);
-					} catch (Exception e) {						
+					} catch (Exception e) {
 					}
 					System.exit(0);
 				}

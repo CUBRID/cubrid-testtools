@@ -26,7 +26,6 @@
 
 package com.navercorp.cubridqa.shell.common;
 
-
 public class GeneralScriptInput extends ScriptInput {
 
 	public static final String INIT_SCRIPT;

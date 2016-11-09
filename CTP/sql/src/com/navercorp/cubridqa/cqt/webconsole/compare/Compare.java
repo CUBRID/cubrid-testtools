@@ -23,6 +23,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 package com.navercorp.cubridqa.cqt.webconsole.compare;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -32,7 +33,7 @@ import name.fraser.neil.plaintext.diff_match_patch.Diff;
 import name.fraser.neil.plaintext.diff_match_patch.Operation;
 
 public class Compare {
-	
+
 	String sqlFilename;
 	String answerFilename;
 	String resultFilename;
@@ -40,16 +41,16 @@ public class Compare {
 	TestReader tr0;
 	ResultReader rr1;
 	ResultReader rr2;
-	
+
 	StringBuffer result;
 	int anchorIndex = 1;
-	
+
 	public Compare(String filename0, String filename1, String filename2) throws Exception {
 
 		this.sqlFilename = filename0;
-		this.answerFilename= filename1;
+		this.answerFilename = filename1;
 		this.resultFilename = filename2;
-		
+
 		tr0 = new TestReader(filename0);
 		rr1 = new ResultReader(filename1);
 		rr2 = new ResultReader(filename2);
@@ -71,13 +72,13 @@ public class Compare {
 
 		out("<html>");
 		out("<head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'>");
-		out("<title>Test: "+sqlFilename+"</title>");
+		out("<title>Test: " + sqlFilename + "</title>");
 		out("<script src='js/jquery-1.9.1.min.js'></script>");
-		out("<script src='js/page_compare.js'></script>");		
+		out("<script src='js/page_compare.js'></script>");
 		out("<style>");
 		out("body {");
 		out("   font-family: arial;");
-		out("}");		
+		out("}");
 		out(".cls_err {");
 		out("   background-color: yellow;");
 		out("}");
@@ -99,7 +100,7 @@ public class Compare {
 		out("<h5>Answer: " + answerFilename + "</h5>");
 		out("<h5>Result: " + resultFilename + "</h5>");
 		out("<input type=button id='btn_source' value='View Source'>");
-		out("&nbsp;&nbsp;<a href=#FID_N_1>Go to the first error</a>");		
+		out("&nbsp;&nbsp;<a href=#FID_N_1>Go to the first error</a>");
 		out("<table id='main_table' border=1 cellspacing=0 >");
 		out("<tr>");
 		out("<td width='35'>NO.</td>");
@@ -107,15 +108,15 @@ public class Compare {
 		out("<td>Expect</td>");
 		out("<td>Actual</td>");
 		out("</tr>");
-		
-		String sql;		
+
+		String sql;
 		int index = 0;
 		while ((sql = tr0.nextStatement()) != null) {
 			leftList = rr1.getNextBlockText();
 			rightList = rr2.getNextBlockText();
 			out(++index, sql, leftList, rightList);
 		}
-		
+
 		out("</table>");
 		out("</body>");
 		out("</html>");
@@ -126,9 +127,9 @@ public class Compare {
 
 		int leftLen = leftList == null ? 0 : leftList.size();
 		int rightLen = rightList == null ? 0 : rightList.size();
-		
+
 		LinkedList<Diff> diffs;
-		
+
 		String link;
 		boolean hasError = false;
 
@@ -140,40 +141,45 @@ public class Compare {
 					right = rightList.get(i);
 					if (!left.equals(right)) {
 						diffs = lineCompare(left, right);
-						
+
 						leftDisp = "";
 						rightDisp = "";
-						for(Diff d: diffs) {
-							if(d.operation == Operation.EQUAL) {
-								leftDisp += d.text;	
-								rightDisp += d.text;	
-							} else if(d.operation == Operation.DELETE) {
-								if(hasError == false) {
-									link = "&nbsp;[<a id=FID_N_" + (anchorIndex++) + " href='#FID_N_" + anchorIndex + "'>NEXT</a>, <a id=FID_P_" + (anchorIndex-1) +" href='#FID_P_" + (anchorIndex - 2) + "'>PREV</a>]";
-									hasError =true;
+						for (Diff d : diffs) {
+							if (d.operation == Operation.EQUAL) {
+								leftDisp += d.text;
+								rightDisp += d.text;
+							} else if (d.operation == Operation.DELETE) {
+								if (hasError == false) {
+									link = "&nbsp;[<a id=FID_N_" + (anchorIndex++) + " href='#FID_N_" + anchorIndex + "'>NEXT</a>, <a id=FID_P_" + (anchorIndex - 1) + " href='#FID_P_"
+											+ (anchorIndex - 2) + "'>PREV</a>]";
+									hasError = true;
 								} else {
 									link = "";
 								}
 								leftDisp += "<span class='cls_diff_delete'>" + d.text + "</span>" + link;
-							} else if(d.operation == Operation.INSERT) {
-								if(hasError == false) {
-									link = "&nbsp;[<a id=FID_N_" + (anchorIndex++) + " href='#FID_N_" + anchorIndex + "'>NEXT</a>, <a id=FID_P_" + (anchorIndex-1) +" href='#FID_P_" + (anchorIndex - 2) + "'>PREV</a>]";
-									hasError =true;
+							} else if (d.operation == Operation.INSERT) {
+								if (hasError == false) {
+									link = "&nbsp;[<a id=FID_N_" + (anchorIndex++) + " href='#FID_N_" + anchorIndex + "'>NEXT</a>, <a id=FID_P_" + (anchorIndex - 1) + " href='#FID_P_"
+											+ (anchorIndex - 2) + "'>PREV</a>]";
+									hasError = true;
 								} else {
 									link = "";
 								}
 								rightDisp += "<span class='cls_diff_insert'>" + d.text + "</span>" + link;
 							}
 						}
-						leftList.set(i, leftDisp);						
-						rightList.set(i, rightDisp);						
-//						leftList.set(i, "<span class='cls_err'>" + left + "</span>");
-//						rightList.set(i, "<span class='cls_err'>" + right + "</span>");
+						leftList.set(i, leftDisp);
+						rightList.set(i, rightDisp);
+						// leftList.set(i, "<span class='cls_err'>" + left +
+						// "</span>");
+						// rightList.set(i, "<span class='cls_err'>" + right +
+						// "</span>");
 					}
 				} else {
-					if(hasError == false) {
-						link = "&nbsp;[<a id=FID_N_" + (anchorIndex++) + " href='#FID_N_" + anchorIndex + "'>NEXT</a>, <a id=FID_P_" + (anchorIndex-1) +" href='#FID_P_" + (anchorIndex - 2) + "'>PREV</a>]";
-						hasError =true;
+					if (hasError == false) {
+						link = "&nbsp;[<a id=FID_N_" + (anchorIndex++) + " href='#FID_N_" + anchorIndex + "'>NEXT</a>, <a id=FID_P_" + (anchorIndex - 1) + " href='#FID_P_" + (anchorIndex - 2)
+								+ "'>PREV</a>]";
+						hasError = true;
 					} else {
 						link = "";
 					}
@@ -185,9 +191,10 @@ public class Compare {
 		if (rightLen > leftLen) {
 			for (int i = leftLen; i < rightLen; i++) {
 				right = rightList.get(i);
-				if(hasError == false) {
-					link = "&nbsp;[<a id=FID_N_" + (anchorIndex++) + " href='#FID_N_" + anchorIndex + "'>NEXT</a>, <a id=FID_P_" + (anchorIndex-1) +" href='#FID_P_" + (anchorIndex - 2) + "'>PREV</a>]";
-					hasError =true;
+				if (hasError == false) {
+					link = "&nbsp;[<a id=FID_N_" + (anchorIndex++) + " href='#FID_N_" + anchorIndex + "'>NEXT</a>, <a id=FID_P_" + (anchorIndex - 1) + " href='#FID_P_" + (anchorIndex - 2)
+							+ "'>PREV</a>]";
+					hasError = true;
 				} else {
 					link = "";
 				}
@@ -196,11 +203,11 @@ public class Compare {
 		}
 
 		out("<tr>");
-		
+
 		out("<td>");
 		out(String.valueOf(index));
 		out("</td>");
-		
+
 		out("<td style='width:300px'><pre style='width:300px;word-wrap:break-word; word-break: normal; white-space:pre-wrap; font-size:8pt;'>");
 		out(sql);
 		out("</pre></td>");
@@ -226,15 +233,15 @@ public class Compare {
 
 	private void out(ArrayList<String> list) {
 		for (String line : list) {
-			out(line );
+			out(line);
 		}
 	}
-	
+
 	private void out(String msg) {
 		result.append(msg + "\n");
 	}
-	
-	public String getResult(){
+
+	public String getResult() {
 		return result.toString();
 	}
 

@@ -28,12 +28,9 @@ import com.navercorp.cubridqa.cqt.console.util.PropertiesUtil;
 
 public class SystemConst {
 	public static final String EXPECT_HEAD = "#!/usr/bin/expect -f\r";
-	public static final String LINE_SEPERATOR = System
-			.getProperty("line.separator");
+	public static final String LINE_SEPERATOR = System.getProperty("line.separator");
 	public static final String USER_PATH = System.getProperty("user.dir");
 	public static final String ROOT_PATH = System.getProperty("home.dir");
-	public static final String QA_PATH = (PropertiesUtil.getValue("local.path")
-			.equals("")) ? "/home/xdbms/CQT"
-			: PropertiesUtil.getValue("local.path");
+	public static final String QA_PATH = (PropertiesUtil.getValue("local.path").equals("")) ? "/home/xdbms/CQT" : PropertiesUtil.getValue("local.path");
 
 }

@@ -126,8 +126,8 @@ public class Test {
 
 				if (testCaseSuccess == false) {
 					String cont = showDifferenceBetweenAnswerAndResult(this.testCaseFullName);
-					resultCont.append("=================================================================== D I F F ===================================================================")
-							.append(Constants.LINE_SEPARATOR);
+					resultCont.append("=================================================================== D I F F ===================================================================").append(
+							Constants.LINE_SEPARATOR);
 					resultCont.append(cont).append(Constants.LINE_SEPARATOR);
 				}
 				context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore, Constants.SKIP_TYPE_NO);

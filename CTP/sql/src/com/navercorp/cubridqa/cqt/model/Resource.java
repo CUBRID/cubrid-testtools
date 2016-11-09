@@ -30,46 +30,43 @@ import java.util.StringTokenizer;
 import com.navercorp.cubridqa.cqt.console.util.XstreamHelper;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-@XStreamAlias(value="resource")
+@XStreamAlias(value = "resource")
 public class Resource {
-	
 
 	protected String id;
 
 	protected String name;
 
 	public String path;
-	
-	public Resource(){
+
+	public Resource() {
 	}
-	
-	public static Resource getInstance(String absPath){
+
+	public static Resource getInstance(String absPath) {
 		Resource instance = new Resource();
-		if(absPath!=null&&!absPath.equals("")){
+		if (absPath != null && !absPath.equals("")) {
 			instance = (Resource) XstreamHelper.fromXml(absPath);
 		}
 		return instance;
 	}
-	
+
 	public Resource(String absPath) {
 		setName(absPath.replaceAll("\\\\", "/"));
 	}
 
-
 	public String getFileName() {
 		return name.substring(name.lastIndexOf("/") + 1);
 	}
-	
-	public String getRealName(){
-		StringTokenizer stringTokenizer = new StringTokenizer(name,".");
+
+	public String getRealName() {
+		StringTokenizer stringTokenizer = new StringTokenizer(name, ".");
 		String string = "";
-		if(stringTokenizer.hasMoreTokens()){
+		if (stringTokenizer.hasMoreTokens()) {
 			string = stringTokenizer.nextToken();
 		}
-		return string.substring(string.lastIndexOf("/") + 1,string.length());
+		return string.substring(string.lastIndexOf("/") + 1, string.length());
 	}
-	
-	
+
 	public String getId() {
 		return id;
 	}
@@ -77,7 +74,6 @@ public class Resource {
 	public void setId(String id) {
 		this.id = id;
 	}
-
 
 	public String getPath() {
 		return path;
@@ -94,7 +90,7 @@ public class Resource {
 	public void setPath(String path) {
 		this.path = path;
 	}
-	
+
 	public boolean equals(Object obj) {
 		if (obj instanceof Case) {
 			Case c = (Case) obj;
@@ -102,11 +98,10 @@ public class Resource {
 		}
 		return false;
 	}
-	
-	public File getFile(){
+
+	public File getFile() {
 		return new File(name);
 	}
-	
 
 	@Override
 	public int hashCode() {
@@ -116,6 +111,5 @@ public class Resource {
 	public String getTITLE() {
 		return "Resource";
 	}
-
 
 }

@@ -30,7 +30,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-
 import com.navercorp.cubridqa.cqt.console.ConsoleAgent;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.DefTestDB;
@@ -41,7 +40,6 @@ import com.navercorp.cubridqa.cqt.model.Resource;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.annotations.Annotations;
 import com.thoughtworks.xstream.io.xml.DomDriver;
-
 
 public class XstreamHelper {
 
@@ -60,7 +58,6 @@ public class XstreamHelper {
 		Annotations.configureAliases(xs, SystemModel.class);
 		Annotations.configureAliases(xs, DefTestDB.class);
 		Annotations.configureAliases(xs, CaseResult.class);
-		
 
 		xs2 = new XStream(new DomDriver());
 		// zmc 2008-1-09 add

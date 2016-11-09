@@ -33,7 +33,6 @@ public class Constants {
 
 	public static String FM_DATE_SNAPSHOT = "yyyyMMdd_hhmmss";
 
-
 	public static final String SKIP_TYPE_NO = "0";
 	public static final String SKIP_TYPE_BY_MACRO = "1"; // Not implement.
 															// Please ignore. By

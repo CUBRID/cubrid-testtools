@@ -26,7 +26,6 @@ package com.navercorp.cubridqa.cqt.console.util;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-
 @XStreamAlias(value = "system")
 public class SystemModel {
 	private String systemIp;

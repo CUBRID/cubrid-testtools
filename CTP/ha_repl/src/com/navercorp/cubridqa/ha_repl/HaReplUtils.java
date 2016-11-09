@@ -56,10 +56,11 @@ public class HaReplUtils {
 		ArrayList<SSHConnect> allHosts = hostManager.getAllNodeList();
 
 		StringBuffer s = new StringBuffer();
-		s.append("pkill -u $USER cub;ps -u $USER | grep cub | awk '{print $1}' | grep -v PID | xargs -i  kill -9 {}; ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {};cubrid deletedb "
-				+ hostManager.getTestDb()).append(";");
+		s.append(
+				"pkill -u $USER cub;ps -u $USER | grep cub | awk '{print $1}' | grep -v PID | xargs -i  kill -9 {}; ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {};cubrid deletedb "
+						+ hostManager.getTestDb()).append(";");
 		s.append("cd ${CUBRID}/databases/").append(";");
-		if(CommonUtils.isEmpty(hostManager.getTestDb()) == false) {
+		if (CommonUtils.isEmpty(hostManager.getTestDb()) == false) {
 			s.append("rm -rf ").append(hostManager.getTestDb().trim() + "*").append(";");
 		}
 		s.append("cd ~;");
@@ -104,7 +105,7 @@ public class HaReplUtils {
 
 		String result = master.execute(script);
 		log.println(result);
-	    System.out.println(result);
+		System.out.println(result);
 		if (result.indexOf("fail") != -1) {
 			throw new Exception("fail to create on master.");
 		}
@@ -117,7 +118,7 @@ public class HaReplUtils {
 			log.println("------------ SLAVE/REPLICA : CREATE DATABASE -----------------");
 			result = ssh.execute(script);
 			log.println(result);
-		    System.out.println(result);
+			System.out.println(result);
 			if (result.indexOf("fail") != -1) {
 				throw new Exception("fail to create on slave/replica.");
 			}
@@ -148,8 +149,6 @@ public class HaReplUtils {
 		return false;
 	}
 
-
-	
 	public static ArrayList<String[]> extractTableToBeVerified(String input, String flag) {
 
 		ArrayList<String[]> list = new ArrayList<String[]>();
