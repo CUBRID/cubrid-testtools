@@ -120,15 +120,15 @@ public class SummaryModel {
 		}
 		return failureTestCaseList;
 	}
-	
+
 	public ArrayList<File> searchFailureTestCaseList(File upperFile, ArrayList<File> resultList) throws Exception {
-		
+
 		File[] files = upperFile.listFiles();
 		for (File f : files) {
 			if (f.isDirectory()) {
 				searchFailureTestCaseList(f, resultList);
-			} else if(f.getAbsolutePath().endsWith(".sql")) {
-				resultList.add(f);				
+			} else if (f.getAbsolutePath().endsWith(".sql")) {
+				resultList.add(f);
 			}
 		}
 		return resultList;
@@ -216,7 +216,7 @@ public class SummaryModel {
 			if (key.equals("msg_id")) {
 				continue;
 			}
-				
+
 			value = line.substring(firstColon + 1).trim();
 
 			if (isSummaryItem) {

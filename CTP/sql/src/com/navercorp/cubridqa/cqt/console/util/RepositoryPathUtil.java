@@ -26,8 +26,6 @@ package com.navercorp.cubridqa.cqt.console.util;
 
 import java.io.File;
 
-import com.navercorp.cubridqa.cqt.console.util.PropertiesUtil;
-
 public class RepositoryPathUtil {
 
 	public static String getRepositoryPath() {
@@ -47,8 +45,7 @@ public class RepositoryPathUtil {
 	}
 
 	public static String getTestResultDir(String testId) {
-		return getRepositoryPath() + TestUtil.RESULT
-				+ TestUtil.getResultPreDir(testId);
+		return getRepositoryPath() + TestUtil.RESULT + TestUtil.getResultPreDir(testId);
 
 	}
 

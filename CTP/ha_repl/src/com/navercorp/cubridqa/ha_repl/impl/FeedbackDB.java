@@ -26,7 +26,6 @@ package com.navercorp.cubridqa.ha_repl.impl;
 
 import java.sql.Connection;
 
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -44,6 +43,7 @@ import com.navercorp.cubridqa.ha_repl.InstanceManager;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.shell.common.HttpUtil;
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 
 public class FeedbackDB implements Feedback {
@@ -72,8 +72,8 @@ public class FeedbackDB implements Feedback {
 
 		Timestamp d = new Timestamp(System.currentTimeMillis());
 
-		String category = context.getProperty("main.testing.category");
-		String os = context.getProperty("main.testing.os");
+		String category = context.getTestCategory();
+		String os = context.getTestPlatform();
 
 		sql = "insert into ha_repl_main(test_build, category, start_time, os, version) values(?, ?, ?, ?, ?)";
 
@@ -138,7 +138,7 @@ public class FeedbackDB implements Feedback {
 
 		shutdownDataSource();
 
-		String noticeUrl = context.getProperty("feedback.qahome.notice_load");
+		String noticeUrl = context.getProperty(ConfigParameterConstants.FEEDBACK_NOTICE_QAHOME_URL);
 		if (noticeUrl != null && noticeUrl.trim().length() > 0) {
 			try {
 				noticeUrl = CommonUtils.replace(noticeUrl, "<MAINID>", String.valueOf(task_id));
@@ -315,7 +315,8 @@ public class FeedbackDB implements Feedback {
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType) {
 
 		if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
-			println((flag ? "[OK]" : "[NOK]") + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
+			// println((flag ? "[OK]" : "[NOK]") + " " + testCase + " " +
+			// elapseTime + " " + envIdentify, resultCont, "");
 		} else {
 			println("[SKIP]" + testCase);
 		}
@@ -366,7 +367,7 @@ public class FeedbackDB implements Feedback {
 
 	@Override
 	public void onTestCaseStartEvent(String testCase, String envIdentify) {
-		println("[TEST CASE] START " + testCase + " " + envIdentify);
+		// println("[TEST CASE] START " + testCase + " " + envIdentify);
 	}
 
 	@Override

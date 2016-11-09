@@ -25,6 +25,7 @@
 #
 
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+alias ini="sh ${CTP_HOME}/bin/ini.sh"
 
 baseHome=$CTP_HOME/common
 
@@ -62,13 +63,13 @@ while getopts "f:b:t:h:" opt; do
       esac
 done
 
-[ ! -d "$local_git_source_home" ] && echo "please confirm your local_git_source_home parameter!" && exit 1
+[ ! -d "$local_git_source_home" ] && echo "please confirm your scenario $local_git_source_home is correct or not!" && exit 1
 [ -z "$branch_name" ] && echo "please branch_name parameter!" && exit 1
+[ ! -f ${CTP_HOME}/conf/common.conf ] && echo "please confirm ${CTP_HOME}/conf/common.conf exist or not!" && exit 1
 
-
-gitUser=`awk -F '=' '/git.user/ {print $2}' ${CTP_HOME}/conf/dailyqa.conf|tr -d '\r'`
-gitPwd=`awk -F '=' '/git.pwd/ {print $2}' ${CTP_HOME}/conf/dailyqa.conf|tr -d '\r'`
-gitMail=`awk -F '=' '/git.email/ {print $2}' ${CTP_HOME}/conf/dailyqa.conf|tr -d '\r'`
+gitUser=`ini ${CTP_HOME}/conf/common.conf 'git_user'|tr -d '\r'`
+gitPwd=`ini ${CTP_HOME}/conf/common.conf 'git_pwd'|tr -d '\r'`
+gitMail=`ini ${CTP_HOME}/conf/common.conf 'git_email'|tr -d '\r'`
 
 #init config
 git config --global user.name "${gitUser}"
@@ -87,7 +88,15 @@ temp_branch_name=temp_branch_`date '+%Y%m%d%H%M%s'`
 git branch ${temp_branch_name}
 git checkout -f ${temp_branch_name}
 git clean -df
+git reset -- .
+git clean -df
 
+git fetch auto_update_url
+if [ $? -ne 0 ];then
+		git branch | grep  temp_branch | xargs -i git branch -D {}
+        echo "[ERROR]: Please confirm your permission!"
+        exit
+fi
 git branch -D $branch_name
 git fetch auto_update_url
 git checkout -b $branch_name -t auto_update_url/$branch_name

@@ -27,7 +27,6 @@ package com.navercorp.cubridqa.cqt.console.util;
 import org.apache.avalon.framework.configuration.Configuration;
 import org.apache.avalon.framework.configuration.DefaultConfigurationBuilder;
 
-
 public class XmlUtil {
 
 	private static DefaultConfigurationBuilder ConfigBuilder = new DefaultConfigurationBuilder();

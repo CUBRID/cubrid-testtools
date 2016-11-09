@@ -27,11 +27,13 @@
 package com.navercorp.cubridqa.shell.deploy;
 
 import com.jcraft.jsch.JSchException;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
+import com.navercorp.cubridqa.shell.main.ShellHelper;
 
 public class DeployHA {
 	Context context;
@@ -40,39 +42,37 @@ public class DeployHA {
 	SSHConnect ssh;
 	String port, user, pwd, masterHost;
 	String envIdentify;
-	
+
 	Log log;
-	
-	public DeployHA(Context context, String masterEnvId, String slaveEnvIP, Log log) throws JSchException{
+
+	public DeployHA(Context context, String masterEnvId, String slaveEnvIP, Log log) throws JSchException {
 		this.context = context;
 		this.masterEnvId = masterEnvId;
 		this.slaveIp = slaveEnvIP;
-		
-		port = context.getInstanceProperty(masterEnvId, "ssh.port");
-		user = context.getInstanceProperty(masterEnvId, "ssh.user");
-		pwd = context.getInstanceProperty(masterEnvId, "ssh.pwd");
-		masterHost = context.getInstanceProperty(masterEnvId, "ssh.host");
-		
-		envIdentify = "MasterEnvId=" + masterEnvId + "[" + user+"@"+ masterHost +":" + port + "] - SlaveEnvId:" + slaveIp;
-		this.ssh = new SSHConnect(masterHost, port, user, pwd, context.getServiceProtocolType());
+
+		port = context.getInstanceProperty(masterEnvId, ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
+		user = context.getInstanceProperty(masterEnvId, ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
+		pwd = context.getInstanceProperty(masterEnvId, ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
+		masterHost = context.getInstanceProperty(masterEnvId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+
+		envIdentify = "MasterEnvId=" + masterEnvId + "[" + user + "@" + masterHost + ":" + port + "] - SlaveEnvId:" + slaveIp;
+		this.ssh = ShellHelper.createTestNodeConnect(context, masterEnvId);
 		this.log = log;
 	}
-	
-	
-	public void deploy()
-	{
+
+	public void deploy() {
 		log.print("===== Start to update HA.properties =====");
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("ini.sh -u MASTER_SERVER_IP=" + masterHost + " $init_path/HA.properties");
 		scripts.addCommand("ini.sh -u MASTER_SERVER_USER=" + this.user + " $init_path/HA.properties");
 		scripts.addCommand("ini.sh -u MASTER_SERVER_PW=" + this.pwd + " $init_path/HA.properties ");
 		scripts.addCommand("ini.sh -u MASTER_SERVER_SSH_PORT=" + this.port + " $init_path/HA.properties");
-		
+
 		scripts.addCommand("ini.sh -u SLAVE_SERVER_IP=" + slaveIp + " $init_path/HA.properties");
 		scripts.addCommand("ini.sh -u SLAVE_SERVER_USER=" + this.user + " $init_path/HA.properties");
 		scripts.addCommand("ini.sh -u SLAVE_SERVER_PW=" + this.pwd + " $init_path/HA.properties ");
 		scripts.addCommand("ini.sh -u SLAVE_SERVER_SSH_PORT=" + this.port + " $init_path/HA.properties");
-		
+
 		scripts.addCommand("cubrid_port_id_value=`ini.sh -s 'common' $CUBRID/conf/cubrid.conf cubrid_port_id`");
 		scripts.addCommand("ini.sh -u CUBRID_PORT_ID=$cubrid_port_id_value $init_path/HA.properties");
 		scripts.addCommand("cubrid_master_shm_id_value=`ini.sh -s 'broker' $CUBRID/conf/cubrid_broker.conf MASTER_SHM_ID`");
@@ -85,14 +85,14 @@ public class DeployHA {
 		scripts.addCommand("ini.sh -u BROKER_PORT2=$cubrid_broker2_port_value $init_path/HA.properties ");
 		scripts.addCommand("cubrid_broker2_app_server_shm_value=`ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf APPL_SERVER_SHM_ID`");
 		scripts.addCommand("ini.sh -u APPL_SERVER_SHM_ID2=$cubrid_broker2_app_server_shm_value $init_path/HA.properties");
-		
-		String haPortId = context.getInstanceProperty(this.masterEnvId, "ha.ha_port_id");
-		if(CommonUtils.isEmpty(haPortId)) {
+
+		String haPortId = context.getInstanceProperty(this.masterEnvId, ConfigParameterConstants.ROLE_HA + "." + "ha_port_id");
+		if (CommonUtils.isEmpty(haPortId)) {
 			haPortId = "59901";
-		}		
+		}
 		scripts.addCommand("ini.sh -u HA_PORT_ID=" + haPortId + " $init_path/HA.properties");
-		
-		String result="";
+
+		String result = "";
 		try {
 			result = ssh.execute(scripts);
 			log.println(result);
@@ -100,10 +100,10 @@ public class DeployHA {
 			e.printStackTrace();
 			log.print("[ERROR] " + e.getMessage());
 		}
-		
+
 		log.print("===== End to update HA.properties =====");
 	}
-	
+
 	public void close() {
 		ssh.close();
 	}

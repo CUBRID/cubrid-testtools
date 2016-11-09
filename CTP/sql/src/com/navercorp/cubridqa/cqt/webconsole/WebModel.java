@@ -50,7 +50,8 @@ public class WebModel {
 			public int compare(File o1, File o2) {
 				if (o1 == null || o2 == null)
 					return -1;
-				return new Long(new File(o2.getAbsolutePath() + File.separator + "main.info").lastModified()).compareTo(new Long(new File(o1.getAbsolutePath() + File.separator + "main.info").lastModified()));
+				return new Long(new File(o2.getAbsolutePath() + File.separator + "main.info").lastModified()).compareTo(new Long(new File(o1.getAbsolutePath() + File.separator + "main.info")
+						.lastModified()));
 			}
 		});
 
@@ -140,7 +141,7 @@ public class WebModel {
 
 			for (int i = 0; i < list.size(); i++) {
 				sqlFilename = list.get(i).getAbsolutePath();
-				testResultRoot = getScheduleFolerName (sqlFilename);
+				testResultRoot = getScheduleFolerName(sqlFilename);
 				label = sqlFilename.substring(sqlFilename.lastIndexOf(testResultRoot) + testResultRoot.length() + 1);
 				label = CommonUtils.replace(label, "\\", "/");
 				link = "compare.jsp?p=" + sqlFilename;
@@ -157,9 +158,12 @@ public class WebModel {
 			throw new Exception("permission deny");
 		}
 
-		//int p1 = sqlFilename.lastIndexOf(File.separator + "cases" + File.separator);
-		//int p2 = sqlFilename.lastIndexOf(File.separator) + 1;
-		//String answerFilename = sqlFilename.substring(0, p1) + File.separator + "answers" + File.separator + sqlFilename.substring(p2, sqlFilename.lastIndexOf(".sql")) + ".answer";
+		// int p1 = sqlFilename.lastIndexOf(File.separator + "cases" +
+		// File.separator);
+		// int p2 = sqlFilename.lastIndexOf(File.separator) + 1;
+		// String answerFilename = sqlFilename.substring(0, p1) + File.separator
+		// + "answers" + File.separator + sqlFilename.substring(p2,
+		// sqlFilename.lastIndexOf(".sql")) + ".answer";
 		String resultFilename = sqlFilename.substring(0, sqlFilename.lastIndexOf(".")) + ".result";
 		String answerFilename = sqlFilename.substring(0, sqlFilename.lastIndexOf(".")) + ".answer";
 
@@ -176,11 +180,11 @@ public class WebModel {
 		}
 		return content;
 	}
-	
+
 	private String getScheduleFolerName(String absDirName) {
 		int p1 = absDirName.indexOf(File.separator + "schedule_");
 		int p2 = absDirName.indexOf(File.separator, p1 + 1);
-		return  p2 == -1 ? absDirName.substring(p1 + 1) : absDirName.substring(p1 + 1, p2);
+		return p2 == -1 ? absDirName.substring(p1 + 1) : absDirName.substring(p1 + 1, p2);
 	}
 
 	public String showTestCase(String folder) throws Exception {
@@ -218,9 +222,9 @@ public class WebModel {
 		int p1, p2;
 		for (int i = 0; i < itemList.length; i++) {
 			item = itemList[i];
-			result.append("<tr>");			
+			result.append("<tr>");
 			testRootName = getScheduleFolerName(absDirName);
-			//System.out.println("testRootName:" +testRootName);
+			// System.out.println("testRootName:" +testRootName);
 
 			p1 = item.getCat().indexOf(testRootName);
 			if (p1 == -1) {
@@ -228,7 +232,7 @@ public class WebModel {
 			} else {
 				subPath = item.getCat().substring(item.getCat().indexOf(testRootName) + testRootName.length());
 			}
-			//System.out.println("subPath:" + subPath);
+			// System.out.println("subPath:" + subPath);
 
 			if (isDir) {
 				finalPath = CommonUtils.concatFile(CommonUtils.concatFile(absDirName.substring(0, absDirName.indexOf(testRootName)), testRootName), subPath);
@@ -236,7 +240,7 @@ public class WebModel {
 				result.append("<td>").append(item.getTotal()).append("</td>");
 				result.append("<td>").append(item.getSucc()).append("</td>");
 				if (item.getFail() > 0) {
-					result.append("<td><a href='failure.jsp?p=" + finalPath +"'>").append(item.getFail()).append("</a></td>");
+					result.append("<td><a href='failure.jsp?p=" + finalPath + "'>").append(item.getFail()).append("</a></td>");
 				} else {
 					result.append("<td>").append(item.getFail()).append("</td>");
 				}
@@ -271,12 +275,12 @@ public class WebModel {
 		if (!sqlFilename.endsWith(".sql")) {
 			throw new Exception("permission deny");
 		}
-		
+
 		File f = Util.searchFile(SCENARIO_ROOT, sqlFilename);
 		if (f != null) {
 			sqlFilename = f.getAbsolutePath();
 		}
-		
+
 		if (new File(sqlFilename).exists() == false) {
 			throw new Exception("File not found: " + sqlFilename);
 		}
@@ -287,7 +291,8 @@ public class WebModel {
 
 		String resultFilename = sqlFilename.substring(0, sqlFilename.lastIndexOf(".sql")) + ".result";
 
-		//String answerFilename = sqlFilename.substring(0, sqlFilename.lastIndexOf(".sql")) + ".answer";
+		// String answerFilename = sqlFilename.substring(0,
+		// sqlFilename.lastIndexOf(".sql")) + ".answer";
 
 		Compare compare = new Compare(sqlFilename, answerFilename, resultFilename);
 		compare.compare();

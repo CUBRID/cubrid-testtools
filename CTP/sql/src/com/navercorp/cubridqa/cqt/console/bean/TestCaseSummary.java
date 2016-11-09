@@ -27,41 +27,40 @@ package com.navercorp.cubridqa.cqt.console.bean;
 import com.navercorp.cubridqa.cqt.console.util.FileUtil;
 
 public class TestCaseSummary {
-	
+
 	private static final String S_FAILLISTTAG = "<scenario>";
-	
+
 	private static final String E_FAILLISTTAG = "</scenario>";
-	
+
 	private static final String S_CASE = "<case>";
-	
+
 	private static final String E_CASE = "</case>";
-	
+
 	private static final String S_ANSWER = "<answer>";
-	
+
 	private static final String E_ANSWER = "</answer>";
-	
+
 	private static final String S_ELAPSETIME = "<elapsetime>";
-	
+
 	private static final String E_ELAPSETIME = "</elapsetime>";
-	
-    private static final String S_RESULT = "<result>";
-	
+
+	private static final String S_RESULT = "<result>";
+
 	private static final String E_RESULT = "</result>";
-	
+
 	private String caseFile;
-	
-    private String answerFile;
-	
+
+	private String answerFile;
+
 	private String elapseTime;
-	
+
 	private String testResult;
-	
+
 	public String getCaseFile() {
 		return caseFile;
 	}
-	
-	public String toXmlString()
-	{
+
+	public String toXmlString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append(FileUtil.AddSpace(2) + TestCaseSummary.S_FAILLISTTAG + System.getProperty("line.separator"));
 		sb.append(FileUtil.AddSpace(5) + TestCaseSummary.S_CASE + this.caseFile + TestCaseSummary.E_CASE + System.getProperty("line.separator"));

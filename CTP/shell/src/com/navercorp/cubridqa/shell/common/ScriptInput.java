@@ -36,10 +36,10 @@ public class ScriptInput {
 
 	public static final String START_FLAG_MOCK = "ALL_${NOTEXIST}STARTED";
 	public static final String COMP_FLAG_MOCK = "ALL_${NOTEXIST}COMPLETED";
-	
+
 	public static final String START_FLAG_MOCK_WIN = "ALL_%NOTEXIST%STARTED";
 	public static final String COMP_FLAG_MOCK_WIN = "ALL_%NOTEXIST%COMPLETED";
-	
+
 	public static final String START_FLAG = "ALL_STARTED";
 	public static final String COMP_FLAG = "ALL_COMPLETED";
 
@@ -68,7 +68,8 @@ public class ScriptInput {
 		if (isPureWindows) {
 			return "echo " + START_FLAG_MOCK_WIN + LINE_SEPARATOR_WIN + cmds.toString() + "@ECHO OFF" + LINE_SEPARATOR_WIN + "echo " + COMP_FLAG_MOCK_WIN + LINE_SEPARATOR_WIN;
 		} else {
-			return "if  [ -f ~/.bash_profile ]; then . ~/.bash_profile; fi; " + LINE_SEPARATOR + "echo " + START_FLAG_MOCK + LINE_SEPARATOR + cmds.toString() + "echo " + COMP_FLAG_MOCK + LINE_SEPARATOR;
+			return "pri_ctp_home=$CTP_HOME; if  [ -f ~/.bash_profile ]; then . ~/.bash_profile; fi; if [ \"$pri_ctp_home\" != \"\" ];then export CTP_HOME=${pri_ctp_home}; fi; " + LINE_SEPARATOR
+					+ "echo " + START_FLAG_MOCK + LINE_SEPARATOR + cmds.toString() + "echo " + COMP_FLAG_MOCK + LINE_SEPARATOR;
 		}
 	}
 

@@ -650,7 +650,13 @@ function init
   export LD_LIBRARY_PATH
   export LIBRARY_PATH
   
-  broker_port=`ini.sh -s "%BROKER1" $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
+  isAvailableServiceForBroker1=`ini.sh -s '%BROKER1' $CUBRID/conf/cubrid_broker.conf SERVICE |grep -iw ON|grep -v grep |wc -l`
+  if [ $isAvailableServiceForBroker1 -ne 0 ];then
+  	 broker_port=`ini.sh -s "%BROKER1" $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
+  else
+ 	 broker_port=`ini.sh -s "%query_editor" $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
+  fi
+  
   sed -i "s@<port>[0-9]*</port>@<port>${broker_port}</port>@g" ${init_path}/shell_config.xml 
   
   if [ "$mode" = "test" ]

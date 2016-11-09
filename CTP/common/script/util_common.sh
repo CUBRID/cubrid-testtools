@@ -82,26 +82,18 @@ function clean_processes {
   kill_process
 }
 
-function clean_for_ha_repl()
-{
-    cd ~
-    rm csql.err* CUBRID-* core.*
-    find ~/build ~/ERROR_BACKUP -mtime +15 | xargs rm -rf
-}
-
-function mail_send {
-    PATH=$HOME/CTP/common/script:$HOME/cubrid_common:$PATH
-    run_mail_send "$@"
-}
-
 function get_current_ip {
-    (ifconfig || /sbin/ifconfig) 2>/dev/null| awk '/inet addr/{print substr($2,6)}'|grep -v "127.0.0.1" | grep -v "192.168."
+    current_ip=`(ifconfig || /sbin/ifconfig) 2>/dev/null| awk '/inet addr/{print substr($2,6)}'|grep -v "127.0.0.1" | grep -v "192.168."`
+    if [ "$current_ip" == "" ]; then
+        current_ip=`hostname -i | awk '{print $NF}'`
+    fi
+    echo $current_ip
 }
 
 
 ########## check disk space ###########
 function check_disk_space {
-    if [ $# -ne 3 ]
+    if [ $# -lt 3 ]
     then
         echo "Usage: check_disk_space /dev/sda3 20G \"Nickname<your@mail.address>\""
         exit 1
@@ -114,6 +106,7 @@ function check_disk_space {
     diskName="$1"
     expectOriginal=$2
     mailto="$3"
+    mailcc="$4"
 
     expect=`echo $expectOriginal | tr [a-z] [A-Z]`
     unit=""
@@ -123,17 +116,17 @@ function check_disk_space {
 
     if [ -z $unit ]
     then
-        expect=`echo $expect/1024|bc`
+        expect=$(($expect/1024))
     else
         if [ $unit == "M" ]
         then
-            expect=`echo $expect*1024|bc`
+            expect=$(($expect*1024))
         elif [ $unit == "G" ]
         then
-            expect=`echo $expect*1024*1024|bc`
+            expect=$(($expect*1024*1024))
         elif [ $unit == "T" ]
         then
-            expect=`echo $expect*1024*1024*1024|bc`
+            expect=$(($expect*1024*1024*1024))
         else 
             if [ $unit != "K" ]
             then
@@ -147,6 +140,13 @@ function check_disk_space {
    expect=${expect%%\.*}
    
    startTime=`date +%s`
+   sended_flag=0
+
+   current_user="$USER"
+   if [ "$current_user" == "" ]; then
+      current_user="<user>"
+   fi
+   current_ip="`get_current_ip`"
 
    for (( i=1; ; i=i+1 ))
    do
@@ -157,8 +157,13 @@ function check_disk_space {
            if [ $i -eq 1 ]
            then
                noteInfo="$@"
-               mail_send -to "$mailto" -cc "${KEY_MAIL_FROM_NICKNAME}<${KEY_MAIL_FROM_ADDRESS}>" -title "[CUBRID QA] Please Check Disk Space on $USER@`get_current_ip` Right Now" -content "Dear #TO#,<br>$USER@`get_current_ip` dose not have enough available disk space. Please handle with it right now. <br><br> (note: $noteInfo) <br><br>Best Regards,<br>CUBRID QA" 
+               echo No enough available disk space. Send mail to notice:
+               echo "MAIL TO: " $mailto
+               echo "MAIL CC: " $mailcc
+               run_mail_send -to "$mailto" -cc "$mailcc" -title "[CUBRID QA] Please Check Disk Space on ${current_user}@${current_ip} Right Now" -content "Dear #TO#,<br><br>${current_user}@${current_ip} does not have enough available disk space. Please handle with it right now. <br><b>We hope to  get your feedback!</b><br>==========<pre>`df -h`</pre>----------<pre>`ls -lh $HOME`<pre> <br>(<b>Note</b>: $noteInfo) <br><br>Best Regards,<br>CUBRID QA" 
+               sended_flag=1
            else
+               echo actual: $actual, expect: $expect
                sleep 15
            fi
        else
@@ -169,9 +174,7 @@ function check_disk_space {
    endTime=`date +%s`
    elapse=`expr \( $endTime - $startTime \)`
    echo "CHECK DISK SPACE: ${expectOriginal} expected, actual is ${actual} K. (elapse: $elapse seconds)"
-
-}
-
-function upgrade_ctp {
-    (cd $HOME/CTP/scheduler && sh upgrade.sh)
+   if [ "$sended_flag" == "1" ]; then
+      run_mail_send -to "$mailto" -cc "$mailcc" -title "Re: [CUBRID QA] Please Check Disk Space on ${current_user}@${current_ip} Right Now" -content "Dear #TO#, <br><br>Thank you for your fixing on ${current_user}@${current_ip}. <br> Elapse time: $elapse second(s).<br> <br>==========<pre>`df -h`</pre><br>----------<pre>`ls -lh $HOME`</pre> <br><br> Best Regards, <BR> CUBRID QA"
+   fi
 }

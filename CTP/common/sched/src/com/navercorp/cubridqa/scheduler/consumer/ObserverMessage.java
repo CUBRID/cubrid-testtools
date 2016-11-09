@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.scheduler.consumer;
 
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,7 +49,6 @@ import org.apache.activemq.command.ActiveMQQueue;
 
 import com.navercorp.cubridqa.scheduler.common.ActiveMQFactory;
 import com.navercorp.cubridqa.scheduler.common.ConsumerContext;
-import com.navercorp.cubridqa.scheduler.consumer.Configure;
 
 public class ObserverMessage extends Thread {
 	Configure conf;
@@ -70,17 +68,16 @@ public class ObserverMessage extends Thread {
 
 	public void monitorController(ConsumerContext cc) throws JMSException {
 		try {
-			String queueName=cc.getQueueName();
-			boolean isdg=cc.getIsDubugEnv();
-			boolean isOlyMax=cc.isOnlyMax();
-			
+			String queueName = cc.getQueueName();
+			boolean isdg = cc.getIsDubugEnv();
+			boolean isOlyMax = cc.isOnlyMax();
+
 			if (isOlyMax) {
-				 viewQueueMessage(queueName);
-				 saveSummaryInfo();
-				 removeLowerAndRunUpperMessageFromQuenu(cc.getQueueName(), isdg);
+				viewQueueMessage(queueName);
+				saveSummaryInfo();
+				removeLowerAndRunUpperMessageFromQuenu(cc.getQueueName(), isdg);
 			} else {
-				 generalMonitorTaskMessageAndInitTaskContext(queueName,
-						isdg);
+				generalMonitorTaskMessageAndInitTaskContext(queueName, isdg);
 			}
 
 		} catch (JMSException e) {
@@ -90,17 +87,16 @@ public class ObserverMessage extends Thread {
 		}
 	}
 
-	public void generalMonitorTaskMessageAndInitTaskContext(String queueType,
-			boolean isNotCommit) throws JMSException {
-		String user = this.conf.getProperty("activemq.user");
-		String passwd = this.conf.getProperty("activemq.pwd");
-		String url = this.conf.getProperty("activemq.url");
+	public void generalMonitorTaskMessageAndInitTaskContext(String queueType, boolean isNotCommit) throws JMSException {
+		String user = this.conf.getProperty("activemq_user");
+		String passwd = this.conf.getProperty("activemq_pwd");
+		String url = this.conf.getProperty("activemq_url");
 		try {
 			mq = new ActiveMQFactory(user, passwd, url);
 			conn = mq.getConn();
 			mq.setTrans(true);
 			mq.setAckMode("AUTO_ACKNOWLEDGE");
-			
+
 			ses = mq.getSec();
 			destination = ses.createQueue(queueType);
 			MessageConsumer consumer = ses.createConsumer(destination);
@@ -117,15 +113,15 @@ public class ObserverMessage extends Thread {
 
 			if (!isNotCommit) {
 				ses.commit();
-			}else
-			{
+			} else {
 				if (ses != null)
 					ses.rollback();
 			}
 		} catch (Exception e) {
-			if (ses != null){
+			if (ses != null) {
 				ses.rollback();
-			    ses.close();}
+				ses.close();
+			}
 			e.printStackTrace();
 		} finally {
 			if (conn != null)
@@ -139,39 +135,36 @@ public class ObserverMessage extends Thread {
 			String key;
 			String maxVersion;
 			key = entry.getKey().toString();
-			maxVersion = Collections.max(entry.getValue(),
-					new Comparator<String>() {
-						@Override
-						public int compare(String ver1, String ver2) {
-							ver1 = ver1.indexOf("-") == -1 ? ver1 : ver1.substring(0, ver1.indexOf("-"));
-							ver2 = ver2.indexOf("-") == -1 ? ver2 : ver2.substring(0, ver2.indexOf("-"));
-							
-							String[] v1 = ver1.split("\\.");
-							String[] v2 = ver2.split("\\.");
+			maxVersion = Collections.max(entry.getValue(), new Comparator<String>() {
+				@Override
+				public int compare(String ver1, String ver2) {
+					ver1 = ver1.indexOf("-") == -1 ? ver1 : ver1.substring(0, ver1.indexOf("-"));
+					ver2 = ver2.indexOf("-") == -1 ? ver2 : ver2.substring(0, ver2.indexOf("-"));
 
-							int len = v1.length > v2.length ? v2.length
-									: v1.length;
-							int v;
-							for (int i = 0; i < len; i++) {
-								v = Integer.parseInt(v1[i])
-										- Integer.parseInt(v2[i]);
-								if (v != 0)
-									return v;
-							}
+					String[] v1 = ver1.split("\\.");
+					String[] v2 = ver2.split("\\.");
 
-							return v1.length - v2.length;
-						}
-					});
+					int len = v1.length > v2.length ? v2.length : v1.length;
+					int v;
+					for (int i = 0; i < len; i++) {
+						v = Integer.parseInt(v1[i]) - Integer.parseInt(v2[i]);
+						if (v != 0)
+							return v;
+					}
+
+					return v1.length - v2.length;
+				}
+			});
 
 			maxVersionList.put(key, maxVersion);
 			System.out.println("Max Version of " + key + ": " + maxVersion);
 		}
 	}
-	
+
 	public void removeLowerAndRunUpperMessageFromQuenu(String queueName, boolean isDebug) throws JMSException {
-		String user = this.conf.getProperty("activemq.user");
-		String passwd = this.conf.getProperty("activemq.pwd");
-		String url = this.conf.getProperty("activemq.url");
+		String user = this.conf.getProperty("activemq_user");
+		String passwd = this.conf.getProperty("activemq_pwd");
+		String url = this.conf.getProperty("activemq_url");
 
 		try {
 
@@ -179,14 +172,12 @@ public class ObserverMessage extends Thread {
 			conn = mq.getConn();
 			mq.setTrans(true);
 			mq.setAckMode("AUTO_ACKNOWLEDGE");
-			
 
 			ses = mq.getSec();
 			destination = ses.createQueue(queueName);
-			
+
 			MessageConsumer consumer = ses.createConsumer(destination);
-			System.out
-					.println("++++++++++++++++ Summary Info For Message Queue ++++++++++++++++");
+			System.out.println("++++++++++++++++ Summary Info For Message Queue ++++++++++++++++");
 			while (true) {
 				TextMessage message = (TextMessage) consumer.receive(1000);
 				if (null != message) {
@@ -200,17 +191,14 @@ public class ObserverMessage extends Thread {
 					build_num = message.getStringProperty("BUILD_ID");
 					String key = branch + "_" + build_bit + "bit_" + build_type;
 
-					if (maxVersionList.containsKey(key)
-							&& build_num.equals(maxVersionList.get(key))) {
+					if (maxVersionList.containsKey(key) && build_num.equals(maxVersionList.get(key))) {
 						printMsgContext(message);
-						if(!isDebug)
-						{
+						if (!isDebug) {
 							ses.commit();
 						}
 						break;
 					} else {
-						if(!isDebug)
-						{
+						if (!isDebug) {
 							ses.commit();
 						}
 					}
@@ -223,13 +211,13 @@ public class ObserverMessage extends Thread {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			if (ses != null){
+			if (ses != null) {
 				ses.rollback();
-				ses.close();}
+				ses.close();
+			}
 			if (conn != null)
 				conn.close();
-			System.out
-			.println("==============================================================================================");
+			System.out.println("==============================================================================================");
 			// System.out.println("Remove Done!");
 		}
 
@@ -262,9 +250,9 @@ public class ObserverMessage extends Thread {
 
 	public void viewQueueMessage(String queueType) throws JMSException {
 
-		String user = this.conf.getProperty("activemq.user");
-		String passwd = this.conf.getProperty("activemq.pwd");
-		String url = this.conf.getProperty("activemq.url");
+		String user = this.conf.getProperty("activemq_user");
+		String passwd = this.conf.getProperty("activemq_pwd");
+		String url = this.conf.getProperty("activemq_url");
 
 		try {
 			mq = new ActiveMQFactory(user, passwd, url);
@@ -273,40 +261,37 @@ public class ObserverMessage extends Thread {
 			mq.setAckMode("AUTO_ACKNOWLEDGE");
 			ses = mq.getSec();
 			ActiveMQQueue destination = new ActiveMQQueue(queueType);
-			QueueBrowser browser = ses.createBrowser((Queue)destination);
-			Enumeration msgs =browser.getEnumeration();
-			if(!msgs.hasMoreElements())
-			{
+			QueueBrowser browser = ses.createBrowser((Queue) destination);
+			Enumeration msgs = browser.getEnumeration();
+			if (!msgs.hasMoreElements()) {
 				System.out.println("No Message In Queue!");
-			}else
-			{
-				while(msgs.hasMoreElements())
-				{
-					TextMessage msgTxt=(TextMessage)msgs.nextElement();
+			} else {
+				while (msgs.hasMoreElements()) {
+					TextMessage msgTxt = (TextMessage) msgs.nextElement();
 					collectMsgContext(msgTxt);
 				}
-				
+
 			}
-			
-			//MessageConsumer consumer = ses.createConsumer(destination);
+
+			// MessageConsumer consumer = ses.createConsumer(destination);
 			// System.out
 			// .println("-------------- Task Message Information -------------- ");
-//			while (true) {
-//				TextMessage message = (TextMessage) consumer.receive(1000);
-//				if (null != message) {
-//					collectMsgContext(message);
-//					// break;
-//				} else {
-//					break;
-//				}
-//			}
+			// while (true) {
+			// TextMessage message = (TextMessage) consumer.receive(1000);
+			// if (null != message) {
+			// collectMsgContext(message);
+			// // break;
+			// } else {
+			// break;
+			// }
+			// }
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			if (ses != null)
 				ses.rollback();
-				ses.close();
+			ses.close();
 			if (conn != null)
 				conn.close();
 		}

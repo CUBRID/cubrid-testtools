@@ -1,9 +1,9 @@
 #!/bin/bash
 # 
-#Copyright (c) 2016, Search Solution Corporation? All rights reserved.
+# Copyright (c) 2016, Search Solution Corporation? All rights reserved.
 #
-#Redistribution and use in source and binary forms, with or without 
-#modification, are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
 #
 #  * Redistributions of source code must retain the above copyright notice, 
 #    this list of conditions and the following disclaimer.
@@ -15,13 +15,13 @@
 #  * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
 #    derived from this software without specific prior written permission.
 #
-#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
-#INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
-#DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-#SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-#SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
-#WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
-#USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
 
@@ -31,7 +31,7 @@ scenario_category=""
 scenario_full_name=""
 scenario_update_yn=""
 result_copy_yn=""
-config_file_ext=""
+jdbc_config_file_ext=""
 config_file_main=""
 log_dir=""
 log_filename=""
@@ -50,6 +50,7 @@ is_support_ha=""
 scenario_alias=""
 need_make_locale=""
 test_data_file=""
+interface_type=""
 alias ini="sh ${CTP_HOME}/bin/ini.sh"
 
 
@@ -95,7 +96,7 @@ function do_init()
     cubrid_bits=64
     scenario_update_yn=no
     result_copy_yn=no
-    config_file_ext="test_default.xml"
+    jdbc_config_file_ext="test_default.xml"
     log_dir=${CTP_HOME}/sql/log
     result_dir=${CTP_HOME}/sql/result
     log_filename=cqt.log
@@ -132,12 +133,12 @@ function do_init()
 
     #init log file
     if [ ! -d $log_dir ];then
-       mkdir $log_dir
+       mkdir -p $log_dir
     fi
 
     #init result folder
     if [ ! -d $result_dir ];then
-       mkdir $result_dir
+       mkdir -p $result_dir
     fi
 
     cd $log_dir
@@ -148,10 +149,10 @@ function do_init()
     scenario_repo_root=`ini -s sql ${config_file_main} scenario`
     [ ! -d "$scenario_repo_root" -a ! -f "$scenario_repo_root" ] && echo "please make sure your scenario directory" && exit 1
 
-    scenario_alias=`ini -s sql ${config_file_main} category_alias`
+    scenario_alias=`ini -s sql ${config_file_main} test_category`
     if [ -z "$scenario_alias" ]
     then
-	scenario_alias=${scenario_category}
+	     scenario_alias=${scenario_category}
     fi
 
     need_make_locale=`ini -s sql ${config_file_main} need_make_locale`
@@ -165,6 +166,10 @@ function do_init()
     if [ $is_support_ha_mode -ne 0 ]
     then
 	 is_support_ha="yes"
+    fi
+
+    if [ "${sql_interface_type}" ];then
+         interface_type=${sql_interface_type}	
     fi
 
     cd $curDir
@@ -312,20 +317,29 @@ function config_cubrid_without_ha()
 
 }
 
-function config_cqt_tool()
+function config_qa_tool()
 {
      curDir=`pwd`
-     build_ver_type=""
-     qa_db_xml_path=${CTP_HOME}/sql/configuration/Function_Db/${db_name}_qa.xml
-     avaliable_broker_port=`awk '/SERVICE[[:space:]]*=[[:space:]]*ON/, /BROKER_PORT/' $CUBRID/conf/cubrid_broker.conf|grep BROKER_PORT|grep -v '#'|awk -F '=' '{print $2}'|head -1| tr -d ' '`
-     db_url="<dburl>jdbc:cubrid:localhost:${avaliable_broker_port}:${db_name}:::</dburl>"
-     sed -i "s#<dburl>.*</dburl>#$db_url#g" $qa_db_xml_path
-     if [ "$cubrid_bits" == "32" ];then
-          build_ver_type="32bits"
+     if [ "$interface_type" == "cci" ];then
+	
+	cd $CTP_HOME/sql_by_cci
+        echo ""> interface_verify.h 
+	sh compile.sh
+
      else
-          build_ver_type="Main"
+     	build_ver_type=""
+     	qa_db_xml_path=${CTP_HOME}/sql/configuration/Function_Db/${db_name}_qa.xml
+     	avaliable_broker_port=`awk '/SERVICE[[:space:]]*=[[:space:]]*ON/, /BROKER_PORT/' $CUBRID/conf/cubrid_broker.conf|grep BROKER_PORT|grep -v '#'|awk -F '=' '{print $2}'|head -1| tr -d ' '`
+     	db_url="<dburl>jdbc:cubrid:localhost:${avaliable_broker_port}:${db_name}:::</dburl>"
+     	sed -i "s#<dburl>.*</dburl>#$db_url#g" $qa_db_xml_path
+     	if [ "$cubrid_bits" == "32" ];then
+        	  build_ver_type="32bits"
+     	else
+        	  build_ver_type="Main"
+     	fi
+     	sed -i "s#<version>.*</version>#<version>$build_ver_type</version>#g" $qa_db_xml_path
      fi
-     sed -i "s#<version>.*</version>#<version>$build_ver_type</version>#g" $qa_db_xml_path
+
      cd $curDir
 }
 
@@ -500,7 +514,6 @@ function start_db()
 
 function delete_db()
 {
-     curDir=`pwd`
      echo "delete database $1"
      cubrid deletedb $1 2>&1 >> $log_filename
      sleep 2
@@ -508,10 +521,9 @@ function delete_db()
      #delete db folder 
      cd $cubrid_root_dir/databases
      if [ -d "$db_name" ];then
-	rm -rf $db_name
+		rm -rf $db_name
      fi
-
-     cd $curDir
+      
 }
 
 function restart_broker()
@@ -655,8 +667,8 @@ function do_configure()
      #config HA env, to check if need ha mode, if need it, config it
      config_cubrid_ha
 
-     #config cqt tool
-     config_cqt_tool
+     #config qa tool
+     config_qa_tool
      
      #make locale
      make_locale
@@ -668,9 +680,9 @@ function do_configure()
      fi
   
      #get config file
-     config_file=`ini -s sql ${config_file_main} config_file`
-     if [ -n "$config_file" ];then
-  	config_file_ext=$config_file
+     jdbc_config_file=`ini -s sql ${config_file_main} jdbc_config_file`
+     if [ -n "$jdbc_config_file" ];then
+  	jdbc_config_file_ext=$jdbc_config_file
      fi
   
      cd $curDir
@@ -709,7 +721,7 @@ function do_test()
    
      if [ ! -f ${scenario_repo_root} ];then
          lastChar=${scenario_repo_root:${#scenario_repo_root}-1:1}
-         if [ "$lastChar" != "/" -a "$lastChar" != "\\" ];then
+         if [ "$lastChar" != "/" -a "$lastChar" != "\\" ] && [ "$interface_type" != "cci" ];then
             scenario_repo_root=${scenario_repo_root}/
          fi
      fi
@@ -723,16 +735,57 @@ function do_test()
           export scenario_alias_in_interactive=${scenario_alias}
           export bits_in_interactive=${cubrid_bits}
           export db_name_in_interactive=$db_name
-          export client_charset_in_interactive=$config_file_ext
+          export client_charset_in_interactive=$jdbc_config_file_ext
           export PS1="sql> ";cd ${scenario_repo_root}; source ${CTP_HOME}/sql/bin/interactive.sh; help; bash --posix)
 	
           #do clean for interactive mode
           do_clean
+     elif [ "$interface_type" == "cci" ];then
+	  port=`ini -s "%BROKER1"  $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
+	  resultFolder="schedule_cdriver_${os_type}_${scenario_alias}_`date +"%Y%m%d%H%M%S"`_${cubrid_ver}_${cubrid_bits}"
+	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${resultFolder} ${scenario_repo_root} $CTP_HOME 2>&1 >> $log_filename 
+	  cd $curDir
+	  
      else   
-     	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $config_file_ext $javaArgs 2>&1 >> $log_filename 
+     	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $jdbc_config_file_ext $javaArgs 2>&1 >> $log_filename 
           cd $curDir
      fi
     )
+}
+
+function generate_summary_info()
+{
+    summaryFolder=$1
+    if [ "x${summaryFolder}" != "x" -a -d "$summaryFolder" ];then
+	summaryFile=${summaryFolder}/summary.info
+        failCount=`cat $summaryFile|grep "NOK"|wc -l`
+	totalCount=`cat ${log_filename}|grep "TOTAL_COUNT"|awk -F ':' '{print $2}'|tr -d ' '`
+	totalElapseTime=`cat ${log_filename}|grep "TOTAL_ELAPSE_TIME"|awk -F ':' '{print $2}'|tr -d ' '`
+	let "succCount=totalCount-failCount" 
+	echo "cubrid_build_id=$cubrid_ver" >> ${summaryFolder}/summary_info
+	echo "execute_date=`date +"%Y-%m-%d %H:%M:%S"`" >> ${summaryFolder}/summary_info
+	echo "Num_total=$totalCount" >> ${summaryFolder}/summary_info
+	echo "Num_test_total=$totalCount" >> ${summaryFolder}/summary_info
+	echo "Num_success=$succCount" >> ${summaryFolder}/summary_info
+	echo "Num_fail=$failCount" >> ${summaryFolder}/summary_info
+	echo "Test_cat=$scenario_alias" >> ${summaryFolder}/summary_info
+	echo "Test_upcat=function" >> ${summaryFolder}/summary_info
+	echo "OS=$(tr '[:upper:]' '[:lower:]' <<< ${os_type:0:1})${os_type:1}" >> ${summaryFolder}/summary_info
+	echo "Bit=${cubrid_bits}bits" >> ${summaryFolder}/summary_info
+	echo "Elapse_time=$totalElapseTime" >> ${summaryFolder}/summary_info
+
+        echo ""
+	echo "-----------------------"
+        echo "Fail:$failCount"
+        echo "Success:$succCount"
+        echo "Total:$totalCount"
+        echo "Elapse Time:$totalElapseTime"
+        echo "Test Log:$log_filename"
+        echo "Test Result Directory:$summaryFolder"
+        echo "-----------------------"
+        echo ""
+    fi
+
 }
 
 
@@ -740,26 +793,31 @@ function do_summary_and_clean()
 {
      #get summary info
      [ "$sql_interactive" == "yes" ] && return
+
      coreCount=0
      resultDirTemp=`cat ${log_filename}|grep "^Result Root Dir"|head -n 1`
      resultDir=${resultDirTemp#*:}
-     resultSummaryInfoFile=${resultDir}/main.info
-     [ ! -f $resultSummaryInfoFile ] && echo "No Results!! please confirm your scenario path include valid case script(the current scenairo path:$scenario_repo_root)" && exit 1
-     failNum=`cat $resultSummaryInfoFile|grep 'fail:'|awk -F ':' '{print $2}'`
-     succNum=`cat $resultSummaryInfoFile|grep 'success:'|awk -F ':' '{print $2}'`
-     totalNum=`cat $resultSummaryInfoFile|grep 'total:'|awk -F ':' '{print $2}'`
-     elapseTime=`cat $resultSummaryInfoFile|grep 'totalTime:'|awk -F ':' '{print $2}'`
-     
-     echo ""
-     echo "-----------------------"
-     echo "Fail:$failNum"
-     echo "Success:$succNum"
-     echo "Total:$totalNum"
-     echo "Elapse Time:$elapseTime"
-     echo "Test Log:$log_filename"
-     echo "Test Result Directory:$resultDir"
-     echo "-----------------------"
-     echo ""
+     if [ "$interface_type" == "cci" ];then
+	 generate_summary_info $resultDir	          		
+     else
+     	resultSummaryInfoFile=${resultDir}/main.info
+     	[ ! -f $resultSummaryInfoFile ] && echo "No Results!! please confirm your scenario path include valid case script(the current scenairo path:$scenario_repo_root)" && exit 1
+     	failNum=`cat $resultSummaryInfoFile|grep 'fail:'|awk -F ':' '{print $2}'`
+     	succNum=`cat $resultSummaryInfoFile|grep 'success:'|awk -F ':' '{print $2}'`
+     	totalNum=`cat $resultSummaryInfoFile|grep 'total:'|awk -F ':' '{print $2}'`
+     	elapseTime=`cat $resultSummaryInfoFile|grep 'totalTime:'|awk -F ':' '{print $2}'`
+     	
+     	echo ""
+     	echo "-----------------------"
+     	echo "Fail:$failNum"
+     	echo "Success:$succNum"
+     	echo "Total:$totalNum"
+     	echo "Elapse Time:$elapseTime"
+     	echo "Test Log:$log_filename"
+     	echo "Test Result Directory:$resultDir"
+     	echo "-----------------------"
+     	echo ""
+     fi
 
      #check core
      coreFiles=$(find "$CUBRID" "${CTP_HOME}" -type f -name "core*")

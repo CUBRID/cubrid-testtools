@@ -26,6 +26,7 @@
 
 package com.navercorp.cubridqa.shell.common;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.rmi.Naming;
 import java.util.Properties;
@@ -38,6 +39,10 @@ import com.navercorp.cubridqa.shell.service.ShellService;
 
 public class SSHConnect {
 
+	public final static String SERVICE_TYPE_SSH = "ssh";
+	public final static String SERVICE_TYPE_RMI = "rmi";
+	public final static String SERVICE_TYPE_LOCAL = "local";
+
 	private Session session;
 
 	String host;
@@ -46,19 +51,22 @@ public class SSHConnect {
 	String pwd;
 	String title;
 	String serviceProtocol;
-	
+
 	final int MAX_TRY_TIME = 10;
-	
-	public SSHConnect(String host, String port, String user, String pwd) throws JSchException {
-		this(host, Integer.parseInt(port), user, pwd, "ssh");
+
+	public SSHConnect() throws JSchException {
+		this(null, -1, null, null, SERVICE_TYPE_LOCAL);
 	}
-	
+
+	public SSHConnect(String host, String port, String user, String pwd) throws JSchException {
+		this(host, Integer.parseInt(port), user, pwd, SERVICE_TYPE_SSH);
+	}
+
 	public SSHConnect(String host, String port, String user, String pwd, String serviceProtocol) throws JSchException {
 		this(host, Integer.parseInt(port), user, pwd, serviceProtocol);
 	}
 
 	public SSHConnect(String host, int port, String user, String pwd, String serviceProtocol) throws JSchException {
-
 		this.host = host;
 		this.port = port;
 		this.user = user;
@@ -67,7 +75,15 @@ public class SSHConnect {
 	}
 
 	public String toString() {
-		return user + "@" + host + ":" + port + ":" + title;
+		if (serviceProtocol != null && serviceProtocol.equals(SERVICE_TYPE_LOCAL)) {
+			return "local";
+		}
+
+		String result = user + "@" + host + ":" + port;
+		if (title != null) {
+			result = result + ":" + title;
+		}
+		return result;
 	}
 
 	private void reconnect() throws JSchException {
@@ -87,31 +103,34 @@ public class SSHConnect {
 			count++;
 		}
 	}
-	
+
 	public String execute(ScriptInput scripts) throws Exception {
 		return execute(scripts.getCommands(), scripts.isPureWindows);
 	}
-	
+
 	public String execute(String scripts) throws Exception {
 		return execute(scripts, false);
 	}
 
 	public String execute(String scripts, boolean pureWindows) throws Exception {
-		//System.out.println(scripts);
-		if (serviceProtocol.equals("rmi")) {
+		// System.out.println(scripts);
+		if (serviceProtocol.equals(SERVICE_TYPE_RMI)) {
 			ShellService srv = null;
 			String url = "rmi://" + host + ":" + port + "/shellService";
-			while(true) {
-				try{					
+			while (true) {
+				try {
 					srv = (ShellService) Naming.lookup(url);
 					break;
-				} catch(Exception e) {
+				} catch (Exception e) {
 					System.out.println("RMI FAIL: " + url);
 					CommonUtils.sleep(1);
 					continue;
-				}				
-			}			
+				}
+			}
 			return srv.exec(user, pwd, scripts, pureWindows);
+		} else if (serviceProtocol.equals(SERVICE_TYPE_LOCAL)) {
+			String raw = LocalInvoker.exec(scripts, pureWindows, false);
+			return extractOutput(raw);
 		}
 
 		if (session == null || !session.isConnected())
@@ -120,25 +139,32 @@ public class SSHConnect {
 		ChannelExec exec = (ChannelExec) session.openChannel("exec");
 
 		InputStream in = exec.getInputStream();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+
 		byte[] b = new byte[1024];
 
 		exec.setCommand(scripts);
 		exec.connect();
 
-		StringBuffer buffer = new StringBuffer();
-
 		int len = 0;
 		while ((len = in.read(b)) > 0) {
-			buffer.append(new String(b, 0, len));
-
-			if (buffer.toString().indexOf(ScriptInput.COMP_FLAG) > 0) {
+			out.write(b, 0, len);
+			if (out.toString().indexOf(ScriptInput.COMP_FLAG) > 0) {
 				break;
 			}
 		}
 
 		exec.disconnect();
 
-		String result = buffer.toString();
+		return extractOutput(out.toString());
+	}
+
+	private static String extractOutput(String raw) {
+		if (raw == null) {
+			return raw;
+		}
+
+		String result = raw;
 
 		int p = result.indexOf(ScriptInput.START_FLAG);
 		if (p != -1) {
@@ -148,19 +174,19 @@ public class SSHConnect {
 		if (p != -1) {
 			result = result.substring(0, p);
 		}
-		//System.out.println(result.trim());
 		return result.trim();
+
 	}
-	
+
 	public void restartRemoteAgent() throws Exception {
 		try {
 			execute("PLEASE_RESTART_AGENT");
 		} catch (Exception e) {
 		}
-		
+
 		wait("\n\necho COME BACK\n", "COME BACK");
 	}
-	
+
 	public void wait(ScriptInput scripts, String expectKeyworkInclude) throws Exception {
 		wait(scripts.getCommands(), expectKeyworkInclude);
 	}

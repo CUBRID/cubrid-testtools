@@ -25,7 +25,8 @@
  */
 
 package com.navercorp.cubridqa.shell.service;
-import java.rmi.*;
+
+import java.rmi.Remote;
 
 public interface ShellService extends Remote {
 

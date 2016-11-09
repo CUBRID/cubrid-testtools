@@ -107,13 +107,13 @@ public class CheckRequirement {
 
 		GeneralScriptInput scripts = new GeneralScriptInput();
 		scripts.addCommand("source ${CTP_HOME}/common/script/util_common.sh");
-		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
+		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G \"" + context.getMailNoticeTo() + "\"" + " \"" + context.getMailNoticeCC() + "\"");
 		String result;
 		try {
 			result = ssh.execute(scripts);
 			log.println(result);
 			log.println("...... PASS");
-			
+
 		} catch (Exception e) {
 			log.println("...... FAIL: " + e.getMessage());
 			setFail();

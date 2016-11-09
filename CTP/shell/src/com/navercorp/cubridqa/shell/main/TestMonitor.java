@@ -28,7 +28,6 @@ package com.navercorp.cubridqa.shell.main;
 
 import java.util.ArrayList;
 
-
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -50,37 +49,30 @@ public class TestMonitor {
 	public TestMonitor(Context context, Test test) throws Exception {
 		this.context = context;
 		this.test = test;
-		
-		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "monitor_" + test.getCurrentEnvId() + ".log"), false, context.isContinueMode);
-		
-		String currEnvId = test.getCurrentEnvId();
-		String host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-		String serviceProtocol = context.getServiceProtocolType();
 
-		this.ssh = new SSHConnect(host, port, user, pwd, serviceProtocol);		
+		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "monitor_" + test.getCurrentEnvId() + ".log"), false, context.isContinueMode);
+
+		this.ssh = ShellHelper.createTestNodeConnect(context, test.getCurrentEnvId());
 		this.initRelatedSSH();
 
 		try {
-			testCaseTimeout = Integer.parseInt(context.getProperty("main.testcase.timeout"));
+			testCaseTimeout = Integer.parseInt(context.getTestCaseTimeout());
 		} catch (Exception e) {
 			testCaseTimeout = -1;
 		}
 
 		try {
-			enableTracing = context.getProperty("main.monitor.enable_tracing").equalsIgnoreCase("true");
+			enableTracing = context.needEnableMonitorTrace();
 			traceScript = initTraceScript();
 		} catch (Exception e) {
 			enableTracing = false;
 		}
-		
+
 		if (enableTracing && sshRelateds != null && sshRelateds.size() > 0) {
 			this.logRelated = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "monitor_" + test.getCurrentEnvId() + "_related.log"), false, context.isContinueMode);
 		}
 	}
-	
+
 	private void initRelatedSSH() {
 		if (this.sshRelateds == null) {
 			this.sshRelateds = new ArrayList<SSHConnect>();
@@ -94,14 +86,13 @@ public class TestMonitor {
 			}
 			this.sshRelateds.clear();
 		}
-		
+
 		ArrayList<String> relatedHosts = context.getRelatedHosts(test.getCurrentEnvId());
-		String serviceProtocol = context.getServiceProtocolType();
-		if (relatedHosts != null && relatedHosts.size() > 0) {			
+		if (relatedHosts != null && relatedHosts.size() > 0) {
 			SSHConnect s;
 			for (String host : relatedHosts) {
 				try {
-					s = new SSHConnect(host, test.sshPort, test.sshUser, test.sshPwd, serviceProtocol);
+					s = ShellHelper.createTestNodeConnect(context, test.getCurrentEnvId(), host);
 					this.sshRelateds.add(s);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -128,7 +119,7 @@ public class TestMonitor {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void collectOnce() {
 		try {
 			collectRuntimeData();
@@ -136,15 +127,15 @@ public class TestMonitor {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private ShellScriptInput initTraceScript() {
 		ShellScriptInput scripts = new ShellScriptInput();
-	
+
 		scripts.addCommand("date");
-			
+
 		scripts.addCommand("echo --------------MEMORY ---------------");
 		scripts.addCommand("free");
-			
+
 		scripts.addCommand("echo --------------DISK SPACE ---------------");
 		scripts.addCommand("df");
 
@@ -152,14 +143,14 @@ public class TestMonitor {
 		if (context.isWindows) {
 			scripts.addCommand("tasklist /V");
 		} else {
-			scripts.addCommand("ps -ef");				
+			scripts.addCommand("ps -ef");
 		}
 
 		scripts.addCommand("echo --------------USER PROCESS ---------------");
-		if (context.isWindows) {				
+		if (context.isWindows) {
 			scripts.addCommand("ps -W");
 		} else {
-			scripts.addCommand("ps -u $USER -f");				
+			scripts.addCommand("ps -u $USER -f");
 		}
 
 		scripts.addCommand("echo --------------CUBRID/log/* ---------------");
@@ -179,7 +170,6 @@ public class TestMonitor {
 			scripts.addCommand("cat /c/windows/system32/cub*");
 		}
 
-	
 		scripts.addCommand("echo --------------NETSTAT---------------");
 		if (context.isWindows) {
 			scripts.addCommand("netstat -a -b -f -n -o");
@@ -187,9 +177,9 @@ public class TestMonitor {
 			scripts.addCommand("netstat -n -e -p -a");
 		}
 		return scripts;
-		
+
 	}
-	
+
 	private void collectRuntimeData() {
 
 		try {
@@ -210,24 +200,26 @@ public class TestMonitor {
 	}
 
 	private void resolveTimeout() {
-		
+
 		if (testCaseTimeout < 0 || test.startTime <= 0)
 			return;
 
 		long endTime = System.currentTimeMillis();
-		
+
 		if (endTime - test.startTime < testCaseTimeout * 1000) {
 			return;
 		}
-		
+
 		long elapse_time = (endTime - test.startTime) / 1000;
-		
-		String result = CommonUtils.resetProcess(ssh, context.isWindows);
-		
+
+		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
+
 		test.testCaseSuccess = false;
 		test.addResultItem("NOK", "timeout");
 		test.isTimeOut = true;
-		context.getFeedback().onTestCaseMonitor(test.testCaseFullName, "[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result, test.envIdentify);
+		context.getFeedback().onTestCaseMonitor(test.testCaseFullName,
+				"[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
+				test.envIdentify);
 	}
 
 	public void close() {
@@ -236,8 +228,7 @@ public class TestMonitor {
 		/*
 		 * If enableTracing is false and not ha test, logRelated will be null
 		 */
-		if(this.logRelated!=null)
-		{
+		if (this.logRelated != null) {
 			this.logRelated.close();
 		}
 

@@ -34,7 +34,7 @@ public class Constants {
 	public static final String TC_RESULT_NOK = "NOK";
 
 	public static final String SKIP_TYPE_NO = "0";
-	public static final String SKIP_TYPE_BY_MACRO = "1"; 
+	public static final String SKIP_TYPE_BY_MACRO = "1";
 	public static final String SKIP_TYPE_BY_TEMP = "2";
 
 	public static final HashMap<String, String> DB_TEST_MAP;

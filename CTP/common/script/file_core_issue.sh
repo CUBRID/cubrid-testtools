@@ -201,7 +201,9 @@ while [ $# -ne 0 ]; do
                        # delete file
                        dpath=`grep 'DB-Volume Location:' template.txt|sed 's;\*DB-Volume Location:\*;;g'`
                        rpath=`echo ${dpath%/*}`
-                       rm -rf $rpath
+                       if [ "$rpath" ];then
+                       	  rm -rf $rpath
+                       fi
                        
                        # add issue number in readme
                        fname=`echo ${rpath##*/}`

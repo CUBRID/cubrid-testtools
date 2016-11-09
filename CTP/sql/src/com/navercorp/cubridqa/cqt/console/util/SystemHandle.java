@@ -106,7 +106,7 @@ public class SystemHandle {
 	 */
 	public static int executeWCmdShell(String filename) {
 		filename = StringUtil.replaceForCygwin(filename);
-		
+
 		String[] cmd = new String[3];
 		cmd[0] = "cmd.exe";
 		cmd[1] = "/C";
@@ -120,15 +120,12 @@ public class SystemHandle {
 	 * @param commands
 	 * @return
 	 */
-/*	public static int executeWCmd(String... commands) {
-		String[] cmd = new String[commands.length + 2];
-		cmd[0] = "cmd.exe";
-		cmd[1] = "/C";
-		for (int i = 0; i < commands.length; i++) {
-			cmd[i + 2] = commands[i];
-		}
-		return ShellFileMaker.executeShell(cmd);
-	}*/
+	/*
+	 * public static int executeWCmd(String... commands) { String[] cmd = new
+	 * String[commands.length + 2]; cmd[0] = "cmd.exe"; cmd[1] = "/C"; for (int
+	 * i = 0; i < commands.length; i++) { cmd[i + 2] = commands[i]; } return
+	 * ShellFileMaker.executeShell(cmd); }
+	 */
 
 	/**
 	 * check the result of shell execute
@@ -155,9 +152,6 @@ public class SystemHandle {
 		}
 	}
 
-
-
-
 	/**
 	 * copy file
 	 * 
@@ -166,8 +160,7 @@ public class SystemHandle {
 	 * @param cp
 	 * @throws Exception
 	 */
-	public static void copyFile(String sourcepath, String targetpath, String cp)
-			throws Exception {
+	public static void copyFile(String sourcepath, String targetpath, String cp) throws Exception {
 		StringBuffer context = ShellFileMaker.makeExpectShellHead();
 		if (cp == null) {
 			ConsoleAgent.addMessage("Error:  Copy Shell is null !");
@@ -177,10 +170,8 @@ public class SystemHandle {
 		cp = cp.replace("$target", targetpath);
 		context = context.append(cp + SystemConst.LINE_SEPERATOR);
 		context = ShellFileMaker.makeExpectShellEnd(context);
-		String shellname = ShellFileMaker.writer(context.toString(),
-				SystemConst.QA_PATH + "/temp/temp.sh");
-		SystemHandle.checkExecuteResult(SystemHandle
-				.executeExpectShell(shellname));
+		String shellname = ShellFileMaker.writer(context.toString(), SystemConst.QA_PATH + "/temp/temp.sh");
+		SystemHandle.checkExecuteResult(SystemHandle.executeExpectShell(shellname));
 		ConsoleAgent.addMessage("Done");
 		ShellFileMaker.removeFile(shellname);
 	}
@@ -188,11 +179,11 @@ public class SystemHandle {
 	public static List getList() {
 		return ShellFileMaker.getList();
 	}
-	
-	public static void main(String[] args){
+
+	public static void main(String[] args) {
 		String abc = "C:/temp/";
-		String tmp = abc.substring(0,1);
-		abc = "/cygdrive/"+tmp+abc.substring(2);
+		String tmp = abc.substring(0, 1);
+		abc = "/cygdrive/" + tmp + abc.substring(2);
 		System.out.println(abc);
 	}
 }

@@ -31,12 +31,12 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 		Configure conf = new Configure();
-		
+
 		SchedularMain schedular = new SchedularMain(conf);
 		schedular.startup();
-		
-//		Producer producer = new Producer(conf);
-//		producer.startup();
+
+		// Producer producer = new Producer(conf);
+		// producer.startup();
 	}
 
 }

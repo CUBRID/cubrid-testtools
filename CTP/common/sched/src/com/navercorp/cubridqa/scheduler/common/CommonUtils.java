@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.scheduler.common;
 
 import java.io.File;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -390,7 +389,7 @@ public class CommonUtils {
 		}
 		return sequenceValue++;
 	}
-	
+
 	public static String toSimplifiedBuildId(String buildId) {
 		if (buildId == null)
 			return null;
@@ -400,26 +399,26 @@ public class CommonUtils {
 		}
 		return buildId.trim();
 	}
-	
+
 	public static boolean isNewBuildNumberSystem(String simplifiedBuildId) {
-		if(simplifiedBuildId == null) {
+		if (simplifiedBuildId == null) {
 			return false;
-		}		
+		}
 		String curValue = convertNumberSystemToFixedLength(simplifiedBuildId);
 		String stdValue = convertNumberSystemToFixedLength("10.1.0.6858");
 		return curValue.compareTo(stdValue) >= 0;
 	}
-	
-	public static String convertNumberSystemToFixedLength (String simplifiedBuildId) {
-		if(simplifiedBuildId == null) {
+
+	public static String convertNumberSystemToFixedLength(String simplifiedBuildId) {
+		if (simplifiedBuildId == null) {
 			return simplifiedBuildId;
 		}
-		
+
 		String[] items = simplifiedBuildId.split("\\.");
 		return toFixedLength(items[0], 3, '0') + toFixedLength(items[1], 3, '0') + toFixedLength(items[2], 3, '0') + toFixedLength(items[3], 10, '0');
-		
+
 	}
-	
+
 	public static String toFixedLength(String str, int len, char fillChar) {
 		if (str == null)
 			return null;
@@ -429,17 +428,17 @@ public class CommonUtils {
 		}
 		return result.substring(result.length() - len);
 	}
-	
+
 	public static String fixListenFilename(String listenFilename, String buildId, boolean toRegular) {
 		boolean isNewNumberSystem = isNewBuildNumberSystem(toSimplifiedBuildId(buildId));
 		if (isNewNumberSystem) {
-			
-			if(toRegular) {
-				listenFilename = CommonUtils.replace(listenFilename, "Linux", "linux");	
+
+			if (toRegular) {
+				listenFilename = CommonUtils.replace(listenFilename, "Linux", "linux");
 			} else {
-				//Exact
+				// Exact
 				listenFilename = CommonUtils.replace(listenFilename, "linux", "Linux");
-			}			
+			}
 		}
 		return listenFilename;
 	}

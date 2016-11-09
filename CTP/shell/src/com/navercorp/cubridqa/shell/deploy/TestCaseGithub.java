@@ -27,10 +27,10 @@
 package com.navercorp.cubridqa.shell.deploy;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
-
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.main.Context;
+import com.navercorp.cubridqa.shell.main.ShellHelper;
 
 public class TestCaseGithub {
 
@@ -41,70 +41,85 @@ public class TestCaseGithub {
 
 	public TestCaseGithub(Context context, String currEnvId) throws Exception {
 		this.context = context;
-		this.currEnvId =currEnvId;
-		String host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-		
-		envIdentify = "EnvId=" + currEnvId + "[" + user+"@"+host+":" + port + "] with " + context.getServiceProtocolType() + " protocol!";
-		this.ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
-		
-		if(context.isWindows()) {
+		this.currEnvId = currEnvId;
+
+		envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId)) + "] with " + context.getServiceProtocolType() + " protocol!";
+		this.ssh = ShellHelper.createTestNodeConnect(context, currEnvId);
+
+		if (context.isWindows()) {
 			initWindows();
 		}
 	}
-	
+
 	public void update() throws Exception {
 		context.getFeedback().onSvnUpdateStart(envIdentify);
-		
-		cleanProcess();
-		
-		//TODO if test case doesn't exist
-		
-		ShellScriptInput scripts = new ShellScriptInput();
-		
-		if(context.getCleanTestCase()) {
-			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch() + "  2>&1");
+
+		while (true) {
+			if (doUpdate()) {
+				break;
+			}
+
+			System.out.println("==>Retry to do case update after 5 seconds!");
+			CommonUtils.sleep(5);
 		}
-		
-		//scripts.addCommand("cd ");
-		//scripts.addCommand("cd " + context.getTestCaseRoot());
-		//scripts.addCommand("echo 'EXPECT NOTHING FOR BELOW (" + this.currEnvId + ")'");
-		//scripts.addCommand("svn st " + context.getSVNUserInfo());
-		//scripts.addCommand("echo Above EnvId is " + this.currEnvId);
+
 		if (!context.getTestCaseWorkspace().equals(context.getTestCaseRoot())) {
+			ShellScriptInput scripts = new ShellScriptInput();
 			String wsRoot = context.getTestCaseWorkspace().replace('\\', '/');
 			String tcRoot = context.getTestCaseRoot().replace('\\', '/');
 			String fromStar = CommonUtils.concatFile(tcRoot, "*").replace('\\', '/');
 			String toStar = CommonUtils.concatFile(wsRoot, "*").replace('\\', '/');
 
 			scripts.addCommand("mkdir -p " + wsRoot);
-			scripts.addCommand("rm -rf " + toStar);
+			if (!CommonUtils.isEmpty(toStar)) {
+				scripts.addCommand("rm -rf " + toStar);
+			}
 			scripts.addCommand("cp -r " + fromStar + " " + wsRoot);
+
+			String result;
+			try {
+				result = ssh.execute(scripts);
+				System.out.println(result);
+			} catch (Exception e) {
+				System.out.print("[ERROR] " + e.getMessage());
+			}
 		}
-		
-		String result;
-		try {
-			result = ssh.execute(scripts);
-			System.out.println(result);
-		} catch (Exception e) {
-			System.out.print("[ERROR] " + e.getMessage());
-			throw e;
-		}
-		System.out.println("UPDATE TEST CASES COMPLETE");
-		
+
 		context.getFeedback().onSvnUpdateStop(envIdentify);
- 	}
-	
+	}
+
+	private boolean doUpdate() {
+		boolean isSucc = true;
+		cleanProcess();
+		if (context.needCleanTestCase()) {
+			ShellScriptInput scripts = new ShellScriptInput();
+			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch() + "  2>&1");
+			String result;
+			try {
+				result = ssh.execute(scripts);
+				if (result != null && result.indexOf("ERROR") != -1) {
+					isSucc = false;
+				}
+				System.out.println(result);
+			} catch (Exception e) {
+				isSucc = false;
+				System.out.print("[ERROR] " + e.getMessage());
+			}
+
+			System.out.println("UPDATE TEST CASES " + (isSucc ? "COMPLETE !" : "FAIL !"));
+		} else {
+			System.out.println("SKIP TEST CASES UPDATE");
+		}
+
+		return isSucc;
+	}
+
 	public void cleanProcess() {
-		String result = CommonUtils.resetProcess(ssh, context.isWindows());
+		String result = CommonUtils.resetProcess(ssh, context.isWindows(), context.isExecuteAtLocal());
 		System.out.println("CLEAN PROCESSES:");
 		System.out.println(result);
- 	}
+	}
 
-	
-	
 	private void initWindows() {
 		ShellScriptInput scripts = new ShellScriptInput();
 

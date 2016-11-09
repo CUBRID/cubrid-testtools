@@ -38,21 +38,21 @@ public class ParseActionFiles {
 		if (args == null || args.length == 0) {
 			return;
 		}
-		
+
 		System.out.print("#!/bin/sh\n");
-		System.out.print("cd ${CTP_HOME}/common/\n");		
+		System.out.print("cd ${CTP_HOME}/common/\n");
 		System.out.print(getCommonEnv());
 		System.out.print("source ./script/util_common.sh\n");
 		System.out.print("\n");
 
 		String result;
 		for (String fileName : args) {
-			try{
+			try {
 				result = run(fileName);
 				System.out.print("echo [ACTION FILE] start " + fileName + "\n");
 				System.out.print(result + "\n");
 				System.out.print("\n");
-			} catch(Exception e){
+			} catch (Exception e) {
 				System.out.print("echo [ACTION FILE] fail to parse action file " + fileName + "\n");
 			}
 		}
@@ -75,10 +75,10 @@ public class ParseActionFiles {
 
 				needEOF = false;
 				params = getConnectParameter(line);
-				
+
 				result.append("\n");
 				result.append(line).append("\n");
-				
+
 				if (params.toLowerCase().trim().equals("local") == false) {
 					result.append("cat <<\"EEOOFF\" > " + scriptFilename).append("\n");
 					result.append(getCommonEnv());
@@ -95,11 +95,10 @@ public class ParseActionFiles {
 			needEOF = false;
 		}
 
-		
 		result.append("rm -rf " + scriptFilename + "\n");
 		return result.toString();
 	}
-	
+
 	private static String getCommonEnv() {
 		Map<String, String> map = System.getenv();
 		Set set = map.keySet();
@@ -107,9 +106,9 @@ public class ParseActionFiles {
 		StringBuffer result = new StringBuffer();
 		String key;
 		String value;
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			key = (String) it.next();
-			if(key!=null && key.startsWith("KEY_")) {
+			if (key != null && key.startsWith("KEY_")) {
 				result.append("export ").append(key).append("=\'").append(map.get(key)).append("\'\n");
 			}
 		}

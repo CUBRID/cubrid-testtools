@@ -26,8 +26,6 @@
 package com.navercorp.cubridqa.isolation.dispatch;
 
 import java.io.File;
-
-
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -35,11 +33,12 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 
-import com.navercorp.cubridqa.isolation.Constants;
-import com.navercorp.cubridqa.isolation.Context;
-import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
+import com.navercorp.cubridqa.isolation.Constants;
+import com.navercorp.cubridqa.isolation.Context;
+import com.navercorp.cubridqa.isolation.IsolationHelper;
+import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class Dispatch {
@@ -115,7 +114,7 @@ public class Dispatch {
 			}
 
 		} else {
-			clean();
+			initInstanceFiles();
 			this.tbdList = findAllTestCase();
 
 			this.macroSkippedSize = 0;
@@ -157,12 +156,7 @@ public class Dispatch {
 	private ArrayList<String> findAllTestCase() throws Exception {
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getInstanceProperty(envId, "ssh.host");
-		String port = context.getInstanceProperty(envId, "ssh.port");
-		String user = context.getInstanceProperty(envId, "ssh.user");
-		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh = IsolationHelper.createTestNodeConnect(context, envId);
 		IsolationScriptInput script;
 		String result;
 
@@ -190,25 +184,20 @@ public class Dispatch {
 	}
 
 	private ArrayList<String> findExcludedList() throws Exception {
-		String excludedFilename = context.getProperty("main.testcase.excluded");
+		String excludedFilename = context.getExclucdedFile();
 		if (excludedFilename == null || excludedFilename.trim().equals(""))
 			return null;
 
 		String envId = context.getEnvList().get(0);
 
-		String host = context.getInstanceProperty(envId, "ssh.host");
-		String port = context.getInstanceProperty(envId, "ssh.port");
-		String user = context.getInstanceProperty(envId, "ssh.user");
-		String pwd = context.getInstanceProperty(envId, "ssh.pwd");
-
-		SSHConnect ssh = new SSHConnect(host, port, user, pwd);
+		SSHConnect ssh = IsolationHelper.createTestNodeConnect(context, envId);
 		IsolationScriptInput script;
 		String result;
 
 		try {
 			script = new IsolationScriptInput();
 			script.addCommand("cd > /dev/null 2>&1");
-			script.addCommand("cat " + excludedFilename);
+			script.addCommand("cat " + excludedFilename.trim());
 			result = ssh.execute(script);
 		} finally {
 			if (ssh != null)
@@ -232,14 +221,9 @@ public class Dispatch {
 		return testCaseList;
 	}
 
-	private void clean() throws IOException {
+	private void initInstanceFiles() throws IOException {
 		File allFile;
 		File finishedFile;
-
-		File[] subList = new File(context.getCurrentLogDir()).listFiles();
-		for (File file : subList) {
-			if(file.isFile()) file.delete();
-		}
 
 		allFile = new File(getFileNameForDispatchAll());
 		allFile.createNewFile();

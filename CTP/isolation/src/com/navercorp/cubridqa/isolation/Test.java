@@ -32,6 +32,7 @@ import java.util.Properties;
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.isolation.dispatch.Dispatch;
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
@@ -69,10 +70,7 @@ public class Test {
 		this.dispatchLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + currEnvId + ".txt"), false, context.isContinueMode());
 		this.workerLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, true);
 
-		String host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		envIdentify = "EnvId=" + currEnvId + "[" + user + "@" + host + ":" + port + "]";
+		envIdentify = "EnvId=" + currEnvId + "[" + IsolationHelper.getTestNodeTitle(context, currEnvId) + "]";
 
 		resetSSH();
 	}
@@ -128,8 +126,8 @@ public class Test {
 
 				if (testCaseSuccess == false) {
 					String cont = showDifferenceBetweenAnswerAndResult(this.testCaseFullName);
-					resultCont.append("=================================================================== D I F F ===================================================================")
-							.append(Constants.LINE_SEPARATOR);
+					resultCont.append("=================================================================== D I F F ===================================================================").append(
+							Constants.LINE_SEPARATOR);
 					resultCont.append(cont).append(Constants.LINE_SEPARATOR);
 				}
 				context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore, Constants.SKIP_TYPE_NO);
@@ -182,7 +180,7 @@ public class Test {
 		if (tc.startsWith("/") == false) {
 			tc = "$HOME/" + tc;
 		}
-		script.addCommand("sh runone.sh -r " + (context.getRetryTimes() + 1) + " " + tc + " " + context.getProperty("main.testcase.timeout") + " " + context.getTestingDatabase() + " 2>&1");
+		script.addCommand("sh runone.sh -r " + (context.getRetryTimes() + 1) + " " + tc + " " + context.getTestCaseTimeoutInSec() + " " + context.getTestingDatabase() + " 2>&1");
 		result = ssh.execute(script);
 		workerLog.println(result);
 
@@ -256,12 +254,7 @@ public class Test {
 			e.printStackTrace();
 		}
 
-		String host = context.getInstanceProperty(currEnvId, "ssh.host");
-		String port = context.getInstanceProperty(currEnvId, "ssh.port");
-		String user = context.getInstanceProperty(currEnvId, "ssh.user");
-		String pwd = context.getInstanceProperty(currEnvId, "ssh.pwd");
-
-		this.ssh = new SSHConnect(host, port, user, pwd);
+		this.ssh = IsolationHelper.createTestNodeConnect(context, currEnvId);
 	}
 
 	public void addResultItem(String flag, String message) {

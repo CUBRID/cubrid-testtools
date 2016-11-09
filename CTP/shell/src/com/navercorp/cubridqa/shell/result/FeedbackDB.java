@@ -36,6 +36,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.HttpUtil;
@@ -70,8 +71,8 @@ public class FeedbackDB implements Feedback {
 
 		String build = context.getTestBuild();
 
-		String category = context.getProperty("main.testing.category");
-		String os = context.getProperty("main.testing.platform");
+		String category = context.getTestCategory();
+		String os = context.getTestPlatform();
 
 		String version = context.getVersion();
 		String msgId = context.getMsgId();
@@ -134,11 +135,11 @@ public class FeedbackDB implements Feedback {
 	@Override
 	public void onTaskStopEvent() {
 
-		refreshShellMain(true);
+		showTestResult();
 
 		shutdownDataSource();
 
-		String noticeUrl = context.getProperty("feedback.qahome.notice_load");
+		String noticeUrl = context.getProperty(ConfigParameterConstants.FEEDBACK_NOTICE_QAHOME_URL);
 		if (noticeUrl != null && noticeUrl.trim().length() > 0) {
 			try {
 				noticeUrl = CommonUtils.replace(noticeUrl, "<MAINID>", String.valueOf(task_id));
@@ -151,25 +152,7 @@ public class FeedbackDB implements Feedback {
 		}
 	}
 
-	public void notifyUpdateMain() {
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		String sql;
-		try {
-			conn = ds.getConnection();
-			sql = "update shell_main set test_error='Y' where main_id=? and (test_error='N' or test_error is null)";
-			stmt = conn.prepareStatement(sql);
-			stmt.setInt(1, task_id);
-			stmt.executeUpdate();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			close(stmt);
-			close(conn);
-		}
-	}
-
-	public void refreshShellMain(boolean show) {
+	private synchronized void updateShellMain(boolean newSucc, boolean newCore) {
 		Connection conn = null;
 
 		PreparedStatement stmt = null;
@@ -184,30 +167,35 @@ public class FeedbackDB implements Feedback {
 		// get fail number
 		int fail_num = 0;
 		int succ_num = 0;
+		String testError = null;
 		try {
 			conn = ds.getConnection();
-			sql = "select count(*) from shell_items where main_id=? and test_result=?";
+			sql = "select success_num, fail_num,test_error from shell_main where main_id=?";
 			stmt = conn.prepareStatement(sql);
 			stmt.setInt(1, task_id);
-			stmt.setString(2, "OK");
 			rs = stmt.executeQuery();
-			if (rs.next()) {
-				succ_num = rs.getInt(1);
-			}
-			rs.close();
-
-			stmt.setInt(1, task_id);
-			stmt.setString(2, "NOK");
-			rs = stmt.executeQuery();
-			if (rs.next()) {
-				fail_num = rs.getInt(1);
-			}
+			rs.next();
+			succ_num = rs.getInt(1);
+			fail_num = rs.getInt(2);
+			testError = rs.getString(3);
 			rs.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			close(rs);
 			close(stmt);
+		}
+
+		if (newSucc) {
+			succ_num = succ_num + 1;
+		} else {
+			fail_num = fail_num + 1;
+		}
+
+		if (newCore) {
+			testError = "Y";
+		} else {
+			testError = testError == null || testError.trim().equals("Y") == false ? "N" : "Y";
 		}
 
 		executed_num = fail_num + succ_num;
@@ -217,31 +205,16 @@ public class FeedbackDB implements Feedback {
 		try {
 			float success_rate = tbdNum <= 0 ? 0 : (float) succ_num / (float) executed_num * 100;
 
-			if (show) {
-				System.out.println("Success num: " + succ_num + ", Fail_num: " + fail_num + ", Skipped(macro): " + macroSkippedNum + ", Skipped(temp): " + tempSkippedNum + ", Total Scenario: "
-						+ (tbdNum + macroSkippedNum));
-				System.out.println("Test Rate: " + execute_rate + "%");
-				System.out.println("Success Rate: " + success_rate + "%");
-			}
-			sql = "update shell_main set end_time=?, success_num=?, fail_num=?, test_rate=?, success_rate=? where main_id=?";
+			sql = "update shell_main set success_num=?, fail_num=?, end_time=?, test_rate=?, success_rate=?, elapse_time=(?-start_time), test_error=? where main_id=?";
 			stmt = conn.prepareStatement(sql);
-			stmt.setTimestamp(1, d);
-			stmt.setInt(2, succ_num);
-			stmt.setInt(3, fail_num);
+			stmt.setInt(1, succ_num);
+			stmt.setInt(2, fail_num);
+			stmt.setTimestamp(3, d);
 			stmt.setFloat(4, execute_rate);
 			stmt.setFloat(5, success_rate);
-			stmt.setInt(6, task_id);
-			stmt.executeUpdate();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			close(stmt);
-		}
-
-		try {
-			sql = "update shell_main set elapse_time=(end_time-start_time) where main_id=?";
-			stmt = conn.prepareStatement(sql);
-			stmt.setInt(1, task_id);
+			stmt.setTimestamp(6, d);
+			stmt.setString(7, testError);
+			stmt.setInt(8, task_id);
 			stmt.executeUpdate();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -249,6 +222,44 @@ public class FeedbackDB implements Feedback {
 			close(stmt);
 			close(conn);
 		}
+	}
+
+	public void showTestResult() {
+		Connection conn = null;
+
+		PreparedStatement stmt = null;
+		String sql;
+		ResultSet rs = null;
+
+		// get fail number
+		int fail_num = 0;
+		int succ_num = 0;
+		float execute_rate = 0;
+		float success_rate = 0;
+		try {
+			conn = ds.getConnection();
+			sql = "select success_num, fail_num,test_rate,success_rate from shell_main where main_id=?";
+			stmt = conn.prepareStatement(sql);
+			stmt.setInt(1, task_id);
+			rs = stmt.executeQuery();
+			rs.next();
+			succ_num = rs.getInt(1);
+			fail_num = rs.getInt(2);
+			execute_rate = rs.getFloat(3);
+			success_rate = rs.getFloat(4);
+			rs.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			close(rs);
+			close(stmt);
+			close(conn);
+		}
+
+		System.out.println("Success num: " + succ_num + ", Fail_num: " + fail_num + ", Skipped(macro): " + macroSkippedNum + ", Skipped(temp): " + tempSkippedNum + ", Total Scenario: "
+				+ (tbdNum + macroSkippedNum + tempSkippedNum));
+		System.out.println("Test Rate: " + execute_rate + "%");
+		System.out.println("Success Rate: " + success_rate + "%");
 	}
 
 	@Override
@@ -305,63 +316,65 @@ public class FeedbackDB implements Feedback {
 
 	@Override
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
-		Connection conn = null;
-		int resultContSize = 0;
 
-		PreparedStatement stmt = null;
-		String sql;
+		if (context.isSkipToSaveSuccCase() == false || flag == false) {
+			Connection conn = null;
+			int resultContSize = 0;
 
-		long caseStopTime = System.currentTimeMillis();
-		Timestamp d = new Timestamp(caseStopTime);
-        if(resultCont!=null){
-        	resultContSize = resultCont.length();
-        	if(resultContSize > MAX_CONTENT_SIZE){
-        		String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE/2);
-        		String resultContSuffer = resultCont.substring(resultContSize - MAX_CONTENT_SIZE/2, resultContSize);
-        		resultCont = resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********" + System.getProperty("line.separator") + resultContSuffer;
-        	}
-        }
-        
-		sql = "insert into shell_items(main_id, case_file, env_node, elapse_time, test_result, is_timeout, has_core, result_cont, end_time, is_skipped, retry_count) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			PreparedStatement stmt = null;
+			String sql;
 
-		try {
-			conn = ds.getConnection();
-
-			stmt = conn.prepareStatement(sql);
-			stmt.setInt(1, task_id);
-			stmt.setString(2, testCase);
-			stmt.setString(3, envIdentify);
-			stmt.setDouble(4, elapseTime);
-			if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
-				stmt.setString(5, (flag ? "OK" : "NOK"));
-			} else {
-				stmt.setString(5, "");
+			long caseStopTime = System.currentTimeMillis();
+			Timestamp d = new Timestamp(caseStopTime);
+			if (resultCont != null) {
+				resultContSize = resultCont.length();
+				if (resultContSize > MAX_CONTENT_SIZE) {
+					String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE / 2);
+					String resultContSuffer = resultCont.substring(resultContSize - MAX_CONTENT_SIZE / 2, resultContSize);
+					resultCont = resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********"
+							+ System.getProperty("line.separator") + resultContSuffer;
+				}
 			}
-			stmt.setString(6, (isTimeOut ? "Y" : "N"));
-			stmt.setString(7, (hasCore ? "Y" : "N"));
-			stmt.setString(8, resultCont);
-			stmt.setTimestamp(9, d);
-			stmt.setString(10, skippedType);
-			stmt.setInt(11, retryCount);
-			stmt.executeUpdate();
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			close(stmt);
-			close(conn);
+			sql = "insert into shell_items(main_id, case_file, env_node, elapse_time, test_result, is_timeout, has_core, result_cont, end_time, is_skipped, retry_count) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+			try {
+				conn = ds.getConnection();
+
+				stmt = conn.prepareStatement(sql);
+				stmt.setInt(1, task_id);
+				stmt.setString(2, testCase);
+				stmt.setString(3, envIdentify);
+				stmt.setDouble(4, elapseTime);
+				if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
+					stmt.setString(5, (flag ? "OK" : "NOK"));
+				} else {
+					stmt.setString(5, "");
+				}
+				stmt.setString(6, (isTimeOut ? "Y" : "N"));
+				stmt.setString(7, (hasCore ? "Y" : "N"));
+				stmt.setString(8, resultCont);
+				stmt.setTimestamp(9, d);
+				stmt.setString(10, skippedType);
+				stmt.setInt(11, retryCount);
+				stmt.executeUpdate();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				close(stmt);
+				close(conn);
+			}
 		}
 
 		if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
-			refreshShellMain(false);
-			if (hasCore) {
-				notifyUpdateMain();
-			}
+			updateShellMain(flag, hasCore);
 		}
 	}
 
 	@Override
-	public void onTestCaseStopEventForRetry(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
+	public void onTestCaseStopEventForRetry(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType,
+			int retryCount) {
 		Connection conn = null;
 		int resultContSize = 0;
 
@@ -370,14 +383,15 @@ public class FeedbackDB implements Feedback {
 
 		long caseStopTime = System.currentTimeMillis();
 		Timestamp d = new Timestamp(caseStopTime);
-		if(resultCont!=null){
-        	resultContSize = resultCont.length();
-        	if(resultContSize > MAX_CONTENT_SIZE){
-        		String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE/2);
-        		String resultContSuffer = resultCont.substring(resultContSize - MAX_CONTENT_SIZE/2, resultContSize);
-        		resultCont = resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********" + System.getProperty("line.separator") + resultContSuffer;
-        	}
-        }
+		if (resultCont != null) {
+			resultContSize = resultCont.length();
+			if (resultContSize > MAX_CONTENT_SIZE) {
+				String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE / 2);
+				String resultContSuffer = resultCont.substring(resultContSize - MAX_CONTENT_SIZE / 2, resultContSize);
+				resultCont = resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********"
+						+ System.getProperty("line.separator") + resultContSuffer;
+			}
+		}
 
 		sql = "insert into shell_retry_log(main_id, case_file, env_node, elapse_time, test_result, is_timeout, has_core, result_cont, end_time, is_skipped, retry_count) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -408,14 +422,6 @@ public class FeedbackDB implements Feedback {
 			close(stmt);
 			close(conn);
 		}
-
-		if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
-			refreshShellMain(false);
-			if (hasCore) {
-				notifyUpdateMain();
-			}
-		}
-
 	}
 
 	/**
@@ -508,7 +514,7 @@ public class FeedbackDB implements Feedback {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Override
 	public int getTestId() {
 		return this.task_id;
@@ -517,7 +523,5 @@ public class FeedbackDB implements Feedback {
 	@Override
 	public void onStopEnvEvent(String envIdentify) {
 		// TODO Auto-generated method stub
-		
 	}
-
 }

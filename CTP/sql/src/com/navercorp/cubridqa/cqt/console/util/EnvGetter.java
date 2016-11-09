@@ -32,7 +32,7 @@ public class EnvGetter {
 		String value = System.getenv().get(key);
 		if (value != null) {
 			value = value.trim();
-		}		
+		}
 		return value;
 	}
 

@@ -33,6 +33,8 @@ chmod u+x ${CTP_HOME}/common/script*
 mkdir -p ${CTP_HOME}/common/sched/result/ >/dev/null 2>&1
 mkdir -p ${CTP_HOME}/common/sched/status/ >/dev/null 2>&1
 cd ${CURRENT_TOOL_HOME}
+params=$@
+cmd=$0
 
 ##variable for script
 separator=":"
@@ -135,18 +137,22 @@ function consumerTimer()
 
 function updateCodes()
 { 
-	curDir=`pwd`
+    curDir=`pwd`
     branchName=$1
-
     changedCount=`cd ${CTP_HOME}; run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" --check-only . | grep "fetch" | grep CHANGED | wc -l`
         
     if [ "$changedCount" -gt "0" ]
     then
-		echo "-------------------------- Begin to update codes -----------------------------"
-		default_lc_all=`echo $LC_ALL`
-		export LC_ALL=en_US
-		echo "Update status: CHANGED " `date`
-		commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
+	    echo "-------------------------- Begin to update codes -----------------------------"
+	    default_lc_all=`echo $LC_ALL`
+	    export LC_ALL=en_US
+	    echo "Update status: CHANGED " `date`
+	    if [ "$os" == "Linux" -o "$os" = "AIX" ];then
+	    	commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
+	    else
+		commands="$cmd $params"
+	    fi
+
 	    echo "#!/bin/bash " > $HOME/.autoUpdate.sh
 	    echo "if [ -f ~/.bash_profile ]; " >> $HOME/.autoUpdate.sh
 	    echo "then " >> $HOME/.autoUpdate.sh
@@ -155,14 +161,23 @@ function updateCodes()
 	    echo "set -x " >> $HOME/.autoUpdate.sh
 	    echo "cd ${CURRENT_TOOL_HOME}/../script ">> $HOME/.autoUpdate.sh
 	    echo "chmod u+x *">> $HOME/.autoUpdate.sh
-       	echo "./stop_consumer.sh" >>$HOME/.autoUpdate.sh
-        echo "./upgrade.sh" >>$HOME/.autoUpdate.sh
-        echo "nohup ${commands} 2>&1 >> $HOME/nohup.out &">>$HOME/.autoUpdate.sh
-        echo "cd -" >>$HOME/.autoUpdate.sh
-		at -f $HOME/.autoUpdate.sh now+1 minutes 2>&1 | xargs -i echo \#{} >> $HOME/.autoUpdate.sh
-		export LC_ALL=$default_lc_all
-		echo "----------------------------Done ----------------------------------------------"
-		exit
+       	    echo "./stop_consumer.sh" >>$HOME/.autoUpdate.sh
+            echo "./upgrade.sh" >>$HOME/.autoUpdate.sh
+            echo "nohup ${commands} 2>&1 >> $HOME/nohup.out &">>$HOME/.autoUpdate.sh
+            echo "cd -" >>$HOME/.autoUpdate.sh
+	    if [ "$os" == "Linux" -o "$os" = "AIX" ];then
+	    	at -f $HOME/.autoUpdate.sh now+1 minutes 2>&1 | xargs -i echo \#{} >> $HOME/.autoUpdate.sh
+	    else
+		h=$(date +%H)
+                m=$(date +%M)
+		let "m=m+1"
+		timeStr="$h:$m"
+		at $timeStr cmd /c sh $HOME/.autoUpdate.sh
+		echo "At task will be start: $timeStr" >> $HOME/.autoUpdate.sh
+	    fi 
+	    export LC_ALL=$default_lc_all
+	    echo "----------------------------Done ----------------------------------------------"
+	    exit
 	fi
 
 	cd $curDir

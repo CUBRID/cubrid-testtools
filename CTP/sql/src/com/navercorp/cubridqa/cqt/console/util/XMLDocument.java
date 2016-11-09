@@ -45,7 +45,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-
 public class XMLDocument {
 	/**
 	 * 
@@ -54,8 +53,7 @@ public class XMLDocument {
 	 */
 	public static Element getRootElement(String filename) {
 		try {
-			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory
-					.newInstance();
+			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
 			Document doc = docBuilder.parse(new File(filename));
 			doc.getDocumentElement().normalize();
@@ -81,8 +79,7 @@ public class XMLDocument {
 	 */
 	public static Element getRootElement(File file) {
 		try {
-			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory
-					.newInstance();
+			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
 			Document doc = docBuilder.parse(file);
 			doc.getDocumentElement().normalize();
@@ -213,12 +210,10 @@ public class XMLDocument {
 
 					Element temp_element = (Element) temp_node;
 					if (temp_element.getChildNodes().getLength() > 1) {
-						Map subMap = XMLDocument
-								.getElementsMap((Element) temp_node);
+						Map subMap = XMLDocument.getElementsMap((Element) temp_node);
 						map.put(temp_node.getNodeName(), subMap);
 					} else {
-						map.put(temp_node.getNodeName(), temp_node
-								.getTextContent().trim());
+						map.put(temp_node.getNodeName(), temp_node.getTextContent().trim());
 					}
 				}
 

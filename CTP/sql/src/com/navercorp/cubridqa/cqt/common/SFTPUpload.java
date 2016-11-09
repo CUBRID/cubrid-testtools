@@ -80,7 +80,7 @@ public class SFTPUpload {
 		String to = cmd.hasOption("to") ? cmd.getOptionValue("to") : ".";
 
 		SSHConnect ssh = null;
-		
+
 		SFTP sftp = null;
 		try {
 			ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword);

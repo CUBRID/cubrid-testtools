@@ -42,8 +42,7 @@ public class SSHConnect {
 	String user;
 	String pwd;
 
-	public SSHConnect(String host, int port, String user, String pwd)
-			throws JSchException {
+	public SSHConnect(String host, int port, String user, String pwd) throws JSchException {
 
 		this.host = host;
 		this.port = port;
@@ -52,7 +51,7 @@ public class SSHConnect {
 
 		reconnect();
 	}
-	
+
 	public String toString() {
 		return user + "@" + host;
 	}
@@ -69,8 +68,8 @@ public class SSHConnect {
 	}
 
 	public String execute(ShellInput scripts) throws Exception {
-		
-		//System.out.println(scripts);
+
+		// System.out.println(scripts);
 
 		if (session == null || !session.isConnected())
 			reconnect();
@@ -109,17 +108,14 @@ public class SSHConnect {
 		return result.trim();
 	}
 
-	
-	public void wait(ShellInput scripts, String expectKeyworkInclude)
-			throws Exception {
+	public void wait(ShellInput scripts, String expectKeyworkInclude) throws Exception {
 		String result;
 		System.out.println();
 		while (true) {
 			try {
 				System.out.print(".");
 				result = execute(scripts);
-				if (result != null
-						&& result.trim().indexOf(expectKeyworkInclude) != -1)
+				if (result != null && result.trim().indexOf(expectKeyworkInclude) != -1)
 					break;
 				Thread.sleep(2 * 1000);
 			} catch (Exception e) {
@@ -127,7 +123,6 @@ public class SSHConnect {
 		}
 	}
 
-	
 	public void reboot() throws Exception {
 		ShellInput scripts = new ShellInput("reboot && echo REBOOT_OK");
 		String result = execute(scripts);

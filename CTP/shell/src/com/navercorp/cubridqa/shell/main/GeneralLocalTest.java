@@ -1,13 +1,38 @@
+/**
+ * Copyright (c) 2016, Search Solution Corporation. All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ *   * Redistributions of source code must retain the above copyright notice, 
+ *     this list of conditions and the following disclaimer.
+ * 
+ *   * Redistributions in binary form must reproduce the above copyright 
+ *     notice, this list of conditions and the following disclaimer in 
+ *     the documentation and/or other materials provided with the distribution.
+ * 
+ *   * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
+ *     derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
 package com.navercorp.cubridqa.shell.main;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.LocalInvoker;
+import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
-import com.navercorp.cubridqa.shell.result.FeedbackDB;
-import com.navercorp.cubridqa.shell.result.FeedbackFile;
 
 public class GeneralLocalTest {
 
@@ -15,15 +40,28 @@ public class GeneralLocalTest {
 
 	public GeneralLocalTest(Context context) {
 		this.context = context;
-		this.context.setLogDir(context.getProperty("main.testing.category", "general"));
-		String feedbackType = context.getProperty("main.feedback.type", "").trim();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			context.setFeedback(new FeedbackFile(context));
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			context.setFeedback(new FeedbackDB(context));
+
+		String category = context.getProperty(ConfigParameterConstants.TEST_CATEGORY, (ConfigParameterConstants.TEST_CATEGORY).toUpperCase(), false);
+		if (CommonUtils.isEmpty(category)) {
+			category = "general";
 		}
-		context.setTestBuild(context.getProperty("main.testing.build_id"));
-		context.setVersion(context.getProperty("main.testing.bits"));
+		context.setTestCategory(category);
+
+		String logDirname = System.getProperty("TEST_TYPE");
+		if (CommonUtils.isEmpty(logDirname)) {
+			logDirname = "general";
+		}
+		this.context.setLogDir(logDirname);
+
+		String buildId = context.getProperty(ConfigParameterConstants.TEST_BUILD_ID, (ConfigParameterConstants.TEST_BUILD_ID).toUpperCase(), false);
+		if (!CommonUtils.isEmpty(buildId)) {
+			context.setTestBuild(buildId);
+		}
+
+		String buildBit = context.getProperty(ConfigParameterConstants.TEST_BUILD_BITS, (ConfigParameterConstants.TEST_BUILD_BITS).toUpperCase(), false);
+		if (!CommonUtils.isEmpty(buildBit)) {
+			context.setVersion(buildBit);
+		}
 	}
 
 	public void start() {
@@ -84,7 +122,9 @@ public class GeneralLocalTest {
 		if (scripts == null)
 			return null;
 
-		scripts = "cd ${CTP_HOME}; source shell/local/" + context.getProperty("main.testing.type") + ".sh; " + scripts;
+		String testType = context.getProperty("TEST_TYPE", "TEST_TYPE", false);
+
+		scripts = "cd ${CTP_HOME}; source shell/local/" + testType + ".sh; " + scripts;
 		if (keys != null && keys.length > 0) {
 			scripts = scripts + "; echo GPROPSTART\n";
 			for (String k : keys) {

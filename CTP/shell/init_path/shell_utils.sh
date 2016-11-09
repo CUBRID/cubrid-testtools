@@ -24,8 +24,29 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-function do_check_more_errors
-{
+function generage_readme {
+    test_case_dir=$1
+    backup_dir=$2
+
+    freadme=${backup_dir}/readme.txt
+    echo 1.TEST CASE: ${test_case_dir} > $freadme
+    echo 2.CUBRID VERSION: `cubrid_rel | grep CUBRID` >> $freadme
+    echo 3.TEST DATE: `date` >> $freadme
+    echo 4.ENVIRONMENT: >> $freadme
+    set >> $freadme
+    echo 5.ALL PROCESSES: >> $freadme
+    ps -ef >> $freadme
+    echo 6.IPCS >> $freadme
+    ipcs >> $freadme
+    echo 7.DISK STATUS >> $freadme
+    df -h>> $freadme
+    echo 8.LOGGED >> $freadme
+    who >> $freadme
+    echo 9.MEMORY STATUS >> $freadme
+    free -m >> $freadme
+}
+
+function do_check_more_errors {
     test_case_dir=$1
     test_case_dir=${test_case_dir%/cases*}
     case_name=`echo ${test_case_dir##*/}`
@@ -72,25 +93,11 @@ function do_check_more_errors
     if [ $core_dump_cnt -gt 0 ] || [ $fatal_err_cnt -gt $old_fatal_err_cnt -a "$SKIP_CHECK_FATAL_ERROR" != "TRUE" ]; then
         mkdir -p $backup_dir
 
-        #generate readme
-        freadme=$backup_dir/readme.txt
-        echo 1.TEST CASE: $test_case_dir > $freadme
-        echo 2.CUBRID VERSION: `cubrid_rel | grep CUBRID` >> $freadme
-        echo 3.TEST DATE: `date` >> $freadme
-        echo 4.ENVIRONMENT: >> $freadme
-        set >> $freadme
-        echo 5.PROCESS >> $freadme
-        ps -ef >> $freadme
-        echo 6.IPCS >> $freadme
-        ipcs >> $freadme
-        echo 7.DISK STATUS >> $freadme
-        df >> $freadme
-        echo 8.LOGGED >> $freadme
-        who >> $freadme
+        generage_readme ${test_case_dir} ${backup_dir}
 
         host_ip=`hostname -i`
         if [ $core_dump_cnt -gt 0 ]; then
- 	    out=" : NOK found core file on host "$host_ip"("$backup_dir")"
+ 	        out=" : NOK found core file on host "$host_ip"("$backup_dir")"
             echo $out >> $result_file
             echo $out
 	    while read core
@@ -105,42 +112,62 @@ function do_check_more_errors
 	    done < temp_log
         fi
         if [ $fatal_err_cnt -gt 0 ]; then
-            out=" : NOK found fatal error file on host "$host_ip"("$backup_dir")"
+            out=" : NOK found fatal error on host "$host_ip"("$backup_dir")"
             echo $out >> $result_file
             echo $out
         fi
         cp -rf $CUBRID $backup_dir/CUBRID
         cp -rf $test_case_dir $backup_dir
         cp -rf $init_path $backup_dir/init_path
-	cd ~/ERROR_BACKUP
-	tar zcvf AUTO_${cub_build_id}_${current_datetime}.tar.gz AUTO_${cub_build_id}_${current_datetime}
-	rm -rf AUTO_${cub_build_id}_${current_datetime}
+	    cd ~/ERROR_BACKUP
+	    tar zcvf AUTO_${cub_build_id}_${current_datetime}.tar.gz AUTO_${cub_build_id}_${current_datetime}
+	    rm -rf AUTO_${cub_build_id}_${current_datetime}
         cd -
 
-	cat temp_log | xargs -i rm -rf {}
+	    cat temp_log | xargs -i rm -rf {}
         echo $fatal_err_cnt>$CUBRID/log/qa_fatal_error_count.log
-
     fi
     rm temp_log -f >/dev/null 2>&1
 }
 
-function do_save_normal_error_logs
-{
+function do_save_normal_error_logs {
+    do_save_snapshot_by_type $1 "NORMAL"
+}
+
+function should_save_snapshot_for_recovery {
+    cnt=`grep -aE -f ${init_path}/recovery_ignore_item.conf cubrid_failure_desc.txt | wc -l`
+    if [ $cnt -gt 0 ]; then
+        echo 0
+    else
+        echo 1
+    fi
+}
+
+function do_save_snapshot_by_type {
     test_case_dir=$1
+    kind=$2
     test_case_dir=${test_case_dir%/cases*}
     case_name=`echo ${test_case_dir##*/}`
     result_file=${test_case_dir}/cases/${case_name}.result
     cub_build_id=`cubrid_rel | grep CUBRID | awk -F ')' '{print $1}' | awk -F '(' '{print $NF}'`
     current_datetime=`date "+%Y%m%d_%H%M%S"`
     
-    backup_dir=~/ERROR_BACKUP/AUTO_NORMAL_${cub_build_id}_${current_datetime}
-    mkdir -p $backup_dir
-    cp -rf $CUBRID/log $backup_dir
-    cd ~/ERROR_BACKUP
-    tar zcvf AUTO_NORMAL_${cub_build_id}_${current_datetime}.tar.gz AUTO_NORMAL_${cub_build_id}_${current_datetime} 2>&1 >/dev/null
-    rm -rf AUTO_NORMAL_${cub_build_id}_${current_datetime}
-    cd - 2>&1 >/dev/null
-    echo $backup_dir >> $result_file
-    echo $backup_dir
-}
+    backup_fname=AUTO_${kind}_${cub_build_id}_${current_datetime}
+    backup_dir=~/ERROR_BACKUP/${backup_fname}
 
+    mkdir -p ${backup_dir}
+    cp -rf $CUBRID ${backup_dir}
+    cp -r ${test_case_dir} ${backup_dir}
+    cubrid_fail_file=${test_case_dir}/cubrid_failure_desc.txt
+    if [ -f ${cubrid_fail_file} ]; then
+        mv ${cubrid_fail_file} ${backup_dir}
+    fi
+    generage_readme ${test_case_dir} ${backup_dir}
+
+    cd ${backup_dir}/..
+    tar zcvf ${backup_fname}.tar.gz ${backup_fname} 2>&1 >/dev/null
+    rm -rf ${backup_fname}
+    cd - 2>&1 >/dev/null
+    host_ip=`hostname -i`
+    echo " : NOK found ${kind} error on host $host_ip (${backup_dir})" >> ${result_file}
+}

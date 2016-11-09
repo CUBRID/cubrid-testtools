@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.scheduler.common;
 
 import java.sql.DriverManager;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -58,14 +57,14 @@ public class SendMessage {
 
 	public SendMessage(Properties props) {
 		this.props = props;
-		String user = props.getProperty("activemq.user");
-		String pwd = props.getProperty("activemq.pwd");
-		String url = props.getProperty("activemq.url");
-		
+		String user = props.getProperty("activemq_user");
+		String pwd = props.getProperty("activemq_pwd");
+		String url = props.getProperty("activemq_url");
+
 		this.fact = new ActiveMQConnectionFactory(user, pwd, url);
 		this.messageList = new ArrayList<Message>();
 	}
-	
+
 	public void send() throws JMSException {
 		send(0);
 	}
@@ -99,11 +98,11 @@ public class SendMessage {
 				for (String key : set) {
 					textMsg.setStringProperty(key, message.getProperty(key));
 				}
-				
+
 				if (dbConn != null) {
 					isFilteredOut = isFilteredOut(message) || (isPatchBuild(message) && !isPatchAccepted(message));
 					saveMsgToDatabase(message, isFilteredOut, delay);
-					if(isFilteredOut == false) {
+					if (isFilteredOut == false) {
 						producer.send(textMsg);
 					} else {
 						System.out.println("SORRY. FILTERED OUT!");
@@ -121,7 +120,7 @@ public class SendMessage {
 			if (mqConn != null)
 				mqConn.close();
 			this.messageList.clear();
-			
+
 			if (dbConn != null) {
 				try {
 					dbConn.close();
@@ -136,15 +135,15 @@ public class SendMessage {
 	public void addMessage(Message message) {
 		this.messageList.add(message);
 	}
-	
-	public void clearMessages(){
+
+	public void clearMessages() {
 		this.messageList.clear();
 	}
-	
+
 	public String saveMsgToDatabase(Message msg, boolean isFilteredOut, long delay) {
-		
+
 		String msgId = msg.getMsgId();
-		
+
 		String QUEUE_ID = msg.getQueue();
 		String BUILD_ID = msg.getProperty(Constants.MSG_BUILD_ID);
 		String BUILD_VERSION = CommonUtils.getVersion(BUILD_ID);
@@ -161,8 +160,8 @@ public class SendMessage {
 
 		String sql = "insert into MSG_SENDED (MSG_ID, QUEUE_ID,BUILD_VERSION,BUILD_ID,BUILD_PACKAGE_PATTERN,BUILD_BIT,BUILD_TYPE,BUILD_SCENARIOS,BUILD_GENERATE_MSG_WAY,BUILD_CREATE_TIME,PRODUCE_MSG_SEND_TIME,CONSUME_FLAG,IS_FILTERED_OUT,FULL_SCENARIO_ID, MSG_CONT, MSG_DELAY) values (?,?,?,?,?,?,?,?,?,?,NOW(),?,?,?,?,?);";
 		PreparedStatement pstmt = null;
-		
-		try{
+
+		try {
 			pstmt = getConnection().prepareStatement(sql);
 			pstmt.setString(1, msgId);
 			pstmt.setString(2, QUEUE_ID);
@@ -179,10 +178,10 @@ public class SendMessage {
 			pstmt.setString(13, fullScenarioId);
 			pstmt.setString(14, msg.toString());
 			pstmt.setLong(15, delay);
-			
+
 			pstmt.executeUpdate();
-			
-		} catch(SQLException e) {
+
+		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			try {
@@ -191,12 +190,12 @@ public class SendMessage {
 				e.printStackTrace();
 			}
 		}
-		
+
 		return msgId;
 	}
-	
+
 	public boolean isFilteredOut(Message msg) {
-		
+
 		String QUEUE_ID = msg.getQueue();
 		String BUILD_ID = msg.getProperty(Constants.MSG_BUILD_ID);
 		String BUILD_VERSION = CommonUtils.getVersion(BUILD_ID);
@@ -205,26 +204,26 @@ public class SendMessage {
 		String MSG_FILEID = msg.getProperty(Constants.MSG_MSG_FILEID);
 		String fullScenarioId = MSG_FILEID == null || MSG_FILEID.trim().equals("") ? BUILD_SCENARIOS : MSG_FILEID;
 		String BUILD_GENERATE_MSG_WAY = msg.getProperty(Constants.MSG_BUILD_GENERATE_MSG_WAY);
-		
+
 		String sql_rule = "select AFFECTED_TIMES from MSG_RULE_EXCLUDED_BY_DAY where QUEUE_ID=? and BUILD_VERSION=? and BUILD_PACKAGE_PATTERN=? and FULL_SCENARIO_ID=? and BUILD_GENERATE_MSG_WAY=? order by AFFECTED_TIMES asc";
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-		
+
 		int ruleAffectedTimes = -1;
-		try{
+		try {
 			pstmt = getConnection().prepareStatement(sql_rule);
 			pstmt.setString(1, QUEUE_ID);
 			pstmt.setString(2, BUILD_VERSION);
 			pstmt.setString(3, BUILD_PACKAGE_PATTERN);
 			pstmt.setString(4, fullScenarioId);
 			pstmt.setString(5, BUILD_GENERATE_MSG_WAY);
-			
+
 			rs = pstmt.executeQuery();
-			if(rs.next()) {
+			if (rs.next()) {
 				ruleAffectedTimes = rs.getInt(1);
 			}
 			rs.close();
-		} catch(SQLException e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			try {
@@ -233,26 +232,27 @@ public class SendMessage {
 				e.printStackTrace();
 			}
 		}
-		
-		if (ruleAffectedTimes < 0) return false;
-		
+
+		if (ruleAffectedTimes < 0)
+			return false;
+
 		int acctualTimes = 0;
 		String sql_check = "select count(*) from MSG_SENDED where QUEUE_ID=? and BUILD_VERSION=? and BUILD_PACKAGE_PATTERN=? and FULL_SCENARIO_ID=? and BUILD_GENERATE_MSG_WAY=? and IS_FILTERED_OUT='N' and PRODUCE_MSG_SEND_TIME>=?";
-		try{
-			pstmt = getConnection().prepareStatement(sql_check);			
-			pstmt.setString(1, QUEUE_ID);			
-			pstmt.setString(2, BUILD_VERSION);			
+		try {
+			pstmt = getConnection().prepareStatement(sql_check);
+			pstmt.setString(1, QUEUE_ID);
+			pstmt.setString(2, BUILD_VERSION);
 			pstmt.setString(3, BUILD_PACKAGE_PATTERN);
 			pstmt.setString(4, fullScenarioId);
 			pstmt.setString(5, BUILD_GENERATE_MSG_WAY);
 			pstmt.setTimestamp(6, getStartOfToday());
-			
+
 			rs = pstmt.executeQuery();
-			if(rs.next()) {
+			if (rs.next()) {
 				acctualTimes = rs.getInt(1);
 			}
 			rs.close();
-		} catch(SQLException e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			try {
@@ -261,25 +261,25 @@ public class SendMessage {
 				e.printStackTrace();
 			}
 		}
-		
+
 		return acctualTimes >= ruleAffectedTimes;
 	}
-	
-	public boolean isPatchBuild (Message msg) {
-			
+
+	public boolean isPatchBuild(Message msg) {
+
 		String BUILD_ID = msg.getProperty(Constants.MSG_BUILD_ID);
-			
+
 		String sql_is_patch = "select 1 from msg_patch_list where '" + BUILD_ID + "' like batch_prefix||'%' limit 1";
-			
+
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-			
+
 		boolean isPatchBuild = false;
-		try{
+		try {
 			pstmt = getConnection().prepareStatement(sql_is_patch);
 			rs = pstmt.executeQuery();
 			isPatchBuild = rs.next();
-		} catch(SQLException e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			try {
@@ -295,34 +295,34 @@ public class SendMessage {
 		}
 		return isPatchBuild;
 	}
-	
+
 	public boolean isPatchAccepted(Message msg) {
-		
+
 		String QUEUE_ID = msg.getQueue();
 		String BUILD_PACKAGE_PATTERN = msg.getProperty(Constants.MSG_BUILD_PACKAGE_PATTERN);
 		String BUILD_SCENARIOS = msg.getProperty(Constants.MSG_BUILD_SCENARIOS);
 		String MSG_FILEID = msg.getProperty(Constants.MSG_MSG_FILEID);
 		String fullScenarioId = MSG_FILEID == null || MSG_FILEID.trim().equals("") ? BUILD_SCENARIOS : MSG_FILEID;
 		String BUILD_GENERATE_MSG_WAY = msg.getProperty(Constants.MSG_BUILD_GENERATE_MSG_WAY);
-		
-		if(!BUILD_GENERATE_MSG_WAY.equals("AUTO")) {
+
+		if (!BUILD_GENERATE_MSG_WAY.equals("AUTO")) {
 			return true;
 		}
-		
+
 		String sql_rule = "select 1 from msg_rule_included_for_patch where build_package_pattern=? and queue_id=? and full_scenario_id=? and build_generate_msg_way=?";
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-		boolean accept = false;		
-		try{
+		boolean accept = false;
+		try {
 			pstmt = getConnection().prepareStatement(sql_rule);
 			pstmt.setString(1, BUILD_PACKAGE_PATTERN);
 			pstmt.setString(2, QUEUE_ID);
 			pstmt.setString(3, fullScenarioId);
-			pstmt.setString(4, BUILD_GENERATE_MSG_WAY);			
+			pstmt.setString(4, BUILD_GENERATE_MSG_WAY);
 			rs = pstmt.executeQuery();
 			accept = rs.next();
-			
-		} catch(SQLException e) {
+
+		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			try {
@@ -338,30 +338,31 @@ public class SendMessage {
 		}
 		return accept;
 	}
-	
+
 	private java.sql.Connection createConnection() throws SQLException {
-		String url = props.getProperty("dailydb.url");
-		String user = props.getProperty("dailydb.user");
-		String pwd = props.getProperty("dailydb.pwd");
+		String url = props.getProperty("qahome_db_url");
+		String user = props.getProperty("qahome_db_user");
+		String pwd = props.getProperty("qahome_db_pwd");
 		return DriverManager.getConnection(url, user, pwd);
 	}
-	
+
 	private java.sql.Connection getConnection() {
-		if(dbConn != null) return dbConn;
-		try{
+		if (dbConn != null)
+			return dbConn;
+		try {
 			dbConn = createConnection();
-		}catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			dbConn = null;
 		}
-		
+
 		return dbConn;
 	}
-	
+
 	public static void main(String[] args) {
 		System.out.println(getStartOfToday());
 	}
-	
+
 	public static Timestamp getStartOfToday() {
 		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 		String s = format.format(new Date());

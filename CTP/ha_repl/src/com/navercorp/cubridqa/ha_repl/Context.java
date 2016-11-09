@@ -33,6 +33,8 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
+import com.navercorp.cubridqa.common.Constants;
 import com.navercorp.cubridqa.ha_repl.impl.FeedbackDB;
 import com.navercorp.cubridqa.ha_repl.impl.FeedbackFile;
 import com.navercorp.cubridqa.ha_repl.impl.FeedbackNull;
@@ -44,8 +46,7 @@ public class Context {
 	String filename;
 
 	Feedback feedback;
-	
-	private String ctpHome;
+
 	private String rootLogDir;
 	private String currentLogDir;
 
@@ -53,53 +54,50 @@ public class Context {
 	private String buildId;
 	private ArrayList<String> testEnvList = new ArrayList<String>();
 	private boolean enableCheckDiskSpace;
+	private boolean reInstallTestBuildYn = false;
 	String mailNoticeTo;
+	String scenario;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
 		reload();
+		setLogDir("ha_repl");
+		this.scenario = CommonUtils.translateVariable(getProperty(ConfigParameterConstants.SCENARIO, "").trim());
 	}
 
 	public void reload() throws IOException {
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
-		
-		this.ctpHome = CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
-		setLogDir("ha_repl");
-		
-		Feedback feedback;
-		String feedbackType = getProperty("main.feedback.type", "").trim();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			feedback = new FeedbackFile(this);
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			feedback = new FeedbackDB(this);
-		} else {
-			feedback = new FeedbackNull(this);
-		}
-		setFeedback(feedback);
-		
+
 		Set<Object> set = config.keySet();
 		Iterator<Object> it = set.iterator();
 		String key;
 		while (it.hasNext()) {
 			key = (String) it.next();
-			if (key.startsWith("env.") && key.endsWith(".master.ssh.host")) {
-				testEnvList.add(key.substring(4, key.indexOf(".master.ssh.host")));
+			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith(".master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)) {
+				testEnvList.add(key.substring(4, key.indexOf(".master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)));
 			}
 		}
-		
-		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
-		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
+
+		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
+		this.mailNoticeTo = getProperty(ConfigParameterConstants.TEST_OWNER_EMAIL, "").trim();
 	}
-	
+
 	public ArrayList<String> getTestEnvList() {
 		return this.testEnvList;
 	}
 
-	public void setFeedback(Feedback feedback) {
-		this.feedback = feedback;
-	}
-
 	public Feedback getFeedback() {
+
+		if (this.feedback == null) {
+			String feedbackType = getProperty(ConfigParameterConstants.FEEDBACK_TYPE, "file").trim();
+			if (feedbackType.equalsIgnoreCase("file")) {
+				this.feedback = new FeedbackFile(this);
+			} else if (feedbackType.equalsIgnoreCase("database")) {
+				this.feedback = new FeedbackDB(this);
+			} else {
+				this.feedback = new FeedbackNull(this);
+			}
+		}
 		return this.feedback;
 	}
 
@@ -112,36 +110,13 @@ public class Context {
 	}
 
 	public boolean isContinueMode() {
-		return CommonUtils.convertBoolean(getProperty("main.mode.continue", "false"));
-	}
-
-	public String getDBUrl() {
-		String host = getProperty("ha.master.ssh.host", "");
-		String port = getProperty("feedback.db.port", "");
-		String dbname = getProperty("feedback.db.name", "");
-
-		String url = "jdbc:cubrid:" + host + ":" + port + ":" + dbname + ":::";
-
-		return url;
-
-	}
-
-	public String getDbUser() {
-		String user = getProperty("ha.master.ssh.user", "");
-
-		return user;
-	}
-
-	public String getDbPwd() {
-		String pwd = getProperty("ha.master.ssh.password", "");
-
-		return pwd;
+		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TEST_CONTINUE_YES_OR_NO, "false"));
 	}
 
 	public String getFeedbackDbUrl() {
-		String host = getProperty("feedback.db.host", "");
-		String port = getProperty("feedback.db.port", "");
-		String dbname = getProperty("feedback.db.name", "");
+		String host = getProperty(ConfigParameterConstants.FEEDBACK_DB_HOST, "");
+		String port = getProperty(ConfigParameterConstants.FEEDBACK_DB_PORT, "");
+		String dbname = getProperty(ConfigParameterConstants.FEEDBACK_DB_NAME, "");
 
 		String url = "jdbc:cubrid:" + host + ":" + port + ":" + dbname + ":::";
 
@@ -149,13 +124,13 @@ public class Context {
 	}
 
 	public String getFeedbackDbUser() {
-		String user = getProperty("feedback.db.user", "");
+		String user = getProperty(ConfigParameterConstants.FEEDBACK_DB_USER, "");
 
 		return user;
 	}
 
 	public String getFeedbackDbPwd() {
-		String pwd = getProperty("feedback.db.pwd", "");
+		String pwd = getProperty(ConfigParameterConstants.FEEDBACK_DB_PASSWORD, "");
 
 		return pwd;
 	}
@@ -165,32 +140,33 @@ public class Context {
 	}
 
 	public String getTestmode() {
-		String testmode = getProperty("main.testmode", "jdbc");
+		String testmode = getProperty(ConfigParameterConstants.TEST_INTERFACE_TYPE, "jdbc");
 
 		return testmode;
 	}
 
-	public boolean isFailureBackup() {
-		return getProperty("main.testing.failure.backup", "false").toUpperCase().trim().equals("TRUE");
+	public boolean rebuildYn() {
+		String rebuildEnv = getProperty(ConfigParameterConstants.TEST_REBUILD_ENV_YES_OR_NO, "true");
+		return CommonUtils.convertBoolean(rebuildEnv);
 	}
-	
+
+	public boolean isFailureBackup() {
+		return getProperty(ConfigParameterConstants.ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO, "false").toUpperCase().trim().equals("TRUE");
+	}
+
 	public void setLogDir(String category) {
-		this.rootLogDir = ctpHome + "/result/" + category;
+		this.rootLogDir = Constants.ENV_CTP_HOME + "/result/" + category;
 		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
 	}
-	
+
 	public String getCurrentLogDir() {
 		return this.currentLogDir;
 	}
-	
+
 	public String getLogRootDir() {
 		return this.rootLogDir;
 	}
-	
-	public String getCtpHome() {
-		return this.ctpHome;
-	}
-	
+
 	public void setBuildId(String buildId) {
 		this.buildId = buildId;
 	}
@@ -206,46 +182,61 @@ public class Context {
 	public String getBuildBits() {
 		return this.buildBits;
 	}
-	
+
 	public String getCubridPackageUrl() {
-		return getProperty("main.testbuild.url", "").trim();
+		return getProperty(ConfigParameterConstants.CUBRID_DOWNLOAD_URL, "").trim();
 	}
-	
+
 	public String getDiffMode() {
-		return getProperty("main.differ.mode", "diff_1").trim();
+		return getProperty(ConfigParameterConstants.TESTCASE_ADDITIONAL_ANSWER, "diff_1").trim();
 	}
-	
+
 	public String getTestCaseRoot() {
-		return getProperty("main.testcase.root", "").trim();
+		return this.scenario;
 	}
-	
-	public boolean rebuildYn() {
-		String rebuildEnv = getProperty("main.deploy.rebuild_yn", "true");
-		return CommonUtils.convertBoolean(rebuildEnv);
+
+	public boolean isReInstallTestBuildYn() {
+		return reInstallTestBuildYn;
 	}
-	
+
+	public void setReInstallTestBuildYn(boolean reInstallTestBuildYn) {
+		this.reInstallTestBuildYn = reInstallTestBuildYn;
+	}
+
 	public String getExcludedTestCaseFile() {
-		return getProperty("main.testcase.excluded");
+		return CommonUtils.translateVariable(getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE, "").trim());
 	}
-	
-	public String getInstanceProperty(String envId, String key) {
-		String value = getProperty("env." + envId + "." + key);
-		if (CommonUtils.isEmpty(value)) {
-			value = getProperty("default." + key);
-		}
-		return value;
-	}
-	
+
 	public boolean shouldCleanupAfterQuit() {
-		return CommonUtils.convertBoolean(getProperty("main.testing.cleanup_after_quit_yn", "true"));
+		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.CLEAN_PROCESS_AFTER_EXECUTION_QUIT_YES_OR_NO, "true"));
 	}
-	
+
 	public boolean enableCheckDiskSpace() {
 		return enableCheckDiskSpace;
 	}
-	
-	public String getMailNoticeTo() {
-		return this.mailNoticeTo;		
+
+	public boolean enableSkipMakeLocale() {
+		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_SIKP_MAKE_LOCALE_YES_OR_NO, "false"));
 	}
 
+	public String getTestPlatform() {
+		return getProperty(ConfigParameterConstants.TEST_PLATFORM, "linux");
+	}
+
+	public String getTestCategory() {
+		return getProperty(ConfigParameterConstants.TEST_CATEGORY, "ha_repl");
+	}
+
+	public String getMailNoticeTo() {
+		return this.mailNoticeTo;
+	}
+
+	public String getMailNoticeCC() {
+		String cc = getProperty(ConfigParameterConstants.TEST_CC_EMAIL, "").trim();
+		if (CommonUtils.isEmpty(cc)) {
+			return com.navercorp.cubridqa.common.Constants.MAIL_FROM;
+		} else {
+			return cc;
+		}
+	}
 }

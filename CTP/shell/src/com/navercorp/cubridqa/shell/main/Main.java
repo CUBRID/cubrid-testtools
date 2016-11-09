@@ -29,12 +29,11 @@ package com.navercorp.cubridqa.shell.main;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import com.navercorp.cubridqa.shell.common.CommonUtils;
-import com.navercorp.cubridqa.shell.common.Constants;
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 
 public class Main {
 
@@ -45,77 +44,68 @@ public class Main {
 		// system.setProperty("sun.rmi.transport.tcp.responseTimeout", "0");
 
 		Context context = new Context(configFilename);
-
-		String cubridPackageUrl = context.getCubridPackageUrl();
-
-		System.out.println("Continue Mode: " + context.isContinueMode());
-		System.out.println("Test Build: " + cubridPackageUrl);
-
-		// get test build number
-		String build = null;
-		Pattern pattern = Pattern.compile("\\d+\\.\\d+\\.\\d+\\.\\d+");
-		Matcher matcher = pattern.matcher(cubridPackageUrl);
-		while (matcher.find()) {
-			build = matcher.group();
+		if (CommonUtils.isEmpty(context.getTestCaseRoot())) {
+			System.out.println("[ERROR]: The parameter 'scenario' must be set correctly in " + configFilename + " !");
+			System.out.println("QUIT");
+			System.exit(-1);
 		}
-
-		if (CommonUtils.isNewBuildNumberSystem(build)) {
-			String buildId;
-
-			int p1 = cubridPackageUrl.lastIndexOf(build);
-			int p2 = cubridPackageUrl.indexOf("-", p1 + build.length() + 1);
-
-			if (p2 == -1) {
-				p2 = cubridPackageUrl.indexOf(".", p1 + build.length() + 1);
-			}
-
-			buildId = p2 == -1 ? cubridPackageUrl.substring(p1)
-					: cubridPackageUrl.substring(p1, p2);
-			context.setTestBuild(buildId);
-			context.setIsNewBuildNumberSystem(true);
-		} else {
-			context.setTestBuild(build);
-			context.setIsNewBuildNumberSystem(false);
-		}
-
-		System.out.println("Build Number: " + context.getTestBuild());
-
-		// get version (64bit or 32bit)
-		String version = null;
-		String role = context.getProperty("main.testing.role", "").trim();
-		int idx1 = cubridPackageUrl.indexOf("_64");
-		int idx2 = cubridPackageUrl.indexOf("x64");
-		int idx3 = cubridPackageUrl.indexOf("ppc64"); // AIX BUILD.
-														// CUBRID-8.4.4.0136-AIX-ppc64.sh
-
-		if (idx1 >= 0 || idx2 >= 0 || idx3 >= 0
-				|| (role != null && role.length() > 0)) {
-			version = "64bits";
-			System.out.println("Test Version: " + version);
-		} else {
-			version = "32bits";
-			System.out.println("Test Version: " + version);
-		}
-		context.setVersion(version);
-
 		ArrayList<String> envList = context.getEnvList();
 		System.out.println("Available Env: " + envList);
 
 		if (context.getEnvList().size() == 0) {
-			throw new Exception(
-					"Not found any environment instance to test on it.");
+			System.out.println("[ERROR]: Not found any environment instance to test on it!");
+			System.out.println("QUIT");
+			System.exit(-1);
 		}
+
+		String cubridPackageUrl = context.getCubridPackageUrl();
+
+		System.out.println("Continue Mode: " + context.isContinueMode());
+
+		if (!CommonUtils.isEmpty(cubridPackageUrl)) {
+			if (!CommonUtils.isAvailableURL(cubridPackageUrl)) {
+				System.out.println();
+				System.out.println("[ERROR]: Please confirm " + cubridPackageUrl + " url is available!");
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
+			System.out.println("Test Build: " + cubridPackageUrl);
+			context.setTestBuild(CommonUtils.getBuildId(context.getCubridPackageUrl()));
+			context.setVersion(CommonUtils.getBuildBits(context.getCubridPackageUrl()));
+			context.setIsNewBuildNumberSystem(CommonUtils.isNewBuildNumberSystem(context.getTestBuild()));
+			context.setReInstallTestBuildYn(true);
+		} else {
+			String envId = context.getEnvList().get(0);
+
+			SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId);
+			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
+			if (CommonUtils.isEmpty(buildInfo)) {
+				System.out.println("[ERROR]: Please confirm your build installation for local test!");
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
+			context.setTestBuild(CommonUtils.getBuildId(buildInfo));
+			context.setVersion(CommonUtils.getBuildBits(buildInfo));
+			context.setIsNewBuildNumberSystem(CommonUtils.isNewBuildNumberSystem(context.getTestBuild()));
+			context.setReInstallTestBuildYn(false);
+
+			if (ssh != null)
+				ssh.close();
+		}
+
+		try {
+			context.setTestCaseRoot(calcScenario(context));
+		} catch (Exception e) {
+			System.out.println("[ERROR]" + e.getMessage());
+			return;
+		}
+		System.out.println("Build Number: " + context.getTestBuild());
 
 		Properties props = context.getProperties();
 		Set set = props.keySet();
-		Log contextSnapshot = new Log(
-				CommonUtils
-						.concatFile(context.getCurrentLogDir(),
-								"main_snapshot.properties"),
-				true, false);
+		Log contextSnapshot = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "main_snapshot.properties"), true, false);
 		for (Object key : set) {
-			contextSnapshot
-					.println(key + "=" + props.getProperty((String) key));
+			contextSnapshot.println(key + "=" + props.getProperty((String) key));
 		}
 		contextSnapshot.println("AUTO_TEST_VERSION=" + context.getTestBuild());
 		contextSnapshot.println("AUTO_TEST_BITS=" + context.getVersion());
@@ -123,5 +113,37 @@ public class Main {
 
 		TestFactory factory = new TestFactory(context);
 		factory.execute();
+	}
+
+	private static String calcScenario(Context context) throws Exception {
+		SSHConnect ssh = null;
+
+		try {
+			ssh = ShellHelper.createFirstTestNodeConnect(context);
+			String homeDir = ssh.execute(new ShellScriptInput("echo $(cd $HOME; pwd)")).trim();
+
+			String errKey = "DIR_NOT_FOUND";
+			ShellScriptInput script = new ShellScriptInput("if [ ! -d " + context.getTestCaseRoot() + " ]; then echo " + errKey + "; fi");
+			script.addCommand("echo $(cd " + context.getTestCaseRoot() + "; pwd)");
+			String scenarioDir = ssh.execute(script).trim();
+
+			if (scenarioDir.indexOf(errKey) != -1) {
+				throw new Exception("The directory in 'scenario' does not exist. Please check it again at " + ssh.toString() + ".");
+			}
+
+			if (scenarioDir.startsWith(homeDir)) {
+				if (scenarioDir.length() > homeDir.length()) {
+					scenarioDir = scenarioDir.substring(homeDir.length() + 1);
+				} else {
+					scenarioDir = ".";
+				}
+				return scenarioDir;
+			} else {
+				return context.getTestCaseRoot().trim();
+			}
+		} finally {
+			if (ssh != null)
+				ssh.close();
+		}
 	}
 }

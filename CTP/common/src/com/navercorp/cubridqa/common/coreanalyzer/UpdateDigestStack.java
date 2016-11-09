@@ -24,21 +24,18 @@
  */
 package com.navercorp.cubridqa.common.coreanalyzer;
 
-import java.io.IOException;
-
 public class UpdateDigestStack {
 
 	public static void main(String[] args) throws Exception {
 		CoreBO bo = new CoreBO();
-		
+
 		String detailStack = CommonUtil.getFileContent("data\\detail_stack.txt");
-		
-		String digestStack = Analyzer.extractCoreStackDigest(detailStack); 
+
+		String digestStack = Analyzer.extractCoreStackDigest(detailStack);
 		System.out.println(detailStack);
 		System.out.println(digestStack);
-		
+
 		bo.updateStack("26", detailStack, digestStack);
-		
 
 	}
 }

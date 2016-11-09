@@ -25,9 +25,10 @@
 package com.navercorp.cubridqa.shell.main;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
-import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 
 public class CheckRequirement {
 
@@ -37,7 +38,7 @@ public class CheckRequirement {
 	String sshTitle;
 	Log log;
 	boolean finalPass = true;
-	String host, port, user, pwd;
+	String host;
 	boolean isRelated;
 
 	public CheckRequirement(Context context, String envId, String host, boolean isRelated) {
@@ -45,12 +46,8 @@ public class CheckRequirement {
 		this.envId = envId;
 		this.isRelated = isRelated;
 		this.host = host;
-		
-		this.port = context.getInstanceProperty(envId, "ssh.port");
-		this.user = context.getInstanceProperty(envId, "ssh.user");
-		this.pwd = context.getInstanceProperty(envId, "ssh.pwd");
 
-		this.sshTitle = user + "@" + host + ":" + port;
+		this.sshTitle = ShellHelper.getTestNodeTitle(context, envId, host);
 
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "check_" + envId + ".log"), true, context.isContinueMode());
 		this.finalPass = true;
@@ -78,22 +75,22 @@ public class CheckRequirement {
 		checkCommand("kill");
 		checkCommand("dos2unix");
 		checkCommand("tar");
-		if (context.getCleanTestCase()) {
+		if (context.needCleanTestCase()) {
 			checkCommand("git");
 		}
-		
+
 		checkDirectory("${CTP_HOME}/bin");
 		checkDirectory("${CTP_HOME}/common/script");
 
 		if (!isRelated) {
 			checkDirectory(context.getTestCaseRoot());
 		}
-		
+
 		if (context.isWindows()) {
 			checkCommand("unzip");
 		}
-		
-		String excludedFilename = context.getProperty("main.testcase.excluded");
+
+		String excludedFilename = context.getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE);
 		if (!CommonUtils.isEmpty(excludedFilename) && isRelated == false) {
 			checkFile(excludedFilename);
 		}
@@ -116,12 +113,8 @@ public class CheckRequirement {
 
 	private void checkSSH() throws Exception {
 		try {
-			this.log.print("==> Check ssh connection ");
-			if(context.isWindows()) {
-				this.ssh = new SSHConnect(host, port, user, pwd, "rmi");
-			} else {
-				this.ssh = new SSHConnect(host, port, user, pwd);
-			}
+			this.log.print("==> Check connection(" + context.getServiceProtocolType() + ") ");
+			this.ssh = ShellHelper.createTestNodeConnect(context, envId, host);
 			log.print("...... PASS");
 		} catch (Exception e) {
 			log.print("...... FAIL: " + e.getMessage());
@@ -157,8 +150,8 @@ public class CheckRequirement {
 		this.log.println("If insufficient available disk space (<2G), you will receive a mail in '" + context.getMailNoticeTo() + "'. And checking will hang till you resovle it.");
 
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
-		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
+		scripts.addCommand("source ${CTP_HOME}/common/script/util_common.sh");
+		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G \"" + context.getMailNoticeTo() + "\"" + " \"" + context.getMailNoticeCC() + "\"");
 		String result;
 		try {
 			result = ssh.execute(scripts);
@@ -213,7 +206,7 @@ public class CheckRequirement {
 
 		log.println("");
 	}
-	
+
 	private void checkFile(String file) {
 		this.log.print("==> Check file '" + file + "' ");
 

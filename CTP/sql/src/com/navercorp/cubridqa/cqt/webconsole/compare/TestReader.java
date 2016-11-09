@@ -24,7 +24,6 @@
  */
 package com.navercorp.cubridqa.cqt.webconsole.compare;
 
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -57,39 +56,37 @@ public class TestReader {
 				closeFile();
 				throw e;
 			}
-			
-			if(line==null) {
+
+			if (line == null) {
 				closeFile();
 				break;
 			}
-			
+
 			line = line.trim();
-			
-			
+
 			sb.append(line + "\n");
-			
-			if(line.startsWith("--") || line.startsWith("$") || line.startsWith("autocommit")) {
+
+			if (line.startsWith("--") || line.startsWith("$") || line.startsWith("autocommit")) {
 				continue;
-			} else if(line.endsWith(";")) {
+			} else if (line.endsWith(";")) {
 				break;
-			}			
+			}
 		}
 
-		String sql =sb.toString().trim() + "\n";
-		return (sql.trim().length() == 0 ) ?null: sql;
+		String sql = sb.toString().trim() + "\n";
+		return (sql.trim().length() == 0) ? null : sql;
 	}
-	
-	public void closeFile(){
-		if(reader1!=null) {
+
+	public void closeFile() {
+		if (reader1 != null) {
 			try {
 				reader1.close();
-				reader1 =null;
+				reader1 = null;
 				isEOF = true;
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
 	}
-	
 
 }

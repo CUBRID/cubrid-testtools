@@ -37,7 +37,7 @@ public class ConsumerContext {
 	private boolean isStarted;
 	private boolean isFinished;
 	private boolean isOnlyMax;
-	
+
 	public boolean isOnlyMax() {
 		return isOnlyMax;
 	}

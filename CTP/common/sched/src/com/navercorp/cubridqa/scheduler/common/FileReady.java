@@ -64,7 +64,7 @@ public class FileReady {
 		while (true) {
 
 			props = CommonUtils.getProperties(logFilename);
-			if(props == null) {
+			if (props == null) {
 				props = new Properties();
 			}
 			v = props.getProperty("fn." + file.getName());

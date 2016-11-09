@@ -24,33 +24,31 @@
  */
 package com.navercorp.cubridqa.cqt.console.bean;
 
-import com.navercorp.cubridqa.cqt.console.util.XstreamHelper;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-
-@XStreamAlias(value="DefaultTestDB")
+@XStreamAlias(value = "DefaultTestDB")
 public class DefTestDB {
-	
+
 	private String id;
-	
+
 	private String name;
-	
+
 	private String dbaPwd;
-	
+
 	private String pubPwd;
-	
+
 	private String dburl;
-	
+
 	private String dbuser;
-	
+
 	private String dbpassword;
-	
+
 	private String connectionType;
-	
+
 	private String charSet;
-	
+
 	private String script;
-	
+
 	private String version;
 
 	public String getScript() {
@@ -69,7 +67,6 @@ public class DefTestDB {
 		this.name = name;
 	}
 
-	
 	public String getDbaPwd() {
 		return dbaPwd;
 	}
@@ -86,7 +83,6 @@ public class DefTestDB {
 		this.pubPwd = pubPwd;
 	}
 
-	
 	public String getDburl() {
 		return dburl;
 	}

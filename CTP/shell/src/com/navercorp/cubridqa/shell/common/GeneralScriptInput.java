@@ -26,8 +26,6 @@
 
 package com.navercorp.cubridqa.shell.common;
 
-import com.navercorp.cubridqa.shell.common.ScriptInput;
-
 public class GeneralScriptInput extends ScriptInput {
 
 	public static final String INIT_SCRIPT;
@@ -41,8 +39,11 @@ public class GeneralScriptInput extends ScriptInput {
 		scripts.append("  fi").append('\n');
 		scripts.append("fi").append('\n');
 		scripts.append("ulimit -c unlimited").append('\n');
-		scripts.append("export CTP_HOME=$(cd ${CTP_HOME}; pwd)").append('\n');
-		scripts.append("export PATH=${CTP_HOME}/bin:${CTP_HOME}/common/script:$PATH").append('\n');
+		scripts.append("if [ \"${CTP_HOME}\" != \"\" ]; then ").append('\n');
+		scripts.append("  export CTP_HOME=$(cd ${CTP_HOME}; pwd)").append('\n');
+		scripts.append("  export PATH=${CTP_HOME}/bin:${CTP_HOME}/common/script:$PATH").append('\n');
+		scripts.append("fi").append('\n');
+		scripts.append("cd").append('\n');
 		INIT_SCRIPT = scripts.toString();
 	}
 

@@ -37,6 +37,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
@@ -46,7 +47,7 @@ import com.navercorp.cubridqa.shell.common.SyncException;
 
 public class Test {
 	public final static int FAIL_MAX_STAT = 100;
-	
+
 	InstanceManager hostManager;
 	Log mlog;
 	Log masterDumpLog;
@@ -67,10 +68,10 @@ public class Test {
 	public Test(Context context, String envId) throws Exception {
 		this.context = context;
 		this.hostManager = new InstanceManager(context, envId);
-	
+
 		this.mlog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + envId + ".log"), false, context.isContinueMode());
 		this.finishedLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt"), false, context.isContinueMode());
-		this.commonReader = new CommonReader(CommonUtils.concatFile(context.getCtpHome() + "/ha_repl/lib", "common.inc"));
+		this.commonReader = new CommonReader(CommonUtils.concatFile(com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME + "/ha_repl/lib", "common.inc"));
 	}
 
 	public void runAll() {
@@ -84,14 +85,13 @@ public class Test {
 			filename = dispatch.nextTestFile();
 			this.hostManager.refreshConnection();
 			if (filename == null) {
-				this.testCompleted = true;
-
 				context.getFeedback().onStopEnvEvent(hostManager, mlog);
 
 				if (context.shouldCleanupAfterQuit()) {
 					cleanAfterQuit();
 				}
 
+				this.testCompleted = true;
 				break;
 			}
 
@@ -122,7 +122,9 @@ public class Test {
 		this.mlog.close();
 		this.hostManager.close();
 		try {
-			this.connection.close();
+			if (this.connection != null && !this.connection.isClosed()) {
+				this.connection.close();
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -305,8 +307,9 @@ public class Test {
 
 		context.getFeedback().onTestCaseStopEvent(currentTestFile, succFlag != null && succFlag.equals("SUCC"), endTime - startTime, userInfo.toString(), hostManager.getEnvId(), false, hasCore,
 				Constants.SKIP_TYPE_NO);
-		System.out.println("[TESTCASE] " + currentTestFile + " " + (endTime - startTime) + "ms " + hostManager.getEnvId() + " " + (hasCore ? "FOUND CORE" : "") + " " + ((succFlag != null && succFlag.equals("SUCC"))? "[OK]": "[NOK]") );
-		
+		System.out.println("[TESTCASE] " + currentTestFile + " " + (endTime - startTime) + "ms " + hostManager.getEnvId() + " " + (hasCore ? "FOUND CORE" : "") + " "
+				+ ((succFlag != null && succFlag.equals("SUCC")) ? "[OK]" : "[NOK]"));
+
 		Iterator logHashTableIterator = this.logHashTable.entrySet().iterator();
 		while (logHashTableIterator.hasNext()) {
 			Entry entry = (Entry) logHashTableIterator.next();
@@ -383,7 +386,7 @@ public class Test {
 
 	private void clearDatabaseLog() {
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
-		String cmd = "find ~/CUBRID/log -type f -print | xargs -i sh -c 'cat /dev/null > {}'";
+		String cmd = "find ${CUBRID}/log -type f -print | xargs -i sh -c 'cat /dev/null > {}'";
 		for (SSHConnect ssh : allNodeList) {
 			try {
 				mlog.print("clear database log on " + ssh.toString() + " ... ");
@@ -484,7 +487,7 @@ public class Test {
 
 		for (SSHConnect ssh : allNodeList) {
 			try {
-				checkScript = new GeneralScriptInput("find $CUBRID -name \"core.*\" -exec rm -rf {} \\; ");
+				checkScript = new GeneralScriptInput("if [ -d \"${CUBRID}\" ];then find ${CUBRID} -name \"core.*\" -exec rm -rf {} \\; ;fi");
 				result = ssh.execute(checkScript);
 				mlog.println("clean core files: " + ssh.toString());
 			} catch (Exception e) {
@@ -527,7 +530,7 @@ public class Test {
 	}
 
 	private void checkCUBRIDLogFile() {
-		String cmd = "grep -s -Ri 'Internal error' ~/CUBRID/log | wc -l";
+		String cmd = "grep -s -Ri 'Internal error' ${CUBRID}/log | wc -l";
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
 		String result;
 		for (SSHConnect ssh : allNodeList) {
@@ -555,7 +558,8 @@ public class Test {
 
 	private ArrayList<String> getCheckSQLForDML() throws Exception {
 		SSHConnect ssh = hostManager.getHost("master");
-		String script = "csql -u dba " + hostManager.getTestDb()
+		String script = "csql -u dba "
+				+ hostManager.getTestDb()
 				+ " -c \"select 'FIND'||'_'||'PK_CLASS', class_name, count(*) from db_attribute where class_name in (select distinct class_name from db_index where is_primary_key='YES' and class_name in (select class_name from db_class where is_system_class='NO' and lower(class_name)<>'qa_system_tb_flag')) group by class_name;\" | grep 'FIND_PK_CLASS' ";
 		GeneralScriptInput csql = new GeneralScriptInput(script);
 		String tablesResult = ssh.execute(csql);
@@ -681,7 +685,7 @@ public class Test {
 
 	private Connection getDBConnection() throws SQLException {
 		if (connection == null || connection.isClosed()) {
-			String host = hostManager.getInstanceProperty("master.ssh.host");
+			String host = hostManager.getInstanceProperty("master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
 			String port = hostManager.getInstanceProperty("broker.BROKER_PORT");
 			String url = "jdbc:cubrid:" + host + ":" + port + ":" + hostManager.getTestDb() + ":::";
 			connection = DriverManager.getConnection(url, "dba", "");
@@ -856,7 +860,8 @@ public class Test {
 		masterNode.execute(script);
 
 		this.globalFlag++;
-		script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values (" + this.globalFlag + ");\"");
+		script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values ("
+				+ this.globalFlag + ");\"");
 		masterNode.execute(script);
 
 		mlog.println("DONE");
@@ -910,10 +915,6 @@ public class Test {
 		s.append("cubrid service stop;");
 		s.append("cubrid hb stop;");
 		s.append("pkill cub").append(";");
-		s.append("rm -rf ~/CUBRID").append(";");
-		if (CommonUtils.isEmpty(hostManager.getTestDb()) == false) {
-			s.append("rm -rf ~/" + hostManager.getTestDb()).append(";");
-		}
 		s.append("ipcs | grep $USER | awk '{print $2}' | xargs -i ipcrm -m {}").append(";");
 
 		ArrayList<SSHConnect> list = hostManager.getAllNodeList();
@@ -925,7 +926,7 @@ public class Test {
 			}
 		}
 	}
-	
+
 	public InstanceManager getInstanceManager() {
 		return this.hostManager;
 	}

@@ -47,8 +47,6 @@ import org.apache.commons.dbcp.BasicDataSource;
 
 import com.navercorp.cubridqa.cqt.console.bean.DefTestDB;
 import com.navercorp.cubridqa.cqt.console.bean.Test;
-import com.navercorp.cubridqa.cqt.console.util.MyDataSource;
-import com.navercorp.cubridqa.cqt.console.util.XstreamHelper;
 
 public class CubridConnManager {
 
@@ -74,26 +72,16 @@ public class CubridConnManager {
 			sb.append("\r\n");
 		} else {
 			int id = 0;
-			for (Map<String, Map<String, List<CubridConnection>>> dbmsConnectionMap : GroupMap
-					.values()) {
+			for (Map<String, Map<String, List<CubridConnection>>> dbmsConnectionMap : GroupMap.values()) {
 				id++;
-				sb.append("Connection Group [" + id + "]:"
-						+ dbmsConnectionMap.size());
+				sb.append("Connection Group [" + id + "]:" + dbmsConnectionMap.size());
 				sb.append("\r\n");
-				Iterator<Map<String, List<CubridConnection>>> DbmsConnectionIterator = dbmsConnectionMap
-						.values().iterator();
+				Iterator<Map<String, List<CubridConnection>>> DbmsConnectionIterator = dbmsConnectionMap.values().iterator();
 				while (DbmsConnectionIterator.hasNext()) {
-					Map<String, List<CubridConnection>> dbmsConnList = DbmsConnectionIterator
-							.next();
+					Map<String, List<CubridConnection>> dbmsConnList = DbmsConnectionIterator.next();
 					for (List<CubridConnection> l : dbmsConnList.values()) {
 						for (CubridConnection conn : l) {
-							sb.append("\tCubridConnection :\t"
-									+ conn.getConnName()
-									+ "["
-									+ conn.getId()
-									+ "]    "
-									+ (conn.isAutocreate() ? "[AUTO]"
-											: "[MAUL]"));
+							sb.append("\tCubridConnection :\t" + conn.getConnName() + "[" + conn.getId() + "]    " + (conn.isAutocreate() ? "[AUTO]" : "[MAUL]"));
 							sb.append("\r\n");
 						}
 					}
@@ -110,13 +98,10 @@ public class CubridConnManager {
 		if (GroupMap.isEmpty())
 			GroupMap = null;
 		else {
-			for (Map<String, Map<String, List<CubridConnection>>> dbmsConnectionMap : GroupMap
-					.values()) {
-				Iterator<Map<String, List<CubridConnection>>> DbmsConnectionIterator = dbmsConnectionMap
-						.values().iterator();
+			for (Map<String, Map<String, List<CubridConnection>>> dbmsConnectionMap : GroupMap.values()) {
+				Iterator<Map<String, List<CubridConnection>>> DbmsConnectionIterator = dbmsConnectionMap.values().iterator();
 				while (DbmsConnectionIterator.hasNext()) {
-					Map<String, List<CubridConnection>> dbmsConnList = DbmsConnectionIterator
-							.next();
+					Map<String, List<CubridConnection>> dbmsConnList = DbmsConnectionIterator.next();
 					for (List<CubridConnection> l : dbmsConnList.values()) {
 						for (CubridConnection conn : l) {
 							conn.destroyed();
@@ -136,21 +121,18 @@ public class CubridConnManager {
 	 * @param seq
 	 * @return
 	 */
-	public static synchronized CubridConnection getDbmsConnection(
-			String connGroup, String connName, int seq, int Type) {
+	public static synchronized CubridConnection getDbmsConnection(String connGroup, String connName, int seq, int Type) {
 		if (connName == null || connName.trim().length() == 0) {
 			connName = "default";
 		}
-		
-		List<CubridConnection> ConnectionList = getAvlibleDbmsConnectionList(
-				connGroup, connName);// .get(connName);
+
+		List<CubridConnection> ConnectionList = getAvlibleDbmsConnectionList(connGroup, connName);// .get(connName);
 		for (CubridConnection conn : ConnectionList) {
 			if (conn.getId() == seq)
 				return conn;
 		}
 
-		CubridConnection NewDbmsConnection = new CubridConnection(connName,
-				connGroup, GetDataBaseDefine(connGroup, Type), seq, false);
+		CubridConnection NewDbmsConnection = new CubridConnection(connName, connGroup, GetDataBaseDefine(connGroup, Type), seq, false);
 		ConnectionList.add(NewDbmsConnection);
 		return NewDbmsConnection;
 	}
@@ -164,15 +146,13 @@ public class CubridConnManager {
 	 * @param seq
 	 * @return
 	 */
-	public static synchronized CubridConnection getAvlibleDbmsConnection(
-			String connGroup, String connName, int Type) {
+	public static synchronized CubridConnection getAvlibleDbmsConnection(String connGroup, String connName, int Type) {
 		int NameSize = 0;
 		ArrayList NameList = new ArrayList();
 		if (connName == null || connName.trim().length() == 0) {
 			connName = "default";
 		}
-		List<CubridConnection> ConnectionList = getAvlibleDbmsConnectionList(
-				connGroup, connName);
+		List<CubridConnection> ConnectionList = getAvlibleDbmsConnectionList(connGroup, connName);
 		for (CubridConnection conn : ConnectionList) {
 			if (conn.isAvlible())
 				return conn;
@@ -185,8 +165,7 @@ public class CubridConnManager {
 				break;
 		}
 
-		CubridConnection NewDbmsConnection = new CubridConnection(connName,
-				connGroup, GetDataBaseDefine(connGroup, Type), seq, true);
+		CubridConnection NewDbmsConnection = new CubridConnection(connName, connGroup, GetDataBaseDefine(connGroup, Type), seq, true);
 		ConnectionList.add(NewDbmsConnection);
 		return NewDbmsConnection;
 	}
@@ -197,8 +176,7 @@ public class CubridConnManager {
 	 * @param connGroup
 	 * @return
 	 */
-	private static List<CubridConnection> getAvlibleDbmsConnectionList(
-			String connGroup, String connName) {
+	private static List<CubridConnection> getAvlibleDbmsConnectionList(String connGroup, String connName) {
 		Map<String, Map<String, List<CubridConnection>>> ConnMap = new HashMap<String, Map<String, List<CubridConnection>>>();
 		Map<String, List<CubridConnection>> ConnListMap = new HashMap<String, List<CubridConnection>>();
 		List<CubridConnection> ConnList = new ArrayList<CubridConnection>();
@@ -224,17 +202,14 @@ public class CubridConnManager {
 	private static Object GetDataBaseDefine(String connGroup, int Type) {
 		if (DataBaseDefine.isEmpty() || DataBaseDefine.get(connGroup) == null) {
 			if (configureUtil == null) {
-				System.out
-						.println("Error:Please set the configureUtil Object first!!!");
+				System.out.println("Error:Please set the configureUtil Object first!!!");
 				return null;
 			}
 			String dbPath = "";
 			if (Type == Test.TYPE_PERFORMANCE) {
-				dbPath = configureUtil.getRepositoryPath()
-						+ "/configuration/Performance_Db";
+				dbPath = configureUtil.getRepositoryPath() + "/configuration/Performance_Db";
 			} else {
-				dbPath = configureUtil.getRepositoryPath()
-						+ "/configuration/Function_Db";
+				dbPath = configureUtil.getRepositoryPath() + "/configuration/Function_Db";
 			}
 			if (connGroup == null || connGroup.trim().equals("")) {
 				return null;
@@ -242,10 +217,9 @@ public class CubridConnManager {
 			if (!DataBaseDefine.containsKey(connGroup)) {
 
 				String dbConfFile = dbPath + "/" + connGroup + ".xml";
-				
-				System.out.println(" ===== dbConfFile "+dbConfFile);
-				DefTestDB dbConf = (DefTestDB) XstreamHelper
-						.fromXml(dbConfFile);
+
+				System.out.println(" ===== dbConfFile " + dbConfFile);
+				DefTestDB dbConf = (DefTestDB) XstreamHelper.fromXml(dbConfFile);
 				if ("dbcp".equalsIgnoreCase(dbConf.getConnectionType())) {
 					String url = dbConf.getDburl();
 					String user = dbConf.getDbuser();
@@ -255,17 +229,14 @@ public class CubridConnManager {
 					dataSource.setDriverClassName(driver);
 					dataSource.setUsername(user);
 					dataSource.setPassword(password);
-					
-					//modified by ZhangQiang at 2010-05-24
-					if(url.indexOf("charset=") == -1){
+
+					// modified by ZhangQiang at 2010-05-24
+					if (url.indexOf("charset=") == -1) {
 						dataSource.setUrl(url + "?charset=" + dbConf.getCharSet());
 					}
-					
-					
-					
-					System.out.println(" ===== dbConf.getCharSet() "+dbConf.getCharSet());
-					
-					
+
+					System.out.println(" ===== dbConf.getCharSet() " + dbConf.getCharSet());
+
 					dataSource.setDefaultAutoCommit(false);
 					DataBaseDefine.put(connGroup, dataSource);
 				} else {
@@ -276,8 +247,7 @@ public class CubridConnManager {
 		return DataBaseDefine.get(connGroup);
 	}
 
-	public static void setGroupMap(
-			Map<String, Map<String, Map<String, List<CubridConnection>>>> groupMap) {
+	public static void setGroupMap(Map<String, Map<String, Map<String, List<CubridConnection>>>> groupMap) {
 		GroupMap = groupMap;
 	}
 

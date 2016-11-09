@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.scheduler.producer;
 
 import java.io.File;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
@@ -54,14 +53,14 @@ public class Producer {
 			CommonUtils.sleep(1);
 			freshBuildList = observer.getFreshBuilds();
 			for (int i = 0; i < freshBuildList.size(); i++) {
-				try{
+				try {
 					processBuild(freshBuildList.get(i));
-				}catch(Exception e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-			
-			if(conf.isGenerateMessage() == false) {
+
+			if (conf.isGenerateMessage() == false) {
 				break;
 			}
 		}
@@ -72,34 +71,34 @@ public class Producer {
 		String buildId = buildFile.getName();
 		boolean delivered = false;
 		if (conf.isGenerateMessage() || conf.isGenerateMessageTest()) {
-			if(conf.isAcceptableBuildToListen(buildId)) {
+			if (conf.isAcceptableBuildToListen(buildId)) {
 				delivered = true;
 				deliverTasksMessages(buildFile);
 			}
 		}
-		
+
 		if (conf.isGenerateMessageTest() == false) {
 			MessageFinished.getInstantce().clear();
 			observer.finishedBuild(delivered, buildFile.getName());
 		}
-		
+
 		System.out.println("Finished for " + buildFile.getPath());
 		System.out.println();
 	}
 
 	private void deliverTasksMessages(File buildDir) throws InterruptedException, IOException {
-		
+
 		File buildFileRoot = new File(CommonUtils.concatFile(buildDir.getPath(), "drop"));
-		
+
 		ExecutorService pool = Executors.newCachedThreadPool();
 		ArrayList<Callable<Boolean>> callers = new ArrayList<Callable<Boolean>>();
-		
+
 		Compatibility.init(conf);
 		I18N.init(conf);
 		CompatDatabaseImage.init(conf, "compat_dbimg.conf");
-		
-		FileProcessCaller task;		
-		
+
+		FileProcessCaller task;
+
 		task = new FileProcessCaller(conf, buildFileRoot, "CUBRID-{1}-linux.x86_64.sh", Constants.BUILD_TYPE_SERVER_SH_LINUX_X86_64);
 		callers.add(task);
 
@@ -108,10 +107,10 @@ public class Producer {
 		itemList.add(new FileItem("JDBC-{1}-cubrid-src.jar"));
 		task = new FileProcessCaller(conf, buildFileRoot, itemList, Constants.BUILD_TYPE_SERVER_SH_LINUX_X86_64_AND_JDBC);
 		callers.add(task);
-		
+
 		task = new FileProcessCaller(conf, buildFileRoot, "CUBRID-{1}-linux.x86_64-debug.sh", Constants.BUILD_TYPE_SERVER_SH_LINUX_X86_64_DEBUG);
 		callers.add(task);
-		
+
 		task = new FileProcessCaller(conf, buildFileRoot, "CUBRID-{1}-linux.i386.sh", Constants.BUILD_TYPE_SERVER_SH_LINUX_I386);
 		callers.add(task);
 
@@ -121,12 +120,13 @@ public class Producer {
 		task = new FileProcessCaller(conf, buildFileRoot, "CUBRID-Windows-x86-{1}.zip", Constants.BUILD_TYPE_SERVER_ZIP_WINDOWS_X86);
 		callers.add(task);
 
-//		task = new FileProcessCaller(conf, buildFileRoot, "CUBRID-{1}", "-AIX-ppc.sh",  Constants.BUILD_TYPE_SERVER_SH_AIX_64);
+		// task = new FileProcessCaller(conf, buildFileRoot, "CUBRID-{1}",
+		// "-AIX-ppc.sh", Constants.BUILD_TYPE_SERVER_SH_AIX_64);
 		task = new FileProcessCaller(conf, buildFileRoot, "CUBRID-{1}-AIX-ppc64.sh", Constants.BUILD_TYPE_SERVER_SH_AIX_64);
 		callers.add(task);
 
 		pool.invokeAll(callers);
-		pool.shutdown();		
-		
-	}	
+		pool.shutdown();
+
+	}
 }

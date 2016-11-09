@@ -29,7 +29,7 @@ public class StackItem {
 	private int index;
 	private String methodCodes;
 	private String fileCodes;
-	
+
 	public StackItem(int index, String methodCodes, String fileCodes) {
 		this.index = index;
 		this.methodCodes = methodCodes;
@@ -59,11 +59,11 @@ public class StackItem {
 	public void setFileCodes(String fileCodes) {
 		this.fileCodes = fileCodes;
 	}
-	
+
 	public String toString() {
 		return "#" + index + "  " + methodCodes + "\t" + fileCodes;
 	}
-	
+
 	public String getDigest() {
 		return "#" + index + "\t" + methodCodes + "\t" + fileCodes;
 	}

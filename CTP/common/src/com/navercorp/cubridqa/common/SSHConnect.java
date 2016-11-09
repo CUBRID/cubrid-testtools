@@ -51,8 +51,7 @@ public class SSHConnect {
 		reconnect();
 	}
 
-	public SSHConnect(String host, int port, String user, String pwd,
-			boolean needDebugInfo) throws JSchException {
+	public SSHConnect(String host, int port, String user, String pwd, boolean needDebugInfo) throws JSchException {
 		this.host = host;
 		this.port = port;
 		this.user = user;
@@ -73,8 +72,7 @@ public class SSHConnect {
 		this.session.setPassword(pwd);
 		Properties config = new Properties();
 		config.setProperty("StrictHostKeyChecking", "no");
-		session.setConfig("PreferredAuthentications",
-				"password,publickey,keyboard-interactive,");
+		session.setConfig("PreferredAuthentications", "password,publickey,keyboard-interactive,");
 		this.session.setConfig(config);
 		this.session.connect();
 	}
@@ -111,8 +109,7 @@ public class SSHConnect {
 
 		int p = result.indexOf(ShellInput.START_FLAG_RESULT);
 		if (p != -1) {
-			result = result
-					.substring(p + ShellInput.START_FLAG_RESULT.length());
+			result = result.substring(p + ShellInput.START_FLAG_RESULT.length());
 		}
 		p = result.indexOf(ShellInput.COMP_FLAG_RESULT);
 		if (p != -1) {
@@ -121,16 +118,14 @@ public class SSHConnect {
 		return result.trim();
 	}
 
-	public void wait(ShellInput scripts, String expectKeyworkInclude)
-			throws Exception {
+	public void wait(ShellInput scripts, String expectKeyworkInclude) throws Exception {
 		String result;
 		System.out.println();
 		while (true) {
 			try {
 				System.out.print(".");
 				result = execute(scripts);
-				if (result != null
-						&& result.trim().indexOf(expectKeyworkInclude) != -1)
+				if (result != null && result.trim().indexOf(expectKeyworkInclude) != -1)
 					break;
 				Thread.sleep(2 * 1000);
 			} catch (Exception e) {

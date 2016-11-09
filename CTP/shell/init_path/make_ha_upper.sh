@@ -24,13 +24,13 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-#script to setup cubrid ha environment
-#To start ha environment establishment, please call the main function which is 'setup_ha_enviroment'
-#Before you call the function, make sure you do the settings below:
-#(1) set the environment variables in 'user configuration' area, and no other parameters are needed when calling the function.
-#(2) include '$init_path/make_ha.sh' and '$init_path/init.sh' script file in your script file which calls the main function here.
-#(3) the current script file 'make_ha.sh' and other related expect files 
-#    including 'hostname.exp', 'rm_db_info.exp', 'scp.exp' and 'start_cubrid_ha.exp' must be put in $init_path directory.
+# script to setup cubrid ha environment
+# To start ha environment establishment, please call the main function which is 'setup_ha_enviroment'
+# Before you call the function, make sure you do the settings below:
+# (1) set the environment variables in 'user configuration' area, and no other parameters are needed when calling the function.
+# (2) include '$init_path/make_ha.sh' and '$init_path/init.sh' script file in your script file which calls the main function here.
+# (3) the current script file 'make_ha.sh' and other related expect files 
+#     including 'hostname.exp', 'rm_db_info.exp', 'scp.exp' and 'start_cubrid_ha.exp' must be put in $init_path directory.
 
 #set -x
 

@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.common.grepo.service;
 
 import java.io.ByteArrayInputStream;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -55,7 +54,6 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 
 import com.navercorp.cubridqa.common.grepo.EntryListener;
-import com.navercorp.cubridqa.common.grepo.GeneralEntryListener;
 
 public class RepoUtil {
 
@@ -109,7 +107,7 @@ public class RepoUtil {
 			}
 		}
 		ObjectReader reader = repository.newObjectReader();
-		
+
 		CanonicalTreeParser newTree = new CanonicalTreeParser();
 		newTree.reset(reader, theLatestCommit.getTree().getId());
 
@@ -129,7 +127,6 @@ public class RepoUtil {
 				continue;
 			}
 			objectId = f.getNewId().toObjectId();
-			
 
 			if (listener != null) {
 				loader = repository.open(objectId);

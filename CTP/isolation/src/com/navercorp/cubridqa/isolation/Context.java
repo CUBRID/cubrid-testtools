@@ -26,20 +26,19 @@
 package com.navercorp.cubridqa.isolation;
 
 import java.io.IOException;
-
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.isolation.impl.FeedbackDB;
 import com.navercorp.cubridqa.isolation.impl.FeedbackFile;
 import com.navercorp.cubridqa.isolation.impl.FeedbackNull;
-import com.navercorp.cubridqa.common.CommonUtils;
 
 public class Context {
-	
+
 	private String ctpHome;
 	private String rootLogDir;
 	private String currentLogDir;
@@ -61,35 +60,43 @@ public class Context {
 	private String buildId;
 
 	private String buildBits;
-	
+
 	private String mailNoticeTo;
 	private boolean enableCheckDiskSpace;
+	private boolean reInstallTestBuildYn = false;
+	private String scenario;
+	private boolean isExecuteAtLocal = false;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
 		reload();
+
+		setLogDir("isolation");
+
+		if (this.envList.size() == 0) {
+			isExecuteAtLocal = true;
+			this.envList.add("local");
+		} else {
+			isExecuteAtLocal = false;
+		}
+		this.scenario = getProperty(ConfigParameterConstants.SCENARIO, "").trim();
 	}
 
 	public void reload() throws IOException {
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
-		this.envList = initEnvList(config);
-		this.ctpHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile (com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
-		setLogDir("isolation");
-		
-		this.shouldUpdateTestCase = getProperty("main.testcase.update_yn", "false").equalsIgnoreCase("true");
-		this.isWindows = getProperty("main.testing.platform", "linux").equalsIgnoreCase("windows");
-		this.isContinueMode = getProperty("main.mode.continue", "false").equalsIgnoreCase("true");
-		String feedbackType = getProperty("main.feedback.type", "").trim();
-		if (feedbackType.equalsIgnoreCase("file")) {
-			this.feedback = new FeedbackFile(this);
-		} else if (feedbackType.equalsIgnoreCase("database")) {
-			this.feedback = new FeedbackDB(this);
-		} else {
-			this.feedback = new FeedbackNull();
+
+		if (isExecuteAtLocal == false) {
+			this.envList = initEnvList(config);
 		}
-		
-		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty("main.testing.enable_check_disk_space", "FALSE").trim());
-		this.mailNoticeTo = getProperty("main.owner.mail", "").trim();
+
+		this.ctpHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile(com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME_KEY);
+
+		this.shouldUpdateTestCase = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TESTCASE_UPDATE_YES_OR_NO, "false")) && !CommonUtils.isEmpty(getTestCaseBranch());
+		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
+		this.isContinueMode = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TEST_CONTINUE_YES_OR_NO, "false"));
+
+		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
+		this.mailNoticeTo = getProperty(ConfigParameterConstants.TEST_OWNER_EMAIL, "").trim();
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {
@@ -99,8 +106,8 @@ public class Context {
 		String key;
 		while (it.hasNext()) {
 			key = (String) it.next();
-			if (key.startsWith("env.") && key.endsWith(".ssh.host")) {
-				resultList.add(key.substring(4, key.indexOf(".ssh.host")));
+			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)) {
+				resultList.add(key.substring(4, key.indexOf("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)));
 			}
 		}
 		return resultList;
@@ -117,7 +124,7 @@ public class Context {
 	public ArrayList<String> getEnvList() {
 		return this.envList;
 	}
-	
+
 	public String getInstanceProperty(String envId, String key, String defaultValue) {
 		String value = getInstanceProperty(envId, key);
 		if (value == null || value.trim().equals("")) {
@@ -127,8 +134,8 @@ public class Context {
 		}
 	}
 
-	public String getInstanceProperty(String envId, String key){
-		String value = getProperty("env." + envId + "." + key);
+	public String getInstanceProperty(String envId, String key) {
+		String value = getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX + envId + "." + key);
 		return value == null ? getProperty("default." + key, "") : value;
 	}
 
@@ -141,11 +148,23 @@ public class Context {
 	}
 
 	public String getTestCaseRoot() {
-		return getProperty("main.testcase.root");
+		return this.scenario;
+	}
+
+	public void setTestCaseRoot(String scenario) {
+		this.scenario = scenario;
+	}
+
+	public String getTestCategory() {
+		return getProperty(ConfigParameterConstants.TEST_CATEGORY, "isolation");
+	}
+
+	public String getTestPlatform() {
+		return getProperty(ConfigParameterConstants.TEST_PLATFORM, "linux");
 	}
 
 	public String getCubridPackageUrl() {
-		return getProperty("main.testbuild.url");
+		return getProperty(ConfigParameterConstants.CUBRID_DOWNLOAD_URL);
 	}
 
 	public boolean shouldUpdateTestCase() {
@@ -156,18 +175,32 @@ public class Context {
 		return this.isWindows;
 	}
 
-	public void setFeedback(Feedback feedback) {
-		this.feedback = feedback;
+	public String getTestCaseTimeoutInSec() {
+		return getProperty(ConfigParameterConstants.TESTCASE_TIMEOUT_IN_SECS, String.valueOf(Integer.MAX_VALUE));
+	}
+
+	public String getExclucdedFile() {
+		return getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE, "");
 	}
 
 	public Feedback getFeedback() {
+		if (this.feedback == null) {
+			String feedbackType = getProperty(ConfigParameterConstants.FEEDBACK_TYPE, "file").trim();
+			if (feedbackType.equalsIgnoreCase("file")) {
+				this.feedback = new FeedbackFile(this);
+			} else if (feedbackType.equalsIgnoreCase("database")) {
+				this.feedback = new FeedbackDB(this);
+			} else {
+				this.feedback = new FeedbackNull();
+			}
+		}
 		return this.feedback;
 	}
 
 	public String getFeedbackDbUrl() {
-		String host = getProperty("feedback.db.host", "");
-		String port = getProperty("feedback.db.port", "");
-		String dbname = getProperty("feedback.db.name", "");
+		String host = getProperty(ConfigParameterConstants.FEEDBACK_DB_HOST, "");
+		String port = getProperty(ConfigParameterConstants.FEEDBACK_DB_PORT, "");
+		String dbname = getProperty(ConfigParameterConstants.FEEDBACK_DB_NAME, "");
 
 		String url = "jdbc:cubrid:" + host + ":" + port + ":" + dbname + ":::";
 
@@ -175,12 +208,12 @@ public class Context {
 	}
 
 	public String getFeedbackDbUser() {
-		String user = getProperty("feedback.db.user", "");
+		String user = getProperty(ConfigParameterConstants.FEEDBACK_DB_USER, "");
 		return user;
 	}
 
 	public String getFeedbackDbPwd() {
-		String pwd = getProperty("feedback.db.pwd", "");
+		String pwd = getProperty(ConfigParameterConstants.FEEDBACK_DB_PASSWORD, "");
 		return pwd;
 	}
 
@@ -204,16 +237,20 @@ public class Context {
 		return this.config;
 	}
 
-	public boolean isStartMonitor() {
-		return this.config.getProperty("main.testing.monitor", "false").equalsIgnoreCase("true");
+	public String getTestCaseBranch() {
+		return getProperty(ConfigParameterConstants.TESTCASE_GIT_BRANCH).trim();
 	}
 
-	public String getTestCaseBranch() {
-		return getProperty("main.testcase.branch_git", "").trim();
+	public boolean isReInstallTestBuildYn() {
+		return reInstallTestBuildYn;
+	}
+
+	public void setReInstallTestBuildYn(boolean reInstallTestBuildYn) {
+		this.reInstallTestBuildYn = reInstallTestBuildYn;
 	}
 
 	public String getTestingDatabase() {
-		String v = this.config.getProperty("main.testing.database");
+		String v = this.config.getProperty(ConfigParameterConstants.CUBRID_TESTDB_NAME);
 		if (v == null) {
 			v = "cubrid";
 		} else {
@@ -224,38 +261,51 @@ public class Context {
 		}
 		return Constants.DB_TEST_MAP.get(v);
 	}
-	
+
 	public void setLogDir(String category) {
 		this.rootLogDir = ctpHome + "/result/" + category;
 		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
 	}
-	
+
 	public String getCurrentLogDir() {
 		return this.currentLogDir;
 	}
-	
+
 	public String getLogRootDir() {
 		return this.rootLogDir;
 	}
-	
+
 	public int getRetryTimes() {
 		int retryTimes = 0;
 		try {
-			retryTimes = Integer.parseInt(getProperty("main.testcase.retry", "0"));
+			retryTimes = Integer.parseInt(getProperty(ConfigParameterConstants.TESTCASE_RETRY_NUM, "0"));
 			if (retryTimes <= 0) {
 				retryTimes = 0;
 			}
 		} catch (Exception e) {
-			System.out.println("Fail to read 'main.testcase.retry' value");
+			System.out.println("Fail to read 'testcase_retry_num' value");
 		}
 		return retryTimes;
 	}
-	
+
 	public String getMailNoticeTo() {
-		return this.mailNoticeTo;		
+		return this.mailNoticeTo;
 	}
-	
+
+	public String getMailNoticeCC() {
+		String cc = getProperty(ConfigParameterConstants.TEST_CC_EMAIL, "").trim();
+		if (CommonUtils.isEmpty(cc)) {
+			return com.navercorp.cubridqa.common.Constants.MAIL_FROM;
+		} else {
+			return cc;
+		}
+	}
+
 	public boolean enableCheckDiskSpace() {
 		return enableCheckDiskSpace;
+	}
+
+	public boolean isExecuteAtLocal() {
+		return isExecuteAtLocal;
 	}
 }

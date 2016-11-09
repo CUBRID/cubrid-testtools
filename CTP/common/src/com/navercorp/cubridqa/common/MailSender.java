@@ -26,9 +26,7 @@
 
 package com.navercorp.cubridqa.common;
 
-import java.io.File;
 import java.io.FileInputStream;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -60,10 +58,10 @@ public class MailSender {
 		options.addOption("title", true, "the subject of mail");
 		options.addOption("content", true, "the content of mail");
 		options.addOption("help", false, "List help");
-		
+
 		Properties props = Constants.COMMON_DAILYQA_CONF;
-		
-		InternetAddress from = new InternetAddress(props.getProperty("mail.from.address"), props.getProperty("mail.from.nickname"));
+
+		InternetAddress from = new InternetAddress(props.getProperty("mail_from_address"), props.getProperty("mail_from_nickname"));
 		String dearContent = "";
 
 		CommandLineParser parser = null;
@@ -101,6 +99,9 @@ public class MailSender {
 		ArrayList<InternetAddress> toAdrrList = new ArrayList<InternetAddress>();
 		ArrayList<InternetAddress> ccAdrrList = new ArrayList<InternetAddress>();
 		for (int i = 0; i < toList.length; i++) {
+			if (toList[i].indexOf("@") <= 0) {
+				continue;
+			}
 			if (toList[i].indexOf("<") >= 0) {
 				String mailAlias = toList[i].substring(0, toList[i].indexOf("<"));
 				String mailAddr = toList[i].substring(toList[i].indexOf("<") + 1, toList[i].indexOf(">"));
@@ -119,6 +120,9 @@ public class MailSender {
 		if (cc != null && cc.length() > 0) {
 			String[] ccList = cc.split(",");
 			for (int j = 0; j < ccList.length; j++) {
+				if (ccList[j].indexOf("@") <= 0) {
+					continue;
+				}
 				if (ccList[j].indexOf("<") >= 0) {
 					String mailAlias = ccList[j].substring(0, ccList[j].indexOf("<"));
 					String mailAddr = ccList[j].substring(ccList[j].indexOf("<") + 1, ccList[j].indexOf(">"));
@@ -131,11 +135,6 @@ public class MailSender {
 					ccAdrrList.add(idxCc);
 				}
 			}
-
-		} else {
-			// InternetAddress defaultCC = new
-			// InternetAddress("!cubridqa@navercorp.com", "CUBRIDQA");
-			// ccAdrrList.add(defaultCC);
 		}
 
 		if (content != null && content.length() > 0) {
@@ -143,7 +142,9 @@ public class MailSender {
 			content = content.replace("#TO#", dearContent);
 		}
 
-		MailSender.getInstance().send(from, toAdrrList, ccAdrrList, title, content);
+		if ((toAdrrList != null && toAdrrList.size() > 0) || (ccAdrrList != null && ccAdrrList.size() > 0)) {
+			MailSender.getInstance().send(from, toAdrrList, ccAdrrList, title, content);
+		}
 
 	}
 
@@ -187,8 +188,9 @@ public class MailSender {
 	public void send(InternetAddress from, ArrayList<InternetAddress> to, ArrayList<InternetAddress> cc, String title, String mailContent) throws Exception {
 		Properties prop = System.getProperties();
 		prop.put("mail.smtp.host", "localhost");
-		MimeMessage message = new  MimeMessage(Session.getDefaultInstance(prop, new Authenticator() {}));
-		//MimeMessage message = Aspirin.createNewMimeMessage();
+		MimeMessage message = new MimeMessage(Session.getDefaultInstance(prop, new Authenticator() {
+		}));
+		// MimeMessage message = Aspirin.createNewMimeMessage();
 		message.setSubject(title);
 		message.setContent(mailContent, "text/html");
 		message.setSentDate(new Date());

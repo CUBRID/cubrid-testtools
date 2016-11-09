@@ -1,13 +1,64 @@
 #!/bin/bash
-source $init_path/shell_utils.sh  
+# 
+# Copyright (c) 2016, Search Solution Corporation? All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+#
+#  * Redistributions of source code must retain the above copyright notice, 
+#    this list of conditions and the following disclaimer.
+#
+#  * Redistributions in binary form must reproduce the above copyright 
+#    notice, this list of conditions and the following disclaimer in 
+#    the documentation and/or other materials provided with the distribution.
+#
+#  * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
+#    derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+if [ ! -f $CUBRID/bin/cub_server ]; then
+	exit 127
+fi
+source $init_path/shell_utils.sh
 
 cub_util=$(echo $1|tr "[A-Z]" "[a-z]") >/dev/null 2>&1
 
-if [ $OS != "Windows_NT" -a "$cub_util" == "deletedb" ]; then
-    do_check_more_errors "`pwd`"
-fi >/dev/null 2>&1 
 export PATH=$CUBRID/bin:$PATH >/dev/null
-if [ -f $CUBRID/bin/cub_server ]
-then
-    cubrid "$@"
+
+if [ "$OS" != "Windows_NT" -a "$cub_util" == "deletedb" ]; then
+    do_check_more_errors "`pwd`" >/dev/null 2>&1
+elif [ "$cub_util" == "server" -o "$cub_util" == "checkdb" ]; then
+    cubrid "$@" >cubrid_failure_stdout.txt 2>cubrid_failure_stderr.txt
+    exit_value=$?
+    cat cubrid_failure_stdout.txt > cubrid_failure_desc.txt
+    cat cubrid_failure_stderr.txt >> cubrid_failure_desc.txt
+    cat cubrid_failure_stdout.txt >&1
+    cat cubrid_failure_stderr.txt >&2
+    if [ ${exit_value} -ne 0 -a "${SKIP_CHECK_RECOVERY_ERROR}" != "TRUE" ]; then
+        cmd_kind=""
+        if [ "$cub_util" == "checkdb" ]; then
+            cmd_kind="CHECKDB"
+        else
+            is_server_start=`echo "$@" | grep "start " | wc -l`
+            if [ ${is_server_start} -ge 1 ]; then
+                cmd_kind="SERVER-START"
+            fi
+        fi
+        if [ "$cmd_kind" != "" ]; then
+            hit_flag=`should_save_snapshot_for_recovery cubrid_failure_desc.txt`
+            if [ ${hit_flag} -eq 1 ]; then
+                do_save_snapshot_by_type "`pwd`" ${cmd_kind} >/dev/null 2>&1
+            fi
+        fi
+    fi
+    rm -rf cubrid_failure_*.txt >/dev/null 2>&1
+	exit ${exit_value}
 fi
+cubrid "$@"

@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.scheduler.producer;
 
 import java.io.File;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -48,17 +47,17 @@ public class ManualSender {
 
 		boolean isI18N = false;
 		boolean isDBIMG = false;
-		String queue = args[0];		
-		String[] allUrls = getUrl(args[1]);		
+		String queue = args[0];
+		String[] allUrls = getUrl(args[1]);
 		String url = allUrls[0];
 		String scenario = args[2];
 		String priority = args[3];
 		if (priority.equalsIgnoreCase("default"))
 			priority = "4";
-		
+
 		Properties msgProps = getMsgProps(args[args.length - 1]);
 		String confFilename;
-		if(msgProps == null) {
+		if (msgProps == null) {
 			confFilename = args.length == 5 ? args[4] : null;
 		} else {
 			confFilename = args.length == 6 ? args[4] : null;
@@ -97,8 +96,8 @@ public class ManualSender {
 			System.out.println("Err: File not found for " + file.getPath());
 			return;
 		}
-		
-		String BUILD_ABSOLUTE_PATH= file.getParentFile().getAbsolutePath();
+
+		String BUILD_ABSOLUTE_PATH = file.getParentFile().getAbsolutePath();
 
 		String BUILD_CREATE_TIME = String.valueOf(file.lastModified());
 
@@ -135,7 +134,7 @@ public class ManualSender {
 		} else {
 			buildType = "general";
 		}
-		
+
 		String mainVersionIgnorePatch = CommonUtils.getVersionIgnorePatch(BUILD_ID);
 
 		Message message = new Message(queue, "Test for build " + BUILD_ID + " by CUBRID QA Team, China");
@@ -144,7 +143,7 @@ public class ManualSender {
 		if (BUILD_URLS_KR_REPO1 != null) {
 			message.setProperty(Constants.MSG_BUILD_URLS_KR_REPO1, BUILD_URLS_KR_REPO1);
 		}
-		
+
 		if (allUrls.length > 1) {
 			String fn;
 			File f;
@@ -163,9 +162,9 @@ public class ManualSender {
 				}
 			}
 		}
-		
+
 		String isBuildFromGit = Integer.parseInt(CommonUtils.getFirstVersion(BUILD_ID)) >= 10 ? "1" : "0";
-		
+
 		message.setProperty(Constants.MSG_BUILD_URLS_CNT, BUILD_URLS_CNT);
 		message.setProperty(Constants.MSG_BUILD_ID, BUILD_ID);
 		message.setProperty(Constants.MSG_BUILD_STORE_ID, BUILD_STORE_ID);
@@ -189,7 +188,7 @@ public class ManualSender {
 			message.setProperty(Constants.MSG_BUILD_SCENARIO_BRANCH_GIT, scenarioBranchForCurrBuild);
 		}
 		message.setProperty(Constants.MSG_BUILD_GENERATE_MSG_WAY, "MANUAL");
-		
+
 		message.putAll(msgProps);
 
 		message.setPriority(Integer.parseInt(priority));
@@ -211,7 +210,7 @@ public class ManualSender {
 					if (list == null) {
 						list = instance.getMsgProperties(getI18NKey(queue, mainVersionIgnorePatch));
 					}
-					
+
 					for (Properties props : list) {
 						Message m = (Message) message.clone();
 						m.putAll(props);
@@ -220,8 +219,8 @@ public class ManualSender {
 					}
 
 				} else {
-					String compatKey = "MANUAL_INRUNTIME";					
-					File f = new File(confFilename);					
+					String compatKey = "MANUAL_INRUNTIME";
+					File f = new File(confFilename);
 					instance.setCompatibility(compatKey, f.getName());
 					ArrayList<Properties> list = instance.getMsgProperties(compatKey);
 
@@ -249,8 +248,8 @@ public class ManualSender {
 						sendMsg.addMessage(m);
 					}
 				} else {
-					String compatKey = "MANUAL_INRUNTIME";					
-					File f = new File(confFilename);					
+					String compatKey = "MANUAL_INRUNTIME";
+					File f = new File(confFilename);
 					instance.setCompatibility(compatKey, f.getName());
 					ArrayList<Properties> list = instance.getMsgProperties(compatKey);
 					if (list.size() == 0) {
@@ -263,11 +262,11 @@ public class ManualSender {
 				}
 			} else {
 				GeneralExtendedSuite instance = GeneralExtendedSuite.getInstance(conf, "compat.conf", false);
-				
+
 				if (confFilename.trim().equalsIgnoreCase("-compatAll")) {
 					ArrayList<Properties> list = instance.getMsgProperties(getCompatKey(queue, mainVersion));
-					
-					if(list == null) {
+
+					if (list == null) {
 						list = instance.getMsgProperties(getCompatKey(queue, mainVersionIgnorePatch));
 					}
 
@@ -278,9 +277,9 @@ public class ManualSender {
 						sendMsg.addMessage(m);
 					}
 
-				} else {					
-					String compatKey = "MANUAL_INRUNTIME";					
-					File f = new File(confFilename);					
+				} else {
+					String compatKey = "MANUAL_INRUNTIME";
+					File f = new File(confFilename);
 					instance.setCompatibility(compatKey, f.getName());
 					ArrayList<Properties> list = instance.getMsgProperties(compatKey);
 					if (list.size() == 0) {
@@ -316,10 +315,11 @@ public class ManualSender {
 	}
 
 	private static void showHelp() {
-		System.out.println("Usage: java com.navercorp.cubridqa.scheduler.producer.ManualSender <queue> <url1,url2,...> <scenario> <priority> [compat_file|-i18nAll|-dbimgAll|-compatAll] [PROPS:MKEY_TEST1=v1;MKEY_TEST2=v2]");
+		System.out
+				.println("Usage: java com.navercorp.cubridqa.scheduler.producer.ManualSender <queue> <url1,url2,...> <scenario> <priority> [compat_file|-i18nAll|-dbimgAll|-compatAll] [PROPS:MKEY_TEST1=v1;MKEY_TEST2=v2]");
 		System.out.println();
 	}
-	
+
 	private static String getCompatKey(String queue, String mainVersion) {
 		String compatKey = "";
 		if (queue.equals(Constants.QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_DRIVER)) {
@@ -331,10 +331,10 @@ public class ManualSender {
 		} else if (queue.equals(Constants.QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64)) {
 			compatKey = "cci_compatibility_for_" + mainVersion + "_S64";
 		}
-		
+
 		return compatKey;
 	}
-	
+
 	private static String getCompatDBIMGKey(String queue, String mainVersion) {
 		String compatKey = "";
 		if (queue.equals(Constants.QUEUE_CUBRID_QA_COMPAT_DBIMG_INS)) {
@@ -344,7 +344,7 @@ public class ManualSender {
 		}
 		return compatKey;
 	}
-	
+
 	private static String getI18NKey(String queue, String mainVersion) {
 		String i18nKey = "";
 		if (queue.equals(Constants.QUEUE_CUBRID_QA_I18N_LINUX_64)) {
@@ -352,34 +352,36 @@ public class ManualSender {
 		}
 		return i18nKey;
 	}
-	
+
 	private static Properties getMsgProps(String cont) {
-		if(cont == null ) return null;
-		
+		if (cont == null)
+			return null;
+
 		String s = cont.trim();
 		if (!s.startsWith("PROPS:")) {
 			return null;
 		}
 		s = s.substring(s.indexOf(":") + 1);
-		
-		Properties props  = new Properties();
+
+		Properties props = new Properties();
 		String[] arr = s.split(";");
 		String key, value;
 		int index = -1;
-		for(String pair: arr) {
+		for (String pair : arr) {
 			index = pair.indexOf("=");
-			if(index == -1 ) continue;
+			if (index == -1)
+				continue;
 			key = pair.substring(0, index).trim();
 			value = pair.substring(index + 1).trim();
-			props.setProperty(key, value);			
+			props.setProperty(key, value);
 		}
 		return props;
 	}
-	
+
 	private static String[] getUrl(String urls) {
 		return urls.split(",");
 	}
-	
+
 	private static String getFileNameInUrl(String url) {
 		String[] arr = url.split("/");
 		String fileName = arr[arr.length - 1];
