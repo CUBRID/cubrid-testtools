@@ -131,9 +131,6 @@ The section guides users to quickly start SQL test with CTP, for the more catego
  - Prepare
 	* For local test
 		* Make sure to set JAVA_HOME and the required environment variables correctly
-		```
-		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-		```
 		* Check out the SHELL test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)
 		* Check out CTP and configure CTP/conf/shell.conf for testing
 		```
@@ -153,9 +150,6 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 		* Prepare at least two accounts for the multiple test instances (e.g., one account named as ``controller``, another account named as ``shell_instance1``)
 		* On ``controller`` account
 			* Make sure to set JAVA_HOME and the required environment variables correctly
-			```
-			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-			```
 			* Check out CTP and configure CTP/conf/shell.conf for testing
 			```
 			# Test instance information. For HA SHELL, relatedhosts must be configured for slave
@@ -185,7 +179,6 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 			* Make sure to set JAVA_HOME and the required environment variables correctly
 			```
 			CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
-			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
 			* Check out the SHELL test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)				
 
@@ -206,9 +199,6 @@ The section guides users to quickly start SQL test with CTP, for the more catego
  - Prepare
 	* For local test
 		* Make sure to set JAVA_HOME and the required environment variables correctly
-		```
-		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-		```
 		* Check out ISOLATION test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)
 		* Check out CTP and configure CTP/conf/isolation.conf for testing
 		```
@@ -228,9 +218,6 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 		* Prepare at least two accounts for the multiple test instances (e.g., one account named as ``controller``, another account named as ``isolation_instance1``)
 		* On ``controller`` account
 			* Make sure to set JAVA_HOME and the required environment variables correctly
-			```
-			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-			```
 			* Check out CTP and configure CTP/conf/isolation.conf for testing
 			```
 			# The property values configured will be updated into CUBRID conf for testing
@@ -258,7 +245,6 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 			* Make sure to set JAVA_HOME and the required environment variables correctly
 			```
 			CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
-			JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 			```
 			* Check out the ISOLATION test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/isolation directory)				
 
@@ -280,9 +266,6 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 	* Prepare at least three accounts for the multiple test instances (e.g., one account named as ``controller`` will be used as controller, another accounts named as ``ha_repl_instance1`` will be used as HA pairs accounts)
 	* On ``controller`` account
 		* Make sure to set JAVA_HOME and the required environment variables correctly
-		```
-		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-		```
 		* Check out the SQL test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/sql directory)
 		* Check out CTP and configure CTP/conf/ha_repl.conf for testing
 		```
@@ -312,7 +295,6 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 		* Make sure to set JAVA_HOME and the required environment variables correctly
 		```
 		CTP_HOME (e.g., export CTP_HOME=$HOME/CTP) 
-		JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
 		```
 			  
  - Run Tests 
@@ -331,10 +313,6 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 - **JDBC**
   - Prepare
 	* Make sure to set JAVA_HOME and the required environment variables correctly
-
-      ```
-	  JAVA_HOME (e.g., export JAVA_HOME=$HOME/opt/jdk1.6.0_07)
-      ```	
 	* **Example** ``jdbc.conf`` for test scenario and ports of CUBRID:
       ```
 	  [common]
