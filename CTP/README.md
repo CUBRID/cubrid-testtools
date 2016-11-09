@@ -161,7 +161,7 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 			# Test instance information. For HA SHELL, relatedhosts must be configured for slave
 			# The property values configured will be updated into CUBRID conf for testing
 			env.instance1.ssh.host=192.168.1.10
-			#env.instance1.ssh.relatedhosts=192.168.1.11
+			# env.instance1.ssh.relatedhosts=192.168.1.11
 			env.instance1.ssh.port=22
 			env.instance1.ssh.user=shell_instance1
 			env.instance1.ssh.pwd=123456
@@ -437,7 +437,7 @@ It's not required that you execute the build for CTP, unless you make some chang
 	
      if [condition]
      then
-	        #print testing result according to the condition, PASS means ok, otherwise nok
+	        # Print testing result according to the condition, PASS means ok, otherwise nok
 	        write_ok
      else
 	        write_nok
@@ -447,7 +447,7 @@ It's not required that you execute the build for CTP, unless you make some chang
      cubrid broker stop
 	
      cubrid deletedb $dbname
-     #clean environment
+     # clean environment
      finish
 	  ```
 
@@ -542,11 +542,11 @@ It's not required that you execute the build for CTP, unless you make some chang
    * Example for reference
     
      ```
-       --test: #execute test flag for statement
+       --test: # execute test flag for statement
        create table t1 (id int primary key, name varchar)
 
-       --check: #check data between master and slave
-       @HC_CHECK_FOR_EACH_STATEMENT #check if schema is consistent between master and slave 
+       --check: # check data between master and slave
+       @HC_CHECK_FOR_EACH_STATEMENT # check if schema is consistent between master and slave 
        --test:
        
        insert into t1 values (1, 'qa'), (2, 'cubrid');

@@ -26,7 +26,6 @@ package com.navercorp.cubridqa.ha_repl.impl;
 
 import java.sql.Connection;
 
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -316,7 +315,8 @@ public class FeedbackDB implements Feedback {
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType) {
 
 		if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
-			//println((flag ? "[OK]" : "[NOK]") + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
+			// println((flag ? "[OK]" : "[NOK]") + " " + testCase + " " +
+			// elapseTime + " " + envIdentify, resultCont, "");
 		} else {
 			println("[SKIP]" + testCase);
 		}
@@ -367,7 +367,7 @@ public class FeedbackDB implements Feedback {
 
 	@Override
 	public void onTestCaseStartEvent(String testCase, String envIdentify) {
-		//println("[TEST CASE] START " + testCase + " " + envIdentify);
+		// println("[TEST CASE] START " + testCase + " " + envIdentify);
 	}
 
 	@Override

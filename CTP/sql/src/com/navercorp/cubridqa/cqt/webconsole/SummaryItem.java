@@ -30,16 +30,16 @@ public class SummaryItem {
 	int total;
 	int succ;
 	int fail;
-	
+
 	boolean isDir;
 	String elapse;
 	String flag;
-	
-	public SummaryItem(){
-		
+
+	public SummaryItem() {
+
 	}
-	
-	public SummaryItem(String cat, String flag, String elapse){
+
+	public SummaryItem(String cat, String flag, String elapse) {
 		this.cat = cat;
 		this.flag = flag;
 		this.elapse = elapse;

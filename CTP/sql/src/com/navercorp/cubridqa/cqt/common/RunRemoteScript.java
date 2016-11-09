@@ -26,7 +26,6 @@ package com.navercorp.cubridqa.cqt.common;
 
 import java.util.ArrayList;
 
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -39,14 +38,13 @@ public class RunRemoteScript {
 
 	/**
 	 * @param args
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		
+
 	}
-	
-	public static boolean runRemoteScript(String... params)
-	{
+
+	public static boolean runRemoteScript(String... params) {
 		boolean ret = false;
 		Options options = new Options();
 		options.addOption("host", true, "Remote ssh host");
@@ -61,50 +59,50 @@ public class RunRemoteScript {
 		options.addOption("maxattempts", true, "results equal some string. default: 200");
 		options.addOption("interval", true, "second(s) that refresh interval. default: 1");
 		options.addOption("help", false, "List help");
-		
+
 		CommandLineParser parser = null;
 		CommandLine cmd = null;
-		
-		try{
-			parser = new PosixParser(); 
+
+		try {
+			parser = new PosixParser();
 			cmd = parser.parse(options, params);
-		}catch(Exception e) {
+		} catch (Exception e) {
 			showHelp(e.getMessage(), options);
 			return false;
 		}
-		
-		if(params.length == 0 ||cmd.hasOption("help")) {
-			showHelp(null, options);			
-			return false;
-		}
-		
-		if(!cmd.hasOption("host") || !cmd.hasOption("user") ||!cmd.hasOption("password")) {
-			showHelp("Please input remote <host>, <port>, <user>, <password>.", options);			
+
+		if (params.length == 0 || cmd.hasOption("help")) {
+			showHelp(null, options);
 			return false;
 		}
 
-		if(!cmd.hasOption("f") && !cmd.hasOption("c")) {
+		if (!cmd.hasOption("host") || !cmd.hasOption("user") || !cmd.hasOption("password")) {
+			showHelp("Please input remote <host>, <port>, <user>, <password>.", options);
+			return false;
+		}
+
+		if (!cmd.hasOption("f") && !cmd.hasOption("c")) {
 			showHelp("Please input scripts to run.", options);
 			return false;
 		}
 
-		
 		String sshHost = cmd.getOptionValue("host");
-		String sshPort = cmd.getOptionValue("port");		
-		if(sshPort == null || sshPort.trim().equals("")) sshPort = "22";
-		
+		String sshPort = cmd.getOptionValue("port");
+		if (sshPort == null || sshPort.trim().equals(""))
+			sshPort = "22";
+
 		String sshUser = cmd.getOptionValue("user");
 		String sshPassword = cmd.getOptionValue("password");
-		
+
 		String scriptCmd = cmd.getOptionValue("c");
 		String scriptFile = null;
-		if(cmd.hasOption("f")) {
-			scriptFile = cmd.getOptionValue("f");	
+		if (cmd.hasOption("f")) {
+			scriptFile = cmd.getOptionValue("f");
 		}
 
 		String initFile = null;
-		if(cmd.hasOption("initfile")) {
-			initFile = cmd.getOptionValue("initfile");	
+		if (cmd.hasOption("initfile")) {
+			initFile = cmd.getOptionValue("initfile");
 		}
 
 		int maxattempts = 1;
@@ -118,9 +116,9 @@ public class RunRemoteScript {
 				} else {
 					maxattempts = 200;
 				}
-			}			
+			}
 		}
-		
+
 		String tillequals = null;
 		if (cmd.hasOption("tillequals")) {
 			tillequals = cmd.getOptionValue("tillequals");
@@ -134,54 +132,54 @@ public class RunRemoteScript {
 			}
 		}
 
-		if(cmd.hasOption("maxattempts")) {
+		if (cmd.hasOption("maxattempts")) {
 			String s = cmd.getOptionValue("maxattempts");
 			maxattempts = Integer.parseInt(s);
-		}		
-		
+		}
+
 		if (tillcontains == null && tillequals == null) {
 			maxattempts = 1;
 		}
 
 		int interval = 1;
-		if(cmd.hasOption("interval")) {
+		if (cmd.hasOption("interval")) {
 			String s = cmd.getOptionValue("interval");
 			interval = Integer.parseInt(s);
 		}
-		
+
 		SSHConnect ssh = null;
 		ShellInput input = null;
 		ArrayList<String> list;
 		String result = null;
-		try{
+		try {
 			ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword);
 			input = new ShellInput("");
-			
+
 			if (initFile != null && initFile.trim().equals("") == false) {
 				list = CommonUtils.getLineList(initFile);
-				if(list!=null) {
-					for(String s1: list){
+				if (list != null) {
+					for (String s1 : list) {
 						input.addCommand(s1);
 					}
 				}
 			}
-			
-			if(scriptCmd!=null) {
+
+			if (scriptCmd != null) {
 				input.addCommand(CommonUtils.replace(scriptCmd, "\\n", "\n"));
 			}
-			
+
 			list = CommonUtils.getLineList(scriptFile);
-			if(list!=null) {
-				for(String s1: list){
+			if (list != null) {
+				for (String s1 : list) {
 					input.addCommand(s1);
 				}
 			}
-			
+
 			for (int i = 0; i < maxattempts; i++) {
 				result = ssh.execute(input);
 				result = result.trim();
 				if (tillcontains != null) {
-					if(result.indexOf(tillcontains)!=-1) {
+					if (result.indexOf(tillcontains) != -1) {
 						break;
 					} else {
 						Thread.sleep(interval * 1000);
@@ -200,17 +198,19 @@ public class RunRemoteScript {
 			ret = true;
 		} catch (Exception e) {
 			System.out.println("ERROR:" + e.getMessage());
-		} finally{
-			if(ssh!=null) ssh.close();
+		} finally {
+			if (ssh != null)
+				ssh.close();
 		}
-		 
+
 		return ret;
 	}
-	
-	private static void showHelp(String error, Options options){
-		if(error!=null) System.out.println("Error: " + error);
+
+	private static void showHelp(String error, Options options) {
+		if (error != null)
+			System.out.println("Error: " + error);
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp( "run_remote_script: to execute scripts on remote host", options );
+		formatter.printHelp("run_remote_script: to execute scripts on remote host", options);
 		System.out.println();
 	}
 }

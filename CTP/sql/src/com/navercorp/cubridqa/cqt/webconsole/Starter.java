@@ -36,14 +36,14 @@ import com.navercorp.cubridqa.common.IniData;
 import com.navercorp.cubridqa.common.ShareMemory;
 
 public class Starter {
-	
+
 	private final static String ctpHome = CommonUtils.getEnvInFile("CTP_HOME");
 
 	public static void exec(String webconsoleConf, String webRoot, String op) throws Exception {
 		System.out.println("Config: " + webconsoleConf);
 		System.out.println("Web Root: " + webRoot);
 		op = op.toUpperCase();
-		
+
 		String separator = System.getProperty("file.separator");
 
 		IniData ini = new IniData(webconsoleConf);
@@ -59,14 +59,15 @@ public class Starter {
 			resultRoot = ctpHome + File.separator + "sql" + File.separator + "result";
 			System.out.println("Not found valid test result folder value in parameter sql_result_root. Web Console will adopt default value " + resultRoot + ".");
 		}
-		
+
 		String scenarioRoot = ini.getAndTrans(null, "scenario_root");
 		if (scenarioRoot == null || scenarioRoot.trim().equals("") || new File(scenarioRoot).exists() == false) {
 			scenarioRoot = "/";
 		}
-		
+
 		String[] cmd = new String[8];
-		cmd[0] = System.getProperty("java.home") + separator + "bin" + separator + "java";;
+		cmd[0] = System.getProperty("java.home") + separator + "bin" + separator + "java";
+		;
 		cmd[1] = "-cp";
 		cmd[2] = System.getProperty("java.class.path") + File.pathSeparator + webRoot + "/../lib/cubridqa-cqt.jar";
 		cmd[3] = WebServer.class.getCanonicalName();
@@ -81,22 +82,22 @@ public class Starter {
 		if (op.equals("START")) {
 			sm.write(Constants.SM_PLEASE_STOP);
 			Thread.sleep(2000);
-			
+
 			System.out.println("Begin to start ...");
-			ProcessBuilder process = new ProcessBuilder(cmd);			
+			ProcessBuilder process = new ProcessBuilder(cmd);
 			process.redirectErrorStream(true);
 			Process p = process.start();
-			
+
 			StreamGobbler errorGobbler = new Starter().new StreamGobbler(p.getErrorStream(), "ERROR", false);
 			StreamGobbler outputGobbler = new Starter().new StreamGobbler(p.getInputStream(), "OUTPUT", false);
 			outputGobbler.start();
 			errorGobbler.start();
-			
+
 			succ = sm.wait(Constants.SM_STARTED, 1000);
 			System.out.println();
 			System.out.println(succ ? "Done" : "Fail");
-			
-			if(succ) {
+
+			if (succ) {
 				System.out.println("URL:  http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port);
 			}
 		} else if (op.equals("STOP")) {
@@ -105,34 +106,34 @@ public class Starter {
 			System.out.println();
 			System.out.println(succ ? "Done" : "Fail");
 		}
-		
-		System.exit(succ ? 0: 1);
+
+		System.exit(succ ? 0 : 1);
 	}
-	
+
 	class StreamGobbler extends Thread {
-	    InputStream is;
-	    String type;
-	    boolean echo;
+		InputStream is;
+		String type;
+		boolean echo;
 
-	    public StreamGobbler(InputStream is, String type, boolean echo) {
-	        this.is = is;
-	        this.type = type;
-	        this.echo = echo;
-	    }
+		public StreamGobbler(InputStream is, String type, boolean echo) {
+			this.is = is;
+			this.type = type;
+			this.echo = echo;
+		}
 
-	    @Override
-	    public void run() {
-	        try {
-	            InputStreamReader isr = new InputStreamReader(is);
-	            BufferedReader br = new BufferedReader(isr);
-	            String line = null;
-	            while ((line = br.readLine()) != null) {
-	                if(echo) System.out.println(type + "> " + line);
-	            }
-	        }
-	        catch (IOException ioe) {
-	            ioe.printStackTrace();
-	        }
-	    }
+		@Override
+		public void run() {
+			try {
+				InputStreamReader isr = new InputStreamReader(is);
+				BufferedReader br = new BufferedReader(isr);
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					if (echo)
+						System.out.println(type + "> " + line);
+				}
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
+		}
 	}
 }

@@ -25,7 +25,7 @@
 package com.navercorp.cubridqa.cqt.webconsole;
 
 public class Constants {
-	
+
 	public final static String SM_PLEASE_STOP = "STOP";
 	public final static String SM_STOPPED = "STOPPED";
 	public final static String SM_STARTED = "STARTED";

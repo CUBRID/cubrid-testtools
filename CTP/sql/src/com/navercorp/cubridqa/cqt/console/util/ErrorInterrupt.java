@@ -24,7 +24,7 @@
  */
 package com.navercorp.cubridqa.cqt.console.util;
 
-public abstract  class ErrorInterrupt {
-	public static boolean ERROR_INTER=false;
-	public static String DELETE_RESULT_PATH=null;
+public abstract class ErrorInterrupt {
+	public static boolean ERROR_INTER = false;
+	public static String DELETE_RESULT_PATH = null;
 }

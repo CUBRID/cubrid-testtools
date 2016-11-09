@@ -37,7 +37,6 @@ import com.navercorp.cubridqa.cqt.console.util.CommonFileUtile;
 import com.navercorp.cubridqa.cqt.console.util.PropertiesUtil;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-
 @XStreamAlias(value = "case")
 public class Case extends Resource {
 
@@ -57,17 +56,12 @@ public class Case extends Resource {
 
 	protected String contextPath;
 
-	public static String[] categorys = new String[] { "sql", "shell", "site",
-			"medium" };
+	public static String[] categorys = new String[] { "sql", "shell", "site", "medium" };
 
 	public static List<String> categoryList = Arrays.asList(categorys);
 
-	public static Map categoryMapping = ArrayUtils.toMap(new String[][] {
-			{ SQL_CATEGORY, "sql" }, { SHELL_CATEGORY, "shell" },
-			{ SHELL_CATEGORY, "site" }, { SHELL_CATEGORY, "medium" } });
-	private static Map fileTypeMapping = ArrayUtils.toMap(new String[][] {
-			{ SQL_CATEGORY, ".sql" }, { SHELL_CATEGORY, ".sh" },
-			{ GROOVY_CATEGORY, ".grv" } });
+	public static Map categoryMapping = ArrayUtils.toMap(new String[][] { { SQL_CATEGORY, "sql" }, { SHELL_CATEGORY, "shell" }, { SHELL_CATEGORY, "site" }, { SHELL_CATEGORY, "medium" } });
+	private static Map fileTypeMapping = ArrayUtils.toMap(new String[][] { { SQL_CATEGORY, ".sql" }, { SHELL_CATEGORY, ".sh" }, { GROOVY_CATEGORY, ".grv" } });
 	private int checkCount = 0;
 
 	private int leaf = -1;
@@ -78,11 +72,12 @@ public class Case extends Resource {
 		}
 		return leaf == 1;
 	}
-	
+
 	/**
 	 * 
 	 * @Title: isLeaf
-	 * @Description:Determine does the specified category is the smallest classification.
+	 * @Description:Determine does the specified category is the smallest
+	 *                        classification.
 	 * @param @param path
 	 * @param @return
 	 * @return boolean
@@ -111,7 +106,7 @@ public class Case extends Resource {
 	public Case() {
 
 	}
-	
+
 	public String getContextPath() {
 		return contextPath;
 	}
@@ -143,7 +138,7 @@ public class Case extends Resource {
 	public void setIdx(String idx) {
 		this.idx = idx;
 	}
-	
+
 	/**
 	 * 
 	 * @Title: getAnswerRate
@@ -154,10 +149,9 @@ public class Case extends Resource {
 	 */
 	public String getAnswerRate() {
 		Map answers = ConsoleAgent.checkAnswers(name);
-		return (String.valueOf(answers.get("answerCount"))) + "/"
-				+ (String.valueOf(answers.get("caseCount")));
+		return (String.valueOf(answers.get("answerCount"))) + "/" + (String.valueOf(answers.get("caseCount")));
 	}
-	
+
 	/**
 	 * 
 	 * @Title: getCaseTotal
@@ -174,7 +168,8 @@ public class Case extends Resource {
 	/**
 	 * 
 	 * @Title: getTotal
-	 * @Description:Get the number of all child scenarios,include the scenarios of child categories.
+	 * @Description:Get the number of all child scenarios,include the scenarios
+	 *                  of child categories.
 	 * @param @return
 	 * @return int
 	 * @throws
@@ -203,8 +198,7 @@ public class Case extends Resource {
 		List rs = new ArrayList();
 		if (root.isFile()) {
 			for (String categoryString : category) {
-				if (root.getAbsolutePath().endsWith(
-						(String) fileTypeMapping.get(categoryString))) {
+				if (root.getAbsolutePath().endsWith((String) fileTypeMapping.get(categoryString))) {
 					rs.add(root.getAbsolutePath().replaceAll("\\\\", "/"));
 				}
 			}

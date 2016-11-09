@@ -209,7 +209,7 @@ public class Dispatch {
 	public ArrayList<String> getTempSkippedList() {
 		return this.tempSkippedList;
 	}
-	
+
 	public int getTotalSize() {
 		return tbdSize + macroSkippedSize + tempSkippedSize;
 	}

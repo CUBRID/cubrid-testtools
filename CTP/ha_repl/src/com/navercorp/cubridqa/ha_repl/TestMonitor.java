@@ -26,7 +26,6 @@ package com.navercorp.cubridqa.ha_repl;
 
 import java.util.ArrayList;
 
-
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -46,8 +45,8 @@ public class TestMonitor {
 		this.context = context;
 		this.test = test;
 		hostManager = test.getInstanceManager();
-		
-		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(),  "monitor_" + hostManager.getEnvId() + ".log"), false, context.isContinueMode());
+
+		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "monitor_" + hostManager.getEnvId() + ".log"), false, context.isContinueMode());
 
 		this.master = hostManager.getHost("master");
 		this.slaveList = hostManager.getAllHost("slave");
@@ -64,7 +63,7 @@ public class TestMonitor {
 
 	private void monitorOnce() {
 
-		//log.println("alive");
+		// log.println("alive");
 
 		// try{
 		// resolveSlaveIsInActiveMode();

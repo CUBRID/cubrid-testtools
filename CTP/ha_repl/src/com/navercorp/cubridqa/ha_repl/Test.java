@@ -47,7 +47,7 @@ import com.navercorp.cubridqa.shell.common.SyncException;
 
 public class Test {
 	public final static int FAIL_MAX_STAT = 100;
-	
+
 	InstanceManager hostManager;
 	Log mlog;
 	Log masterDumpLog;
@@ -68,7 +68,7 @@ public class Test {
 	public Test(Context context, String envId) throws Exception {
 		this.context = context;
 		this.hostManager = new InstanceManager(context, envId);
-	
+
 		this.mlog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + envId + ".log"), false, context.isContinueMode());
 		this.finishedLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt"), false, context.isContinueMode());
 		this.commonReader = new CommonReader(CommonUtils.concatFile(com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME + "/ha_repl/lib", "common.inc"));
@@ -122,7 +122,7 @@ public class Test {
 		this.mlog.close();
 		this.hostManager.close();
 		try {
-			if(this.connection!=null && !this.connection.isClosed()){
+			if (this.connection != null && !this.connection.isClosed()) {
 				this.connection.close();
 			}
 		} catch (SQLException e) {
@@ -307,8 +307,9 @@ public class Test {
 
 		context.getFeedback().onTestCaseStopEvent(currentTestFile, succFlag != null && succFlag.equals("SUCC"), endTime - startTime, userInfo.toString(), hostManager.getEnvId(), false, hasCore,
 				Constants.SKIP_TYPE_NO);
-		System.out.println("[TESTCASE] " + currentTestFile + " " + (endTime - startTime) + "ms " + hostManager.getEnvId() + " " + (hasCore ? "FOUND CORE" : "") + " " + ((succFlag != null && succFlag.equals("SUCC"))? "[OK]": "[NOK]") );
-		
+		System.out.println("[TESTCASE] " + currentTestFile + " " + (endTime - startTime) + "ms " + hostManager.getEnvId() + " " + (hasCore ? "FOUND CORE" : "") + " "
+				+ ((succFlag != null && succFlag.equals("SUCC")) ? "[OK]" : "[NOK]"));
+
 		Iterator logHashTableIterator = this.logHashTable.entrySet().iterator();
 		while (logHashTableIterator.hasNext()) {
 			Entry entry = (Entry) logHashTableIterator.next();
@@ -557,7 +558,8 @@ public class Test {
 
 	private ArrayList<String> getCheckSQLForDML() throws Exception {
 		SSHConnect ssh = hostManager.getHost("master");
-		String script = "csql -u dba " + hostManager.getTestDb()
+		String script = "csql -u dba "
+				+ hostManager.getTestDb()
 				+ " -c \"select 'FIND'||'_'||'PK_CLASS', class_name, count(*) from db_attribute where class_name in (select distinct class_name from db_index where is_primary_key='YES' and class_name in (select class_name from db_class where is_system_class='NO' and lower(class_name)<>'qa_system_tb_flag')) group by class_name;\" | grep 'FIND_PK_CLASS' ";
 		GeneralScriptInput csql = new GeneralScriptInput(script);
 		String tablesResult = ssh.execute(csql);
@@ -858,7 +860,8 @@ public class Test {
 		masterNode.execute(script);
 
 		this.globalFlag++;
-		script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values (" + this.globalFlag + ");\"");
+		script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values ("
+				+ this.globalFlag + ");\"");
 		masterNode.execute(script);
 
 		mlog.println("DONE");
@@ -923,7 +926,7 @@ public class Test {
 			}
 		}
 	}
-	
+
 	public InstanceManager getInstanceManager() {
 		return this.hostManager;
 	}

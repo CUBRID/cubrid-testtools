@@ -48,7 +48,6 @@ import com.navercorp.cubridqa.cqt.console.util.EnvGetter;
 import com.navercorp.cubridqa.cqt.console.util.PropertiesUtil;
 import com.navercorp.cubridqa.cqt.console.util.XstreamHelper;
 
-
 public class TestUtil {
 
 	public static Map<String, String[]> SCENARIOMAP;
@@ -70,29 +69,29 @@ public class TestUtil {
 	public static final String TEST_CONFIG = "test_config";
 
 	public static final String RUN_MODE = "run_mode";
-	
+
 	public static final String RUN_MODE_SECONDARY = "run_mode_secondary";
-	
+
 	public static final String HOLDCAS = "holdcas";
 
 	public static final String AUTOCOMMIT = "autocommit";
-	
+
 	public static final String CHECK_SERVER_STATUS = "check_server_status";
-	
+
 	public static final String URL_PROPERTIES = "url_properties";
-	
+
 	public static final String ADD_DEBUG_HINT = "add_debug_hint";
-	
+
 	public static final String NEED_XML_SUMMARY = "need_xml_summary";
-	
+
 	public static final String NEED_ANSWER_In_Summary = "need_answer_in_summary";
-	
+
 	public static final String HINT_PREFIX = "/*+ RECOMPILE QASRC(";
-	
+
 	public static final String APPEND_HINT_PREFIX = " QASRC(";
-	
+
 	public static final String APPEND_HINT_SUFFIX = " ) ";
-	
+
 	public static final String HINT_SUFFIX = ") */";
 
 	public static final String RESET = "reset";
@@ -102,16 +101,15 @@ public class TestUtil {
 	public static final String SQL_END = ";";
 
 	public static final String TOTAL_SUMMARY_FILE = "/main.info";
-	
+
 	public static final String SUMMARYLIST_FILE = "/summary.xml";
-	
+
 	public static final String ScenarioTypes = ".sql";
 
 	public static String getAnswer4SQLAndOther(String filePath) {
 		String filename = FileUtil.getDir(StringUtil.replaceSlashBasedSystem(filePath));
 		if (filename.endsWith(File.separator + CASEFLAG)) {
-			filename = filename.replaceAll("\\\\", "/").replaceAll("/cases",
-					"/" + TestUtil.OTHER_ANSWERS_32);
+			filename = filename.replaceAll("\\\\", "/").replaceAll("/cases", "/" + TestUtil.OTHER_ANSWERS_32);
 		}
 
 		if (FileUtil.isFileExist(filename)) {
@@ -123,9 +121,7 @@ public class TestUtil {
 
 	public static String getCharsetFile(String fileName) {
 		String fName = "";
-		fName = EnvGetter.getenv("CTP_HOME") + File.separator
-				+ CONFIG_NAME + File.separator + TEST_CONFIG + File.separator
-				+ fileName;
+		fName = EnvGetter.getenv("CTP_HOME") + File.separator + CONFIG_NAME + File.separator + TEST_CONFIG + File.separator + fileName;
 		return fName;
 	}
 
@@ -148,8 +144,7 @@ public class TestUtil {
 					String dirName = type.substring(0, position);
 					String fileType = type.substring(position);
 
-					fileType = fileType.replaceAll("\\(", "").replaceAll("\\)",
-							"");
+					fileType = fileType.replaceAll("\\(", "").replaceAll("\\)", "");
 					String[] postfixes = fileType.split(",");
 					SCENARIOMAP.put(dirName, postfixes);
 				}
@@ -171,7 +166,6 @@ public class TestUtil {
 			type = "common";
 		}
 		ret.append(type);
-		
 
 		String os = SystemUtil.getOS();
 		ret.append("_" + os);
@@ -181,8 +175,8 @@ public class TestUtil {
 		}
 
 		String date = "";
-//		long s = System.currentTimeMillis();
-//		date = Long.toString(s);
+		// long s = System.currentTimeMillis();
+		// date = Long.toString(s);
 		SimpleDateFormat sdf = new SimpleDateFormat("ddHHmmss");
 		Random rand = new Random();
 		try {
@@ -214,15 +208,11 @@ public class TestUtil {
 	public static String getMonthDirName() {
 		return "m" + (Calendar.getInstance().get(Calendar.MONTH) + 1);
 	}
-	
-	
-	public static String getResultDir(String resID)
-	{
+
+	public static String getResultDir(String resID) {
 		String res_dir = "";
-		res_dir = EnvGetter.getenv("CTP_HOME") + RESULT
-		+ getYearDirName() + File.separator + getMonthDirName()
-		+ File.separator + resID;
-		
+		res_dir = EnvGetter.getenv("CTP_HOME") + RESULT + getYearDirName() + File.separator + getMonthDirName() + File.separator + resID;
+
 		res_dir = StringUtil.replaceSlashBasedSystem(res_dir);
 		return res_dir;
 	}
@@ -265,8 +255,7 @@ public class TestUtil {
 		String scenarioRoot = test.getScenarioRootPath();
 		int rootLength = scenarioRoot.length();
 		String scenarioSuffer = caseFile.substring(rootLength);
-		ret = StringUtil.replaceSlashBasedSystem(test.getResult_dir() + File.separator
-				+ test.getTestType() + File.separator + scenarioSuffer);
+		ret = StringUtil.replaceSlashBasedSystem(test.getResult_dir() + File.separator + test.getTestType() + File.separator + scenarioSuffer);
 
 		int pos = ret.lastIndexOf(File.separator + CASEFLAG);
 		if (pos != -1) {
@@ -300,15 +289,13 @@ public class TestUtil {
 	public static String getAnswerDir(String caseFile) {
 		int testType = TestUtil.getTestType(caseFile);
 		String ret = FileUtil.getDir(caseFile);
-		if (testType == CaseResult.TYPE_SQL
-				|| testType == CaseResult.TYPE_GROOVY) {
+		if (testType == CaseResult.TYPE_SQL || testType == CaseResult.TYPE_GROOVY) {
 			int position = ret.lastIndexOf(CASEFLAG);
 			if (position != -1) {
-				ret = ret.substring(0, position)
-						+ getAnswer4SQLAndOther(caseFile);
+				ret = ret.substring(0, position) + getAnswer4SQLAndOther(caseFile);
 			}
 		}
-		
+
 		return StringUtil.replaceSlashBasedSystem(ret);
 	}
 
@@ -334,7 +321,7 @@ public class TestUtil {
 		if (file == null) {
 			return null;
 		}
-		String[] ret = new String[]{TestUtil.ScenarioTypes};
+		String[] ret = new String[] { TestUtil.ScenarioTypes };
 		return ret;
 	}
 
@@ -347,8 +334,7 @@ public class TestUtil {
 	 * @param postFixes
 	 * @throws Exception
 	 */
-	public static void getCaseFiles(Test test, String filePath,
-			List<String> fileList, String[] postFixes) throws Exception {
+	public static void getCaseFiles(Test test, String filePath, List<String> fileList, String[] postFixes) throws Exception {
 		if (filePath == null || postFixes == null || fileList == null) {
 			return;
 		}
@@ -365,8 +351,7 @@ public class TestUtil {
 			path = path + File.separator;
 		}
 
-		int positionAnswers = path.indexOf(File.separator
-				+ getAnswer4SQLAndOther(filePath) + File.separator);
+		int positionAnswers = path.indexOf(File.separator + getAnswer4SQLAndOther(filePath) + File.separator);
 
 		if (positionAnswers != -1) {
 			return;
@@ -400,9 +385,7 @@ public class TestUtil {
 				String file = dirPath + separator + files[i];
 				File child = new File(file);
 				System.out.println("child.getName: " + child.getName());
-				if (child.isDirectory()
-						&& (!("common".equals(child.getName()) || getAnswer4SQLAndOther(
-								filePath).equals(child.getName())))) {
+				if (child.isDirectory() && (!("common".equals(child.getName()) || getAnswer4SQLAndOther(filePath).equals(child.getName())))) {
 					getCaseFiles(test, file, fileList, postFixes);
 				} else {
 					for (int k = 0; k < postFixes.length; k++) {
@@ -412,8 +395,7 @@ public class TestUtil {
 						}
 						if (file.endsWith(postfix)) {
 							fileList.add(file);
-							if (test != null
-									&& postfix.equalsIgnoreCase(".sql")) {
+							if (test != null && postfix.equalsIgnoreCase(".sql")) {
 								String db = test.getDbId();
 								if (db != null && !db.trim().equals("")) {
 									test.putCaseDbToMap(file, test.getDbId());
@@ -486,7 +468,7 @@ public class TestUtil {
 					summary.setSiteRunTimes(1);
 				}
 			}
-			
+
 			String catPath = TestUtil.getTestCatBasedOnResultDir(resultDir, test);
 			summary.setCatPath(catPath);
 			iter = currentLayer.keySet().iterator();
@@ -497,26 +479,19 @@ public class TestUtil {
 				}
 
 				Object nextLayer = currentLayer.get(key);
-				Summary childSummary = (Summary) ((Map) nextLayer)
-						.get(SUMMARY_KEY);
+				Summary childSummary = (Summary) ((Map) nextLayer).get(SUMMARY_KEY);
 				if (dirPath.size() > 0) {
-					if (dirPath.get(dirPath.size() - 1)
-							.equalsIgnoreCase("site")) {
+					if (dirPath.get(dirPath.size() - 1).equalsIgnoreCase("site")) {
 						summary.setSiteRunTimes(test.getSiteRunTimes());
 					} else {
 						summary.setSiteRunTimes(1);
 					}
 				}
-				summary.setTotalCount(summary.getTotalCount()
-						+ childSummary.getTotalCount());
-				summary.setSuccessCount(summary.getSuccessCount()
-						+ childSummary.getSuccessCount());
-				summary.setFailCount(summary.getFailCount()
-						+ childSummary.getFailCount());
-				summary.setTotalTime(summary.getTotalTime()
-						+ childSummary.getTotalTime());
-				summary.getChildSummaryMap().put(childSummary.getResultDir(),
-						childSummary);
+				summary.setTotalCount(summary.getTotalCount() + childSummary.getTotalCount());
+				summary.setSuccessCount(summary.getSuccessCount() + childSummary.getSuccessCount());
+				summary.setFailCount(summary.getFailCount() + childSummary.getFailCount());
+				summary.setTotalTime(summary.getTotalTime() + childSummary.getTotalTime());
+				summary.getChildSummaryMap().put(childSummary.getResultDir(), childSummary);
 
 				summary.getCaseList().addAll(childSummary.getCaseList());
 			}
@@ -538,8 +513,7 @@ public class TestUtil {
 					} else {
 						summary.setSuccessCount(summary.getSuccessCount() + 1);
 					}
-					summary.setTotalTime(summary.getTotalTime()
-							+ caseResult.getTotalTime());
+					summary.setTotalTime(summary.getTotalTime() + caseResult.getTotalTime());
 				}
 				String resultDir = summary.getResultDir();
 				if (test.getRunMode() == Test.MODE_NO_RESULT) {
@@ -569,21 +543,17 @@ public class TestUtil {
 			String key = (String) iter.next();
 			if (key.equals(SUMMARY_KEY)) {
 				Summary summary = (Summary) currentLayer.get(key);
-				SummaryInfo summaryInfo = test.getSummaryInfoFromMap(summary
-						.getResultDir());
+				SummaryInfo summaryInfo = test.getSummaryInfoFromMap(summary.getResultDir());
 
-				FileUtil.writeToFile(summary.getResultDir() + "/summary_info",
-						summary.toString());
+				FileUtil.writeToFile(summary.getResultDir() + "/summary_info", summary.toString());
 				SummaryInfo parent = summaryInfo.getParent();
 				summaryInfo.setParent(null);
 				String testType = test.getTestType();
-				if (testType.equalsIgnoreCase(summaryInfo.getCatPath())
-						&& !testType.equalsIgnoreCase(test.getTestTypeAlias())) {
+				if (testType.equalsIgnoreCase(summaryInfo.getCatPath()) && !testType.equalsIgnoreCase(test.getTestTypeAlias())) {
 					summaryInfo.setCatPath(test.getTestTypeAlias());
 				}
 				String xml = XstreamHelper.toXml(summaryInfo);
-				FileUtil.writeToFile(summaryInfo.getResultDir()
-						+ "/summary.info", xml);
+				FileUtil.writeToFile(summaryInfo.getResultDir() + "/summary.info", xml);
 				summaryInfo.setParent(parent);
 
 				if (test.getRunMode() == Test.MODE_RESULT) {
@@ -600,32 +570,20 @@ public class TestUtil {
 
 	public static void saveSummaryMainInfo(Test test, Summary summary) {
 		String collect_info = "";
-		collect_info += "build:"
-			+ PropertiesUtil.getValue("dbversion") + "." + PropertiesUtil.getValue("dbbuildnumber") + System.getProperty("line.separator");
-		collect_info += "version:" + test.getTestBit()
-			+ System.getProperty("line.separator");
-		collect_info += "os:" + SystemUtil.getOS()
-			+ System.getProperty("line.separator");
-		collect_info += "category:" 
-			+ test.getTestTypeAlias() + System.getProperty("line.separator");
-		collect_info += "elapse_time:"
-				+ summary.getTotalTime()+ System.getProperty("line.separator");
-		collect_info += "success:" + summary.getSuccessCount()
-				+ System.getProperty("line.separator");
-		collect_info += "fail:" + summary.getFailCount()
-				+ System.getProperty("line.separator");
-		collect_info += "total:" + summary.getTotalCount()
-				+ System.getProperty("line.separator");
+		collect_info += "build:" + PropertiesUtil.getValue("dbversion") + "." + PropertiesUtil.getValue("dbbuildnumber") + System.getProperty("line.separator");
+		collect_info += "version:" + test.getTestBit() + System.getProperty("line.separator");
+		collect_info += "os:" + SystemUtil.getOS() + System.getProperty("line.separator");
+		collect_info += "category:" + test.getTestTypeAlias() + System.getProperty("line.separator");
+		collect_info += "elapse_time:" + summary.getTotalTime() + System.getProperty("line.separator");
+		collect_info += "success:" + summary.getSuccessCount() + System.getProperty("line.separator");
+		collect_info += "fail:" + summary.getFailCount() + System.getProperty("line.separator");
+		collect_info += "total:" + summary.getTotalCount() + System.getProperty("line.separator");
 		int execut_count = summary.getFailCount() + summary.getSuccessCount();
-		collect_info += "execute_case:" + execut_count
-				+ System.getProperty("line.separator");
-		collect_info += "totalTime:" + summary.getTotalTime()
-				+ System.getProperty("line.separator");
-		collect_info += "result_path:" + test.getResult_dir()
-		        + System.getProperty("line.separator");
-		FileUtil.writeToFile(test.getResult_dir() + TOTAL_SUMMARY_FILE,
-				collect_info);
-	
+		collect_info += "execute_case:" + execut_count + System.getProperty("line.separator");
+		collect_info += "totalTime:" + summary.getTotalTime() + System.getProperty("line.separator");
+		collect_info += "result_path:" + test.getResult_dir() + System.getProperty("line.separator");
+		FileUtil.writeToFile(test.getResult_dir() + TOTAL_SUMMARY_FILE, collect_info);
+
 	}
 
 	/**
@@ -640,26 +598,22 @@ public class TestUtil {
 			String key = (String) iter.next();
 			if (key.equals(SUMMARY_KEY)) {
 				Summary summary = (Summary) currentLayer.get(key);
-				SummaryInfo summaryInfo = test.getSummaryInfoFromMap(summary
-						.getResultDir());
-				FileUtil.writeToFile(summary.getResultDir() + "/summary_info",
-						summary.toString());
+				SummaryInfo summaryInfo = test.getSummaryInfoFromMap(summary.getResultDir());
+				FileUtil.writeToFile(summary.getResultDir() + "/summary_info", summary.toString());
 				SummaryInfo parent = summaryInfo.getParent();
 				summaryInfo.setParent(null);
 				String xml = XstreamHelper.toXml(summaryInfo);
-				FileUtil.writeToFile(summaryInfo.getResultDir()
-						+ "/summary.info", xml);
+				FileUtil.writeToFile(summaryInfo.getResultDir() + "/summary.info", xml);
 				summaryInfo.setParent(parent);
 
 				if (test.getRunMode() == Test.MODE_RESULT) {
 					if (summary.getType() == Summary.TYPE_BOTTOM) {
 						List<CaseResult> caseList = summary.getCaseList();
 						for (int i = 0; i < caseList.size(); i++) {
-							CaseResult caseResult = (CaseResult) caseList
-									.get(i);
+							CaseResult caseResult = (CaseResult) caseList.get(i);
 							saveResult(caseResult, test.getCodeset());
 						}
-						
+
 					}
 				}
 			} else {
@@ -678,32 +632,26 @@ public class TestUtil {
 	 */
 	public static void saveResult(CaseResult caseResult, String charset) {
 		if (!caseResult.isSuccessFul()) {
-			String resultFile = caseResult.getResultDir() + "/"
-					+ caseResult.getCaseName() + ".result";
+			String resultFile = caseResult.getResultDir() + "/" + caseResult.getCaseName() + ".result";
 			if (caseResult.getType() == CaseResult.TYPE_SQL) {
-				FileUtil.writeToFile(resultFile, caseResult.getResult(),
-						charset);
+				FileUtil.writeToFile(resultFile, caseResult.getResult(), charset);
 			} else {
-				String tempResultFile = caseResult.getCaseDir() + "/"
-						+ caseResult.getCaseName() + ".result";
+				String tempResultFile = caseResult.getCaseDir() + "/" + caseResult.getCaseName() + ".result";
 				FileUtil.copyFile(tempResultFile, resultFile);
 			}
 		}
 	}
-	
+
 	public static void copyCaseAnswerFile(CaseResult caseResult) {
 		if (!caseResult.isSuccessFul()) {
-			String targetSqlFile = caseResult.getResultDir() + "/"
-					+ caseResult.getCaseName() + ".sql";
-			String targetAnswerFile = caseResult.getResultDir() + "/"
-			+ caseResult.getCaseName() + ".answer";
+			String targetSqlFile = caseResult.getResultDir() + "/" + caseResult.getCaseName() + ".sql";
+			String targetAnswerFile = caseResult.getResultDir() + "/" + caseResult.getCaseName() + ".answer";
 			if (caseResult.getType() == CaseResult.TYPE_SQL) {
 				FileUtil.writeSQLFileIntoResultFolder(caseResult.getCaseFile(), targetSqlFile);
 				FileUtil.writeSQLFileIntoResultFolder(caseResult.getAnswerFile(), targetAnswerFile);
-			} 
+			}
 		}
 	}
-
 
 	/**
 	 * 
@@ -711,8 +659,7 @@ public class TestUtil {
 	 * @param currentLayer
 	 * @param parent
 	 */
-	public static void makeSummaryInfo(Test test, Map currentLayer,
-			SummaryInfo parent) {
+	public static void makeSummaryInfo(Test test, Map currentLayer, SummaryInfo parent) {
 		if (test.getRunMode() != Test.MODE_RESULT) {
 			return;
 		}
@@ -748,8 +695,7 @@ public class TestUtil {
 				summaryInfo.setFailCount(summary.getFailCount());
 				summaryInfo.setCatPath(summary.getCatPath());
 				summaryInfo.setTotalTime(summary.getTotalTime());
-				test.putSummaryInfoToMap(summaryInfo.getResultDir(),
-						summaryInfo);
+				test.putSummaryInfoToMap(summaryInfo.getResultDir(), summaryInfo);
 			} catch (Exception e) {
 				System.out.println("no sql case, please check the directory!");
 			}
@@ -781,8 +727,7 @@ public class TestUtil {
 				summaryInfo.setFailCount(summary.getFailCount());
 				summaryInfo.setCatPath(summary.getCatPath());
 				summaryInfo.setTotalTime(summary.getTotalTime());
-				test.putSummaryInfoToMap(summaryInfo.getResultDir(),
-						summaryInfo);
+				test.putSummaryInfoToMap(summaryInfo.getResultDir(), summaryInfo);
 
 				// if test build is debug build, change catpat of the last
 				// second one to [sql|medium|site|shell]_debug to show on qahome
@@ -802,8 +747,7 @@ public class TestUtil {
 					String cat = summary.getCatPath();
 					// this should fully match with condition to make this
 					// changes
-					if ("sql".equals(cat) || "medium".equals(cat)
-							|| "shell".equals(cat)) {
+					if ("sql".equals(cat) || "medium".equals(cat) || "shell".equals(cat)) {
 						tmp = cat + "_debug";
 						summaryInfo.setCatPath(tmp);
 					} else if ("site".equals(cat)) {
@@ -814,9 +758,9 @@ public class TestUtil {
 
 				if (summary.getType() == Summary.TYPE_BOTTOM) {
 					List<CaseResult> caseList = summary.getCaseList();
-					//comment out save summary collection function
-					//saveSummaryMainInfo(test, summary);
-					
+					// comment out save summary collection function
+					// saveSummaryMainInfo(test, summary);
+
 					for (int i = 0; i < caseList.size(); i++) {
 						CaseResult caseResult = (CaseResult) caseList.get(i);
 						String caseFile = caseResult.getCaseFile();
@@ -885,8 +829,7 @@ public class TestUtil {
 	public static String getCaseSummary(String summaryFile) {
 		StringBuilder sb = new StringBuilder();
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					new FileInputStream(new File(summaryFile)), "UTF-8"));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(summaryFile)), "UTF-8"));
 			int lineNum = 0;
 			String line = reader.readLine();
 			while (line != null) {
@@ -904,34 +847,34 @@ public class TestUtil {
 		return sb.toString();
 	}
 
-	public static String getTestCatBasedOnResultDir(String resDir, Test test){
-		if(resDir == null){
+	public static String getTestCatBasedOnResultDir(String resDir, Test test) {
+		if (resDir == null) {
 			return null;
 		}
-		
+
 		String ret;
 		String resultRootDir = test.getResult_dir();
-        int resultRootDirLength = resultRootDir.length();
-        
-        ret = resDir.substring(resultRootDirLength);
-        
-		if (ret != null
-				&& (ret.startsWith("/") || ret.startsWith("\\"))) {
+		int resultRootDirLength = resultRootDir.length();
+
+		ret = resDir.substring(resultRootDirLength);
+
+		if (ret != null && (ret.startsWith("/") || ret.startsWith("\\"))) {
 			ret = ret.substring(1);
 		}
-        
-        int pos = ret.lastIndexOf(File.separator + CASEFLAG);
+
+		int pos = ret.lastIndexOf(File.separator + CASEFLAG);
 		if (pos != -1) {
 			ret = ret.substring(0, pos);
 		}
-		
+
 		if (ret.endsWith(File.separator)) {
 			ret = ret.substring(0, ret.length() - 1);
 		}
-		
+
 		return ret;
-		
+
 	}
+
 	public static String getTestCatPath(String file, Test test) {
 		if (file == null) {
 			return null;
@@ -947,7 +890,7 @@ public class TestUtil {
 		if (pos != -1) {
 			ret = ret.substring(0, pos);
 		}
-		
+
 		if (ret.endsWith(File.separator)) {
 			ret = ret.substring(0, ret.length() - 1);
 		}
@@ -964,9 +907,7 @@ public class TestUtil {
 		if (position == -1) {
 			return false;
 		}
-		SystemModel systemModel = (SystemModel) XstreamHelper
-				.fromXml(EnvGetter.getenv("CTP_HOME") + File.separator 
-						+ "sql/configuration/System.xml");
+		SystemModel systemModel = (SystemModel) XstreamHelper.fromXml(EnvGetter.getenv("CTP_HOME") + File.separator + "sql/configuration/System.xml");
 		if (systemModel.isQueryPlan()) {
 			flag = true;
 		} else {
@@ -979,7 +920,7 @@ public class TestUtil {
 
 	private static String[] getCatPath(String file, Test test) {
 		String path = getTestCatPath(file, test);
-		String standardPath= StringUtil.replaceSlash(path);
+		String standardPath = StringUtil.replaceSlash(path);
 		String[] keys = standardPath.split("/");
 		return keys;
 	}

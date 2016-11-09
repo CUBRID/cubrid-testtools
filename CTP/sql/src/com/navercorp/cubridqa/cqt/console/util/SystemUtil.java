@@ -34,14 +34,10 @@ import org.apache.commons.lang.SystemUtils;
 
 import com.navercorp.cubridqa.cqt.console.util.EnvGetter;
 
-
 public class SystemUtil {
 
-	private static final String[] crontabEnv = { "PROPERTIES_PATH",
-			"init_path", "LD_LIBRARY_PATH", "LIBPATH", "PATH", "SHLIB_PATH",
-			"CUBRID", "CUBRID_MANAGER", "CUBRID_BROKER", "CUBRID_DATABASES",
-			"CUBRID_LANG", "CUBRID_MODE", "JAVA_HOME", "HOSTNAME", "SHELL",
-			"TMOUT", "CLASSPATH", "QA_REPOSITORY", "SHELL_CONFIG_PATH" };
+	private static final String[] crontabEnv = { "PROPERTIES_PATH", "init_path", "LD_LIBRARY_PATH", "LIBPATH", "PATH", "SHLIB_PATH", "CUBRID", "CUBRID_MANAGER", "CUBRID_BROKER", "CUBRID_DATABASES",
+			"CUBRID_LANG", "CUBRID_MODE", "JAVA_HOME", "HOSTNAME", "SHELL", "TMOUT", "CLASSPATH", "QA_REPOSITORY", "SHELL_CONFIG_PATH" };
 
 	private static String os = null;
 
@@ -85,8 +81,7 @@ public class SystemUtil {
 		while (iter.hasNext()) {
 			String key = iter.next().toString();
 			String value = env.get(key).toString();
-			sb.append("" + key + "=" + value
-					+ System.getProperty("line.separator"));
+			sb.append("" + key + "=" + value + System.getProperty("line.separator"));
 		}
 
 		Properties props = System.getProperties();
@@ -94,8 +89,7 @@ public class SystemUtil {
 		while (propIter.hasNext()) {
 			String key = propIter.next().toString();
 			String value = props.get(key).toString();
-			sb.append("" + key + "=" + value
-					+ System.getProperty("line.separator"));
+			sb.append("" + key + "=" + value + System.getProperty("line.separator"));
 		}
 		FileUtil.writeToFile("env_props.txt", sb.toString());
 	}

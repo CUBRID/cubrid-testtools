@@ -348,7 +348,7 @@ public class CTP {
 		System.out.println("	ctp.sh ha_repl		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "ha_repl.conf");
 		System.out.println("	ctp.sh isolation		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "isolation.conf");
 		System.out.println("	ctp.sh jdbc		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "jdbc.conf");
-		System.out.println("	ctp.sh unittest #use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "unittest.conf");		
+		System.out.println("	ctp.sh unittest #use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "unittest.conf");
 		System.out.println("	ctp.sh sql medium  	#run both sql and medium with default configuration");
 		System.out.println("	ctp.sh medium medium 	#execute medium twice");
 		System.out.println("	ctp.sh webconsole start	#start web console to view sql test results");

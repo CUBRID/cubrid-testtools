@@ -31,74 +31,74 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 
 public class SFTP {
-	
+
 	ChannelSftp sftp;
 
-	public SFTP(ChannelSftp sftp)
-			throws JSchException {
-		this.sftp=sftp;
+	public SFTP(ChannelSftp sftp) throws JSchException {
+		this.sftp = sftp;
 		this.sftp.connect();
 	}
-	
-	public void download(String remoteFile, String localDir) throws Exception {		
+
+	public void download(String remoteFile, String localDir) throws Exception {
 		sftp.get(remoteFile, localDir);
 	}
-	
-	public void copy (String fromFiles, String toFiles, SSHConnect toSsh) throws Exception {
+
+	public void copy(String fromFiles, String toFiles, SSHConnect toSsh) throws Exception {
 		SFTP toSftp = toSsh.createSFTP();
 		copy(fromFiles, toFiles, toSftp);
 		toSftp.close();
 	}
-	
-	public void copy (String fromFiles, String toFiles, SFTP toSftp) throws Exception {
+
+	public void copy(String fromFiles, String toFiles, SFTP toSftp) throws Exception {
 		File localDir = new File("tmp");
-		if(localDir.exists() == false) {
+		if (localDir.exists() == false) {
 			localDir.mkdirs();
 		} else {
 			File[] subList = localDir.listFiles();
-			for(File f: subList) {
-				f.delete();	
+			for (File f : subList) {
+				f.delete();
 			}
 		}
 		download(fromFiles, localDir + File.separator);
 		int pos = fromFiles.lastIndexOf("\\");
-		if(pos==-1) {
+		if (pos == -1) {
 			pos = fromFiles.lastIndexOf("/");
 		}
 		String localFromFiles;
-		if(pos==-1) {
+		if (pos == -1) {
 			localFromFiles = fromFiles;
 		} else {
 			localFromFiles = fromFiles.substring(pos + 1);
 		}
-		
+
 		toSftp.upload(localDir + File.separator + localFromFiles, toFiles);
 	}
-	
-	public void mkdir(String path) throws SftpException{
-		try{
+
+	public void mkdir(String path) throws SftpException {
+		try {
 			sftp.mkdir(path);
 		} catch (SftpException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void cd(String path) throws SftpException{
+	public void cd(String path) throws SftpException {
 		sftp.cd(path);
 	}
-	
+
 	public void upload(String localFile) throws Exception {
 		upload(localFile, ".");
 	}
-	public void upload(String localFile, String remoteFile) throws Exception {		
+
+	public void upload(String localFile, String remoteFile) throws Exception {
 		sftp.put(localFile, remoteFile);
 	}
-	
-	public void close(){
+
+	public void close() {
 		sftp.disconnect();
 		sftp.exit();
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		SSHConnect ssh1 = new SSHConnect("localhost", 22, "test", "test");
 		SSHConnect ssh2 = new SSHConnect("localhost", 22, "test", "test");
@@ -116,7 +116,7 @@ public class SFTP {
 		sftp2.cd("test");
 
 		sftp2.upload("tmp\\databases.txt");
-		
+
 		sftp2.close();
 		ssh1.close();
 		ssh2.close();

@@ -34,7 +34,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import com.navercorp.cubridqa.common.CommonUtils;
-import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.deploy.Deploy;
@@ -45,17 +44,17 @@ import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class Main {
 	public static void exec(String configFilename) throws Exception {
-		
+
 		Class.forName("cubrid.jdbc.driver.CUBRIDDriver").newInstance();
 
 		Context context = new Context(configFilename);
 		ArrayList<String> envList = context.getTestEnvList();
 		System.out.println("Available Env: " + envList);
-		
+
 		if (envList.size() == 0) {
 			throw new Exception("Not found any HA instance to test.");
 		}
-		
+
 		String testRoot = context.getTestCaseRoot();
 		boolean hasError = false;
 		if (com.navercorp.cubridqa.common.CommonUtils.isEmpty(testRoot)) {
@@ -65,15 +64,14 @@ public class Main {
 			File file = new File(testRoot);
 			hasError = !file.exists();
 		}
-		if (hasError){
+		if (hasError) {
 			System.out.println("[ERROR] Not found test cases directory. Please check 'scenario' in test configuration file.");
 			System.exit(-1);
 		}
-			
 
 		String cubridPackageUrl = context.getCubridPackageUrl();
 		if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(cubridPackageUrl)) {
-			if(!CommonUtils.isAvailableURL(cubridPackageUrl)){
+			if (!CommonUtils.isAvailableURL(cubridPackageUrl)) {
 				System.out.println();
 				System.out.println("[ERROR]: Please confirm " + cubridPackageUrl + " url is available!");
 				System.out.println("QUIT");
@@ -87,22 +85,23 @@ public class Main {
 			InstanceManager hostManager = new InstanceManager(context, envId);
 			SSHConnect ssh = hostManager.getHost("master");
 			String buildInfo = com.navercorp.cubridqa.shell.common.CommonUtils.getBuildVersionInfo(ssh);
-			if(CommonUtils.isEmpty(buildInfo)){
+			if (CommonUtils.isEmpty(buildInfo)) {
 				System.out.println("[ERROR]: Please confirm your build installation for local test!");
 				System.out.println("QUIT");
 				System.exit(-1);
 			}
-			
+
 			hostManager.close();
 			context.setBuildId(CommonUtils.getBuildId(buildInfo));
 			context.setBuildBits(CommonUtils.getBuildBits(buildInfo));
 			context.setReInstallTestBuildYn(false);
-			
-			if(ssh != null) ssh.close();
+
+			if (ssh != null)
+				ssh.close();
 		}
 
 		System.out.println("BUILD ID: " + context.getBuildId());
-		System.out.println("BUILD BITS: " + context.getBuildBits());		
+		System.out.println("BUILD BITS: " + context.getBuildBits());
 		System.out.println("Continue Mode: " + context.isContinueMode());
 		checkRequirement(context);
 
@@ -132,7 +131,7 @@ public class Main {
 			concurrentDeploy(context, envList);
 			System.out.println("DONE.");
 		}
-		
+
 		/*
 		 * dispatch phase
 		 */
@@ -154,11 +153,11 @@ public class Main {
 		concurrentTest(context);
 		context.getFeedback().onTaskStopEvent();
 		System.out.println("DONE.");
-		
+
 		System.out.println("============= BACKUP TEST RESULTS ==================");
-		backupTestResults(context);		
+		backupTestResults(context);
 		System.out.println("DONE.");
-		
+
 		System.out.println("TEST COMPLETED.");
 
 	}
@@ -168,7 +167,7 @@ public class Main {
 
 		pool = Executors.newFixedThreadPool(context.getTestEnvList().size() * 2);
 
-		for (final String envId : context.getTestEnvList()) {			
+		for (final String envId : context.getTestEnvList()) {
 			final Test test = new Test(context, envId);
 			final TestMonitor monitor = new TestMonitor(context, test);
 			pool.execute(new Runnable() {
@@ -194,7 +193,7 @@ public class Main {
 				}
 			});
 		}
-		
+
 		pool.shutdown();
 		pool.awaitTermination(Integer.MAX_VALUE, TimeUnit.DAYS);
 		pool = null;
@@ -218,7 +217,7 @@ public class Main {
 						context.getFeedback().onDeployStop(envId);
 					} catch (Exception e) {
 						e.printStackTrace();
-					} finally{
+					} finally {
 						deploy.close();
 					}
 				}
@@ -237,7 +236,7 @@ public class Main {
 			feedback.onTestCaseStopEvent(tc, false, -1, "", "", false, false, skippedType);
 		}
 	}
-	
+
 	private static void backupTestResults(Context context) {
 		if (CommonUtils.isWindowsPlatform()) {
 			return;
@@ -254,10 +253,11 @@ public class Main {
 		String curTimestamp = year + "." + month + "." + day + "_" + hour + "." + minute + "." + second;
 
 		backupFileName = "ha_repl_result_" + context.getBuildId() + "_" + context.getBuildBits() + "_" + context.getFeedback().getTaskId() + "_" + curTimestamp + ".tar.gz";
-		LocalInvoker.exec("mkdir -p " + context.getCurrentLogDir() + " >/dev/null 2>&1 ; cd " + context.getCurrentLogDir() + "; tar zvcPf ../" + backupFileName + " . " + " `cat "
-				+ context.getCurrentLogDir() + "/test*.log | grep \"\\[FAIL\\]\" | awk '{print $2}' |sed 's/test$/*/'` ", false, true);
+		LocalInvoker.exec(
+				"mkdir -p " + context.getCurrentLogDir() + " >/dev/null 2>&1 ; cd " + context.getCurrentLogDir() + "; tar zvcPf ../" + backupFileName + " . " + " `cat " + context.getCurrentLogDir()
+						+ "/test*.log | grep \"\\[FAIL\\]\" | awk '{print $2}' |sed 's/test$/*/'` ", false, true);
 	}
-	
+
 	private static void checkRequirement(Context context) throws Exception {
 		System.out.println("BEGIN TO CHECK: ");
 		ArrayList<String> envList = context.getTestEnvList();
@@ -265,12 +265,12 @@ public class Main {
 		boolean pass = true;
 		InstanceManager im;
 		ArrayList<SSHConnect> sshList;
-		for(String envId: envList) {
-			im = new InstanceManager(context,envId);
+		for (String envId : envList) {
+			im = new InstanceManager(context, envId);
 			sshList = im.getAllNodeList();
-			for(SSHConnect s: sshList) {
+			for (SSHConnect s : sshList) {
 				check = new CheckRequirement(context, envId, s);
-				if (!check.check()) {				
+				if (!check.check()) {
 					pass = false;
 				}
 			}

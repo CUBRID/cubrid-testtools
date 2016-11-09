@@ -24,7 +24,6 @@
  */
 package com.navercorp.cubridqa.common.coreanalyzer;
 
-
 public class UpdateDigestStack {
 
 	public static void main(String[] args) throws Exception {

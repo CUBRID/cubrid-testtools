@@ -46,7 +46,7 @@ public class Context {
 	String filename;
 
 	Feedback feedback;
-	
+
 	private String rootLogDir;
 	private String currentLogDir;
 
@@ -60,14 +60,14 @@ public class Context {
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
-		reload();		
+		reload();
 		setLogDir("ha_repl");
 		this.scenario = CommonUtils.translateVariable(getProperty(ConfigParameterConstants.SCENARIO, "").trim());
 	}
 
 	public void reload() throws IOException {
 		this.config = CommonUtils.getPropertiesWithPriority(filename);
-		
+
 		Set<Object> set = config.keySet();
 		Iterator<Object> it = set.iterator();
 		String key;
@@ -77,20 +77,19 @@ public class Context {
 				testEnvList.add(key.substring(4, key.indexOf(".master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)));
 			}
 		}
-		
+
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
 		this.mailNoticeTo = getProperty(ConfigParameterConstants.TEST_OWNER_EMAIL, "").trim();
 	}
-	
+
 	public ArrayList<String> getTestEnvList() {
 		return this.testEnvList;
 	}
 
 	public Feedback getFeedback() {
-		
+
 		if (this.feedback == null) {
-			String feedbackType = getProperty(ConfigParameterConstants.FEEDBACK_TYPE, "file")
-					.trim();
+			String feedbackType = getProperty(ConfigParameterConstants.FEEDBACK_TYPE, "file").trim();
 			if (feedbackType.equalsIgnoreCase("file")) {
 				this.feedback = new FeedbackFile(this);
 			} else if (feedbackType.equalsIgnoreCase("database")) {
@@ -150,23 +149,24 @@ public class Context {
 		String rebuildEnv = getProperty(ConfigParameterConstants.TEST_REBUILD_ENV_YES_OR_NO, "true");
 		return CommonUtils.convertBoolean(rebuildEnv);
 	}
+
 	public boolean isFailureBackup() {
 		return getProperty(ConfigParameterConstants.ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO, "false").toUpperCase().trim().equals("TRUE");
 	}
-	
+
 	public void setLogDir(String category) {
 		this.rootLogDir = Constants.ENV_CTP_HOME + "/result/" + category;
 		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
 	}
-	
+
 	public String getCurrentLogDir() {
 		return this.currentLogDir;
 	}
-	
+
 	public String getLogRootDir() {
 		return this.rootLogDir;
 	}
-	
+
 	public void setBuildId(String buildId) {
 		this.buildId = buildId;
 	}
@@ -182,19 +182,19 @@ public class Context {
 	public String getBuildBits() {
 		return this.buildBits;
 	}
-	
+
 	public String getCubridPackageUrl() {
 		return getProperty(ConfigParameterConstants.CUBRID_DOWNLOAD_URL, "").trim();
 	}
-	
+
 	public String getDiffMode() {
 		return getProperty(ConfigParameterConstants.TESTCASE_ADDITIONAL_ANSWER, "diff_1").trim();
 	}
-	
+
 	public String getTestCaseRoot() {
 		return this.scenario;
 	}
-	
+
 	public boolean isReInstallTestBuildYn() {
 		return reInstallTestBuildYn;
 	}
@@ -202,22 +202,23 @@ public class Context {
 	public void setReInstallTestBuildYn(boolean reInstallTestBuildYn) {
 		this.reInstallTestBuildYn = reInstallTestBuildYn;
 	}
-	
+
 	public String getExcludedTestCaseFile() {
 		return CommonUtils.translateVariable(getProperty(ConfigParameterConstants.TESTCASE_EXCLUDE_FROM_FILE, "").trim());
 	}
-	
+
 	public boolean shouldCleanupAfterQuit() {
 		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.CLEAN_PROCESS_AFTER_EXECUTION_QUIT_YES_OR_NO, "true"));
 	}
-	
+
 	public boolean enableCheckDiskSpace() {
 		return enableCheckDiskSpace;
 	}
-	
-	public boolean enableSkipMakeLocale(){
+
+	public boolean enableSkipMakeLocale() {
 		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_SIKP_MAKE_LOCALE_YES_OR_NO, "false"));
 	}
+
 	public String getTestPlatform() {
 		return getProperty(ConfigParameterConstants.TEST_PLATFORM, "linux");
 	}
@@ -225,11 +226,11 @@ public class Context {
 	public String getTestCategory() {
 		return getProperty(ConfigParameterConstants.TEST_CATEGORY, "ha_repl");
 	}
-	
+
 	public String getMailNoticeTo() {
-		return this.mailNoticeTo;		
+		return this.mailNoticeTo;
 	}
-	
+
 	public String getMailNoticeCC() {
 		String cc = getProperty(ConfigParameterConstants.TEST_CC_EMAIL, "").trim();
 		if (CommonUtils.isEmpty(cc)) {
