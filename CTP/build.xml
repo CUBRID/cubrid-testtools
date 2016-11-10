@@ -33,29 +33,29 @@
 
 	<target name="compile" depends="init" description="compile the source ">
 		<!-- Compile the java code from ${src} into ${build} -->
-		<javac srcdir="common/src" destdir="${build}">			
+		<javac target="1.6" source="1.6"  includeantruntime="false" srcdir="common/src" destdir="${build}">			
 			<!--<compilerarg value="-Xlint:unchecked"/>-->
 			<classpath refid="libs" />
 		</javac>
-		<javac srcdir="sql/src" destdir="${build}">
+		<javac target="1.6" source="1.6"  includeantruntime="false" srcdir="sql/src" destdir="${build}">
 			<!--<compilerarg value="-Xlint:unchecked"/>-->
 			<classpath refid="libs" />
 		</javac>
-		<javac srcdir="common/sched/src" destdir="${build}">
+		<javac target="1.6" source="1.6"  includeantruntime="false" srcdir="common/sched/src" destdir="${build}">
 			<!--<compilerarg value="-Xlint:unchecked"/>-->
 			<classpath refid="libs" />
 		</javac>
-		<javac srcdir="shell/src" destdir="${build}">
+		<javac target="1.6" source="1.6"  includeantruntime="false" srcdir="shell/src" destdir="${build}">
 			<!--<compilerarg value="-Xlint:unchecked"/>-->
 			<classpath refid="libs" />
 		</javac>
-		<javac srcdir="isolation/src" destdir="${build}">
+		<javac target="1.6" source="1.6"  includeantruntime="false" srcdir="isolation/src" destdir="${build}">
 			<classpath refid="libs" />
 		</javac>
-		<javac srcdir="ha_repl/src" destdir="${build}">
+		<javac target="1.6" source="1.6"  includeantruntime="false" srcdir="ha_repl/src" destdir="${build}">
 			<classpath refid="libs" />
 		</javac>
-		<javac srcdir="shell/init_path/commonforjdbc_src" destdir="${build}">
+		<javac target="1.6" source="1.6"  includeantruntime="false" srcdir="shell/init_path/commonforjdbc_src" destdir="${build}">
 		</javac>
 	</target>
 
