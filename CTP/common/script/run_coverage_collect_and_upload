@@ -132,7 +132,7 @@ function collectCoverage()
       fi
 
       rm -rf *.lcov
-      lcov --gcov-tool=${gcov_dir}  -d . -c -t "cubrid" -o cubrid_o.lcov
+      lcov --gcov-tool=${gcov_dir}  -d . -c -t "cubrid" -o cubrid_o.lcov --rc geninfo_adjust_src_path="$HOME => /home/cov"
       tStamp=`date '+%Y%m%d%H%M%s'`
       host_name=`hostname -s`
       lcov_data_name="cubrid_[${category}]_${USER}-${host_name}_${tStamp}.lcov"
