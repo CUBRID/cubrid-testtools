@@ -116,16 +116,16 @@ function packageBuildsAndUploadpackages()
         cd $source_code_dir
 	tar zvcf $cov_source_package_name . 2>&1 >> $build_log
     
-	coverage_kr_host=`ini ${CTP_HOME}/conf/common.conf covarage_build_server_host`
-	coverage_kr_usr=`ini ${CTP_HOME}/conf/common.conf coverage_build_server_usr`
-	coverage_kr_password=`ini ${CTP_HOME}/conf/common.conf coverage_build_server_pwd`
-	coverage_kr_port=`ini ${CTP_HOME}/conf/common.conf coverage_build_server_port`
-	coverage_kr_build_target_dir=`ini ${CTP_HOME}/conf/common.conf coverage_build_server_target_dir`
+	coverage_kr_host=`ini ${CTP_HOME}/conf/coverage.conf covarage_build_server_kr_host`
+	coverage_kr_usr=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_usr`
+	coverage_kr_password=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_pwd`
+	coverage_kr_port=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_port`
+	coverage_kr_build_target_dir=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_target_dir`
 
-        coverage_cn_host="$MKEY_TARGET_IP"
-        coverage_cn_usr="$MKEY_TARGET_USER"
-        coverage_cn_password="$MKEY_TARGET_PWD"
-        coverage_cn_port="$MKEY_TARGET_PORT"
+        coverage_cn_host=`ini ${CTP_HOME}/conf/coverage.conf covarage_build_server_cn_host`
+        coverage_cn_usr=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_cn_usr`
+        coverage_cn_password=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_cn_pwd`
+        coverage_cn_port=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_cn_port`
 	if [ ! "$coverage_cn_port" ];then
 		coverage_cn_port="22"
 	fi
