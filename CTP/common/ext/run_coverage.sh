@@ -30,6 +30,7 @@ build_home=$HOME/build
 binary_build_folder="_install"
 source_code_dir=""
 build_log=""
+cc4c_home_dir=""
 alias ini="sh ${CTP_HOME}/bin/ini.sh"
 
 function deploySource()
@@ -145,6 +146,48 @@ function packageBuildsAndUploadpackages()
    cd $curDir
 }
 
+function backupPackages()
+{
+   curDir=`pwd`
+   cc4c_home_dir=`ini ${CTP_HOME}/conf/coverage.conf coverage_cc4c_home`
+   if [ ! -d "$cc4c_home_dir" ];then
+        echo ""
+        echo "Please configure coverage_cc4c_home in ${CTP_HOME}/conf/coverage.conf"
+        exit -1
+   fi 
+
+   cd $cc4c_home_dir
+   if [ ! -d "result" ];then
+	mkdir -p "result"
+   fi
+   cd result
+   if [ ! -d "$BUILD_ID" ];then
+   	mkdir -p "$BUILD_ID"
+   fi
+
+   mkdir -p new
+   mkdir -p merge
+   mkdir -p manual 
+   
+   if [ -f "${source_code_dir}/cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz" ];then
+	cov_source_folder_full_name="${source_code_dir##*/}"
+	if [ -d "$cov_source_folder_full_name" ];then
+	   rm -rf $cov_source_folder_full_name
+        fi
+
+	mkdir -p $cov_source_folder_full_name
+        cd $cov_source_folder_full_name
+	cp ${source_code_dir}/cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz .
+        tar zvxfm "cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz"
+	rm "cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz"
+   else
+	echo ""
+	echo "Please confirm your coverage source build is generated -> cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz"
+   fi
+    
+   cd $curDir
+}
+
 #=====
 # MAIN
 # Deploy the source code
@@ -155,3 +198,7 @@ doCompile
 
 # Generate packages for the coverage build
 packageBuildsAndUploadpackages
+
+# Backup coverage packages
+backupPackages
+
