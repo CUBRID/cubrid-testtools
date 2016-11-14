@@ -165,6 +165,8 @@ function backupPackages()
    	mkdir -p "$BUILD_ID"
    fi
 
+   cd $BUILD_ID
+
    mkdir -p new
    mkdir -p merge
    mkdir -p manual 
