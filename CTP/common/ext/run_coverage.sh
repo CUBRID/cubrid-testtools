@@ -114,9 +114,6 @@ function packageBuildsAndUploadpackages()
 	cov_binary_package_name="CUBRID-${BUILD_ID}-gcov-linux.x86_64.tar.gz"
 	cov_source_package_name="cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz"
 
-        cd $source_code_dir
-	tar zvcf $cov_source_package_name . 2>&1 >> $build_log
-    
 	coverage_kr_host=`ini ${CTP_HOME}/conf/coverage.conf covarage_build_server_kr_host`
 	coverage_kr_usr=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_usr`
 	coverage_kr_password=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_pwd`
@@ -133,15 +130,18 @@ function packageBuildsAndUploadpackages()
         coverage_cn_build_target_dir="$BUILD_ABSOLUTE_PATH"
 
 	
+        cd $source_code_dir
+	tar zvcf $cov_source_package_name . 2>&1 >> $build_log
 
         run_remote_script -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -c "cd ${coverage_kr_build_target_dir};mkdir -p ${BUILD_ID}/drop;"
         run_upload -from "$cov_source_package_name" -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -to "$coverage_kr_build_target_dir/${BUILD_ID}/drop"
+        run_upload -from "$cov_source_package_name" -user "$coverage_cn_usr" -password "$coverage_cn_password" -host "$coverage_cn_host" -port "$coverage_cn_port" -to "$BUILD_ABSOLUTE_PATH"
         	
         cd ${build_home}/${binary_build_folder}
         tar zvcf $cov_binary_package_name . 2>&1 >> $build_log
 
         run_upload -from "$cov_binary_package_name" -user "$coverage_cn_usr" -password "$coverage_cn_password" -host "$coverage_cn_host" -port "$coverage_cn_port" -to "$BUILD_ABSOLUTE_PATH"
-        run_upload -from "$cov_source_package_name" -user "$coverage_cn_usr" -password "$coverage_cn_password" -host "$coverage_cn_host" -port "$coverage_cn_port" -to "$BUILD_ABSOLUTE_PATH"
+        run_upload -from "$cov_binary_package_name" -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -to "$coverage_kr_build_target_dir/${BUILD_ID}/drop"
   fi
    cd $curDir
 }
