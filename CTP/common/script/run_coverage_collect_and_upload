@@ -121,18 +121,9 @@ function collectCoverage()
            cd $build_home/${srcFolder}
       fi
 
-      cc_dir=`which run_coverage_collect_and_upload`
-      gcov_dir=
-      if [ "$cc_dir" ]
-      then
-     cubrid_common_dir=${cc_dir%/*}
-           gcov_dir=$cubrid_common_dir/gcov/gcov
-      else
-     gcov_dir=`which gcov`
-      fi
-
       rm -rf *.lcov
-      lcov --gcov-tool=${gcov_dir}  -d . -c -t "cubrid" -o cubrid_o.lcov --rc geninfo_adjust_src_path="$HOME => /home/cov"
+      chmod 755 ${CTP_HOME}/common/gcov/gcov 
+      lcov --gcov-tool=${CTP_HOME}/common/gcov/gcov  -d . -c -t "cubrid" -o cubrid_o.lcov --rc geninfo_adjust_src_path="$HOME => /home/cov"
       tStamp=`date '+%Y%m%d%H%M%s'`
       host_name=`hostname -s`
       lcov_data_name="cubrid_[${category}]_${USER}-${host_name}_${tStamp}.lcov"
