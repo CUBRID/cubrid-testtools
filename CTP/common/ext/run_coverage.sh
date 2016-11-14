@@ -131,6 +131,7 @@ function packageBuildsAndUploadpackages()
 
 	
         cd $source_code_dir
+	echo "COVERAGE_CONTROLLER=$HOME" > COVERAGE_CONTROLLER.TXT
 	tar zvcf $cov_source_package_name . 2>&1 >> $build_log
 
         run_remote_script -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -c "cd ${coverage_kr_build_target_dir};mkdir -p ${BUILD_ID}/drop;"

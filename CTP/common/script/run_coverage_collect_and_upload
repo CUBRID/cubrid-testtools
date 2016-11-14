@@ -32,7 +32,7 @@ from=
 user=
 passwd=
 host=
-port=
+port=14024
 to=
 lcov_data_name=
 allParams=$@
@@ -115,15 +115,16 @@ function collectCoverage()
       srcFolder="cubrid-${buildId}"
       if [ !"$build_home" ]
       then
-     goToInstallationDirectory
-     cd build/${srcFolder}
+     	   goToInstallationDirectory
+    	   cd build/${srcFolder}
       else
            cd $build_home/${srcFolder}
       fi
 
       rm -rf *.lcov
       chmod 755 ${CTP_HOME}/common/gcov/gcov 
-      lcov --gcov-tool=${CTP_HOME}/common/gcov/gcov  -d . -c -t "cubrid" -o cubrid_o.lcov --rc geninfo_adjust_src_path="$HOME => /home/cov"
+      target_home=`cat COVERAGE_CONTROLLER.TXT|grep COVERAGE_CONTROLLER|awk -F '=' '{print $2}'`
+      lcov --gcov-tool=${CTP_HOME}/common/gcov/gcov  -d . -c -t "cubrid" -o cubrid_o.lcov --rc geninfo_adjust_src_path="$HOME => ${target_home}"
       tStamp=`date '+%Y%m%d%H%M%s'`
       host_name=`hostname -s`
       lcov_data_name="cubrid_[${category}]_${USER}-${host_name}_${tStamp}.lcov"
@@ -138,7 +139,7 @@ function uploadResult()
    srcFolder="cubrid-${buildId}"
    if [ !"$build_home" ]
    then
-  goToInstallationDirectory
+        goToInstallationDirectory
         cd build/${srcFolder}
    else
     cd $build_home/${srcFolder}
