@@ -24,16 +24,18 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+alias ini="sh ${CTP_HOME}/bin/ini.sh"
 
 build_home=
 buildId=
 category=
 from=
-user=
-passwd=
-host=
-port=14024
-to=
+coverage_controller_home=
+coverage_controller_host=
+coverage_controller_user=
+coverage_controller_port=
+coverage_controller_cc4c_home=
+
 lcov_data_name=
 allParams=$@
 
@@ -41,12 +43,7 @@ usage()
 {
     echo "Usage: `basename $0` -h=source directory;
                                -n=build number;
-                               -c=test category;
-                               -user=username for target;
-                               -pwd=password for target;
-                               -host=target ip;
-             -port=ssh port
-                               -to=target directory;"
+                               -c=test category;"
     exit 1
 }
 
@@ -70,26 +67,6 @@ while [ $# -ne 0 ];do
                         shift
                 category=$1
                 ;;
-    -user)
-      shift
-    user="$1"
-    ;;
-    -pwd)
-      shift
-    passwd="$1"
-    ;;
-    -host)
-      shift
-    host="$1"
-    ;;
-    -port)
-      shift
-    port="$1"
-    ;;
-    -to)
-      shift
-    to="$1"
-    ;;
         esac
         shift
 done
@@ -112,6 +89,7 @@ function goToInstallationDirectory()
 function collectCoverage()
 {
       curDir=`pwd`
+      
       srcFolder="cubrid-${buildId}"
       if [ !"$build_home" ]
       then
@@ -120,11 +98,17 @@ function collectCoverage()
       else
            cd $build_home/${srcFolder}
       fi
-
+      
       rm -rf *.lcov
       chmod 755 ${CTP_HOME}/common/gcov/gcov 
-      target_home=`cat COVERAGE_CONTROLLER.TXT|grep COVERAGE_CONTROLLER|awk -F '=' '{print $2}'`
-      lcov --gcov-tool=${CTP_HOME}/common/gcov/gcov  -d . -c -t "cubrid" -o cubrid_o.lcov --rc geninfo_adjust_src_path="$HOME => ${target_home}"
+      coverage_controller_home=`ini coverage.conf coverage_controller_home`
+      coverage_controller_host=`ini coverage.conf coverage_controller_host`
+      coverage_controller_user=`ini coverage.conf coverage_controller_user`
+      coverage_controller_port=`ini coverage.conf coverage_controller_port`
+      coverage_controller_pwd=`ini ${CTP_HOME}/conf/common.conf coverage_controller_pwd`
+      coverage_controller_cc4c_home=`ini coverage.conf coverage_controller_cc4c_home`
+      
+      lcov --gcov-tool=${CTP_HOME}/common/gcov/gcov  -d . -c -t "cubrid" -o cubrid_o.lcov --rc geninfo_adjust_src_path="$HOME => ${coverage_controller_home}"
       tStamp=`date '+%Y%m%d%H%M%s'`
       host_name=`hostname -s`
       lcov_data_name="cubrid_[${category}]_${USER}-${host_name}_${tStamp}.lcov"
@@ -145,8 +129,8 @@ function uploadResult()
     cd $build_home/${srcFolder}
    fi
 
-   run_upload -from ${lcov_data_name} -user "$user" -password "$passwd" -host "$host" -port "$port" -to "$to"
-   run_remote_script -from -user "$user" -password "$passwd" -host "$host" -port "$port" -c "cd ${to}; echo ${lcov_data_name} >${lcov_data_name}.info"
+   run_upload -from ${lcov_data_name} -user "$coverage_controller_user" -password "$coverage_controller_pwd" -host "$coverage_controller_host" -port "$coverage_controller_port" -to "${coverage_controller_cc4c_home}/result/${buildId}/new"
+   run_remote_script -from -user "$coverage_controller_user" -password "$coverage_controller_pwd" -host "$coverage_controller_host" -port "$coverage_controller_port" -c "cd ${coverage_controller_cc4c_home}/result/${buildId}/new; echo ${lcov_data_name} >${lcov_data_name}.info"
    cd - $curDir
    echo UPLOAD `date '+%Y%m%d%H%M%s'` ${allParams} >> $HOME/.qacoverage
 
