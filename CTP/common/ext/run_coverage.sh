@@ -41,28 +41,34 @@ function deploySource()
   then
 	cd $build_home
         buildID=${BUILD_ID}
-        prefixBuildId=${buildID%.*}
-        branchSrcFolder="cubrid-${prefixBuildId}"
-	mkdir -p $branchSrcFolder
 	mkdir -p $binary_build_folder
 	rm -rf $binary_build_folder/* > /dev/null
 	
-	cd $branchSrcFolder
-        wget $BUILD_URLS
 	
         buildPackageName=${BUILD_URLS##*/}
-	if [ -d "$buildPackageName" ];then
-	   rm -rf $buildPackageName
+	source_build_full_name=${buildPackageName%.tar*}
+        if [ -d "$source_build_full_name" ];then
+	    rm -rf $source_build_full_name
+	fi
+	
+	if [ -f "$buildPackageName" ];then
+	    rm $buildPackageName
+	fi
+	
+        wget $BUILD_URLS
+	if [ $? -eq 0 ];then
 	   tar zvxf ${buildPackageName} -C .
 	else
-	   tar zvxf ${buildPackageName} -C .
+	   echo ""
+	   echo "Please confirm your build url($BUILD_URLS) is available!"
+	   exit -1
 	fi
 
 	if [ -f "$buildPackageName" ];then
 	   rm $buildPackageName
 	fi
-	source_build_full_name=${buildPackageName%.tar*}
-	source_code_dir=${build_home}/${branchSrcFolder}/${source_build_full_name}
+	
+	source_code_dir=${build_home}/${source_build_full_name}
 
   else
 	echo "Please confirm your branch in message is correct!"
