@@ -290,9 +290,9 @@ function checkEnvironmentVariable()
           sed -i '/GCOV_PREFIX/d' $HOME/.bash_profile
           echo "export GCOV_PREFIX=$HOME" >> $HOME/.bash_profile
           echo "export GCOV_PREFIX_STRIP=2" >> $HOME/.bash_profile
-          cd $HOME
-          source .bash_profile
      fi
+     cd $HOME
+     source .bash_profile
 
      cd $curDir
 }
@@ -334,26 +334,17 @@ function InstallBuildForCoverage()
     mkdir -p build
     cd build
     cov_source_file_name=${source_url##*/}
-    build_main_number=`echo $cov_source_file_name|awk -F '-' '{print $2}'`
-    build_prefix="${build_main_number%.*}"
-    branch_src_folder="cubrid-${build_prefix}"
     build_src_folder_full_name="${cov_source_file_name%-gcov*}" 
 	
-    if [ ! -d "$branch_src_folder" ];then
-	mkdir -p $branch_src_folder
-    fi
-
-    cd $branch_src_folder
     if [ -f "$cov_source_file_name" ];then
 	rm $cov_source_file_name  >/dev/null 2>&1
     fi
 
     if [ -d "$build_src_folder_full_name" ];then
         rm -rf $build_src_folder_full_name
-	mkdir -p $build_src_folder_full_name
-    else
-	mkdir -p $build_src_folder_full_name
     fi
+
+    mkdir -p $build_src_folder_full_name
 
     cd $build_src_folder_full_name
     wget -t 3 -T 120 $source_url
