@@ -105,6 +105,9 @@ function collectCoverage()
       coverage_controller_user=`sh ${CTP_HOME}/bin/ini.sh coverage.conf coverage_controller_user`
       coverage_controller_port=`sh ${CTP_HOME}/bin/ini.sh coverage.conf coverage_controller_port`
       coverage_controller_pwd=`sh ${CTP_HOME}/bin/ini.sh ${CTP_HOME}/conf/common.conf coverage_controller_pwd`
+      if [ ! "$coverage_controller_pwd" ];then
+	 coverage_controller_pwd=`sh ${CTP_HOME}/bin/ini.sh ${CTP_HOME}/conf/common.conf default_ssh_pwd`
+      fi
       coverage_controller_cc4c_home=`sh ${CTP_HOME}/bin/ini.sh coverage.conf coverage_controller_cc4c_home`
       
       lcov --gcov-tool=${CTP_HOME}/common/gcov/gcov  -d . -c -t "cubrid" -o cubrid_o.lcov --rc geninfo_adjust_src_path="$HOME => ${coverage_controller_home}"
