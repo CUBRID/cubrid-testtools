@@ -156,10 +156,10 @@ function packageBuildsAndUploadpackages()
 function backupPackages()
 {
    curDir=`pwd`
-   cc4c_home_dir=`ini ${CTP_HOME}/conf/coverage.conf coverage_cc4c_home`
+   cc4c_home_dir=`ini ${CTP_HOME}/conf/coverage.conf coverage_controller_cc4c_home`
    if [ ! -d "$cc4c_home_dir" ];then
         echo ""
-        echo "Please configure coverage_cc4c_home in ${CTP_HOME}/conf/coverage.conf"
+        echo "Please configure coverage_controller_cc4c_home in ${CTP_HOME}/conf/coverage.conf"
         exit -1
    fi 
 
