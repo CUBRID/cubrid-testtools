@@ -145,6 +145,7 @@ function packageBuildsAndUploadpackages()
         run_upload -from "$cov_source_package_name" -user "$coverage_cn_usr" -password "$coverage_cn_password" -host "$coverage_cn_host" -port "$coverage_cn_port" -to "$BUILD_ABSOLUTE_PATH"
         	
         cd ${build_home}/${binary_build_folder}
+	mkdir -p databases
         tar zvcf $cov_binary_package_name . 2>&1 >> $build_log
 
         run_upload -from "$cov_binary_package_name" -user "$coverage_cn_usr" -password "$coverage_cn_password" -host "$coverage_cn_host" -port "$coverage_cn_port" -to "$BUILD_ABSOLUTE_PATH"
