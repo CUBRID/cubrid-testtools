@@ -41,28 +41,34 @@ function deploySource()
   then
 	cd $build_home
         buildID=${BUILD_ID}
-        prefixBuildId=${buildID%.*}
-        branchSrcFolder="cubrid-${prefixBuildId}"
-	mkdir -p $branchSrcFolder
 	mkdir -p $binary_build_folder
 	rm -rf $binary_build_folder/* > /dev/null
 	
-	cd $branchSrcFolder
-        wget $BUILD_URLS
 	
         buildPackageName=${BUILD_URLS##*/}
-	if [ -d "$buildPackageName" ];then
-	   rm -rf $buildPackageName
+	source_build_full_name=${buildPackageName%.tar*}
+        if [ -d "$source_build_full_name" ];then
+	    rm -rf $source_build_full_name
+	fi
+	
+	if [ -f "$buildPackageName" ];then
+	    rm $buildPackageName
+	fi
+	
+        wget $BUILD_URLS
+	if [ $? -eq 0 ];then
 	   tar zvxf ${buildPackageName} -C .
 	else
-	   tar zvxf ${buildPackageName} -C .
+	   echo ""
+	   echo "Please confirm your build url($BUILD_URLS) is available!"
+	   exit -1
 	fi
 
 	if [ -f "$buildPackageName" ];then
 	   rm $buildPackageName
 	fi
-	source_build_full_name=${buildPackageName%.tar*}
-	source_code_dir=${build_home}/${branchSrcFolder}/${source_build_full_name}
+	
+	source_code_dir=${build_home}/${source_build_full_name}
 
   else
 	echo "Please confirm your branch in message is correct!"
@@ -111,8 +117,8 @@ function packageBuildsAndUploadpackages()
    build_succ=`cat $build_log|grep "\[OK\] Building"|wc -l`
    install_ok=`cat $build_log|grep "\[OK\] Installing"|wc -l`
    if [ $build_succ -ne 0 -a $install_ok -ne 0 ];then
-	cov_binary_package_name="CUBRID-${BUILD_ID}-gcov-linux.x86_64.tar.gz"
-	cov_source_package_name="cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz"
+	cov_binary_package_name="CUBRID-${BUILD_ID}-gcov-Linux.x86_64.tar.gz"
+	cov_source_package_name="cubrid-${BUILD_ID}-gcov-src-Linux.x86_64.tar.gz"
 
 	coverage_kr_host=`ini ${CTP_HOME}/conf/coverage.conf covarage_build_server_kr_host`
 	coverage_kr_usr=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_usr`
@@ -131,6 +137,7 @@ function packageBuildsAndUploadpackages()
 
 	
         cd $source_code_dir
+	cat ${CTP_HOME}/conf/coverage.conf |grep -v '_pwd' > ./coverage.conf
 	tar zvcf $cov_source_package_name . 2>&1 >> $build_log
 
         run_remote_script -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -c "cd ${coverage_kr_build_target_dir};mkdir -p ${BUILD_ID}/drop;"
@@ -149,10 +156,10 @@ function packageBuildsAndUploadpackages()
 function backupPackages()
 {
    curDir=`pwd`
-   cc4c_home_dir=`ini ${CTP_HOME}/conf/coverage.conf coverage_cc4c_home`
+   cc4c_home_dir=`ini ${CTP_HOME}/conf/coverage.conf coverage_controller_cc4c_home`
    if [ ! -d "$cc4c_home_dir" ];then
         echo ""
-        echo "Please configure coverage_cc4c_home in ${CTP_HOME}/conf/coverage.conf"
+        echo "Please configure coverage_controller_cc4c_home in ${CTP_HOME}/conf/coverage.conf"
         exit -1
    fi 
 
@@ -171,7 +178,7 @@ function backupPackages()
    mkdir -p merge
    mkdir -p manual 
    
-   if [ -f "${source_code_dir}/cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz" ];then
+   if [ -f "${source_code_dir}/cubrid-${BUILD_ID}-gcov-src-Linux.x86_64.tar.gz" ];then
 	cov_source_folder_full_name="${source_code_dir##*/}"
 	if [ -d "$cov_source_folder_full_name" ];then
 	   rm -rf $cov_source_folder_full_name
@@ -179,12 +186,12 @@ function backupPackages()
 
 	mkdir -p $cov_source_folder_full_name
         cd $cov_source_folder_full_name
-	cp ${source_code_dir}/cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz .
-        tar zvxfm "cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz"
-	rm "cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz"
+	cp ${source_code_dir}/cubrid-${BUILD_ID}-gcov-src-Linux.x86_64.tar.gz .
+        tar zvxfm "cubrid-${BUILD_ID}-gcov-src-Linux.x86_64.tar.gz"
+	rm "cubrid-${BUILD_ID}-gcov-src-Linux.x86_64.tar.gz"
    else
 	echo ""
-	echo "Please confirm your coverage source build is generated -> cubrid-${BUILD_ID}-gcov-src-linux.x86_64.tar.gz"
+	echo "Please confirm your coverage source build is generated -> cubrid-${BUILD_ID}-gcov-src-Linux.x86_64.tar.gz"
    fi
     
    cd $curDir
