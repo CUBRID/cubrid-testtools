@@ -75,14 +75,35 @@ public class SFTP {
 	}
 
 	public void mkdir(String path) throws SftpException {
+		if (path == null)
+			return;
 		try {
 			sftp.mkdir(path);
 		} catch (SftpException e) {
 			e.printStackTrace();
 		}
+		sftp.cd(path);
+	}
+
+	public void mkdirs(String path) throws SftpException {
+		if (path == null)
+			return;
+		String[] arr = path.split("/");
+		for (String sub : arr) {
+			if (sub.equals(".") || sub.equals("")) {
+				continue;
+			}
+			try {
+				sftp.mkdir(sub);
+			} catch (Exception e) {
+			}
+			sftp.cd(sub);
+		}
 	}
 
 	public void cd(String path) throws SftpException {
+		if (path == null)
+			return;
 		sftp.cd(path);
 	}
 
@@ -97,31 +118,5 @@ public class SFTP {
 	public void close() {
 		sftp.disconnect();
 		sftp.exit();
-	}
-
-	public static void main(String[] args) throws Exception {
-		SSHConnect ssh1 = new SSHConnect("10.34.64.58", 22, "cubrid_daily", "PG%RB*12");
-		SSHConnect ssh2 = new SSHConnect("10.34.64.58", 22, "xdbms", "PG%RB*12");
-		SFTP sftp2 = ssh2.createSFTP();
-
-		// sftp1.copy("CUBRID/conf/*.conf", "fanzq", ssh2);
-		// sftp1.copy("CUBRID/databases/databases.txt", "fanzq", ssh2);
-
-		sftp2.mkdir("fanzq");
-		sftp2.cd("fanzq");
-		sftp2.mkdir("fanzq");
-		sftp2.cd("fanzq");
-
-		sftp2.mkdir("fanzq");
-		sftp2.cd("fanzq");
-
-		sftp2.mkdir("fanzq");
-		sftp2.cd("fanzq");
-
-		sftp2.upload("tmp\\databases.txt");
-
-		sftp2.close();
-		ssh1.close();
-		ssh2.close();
 	}
 }
