@@ -38,6 +38,12 @@ public class ConfigParameterConstants {
 	// Environment variables
 	public static final String CTP_SKIP_UPDATE = "CTP_SKIP_UPDATE";
 	public static final String CTP_BRANCH_NAME = "CTP_BRANCH_NAME";
+	public static final String CTP_DEBUG_ENABLE = "CTP_DEBUG_ENABLE";
+	public static final String CTP_PROXY_HOST = "CTP_PROXY_HOST";
+	public static final String CTP_PROXY_PORT = "CTP_PROXY_PORT";
+	public static final String CTP_PROXY_USER = "CTP_PROXY_USER";
+	public static final String CTP_PROXY_PASSWORD = "CTP_PROXY_PASSWORD";
+	public static final String CTP_PROXY_PRIORITY = "CTP_PROXY_PRIORITY";
 
 	// CUBRID installation and configuration parameters
 	public static final String CUBRID_INSTALL_ROLE = "cubrid_install_role";
