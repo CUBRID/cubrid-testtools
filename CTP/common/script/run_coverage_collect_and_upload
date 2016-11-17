@@ -34,6 +34,9 @@ coverage_controller_host=
 coverage_controller_user=
 coverage_controller_port=
 coverage_controller_cc4c_home=
+coverage_controller_proxy_host=
+coverage_controller_proxy_user=
+coverage_controller_proxy_port=
 
 lcov_data_name=
 allParams=$@
@@ -104,6 +107,9 @@ function collectCoverage()
       coverage_controller_host=`sh ${CTP_HOME}/bin/ini.sh coverage.conf coverage_controller_host`
       coverage_controller_user=`sh ${CTP_HOME}/bin/ini.sh coverage.conf coverage_controller_user`
       coverage_controller_port=`sh ${CTP_HOME}/bin/ini.sh coverage.conf coverage_controller_port`
+      coverage_controller_proxy_host=`sh ${CTP_HOME}/bin/ini.sh coverage.conf coverage_controller_proxy_host`
+      coverage_controller_proxy_user=`sh ${CTP_HOME}/bin/ini.sh coverage.conf coverage_controller_proxy_user`
+      coverage_controller_proxy_port=`sh ${CTP_HOME}/bin/ini.sh coverage.conf coverage_controller_proxy_port`
       coverage_controller_pwd=`sh ${CTP_HOME}/bin/ini.sh ${CTP_HOME}/conf/common.conf coverage_controller_pwd`
       if [ ! "$coverage_controller_pwd" ];then
 	 coverage_controller_pwd=`sh ${CTP_HOME}/bin/ini.sh ${CTP_HOME}/conf/common.conf default_ssh_pwd`
@@ -131,8 +137,9 @@ function uploadResult()
     cd $build_home/${srcFolder}
    fi
 
-   run_upload -from ${lcov_data_name} -user "$coverage_controller_user" -password "$coverage_controller_pwd" -host "$coverage_controller_host" -port "$coverage_controller_port" -to "${coverage_controller_cc4c_home}/result/${buildId}/new"
-   run_remote_script -from -user "$coverage_controller_user" -password "$coverage_controller_pwd" -host "$coverage_controller_host" -port "$coverage_controller_port" -c "cd ${coverage_controller_cc4c_home}/result/${buildId}/new; echo ${lcov_data_name} >${lcov_data_name}.info"
+   run_upload -from ${lcov_data_name} -user "$coverage_controller_user" -password "$coverage_controller_pwd" -host "$coverage_controller_host" -port "$coverage_controller_port" --proxy-host "$coverage_controller_proxy_host" --proxy-user="$coverage_controller_proxy_user" --proxy-port="$coverage_controller_proxy_port" -to "${coverage_controller_cc4c_home}/result/${buildId}/new"
+   run_remote_script -from -user "$coverage_controller_user" -password "$coverage_controller_pwd" -host "$coverage_controller_host" -port "$coverage_controller_port" --proxy-host "$coverage_controller_proxy_host" --proxy-user="$coverage_controller_proxy_user" --proxy-por
+t="$coverage_controller_proxy_port" -c "cd ${coverage_controller_cc4c_home}/result/${buildId}/new; echo ${lcov_data_name} >${lcov_data_name}.info"
    cd - $curDir
    echo UPLOAD `date '+%Y%m%d%H%M%s'` ${allParams} >> $HOME/.qacoverage
 
