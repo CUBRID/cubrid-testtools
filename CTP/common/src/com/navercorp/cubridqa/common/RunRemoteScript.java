@@ -34,10 +34,9 @@ import org.apache.commons.cli.PosixParser;
 
 public class RunRemoteScript {
 
-	/**
-	 * @param args
-	 * @throws Exception
-	 */
+	private static boolean enableDebug = CommonUtils.convertBoolean(System.getenv(ConfigParameterConstants.CTP_DEBUG_ENABLE), false);
+	private static boolean skipProxy = false;
+
 	public static void main(String[] args) throws Exception {
 		Options options = new Options();
 		options.addOption("host", true, "Remote ssh host");
@@ -51,6 +50,13 @@ public class RunRemoteScript {
 		options.addOption("tillequals", true, "execute repeatedly till result equals some string");
 		options.addOption("maxattempts", true, "results equal some string. default: 200");
 		options.addOption("interval", true, "second(s) that refresh interval. default: 1");
+
+		options.addOption(null, "proxy-host", true, "Proxy ssh host");
+		options.addOption(null, "proxy-port", true, "Proxy ssh port");
+		options.addOption(null, "proxy-user", true, "Proxy ssh user");
+		options.addOption(null, "proxy-password", true, "Proxy ssh password");
+		options.addOption(null, "proxy-first", false, "Proxy first");
+
 		options.addOption("help", false, "List help");
 
 		CommandLineParser parser = null;
@@ -86,6 +92,85 @@ public class RunRemoteScript {
 
 		String sshUser = cmd.getOptionValue("user");
 		String sshPassword = cmd.getOptionValue("password");
+
+		String proxyHost = cmd.getOptionValue("proxy-host");
+		if (CommonUtils.isEmpty(proxyHost)) {
+			proxyHost = System.getenv(ConfigParameterConstants.CTP_PROXY_HOST);
+		}
+		String proxyPort = cmd.getOptionValue("proxy-port");
+		if (CommonUtils.isEmpty(proxyPort)) {
+			proxyPort = System.getenv(ConfigParameterConstants.CTP_PROXY_PORT);
+			if (CommonUtils.isEmpty(proxyPort)) {
+				proxyPort = "22";
+			}
+		}
+		String proxyUser = cmd.getOptionValue("proxy-user");
+		if (CommonUtils.isEmpty(proxyUser)) {
+			proxyUser = System.getenv(ConfigParameterConstants.CTP_PROXY_USER);
+			if (CommonUtils.isEmpty(proxyUser)) {
+				proxyUser = sshUser;
+			}
+		}
+		String proxyPwd = cmd.getOptionValue("proxy-password");
+		if (CommonUtils.isEmpty(proxyPwd)) {
+			proxyPwd = System.getenv(ConfigParameterConstants.CTP_PROXY_PASSWORD);
+			if (CommonUtils.isEmpty(proxyPwd)) {
+				proxyPwd = sshPassword;
+			}
+		}
+		boolean hasProxy = skipProxy == false && proxyHost != null && proxyHost.trim().equals("") == false;
+		if (hasProxy) {
+			if (cmd.hasOption("initfile") || cmd.hasOption("f")) {
+				hasProxy = false;
+			}
+		}
+		boolean proxyPriority = cmd.hasOption("proxy-first") || CommonUtils.convertBoolean(System.getenv(ConfigParameterConstants.CTP_PROXY_PRIORITY), false);
+
+		if ((hasProxy && proxyPriority) || (hasProxy && mayConnectDirectly(sshHost, sshPort, sshUser, sshPassword) == false)) {
+
+			if (enableDebug)
+				System.out.println("PROXY: local -> " + proxyUser + "@" + proxyHost + " -> " + sshUser + "@" + sshHost);
+
+			String proxyCmd = "run_remote_script -host " + sshHost + " -port " + sshPort + " -user " + sshUser + " -password " + sshPassword;
+			if (cmd.hasOption("initfile")) {
+				proxyCmd += " -initfile '" + cmd.getOptionValue("initfile") + "' ";
+			}
+			if (cmd.hasOption("c")) {
+				proxyCmd += " -c '" + cmd.getOptionValue("c") + "' ";
+			}
+			if (cmd.hasOption("f")) {
+				proxyCmd += " -f '" + cmd.getOptionValue("f") + "' ";
+			}
+			if (cmd.hasOption("tillcontains")) {
+				proxyCmd += " -tillcontains '" + cmd.getOptionValue("tillcontains") + "' ";
+			}
+			if (cmd.hasOption("tillequals")) {
+				proxyCmd += " -tillequals '" + cmd.getOptionValue("tillequals") + "' ";
+			}
+			if (cmd.hasOption("maxattempts")) {
+				proxyCmd += " -maxattempts '" + cmd.getOptionValue("maxattempts") + "' ";
+			}
+			if (cmd.hasOption("interval")) {
+				proxyCmd += " -interval '" + cmd.getOptionValue("interval") + "' ";
+			}
+
+			String[] remoteArgs = new String[10];
+			int i = 0;
+			remoteArgs[i++] = "-host";
+			remoteArgs[i++] = proxyHost;
+			remoteArgs[i++] = "-port";
+			remoteArgs[i++] = proxyPort;
+			remoteArgs[i++] = "-user";
+			remoteArgs[i++] = proxyUser;
+			remoteArgs[i++] = "-password";
+			remoteArgs[i++] = proxyPwd;
+			remoteArgs[i++] = "-c";
+			remoteArgs[i++] = proxyCmd;
+
+			skipProxy = true;
+			RunRemoteScript.main(remoteArgs);
+			return;
+		}
 
 		String scriptCmd = cmd.getOptionValue("c");
 		String scriptFile = null;
@@ -140,14 +225,12 @@ public class RunRemoteScript {
 			interval = Integer.parseInt(s);
 		}
 
-		boolean needLog = Boolean.parseBoolean(System.getProperty("main.need.debug.info", "false"));
-
 		SSHConnect ssh = null;
 		ShellInput input = null;
 		ArrayList<String> list;
 		String result = null;
 		try {
-			ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword, needLog);
+			ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword, enableDebug);
 			input = new ShellInput("");
 
 			if (initFile != null && initFile.trim().equals("") == false) {
@@ -196,6 +279,26 @@ public class RunRemoteScript {
 			if (ssh != null)
 				ssh.close();
 		}
+	}
+
+	private static boolean mayConnectDirectly(String sshHost, String sshPort, String sshUser, String sshPassword) {
+		SSHConnect ssh = null;
+
+		try {
+			ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword, enableDebug);
+
+			String hello = ssh.execute(new ShellInput("echo OOO${NOT_EXIST}KKK"));
+			if (hello.trim().equals("OOOKKK")) {
+				if (enableDebug)
+					System.out.println("SSH CONNECTED + " + sshHost);
+				return true;
+			}
+		} catch (Exception e) {
+		} finally {
+			if (ssh != null)
+				ssh.close();
+		}
+		return false;
 	}
 
 	private static void showHelp(String error, Options options) {
