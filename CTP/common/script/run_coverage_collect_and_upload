@@ -138,8 +138,7 @@ function uploadResult()
    fi
 
    run_upload -from ${lcov_data_name} -user "$coverage_controller_user" -password "$coverage_controller_pwd" -host "$coverage_controller_host" -port "$coverage_controller_port" --proxy-host "$coverage_controller_proxy_host" --proxy-user="$coverage_controller_proxy_user" --proxy-port="$coverage_controller_proxy_port" -to "${coverage_controller_cc4c_home}/result/${buildId}/new"
-   run_remote_script -from -user "$coverage_controller_user" -password "$coverage_controller_pwd" -host "$coverage_controller_host" -port "$coverage_controller_port" --proxy-host "$coverage_controller_proxy_host" --proxy-user="$coverage_controller_proxy_user" --proxy-por
-t="$coverage_controller_proxy_port" -c "cd ${coverage_controller_cc4c_home}/result/${buildId}/new; echo ${lcov_data_name} >${lcov_data_name}.info"
+   run_remote_script -user "$coverage_controller_user" -password "$coverage_controller_pwd" -host "$coverage_controller_host" -port "$coverage_controller_port" --proxy-host "$coverage_controller_proxy_host" --proxy-user="$coverage_controller_proxy_user" --proxy-port="$coverage_controller_proxy_port" -c "cd ${coverage_controller_cc4c_home}/result/${buildId}/new; echo ${lcov_data_name} >${lcov_data_name}.info"
    cd - $curDir
    echo UPLOAD `date '+%Y%m%d%H%M%s'` ${allParams} >> $HOME/.qacoverage
 
