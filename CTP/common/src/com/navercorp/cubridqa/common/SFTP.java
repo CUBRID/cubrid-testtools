@@ -28,6 +28,7 @@ import java.io.File;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 
 public class SFTP {
@@ -88,6 +89,9 @@ public class SFTP {
 	public void mkdirs(String path) throws SftpException {
 		if (path == null)
 			return;
+		if (path.startsWith("/")) {
+			cd("/");
+		}
 		String[] arr = path.split("/");
 		for (String sub : arr) {
 			if (sub.equals(".") || sub.equals("")) {
@@ -112,7 +116,20 @@ public class SFTP {
 	}
 
 	public void upload(String localFile, String remoteFile) throws Exception {
-		sftp.put(localFile, remoteFile);
+		if (CommonUtils.isEmpty(remoteFile)) {
+			upload(localFile);
+		} else {
+			sftp.put(localFile, remoteFile);
+		}
+	}
+	
+	public boolean existDir(String to) {
+		try{
+			SftpATTRS att = sftp.stat(to);
+			return att.isDir();
+		} catch(Exception e) {
+			return false;
+		}
 	}
 
 	public void close() {

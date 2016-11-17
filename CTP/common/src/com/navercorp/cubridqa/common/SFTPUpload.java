@@ -116,11 +116,10 @@ public class SFTPUpload {
 		}
 
 		boolean proxyPriority = cmd.hasOption("proxy-first") || CommonUtils.convertBoolean(System.getenv(ConfigParameterConstants.CTP_PROXY_PRIORITY), false);
-
+		boolean hasProxy = proxyHost != null && proxyHost.trim().equals("") == false;
+		
 		String from = cmd.getOptionValue("from");
 		String to = cmd.hasOption("to") ? cmd.getOptionValue("to") : ".";
-
-		boolean hasProxy = proxyHost != null && proxyHost.trim().equals("") == false;
 
 		boolean succ = false;
 		if (hasProxy == false || proxyPriority == false) {
@@ -178,10 +177,12 @@ public class SFTPUpload {
 			sftp = ssh.createSFTP();
 
 			if (isFolder == false) {
-				String dir = getDir(to);
-				String fn = getFn(to);
-				sftp.mkdirs(dir);
-				sftp.upload(fromFile.getCanonicalPath(), fn);
+				if (sftp.existDir(to)) {
+					sftp.upload(fromFile.getCanonicalPath(), to);
+				} else {
+					sftp.mkdirs(getDir(to));
+					sftp.upload(fromFile.getCanonicalPath(), getFn(to));
+				}				
 				System.out.println("[INFO] upload done");
 			} else {
 				String pkgName = null;
