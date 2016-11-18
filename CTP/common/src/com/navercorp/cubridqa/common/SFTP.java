@@ -132,6 +132,15 @@ public class SFTP {
 		}
 	}
 
+	public boolean existFile(String to) {
+		try {
+			SftpATTRS att = sftp.stat(to);
+			return att.isDir() == false;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
 	public void close() {
 		sftp.disconnect();
 		sftp.exit();

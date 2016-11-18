@@ -36,6 +36,7 @@ import org.apache.commons.cli.PosixParser;
 public class SFTPUpload {
 
 	private static boolean enableDebug = CommonUtils.convertBoolean(System.getenv(ConfigParameterConstants.CTP_DEBUG_ENABLE), false);
+	private static String TOKEN = ".CTPPROXY";
 
 	public static void main(String[] args) throws Exception {
 		Options options = new Options();
@@ -117,14 +118,17 @@ public class SFTPUpload {
 
 		boolean proxyPriority = cmd.hasOption("proxy-first") || CommonUtils.convertBoolean(System.getenv(ConfigParameterConstants.CTP_PROXY_PRIORITY), false);
 		boolean hasProxy = proxyHost != null && proxyHost.trim().equals("") == false;
-		
+
 		String from = cmd.getOptionValue("from");
 		String to = cmd.hasOption("to") ? cmd.getOptionValue("to") : ".";
+
+		String pkgFrom = compressSources(from);
 
 		boolean succ = false;
 		if (hasProxy == false || proxyPriority == false) {
 			try {
-				upload(sshHost, sshPort, sshUser, sshPassword, from, to);
+				upload(sshHost, sshPort, sshUser, sshPassword, pkgFrom, to, false);
+				deleteLocalPkgTemp(pkgFrom);
 				succ = true;
 			} catch (Exception e) {
 				succ = false;
@@ -133,11 +137,11 @@ public class SFTPUpload {
 
 		if (hasProxy && succ == false) {
 			System.out.println("PROXY: local -> " + proxyUser + "@" + proxyHost + " -> " + sshUser + "@" + sshHost);
-			String proxyToFile = String.valueOf(new java.util.Date().getTime()) + ".data";
-			upload(proxyHost, proxyPort, proxyUser, proxyPwd, from, proxyToFile);
+			upload(proxyHost, proxyPort, proxyUser, proxyPwd, pkgFrom, ".", true);
+			deleteLocalPkgTemp(pkgFrom);
 
-			String proxyCmd = "run_upload -host " + sshHost + " -port " + sshPort + " -user " + sshUser + " -password " + sshPassword + " -from " + proxyToFile + " -to " + to;
-			proxyCmd += "; rm -rf " + proxyToFile + ";";
+			String proxyCmd = "run_upload -host " + sshHost + " -port " + sshPort + " -user " + sshUser + " -password " + sshPassword + " -from " + pkgFrom + " -to " + to;
+			proxyCmd += "; rm -rf " + pkgFrom + ";";
 			String[] remoteArgs = new String[10];
 			int i = 0;
 			remoteArgs[i++] = "-host";
@@ -155,73 +159,121 @@ public class SFTPUpload {
 		}
 	}
 
-	private static void upload(String sshHost, String sshPort, String sshUser, String sshPassword, String from, String to) throws IOException, Exception {
-		SSHConnect ssh = null;
-
-		File fromFile = new File(CommonUtils.getFixedPath(from));
-		boolean isFolder = fromFile.exists() && fromFile.isDirectory();
-		SFTP sftp = null;
-		String hello;
-
-		System.out.println("[INFO] START TO UPLOAD: " + from);
-
-		ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword, enableDebug);
-		hello = ssh.execute(new ShellInput("echo OOO${NOT_EXIST}KKK"));
-		if (hello.trim().equals("OOOKKK")) {
-			System.out.println("SSH CONNECTED + " + sshHost);
-		} else {
-			throw new Exception("Fail to connect to host: " + sshHost);
+	private static String compressSources(String from) throws IOException {
+		if (from.startsWith(TOKEN)) {
+			return from;
 		}
 
+		File fromFile = new File(CommonUtils.getFixedPath(from));
+		boolean isFolder = fromFile.isDirectory();
+		String fn = fromFile.getName().trim();
+		String pkgName = TOKEN + System.currentTimeMillis() + "_" + fn + "_" + (isFolder ? "D" : "F") + ".tar.gz";
+
+		StringBuffer script = new StringBuffer();
+		script.append("current_dir=`pwd`").append(";");
+		if (isFolder) {
+			script.append("cd " + from).append(";");
+			script.append("tar czvf " + "${current_dir}/" + pkgName + " .").append(";");
+		} else {
+			String dir = getDir(from);
+			if (CommonUtils.isEmpty(dir)) {
+				dir = ".";
+			}
+			script.append("cd " + dir).append(";");
+			script.append("tar czvf " + "${current_dir}/" + pkgName + " " + fn).append(";");
+		}
+
+		int shellType = CommonUtils.getShellType(false);
+		System.out.println("==> Files to upload: ");
+		LocalInvoker.exec(script.toString(), shellType, true);
+		return pkgName;
+	}
+
+	private static void deleteLocalPkgTemp(String from) {
+		if (!from.startsWith(TOKEN)) {
+			return;
+		}
+		int shellType = CommonUtils.getShellType(false);
+		LocalInvoker.exec("rm -rf " + from, shellType, true);
+	}
+
+	private static void upload(String sshHost, String sshPort, String sshUser, String sshPassword, String from, String to, boolean isProxy) throws IOException, Exception {
+		SSHConnect ssh = null;
+		SFTP sftp = null;
+
+		String oriFn = from.substring(from.indexOf("_") + 1, from.lastIndexOf(".tar.gz") - 2);
+		boolean isSourceDir = from.endsWith("D.tar.gz");
+		String hello;
+
 		try {
-			sftp = ssh.createSFTP();
-
-			if (isFolder == false) {
-				if (sftp.existDir(to)) {
-					sftp.upload(fromFile.getCanonicalPath(), to);
-				} else {
-					sftp.mkdirs(getDir(to));
-					sftp.upload(fromFile.getCanonicalPath(), getFn(to));
-				}				
-				System.out.println("[INFO] upload done");
+			ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword, enableDebug);
+			hello = ssh.execute(new ShellInput("echo OOO${NOT_EXIST}KKK"));
+			if (hello.trim().equals("OOOKKK")) {
+				System.out.println("SSH CONNECTED + " + sshUser + "@" + sshHost);
 			} else {
-				String pkgName = null;
-				StringBuffer scriptLocal;
-				ShellInput scriptRemote;
-				int shellType = CommonUtils.getShellType(false);
-
-				pkgName = ".UP_" + fromFile.getName().trim() + "_" + System.currentTimeMillis() + ".tar.gz";
-
-				scriptLocal = new StringBuffer();
-				scriptLocal.append("cd " + from).append(";");
-				scriptLocal.append("tar czvf " + "../" + pkgName + " .").append(";");
-				LocalInvoker.exec(scriptLocal.toString(), shellType, true);
-				System.out.println("[INFO] package done in local: " + pkgName);
-
-				scriptRemote = new ShellInput();
-				scriptRemote.addCommand("mkdir -p " + to);
-				ssh.execute(scriptRemote);
-				System.out.println("[INFO] create dest name done in remote: " + to);
-
-				sftp.upload(fromFile.getParentFile().getCanonicalPath() + "/" + pkgName, to);
-				System.out.println("[INFO] upload done");
-
-				scriptRemote = new ShellInput();
-				scriptRemote.addCommand("cd " + to);
-				scriptRemote.addCommand("tar xzvf " + pkgName);
-				scriptRemote.addCommand("rm -rf " + pkgName);
-				ssh.execute(scriptRemote);
-				System.out.println("[INFO] expand package done");
-
-				scriptLocal = new StringBuffer();
-				scriptLocal.append("cd " + from).append(";");
-				scriptLocal.append("rm -rf ../" + pkgName).append(";");
-				LocalInvoker.exec(scriptLocal.toString(), shellType, true);
-				System.out.println("[INFO] clean temporary files in local and remote");
+				throw new Exception("Fail to connect to host: " + sshHost);
 			}
 
-			System.out.println("DONE");
+			System.out.println("[INFO] START TO UPLOAD: " + oriFn);
+
+			sftp = ssh.createSFTP();
+			if (isProxy) {
+				sftp.upload(from, to);
+			} else {
+				boolean existDir = sftp.existDir(to);
+				boolean existFile = sftp.existFile(to);
+				ShellInput script = new ShellInput();
+				if (existDir) {
+					sftp.upload(from, to);
+
+					script.addCommand("cd " + to);
+					script.addCommand("tar xzvf " + from);
+					script.addCommand("rm -rf " + from);
+				} else if (existFile) {
+					String dir = getDir(to);
+					String fn = getFn(to);
+					if (CommonUtils.isEmpty(dir)) {
+						dir = ".";
+					} else {
+						dir = dir.trim();
+					}
+					if (fn != null) {
+						fn = fn.trim();
+					}
+
+					sftp.upload(from, dir);
+
+					if (isSourceDir) {
+						script.addCommand("cd " + dir);
+						if (CommonUtils.isEmpty(fn) == false && fn.equals(".") == false && fn.indexOf("..") == -1 && fn.equals("/") == false && fn.length() > 0) {
+							script.addCommand("rm -rf ./" + fn);
+							script.addCommand("mkdir " + fn);
+							script.addCommand("cd " + fn);
+							script.addCommand("tar xzvf ../" + from);
+							script.addCommand("rm -rf ../" + from);
+						}
+					} else {
+						script.addCommand("cd " + dir);
+						script.addCommand("tar xzvf " + from);
+						script.addCommand("mv " + fn + " " + oriFn);
+						script.addCommand("rm -rf " + from);
+					}
+
+				} else {
+					sftp.mkdirs(to);
+					sftp.upload(from, ".");
+					script.addCommand("cd " + to);
+					script.addCommand("tar xzvf " + from);
+					script.addCommand("rm -rf " + from);
+				}
+				ssh.execute(script);
+			}
+
+			System.out.println("[INFO] upload done");
 		} finally {
+			if (sftp != null) {
+				sftp.close();
+			}
 			if (ssh != null)
 				ssh.close();
 		}
