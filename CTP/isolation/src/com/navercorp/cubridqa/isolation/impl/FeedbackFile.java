@@ -233,19 +233,14 @@ public class FeedbackFile implements Feedback {
 			println("[Code Coverage] Current Time is " + new Date());
 			feedbackLog.print("[Code Coverage] start code coverage data collection!");
 
-			String covHost = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_IP, "").trim();
-			String covUser = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_USER, "").trim();
-			String covPwd = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_PASSWORD, "").trim();
-			String covPort = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_PORT, "").trim();
-			String covTargetDir = context.getProperty(ConfigParameterConstants.COVERAGE_CONTROLLER_RESULT, "").trim();
 			String category = context.getTestCategory();
-			String covParams = "-n " + context.getBuildId() + " -c " + category + " -user " + covUser + " -pwd '" + covPwd + "' -host " + covHost + " -to " + covTargetDir + " -port " + covPort;
-			envIdentify = "EnvId=" + envIdentify + "[" + IsolationHelper.getTestNodeTitle(context, envIdentify) + "]";
+			String covParams = "-n " + context.getBuildId() + " -c " + category;
+			String envIdentifyTitle = "EnvId=" + envIdentify + "[" + IsolationHelper.getTestNodeTitle(context, envIdentify) + "]";
 			try {
 				ssh = IsolationHelper.createTestNodeConnect(context, envIdentify);
 
 				IsolationScriptInput scripts = new IsolationScriptInput();
-				scripts.addCommand("run_coverage_collect_and_upload " + covParams);
+				scripts.addCommand("run_coverage_collect_and_upload " + covParams + " 2>&1");
 				String result;
 				try {
 					result = ssh.execute(scripts);
@@ -260,8 +255,8 @@ public class FeedbackFile implements Feedback {
 					ssh.close();
 				}
 
-				println("[Code Coverage] end code coverage collection on " + envIdentify);
-				feedbackLog.print("[Code Coverage] end code coverage collection on " + envIdentify);
+				println("[Code Coverage] end code coverage collection on " + envIdentifyTitle);
+				feedbackLog.print("[Code Coverage] end code coverage collection on " + envIdentifyTitle);
 			}
 
 		}
