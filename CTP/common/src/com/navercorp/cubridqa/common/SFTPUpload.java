@@ -279,7 +279,7 @@ public class SFTPUpload {
 		}
 	}
 
-	private static String getDir(String fn) {
+	public static String getDir(String fn) {
 		if (fn == null)
 			return null;
 
@@ -293,7 +293,7 @@ public class SFTPUpload {
 		}
 	}
 
-	private static String getFn(String fn) {
+	public static String getFn(String fn) {
 		if (fn == null)
 			return null;
 
