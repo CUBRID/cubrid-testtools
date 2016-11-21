@@ -244,6 +244,7 @@ public class Test {
 			ssh.close();
 		isStopped = true;
 		shouldStop = true;
+		this.startTime = 0;
 	}
 
 	public void resetSSH() throws JSchException {

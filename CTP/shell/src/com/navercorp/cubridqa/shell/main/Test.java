@@ -371,6 +371,7 @@ public class Test {
 			ssh.close();
 		isStopped = true;
 		shouldStop = true;
+		this.startTime = -1;
 	}
 
 	public void resetCUBRID() {
