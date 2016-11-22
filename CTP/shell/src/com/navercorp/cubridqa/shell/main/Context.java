@@ -115,7 +115,7 @@ public class Context {
 		this.envMap = new HashMap<String, String>();
 
 		reload();
-		setLogDir("shell");
+		setLogDir(getResultName());
 
 		// to get msg id from environment variable
 		putEnvVriableIntoMapByKey("MSG_ID");
@@ -162,7 +162,7 @@ public class Context {
 		this.enableSkipUpdate = getPropertyFromEnv(ConfigParameterConstants.CTP_SKIP_UPDATE, "1");
 		this.ctpBranchName = getPropertyFromEnv(ConfigParameterConstants.CTP_BRANCH_NAME, "master");
 		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.FEEDBACK_DB_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO, "false").trim());
-		this.testCategory = getProperty(ConfigParameterConstants.TEST_CATEGORY, "shell").trim();
+		this.testCategory = getProperty(ConfigParameterConstants.TEST_CATEGORY, getResultName()).trim();
 	}
 
 	public void setLogDir(String category) {
@@ -538,5 +538,14 @@ public class Context {
 
 	public boolean isExecuteAtLocal() {
 		return isExecuteAtLocal;
+	}
+	
+	private String getResultName() {
+		String name = System.getProperty("TEST_CATEGORY");
+		if (CommonUtils.isEmpty(name)) {
+			return "shell";
+		} else {
+			return name;
+		}
 	}
 }

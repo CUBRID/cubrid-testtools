@@ -161,7 +161,10 @@ public class CTP {
 					executeSQL(getConfigData(taskLabel, configFilename, "sql_by_cci"), "sql_by_cci", interactiveMode, true);
 					break;
 				case SHELL:
-					executeShell(getConfigData(taskLabel, configFilename, "shell"), "shell");
+					executeShell(getConfigData(taskLabel, configFilename, "shell"), "shell", null);
+					break;
+				case RQG:
+					executeShell(getConfigData(taskLabel, configFilename, "rqg"), "rqg", "rqg");
 					break;
 				case ISOLATION:
 					executeIsolation(getConfigData(taskLabel, configFilename, "isolation"), "isolation");
@@ -216,8 +219,13 @@ public class CTP {
 		LocalInvoker.exec("sh ${CTP_HOME}/jdbc/bin/run.sh " + configFilePath, CommonUtils.getShellType(false), true);
 	}
 
-	private static void executeShell(IniData config, String suite) {
+	private static void executeShell(IniData config, String suite, String resultName) {
 		String jar = ctpHome + File.separator + "shell" + File.separator + "lib" + File.separator + "cubridqa-shell.jar";
+		
+		if (CommonUtils.isEmpty(resultName) == false) {
+			System.setProperty("TEST_CATEGORY", resultName);
+		}
+		
 		try {
 			URL url = new URL("file:" + jar);
 			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
