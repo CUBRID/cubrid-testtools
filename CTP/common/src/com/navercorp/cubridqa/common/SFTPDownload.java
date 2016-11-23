@@ -137,7 +137,7 @@ public class SFTPDownload {
 
 		if (hasProxy && succ == false) {
 			//System.out.println("PROXY: local -> " + proxyUser + "@" + proxyHost + " -> " + sshUser + "@" + sshHost);
-			String proxyCmd = "run_download -host " + sshHost + " -port " + sshPort + " -user " + sshUser + " -password " + sshPassword + " -from " + from + " -to " + pkgName;
+			String proxyCmd = "run_download -host " + sshHost + " -port " + sshPort + " -user " + sshUser + " -password " + sshPassword + " -from " + from + " -to " + pkgName + " 2>&1";
 			String[] remoteArgs = new String[10];
 			int i = 0;
 			remoteArgs[i++] = "-host";
@@ -150,6 +150,7 @@ public class SFTPDownload {
 			remoteArgs[i++] = proxyPwd;
 			remoteArgs[i++] = "-c";
 			remoteArgs[i++] = proxyCmd;
+			RunRemoteScript.skipProxy = true;
 			RunRemoteScript.main(remoteArgs);
 
 			download(proxyHost, proxyPort, proxyUser, proxyPwd, from, pkgName, true);
@@ -179,6 +180,7 @@ public class SFTPDownload {
 		script = new ShellInput();
 		script.addCommand("if [ -d " + from + " ]; then");
 		script.addCommand("		cd " + from);
+		script.addCommand("     echo DIR > FILE_TYPE");
 		script.addCommand("		tar czvf ~/" + pkgFrom + " .");
 		script.addCommand("fi");
 		script.addCommand("if [ -f " + from + " ]; then");
@@ -188,7 +190,8 @@ public class SFTPDownload {
 		}
 		String fn = SFTPUpload.getFn(from);
 		script.addCommand("		cd " + dir);
-		script.addCommand("		tar czvf ~/" + pkgFrom + " " + fn);
+		script.addCommand("     echo FILE> FILE_TYPE");
+		script.addCommand("		tar czvf ~/" + pkgFrom + " " + fn + " FILE_TYPE");
 		script.addCommand("fi");
 
 		String result = ssh.execute(script);
@@ -196,19 +199,52 @@ public class SFTPDownload {
 		System.out.println(result);
 	}
 
-	private static void expandSources(String pkgFrom, String to) {
+	private static void expandSources(String pkgFrom, String to) throws IOException {
 		if (to != null && to.startsWith(TOKEN)) {
 			return;
 		}
-		int shellType = CommonUtils.getShellType(false);
+		
+		String pkgFromWithoutExt = pkgFrom.substring(0, pkgFrom.lastIndexOf(".tar.gz"));
+		String dirForTo = SFTPUpload.getDir(to);
+		if (CommonUtils.isEmpty(dirForTo)) {
+			dirForTo = ".";
+		}
+		String fnForTo = SFTPUpload.getFn(to);
+		
 		StringBuilder script = new StringBuilder();
+		script.append("current_dir=" + CommonUtils.getLinuxStylePath(new File(".").getCanonicalPath())).append("\n");
+		script.append("cd ${current_dir}").append("\n");
+		script.append("mkdir " + pkgFromWithoutExt).append("\n");
+		script.append("cd " + pkgFromWithoutExt).append("\n");
+		script.append("tar xzvf ../" + pkgFrom).append("\n");
+		script.append("is_src_dir=`cat FILE_TYPE | grep DIR | wc -l`").append("\n");
+		script.append("rm -rf FILE_TYPE").append("\n");
+		script.append("cd ..").append("\n");
 		
-		script.append("current_dir=`pwd`").append(";");
-		script.append("if [ ! -d " + to + " ]; then mkdir -p " + to + "; fi").append(";");
-		script.append("cd " + to).append("; ");
-		script.append("tar xzvf ${current_dir}/" + pkgFrom).append(";");
-		script.append("rm -rf ${current_dir}/" + pkgFrom).append(";");
-		
+		script.append("if [ -d " + to + " ]; then").append("\n");
+		script.append("    mv ${current_dir}/" + pkgFromWithoutExt + "/* " + to + " ").append("\n");
+		script.append("elif [ -f " + to + " ]; then ").append("\n");
+		script.append("    if [ ${is_src_dir} -eq 1 ]; then").append("\n");
+		script.append("        cd " + dirForTo + "; rm -rf " + fnForTo + "; mkdir " + fnForTo).append("\n");
+		script.append("        mv ${current_dir}/" + pkgFromWithoutExt + "/* " + fnForTo + "/").append("\n");		
+		script.append("    else").append("\n");
+		script.append("        mv ${current_dir}/" + pkgFromWithoutExt + "/* " + to).append("\n");
+		script.append("    fi").append("\n");
+		script.append("else").append("\n");
+		script.append("    if [ ${is_src_dir} -eq 1 ]; then").append("\n");
+		script.append("        mkdir -p " + to).append("\n");
+		script.append("        mv ${current_dir}/" + pkgFromWithoutExt + "/* " + to + "/").append("\n");
+		script.append("    else").append("\n");
+		script.append("        mkdir -p " + dirForTo + " >/dev/null 2>&1").append("\n");
+		script.append("        mv ${current_dir}/" + pkgFromWithoutExt + "/* " + to).append("\n");
+		script.append("    fi").append("\n");
+		script.append("fi").append("\n");		
+		script.append("rm -rf ${current_dir}/" + pkgFromWithoutExt).append("\n");
+		script.append("rm -rf ${current_dir}/" + pkgFrom).append("\n");
+		if (enableDebug) {
+			System.out.println(script.toString());
+		}
+		int shellType = CommonUtils.getShellType(false);
 		LocalInvoker.exec(script.toString(), shellType, enableDebug);
 	}
 
@@ -223,6 +259,7 @@ public class SFTPDownload {
 			sftp = ssh.createSFTP();
 			sftp.download(pkgFrom, ".");
 			System.out.println("Download " + from + " from " + sshUser + "@" + sshHost);
+			ssh.execute(new ShellInput("rm -rf " + pkgFrom));
 		} finally {
 			if (ssh != null)
 				ssh.close();
