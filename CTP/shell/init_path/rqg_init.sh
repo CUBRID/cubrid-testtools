@@ -24,30 +24,6 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-function init()
-{
-    . $init_path/init.sh
-    init test
-
-    source $init_path/shell_utils.sh  
-    export RQG_YY_ZZ_HOME=`search_in_upper_path $cur_path files`
-}
-
-
-function search_directory_in_upper_path {
-   curr_path=$1
-   dest_folder_name=$2
-   if [ -d ${curr_path}/${dest_folder_name} ]; then
-       echo $(cd ${curr_path}/${dest_folder_name}; pwd)
-   else
-       if [ "$(cd ${curr_path}/..; pwd)" == "/" ]; then
-           return
-       else
-           search_in_upper_path ${curr_path}/.. ${dest_folder_name}
-       fi
-   fi
-}
-
 function get_dsn_url_with_autocommit_on()
 {
     db_name=$1
@@ -74,12 +50,12 @@ function delete_file()
     done
 }
 
-function rqg_pk_check()
+function rqg_check_constraint_unique()
 {
     name=$1
     db_name=$2
     if [ ! "$db_name" ];then
-	db_name="test"
+        db_name="test"
     fi
 
     csql -udba $db_name > temp 2>&1 <<CCCSQL
@@ -87,54 +63,23 @@ function rqg_pk_check()
 
 CCCSQL
 
-    columns=`grep 'PRIMARY KEY' temp|sed 's/.*(//g'|sed 's/)\s*//g'`
-    if [ "a"${columns} == "a" ]
-    then
-        return
-    fi
-    csql -u dba $db_name -c "select ${columns} from $name" >temp
-    sed -i '1,/===========/d' temp
-    sort temp|uniq >temp1
-    before=`cat temp|wc -l`
-    after=`cat temp1|wc -l`
-    if [ $before -ne $after ]
-    then
-        write_nok "violate unique constraint on pk"
-        return
-    fi
-
-    delete_file temp temp1
-}
-
-function rqg_unique_check()
-{
-    name=$1
-    db_name=$2
-    if [ ! "$db_name" ];then
-        db_name="test"
-    fi
-
-    sh csql.sh $db_name ";sc $name" >temp
-    grep '^\s*UNIQUE' temp|sed 's/.*(//g'|sed 's/)\s*//g' >column.log
+    grep 'PRIMARY KEY' temp|sed 's/.*(//g'|sed 's/)\s*//g' > columns.log
+    grep '^\s*UNIQUE' temp|sed 's/.*(//g'|sed 's/)\s*//g' >>column.log
     while read value
     do
-        csql -u dba $db_name -c "select ${value} from $name" >temp
-        sed -i '1,/===========/d' temp
-        sort temp|uniq >temp1
-        before=`cat temp|wc -l`
-        after=`cat temp1|wc -l`
-        if [ $before -ne $after ]
-        then
-            write_nok "violate unique constraint on pk"
-            return
+	hit_cnt=`csql -u dba ${db_name} -c "select 'NOK' from ${name} group by ${value} having count(*) >1" | wc -l`
+        if [ $hit_cnt -gt 0 ];then
+	      write_nok "Violate unique constraint on ${name}.${value}: $hit_cnt"
+        else  
+	      write_ok "${name}.${value}"	
         fi
     done < column.log
 
-    delete_file temp column.log temp1
+    delete_file temp column.log
 }
 
 
-function rqg_isNotNull_check()
+function rqg_check_constraint_notNull()
 {
     name=$1
     db_name=$2
@@ -142,31 +87,40 @@ function rqg_isNotNull_check()
         db_name="test"
     fi
 
-    sh csql.sh $db_name ";sc $name" >temp
+    csql -udba $db_name > temp 2>&1 <<CCCSQL
+;sc $name
+
+CCCSQL
+
     columns=`cat temp|grep 'NOT NULL'|awk '{print $1}'`
     for value in ${columns[*]}
     do
-       csql -u dba $db_name -c "select * from $name where $value IS NULL" >temp
-       if [ `grep '0 row selected' temp|wc -l` -ne 1 ]
-       then
-           write_nok "$value violate not null constraint"
-           cat temp
-           return
-       fi
+    	cnt=`csql -u dba $db_name -c "select 'CNT:'||count(*) from $name where $value IS NULL" | grep "CNT:0" | wc -l`
+	if [ $cnt -eq 0 ];then
+	     write_ok "${name}.${value}"
+        else
+	     write_nok "${name}.${value} violate not null constraint"
+        fi
+
     done
     
     delete_file temp
 }
 
 
-function rqg_fk_check()
+function rqg_check_constraint_fk()
 {
     name=$1
     db_name=$2
     if [ ! "$db_name" ];then
         db_name="test"
     fi
-    sh csql.sh $db_name ";sc $name" >temp
+    
+    csql -udba $db_name > temp 2>&1 <<CCCSQL
+;sc $name
+
+CCCSQL
+
     if [ `grep 'FOREIGN KEY' temp|wc -l` -eq 0 ]
     then
         return
@@ -199,7 +153,7 @@ function rqg_fk_check()
     delete_file temp temp1 child father 
 }
 
-function rqg_table_column_attribute_check()
+function rqg_check_constraint_all()
 {
     db_name=$1
     db_user=$2
@@ -215,16 +169,15 @@ function rqg_table_column_attribute_check()
     sed -n '/=============/,$p' tables.log|grep "^\s*'"|sed -e "s/^\s*'//g" -e "s/'\s*$//g" >tables
     while read tname
     do
-       rqg_pk_check $tname $db_name
-       rqg_isNotNull_check $tname $db_name
-       rqg_unique_check $tname $db_name
-       rqg_fk_check $tname $db_name
+       rqg_check_constraint_unique $tname $db_name
+       rqg_check_constraint_notnull $tname $db_name
+       rqg_check_constraint_fk $tname $db_name
     done <tables
 
     delete_file tables tables.log    
 }
 
-function rqg_createdb()
+function rqg_cubrid_createdb()
 {
     db_name=
     param_count=$#
@@ -321,7 +274,7 @@ function rqg_cubrid_start_server()
     done
 }
 
-function rqg_check_db()
+function rqg_cubrid_checkdb()
 {
    db_name=$1
    checkdb_options=""
@@ -346,7 +299,7 @@ function rqg_check_db()
 
 }
 
-function rqg_do_standAlone_vacuum()
+function rqg_cubrid_vacuumdb()
 {
    db_name=$1
    if [ ! "$db_name" ];then
@@ -370,4 +323,6 @@ function rqg_check_space()
 }
 
 
+cur_case_path=`pwd`
+export RQG_YY_ZZ_HOME=`search_in_upper_path $cur_case_path files`
 

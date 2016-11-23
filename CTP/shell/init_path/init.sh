@@ -690,7 +690,6 @@ function init
     fi
   fi
  
-  source $init_path/shell_utils.sh 
   export OS
 }
 
@@ -1448,4 +1447,4 @@ function AIX_NOT_SUPPORTED {
     return
 }
 
-
+source $init_path/shell_utils.sh
