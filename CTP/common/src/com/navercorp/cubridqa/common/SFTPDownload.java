@@ -137,7 +137,7 @@ public class SFTPDownload {
 
 		if (hasProxy && succ == false) {
 			//System.out.println("PROXY: local -> " + proxyUser + "@" + proxyHost + " -> " + sshUser + "@" + sshHost);
-			String proxyCmd = "run_download -host " + sshHost + " -port " + sshPort + " -user " + sshUser + " -password " + sshPassword + " -from " + from + " -to " + pkgName;
+			String proxyCmd = "run_download -host " + sshHost + " -port " + sshPort + " -user " + sshUser + " -password " + sshPassword + " -from " + from + " -to " + pkgName + " 2>&1";
 			String[] remoteArgs = new String[10];
 			int i = 0;
 			remoteArgs[i++] = "-host";
@@ -150,6 +150,7 @@ public class SFTPDownload {
 			remoteArgs[i++] = proxyPwd;
 			remoteArgs[i++] = "-c";
 			remoteArgs[i++] = proxyCmd;
+			RunRemoteScript.skipProxy = true;
 			RunRemoteScript.main(remoteArgs);
 
 			download(proxyHost, proxyPort, proxyUser, proxyPwd, from, pkgName, true);
@@ -258,6 +259,7 @@ public class SFTPDownload {
 			sftp = ssh.createSFTP();
 			sftp.download(pkgFrom, ".");
 			System.out.println("Download " + from + " from " + sshUser + "@" + sshHost);
+			ssh.execute(new ShellInput("rm -rf " + pkgFrom));
 		} finally {
 			if (ssh != null)
 				ssh.close();

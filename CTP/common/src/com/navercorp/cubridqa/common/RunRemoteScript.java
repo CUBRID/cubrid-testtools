@@ -35,7 +35,7 @@ import org.apache.commons.cli.PosixParser;
 public class RunRemoteScript {
 
 	private static boolean enableDebug = CommonUtils.convertBoolean(System.getenv(ConfigParameterConstants.CTP_DEBUG_ENABLE), false);
-	private static boolean skipProxy = false;
+	public static boolean skipProxy = false;
 
 	public static void main(String[] args) throws Exception {
 		Options options = new Options();
