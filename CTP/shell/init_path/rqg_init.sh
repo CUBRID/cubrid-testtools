@@ -30,8 +30,23 @@ function init()
     init test
 
     source $init_path/shell_utils.sh  
+    export RQG_YY_ZZ_HOME=`search_directory_in_upper_path $cur_path files`
 }
 
+
+function search_directory_in_upper_path {
+   curr_path=$1
+   dest_folder_name=$2
+   if [ -d ${curr_path}/${dest_folder_name} ]; then
+       echo $(cd ${curr_path}/${dest_folder_name}; pwd)
+   else
+       if [ "$(cd ${curr_path}/..; pwd)" == "/" ]; then
+           return
+       else
+           search_in_upper_path ${curr_path}/.. ${dest_folder_name}
+       fi
+   fi
+}
 
 function get_dsn_url_with_autocommit_on()
 {
