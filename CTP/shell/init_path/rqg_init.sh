@@ -30,7 +30,7 @@ function init()
     init test
 
     source $init_path/shell_utils.sh  
-    export RQG_YY_ZZ_HOME=`search_directory_in_upper_path $cur_path files`
+    export RQG_YY_ZZ_HOME=`search_in_upper_path $cur_path files`
 }
 
 
@@ -60,7 +60,7 @@ function get_dsn_url_with_autocommit_off()
 {
    db_name=$1
    port=$2
-   echo "dbi:cubrid:database=${db_name};host=localhost;port=${port};autocommit=on"
+   echo "dbi:cubrid:database=${db_name};host=localhost;port=${port};autocommit=off"
 }
 
 function delete_file()
@@ -82,7 +82,11 @@ function rqg_pk_check()
 	db_name="test"
     fi
 
-    sh csql.sh $db_name ";sc $name" >temp
+    csql -udba $db_name > temp 2>&1 <<CCCSQL
+;sc $name
+
+CCCSQL
+
     columns=`grep 'PRIMARY KEY' temp|sed 's/.*(//g'|sed 's/)\s*//g'`
     if [ "a"${columns} == "a" ]
     then
@@ -220,7 +224,7 @@ function rqg_table_column_attribute_check()
     delete_file tables tables.log    
 }
 
-function createdb()
+function rqg_createdb()
 {
     db_name=
     param_count=$#
@@ -237,14 +241,14 @@ function createdb()
 
 function rqg_kill_all_cub_process()
 {
-    ps -u $USER -o pid,comm|grep -v grep|grep cub_server|xargs kill -9 {} >/dev/null 2>&1
-    ps -u $USER -o pid,comm|grep -v grep|grep cub_broker|xargs kill -9 {} >/dev/null 2>&1
-    ps -u $USER -o pid,comm|grep -v grep|grep cub_cas|xargs kill -9 {} >/dev/null 2>&1
-    ps -u $USER -o pid,comm|grep -v grep|grep cub_master|xargs kill -9 {} >/dev/null 2>&1
+    ps -u $USER -o pid,comm|grep -v grep|grep cub_server|awk '{print $1}'|xargs kill -9 {} >/dev/null 2>&1
+    ps -u $USER -o pid,comm|grep -v grep|grep cub_broker|awk '{print $1}'|xargs kill -9 {} >/dev/null 2>&1
+    ps -u $USER -o pid,comm|grep -v grep|grep cub_cas|awk '{print $1}'|xargs kill -9 {} >/dev/null 2>&1
+    ps -u $USER -o pid,comm|grep -v grep|grep cub_master|awk '{print $1}'|xargs kill -9 {} >/dev/null 2>&1
 }
 
 
-function check_recovery_begin_test()
+function recovery_test_begin()
 {
     db_name=$1
     if [ ! "$db_name" ];then
@@ -263,7 +267,7 @@ function check_recovery_begin_test()
     cubrid broker start    
 }
 
-function check_recovery_end_test()
+function recovery_test_end()
 {
     db_name=$1
     if [ ! "$db_name" ];then
@@ -283,11 +287,11 @@ function check_recovery_end_test()
 
 function rqg_kill_cub_server()
 {
-    ps -u $USER -o pid,comm|grep -v grep|grep cub_server|xargs kill -9 {}
+    ps -u $USER -o pid,comm|grep -v grep|grep cub_server|awk '{print $1}'|xargs kill -9 {}
     sleep 5
 }
 
-function rqg_check_start_server()
+function rqg_cubrid_start_server()
 {
     db_name=$1
     if [ ! "$db_name" ];then
@@ -300,23 +304,21 @@ function rqg_check_start_server()
 	retry_count=1
     fi 
 
+    isRunning=`ps -u $USER -o pid,comm|grep -v grep|grep cub_server|wc -l`
+    if [ $isRunning -ne 0 ];then
+	return
+    fi
+    
     for((r=0;r<${retry_count};r++))
     do
        cubrid server start $db_name 1>start_status.log 2>&1
-       if grep 'cubrid server start: success' start_status.log
+       if [ $? -eq 0 ]
        then
 	   break
        else
 	   sleep 2
        fi
     done
-
-    isSucc=`csql -u dba $db_name -c "select 'SU'||'CC'" | grep SUCC | wc -l`
-    if [ $isSucc -eq 1 ];then
-        write_ok
-    else
-	write_nok "server start fail!"
-    fi 
 }
 
 function rqg_check_db()
@@ -334,11 +336,12 @@ function rqg_check_db()
    cubrid service stop
    sleep 2
 
-   cubrid checkdb -S $checkdb_options $db_name
-   if [ $? -eq 0 ];then
-	write_ok
+   cubrid checkdb -S $checkdb_options $db_name > _checkdb.log 2>&1
+   if [ $? -ne 0 ];then
+        sed -i 'a\Fail to execute checkdb utility with the standalone mode!\n' _checkdb.log
+	write_nok _checkdb.log
    else
-	write_nok "cubrid checkdb fail!"
+	write_ok 
    fi 
 
 }
@@ -352,9 +355,12 @@ function rqg_do_standAlone_vacuum()
    cubrid service stop
    sleep 2
    
-   cubrid vacuumdb -S $db_name
+   cubrid vacuumdb -S $db_name > _vacuumdb.log 2>&1
    if [ $? -ne 0 ];then
-	write_nok "cubrid vacuumdb fail with the standalone mode!"
+	sed -i '1 a\Fail to execute vacuumdb utility with the standalone mode! \n'  _vacuumdb.log
+	write_nok _vacuumdb.log
+   else
+	write_ok
    fi
 }
 
