@@ -39,17 +39,6 @@ function get_dsn_url_with_autocommit_off()
    echo "dbi:cubrid:database=${db_name};host=localhost;port=${port};autocommit=off"
 }
 
-function delete_file()
-{
-    file_name=$@
-    for x in $file_name
-    do
-    	if [ -f "$x" ];then
-             rm -f $x
-        fi
-    done
-}
-
 function rqg_check_constraint_unique()
 {
     name=$1
@@ -75,11 +64,11 @@ CCCSQL
         fi
     done < column.log
 
-    delete_file temp column.log
+    rm -f temp column.log
 }
 
 
-function rqg_check_constraint_notNull()
+function rqg_check_constraint_notnull()
 {
     name=$1
     db_name=$2
@@ -104,7 +93,7 @@ CCCSQL
 
     done
     
-    delete_file temp
+    rm -f temp
 }
 
 
@@ -130,27 +119,23 @@ CCCSQL
     do
         columns=`echo $line|sed 's/.*(//g'|sed 's/).*$//g'`
         fname=`echo $line|sed 's/.*REFERENCES //g'|sed 's/ ON.*$//g'`
-        sh csql.sh $db_name ";sc $fname" >temp
+        
+        csql -udba $db_name > temp 2>&1 <<CCCSQL
+;sc $fname
+
+CCCSQL
         fcolumns=`grep 'PRIMARY KEY' temp|sed 's/.*(//g'|sed 's/)\s*//g'`
-        csql -u dba $db_name -c "select ${columns} from $name" >child
-        if grep 'There are no results' child >/dev/null
-        then
-            return
+        csql -u dba $db_name -c "select 'RAW', ${columns} from $name" | grep RAW >child.log
+        csql -u dba $db_name -c "select 'RAW', ${fcolumns} from $fname" | grep RAW >father.log
+	cnt=`cat child.log | grep -v -f father.log | wc -l`
+        if [ $cnt -gt 0 ];then
+	    write_nok "$line violate fk constraint"
+	else
+	    write_ok
         fi
-        csql -u dba $db_name -c "select ${fcolumns} from $fname" >father
-        sed -i '1,/===========/d' child
-        sed -i '/row[s]* selected/,$ d' child
-        while read line
-        do
-            if [ `grep "$line" father|wc -l` -eq 0 ]
-            then
-               write_nok "$line violate fk constraint"
-               break
-            fi
-        done <child
     done <temp1
    
-    delete_file temp temp1 child father 
+    rm -f temp temp1 child.log father.log 
 }
 
 function rqg_check_constraint_all()
@@ -174,7 +159,7 @@ function rqg_check_constraint_all()
        rqg_check_constraint_fk $tname $db_name
     done <tables
 
-    delete_file tables tables.log    
+    rm -f tables tables.log    
 }
 
 function rqg_cubrid_createdb()
