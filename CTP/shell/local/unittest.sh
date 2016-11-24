@@ -37,7 +37,7 @@ function execute {
 	
     $1 2>&1 | tee ${unittestlog}
     
-    if [ `cat ${unittestlog} | grep -i 'fail\|Unit tests failed' | wc -l ` -eq 0 -a `cat ${unittestlog} | grep -i 'OK' | wc -l ` -ne 0 ]; then
+    if [ `cat ${unittestlog} | grep -i 'fail\|Unit tests failed' | wc -l ` -eq 0 -a `cat ${unittestlog} | grep -i 'OK\|success' | wc -l ` -ne 0 ]; then
     	IS_SUCC=true
     else
     	IS_SUCC=false
