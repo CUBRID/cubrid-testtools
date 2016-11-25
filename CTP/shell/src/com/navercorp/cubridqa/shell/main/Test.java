@@ -290,6 +290,10 @@ public class Test {
 		}
 
 		script.addCommand("echo > " + testCaseResultName);
+		script.addCommand("export TEST_SSH_HOST=" + (CommonUtils.isEmpty(ssh.getHost()) ? "`hostname -i`" : ssh.getHost()));
+		script.addCommand("export TEST_SSH_PORT=" + (ssh.getPort() <= 0 ? context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX) : ssh.getPort()));
+		script.addCommand("export TEST_SSH_USER=" + (CommonUtils.isEmpty(ssh.getUser()) ? "`echo $USER`" : ssh.getUser()));
+		script.addCommand("export TEST_BUIILD_ID=" + context.getTestBuild());
 		script.addCommand("sh " + testCaseName + " 2>&1");
 		result = ssh.execute(script);
 
