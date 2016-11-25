@@ -28,6 +28,8 @@ package com.navercorp.cubridqa.common.coreanalyzer;
 import java.io.File;
 import java.util.ArrayList;
 
+import com.navercorp.cubridqa.common.CommonUtils;
+
 public class Analyzer {
 
 	private String coreFilename;
@@ -39,6 +41,7 @@ public class Analyzer {
 	private String detailStack;
 	private String digestStack;
 	private String processName;
+	private String summary;
 
 	public Analyzer(String coreFilename) {
 		this.coreFilename = coreFilename;
@@ -62,6 +65,7 @@ public class Analyzer {
 		System.out.println("\tHOME        : " + "[" + this.envHOME + "]");
 		System.out.println("\tJAVA_HOME   : " + "[" + this.envJAVA_HOME + "]");
 		System.out.println("\tPROCESS NAME: " + "[" + processName + "]");
+		System.out.println("\tSUMMARY     : " + "[" + this.summary + "]");
 		System.out.println("\tDETAIL STACK:");
 		System.out.println("--------------------------------------------------------");
 		System.out.println(this.detailStack);
@@ -72,7 +76,14 @@ public class Analyzer {
 		System.out.println();
 	}
 
-	public void analyze() throws Exception {
+	public String[] getCoreFullStack() {
+		String[] result = new String[2];
+		result[0] = this.summary;
+		result[1] = this.detailStack;
+		return result;
+	}
+
+	public void analyze(boolean fullStack) throws Exception {
 
 		String cmd;
 		String result;
@@ -88,14 +99,19 @@ public class Analyzer {
 		this.processName = processName;
 
 		cmd = "gdb `which " + processName + "` " + coreFilename + " <<EOF" + Constants.LINE_SEPARATOR;
-		cmd += "where" + Constants.LINE_SEPARATOR;
+		if (fullStack) {
+			cmd += "bt full" + Constants.LINE_SEPARATOR;
+		} else {
+			cmd += "where" + Constants.LINE_SEPARATOR;
+		}
 		cmd += "EOF";
 
 		result = LocalInvoker.exec(cmd);
 
 		this.detailStack = extractCoreStack(result).trim();
-
-		this.digestStack = extractCoreStackDigest(this.detailStack);
+		String[] info = extractCoreStackDigest(this.detailStack);
+		this.summary = info[0];
+		this.digestStack = info[1];
 	}
 
 	private static String extractCoreProcessName(String desc) {
@@ -137,14 +153,25 @@ public class Analyzer {
 		return stack;
 	}
 
-	public static String extractCoreStackDigest(String detailStack) throws Exception {
+	public static String[] extractCoreStackDigest(String detailStack) throws Exception {
+		String[] result = new String[2];
+
 		ArrayList<StackItem> itemList = extractStackItems(detailStack);
 		StringBuilder digests = new StringBuilder();
+		String excludedMethods = ",er_log,er_set_internal,er_set_internal,abort_handler,";
 		for (StackItem s : itemList) {
 			digests.append(s.getDigest()).append("\n");
+			if (CommonUtils.isEmpty(result[0])) {
+				if (s.getOriFileCodes().startsWith("src/")) {
+					if (excludedMethods.indexOf("," + s.getMethodCodes().trim() + ",") == -1) {
+						result[0] = "Core dumped in " + s.getMethodCodes() + " at " + s.getOriFileCodes();
+					}
+				}
+			}
 		}
 
-		return digests.toString().trim();
+		result[1] = digests.toString().trim();
+		return result;
 	}
 
 	private static ArrayList<StackItem> extractStackItems(String detailStack) throws Exception {
@@ -154,7 +181,7 @@ public class Analyzer {
 		int itemStartPos = 0, itemEndPos = 0;
 
 		String itemText;
-		String methodCodes, fileCodes;
+		String methodCodes, oriFileCodes, fileCodes;
 		StackItem item;
 		String[] arr;
 		while (true) {
@@ -170,6 +197,8 @@ public class Analyzer {
 
 			itemText = detailStack.substring(itemStartPos, itemEndPos).trim();
 			itemText = CommonUtil.replace(itemText, "\t", " ");
+			itemText = CommonUtil.replace(itemText, "\n", " ");
+			itemText = CommonUtil.replace(itemText, "\r", " ");
 			itemText = CommonUtil.removeMoreBlanks(itemText).trim();
 
 			arr = itemText.split(" ");
@@ -182,15 +211,20 @@ public class Analyzer {
 					methodCodes = arr[3];
 				}
 
-				if (arr[arr.length - 2].equals("at") || arr[arr.length - 2].equals("from")) {
-					fileCodes = arr[arr.length - 1];
+				int prefixIndexForFileCodes = getFileCodesPrefixIndex(arr);
+				if (prefixIndexForFileCodes != -1) {
+					oriFileCodes = arr[prefixIndexForFileCodes + 1];
 				} else {
-					fileCodes = "";
+					oriFileCodes = "";
 				}
 
 				methodCodes = refineMethodCodes(methodCodes);
-				fileCodes = refineFileCodes(fileCodes);
-				item = new StackItem(index, methodCodes, fileCodes);
+				fileCodes = refineFileCodes(oriFileCodes);
+				int p = oriFileCodes.lastIndexOf("src/");
+				if (p != -1) {
+					oriFileCodes = oriFileCodes.substring(p);
+				}
+				item = new StackItem(index, methodCodes, fileCodes, oriFileCodes);
 				list.add(item);
 			}
 
@@ -198,6 +232,17 @@ public class Analyzer {
 		}
 
 		return list;
+	}
+
+	private static int getFileCodesPrefixIndex(String[] arr) {
+		String s;
+		for (int i = 0; i < arr.length; i++) {
+			s = arr[i].trim();
+			if (s.equals("at") || s.equals("from")) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	private static String refineMethodCodes(String desc) {
@@ -222,9 +267,11 @@ public class Analyzer {
 		// result = CommonUtil.replace(result, envJAVA_HOME, "$JAVA_HOME");
 		// result = CommonUtil.replace(result, envHOME, "$HOME");
 
-		p = result.indexOf("../src/");
+		p = result.lastIndexOf("/src/");
 		if (p == -1) {
 			result = "<EXTERNAL LIBRARY>";
+		} else {
+			result = result.substring(p + 1);
 		}
 
 		return result;
