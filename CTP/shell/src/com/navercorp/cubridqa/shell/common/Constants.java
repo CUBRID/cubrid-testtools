@@ -91,6 +91,7 @@ public class Constants {
 		scripts.addCommand("taskkill /F /IM ps.exe");
 		scripts.addCommand("taskkill /F /IM sed.exe");
 		scripts.addCommand("taskkill /F /IM awk.exe");
+		scripts.addCommand("taskkill /F /IM dos2unix.exe");
 		return scripts;
 	}
 
@@ -152,6 +153,7 @@ public class Constants {
 		sb.append("taskkill /T /F /IM ps.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM sed.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM awk.exe").append(LINE_SEPARATOR);
+		sb.append("taskkill /T /F /IM dos2unix.exe").append(LINE_SEPARATOR);
 		return sb.toString();
 	}
 
@@ -179,6 +181,7 @@ public class Constants {
 		scripts.addCommand(bothKill("echo ${final_list}"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i sleep | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i expect | awk '{print $1}'"));
+		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i dos2unix | awk '{print $1}'"));		
 		if (inLocal == false) {
 			scripts.addCommand(bothKill("ps -u $USER -o pid,cmd| grep -v grep | grep -i '\\.sh' | awk '{print $1}'"));
 		}

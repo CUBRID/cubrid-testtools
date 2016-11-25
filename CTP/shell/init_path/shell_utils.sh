@@ -88,7 +88,14 @@ function do_check_more_errors {
 
     cub_build_id=`cubrid_rel | grep CUBRID | awk -F ')' '{print $1}' | awk -F '(' '{print $NF}'`
     current_datetime=`date "+%Y%m%d_%H%M%S"`
-    backup_dir=~/ERROR_BACKUP/AUTO_${cub_build_id}_${current_datetime}
+    backup_name=AUTO_${cub_build_id}_${current_datetime}
+    backup_dir=~/ERROR_BACKUP/${backup_name}
+	host_ip="${TEST_SSH_HOST}"
+	if [ "${host_ip}" = "" ]; then
+	    host_ip=`hostname -i`
+	fi
+	export TEST_INFO_ENV="${USER}@${host_ip}:${TEST_SSH_PORT}"
+	export TEST_INFO_BUILD_ID=${cub_build_id}
 
     if [ $core_dump_cnt -gt 0 ] || [ $fatal_err_cnt -gt $old_fatal_err_cnt -a "$SKIP_CHECK_FATAL_ERROR" != "TRUE" ]; then
         mkdir -p $backup_dir
@@ -105,6 +112,8 @@ function do_check_more_errors {
 		analyzer.sh $core  > analyzer.log 2>&1
 		is_cub_cas=`cat analyzer.log | grep "PROCESS NAME:"|grep "cub_cas"|wc -l`
 		if [ $is_cub_cas -eq 0 ];then
+			issue_title=`grep SUMMARY analyzer.log | head -n 1`
+		    echo \<a class=SHELLCORE href=\"javascript:reportShellCoreIssue\(\'${core}\', \'${backup_name}\', \'${host_ip}\', \'${TEST_SSH_PORT}\', \'${USER}\', \'${cub_build_id}\', \'${issue_title}\' \) \"\>\<i\>\<font color=red\>REPORT ISSUE FOR BELOW CRASH\</font\>\</i\>\</a\> >> $result_file
 			cat analyzer.log >> $result_file	
 		else
 			echo "CRASH FROM CUB_CAS:${core}(skip to print call stacks)" >> $result_file
