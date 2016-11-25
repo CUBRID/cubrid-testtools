@@ -31,7 +31,7 @@ public class UpdateDigestStack {
 
 		String detailStack = CommonUtil.getFileContent("data\\detail_stack.txt");
 
-		String digestStack = Analyzer.extractCoreStackDigest(detailStack);
+		String digestStack = Analyzer.extractCoreStackDigest(detailStack)[1];
 		System.out.println(detailStack);
 		System.out.println(digestStack);
 
