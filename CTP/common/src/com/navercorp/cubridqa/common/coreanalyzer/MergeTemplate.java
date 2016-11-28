@@ -1,7 +1,6 @@
 package com.navercorp.cubridqa.common.coreanalyzer;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
@@ -12,7 +11,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 
-import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.MakeFile;
 
 public class MergeTemplate {
@@ -69,7 +67,6 @@ public class MergeTemplate {
 		}
 		
 		String templateFileContents = com.navercorp.cubridqa.common.CommonUtils.getFileContent(templateFile);
-		
 		Properties dataProp = com.navercorp.cubridqa.common.CommonUtils.getProperties(dataFile);
 		Set<Object> set = dataProp.keySet();
 		Iterator<Object> it = set.iterator();
@@ -111,13 +108,11 @@ public class MergeTemplate {
 			}
 		}
 		
+		MakeFile outputFileMaker = new MakeFile(outputFile, true);
+		outputFileMaker.println(templateFileContents);
+		outputFileMaker.close();
 	}
 
-	public static String readJsonTemplate(String templateFilePath) throws IOException {
-		String templateContents = com.navercorp.cubridqa.common.CommonUtils.getFileContent(templateFilePath);
-		return templateContents;
-	}
-	
 	private static void showHelp(String error, Options options) {
 		if (error != null) {
 			System.out.println("Error: " + error);
