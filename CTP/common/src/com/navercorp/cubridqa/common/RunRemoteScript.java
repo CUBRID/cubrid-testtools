@@ -35,9 +35,22 @@ import org.apache.commons.cli.PosixParser;
 public class RunRemoteScript {
 
 	private static boolean enableDebug = CommonUtils.convertBoolean(System.getenv(ConfigParameterConstants.CTP_DEBUG_ENABLE), false);
-	public static boolean skipProxy = false;
 
 	public static void main(String[] args) throws Exception {
+		run(args, false);
+	}
+	
+	public static void run(String[] args, boolean skipProxy) throws Exception {
+		run(args, true, skipProxy);
+	}
+	
+	public static String run(String[] args, boolean showInConsole, boolean skipProxy) throws Exception {
+		Console console = new Console(showInConsole);
+		run(args, console, skipProxy);
+		return console.getContent();
+	}
+	
+	private static void run(String[] args, Console console, boolean skipProxy) throws Exception {
 		Options options = new Options();
 		options.addOption("host", true, "Remote ssh host");
 		options.addOption("port", true, "Remote ssh port");
@@ -66,22 +79,22 @@ public class RunRemoteScript {
 			parser = new PosixParser();
 			cmd = parser.parse(options, args);
 		} catch (Exception e) {
-			showHelp(e.getMessage(), options);
+			showHelp(e.getMessage(), options, console);
 			return;
 		}
 
 		if (args.length == 0 || cmd.hasOption("help")) {
-			showHelp(null, options);
+			showHelp(null, options, console);
 			return;
 		}
 
 		if (!cmd.hasOption("host") || !cmd.hasOption("user") || !cmd.hasOption("password")) {
-			showHelp("Please input remote <host>, <port>, <user>, <password>.", options);
+			showHelp("Please input remote <host>, <port>, <user>, <password>.", options, console);
 			return;
 		}
 
 		if (!cmd.hasOption("f") && !cmd.hasOption("c")) {
-			showHelp("Please input scripts to run.", options);
+			showHelp("Please input scripts to run.", options, console);
 			return;
 		}
 
@@ -126,10 +139,10 @@ public class RunRemoteScript {
 		}
 		boolean proxyPriority = cmd.hasOption("proxy-first") || CommonUtils.convertBoolean(System.getenv(ConfigParameterConstants.CTP_PROXY_PRIORITY), false);
 
-		if ((hasProxy && proxyPriority) || (hasProxy && mayConnectDirectly(sshHost, sshPort, sshUser, sshPassword) == false)) {
+		if ((hasProxy && proxyPriority) || (hasProxy && mayConnectDirectly(sshHost, sshPort, sshUser, sshPassword, console) == false)) {
 
 			if (enableDebug)
-				System.out.println("PROXY: local -> " + proxyUser + "@" + proxyHost + " -> " + sshUser + "@" + sshHost);
+				console.println("PROXY: local -> " + proxyUser + "@" + proxyHost + " -> " + sshUser + "@" + sshHost);
 
 			String proxyCmd = "run_remote_script -host " + sshHost + " -port " + sshPort + " -user " + sshUser + " -password " + sshPassword;
 			if (cmd.hasOption("initfile")) {
@@ -167,8 +180,7 @@ public class RunRemoteScript {
 			remoteArgs[i++] = "-c";
 			remoteArgs[i++] = proxyCmd;
 
-			skipProxy = true;
-			RunRemoteScript.main(remoteArgs);
+			RunRemoteScript.run(remoteArgs, console, true);
 			return;
 		}
 
@@ -272,16 +284,16 @@ public class RunRemoteScript {
 					}
 				}
 			}
-			System.out.println(result);
+			console.println(result);
 		} catch (Exception e) {
-			System.out.println("ERROR:" + e.getMessage());
+			console.println("ERROR:" + e.getMessage());
 		} finally {
 			if (ssh != null)
 				ssh.close();
 		}
 	}
 
-	private static boolean mayConnectDirectly(String sshHost, String sshPort, String sshUser, String sshPassword) {
+	private static boolean mayConnectDirectly(String sshHost, String sshPort, String sshUser, String sshPassword, Console console) {
 		SSHConnect ssh = null;
 
 		try {
@@ -290,7 +302,7 @@ public class RunRemoteScript {
 			String hello = ssh.execute(new ShellInput("echo OOO${NOT_EXIST}KKK"));
 			if (hello.trim().equals("OOOKKK")) {
 				if (enableDebug)
-					System.out.println("SSH CONNECTED + " + sshHost);
+					console.println("SSH CONNECTED + " + sshHost);
 				return true;
 			}
 		} catch (Exception e) {
@@ -301,11 +313,36 @@ public class RunRemoteScript {
 		return false;
 	}
 
-	private static void showHelp(String error, Options options) {
+	private static void showHelp(String error, Options options, Console console) {
 		if (error != null)
-			System.out.println("Error: " + error);
+			console.println("Error: " + error);
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp("run_remote_script: to execute scripts on remote host", options);
-		System.out.println();
+		console.println("\n");
+	}
+}
+
+class Console {
+	StringBuilder out = new StringBuilder();
+
+	boolean showInConsole = true;
+
+	public Console() {
+	}
+
+	public Console(boolean showInConsole) {
+		this.showInConsole = showInConsole;
+	}
+
+	public void println(String info) {
+		if (showInConsole) {
+			System.out.println(info);
+		} else {
+			out.append(info).append("\n");
+		}
+	}
+
+	public String getContent() {
+		return out.toString();
 	}
 }
