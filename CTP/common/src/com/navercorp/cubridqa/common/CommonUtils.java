@@ -735,4 +735,65 @@ public class CommonUtils {
 		}
 		return value;
 	}
+	
+	public static String getJson(String string) {
+		StringBuilder result = new StringBuilder();
+
+		if (string == null || string.length() == 0) {
+			result.append("\"\"");
+			return result.toString();
+		}
+
+		char b;
+		char c = 0;
+		String hhhh;
+		int i;
+		int len = string.length();
+
+		result.append('"');
+		for (i = 0; i < len; i += 1) {
+			b = c;
+			c = string.charAt(i);
+			switch (c) {
+			case '\\':
+			case '"':
+				result.append('\\');
+				result.append(c);
+				break;
+			case '/':
+				if (b == '<') {
+					result.append('\\');
+				}
+				result.append(c);
+				break;
+			case '\b':
+				result.append("\\b");
+				break;
+			case '\t':
+				result.append("\\t");
+				break;
+			case '\n':
+				result.append("\\n");
+				break;
+			case '\f':
+				result.append("\\f");
+				break;
+			case '\r':
+				result.append("\\r");
+				break;
+			default:
+				if (c < ' ' || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
+					result.append("\\u");
+					hhhh = Integer.toHexString(c);
+					result.append("0000", 0, 4 - hhhh.length());
+					result.append(hhhh);
+				} else {
+					result.append(c);
+				}
+			}
+		}
+		result.append('"');
+		return result.toString();
+	}
+
 }

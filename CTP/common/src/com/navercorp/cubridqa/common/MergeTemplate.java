@@ -1,4 +1,4 @@
-package com.navercorp.cubridqa.common.coreanalyzer;
+package com.navercorp.cubridqa.common;
 
 import java.io.File;
 import java.util.Iterator;
@@ -10,8 +10,8 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
+import com.navercorp.cubridqa.common.CommonUtils;
 
-import com.navercorp.cubridqa.common.MakeFile;
 
 public class MergeTemplate {
 	public static void main(String[] args) throws Exception {
@@ -66,15 +66,15 @@ public class MergeTemplate {
 			return;
 		}
 		
-		String templateFileContents = com.navercorp.cubridqa.common.CommonUtils.getFileContent(templateFile);
-		Properties dataProp = com.navercorp.cubridqa.common.CommonUtils.getProperties(dataFile);
+		String templateFileContents = CommonUtils.getFileContent(templateFile);
+		Properties dataProp = CommonUtils.getProperties(dataFile);
 		Set<Object> set = dataProp.keySet();
 		Iterator<Object> it = set.iterator();
 		String key;
 		while (it.hasNext()) {
 			key = (String) it.next();
 			String value = dataProp.getProperty(key);
-			if(!com.navercorp.cubridqa.common.CommonUtils.isEmpty(value) && value.toLowerCase().startsWith("json_file:")){
+			if(!CommonUtils.isEmpty(value) && value.toLowerCase().startsWith("json_file:")){
 				String[] vals = value.split(":");
 				if(vals == null || vals.length < 2){
 					throw new Exception("Please confirm your key format " + value + "  in data file, key->json(key=json_file:data.txt)");
@@ -86,10 +86,10 @@ public class MergeTemplate {
 					throw new Exception("Please confirm your json data file " + jsonData.getAbsolutePath() +  " exists!");
 				}
 				
-				String jsonDataContent = com.navercorp.cubridqa.common.CommonUtils.getFileContent(jsonData.getAbsolutePath());
-				com.navercorp.cubridqa.common.CommonUtils.replace(templateFileContents, key, escape(jsonDataContent));
+				String jsonDataContent = CommonUtils.getFileContent(jsonData.getAbsolutePath());
+				CommonUtils.replace(templateFileContents, key, CommonUtils.getJson(jsonDataContent));
 				
-			}else if(!com.navercorp.cubridqa.common.CommonUtils.isEmpty(value) && value.toLowerCase().startsWith("file:")){
+			}else if(!CommonUtils.isEmpty(value) && value.toLowerCase().startsWith("file:")){
 				String[] vals = value.split(":");
 				if(vals == null || vals.length < 2){
 					throw new Exception("Please confirm your key format " + value + "  in data file, key->file(key=file:data.txt)");
@@ -101,10 +101,10 @@ public class MergeTemplate {
 					throw new Exception("Please confirm your data file " + fdata.getAbsolutePath() +  " exists!");
 				}
 				
-				String fDataContent = com.navercorp.cubridqa.common.CommonUtils.getFileContent(fdata.getAbsolutePath());
-				com.navercorp.cubridqa.common.CommonUtils.replace(templateFileContents, key, fDataContent);
+				String fDataContent = CommonUtils.getFileContent(fdata.getAbsolutePath());
+				CommonUtils.replace(templateFileContents, key, fDataContent);
 			}else{
-				com.navercorp.cubridqa.common.CommonUtils.replace(templateFileContents, key, value);
+				CommonUtils.replace(templateFileContents, key, value);
 			}
 		}
 		
@@ -118,68 +118,8 @@ public class MergeTemplate {
 			System.out.println("Error: " + error);
 		}
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("MergeTemplate.sh <-t|--template-file> template-file <-d|--data> data-file <-o|--out> out-file", options);
+		formatter.printHelp("MergeTemplate.sh <-t|--template-file> template-file <-d|--data-file> data-file <-o|--output-file> out-file", options);
 		System.out.println();
-	}
-
-	public static String escape(String string) {
-		StringBuilder result = new StringBuilder();
-
-		if (string == null || string.length() == 0) {
-			result.append("\"\"");
-			return result.toString();
-		}
-
-		char b;
-		char c = 0;
-		String hhhh;
-		int i;
-		int len = string.length();
-
-		result.append('"');
-		for (i = 0; i < len; i += 1) {
-			b = c;
-			c = string.charAt(i);
-			switch (c) {
-			case '\\':
-			case '"':
-				result.append('\\');
-				result.append(c);
-				break;
-			case '/':
-				if (b == '<') {
-					result.append('\\');
-				}
-				result.append(c);
-				break;
-			case '\b':
-				result.append("\\b");
-				break;
-			case '\t':
-				result.append("\\t");
-				break;
-			case '\n':
-				result.append("\\n");
-				break;
-			case '\f':
-				result.append("\\f");
-				break;
-			case '\r':
-				result.append("\\r");
-				break;
-			default:
-				if (c < ' ' || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
-					result.append("\\u");
-					hhhh = Integer.toHexString(c);
-					result.append("0000", 0, 4 - hhhh.length());
-					result.append(hhhh);
-				} else {
-					result.append(c);
-				}
-			}
-		}
-		result.append('"');
-		return result.toString();
 	}
 
 }
