@@ -150,8 +150,7 @@ public class SFTPDownload {
 			remoteArgs[i++] = proxyPwd;
 			remoteArgs[i++] = "-c";
 			remoteArgs[i++] = proxyCmd;
-			RunRemoteScript.skipProxy = true;
-			RunRemoteScript.main(remoteArgs);
+			RunRemoteScript.run(remoteArgs, true);
 
 			download(proxyHost, proxyPort, proxyUser, proxyPwd, from, pkgName, true);
 		}
