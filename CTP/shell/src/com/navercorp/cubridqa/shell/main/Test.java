@@ -631,11 +631,13 @@ public class Test {
 
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
-		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
+		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G \"" + context.getMailNoticeTo() + "\" \"" + context.getMailNoticeCC() + "\"");
 		String result;
+		long startSecs = System.currentTimeMillis() / 1000;
 		try {
 			result = ssh1.execute(scripts);
-			workerLog.println("[INFO] Check disk space PASS on " + ssh1.toString());
+			long endSecs = System.currentTimeMillis() / 1000;
+			workerLog.println("[INFO] Check disk space PASS on " + ssh1.toString() + "(elapse: " + (endSecs - startSecs) + " seconds)");
 		} catch (Exception e) {
 			workerLog.println("[FAIL] Check disk space FAIL on " + ssh1.toString());
 			workerLog.println(e.getMessage());
