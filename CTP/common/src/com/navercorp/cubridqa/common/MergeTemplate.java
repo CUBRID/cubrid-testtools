@@ -32,12 +32,6 @@ public class MergeTemplate {
 			return;
 		}
 		
-		String[] args1 = cmd.getArgs();
-		if (args.length == 0 || args1.length == 0 || cmd.hasOption("h")) {
-			showHelp(null, options);
-			return;
-		}
-		
 		if (!cmd.hasOption("t") || !cmd.hasOption("d") || !cmd.hasOption("o")) {
 			showHelp("Please input MergeTemplate <-t>, <-d>, <-o> ", options);
 			return;
@@ -49,20 +43,13 @@ public class MergeTemplate {
 		
 		File tmpFile = new File(templateFile);
 		if(!tmpFile.exists()){
-			showHelp("The template file" + tmpFile.getAbsolutePath() + " does not exist!", options);
+			showHelp("The template file " + tmpFile.getAbsolutePath() + " does not exist!", options);
 			return;
 		}
 		
 		File dFile = new File(dataFile);
 		if(!dFile.exists()){
-			showHelp("The template file" + dFile.getAbsolutePath() + " does not exist!", options);
-			return;
-		}
-		
-		
-		File outFile = new File(outputFile);
-		if(!outFile.exists()){
-			showHelp("The template file" + outFile.getAbsolutePath() + " does not exist!", options);
+			showHelp("The template file " + dFile.getAbsolutePath() + " does not exist!", options);
 			return;
 		}
 		
@@ -80,14 +67,14 @@ public class MergeTemplate {
 					throw new Exception("Please confirm your key format " + value + "  in data file, key->json(key=json_file:data.txt)");
 				}
 				
-				String jsonFileName = vals[2];
+				String jsonFileName = vals[1];
 				File jsonData = new File(jsonFileName);
 				if(!jsonData.exists()){
 					throw new Exception("Please confirm your json data file " + jsonData.getAbsolutePath() +  " exists!");
 				}
 				
 				String jsonDataContent = CommonUtils.getFileContent(jsonData.getAbsolutePath());
-				CommonUtils.replace(templateFileContents, key, CommonUtils.getJson(jsonDataContent));
+				templateFileContents = CommonUtils.replace(templateFileContents, "#" + key + "#", CommonUtils.getJson(jsonDataContent));
 				
 			}else if(!CommonUtils.isEmpty(value) && value.toLowerCase().startsWith("file:")){
 				String[] vals = value.split(":");
@@ -95,16 +82,16 @@ public class MergeTemplate {
 					throw new Exception("Please confirm your key format " + value + "  in data file, key->file(key=file:data.txt)");
 				}
 				
-				String dataFileName = vals[2];
+				String dataFileName = vals[1];
 				File fdata = new File(dataFileName);
 				if(!fdata.exists()){
 					throw new Exception("Please confirm your data file " + fdata.getAbsolutePath() +  " exists!");
 				}
 				
 				String fDataContent = CommonUtils.getFileContent(fdata.getAbsolutePath());
-				CommonUtils.replace(templateFileContents, key, fDataContent);
+				templateFileContents = CommonUtils.replace(templateFileContents, "#" + key + "#", fDataContent);
 			}else{
-				CommonUtils.replace(templateFileContents, key, value);
+				templateFileContents = CommonUtils.replace(templateFileContents, "#" + key + "#", value);
 			}
 		}
 		
@@ -118,7 +105,7 @@ public class MergeTemplate {
 			System.out.println("Error: " + error);
 		}
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("MergeTemplate.sh <-t|--template-file> template-file <-d|--data-file> data-file <-o|--output-file> out-file", options);
+		formatter.printHelp("MergeTemplate <-t|--template-file> template-file <-d|--data-file> data-file <-o|--output-file> out-file", options);
 		System.out.println();
 	}
 
