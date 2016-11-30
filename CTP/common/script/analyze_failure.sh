@@ -110,28 +110,26 @@ fi
 function export_CUBRID_environment()
 {
 	curDir=`pwd`
-	pkg_dir=$1
 
-        if [ "$pkg_dir" ];then
-		cd $pkg_dir
-		if [ -d "CUBRID" ];then
-			export CUBRID=$pkg_dir/CUBRID
-			export PATH=$CUBRID/bin:$PATH
-			export CUBRID_DATABASES=$CUBRID/databases	
-			if [ "x${LD_LIBRARY_PATH}x" = xx ]; then
-  				LD_LIBRARY_PATH=$CUBRID/lib
-			else
-  				LD_LIBRARY_PATH=$CUBRID/lib:$LD_LIBRARY_PATH
-			fi
-
-			SHLIB_PATH=$LD_LIBRARY_PATH
-			LIBPATH=$LD_LIBRARY_PATH
-			export LD_LIBRARY_PATH
-			export SHLIB_PATH
-			export LIBPATH
+	if [ -d "CUBRID" ];then
+		CUBRID=${curDir}/CUBRID
+		CUBRID_DATABASES=$CUBRID/databases	
+		if [ "x${LD_LIBRARY_PATH}x" = xx ]; then
+			LD_LIBRARY_PATH=$CUBRID/lib
+		else
+			LD_LIBRARY_PATH=$CUBRID/lib:$LD_LIBRARY_PATH
 		fi
-        fi
-	
+
+		SHLIB_PATH=$LD_LIBRARY_PATH
+		LIBPATH=$LD_LIBRARY_PATH
+		PATH=$CUBRID/bin:$PATH
+		export CUBRID
+		export CUBRID_DATABASES
+		export LD_LIBRARY_PATH
+		export SHLIB_PATH
+		export LIBPATH
+		export PATH
+	fi
 	cd $curDir
 }
 
