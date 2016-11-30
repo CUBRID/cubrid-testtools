@@ -114,7 +114,9 @@ function do_check_more_errors {
 		if [ $is_cub_cas -eq 0 ];then
 			issue_title=`grep SUMMARY analyzer.log | head -n 1`
 		    echo \<!--HTMLESCAPESTART--\>\<a class=SHELLCORE href=\"javascript:reportShellCoreIssue\(\'${core}\', \'${backup_name}\', \'${host_ip}\', \'${TEST_SSH_PORT}\', \'${USER}\', \'${cub_build_id}\', \'${issue_title}\' \) \"\>\<i\>\<font color=red\>REPORT ISSUE FOR BELOW CRASH\</font\>\</i\>\</a\>\<!--HTMLESCAPEEND--\> >> $result_file
-			cat analyzer.log >> $result_file	
+			cat analyzer.log >> $result_file
+			core_full_stack_fn=`basename $core | sed 's/core/fullstack/g'`
+			analyzer.sh -f $core > ${core_full_stack_fn}
 		else
 			echo "CRASH FROM CUB_CAS:${core}(skip to print call stacks)" >> $result_file
 		fi

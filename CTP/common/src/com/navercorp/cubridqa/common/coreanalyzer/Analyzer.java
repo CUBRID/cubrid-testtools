@@ -158,7 +158,7 @@ public class Analyzer {
 
 		ArrayList<StackItem> itemList = extractStackItems(detailStack);
 		StringBuilder digests = new StringBuilder();
-		String excludedMethods = ",er_log,er_set_internal,er_set_internal,abort_handler,";
+		String excludedMethods = ",er_log,er_set_internal,abort_handler,er_set,";
 		for (StackItem s : itemList) {
 			digests.append(s.getDigest()).append("\n");
 			if (CommonUtils.isEmpty(result[0])) {
