@@ -186,14 +186,7 @@ function gen_data_template()
 	affect_version=`get_affect_version $build_id`
 	echo "" > core_file.info
 	for x in `find ./ -name "core*"`;do
-		core_dir="${x%/*}"
-		if [ -d "$core_dir" ];then
-			cd $core_dir
-			echo `file $core_name` >> core_file.info
-			cd $curDir
-		else
-			echo `file $core_name` >> core_file.info
-		fi
+		echo `file $core_name|awk -F '/' '{print $NF}'` >> core_file.info
 	done
 
 	summary_info=`cat core_full_stack.txt|grep "SUMMARY:"|sed 's/SUMMARY://g'`
