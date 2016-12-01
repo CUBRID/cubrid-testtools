@@ -94,7 +94,12 @@ public class MergeTemplate {
 				templateFileContents = CommonUtils.replace(templateFileContents, "#" + key + "#", value);
 			}
 		}
-		
+	
+		if(CommonUtils.isEmpty(templateFileContents)){
+			System.out.println("Please confirm your tempalte file and data file are correct!");
+			return;
+		}
+	
 		MakeFile outputFileMaker = new MakeFile(outputFile, true);
 		outputFileMaker.println(templateFileContents);
 		outputFileMaker.close();

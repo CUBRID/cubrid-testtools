@@ -236,8 +236,8 @@ ISSUEFILDDATA
 	"*Core Location:*${curDir}/${core_file_path}" 
 	"*DB-Volume Location:*${db_volume_info}"
 	"*Error Log Location:*${curDir}/CUBRID/log"
-	" " >> issue_comment_desc.out
-	" " >> issue_comment_desc.out
+
+
 	"*Related Case:* $related_case" 
 ISSUECOMMENTDESC
 
@@ -245,14 +245,14 @@ ISSUECOMMENTDESC
 
 	"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.MergeTemplate -t ${CTP_HOME}/common/tpl/issue_create_desc.tpl -d issue_create_desc.data -o issue_create_desc.out
 	"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.MergeTemplate -t ${CTP_HOME}/common/tpl/issue_create.tpl -d issue_create.data -o ${data_issue_create_json_name}
-	if [ $? -eq 0 ];then
+	if [ -f "${curDir}/${data_issue_create_json_name}" ];then
 		echo "CREATE_ISSUE_FIELDS=${curDir}/${data_issue_create_json_name}"
 	else
 		echo "[ERROR] Please confirm error in ${curDir}/${data_issue_create_json_name}"
 	fi
 
 	"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.MergeTemplate -t ${CTP_HOME}/conf/issue_comment.tpl -d issue_comment.data -o ${data_issue_comment_json_name}
-	if [ $? -eq 0 ];then
+	if [ -f "${curDir}/${data_issue_comment_json_name}" ];then
                 echo "ADD_ISSUE_COMMENT=${curDir}/${data_issue_comment_json_name}"
         else
                 echo "[ERROR] Please confirm error in ${curDir}/${data_issue_comment_json_name}"
