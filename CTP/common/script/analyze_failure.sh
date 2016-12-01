@@ -186,7 +186,7 @@ function gen_data_template()
 	affect_version=`get_affect_version $build_id`
 	echo "" > core_file.info
 	for x in `find ./ -name "core*"`;do
-		echo `file $core_name|awk -F '/' '{print $NF}'` >> core_file.info
+		echo `file $x|awk -F '/' '{print $NF}'` >> core_file.info
 	done
 
 	summary_info=`cat core_full_stack.txt|grep "SUMMARY:"|sed 's/SUMMARY://g'`
@@ -194,19 +194,19 @@ function gen_data_template()
 	
 	#generate issue description 
 	cat > issue_create_desc.data <<ISSUEDESCDATA 
-	TEST_BUILD=$build_version
-	TEST_OS=`get_os`
-	CORE_FILE=file:core_file.info
-	CORE_FILE_NAME=$core_name
-	CALL_STACK_INFO=file:core_full_stack.info
-	ISSUE_SUMMARY_INFO=$summary_info
+TEST_BUILD=$build_version
+TEST_OS=`get_os`
+CORE_FILE=file:core_file.info
+CORE_FILE_NAME=$core_name
+CALL_STACK_INFO=file:core_full_stack.info
+ISSUE_SUMMARY_INFO=$summary_info
 ISSUEDESCDATA
 
 	#generate issue field data
 	cat > issue_create.data <<ISSUEFILDDATA
-	JSON_TPL_ISSUE_SUMMARY_INFO=$summary_info
-	JSON_TPL_AFFECT_VERSION=$affect_version
-	JSON_TPL_CALL_STACK_INFO=json_file:issue_create_desc.out
+JSON_TPL_ISSUE_SUMMARY_INFO=$summary_info
+JSON_TPL_AFFECT_VERSION=$affect_version
+JSON_TPL_CALL_STACK_INFO=json_file:issue_create_desc.out
 ISSUEFILDDATA
 
 	#generate comment data file content
@@ -224,19 +224,19 @@ ISSUEFILDDATA
 	fi
 
 	cat > issue_comment_desc.out << ISSUECOMMENTDESC
-	"*Test Server:*" 
-	"user@IP:$user_info"
-	"pwd: <please use general password>"
-	
-	"*All Info*"
-	"${user_info}:${curDir}"
-	"pwd: <please use general password>"
-	"*Core Location:*${curDir}/${core_file_path}" 
-	"*DB-Volume Location:*${db_volume_info}"
-	"*Error Log Location:*${curDir}/CUBRID/log"
+"*Test Server:*" 
+"user@IP:$user_info"
+"pwd: <please use general password>"
+
+"*All Info*"
+"${user_info}:${curDir}"
+"pwd: <please use general password>"
+"*Core Location:*${curDir}/${core_file_path}" 
+"*DB-Volume Location:*${db_volume_info}"
+"*Error Log Location:*${curDir}/CUBRID/log"
 
 
-	"*Related Case:* $related_case" 
+"*Related Case:* $related_case" 
 ISSUECOMMENTDESC
 
 	echo "JSON_TPL_COMMENT_BODY=json_file:issue_comment_desc.out" > issue_comment.data
