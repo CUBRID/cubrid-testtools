@@ -78,7 +78,7 @@ pkg_file_name_without_ext="${pkg_file_name%.tar*}"
 
 is_running=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep 'analyze_failure.sh' |grep "$pkg_file_name_without_ext"|grep -v grep|wc -l`
 if [ $is_running -gt 2 ];then
-	echo "`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep $0 | grep -v grep`"
+	echo ""
 	echo "[Info]: The current script is running!"
 	exit 1
 fi
@@ -249,7 +249,7 @@ ISSUECOMMENTDESC
 		echo "[ERROR] Please confirm error in ${curDir}/${data_issue_create_json_name}"
 	fi
 
-	"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.MergeTemplate -t ${CTP_HOME}/conf/issue_comment.tpl -d issue_comment.data -o ${data_issue_comment_json_name}
+	"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.common.MergeTemplate -t ${CTP_HOME}/common/tpl/issue_comment.tpl -d issue_comment.data -o ${data_issue_comment_json_name}
 	if [ -f "${curDir}/${data_issue_comment_json_name}" ];then
                 echo "ADD_ISSUE_COMMENT=${curDir}/${data_issue_comment_json_name}"
         else
@@ -276,7 +276,7 @@ function analyze_failure_pkg()
                 	exit 1
         	fi
 	else
-		tar zvxf $pkg_file_name
+		tar zvxf $pkg_file
 		cd $pkg_file_name_without_ext
 	fi	
 
