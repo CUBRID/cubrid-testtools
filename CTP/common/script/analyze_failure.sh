@@ -181,15 +181,20 @@ function gen_data_template()
 	fi
 
 	build_version=`cat readme.txt |grep "CUBRID VERSION"|grep -v grep|awk -F ':' 'BEGIN{OFS=":"} {$1="";print $0}'|sed 's/^://g'|sed 's/^[ \t]*//g'`
-	core_dir="${core_file_path%/*}"
 	core_name="${core_file_path##*/}"
 	build_id=`cat readme.txt |grep TEST_INFO_BUILD_ID|grep -v export|awk -F '=' '{print $NF}'`
 	affect_version=`get_affect_version $build_id`
-	if [ -d "$core_dir" ];then
-		cd $core_dir
-		core_cmd=`file $core_name`
-		cd -
-	fi
+	echo "" > core_file.info
+	for x in `find ./ -name "core*"`;do
+		core_dir="${x%/*}"
+		if [ -d "$core_dir" ];then
+			cd $core_dir
+			echo `file $core_name` >> core_file.info
+			cd $curDir
+		else
+			echo `file $core_name` >> core_file.info
+		fi
+	done
 
 	summary_info=`cat core_full_stack.txt|grep "SUMMARY:"|sed 's/SUMMARY://g'`
 	cat core_full_stack.txt|grep -v "SUMMARY:" > core_full_stack.info
@@ -198,7 +203,7 @@ function gen_data_template()
 	cat > issue_create_desc.data <<ISSUEDESCDATA 
 	TEST_BUILD=$build_version
 	TEST_OS=`get_os`
-	CORE_FILE=$core_cmd
+	CORE_FILE=file:core_file.info
 	CORE_FILE_NAME=$core_name
 	CALL_STACK_INFO=file:core_full_stack.info
 	ISSUE_SUMMARY_INFO=$summary_info
@@ -258,7 +263,7 @@ ISSUECOMMENTDESC
                 echo "[ERROR] Please confirm error in ${curDir}/${data_issue_comment_json_name}"
         fi
 
-        rm -f *.out *.data core_full_stack.txt core_full_stack.info		
+        rm -f *.out *.data core_full_stack.txt *.info		
 	cd $curDir
 }
 
