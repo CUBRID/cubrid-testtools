@@ -63,6 +63,7 @@ public class Context {
 
 	private String mailNoticeTo;
 	private boolean enableCheckDiskSpace;
+	private String reserveDiskSpaceSize;
 	private boolean reInstallTestBuildYn = false;
 	private String scenario;
 	private boolean isExecuteAtLocal = false;
@@ -96,6 +97,7 @@ public class Context {
 		this.isContinueMode = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TEST_CONTINUE_YES_OR_NO, "false"));
 
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
+		this.reserveDiskSpaceSize = getProperty(ConfigParameterConstants.RESERVE_DISK_SPACE_SIZE, ConfigParameterConstants.RESERVE_DISK_SPACE_SIZE_DEFAULT_VALUE).trim();
 		this.mailNoticeTo = getProperty(ConfigParameterConstants.TEST_OWNER_EMAIL, "").trim();
 	}
 
@@ -307,5 +309,9 @@ public class Context {
 
 	public boolean isExecuteAtLocal() {
 		return isExecuteAtLocal;
+	}
+	
+	public String getReserveDiskSpaceSize() {
+		return this.reserveDiskSpaceSize;
 	}
 }

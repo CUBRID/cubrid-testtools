@@ -54,6 +54,7 @@ public class Context {
 	private String buildId;
 	private ArrayList<String> testEnvList = new ArrayList<String>();
 	private boolean enableCheckDiskSpace;
+	private String reserveDiskSpaceSize;
 	private boolean reInstallTestBuildYn = false;
 	String mailNoticeTo;
 	String scenario;
@@ -80,6 +81,7 @@ public class Context {
 
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
 		this.mailNoticeTo = getProperty(ConfigParameterConstants.TEST_OWNER_EMAIL, "").trim();
+		this.reserveDiskSpaceSize = getProperty(ConfigParameterConstants.RESERVE_DISK_SPACE_SIZE, ConfigParameterConstants.RESERVE_DISK_SPACE_SIZE_DEFAULT_VALUE).trim();
 	}
 
 	public ArrayList<String> getTestEnvList() {
@@ -238,5 +240,9 @@ public class Context {
 		} else {
 			return cc;
 		}
+	}
+	
+	public String getReserveDiskSpaceSize() {
+		return this.reserveDiskSpaceSize;
 	}
 }

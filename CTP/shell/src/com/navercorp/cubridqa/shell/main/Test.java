@@ -631,7 +631,7 @@ public class Test {
 
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
-		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G \"" + context.getMailNoticeTo() + "\" \"" + context.getMailNoticeCC() + "\"");
+		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` " + context.getReserveDiskSpaceSize() + " \"" + context.getMailNoticeTo() + "\" \"" + context.getMailNoticeCC() + "\"");
 		String result;
 		long startSecs = System.currentTimeMillis() / 1000;
 		try {
