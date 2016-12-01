@@ -10,8 +10,9 @@
 
 *Call Stack Info:*
 {noformat}
-#CORE_FILE#
+#CORE_FILE_NAME#
 {noformat}
+
 {code}
 #CALL_STACK_INFO#
 {code}

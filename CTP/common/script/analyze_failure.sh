@@ -36,9 +36,10 @@ JAVA_CPS=${CTP_HOME}/common/lib/cubridqa-common.jar
 function usage
 {
     cat <<CCTTPP
-Usage: sh analyze_failure.sh [-c|-e] core_file_name|error_msg_keywords [-p] package-file-path-for-failures
+Usage: sh analyze_failure.sh {-c core_file_name|-e error_msg_keywords} [-p] package-file-path-for-failures
        Valid options :
-        [-c|-e]      : core file name or error message keywords 
+        [-c]         : core file name
+	[-e]         : error message keywords 
         [-p]	     : package file path for failures
 CCTTPP
         exit 1
@@ -182,26 +183,33 @@ function gen_data_template()
 	build_version=`cat readme.txt |grep "CUBRID VERSION"|grep -v grep|awk -F ':' 'BEGIN{OFS=":"} {$1="";print $0}'|sed 's/^://g'|sed 's/^[ \t]*//g'`
 	core_dir="${core_file_path%/*}"
 	core_name="${core_file_path##*/}"
-	build_id=`echo $build_version|awk -F '(' '{print $2}'|sed 's/)//g'|sed 's/[[:space:]]//g'`
+	build_id=`cat readme.txt |grep TEST_INFO_BUILD_ID|grep -v export|awk -F '=' '{print $NF}'`
 	affect_version=`get_affect_version $build_id`
-	cd $core_dir
-	core_cmd=`file $core_name`
-	cd -
+	if [ -d "$core_dir" ];then
+		cd $core_dir
+		core_cmd=`file $core_name`
+		cd -
+	fi
 
 	summary_info=`cat core_full_stack.txt|grep "SUMMARY:"|sed 's/SUMMARY://g'`
 	cat core_full_stack.txt|grep -v "SUMMARY:" > core_full_stack.info
 	
 	#generate issue description 
-	echo "TEST_BUILD=$build_version" > issue_create_desc.data
-	echo "TEST_OS=`get_os`" >> issue_create_desc.data
-	echo "CORE_FILE=$core_cmd" >> issue_create_desc.data
-	echo "CALL_STACK_INFO=file:core_full_stack.info" >> issue_create_desc.data
-	echo "ISSUE_SUMMARY_INFO=$summary_info" >> issue_create_desc.data
+	cat > issue_create_desc.data <<ISSUEDESCDATA 
+	TEST_BUILD=$build_version
+	TEST_OS=`get_os`
+	CORE_FILE=$core_cmd
+	CORE_FILE_NAME=$core_name
+	CALL_STACK_INFO=file:core_full_stack.info
+	ISSUE_SUMMARY_INFO=$summary_info
+ISSUEDESCDATA
 
 	#generate issue field data
-	echo "JSON_TPL_ISSUE_SUMMARY_INFO=" > issue_create.data
-	echo "JSON_TPL_AFFECT_VERSION=$affect_version" >> issue_create.data
-	echo "JSON_TPL_CALL_STACK_INFO=json_file:issue_create_desc.out" >> issue_create.data
+	cat > issue_create.data <<ISSUEFILDDATA
+	JSON_TPL_ISSUE_SUMMARY_INFO=$summary_info
+	JSON_TPL_AFFECT_VERSION=$affect_version
+	JSON_TPL_CALL_STACK_INFO=json_file:issue_create_desc.out
+ISSUEFILDDATA
 
 	#generate comment data file content
 	user_info=`cat readme.txt |grep TEST_INFO_ENV|grep -v export|awk -F '=' '{print $NF}'`
@@ -217,20 +225,21 @@ function gen_data_template()
 		db_volume_info="${curDir}/${vlume_path}"
 	fi
 
-
-	echo "*Test Server:*" > issue_comment_desc.out
-	echo "user@IP:$user_info" >> issue_comment_desc.out
-	echo "pwd: <please use general password>" >> issue_comment_desc.out
-	echo " " >> issue_comment_desc.out
-	echo "*All Info*" >> issue_comment_desc.out
-	echo "${user_info}:${curDir}" >> issue_comment_desc.out
-	echo "pwd: <please use general password>" >> issue_comment_desc.out
-	echo "*Core Location:*${curDir}/${core_file_path}" >> issue_comment_desc.out
-	echo "*DB-Volume Location:*${db_volume_info}" >> issue_comment_desc.out
-	echo "*Error Log Location:*${curDir}/CUBRID/log" >> issue_comment_desc.out
-	echo " " >> issue_comment_desc.out
-	echo " " >> issue_comment_desc.out
-	echo "*Related Case:* $related_case" >> issue_comment_desc.out
+	cat > issue_comment_desc.out << ISSUECOMMENTDESC
+	"*Test Server:*" 
+	"user@IP:$user_info"
+	"pwd: <please use general password>"
+	
+	"*All Info*"
+	"${user_info}:${curDir}"
+	"pwd: <please use general password>"
+	"*Core Location:*${curDir}/${core_file_path}" 
+	"*DB-Volume Location:*${db_volume_info}"
+	"*Error Log Location:*${curDir}/CUBRID/log"
+	" " >> issue_comment_desc.out
+	" " >> issue_comment_desc.out
+	"*Related Case:* $related_case" 
+ISSUECOMMENTDESC
 
 	echo "JSON_TPL_COMMENT_BODY=json_file:issue_comment_desc.out" > issue_comment.data
 
@@ -257,16 +266,15 @@ function analyze_failure_pkg()
 {
 	curDir=`pwd`
 	needAnalyzeCore="false"
-	if [ ! -f "$pkg_file_name" ];then
-		cp -f $pkg_file .
-	fi
 	
 	if [ -d "$pkg_file_name_without_ext" ];then
 		cd $pkg_file_name_without_ext
 
 	        if [ -f "$data_issue_create_json_name" ] || [ -f "$data_issue_comment_json_name" ];then
           	        echo ""
-                	echo "[Info]: Target json file exists - (${curDir}/${pkg_file_name_without_ext}/$data_issue_create_json_name, ${curDir}/${pkg_file_name_without_ext}/$data_issue_comment_json_name)"
+                	echo "[Info]: Target json file exists:"
+			echo "CREATE_ISSUE_FIELDS=${curDir}/${pkg_file_name_without_ext}/$data_issue_create_json_name"
+			echo "ADD_ISSUE_COMMENT=${curDir}/${pkg_file_name_without_ext}/$data_issue_comment_json_name"
                 	exit 1
         	fi
 	else
