@@ -164,13 +164,21 @@ function gen_data_template()
 {
 	curDir=`pwd`	
 	core_file_path=$1
+	core_full_stack_text_file_path=$2
+	need_analyze_core=$3
         if [ ! "$core_file_path" ] || [ ! -f "$core_file_path" ];then
 		echo ""
 		echo "[Skip]: core file $core_file_path does not exist!"
  		return
-	fi	
+	fi
 
-	analyzer.sh -f $core_file_path > core_full_stack.txt
+	if [ "$need_analyze_core" == "true" ];then
+		export_CUBRID_environment
+		analyzer.sh -f $core_file_path > core_full_stack.txt
+	else
+		cat $core_full_stack_text_file_path > core_full_stack.txt	
+	fi
+
 	build_version=`cat readme.txt |grep "CUBRID VERSION"|grep -v grep|awk -F ':' 'BEGIN{OFS=":"} {$1="";print $0}'|sed 's/^://g'|sed 's/^[ \t]*//g'`
 	core_dir="${core_file_path%/*}"
 	core_name="${core_file_path##*/}"
@@ -248,6 +256,7 @@ function gen_data_template()
 function analyze_failure_pkg()
 {
 	curDir=`pwd`
+	needAnalyzeCore="false"
 	if [ ! -f "$pkg_file_name" ];then
 		cp -f $pkg_file .
 	fi
@@ -266,15 +275,22 @@ function analyze_failure_pkg()
 	fi	
 
 	if [ "$core_file_name" ];then
+		coreFullStackTextName=`echo $core_file_name|sed 's/core/fullstack/Ig'`
 		coreFilePath=`find ./ -name "$core_file_name"`
+		coreFullStackTextPath=`find ./ -name "$coreFullStackTextName"`
 		if [ ! -f "$coreFilePath" ];then
 			echo ""
 			echo "Core file ${core_file_name} does not exist!"
 			return
 		fi
 
-		export_CUBRID_environment
-		gen_data_template $coreFilePath	
+		if [ ! -f "$coreFullStackTextPath" ];then
+			echo ""
+			echo "Core full stack text file ${coreFullStackTextName} does not exist!"
+			needAnalyzeCore="true"
+		fi
+
+		gen_data_template $coreFilePath $coreFullStackTextPath $needAnalyzeCore	
 	else
 		#TODO for fatal error report
 		echo ""
