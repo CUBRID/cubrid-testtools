@@ -51,8 +51,12 @@ public class MakeFile {
 
 		if (!file.exists()) {
 			try {
-				file.getParentFile().mkdirs();
-				file.createNewFile();
+			      if(file.getParentFile()==null){
+                                        file.createNewFile();
+                                }else{
+                                        file.getParentFile().mkdirs();
+                                        file.createNewFile();
+                                }
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
