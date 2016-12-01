@@ -72,16 +72,16 @@ if [ ! "$pkg_file" ] || [ ! -f "$pkg_file" ];then
         usage;
 fi
 
-is_running=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep $0 | grep -v grep|wc -l`
+pkg_file=$(readlink -f $pkg_file)
+pkg_file_name="${pkg_file##*/}"
+pkg_file_name_without_ext="${pkg_file_name%.tar*}"
+
+is_running=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep 'analyze_failure.sh' |grep "$pkg_file_name_without_ext"|grep -v grep|wc -l`
 if [ $is_running -gt 2 ];then
 	echo "`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep $0 | grep -v grep`"
 	echo "[Info]: The current script is running!"
 	exit 1
 fi
-
-pkg_file=$(readlink -f $pkg_file)
-pkg_file_name="${pkg_file##*/}"
-pkg_file_name_without_ext="${pkg_file_name%.tar*}"
 
 if [ "$core_file_name" ];then
 	core_full_name=`echo $core_file_name|sed 's/\.//g'|tr '[a-z]' '[A-Z]'`
