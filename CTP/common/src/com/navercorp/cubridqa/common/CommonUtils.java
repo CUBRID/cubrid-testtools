@@ -740,7 +740,6 @@ public class CommonUtils {
 		StringBuilder result = new StringBuilder();
 
 		if (string == null || string.length() == 0) {
-			result.append("\"\"");
 			return result.toString();
 		}
 
@@ -750,7 +749,6 @@ public class CommonUtils {
 		int i;
 		int len = string.length();
 
-		result.append('"');
 		for (i = 0; i < len; i += 1) {
 			b = c;
 			c = string.charAt(i);
@@ -792,7 +790,6 @@ public class CommonUtils {
 				}
 			}
 		}
-		result.append('"');
 		return result.toString();
 	}
 
