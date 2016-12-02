@@ -76,7 +76,7 @@ public class CUBJob implements Job {
 		}
 	}
 
-	private void processBuild(CUBJobContext jctx, File buildRootFile, Properties lastProps) {
+	public void processBuild(CUBJobContext jctx, File buildRootFile, Properties lastProps) {
 
 		String buildId = buildRootFile.getName();
 		String simpliedBuildId = CommonUtils.toSimplifiedBuildId(buildId);
@@ -228,7 +228,7 @@ public class CUBJob implements Job {
 		log.close();
 	}
 
-	public Collection<File> getAllMaxBuild(CUBJobContext jctx) {
+	public Collection<File> getAllMaxBuild(final CUBJobContext jctx) {
 		ArrayList<File> freshList = new ArrayList<File>();
 
 		String root = jctx.getMainConfigure().getRepoRoot();
@@ -237,7 +237,7 @@ public class CUBJob implements Job {
 		File[] storeList = rootFile.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.startsWith("store_");
+				return  CommonUtils.isValidStore(name, jctx.getMainConfigure().isExtendStore());
 			}
 		});
 
