@@ -53,7 +53,7 @@ public class MergeTemplate {
 			return;
 		}
 		
-		String templateFileContents = CommonUtils.getFileContent(templateFile);
+		String templateFileContents = CommonUtils.getFileContent(templateFile, false);
 		Properties dataProp = CommonUtils.getProperties(dataFile);
 		Set<Object> set = dataProp.keySet();
 		Iterator<Object> it = set.iterator();

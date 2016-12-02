@@ -222,7 +222,7 @@ public class CommonUtils {
 		return res;
 	}
 
-	public static String getFileContent(String filename) throws IOException {
+	public static String getFileContent(String filename, boolean trimBlankSpace) throws IOException {
 		File file = new File(filename);
 		if (!file.exists()) {
 			return null;
@@ -237,12 +237,20 @@ public class CommonUtils {
 		while ((line = lineReader.readLine()) != null) {
 			if (line.trim().equals(""))
 				continue;
-			result.append(line.trim()).append('\n');
+			if(trimBlankSpace){
+				result.append(line.trim()).append('\n');
+			}else{
+				result.append(line).append('\n');
+			}
 		}
 		lineReader.close();
 		reader.close();
 		fis.close();
 		return result.toString();
+	}
+
+	public static String getFileContent(String filename) throws IOException{
+		return getFileContent(filename, true);
 	}
 
 	public static ArrayList<String> getLineList(String filename) throws IOException {
