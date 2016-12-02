@@ -77,9 +77,15 @@ if [ "$data_file" ] && [ -f "$data_file" ];then
 	if [ $isUnauthorized -ne 0 ];then
 		echo ""
 		echo "[Info] login in jira fail, please confirm your account (${user_name}:${user_password})!"
+		echo "===================== ERROR INFO ====================="
+		cat issue_report.log
+		echo "======================== END ========================"
 	elif [ $isSucc -ne 0 ];then
 		echo ""
 		echo "[Info] report issue fail, please confirm your data file ($data_file)!"
+		echo "===================== ERROR INFO ====================="
+		cat issue_report.log
+		echo "======================== END ========================"
 	else
 		if [ -s "issue_report.log" ];then
 			if [ -n "$issue_id" ];then

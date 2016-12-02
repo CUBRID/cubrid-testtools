@@ -740,7 +740,6 @@ public class CommonUtils {
 		StringBuilder result = new StringBuilder();
 
 		if (string == null || string.length() == 0) {
-			result.append("\"\"");
 			return result.toString();
 		}
 
