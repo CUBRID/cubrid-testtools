@@ -73,7 +73,7 @@ public class MergeTemplate {
 					throw new Exception("Please confirm your json data file " + jsonData.getAbsolutePath() +  " exists!");
 				}
 				
-				String jsonDataContent = CommonUtils.getFileContent(jsonData.getAbsolutePath());
+				String jsonDataContent = CommonUtils.getFileContent(jsonData.getAbsolutePath(), false);
 				templateFileContents = CommonUtils.replace(templateFileContents, "#" + key + "#", CommonUtils.getJson(jsonDataContent));
 				
 			}else if(!CommonUtils.isEmpty(value) && value.toLowerCase().startsWith("file:")){
@@ -88,7 +88,7 @@ public class MergeTemplate {
 					throw new Exception("Please confirm your data file " + fdata.getAbsolutePath() +  " exists!");
 				}
 				
-				String fDataContent = CommonUtils.getFileContent(fdata.getAbsolutePath());
+				String fDataContent = CommonUtils.getFileContent(fdata.getAbsolutePath(), false);
 				templateFileContents = CommonUtils.replace(templateFileContents, "#" + key + "#", fDataContent);
 			}else{
 				templateFileContents = CommonUtils.replace(templateFileContents, "#" + key + "#", value);
