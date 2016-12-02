@@ -27,6 +27,7 @@
 package com.navercorp.cubridqa.scheduler.producer;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
@@ -119,7 +120,12 @@ public abstract class AbstractExtendedSuite {
 	// [0] buildId, [1] storeId
 	protected String[] getExactBuildInfo(String buildId) {
 
-		File[] storeArray = new File(conf.getRepoRoot()).listFiles();
+		File[] storeArray = new File(conf.getRepoRoot()).listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return CommonUtils.isValidStore(name, conf.isExtendStore());
+			}
+		});
 		File[] buildArray;
 		File justFile = null;
 

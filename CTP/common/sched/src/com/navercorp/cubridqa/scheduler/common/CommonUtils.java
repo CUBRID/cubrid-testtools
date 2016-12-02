@@ -274,39 +274,6 @@ public class CommonUtils {
 	}
 
 	public static void main(String[] args) {
-		System.out.println("getFirstVersion: " + getFirstVersion("10.0.0.1234"));
-		System.out.println("getSecondVersion: " + getSecondVersion("10.1.0.1234"));
-		// System.out.println(getMainVersionId("8.4.4.0211"));
-		// int[] pair = getLastVersionPolicy("8.4.4.0211");
-		// System.out.println(pair[0]+", " + pair[1]);
-		//
-		// pair = getLastVersionPolicy("8.4.4.0211~");
-		// System.out.println(pair[0]+", " + pair[1]);
-		//
-		// pair = getLastVersionPolicy("10.0.0.9001~11111");
-		// System.out.println(pair[0]+", " + pair[1]);
-
-		// String fm = "{abc}_{def}_{gh}";
-		// Properties props = new Properties();
-		// props.setProperty("abc", "shell");
-		// props.setProperty("def", "helo");
-		// props.setProperty("gh", "64");
-		// System.out.println(formatScenarioId(fm, props));
-		// System.out.println(getMainVersionId("10.0.0.0376"));
-		// System.out.println(isBuildInRules("8.3.1",
-		// "8.3.1.0165_disable_owfs"));
-
-		// System.out.println(isBuildInRules("9.2.*.0~0003", "9.2.12.0003"));
-
-		// System.out.println(isMainVersionMatch("9.2.*", "9.2.12"));
-		// for(int i=0;i<Integer.MAX_VALUE; i++) {
-		// if (i % 1 == 0) {
-		// System.out.println(genMsgId());
-		// }else {
-		// genMsgId();
-		// }
-		// }
-
 	}
 
 	public static String formatScenarioId(String fm, Properties props) {
@@ -442,4 +409,48 @@ public class CommonUtils {
 		}
 		return listenFilename;
 	}
+	
+	public static boolean isEmpty(String s) {
+		if (s == null) {
+			return true;
+		}
+		return s.trim().equals("");
+	}
+	
+	public static boolean isValidStore(String storeName, boolean isExtended) {
+		String prefix = "store_";
+		if (storeName == null) {
+			return false;
+		}
+
+		storeName = storeName.trim();
+		if (storeName.startsWith(prefix) == false) {
+			return false;
+		}
+
+		int num = -1;
+		try {
+			num = Integer.parseInt(replace(storeName, prefix, ""));
+		} catch (Exception e) {
+			return false;
+		}
+		
+		if (isExtended) {
+			return true;
+		}
+
+		return num >= 0 && num < Constants.MAX_STORE_ID_FOR_DAILY_BUILD;
+	}
+	
+	public static boolean convertBoolean(String str) {
+		return convertBoolean(str, false);
+	}
+
+	public static boolean convertBoolean(String value, boolean defaultValue) {
+		if (value == null)
+			return defaultValue;
+
+		value = value.trim().toUpperCase();
+		return value.equals("1") || value.equals("TRUE") || value.equals("YES") || value.equals("T") || value.equals("Y");
+	}	
 }

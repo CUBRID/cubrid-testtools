@@ -26,7 +26,6 @@
 package com.navercorp.cubridqa.scheduler.producer;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -40,8 +39,12 @@ import com.navercorp.cubridqa.scheduler.producer.crontab.CUBJobContext;
 public class Configure {
 
 	Properties props;
-
+	
 	public Configure() throws Exception {
+		this("job.conf");
+	}
+
+	public Configure(String config) throws Exception {
 
 		props = new Properties();
 
@@ -55,7 +58,7 @@ public class Configure {
 			props.putAll(CommonUtils.getProperties(file));
 		}
 
-		file = new File(Constants.CTP_HOME + File.separator + "conf" + File.separator + "job.conf");
+		file = new File(Constants.CTP_HOME + File.separator + "conf" + File.separator + config);
 		if (file.exists()) {
 			props.putAll(CommonUtils.getProperties(file));
 		}
@@ -168,6 +171,10 @@ public class Configure {
 		}
 		return resultList;
 	}
+	
+	public boolean isExtendStore() {
+		return CommonUtils.convertBoolean(getProperty("extend_store_yn", "n"));
+	}
 
 	public static void main(String[] args) throws Exception {
 		Configure c = new Configure();
@@ -179,5 +186,7 @@ public class Configure {
 			}
 		}
 	}
+	
+	
 
 }
