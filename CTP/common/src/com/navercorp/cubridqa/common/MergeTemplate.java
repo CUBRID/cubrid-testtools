@@ -101,7 +101,7 @@ public class MergeTemplate {
 		}
 	
 		MakeFile outputFileMaker = new MakeFile(outputFile, true);
-		outputFileMaker.println(templateFileContents);
+		outputFileMaker.println(templateFileContents, false);
 		outputFileMaker.close();
 	}
 

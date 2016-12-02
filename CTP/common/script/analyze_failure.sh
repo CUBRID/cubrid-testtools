@@ -185,7 +185,7 @@ function gen_data_template()
 	build_id=`cat readme.txt |grep TEST_INFO_BUILD_ID|grep -v export|awk -F '=' '{print $NF}'`
 	affect_version=`get_affect_version $build_id`
 	echo "" > core_file.info
-	for x in `find ./ -name "core*"`;do
+	for x in `find ./ -name "core.[0-9]*"`;do
 		echo `file $x|awk -F '/' '{print $NF}'` >> core_file.info
 	done
 
@@ -224,19 +224,19 @@ ISSUEFILDDATA
 	fi
 
 	cat > issue_comment_desc.out << ISSUECOMMENTDESC
-"*Test Server:*" 
-"user@IP:$user_info"
-"pwd: <please use general password>"
+*Test Server:*
+user@IP:$user_info
+pwd: <please use general password>
 
-"*All Info*"
-"${user_info}:${curDir}"
-"pwd: <please use general password>"
-"*Core Location:*${curDir}/${core_file_path}" 
-"*DB-Volume Location:*${db_volume_info}"
-"*Error Log Location:*${curDir}/CUBRID/log"
+*All Info*
+${user_info}:${curDir}
+pwd: <please use general password>
+*Core Location:*${curDir}/${core_file_path}
+*DB-Volume Location:*${db_volume_info}
+*Error Log Location:*${curDir}/CUBRID/log
 
 
-"*Related Case:* $related_case" 
+*Related Case:* $related_case 
 ISSUECOMMENTDESC
 
 	echo "JSON_TPL_COMMENT_BODY=json_file:issue_comment_desc.out" > issue_comment.data
