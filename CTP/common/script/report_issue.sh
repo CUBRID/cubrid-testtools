@@ -65,6 +65,15 @@ done
 
 
 if [ "$data_file" ] && [ -f "$data_file" ];then
+	data_file_full_path=$(readlink -f $data_file)
+	data_file_name="${data_file_full_path##*/}"
+	is_running=`ps -u $USER -o cmd|awk -F '/bash ' '{print $NF}' |grep report_issue.sh|grep "$data_file_name"|grep -v grep|wc -l`
+	if [ $is_running -gt 2 ];then
+		echo ""
+		echo "[Info]: the current script is running based on data file - $data_file_full_path"
+		exit 1		
+	fi
+	
 	if [ "$issue_id" ];then
 		url="${jira_home_url}/${issue_id}/comment"
 	else

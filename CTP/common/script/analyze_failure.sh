@@ -76,7 +76,7 @@ pkg_file=$(readlink -f $pkg_file)
 pkg_file_name="${pkg_file##*/}"
 pkg_file_name_without_ext="${pkg_file_name%.tar*}"
 
-is_running=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep 'analyze_failure.sh' |grep "$pkg_file_name_without_ext"|grep -v grep|wc -l`
+is_running=`ps -u $USER -o cmd | awk -F '/bash ' '{print $NF}' | grep 'analyze_failure.sh' |grep "$pkg_file_name_without_ext"|grep -v grep|wc -l`
 if [ $is_running -gt 2 ];then
 	echo ""
 	echo "[Info]: The current script is running!"
