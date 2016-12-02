@@ -8,8 +8,8 @@
 	        "subtask":false
 	   },
 	   "summary": "[Regression] #JSON_TPL_ISSUE_SUMMARY_INFO#",
-	   "components":"CUBRID",
-	   "versions": "#JSON_TPL_AFFECT_VERSION#",
+	   "components":[{"name":"CUBRID"}],
+	   "versions": [{"name":"#JSON_TPL_AFFECT_VERSION#"}],
 	   "description": "#JSON_TPL_CALL_STACK_INFO#"
 	}
 }

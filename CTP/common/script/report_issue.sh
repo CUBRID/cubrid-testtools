@@ -24,7 +24,7 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-jira_home_url="http://jira.cubrid.org/rest/api/2/issue/"
+jira_home_url="http://jira.cubrid.org/rest/api/2/issue"
 
 function usage
 {
@@ -60,8 +60,8 @@ while getopts "u:p:d:i:h" opt; do
 done
 
 
-[ ! "$user_name" ] && echo "Please input jira user name" && exit 1
-[ ! "$user_password" ] && echo "Please input jira user password" && exit 1
+[ ! "$user_name" ] && echo "Please input jira user name" && usage && exit 1
+[ ! "$user_password" ] && echo "Please input jira user password" && usage && exit 1
 
 
 if [ "$data_file" ] && [ -f "$data_file" ];then
@@ -71,17 +71,40 @@ if [ "$data_file" ] && [ -f "$data_file" ];then
 		url="${jira_home_url}"
 	fi
 	
-	curl -D- -u ${user_name}:${user_password} -X POST --data @${data_file} -H "Content-Type: application/json" $url
-	if [ $? -ne ];then
+	curl -D- -u "${user_name}:${user_password}" -X POST --data @${data_file} -H "Content-Type: application/json" $url 2>&1 > issue_report.log
+	isUnauthorized=`cat issue_report.log|grep "Unauthorized"|grep -v grep|wc -l`
+	isSucc=`cat issue_report.log|grep "errorMessages"|grep -v grep|wc -l`
+	if [ $isUnauthorized -ne 0 ];then
 		echo ""
-		echo "[Info]: please confirm your user info (${user_name}:${user_password}) and data file($data_file)"
+		echo "[Info] login in jira fail, please confirm your account (${user_name}:${user_password})!"
+	elif [ $isSucc -ne 0 ];then
+		echo ""
+		echo "[Info] report issue fail, please confirm your data file ($data_file)!"
 	else
-		echo ""
-		echo "[Info]: Success!"
+		if [ -s "issue_report.log" ];then
+			if [ -n "$issue_id" ];then
+				echo ""
+				echo "[Info] add comments for issue - [$issue_id] successfully!"
+			else
+				echo ""
+				issue_id=`cat issue_report.log|grep -Eo '"key":.*?[^\\]",'|sed 's/["|,]//g'`				
+				echo "[Info] Success:"
+				echo "issue-${issue_id}"
+			fi	
+		else
+			echo ""
+			echo "[Info] fail with unknow reason, please confirm your account (${user_name}:${user_password}) and data file ($data_file)!"	
+		fi
+	fi	
+
+	if [ -f issue_report.log ];then
+		rm issue_report.log
 	fi
+
 else
 	echo ""
 	echo "Please input issue data file $data_file"
+	usage
 	exit 1
 fi
 
