@@ -132,12 +132,15 @@ public class CUBJob implements Job {
 		filename = CommonUtils.concatFile(filename, listenFilename);
 
 		File exactFile = new File(filename);
-		FileReady fready = new FileReady(exactFile, true);
-		try {
-			fready.waitFile();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+		
+		if (jctx.getMainConfigure().isWaitFileReady()) {
+			FileReady fready = new FileReady(exactFile, true);
+			try {
+				fready.waitFile();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
 		}
 		if (exactFile.exists() == false) {
 			return null;

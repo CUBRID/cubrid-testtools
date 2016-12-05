@@ -175,6 +175,10 @@ public class Configure {
 	public boolean isExtendStore() {
 		return CommonUtils.convertBoolean(getProperty("extend_store_yn", "n"));
 	}
+	
+	public boolean isWaitFileReady() {
+		return CommonUtils.convertBoolean(getProperty("wait_file_ready_yn", "y"));
+	}	
 
 	public static void main(String[] args) throws Exception {
 		Configure c = new Configure();
