@@ -99,7 +99,7 @@ if [ $? -ne 0 ];then
 fi
 git branch -D $branch_name
 git fetch auto_update_url
-git checkout -b $branch_name -t auto_update_url/$branch_name
+git checkout -f -b $branch_name -t auto_update_url/$branch_name
 
 git branch | grep  temp_branch | xargs -i git branch -D {}
 
