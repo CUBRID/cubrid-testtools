@@ -213,10 +213,19 @@ public class TestMonitor {
 		long elapse_time = (endTime - test.startTime) / 1000;
 
 		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
-
+		
 		test.testCaseSuccess = false;
 		test.addResultItem("NOK", "timeout");
 		test.isTimeOut = true;
+		if (elapse_time > 120 && context.isWindows()) {
+			this.log.println("Try to restart remote aganet to resovle timeout problem.");
+			try {
+				ssh.restartRemoteAgent();
+				this.log.println("Restart done");
+			} catch (Exception e) {
+				this.log.println("Restart fail: " + e.getMessage());
+			}
+		}
 		context.getFeedback().onTestCaseMonitor(test.testCaseFullName,
 				"[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
 				test.envIdentify);

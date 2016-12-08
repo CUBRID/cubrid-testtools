@@ -290,10 +290,7 @@ public class Test {
 		}
 
 		script.addCommand("echo > " + testCaseResultName);
-		script.addCommand("export TEST_SSH_HOST=" + (CommonUtils.isEmpty(ssh.getHost()) ? "`hostname -i`" : ssh.getHost()));
-		script.addCommand("export TEST_SSH_PORT=" + (ssh.getPort() <= 0 ? context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX) : ssh.getPort()));
-		script.addCommand("export TEST_SSH_USER=" + (CommonUtils.isEmpty(ssh.getUser()) ? "`echo $USER`" : ssh.getUser()));
-		script.addCommand("export TEST_BUIILD_ID=" + context.getTestBuild());
+		addSshInfoScript(script);
 		script.addCommand("sh " + testCaseName + " 2>&1");
 		result = ssh.execute(script);
 
@@ -555,8 +552,8 @@ public class Test {
 		String excludedCoresByAssertLine = context.getProperty(ConfigParameterConstants.IGNORE_CORE_BY_KEYWORDS);
 		if (excludedCoresByAssertLine != null && excludedCoresByAssertLine.trim().equals("") == false) {
 			scripts.addCommand("export EXCLUDED_CORES_BY_ASSERT_LINE=\"" + excludedCoresByAssertLine + "\"");
-		}
-
+		}		
+		addSshInfoScript(scripts);
 		scripts.addCommand("source $init_path/shell_utils.sh && do_check_more_errors \"" + this.testCaseDir + "\"");
 		if (context.isWindows == false) {
 			try {
@@ -653,6 +650,7 @@ public class Test {
 	public String doSaveNormalErrorLog() throws JSchException {
 		String ret = "";
 		ShellScriptInput scripts = new ShellScriptInput();
+		addSshInfoScript(scripts);
 		scripts.addCommand("source $init_path/shell_utils.sh && do_save_normal_error_logs \"" + this.testCaseDir + "\"");
 		StringBuffer sb = new StringBuffer();
 		String result = "";
@@ -686,6 +684,13 @@ public class Test {
 		}
 		ret = sb.toString();
 		return ret;
+	}
+	
+	private void addSshInfoScript(ShellScriptInput script) {
+		script.addCommand("export TEST_SSH_HOST=" + (CommonUtils.isEmpty(ssh.getHost()) ? "`hostname -i`" : ssh.getHost()));
+		script.addCommand("export TEST_SSH_PORT=" + (ssh.getPort() <= 0 ? context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX) : ssh.getPort()));
+		script.addCommand("export TEST_SSH_USER=" + (CommonUtils.isEmpty(ssh.getUser()) ? "`echo $USER`" : ssh.getUser()));
+		script.addCommand("export TEST_BUIILD_ID=" + context.getTestBuild());
 	}
 
 }
