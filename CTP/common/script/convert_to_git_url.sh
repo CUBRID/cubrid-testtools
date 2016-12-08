@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 # 
 # Copyright (c) 2016, Search Solution Corporation. All rights reserved.
 # 
@@ -44,7 +45,11 @@ function convert_to_git_url(){
 
         if [ -f "$case_path" ];then
 		case_dir="${case_path%/*}"
-		case_file_suffix="/${case_path##*/}"	
+		case_file_suffix="${case_path##*/}"
+		if [ -z "$case_dir" ] || [ "$case_dir" == "$case_file_suffix" ];then
+			case_dir="."
+		fi
+		
         elif [ -d "$case_path" ];then
 		case_dir="$case_path"
         else
