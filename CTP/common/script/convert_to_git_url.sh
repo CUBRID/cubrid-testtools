@@ -52,19 +52,19 @@ function convert_to_git_url(){
         elif [ -d "$case_path" ];then
 		case_dir="$case_path"
         else
-		echo "please confirm your case path is correct! - $case_path"
+		echo "please confirm your case path is correct! - $case_path" >&2
                 return
 	fi
 
         cd $case_dir
         root_git_url=`git remote -v | grep -Ew "^origin"|awk '{print $2}'|head -n 1|tr -d '[[:space:]]'`
 	if [ -z "$root_git_url" ];then
-		echo "please confirm if your case path is a git path - $case_path"
+		echo "please confirm if your case path is a git path - $case_path" >&2
 		return 
 	fi
 	
         branch_name=`git rev-parse --abbrev-ref HEAD`
-        repo_root_url_prefix=`echo ${root_git_url}|sed 's/\.git//g'`
+        repo_root_url_prefix=`echo ${root_git_url}|sed 's/\.git$//g'`
 
         while [ ! -d .git ] && [ ! "`pwd`" = "/" ]
       	do 
