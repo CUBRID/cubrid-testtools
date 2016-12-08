@@ -29,20 +29,21 @@ function generage_readme {
     backup_dir=$2
 
     freadme=${backup_dir}/readme.txt
-    echo 1.TEST CASE: ${test_case_dir} > $freadme
-    echo 2.CUBRID VERSION: `cubrid_rel | grep CUBRID` >> $freadme
-    echo 3.TEST DATE: `date` >> $freadme
-    echo 4.ENVIRONMENT: >> $freadme
+    echo 1.TEST CASE: `convert_to_git_url.sh ${test_case_dir}` > $freadme
+    echo 2.LOCAL CASE PATH: ${test_case_dir} >> $freadme
+    echo 3.CUBRID VERSION: `cubrid_rel | grep CUBRID` >> $freadme
+    echo 4.TEST DATE: `date` >> $freadme
+    echo 5.ENVIRONMENT: >> $freadme
     set >> $freadme
-    echo 5.ALL PROCESSES: >> $freadme
+    echo 6.ALL PROCESSES: >> $freadme
     ps -ef >> $freadme
-    echo 6.IPCS >> $freadme
+    echo 7.IPCS >> $freadme
     ipcs >> $freadme
-    echo 7.DISK STATUS >> $freadme
+    echo 8.DISK STATUS >> $freadme
     df -h>> $freadme
-    echo 8.LOGGED >> $freadme
+    echo 9.LOGGED >> $freadme
     who >> $freadme
-    echo 9.MEMORY STATUS >> $freadme
+    echo 10.MEMORY STATUS >> $freadme
     free -m >> $freadme
 }
 
