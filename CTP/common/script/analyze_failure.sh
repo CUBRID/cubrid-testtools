@@ -230,7 +230,6 @@ pwd: <please use general password>
 
 *All Info*
 ${user_info%:*}:${curDir}
-pwd: <please use general password>
 *Core Location:* ${curDir}/${core_file_path}
 *DB-Volume Location:* ${db_volume_info}
 *Error Log Location:* ${curDir}/CUBRID/log
