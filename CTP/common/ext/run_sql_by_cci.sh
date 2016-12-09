@@ -134,7 +134,7 @@ function run_sql_legacy {
     
     #STEP 1: CLEAN
     runAction sql_by_cci.act
-    (cd $HOME/ccqt; sh upgrade.sh)
+    (cd $HOME/ccqt/scripts; sh ./upgrade.sh)
     (cd $HOME/dailyqa/$BUILD_SVN_BRANCH/scenario/$BUILD_SCENARIOS
      svn up
      cd $HOME/dailyqa/$BUILD_SVN_BRANCH
