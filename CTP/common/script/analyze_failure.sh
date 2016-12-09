@@ -32,6 +32,7 @@ json_create_suffix="_CREATE.json"
 json_comment_suffix="_COMMENT.json"
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
 JAVA_CPS=${CTP_HOME}/common/lib/cubridqa-common.jar
+source $CTP_HOME/common/script/process_safe.sh
 
 function usage
 {
@@ -75,9 +76,9 @@ fi
 pkg_file=$(readlink -f $pkg_file)
 pkg_file_name="${pkg_file##*/}"
 pkg_file_name_without_ext="${pkg_file_name%.tar*}"
+process_key="analyze_failure.sh_${pkg_file_name}"
 
-is_running=`ps -u $USER -o cmd | awk -F '/bash ' '{print $NF}' | grep 'analyze_failure.sh' |grep "$pkg_file_name_without_ext"|grep -v grep|wc -l`
-if [ $is_running -gt 2 ];then
+if ! ensure_no_existing_process ${process_key}; then
 	echo ""
 	echo "[Info]: The current script is running!"
 	exit 1
