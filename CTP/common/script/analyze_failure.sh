@@ -225,15 +225,14 @@ ISSUEFILDDATA
 
 	cat > issue_comment_desc.out << ISSUECOMMENTDESC
 *Test Server:*
-user@IP:$user_info
+user@IP: $user_info
 pwd: <please use general password>
 
 *All Info*
-${user_info}:${curDir}
-pwd: <please use general password>
-*Core Location:*${curDir}/${core_file_path}
-*DB-Volume Location:*${db_volume_info}
-*Error Log Location:*${curDir}/CUBRID/log
+${user_info%:*}:${curDir}
+*Core Location:* ${curDir}/${core_file_path}
+*DB-Volume Location:* ${db_volume_info}
+*Error Log Location:* ${curDir}/CUBRID/log
 
 
 *Related Case:* $related_case 
