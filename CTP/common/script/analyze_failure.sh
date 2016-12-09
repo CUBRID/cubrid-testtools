@@ -225,7 +225,7 @@ ISSUEFILDDATA
 
 	cat > issue_comment_desc.out << ISSUECOMMENTDESC
 *Test Server:*
-user@IP:$user_info
+user@IP: $user_info
 pwd: <please use general password>
 
 *All Info*
