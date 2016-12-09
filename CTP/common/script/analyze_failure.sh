@@ -211,7 +211,7 @@ ISSUEFILDDATA
 
 	#generate comment data file content
 	user_info=`cat readme.txt |grep TEST_INFO_ENV|grep -v export|awk -F '=' '{print $NF}'`
-	related_case=`cat readme.txt |grep "TEST CASE:"|grep -v grep|grep -v freadme|awk -F ':' '{print $NF}'`
+	related_case=`cat readme.txt |grep "TEST CASE:"|grep -v grep|grep -v freadme|sed 's/^.*TEST CASE://g'|tr -d '[[:space:]]'`
 	is_only_demodb=`find ./ -name "*_vinf"|grep -v "demodb_vinf"|wc -l`
 	if [ $is_only_demodb -eq 0 ];then
 		volume_file_path=`find ./ -name "*_vinf"|grep demodb_vinf`
