@@ -302,7 +302,7 @@ function rqg_cubrid_vacuumdb()
    fi
 }
 
-function rqg_cubrid_checkcore_and_stop_test()
+function rqg_cubrid_checkcore_and_stoptest()
 {
     case_path=$1
     if [ -n "$case_path" ];then
