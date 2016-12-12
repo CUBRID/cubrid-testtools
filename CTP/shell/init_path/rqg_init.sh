@@ -302,6 +302,15 @@ function rqg_cubrid_vacuumdb()
    fi
 }
 
+function rqg_cubrid_checkcore_and_stop_test()
+{
+    case_path=$1
+    if [ -n "$case_path" ];then
+	do_check_more_errors $case_path
+	exit -1
+    fi
+}
+
 function rqg_check_space()
 {
    #TODO 
