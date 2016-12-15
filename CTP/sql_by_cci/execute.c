@@ -2050,10 +2050,11 @@ int main (int argc, char *argv[])
 {
     int sql_count;
     int rs = -1;
+    int ext_answer_flag = 0;
     char *result;
     char *ans_file = NULL;
     char *test_type = NULL;
-    char cci_ext[255] = { 0 };
+    char cci_ext_answer[255] = { 0 };
     long start_time, end_time, elapse_time;
     if (argc < 4)
     {
@@ -2116,13 +2117,14 @@ int main (int argc, char *argv[])
     init_log (result);
 
     //construct answer_cci file
-    strcpy (cci_ext, answername);
-    strcat (cci_ext, "_cci");
+    strcpy (cci_ext_answer, answername);
+    strcat (cci_ext_answer, "_cci");
 
     //if the answer_cci file exists then  compare the result with answer_cci
-    if ((access (cci_ext, 0)) != -1)
+    if ((access (cci_ext_answer, 0)) != -1)
     {
-        rs = cmp_result_files (resname, cci_ext);
+        rs = cmp_result_files (resname, cci_ext_answer);
+	ext_answer_flag = 1;
     }
     else
     {
@@ -2158,8 +2160,14 @@ int main (int argc, char *argv[])
         copyfile (filename, sqllist);
 
         //mkdir folder for answer, and create result file for failed cases
-        result_p = merge_result_path (result, answername);
-        printf ("----answer name----: %s\n", answername);
+        if (ext_answer_flag == 0){
+		result_p = merge_result_path (result, answername);
+        	printf ("----answer name----: %s\n", answername);
+        }else{
+		result_p = merge_result_path (result, cci_ext_answer);
+        	printf ("----answer name----: %s\n", cci_ext_answer);
+        }
+
         mkdir_r (result_p, result);
         copyfile (answername, result_p);
         if (result_p != NULL)
