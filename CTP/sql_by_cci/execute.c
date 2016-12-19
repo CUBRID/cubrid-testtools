@@ -2063,7 +2063,6 @@ int main (int argc, char *argv[])
     char *result;
     char *ans_file = NULL;
     char *test_type = NULL;
-    char cci_ext[255] = { 0 };
     long start_time, end_time, elapse_time;
     if (argc < 4)
     {
