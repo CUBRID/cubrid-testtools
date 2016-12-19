@@ -114,8 +114,6 @@ public class InstanceManager {
 			result = ssh.execute(script);
 		} catch (Exception e) {
 			e.printStackTrace();
-		}finally{
-			ssh.close();
 		}
 		
 		return result.trim();

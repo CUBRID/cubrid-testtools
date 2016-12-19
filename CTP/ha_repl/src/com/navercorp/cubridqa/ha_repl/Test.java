@@ -690,6 +690,7 @@ public class Test {
 			String port = hostManager.getAvailablePort(ssh);
 			String url = "jdbc:cubrid:" + host + ":" + port + ":" + hostManager.getTestDb() + ":::";
 			connection = DriverManager.getConnection(url, "dba", "");
+			ssh.close();
 		}
 		return connection;
 	}
