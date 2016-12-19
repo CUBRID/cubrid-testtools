@@ -646,7 +646,7 @@ public class Test {
 		Statement stmt = null;
 
 		try {
-			connection = getDBConnection();
+			connection = getDBConnection("master");
 			stmt = connection.createStatement();
 			if (!("".endsWith(sql)) && sql.length() > 0) {
 				if (sql.toUpperCase().trim().startsWith("SELECT")) {
@@ -683,10 +683,11 @@ public class Test {
 
 	}
 
-	private Connection getDBConnection() throws SQLException {
+	private Connection getDBConnection(String hostName) throws SQLException {
 		if (connection == null || connection.isClosed()) {
-			String host = hostManager.getInstanceProperty("master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
-			String port = hostManager.getAvailablePort("master");
+			String host = hostManager.getInstanceProperty(hostName + "." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+			SSHConnect ssh = this.hostManager.getHost(hostName);
+			String port = hostManager.getAvailablePort(ssh);
 			String url = "jdbc:cubrid:" + host + ":" + port + ":" + hostManager.getTestDb() + ":::";
 			connection = DriverManager.getConnection(url, "dba", "");
 		}
