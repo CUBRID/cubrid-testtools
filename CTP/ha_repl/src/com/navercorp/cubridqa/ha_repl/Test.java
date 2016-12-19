@@ -640,14 +640,27 @@ public class Test {
 		return result;
 	}
 
-	private String executeSQL(String sql) {
+	private String executeSQL(String sql, SSHConnect ssh) {
 		String res = "";
 		ResultSet rs = null;
 		Statement stmt = null;
-
+	
 		try {
-			connection = getDBConnection();
+			connection = getDBConnection("master", ssh);
 			stmt = connection.createStatement();
+		} catch (Exception ex) {
+			this.failCount++;
+			this.addFail("[NOK] DB connection creation fail!");
+			if(stmt!=null)
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			return "[NOK] DB connection creation fail!";
+		}
+			
+		try {
 			if (!("".endsWith(sql)) && sql.length() > 0) {
 				if (sql.toUpperCase().trim().startsWith("SELECT")) {
 					rs = stmt.executeQuery(sql);
@@ -680,13 +693,17 @@ public class Test {
 		}
 
 		return res;
-
 	}
 
-	private Connection getDBConnection() throws SQLException {
+	private Connection getDBConnection(String hostName, SSHConnect ssh) throws SQLException {
 		if (connection == null || connection.isClosed()) {
-			String host = hostManager.getInstanceProperty("master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
-			String port = hostManager.getInstanceProperty("broker.BROKER_PORT");
+			String host = hostManager.getInstanceProperty(hostName + "." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+			String port = hostManager.getInstanceProperty(hostName + "." + ConfigParameterConstants.ROLE_BROKER_AVAILABLE_PORT);
+			if(CommonUtils.isEmpty(port)){
+				port = hostManager.getAvailableBrokerPort(ssh);
+				hostManager.putInstanceProperty(hostName + "." + ConfigParameterConstants.ROLE_BROKER_AVAILABLE_PORT, port);
+			}
+			
 			String url = "jdbc:cubrid:" + host + ":" + port + ":" + hostManager.getTestDb() + ":::";
 			connection = DriverManager.getConnection(url, "dba", "");
 		}
@@ -712,8 +729,8 @@ public class Test {
 
 		String result = "";
 		if (isTest && "jdbc".equals(context.getTestmode())) {
-			result = executeSQL(stmt);
-			result += executeSQL(flag_SQL);
+			result = executeSQL(stmt, ssh);
+			result += executeSQL(flag_SQL, ssh);
 		} else {
 			result = executeScript(ssh, isSQL, isCMD, stmt, isTest);
 		}
