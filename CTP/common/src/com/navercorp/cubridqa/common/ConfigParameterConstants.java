@@ -57,6 +57,7 @@ public class ConfigParameterConstants {
 	public static final String ROLE_BROKER_COMMON = "brokercommon";
 	public static final String ROLE_BROKER1 = "broker1";
 	public static final String ROLE_BROKER2 = "broker2";
+	public static final String ROLE_BROKER_AVAILABLE_PORT = "available_port";
 
 	// Test case configuration parameters
 	public static final String SCENARIO = "scenario";

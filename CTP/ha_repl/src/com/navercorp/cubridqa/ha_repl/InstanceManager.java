@@ -105,6 +105,12 @@ public class InstanceManager {
 		}
 		return value;
 	}
+	
+	public void putInstanceProperty(String key, String val){
+		String keyFullName = ConfigParameterConstants.TEST_INSTANCE_PREFIX + currEnvId + "." + key;
+		this.context.config.put(keyFullName, val);
+	}
+	
 
 	public String getAvailableBrokerPort(SSHConnect ssh){
 		if(ssh == null) return "";

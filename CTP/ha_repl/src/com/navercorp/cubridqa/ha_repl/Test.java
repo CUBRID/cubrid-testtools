@@ -168,7 +168,6 @@ public class Test {
 		String actualResult;
 		int stmtCount = 0;
 		boolean isDML;
-		boolean dbConnectionCreationFailFlag = false;
 		ArrayList<String> checkSQLs;
 		StringBuffer msg;
 		try {
@@ -196,13 +195,7 @@ public class Test {
 					if (actualResult.equals("")) {
 						log("[RESULT] (N/A)");
 					} else {
-						if(actualResult.indexOf("[ERROR] - DB connection creation fail") != -1){
-							dbConnectionCreationFailFlag = true;
-							log("[RESULT] DB connection creation fail!");
-						}else{
-							log("[RESULT] " + Constants.LINE_SEPARATOR + actualResult);
-						}
-						
+						log("[RESULT] " + Constants.LINE_SEPARATOR + actualResult);
 					}
 				} else if (tr.isCheck()) {
 
@@ -296,10 +289,6 @@ public class Test {
 			}
 		}
 
-		if (dbConnectionCreationFailFlag) {
-			succFlag = "FAIL";
-		}
-		
 		mlog.println("[" + succFlag + "] " + f.getAbsolutePath());
 		log("===========================================================================================");
 		log("");
@@ -655,13 +644,23 @@ public class Test {
 		String res = "";
 		ResultSet rs = null;
 		Statement stmt = null;
-
+	
 		try {
 			connection = getDBConnection("master", ssh);
-			if(connection == null || connection.isClosed()){
-				res += "[ERROR] - DB connection creation fail!" + Constants.LINE_SEPARATOR;
-			}
 			stmt = connection.createStatement();
+		} catch (Exception ex) {
+			this.failCount++;
+			this.addFail("[NOK] DB connection creation fail!");
+			if(stmt!=null)
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			return "[NOK] DB connection creation fail!";
+		}
+			
+		try {
 			if (!("".endsWith(sql)) && sql.length() > 0) {
 				if (sql.toUpperCase().trim().startsWith("SELECT")) {
 					rs = stmt.executeQuery(sql);
@@ -694,13 +693,17 @@ public class Test {
 		}
 
 		return res;
-
 	}
 
 	private Connection getDBConnection(String hostName, SSHConnect ssh) throws SQLException {
 		if (connection == null || connection.isClosed()) {
 			String host = hostManager.getInstanceProperty(hostName + "." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
-			String port = hostManager.getAvailableBrokerPort(ssh);
+			String port = hostManager.getInstanceProperty(hostName + "." + ConfigParameterConstants.ROLE_BROKER_AVAILABLE_PORT);
+			if(CommonUtils.isEmpty(port)){
+				port = hostManager.getAvailableBrokerPort(ssh);
+				hostManager.putInstanceProperty(hostName + "." + ConfigParameterConstants.ROLE_BROKER_AVAILABLE_PORT, port);
+			}
+			
 			String url = "jdbc:cubrid:" + host + ":" + port + ":" + hostManager.getTestDb() + ":::";
 			connection = DriverManager.getConnection(url, "dba", "");
 		}
