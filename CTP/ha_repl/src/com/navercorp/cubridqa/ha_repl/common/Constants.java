@@ -41,4 +41,5 @@ public class Constants {
 
 	public static final String DIR_ERROR_BACKUP = "~/ERROR_BACKUP";
 
+	public static final String GET_BROKER_PORT_CMD = "cubrid broker status -b|grep -iv 'off'|grep '^*'|tail -n 1|awk '{print $4}'";
 }

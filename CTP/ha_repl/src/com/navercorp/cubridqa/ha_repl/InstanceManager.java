@@ -31,6 +31,7 @@ import java.util.Set;
 
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
+import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
@@ -105,6 +106,21 @@ public class InstanceManager {
 		return value;
 	}
 
+	public String getAvailablePort(String hostId){
+		SSHConnect ssh = this.getHost(hostId);
+		GeneralScriptInput script = new GeneralScriptInput(Constants.GET_BROKER_PORT_CMD);
+		String result = "";
+		try {
+			result = ssh.execute(script);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally{
+			ssh.close();
+		}
+		
+		return result.trim();
+	}
+	
 	public String getTestDb() {
 		return this.testDb;
 	}
