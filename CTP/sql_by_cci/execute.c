@@ -1960,6 +1960,7 @@ char *getanswerfile (const char *casename)
     char *p2 = NULL;
     char *p  = NULL;
     char *answer_str = NULL;
+    char *ext_answer_str = NULL;
     int len_p1, len_p2, len;
 
     if (casename == NULL)
@@ -1983,7 +1984,16 @@ char *getanswerfile (const char *casename)
     p += len_p2;
     p = strncpy (p, "answer", strlen ("answer"));
 
-    return answer_str;
+    ext_answer_str = malloc(strlen(answer_str) + strlen("_cci") + 1);
+    strcpy(ext_answer_str, answer_str);
+    strcat(ext_answer_str, "_cci");
+    if((access (ext_answer_str, 0)) != -1){
+	free(answer_str);
+    	return ext_answer_str;
+    }else{
+	free(ext_answer_str);
+ 	return answer_str;
+    }
 }
 
 char *getRelativeCasePath(char *filename)
@@ -2053,7 +2063,6 @@ int main (int argc, char *argv[])
     char *result;
     char *ans_file = NULL;
     char *test_type = NULL;
-    char cci_ext[255] = { 0 };
     long start_time, end_time, elapse_time;
     if (argc < 4)
     {
@@ -2114,21 +2123,7 @@ int main (int argc, char *argv[])
 
     //start result log file
     init_log (result);
-
-    //construct answer_cci file
-    strcpy (cci_ext, answername);
-    strcat (cci_ext, "_cci");
-
-    //if the answer_cci file exists then  compare the result with answer_cci
-    if ((access (cci_ext, 0)) != -1)
-    {
-        rs = cmp_result_files (resname, cci_ext);
-    }
-    else
-    {
-        rs = cmp_result_files (resname, answername);
-    }
-
+    rs = cmp_result_files (resname, answername);
     //write the compare result into summary file.
     char *case_file = getRelativeCasePath(filename);
     if (rs == 0)
