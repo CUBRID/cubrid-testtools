@@ -106,7 +106,7 @@ public class InstanceManager {
 		return value;
 	}
 
-	public String getAvailablePort(SSHConnect ssh){
+	public String getAvailableBrokerPort(SSHConnect ssh){
 		if(ssh == null) return "";
 		GeneralScriptInput script = new GeneralScriptInput(Constants.GET_BROKER_PORT_CMD);
 		String result = "";
