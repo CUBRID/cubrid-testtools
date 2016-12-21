@@ -689,7 +689,7 @@ function init
        touch $result_file
     fi
   fi
-  
+ 
   export OS
 }
 
@@ -1362,14 +1362,16 @@ function cubrid_createdb()
 
 function search_in_upper_path {
    curr_path=$1
-   dest_file=$2
-   if [ -f ${curr_path}/${dest_file} ]; then
-       echo $(cd ${curr_path}; pwd)/${dest_file}
+   dest_name=$2
+   if [ -f ${curr_path}/${dest_name} ]; then
+       echo $(cd ${curr_path}; pwd)/${dest_name}
+   elif [ -d ${curr_path}/${dest_name} ];then
+       echo $(cd ${curr_path}/${dest_name}; pwd)
    else
        if [ "$(cd ${curr_path}/..; pwd)" == "/" ]; then
            return 
        else
-           search_in_upper_path ${curr_path}/.. ${dest_file}
+           search_in_upper_path ${curr_path}/.. ${dest_name}
        fi
    fi
 }
@@ -1445,4 +1447,4 @@ function AIX_NOT_SUPPORTED {
     return
 }
 
-
+source $init_path/shell_utils.sh
