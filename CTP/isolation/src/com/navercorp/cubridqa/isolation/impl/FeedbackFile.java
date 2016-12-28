@@ -229,7 +229,6 @@ public class FeedbackFile implements Feedback {
 	public void onStopEnvEvent(String envIdentify) {
 		String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
 		SSHConnect ssh = null;
-		String result = "";
 		if (role.indexOf("coverage") != -1) {
 			println("[Code Coverage] Current Time is " + new Date());
 			feedbackLog.print("[Code Coverage] start code coverage data collection!");
@@ -242,14 +241,13 @@ public class FeedbackFile implements Feedback {
 
 				IsolationScriptInput scripts = new IsolationScriptInput();
 				scripts.addCommand("run_coverage_collect_and_upload " + covParams + " 2>&1");
-				scripts.addCommand("cubrid service stop");
+				String result;
 				try {
 					result = ssh.execute(scripts);
 					feedbackLog.println(result);
 				} catch (Exception e) {
 					feedbackLog.print("[ERROR] " + e.getMessage());
 				}
-				
 			} catch (JSchException jschE) {
 				jschE.printStackTrace();
 			} finally {
@@ -261,22 +259,6 @@ public class FeedbackFile implements Feedback {
 				feedbackLog.print("[Code Coverage] end code coverage collection on " + envIdentifyTitle);
 			}
 
-		}else{
-			try {
-				ssh = IsolationHelper.createTestNodeConnect(context, envIdentify);
-				IsolationScriptInput scripts = new IsolationScriptInput();
-				scripts.addCommand("cubrid service stop");
-				try {
-					result = ssh.execute(scripts);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			} catch (JSchException e) {
-				e.printStackTrace();
-			}finally{
-				System.out.println(result);
-				ssh.close();
-			}
 		}
 
 	}

@@ -441,24 +441,6 @@ public class FeedbackDB implements Feedback {
 
 	@Override
 	public void onStopEnvEvent(String envIdentify) {
-		System.out.println("Stop service for node [" + envIdentify + "]");
-		SSHConnect ssh = null;
-		String result = "";
-		try {
-			ssh = IsolationHelper.createTestNodeConnect(context, envIdentify);
-			IsolationScriptInput scripts = new IsolationScriptInput();
-			scripts.addCommand("cubrid service stop");
-			try {
-				result = ssh.execute(scripts);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		} catch (JSchException e) {
-			e.printStackTrace();
-		}finally{
-			System.out.println(result);
-			ssh.close();
-		}
+		// TODO Auto-generated method stub
 	}
-
 }
