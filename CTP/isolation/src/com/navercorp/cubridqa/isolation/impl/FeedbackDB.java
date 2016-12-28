@@ -35,13 +35,17 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 
+import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.Constants;
 import com.navercorp.cubridqa.isolation.Context;
 import com.navercorp.cubridqa.isolation.Feedback;
+import com.navercorp.cubridqa.isolation.IsolationHelper;
+import com.navercorp.cubridqa.isolation.IsolationScriptInput;
 import com.navercorp.cubridqa.shell.common.HttpUtil;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class FeedbackDB implements Feedback {
 
@@ -437,8 +441,24 @@ public class FeedbackDB implements Feedback {
 
 	@Override
 	public void onStopEnvEvent(String envIdentify) {
-		// TODO Auto-generated method stub
-
+		System.out.println("Stop service for node [" + envIdentify + "]");
+		SSHConnect ssh = null;
+		String result = "";
+		try {
+			ssh = IsolationHelper.createTestNodeConnect(context, envIdentify);
+			IsolationScriptInput scripts = new IsolationScriptInput();
+			scripts.addCommand("cubrid service stop");
+			try {
+				result = ssh.execute(scripts);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} catch (JSchException e) {
+			e.printStackTrace();
+		}finally{
+			System.out.println(result);
+			ssh.close();
+		}
 	}
 
 }
