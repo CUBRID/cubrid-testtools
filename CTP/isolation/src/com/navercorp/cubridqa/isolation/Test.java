@@ -137,10 +137,10 @@ public class Test {
 			}
 		}
 
-		isStopped = true;
 		stopCUBRIDService();
 		close();
 		context.getFeedback().onStopEnvEvent(currEnvId);
+		isStopped = true;
 		System.out.println("[ENV STOP] " + currEnvId);
 	}
 
