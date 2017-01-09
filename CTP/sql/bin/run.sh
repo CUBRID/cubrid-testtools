@@ -798,7 +798,7 @@ function do_summary_and_clean()
      resultDirTemp=`cat ${log_filename}|grep "^Result Root Dir"|head -n 1`
      resultDir=${resultDirTemp#*:}
      if [ "$interface_type" == "cci" ];then
-	 generate_summary_info ${resultDir// /}	          		
+	 generate_summary_info $resultDir	          		
      else
      	resultSummaryInfoFile=${resultDir}/main.info
      	[ ! -f $resultSummaryInfoFile ] && echo "No Results!! please confirm your scenario path include valid case script(the current scenairo path:$scenario_repo_root)" && exit 1
