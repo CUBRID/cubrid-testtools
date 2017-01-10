@@ -1714,6 +1714,7 @@ int test(FILE * fp)
             goto _END;
         }else{
 	    fprintf (stdout, "CUBRID server is not available, waiting for recovery - (%s) \n", get_err_msg (conn));
+	    sleep(5); 
         }
 
         count++;
