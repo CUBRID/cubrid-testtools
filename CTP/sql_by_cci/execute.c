@@ -1696,6 +1696,7 @@ int test(FILE * fp)
 {
     int conn = -1, req = 0, res = 0;
     int sql_count = 0, length = 0, count = 0;
+    int MAX_RETRY_COUNT = 50;
     T_CCI_ERROR error;
 
     //contect to the server until  success.
@@ -1706,12 +1707,16 @@ int test(FILE * fp)
         {
             break;
         }
-        else if(conn < 0 && count >= 5)
+        else if(conn < 0 && count >= MAX_RETRY_COUNT)
         {
             fprintf (stdout, "(%s, %d) %s ERROR : cci_connect(%s %d)\n\n",
                     __FILE__,  __LINE__, get_err_msg (conn), error.err_msg, error.err_code);
             goto _END;
+        }else{
+	    fprintf (stdout, "CUBRID server is not available, waiting for recovery - (%s) \n", get_err_msg (conn));
+	    sleep(5); 
         }
+
         count++;
     }
 
