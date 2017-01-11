@@ -132,8 +132,8 @@ public class Analyzer {
 		} else if (processName.indexOf("cub_server") != -1) {
 			processName = "cub_server";
 		} else if (processName.indexOf("cubrid ") != -1) {
-			if ((processName.indexOf("service") != -1) || (processName.indexOf("server") != -1) || (processName.indexOf("broker") != -1) || (processName.indexOf("manager") != -1)
-					|| (processName.indexOf("heartbeat") != -1) || (processName.indexOf("hb") != -1)) {
+			if ((processName.indexOf(" service") != -1) || (processName.indexOf(" server") != -1) || (processName.indexOf(" broker") != -1) || (processName.indexOf(" manager") != -1)
+					|| (processName.indexOf(" heartbeat") != -1) || (processName.indexOf(" hb") != -1)) {
 				processName = "cubrid";
 			}else{
 				processName = "cub_admin";
