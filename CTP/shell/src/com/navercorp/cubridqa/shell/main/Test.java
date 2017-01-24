@@ -394,7 +394,8 @@ public class Test {
 		scripts.addCommand("rm -rf CUBRID/lib/libcubrid_all_locales.dll");
 		scripts.addCommand("ls CUBRID/conf/*");
 		scripts.addCommand("find CUBRID/log -type f -print | xargs -i rm -rf {} ");
-
+		scripts.addCommand("rm -rf CUBRID/var/*");
+		
 		String result = "";
 		try {
 			result = ssh.execute(scripts);
@@ -414,6 +415,7 @@ public class Test {
 		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/databases/* ${CUBRID}/databases/");
 		scripts.addCommand("rm -rf ${CUBRID}/lib/libcubrid_??_??.so");
 		scripts.addCommand("rm -rf ${CUBRID}/lib/libcubrid_all_locales.so");
+		scripts.addCommand("rm -rf ${CUBRID}/var/* >/dev/null 2>&1");
 		scripts.addCommand("find ${CUBRID}/log -type f -print | xargs -i rm -rf {} ");
 		scripts.addCommand("find ${CUBRID}/ -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
 		scripts.addCommand("find ${CUBRID}/ -name \"core\" | xargs -i rm -rf {} ");
