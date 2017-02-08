@@ -102,7 +102,8 @@ function run_sql {
         (cd $testResultPath/..; upload_to_dailysrv "./$testResultName" "./qa_repository/function_cci_for_sql/y`date +%Y`/m`date +%-m`/$testResultName")
 
         if [ `cat $tmplog |grep '^CORE_FILE:' | wc -l` -gt 0 ]; then
-            timestamp=`cat $testResultPath/summary_info |grep execute|sed 's/[^0-9]*//g'`
+	    datestr=`cat $testResultPath/summary_info |grep execute_date|awk -F '=' '{print $(NF)}'
+            timestamp=`date -d "$datestr" +%Y%m%d%H%M%S`
             core_dirname=${BUILD_SCENARIOS}_${timestamp}
             core_path=${core_backup_root}/${testResultName}/${core_dirname}
             mkdir -p ${core_path}
