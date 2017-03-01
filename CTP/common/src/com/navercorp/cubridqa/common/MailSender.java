@@ -57,6 +57,8 @@ public class MailSender {
 		options.addOption("cc", true, "the cc recipient of mail");
 		options.addOption("title", true, "the subject of mail");
 		options.addOption("content", true, "the content of mail");
+		options.addOption("filecont", true, "the content of mail from a file");
+		options.addOption("br", false, "replace with <br>");
 		options.addOption("help", false, "List help");
 
 		Properties props = Constants.COMMON_DAILYQA_CONF;
@@ -93,8 +95,16 @@ public class MailSender {
 		String to = cmd.getOptionValue("to");
 		String cc = cmd.getOptionValue("cc");
 		String title = cmd.getOptionValue("title");
-		String content = cmd.getOptionValue("content");
-
+		String content;
+		if (cmd.hasOption("content")) {
+			content = cmd.getOptionValue("content");
+		} else {
+			content = CommonUtils.getFileContent(cmd.getOptionValue("filecont"));
+		}
+		if (cmd.hasOption("br")) {
+			content = CommonUtils.replace(content, "\n", "<br>");
+		}
+		
 		String[] toList = to.split(",");
 		ArrayList<InternetAddress> toAdrrList = new ArrayList<InternetAddress>();
 		ArrayList<InternetAddress> ccAdrrList = new ArrayList<InternetAddress>();

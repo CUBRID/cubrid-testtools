@@ -544,7 +544,7 @@ public class Test {
 		}
 	}
 
-	private void doFinalCheck() {
+	private synchronized void doFinalCheck() {
 		String result = null;
 
 		ShellScriptInput scripts = new ShellScriptInput("source /dev/stdin <<EOF");
