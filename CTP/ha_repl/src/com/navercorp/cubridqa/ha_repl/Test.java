@@ -427,12 +427,14 @@ public class Test {
 		String hitHost;
 		GeneralScriptInput checkScript;
 		String error = null;
+		String coreStack = null;
 		String cat;
 		boolean hit = false;
 
 		for (SSHConnect ssh : allNodeList) {
 			error = null;
 			cat = null;
+			coreStack = null;
 			try {
 				hitHost = ssh.getHost().trim();
 				checkScript = new GeneralScriptInput("find $CUBRID -name \"core.*\" | wc -l");
@@ -441,8 +443,9 @@ public class Test {
 
 				if (!result.trim().equals("0")) {
 					cat = "CORE";
-					error = "FOUND CORE FILE on host " + hitHost;
+					error = "FOUND CORE FILE on host " + ssh.getUser() + "@" + hitHost;
 					this.hasCore = true;
+					coreStack = ssh.execute("find $CUBRID -name \"core.*\" -exec analyzer.sh {} \\;");
 				}
 
 				checkScript = new GeneralScriptInput("grep -r \"FATAL ERROR\" $CUBRID/log/* | wc -l");
@@ -451,9 +454,9 @@ public class Test {
 				if (!result.trim().equals("0")) {
 					if (cat == null) {
 						cat = "FATAL";
-						error = "FOUND FATAL ERROR on host " + hitHost;
+						error = "FOUND FATAL ERROR on host " + ssh.getUser() + "@" + hitHost;
 					} else {
-						error = error + Constants.LINE_SEPARATOR + "FOUND FATAL ERROR on host " + hitHost;
+						error = error + Constants.LINE_SEPARATOR + "FOUND FATAL ERROR on host " + ssh.getUser() + "@" + hitHost;
 					}
 				}
 
@@ -481,6 +484,9 @@ public class Test {
 			error = error + " (" + Constants.DIR_ERROR_BACKUP + "/" + resultId + ".tar.gz)";
 			mlog.println(error);
 			this.userInfo.append(error).append(Constants.LINE_SEPARATOR);
+			if (coreStack != null && coreStack.trim().equals("") == false) {
+				this.userInfo.append(coreStack).append(Constants.LINE_SEPARATOR);
+			}
 			addFail("[NOK] " + error);
 			break;
 		}
