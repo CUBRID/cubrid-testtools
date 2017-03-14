@@ -445,7 +445,9 @@ public class Test {
 					cat = "CORE";
 					error = "FOUND CORE FILE on host " + ssh.getUser() + "@" + hitHost;
 					this.hasCore = true;
-					coreStack = ssh.execute("find $CUBRID -name \"core.*\" -exec analyzer.sh {} \\;");
+					
+					checkScript = new GeneralScriptInput("find $CUBRID -name \"core.*\" -exec analyzer.sh {} \\;");
+					coreStack = ssh.execute(checkScript);
 				}
 
 				checkScript = new GeneralScriptInput("grep -r \"FATAL ERROR\" $CUBRID/log/* | wc -l");
