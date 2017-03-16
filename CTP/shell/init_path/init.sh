@@ -186,8 +186,7 @@ function get_best_compat_file
        if [ -f ${fileName}${suffix_os} ]
        then
            newfilename=${fileName}${suffix_os}
-       elif [  -f ${fileName} ]
-       then
+       else
            newfilename=${fileName}
        fi   
        
@@ -216,8 +215,7 @@ function get_best_compat_file
        if [ -f ${fileName}${suffix_os} ]
        then
            newfilename=${fileName}${suffix_os}
-       elif [  -f ${fileName} ]
-       then
+       else
            newfilename=${fileName}
        fi   
    else
@@ -257,8 +255,7 @@ function get_best_compat_file
            elif [ -f ${fileName}${suffix_os} ]
            then
            newfilename=${fileName}${suffix_os} 
-           elif [ -f ${fileName} ]
-           then
+           else
            newfilename=${fileName} 
            fi
        fi
@@ -291,18 +288,6 @@ function compare_result_between_files
    
   left=`get_best_compat_file $1 $server $cci_driver`
   right=`get_best_compat_file $2 $server $cci_driver`
-
-  if [ ! -f "$left" ]
-  then
-     write_nok "The left file dose not exist"
-     return
-  fi
-
-  if [ ! -f "$right" ]
-  then
-     write_nok "The right file dose not exist"
-     return
-  fi
 
   dos2unix $left
   dos2unix $right
