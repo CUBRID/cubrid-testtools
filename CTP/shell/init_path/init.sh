@@ -170,6 +170,7 @@ function get_best_compat_file
    fileName=$1
    current_server=$2
    cci_driver=$3   
+   newfilename=""
    
    if [ "$OS" = "Windows_NT" ]
    then
@@ -208,8 +209,6 @@ function get_best_compat_file
         best_driver=""
      fi
    fi
-
-   newfilename=""
    
    if [ "$best_driver" == "" ]
    then    
@@ -277,14 +276,33 @@ function compare_result_between_files
 
   cci_driver=""
   server=""
+  if [ $# -ne 2 ]
+  then
+     write_nok "Please input two files to compare"
+     return
+  fi
+  
   if [ -f $CUBRID/qa.conf ]
   then
      cci_driver=`grep 'CCI_Version' $CUBRID/qa.conf|awk -F= '{print $2}'`
      server=`grep 'Server_Version' $CUBRID/qa.conf|awk -F= '{print $2}'`
   fi
-  
+   
   left=`get_best_compat_file $1 $server $cci_driver`
   right=`get_best_compat_file $2 $server $cci_driver`
+
+  if [ "$left" == "" ]
+  then
+     write_nok "Cannot find the proper file for $1 to compare"
+     return
+  fi
+
+  if [ "$right" == "" ]
+  then
+     write_nok "Cannot find the proper file for $2 to compare"
+     return
+  fi
+
   dos2unix $left
   dos2unix $right
 
