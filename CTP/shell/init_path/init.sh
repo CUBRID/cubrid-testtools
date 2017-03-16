@@ -170,6 +170,7 @@ function get_best_compat_file
    fileName=$1
    current_server=$2
    cci_driver=$3   
+   newfilename=""
    
    if [ "$OS" = "Windows_NT" ]
    then
@@ -186,7 +187,8 @@ function get_best_compat_file
        if [ -f ${fileName}${suffix_os} ]
        then
            newfilename=${fileName}${suffix_os}
-       else
+       elif [  -f ${fileName} ]
+       then
            newfilename=${fileName}
        fi   
        
@@ -207,15 +209,14 @@ function get_best_compat_file
         best_driver=""
      fi
    fi
-
-   newfilename=""
    
    if [ "$best_driver" == "" ]
    then    
        if [ -f ${fileName}${suffix_os} ]
        then
            newfilename=${fileName}${suffix_os}
-       else
+       elif [  -f ${fileName} ]
+       then
            newfilename=${fileName}
        fi   
    else
@@ -255,7 +256,8 @@ function get_best_compat_file
            elif [ -f ${fileName}${suffix_os} ]
            then
            newfilename=${fileName}${suffix_os} 
-           else
+           elif [ -f ${fileName} ]
+           then
            newfilename=${fileName} 
            fi
        fi
@@ -288,6 +290,18 @@ function compare_result_between_files
    
   left=`get_best_compat_file $1 $server $cci_driver`
   right=`get_best_compat_file $2 $server $cci_driver`
+
+  if [ "$left" == "" ]
+  then
+     write_nok "Cannot find the proper file for $1 to compare"
+     return
+  fi
+
+  if [ "$right" == "" ]
+  then
+     write_nok "Cannot find the proper file for $2 to compare"
+     return
+  fi
 
   dos2unix $left
   dos2unix $right
