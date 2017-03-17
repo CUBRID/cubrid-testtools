@@ -276,12 +276,13 @@ function compare_result_between_files
 
   cci_driver=""
   server=""
-  if [ $# -ne 2 ]
+
+  if [ $# -lt 2 ]
   then
      write_nok "Please input two files to compare"
      return
   fi
-  
+
   if [ -f $CUBRID/qa.conf ]
   then
      cci_driver=`grep 'CCI_Version' $CUBRID/qa.conf|awk -F= '{print $2}'`
