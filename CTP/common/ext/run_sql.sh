@@ -71,12 +71,22 @@ function run_sql {
         echo "Please check and re-send message."
         exit
     fi
-
+    
+    if [ "$MKEY_SPARSECHECKOUT" == "" ]; then
+        echo > ${CTP_HOME}/../${git_repo_name}/.git/info/sparse-checkout
+        (cd ${CTP_HOME}/../${git_repo_name}/; git config core.sparseCheckout false)
+    else
+        (cd ${CTP_HOME}/../${git_repo_name}/; git config core.sparseCheckout true)
+        echo -e "$MKEY_SPARSECHECKOUT"> ${CTP_HOME}/../${git_repo_name}/.git/info/sparse-checkout
+    fi
+    
     run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT}
+
+    (cd ${CTP_HOME}/../${git_repo_name}/; git config core.sparseCheckout false)
 
     ini.sh -s sql ${ctp_test_conf} scenario '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario
     ini.sh -s sql ${ctp_test_conf} data_file '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario/files
-    ini.sh -s sql ${ctp_test_conf} test_category $BUILD_SCENARIOS
+    ini.sh -s sql ${ctp_test_conf} test_category $BUILD_SCENARIOS${MKEY_SUBCAT}
     isMemoryLeakTest=`ini.sh -s sql ${ctp_test_conf} enable_memory_leak | tr 'a-z' 'A-Z'`
 
     #set supported param
