@@ -77,7 +77,7 @@ function run_sql {
         (cd ${CTP_HOME}/../${git_repo_name}/; git config core.sparseCheckout false)
     else
         (cd ${CTP_HOME}/../${git_repo_name}/; git config core.sparseCheckout true)
-        echo -e "$MKEY_SPARSECHECKOUT"> ${CTP_HOME}/../${git_repo_name}/.git/info/sparse-checkout
+        echo -e "${MKEY_SPARSECHECKOUT//,/\\n}" > ${CTP_HOME}/../${git_repo_name}/.git/info/sparse-checkout
     fi
     
     run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT}
