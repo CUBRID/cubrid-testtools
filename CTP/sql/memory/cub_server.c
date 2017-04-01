@@ -88,8 +88,8 @@ main (int argc, char *argv[])
 	}
     }
 
-  sprintf (filename, "%s/memory_server.xml", valgrind_out_dir);
-  sprintf (log_file, "%s%s", t, filename);
+  sprintf (filename, "%s/memory_server", valgrind_out_dir);
+  sprintf (log_file, "%s%s%s", t, filename, "_%p.xml");
   p = getenv ("CUBRID");
   if (p == NULL)
     return -1;

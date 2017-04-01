@@ -85,10 +85,10 @@ main (int argc, char *argv[])
 	}
     }
 
-  pid=getpid();
-  sprintf (filename, "%s/memory_cub_cas_%d.xml", valgrind_out_dir,pid);
+  //pid=getpid();
+  sprintf (filename, "%s/memory_cub_cas", valgrind_out_dir);
 
-  sprintf (log_file, "%s%s", t, filename);
+  sprintf (log_file, "%s%s%s", t, filename, "_%p.xml");
   p = getenv ("CUBRID");
   if (p == NULL)
     return -1;
