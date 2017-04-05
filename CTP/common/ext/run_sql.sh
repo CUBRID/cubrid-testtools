@@ -72,17 +72,11 @@ function run_sql {
         exit
     fi
     
-    if [ "$MKEY_SPARSECHECKOUT" == "" ]; then
-        echo > ${CTP_HOME}/../${git_repo_name}/.git/info/sparse-checkout
-        (cd ${CTP_HOME}/../${git_repo_name}/; git config core.sparseCheckout false)
-    else
-        (cd ${CTP_HOME}/../${git_repo_name}/; git config core.sparseCheckout true)
-        echo -e "${MKEY_SPARSECHECKOUT//,/\\n}" > ${CTP_HOME}/../${git_repo_name}/.git/info/sparse-checkout
-    fi
-    
     run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT}
 
-    (cd ${CTP_HOME}/../${git_repo_name}/; git config core.sparseCheckout false)
+    if [ "$MKEY_SPARSECHECKOUT" != "" ]; then
+        run_sparsefs "${CTP_HOME}/../${git_repo_name}" "${MKEY_SPARSECHECKOUT}"
+    fi
 
     ini.sh -s sql ${ctp_test_conf} scenario '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario
     ini.sh -s sql ${ctp_test_conf} data_file '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario/files
