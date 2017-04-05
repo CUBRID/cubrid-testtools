@@ -33,11 +33,11 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define MEM_PATH 13 //the length of "/result/memory"
+#define MEM_PATH 14 //the length of "/result/memory"
 char *current_date (char *strd);
 char *cubrid_version (char *strv);
 char *ctp_home = NULL;
-char memory_main_info[128] = { 0x00 };
+//char memory_main_info[128] = { 0x00 };
 
 int
 main (int argc, char *argv[])
@@ -64,7 +64,7 @@ main (int argc, char *argv[])
   memset (valgrind_out_dir, 0, LEN);
   sprintf (valgrind_out_dir, "%s%s", ctp_home, "/result/memory");
   
-  strcpy(memory_main_info, valgrind_out_dir);
+  //strcpy(memory_main_info, valgrind_out_dir);
 
   struct stat stat_buf;
 
