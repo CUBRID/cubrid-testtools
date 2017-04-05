@@ -68,13 +68,13 @@ main (int argc, char *argv[])
   const char *option1 = "--trace-children=yes";
   const char *option2 = "--leak-check=full";
   const char *option3 = "--error-limit=no";
-  const char *option4 = "--xml=yes";
+  //const char *option4 = "--xml=yes";
   const char *option5 = "--track-origins=yes";
   const char *option6 = "--num-callers=30"; 
   const char *option7 = "--error-limit=no";
   char log_file[128] = { 0x00 };
   char t[128] = { 0x00 };
-  strcpy (t, "--xml-file=");
+  strcpy (t, "--log-file=");
 
   if (access (valgrind_out_dir, F_OK) < 0)
     {
@@ -88,13 +88,13 @@ main (int argc, char *argv[])
   //pid=getpid();
   sprintf (filename, "%s/memory_cub_cas", valgrind_out_dir);
 
-  sprintf (log_file, "%s%s%s", t, filename, "_%p.xml");
+  sprintf (log_file, "%s%s%s", t, filename, "_%p.log");
   p = getenv ("CUBRID");
   if (p == NULL)
     return -1;
 
   sprintf (server_exe_path, "%s/bin/cas.exe", p);
-  execl (valgrind_path, valgrind_path, log_file, default_sup, option2, option4, option5, option6, option7, server_exe_path, argv[1], NULL);
+  execl (valgrind_path, valgrind_path, log_file, default_sup, option2, option5, option6, option7, server_exe_path, argv[1], NULL);
 
   if (valgrind_out_dir != NULL)
     free (valgrind_out_dir);
