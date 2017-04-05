@@ -95,7 +95,7 @@ main (int argc, char *argv[])
     return -1;
 
   sprintf (server_exe_path, "%s/bin/server.exe", p);
-  execl (valgrind_path, valgrind_path, log_file, default_sup, option2, option4, option5, option6, option7, server_exe_path, argv[1], NULL);
+  execl (valgrind_path, valgrind_path, log_file, default_sup, option2, option5, option6, option7, server_exe_path, argv[1], NULL);
 
   if (valgrind_out_dir != NULL)
     free (valgrind_out_dir);
