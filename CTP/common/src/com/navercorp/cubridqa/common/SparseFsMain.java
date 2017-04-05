@@ -30,7 +30,7 @@ import java.util.ArrayList;
 
 public class SparseFsMain {
 
-	private static ArrayList<String> ruleList;
+	private static ArrayList<String> ruleIncludeList, ruleExcludeList;
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
@@ -51,31 +51,49 @@ public class SparseFsMain {
 			return;
 		}
 
-		ruleList = new ArrayList<String>();
+		ruleIncludeList = new ArrayList<String>();
+		ruleExcludeList = new ArrayList<String>();
 		String[] a = rules.split(",");
 
 		File f;
+		boolean isExcluded = false;
 		for (String i : a) {
 			i = i.trim();
 			if (i.equals("")) {
 				continue;
 			}
-			f = new File( checkRoot + "/" + i);
+			if (i.startsWith("!")) {
+				isExcluded = true;
+				i = i.substring(1);
+			} else {
+				isExcluded = false;
+			}
+			f = new File(checkRoot + "/" + i);
 			if (f.exists()) {
 				i = f.getCanonicalPath();
-				ruleList.add(i);
-				System.out.println("[INFO] Sparse rule: " + i);
+				if (isExcluded) {
+					ruleExcludeList.add(i);
+				} else {
+					ruleIncludeList.add(i);
+				}
+				System.out.println("[INFO] Sparse rule: " + i + (isExcluded ? "(exclude)" : ""));
 			} else {
 				System.out.println("[ERROR] Sparse rule: invalid " + i);
 			}
 		}
 
-		if (ruleList.isEmpty()) {
+		if (ruleIncludeList.isEmpty() && ruleExcludeList.isEmpty()) {
 			System.out.println("[ERROR] not found valid sparse rules in " + rules);
 			return;
 		}
 
-		travelFsAndAction(checkRootFile);
+		for (String e : ruleExcludeList) {
+			deleteAll(new File(e));
+		}
+
+		if (ruleIncludeList.isEmpty() == false) {
+			travelFsAndAction(checkRootFile);
+		}
 	}
 
 	private static boolean travelFsAndAction(File curDir) throws IOException {
@@ -83,7 +101,7 @@ public class SparseFsMain {
 			return true;
 		}
 
-		if (ruleList.contains(curDir.getCanonicalPath())) {
+		if (ruleIncludeList.contains(curDir.getCanonicalPath())) {
 			return true;
 		}
 
@@ -113,6 +131,18 @@ public class SparseFsMain {
 		if (keepCurrDir == false) {
 			deleteOne(curDir);
 		}
+	}
+
+	private static void deleteAll(File curDir) {
+		File[] list = curDir.listFiles();
+		for (File f : list) {
+			if (f.isFile()) {
+				deleteOne(f);
+			} else if (f.isDirectory()) {
+				deleteAll(f);
+			}
+		}
+		deleteOne(curDir);
 	}
 
 	private static void deleteOne(File f) {
