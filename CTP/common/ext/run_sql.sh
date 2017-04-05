@@ -75,7 +75,7 @@ function run_sql {
     run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT}
 
     if [ "$MKEY_SPARSECHECKOUT" != "" ]; then
-        run_sparsefs "${CTP_HOME}/../${git_repo_name}" "${MKEY_SPARSECHECKOUT}"
+        (set +H; run_sparsefs "${CTP_HOME}/../${git_repo_name}" "${MKEY_SPARSECHECKOUT}")
     fi
 
     ini.sh -s sql ${ctp_test_conf} scenario '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario
