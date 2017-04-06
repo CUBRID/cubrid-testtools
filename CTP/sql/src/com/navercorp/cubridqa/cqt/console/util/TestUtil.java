@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -581,6 +582,9 @@ public class TestUtil {
 		int execut_count = summary.getFailCount() + summary.getSuccessCount();
 		collect_info += "execute_case:" + execut_count + System.getProperty("line.separator");
 		collect_info += "totalTime:" + summary.getTotalTime() + System.getProperty("line.separator");
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		Date date = new Date();
+		collect_info += "end_time:" + dateFormat.format(date) + System.getProperty("line.separator");
 		collect_info += "result_path:" + test.getResult_dir() + System.getProperty("line.separator");
 		FileUtil.writeToFile(test.getResult_dir() + TOTAL_SUMMARY_FILE, collect_info);
 
