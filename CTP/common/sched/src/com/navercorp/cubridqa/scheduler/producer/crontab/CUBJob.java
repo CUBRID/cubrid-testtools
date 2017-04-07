@@ -110,7 +110,7 @@ public class CUBJob implements Job {
 
 		if (msgSended) {
 			String url = jctx.getMainConfigure().getProperty("url.notice_new_build");
-			if (url != null) {
+			if (url != null && url.trim().equals("") == false) {
 				try {
 					url = CommonUtils.replace(url, "{buildId}", buildId);
 					HttpUtil.getHtmlSource(url);
