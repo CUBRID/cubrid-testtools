@@ -156,8 +156,10 @@ function format_results()
 
    testing_result=`cat $run_log|grep 'Test Result Directory:'|grep -v grep|awk -F ':' '{print $2}'|tr -d ' '`
 
-   cp -rf $testing_result/* $CTP_HOME/result/$result_folder
-   
+   if [ -n "$testing_result" ];then
+   	cp -rf $testing_result/* $CTP_HOME/result/$result_folder
+   fi   
+
    echo "======================="
    echo "Test Build:${build_no}"
    echo "Memory Result:${CTP_HOME}/result/${result_folder}"
