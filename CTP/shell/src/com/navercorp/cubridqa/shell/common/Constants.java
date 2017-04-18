@@ -160,7 +160,6 @@ public class Constants {
 
 	private static ShellScriptInput createLinKillScripts(boolean inLocal) {
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("pkill cub_server");
 		scripts.addCommand("cubrid service stop");
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep cub_admin | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep cub_master | awk '{print $1}'"));
