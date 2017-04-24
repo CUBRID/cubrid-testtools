@@ -1183,11 +1183,11 @@ public class ConsoleBO extends Executor {
 			boolean isNewStatement = true;
 			boolean isQueryplan = false;
 			boolean isHoldCas = false;
+			boolean sqlQueryPlan = false;
 			while (line != null) {
 				line = line.trim();
 
 				// receive the value of queryplan by previous line
-				boolean sqlQueryPlan = false;
 				if (isQueryplan) {
 					sqlQueryPlan = true;
 				}
@@ -1207,6 +1207,7 @@ public class ConsoleBO extends Executor {
 						list.add(sql);
 
 						isNewStatement = true;
+						sqlQueryPlan = false;
 						ret = new StringBuilder();
 						paramList = null;
 						isCall = false;
@@ -1332,6 +1333,7 @@ public class ConsoleBO extends Executor {
 
 				if (isStatement && line.endsWith(";")) {
 					isNewStatement = true;
+					sqlQueryPlan = false;
 
 					ret = new StringBuilder();
 					paramList = null;
