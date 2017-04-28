@@ -1170,7 +1170,7 @@ function do_make_tz
                 fi
                 shift
                 ;;
-	     new|update)
+	     new|extend)
 		if [ "$OS" == "Windows_NT" ]
 		then
 			parameter=`echo $parameter " /$1"`
@@ -1179,18 +1179,6 @@ function do_make_tz
 		fi
 		shift
 		;;
-	     extend)
-		# dbname should be given after "extend" option
-		if [ "$OS" == "Windows_NT" ]
-                then
-                        parameter=`echo $parameter " /extend"`
-                else
-                        parameter=`echo $parameter " -g extend"`
-                fi
-                shift
-		parameter=`echo $parameter " -d $1"`
-                shift
-                ;;
 	     # do not check error
              nocheck)
                 nocheck=1
