@@ -1207,7 +1207,10 @@ function do_make_tz
         done
         echo $parameter
 
-        backup_tz	
+        if [ ! -d $CUBRID/qa_tzbk ]
+        then
+	  echo "Warning: please backup timezone related data before make_tz"
+	fi
 
 	if [ "$OS" == "Windows_NT" ]
         then
@@ -1247,12 +1250,6 @@ function do_make_tz
 
 function revert_tz
 {
-	cubrid service stop
-	if [ "$OS" == "Windows_NT" ]
-	then
-		sleep 3
-	fi
-
 	if [ -d $CUBRID/qa_tzbk ]
 	then
 		rm -rf $CUBRID/timezones/tzdata
