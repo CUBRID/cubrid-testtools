@@ -1151,6 +1151,21 @@ function delete_make_locale
 }
 
 
+function backup_tz
+{
+        if [ ! -d $CUBRID/qa_tzbk ]
+        then
+          mkdir $CUBRID/qa_tzbk
+	  cp -rf $CUBRID/timezones/tzdata $CUBRID/qa_tzbk/
+	  cp -f $CUBRID/lib/libcubrid_timezones* $CUBRID/qa_tzbk/
+
+	  if [ -d $CUBRID/databases/demodb ]
+	  then
+	     cp -rf $CUBRID/databases/demodb $CUBRID/qa_tzbk/
+          fi
+        fi
+}
+
 # execute make_tz tool
 # usage: do_make_tz [debug|release] [new|update|extend database_name] [nocheck]
 function do_make_tz
@@ -1192,13 +1207,18 @@ function do_make_tz
         done
         echo $parameter
 
-        if [ "$OS" == "Windows_NT" ]
+        if [ ! -d $CUBRID/qa_tzbk ]
+        then
+	  echo "Warning: please backup timezone related data before make_tz"
+	fi
+
+	if [ "$OS" == "Windows_NT" ]
         then
           #old_cubrid=`echo $CUBRID`
           #new_lang=`echo ${old_cubrid}|sed 's:/:\\\\:g'`
           #export CUBRID=${new_lang}
           #make_tz.bat $parameter > make_tz.log 2>&1
-          #export CUBRID=${old_cubrid}
+          #export CUBRID=${old_cubrid}		  
           (export CUBRID=`cygpath -w $CUBRID`; make_tz.bat $parameter > make_tz.log 2>&1)
         else
           if [ `is32bit` -eq 1 ]
@@ -1228,6 +1248,22 @@ function do_make_tz
         fi
 }
 
+function revert_tz
+{
+	if [ -d $CUBRID/qa_tzbk ]
+	then
+		rm -rf $CUBRID/timezones/tzdata
+		cp -rf $CUBRID/qa_tzbk/tzdata $CUBRID/timezones/
+		rm -f $CUBRID/lib/libcubrid_timezones*
+		cp -f $CUBRID/qa_tzbk/libcubrid_timezones* $CUBRID/lib/
+
+		if [ -d $CUBRID/qa_tzbk/demodb ]
+		then
+			rm -rf $CUBRID/databases/demodb
+			cp -rf $CUBRID/qa_tzbk/demodb $CUBRID/databases/
+		fi
+	fi
+}
 
 #get the OS version
 function get_os(){
