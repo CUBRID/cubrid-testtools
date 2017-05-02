@@ -72,10 +72,9 @@ main (int argc, char *argv[])
   const char *option2 = "--leak-check=full";
   const char *option3 = "--error-limit=no";
   //const char *option4 = "--xml=yes";
-  const char *option4 = "--expensive-definedness-checks=yes";
+  //const char *option4 = "--expensive-definedness-checks=yes";
   const char *option5 = "--track-origins=yes";
   const char *option6 = "--num-callers=30"; 
-  const char *option7 = "--error-limit=no";
   char log_file[128] = { 0x00 };
   char t[128] = { 0x00 };
   strcpy (t, "--log-file=");
@@ -96,7 +95,7 @@ main (int argc, char *argv[])
     return -1;
 
   sprintf (server_exe_path, "%s/bin/server.exe", p);
-  execl (valgrind_path, valgrind_path, log_file, default_sup, option2, option4, option5, option6, option7, server_exe_path, argv[1], NULL);
+  execl (valgrind_path, valgrind_path, log_file, default_sup, option2, option3, option5, option6, server_exe_path, argv[1], NULL);
 
   if (valgrind_out_dir != NULL)
     free (valgrind_out_dir);
