@@ -158,6 +158,7 @@ function format_results()
 
    if [ -n "$testing_result" ];then
    	cp -rf $testing_result/* $CTP_HOME/result/$result_folder
+	cp -rf ${CUBRID}/log  $CTP_HOME/result/$result_folder
    fi   
 
    echo "======================="
