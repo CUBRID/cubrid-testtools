@@ -158,7 +158,12 @@ function format_results()
 
    if [ -n "$testing_result" ];then
    	cp -rf $testing_result/* $CTP_HOME/result/$result_folder
-	cp -rf ${CUBRID}/log  $CTP_HOME/result/$result_folder
+	cd ${CUBRID}
+        tar zvcf log.tar.gz ./log
+        if [ $? -eq 0 ];then
+	   cp ${CUBRID}/log.tar.gz  $CTP_HOME/result/$result_folder
+	fi
+	cd -
    fi   
 
    echo "======================="
