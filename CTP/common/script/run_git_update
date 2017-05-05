@@ -94,7 +94,9 @@ do
                 break
         fi
         lockFile=`cat checkout.log|grep -ie 'fatal:'|grep -o "'.*index.lock"|cut -c 2-`
-        rm -f $lockFile 2>/dev/null
+        if [ -f "$lockFile" ];then
+        	rm -f $lockFile 2>/dev/null
+	fi
         let retry_idx++
 done
 rm -f checkout.log >/dev/null 2>&1
