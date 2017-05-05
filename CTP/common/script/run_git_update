@@ -86,7 +86,20 @@ git remote add auto_update_url ${urlWithAuthen}
 
 temp_branch_name=temp_branch_`date '+%Y%m%d%H%M%s'`
 git branch ${temp_branch_name}
-git checkout -f ${temp_branch_name}
+retry_idx=1
+while [ $retry_idx -lt 5 ]
+do
+        git checkout -f ${temp_branch_name} 2>checkout.log
+        if [ $? -eq 0 ];then
+                break
+        fi
+        lockFile=`cat checkout.log|grep -ie 'fatal:'|grep -o "'.*index.lock"|cut -c 2-`
+        if [ -f "$lockFile" ];then
+        	rm -f $lockFile 2>/dev/null
+	fi
+        let retry_idx++
+done
+rm -f checkout.log >/dev/null 2>&1
 git clean -df
 git reset -- .
 git clean -df
