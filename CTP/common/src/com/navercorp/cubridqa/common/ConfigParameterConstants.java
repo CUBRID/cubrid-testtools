@@ -38,6 +38,12 @@ public class ConfigParameterConstants {
 	// Environment variables
 	public static final String CTP_SKIP_UPDATE = "CTP_SKIP_UPDATE";
 	public static final String CTP_BRANCH_NAME = "CTP_BRANCH_NAME";
+	public static final String CTP_DEBUG_ENABLE = "CTP_DEBUG_ENABLE";
+	public static final String CTP_PROXY_HOST = "CTP_PROXY_HOST";
+	public static final String CTP_PROXY_PORT = "CTP_PROXY_PORT";
+	public static final String CTP_PROXY_USER = "CTP_PROXY_USER";
+	public static final String CTP_PROXY_PASSWORD = "CTP_PROXY_PASSWORD";
+	public static final String CTP_PROXY_PRIORITY = "CTP_PROXY_PRIORITY";
 
 	// CUBRID installation and configuration parameters
 	public static final String CUBRID_INSTALL_ROLE = "cubrid_install_role";
@@ -51,6 +57,7 @@ public class ConfigParameterConstants {
 	public static final String ROLE_BROKER_COMMON = "brokercommon";
 	public static final String ROLE_BROKER1 = "broker1";
 	public static final String ROLE_BROKER2 = "broker2";
+	public static final String ROLE_BROKER_AVAILABLE_PORT = "available_port";
 
 	// Test case configuration parameters
 	public static final String SCENARIO = "scenario";
@@ -66,7 +73,11 @@ public class ConfigParameterConstants {
 	// Test tool configuration parameters
 	public static final String IGNORE_CORE_BY_KEYWORDS = "ignore_core_by_keywords";
 	public static final String LARGE_SPACE_DIR = "large_space_dir";
+	
 	public static final String ENABLE_CHECK_DISK_SPACE_YES_OR_NO = "enable_check_disk_space_yn";
+	public static final String RESERVE_DISK_SPACE_SIZE = "reserve_disk_space_size";
+	public static final String RESERVE_DISK_SPACE_SIZE_DEFAULT_VALUE = "2G";  //default value for param reserve_disk_space_size
+	
 	public static final String ENABLE_STATUS_TRACE_YES_OR_NO = "enable_status_trace_yn";
 	public static final String ENABLE_SIKP_MAKE_LOCALE_YES_OR_NO = "enable_skip_make_locale_yn";
 	public static final String ENABLE_SAVE_LOG_ONCE_FAIL_YES_OR_NO = "enable_save_log_once_fail_yn";

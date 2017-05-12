@@ -41,4 +41,5 @@ public class Constants {
 
 	public static final String DIR_ERROR_BACKUP = "~/ERROR_BACKUP";
 
+	public static final String GET_BROKER_PORT_CMD = "cat $CUBRID/conf/cubrid_broker.conf| grep '^SERVICE\\|^BROKER_PORT' |grep -A1 'ON' |grep 'BROKER_PORT'|tail -n 1|awk -F '=' '{print $NF}'|tr -d '[[:space:]]'";
 }

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # 
 # Copyright (c) 2016, Search Solution Corporation. All rights reserved.
 # 
@@ -23,28 +23,13 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
+set +H
 
-function init {
-	return
-}
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+JAVA_CPS=${CTP_HOME}/common/lib/cubridqa-common.jar
+if [ "$OSTYPE" == "cygwin" ]
+then
+    JAVA_CPS=`cygpath -wpm $JAVA_CPS`
+fi
 
-function list {
-    find $CUBRID/util -name unittests* | grep -v CMake
-}
-
-function execute {
-	unittestlog=".unittest.log"
-	
-    $1 2>&1 | tee ${unittestlog}
-    
-    if [ `cat ${unittestlog} | grep -i 'fail\|Unit tests failed' | wc -l ` -eq 0 -a `cat ${unittestlog} | grep -i 'OK\|success' | wc -l ` -ne 0 ]; then
-    	IS_SUCC=true
-    else
-    	IS_SUCC=false
-    fi
-    rm -rf ${unittestlog}
-}
-
-function finish {
-	return
-}
+"$JAVA_HOME/bin/java" -cp $JAVA_CPS com.navercorp.cubridqa.common.SparseFsMain "$1" "$2"

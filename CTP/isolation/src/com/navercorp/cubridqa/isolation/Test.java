@@ -75,7 +75,7 @@ public class Test {
 		resetSSH();
 	}
 
-	public void runAll() throws JSchException {
+	public void runAll() throws Exception {
 
 		System.out.println("[ENV START] " + currEnvId);
 
@@ -137,9 +137,10 @@ public class Test {
 			}
 		}
 
-		isStopped = true;
+		stopCUBRIDService();
 		close();
 		context.getFeedback().onStopEnvEvent(currEnvId);
+		isStopped = true;
 		System.out.println("[ENV STOP] " + currEnvId);
 	}
 
@@ -234,9 +235,18 @@ public class Test {
 			result = ssh.execute(script);
 		}
 	}
+	
+	private void stopCUBRIDService() throws Exception
+	{
+		this.workerLog.println("Stop service for " + envIdentify + "]");
+		String result;
+		IsolationScriptInput script;
+		script = new IsolationScriptInput("cubrid service stop");
+		result = ssh.execute(script);
+		this.workerLog.println(result);
+	}
 
 	public void close() {
-
 		this.dispatchLog.close();
 		this.workerLog.close();
 
@@ -244,6 +254,7 @@ public class Test {
 			ssh.close();
 		isStopped = true;
 		shouldStop = true;
+		this.startTime = 0;
 	}
 
 	public void resetSSH() throws JSchException {

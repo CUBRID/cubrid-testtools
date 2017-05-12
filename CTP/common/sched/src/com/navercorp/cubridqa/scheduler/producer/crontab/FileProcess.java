@@ -207,7 +207,7 @@ public class FileProcess {
 	}
 
 	private static String convToURL(Configure conf, File f, String storeId, boolean isKorean) {
-		if (isKorean) {
+		if (isKorean && CommonUtils.isEmpty(conf.getWebBaseUrl_Kr()) == false) {
 			return conf.getWebBaseUrl_Kr() + "/" + f.getParentFile().getParentFile().getName() + "/drop/" + f.getName();
 		} else {
 			return conf.getWebBaseUrl() + "/" + storeId + "/" + f.getParentFile().getParentFile().getName() + "/drop/" + f.getName();

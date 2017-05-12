@@ -797,6 +797,7 @@ function do_summary_and_clean()
      coreCount=0
      resultDirTemp=`cat ${log_filename}|grep "^Result Root Dir"|head -n 1`
      resultDir=${resultDirTemp#*:}
+     resultDir=`echo $resultDir|tr -d '[[:space:]]'`
      if [ "$interface_type" == "cci" ];then
 	 generate_summary_info $resultDir	          		
      else

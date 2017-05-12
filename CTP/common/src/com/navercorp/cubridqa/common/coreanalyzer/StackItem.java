@@ -29,11 +29,13 @@ public class StackItem {
 	private int index;
 	private String methodCodes;
 	private String fileCodes;
+	private String oriFileCodes;
 
-	public StackItem(int index, String methodCodes, String fileCodes) {
+	public StackItem(int index, String methodCodes, String fileCodes, String oriFileCodes) {
 		this.index = index;
 		this.methodCodes = methodCodes;
 		this.fileCodes = fileCodes;
+		this.oriFileCodes = oriFileCodes;
 	}
 
 	public int getIndex() {
@@ -54,6 +56,10 @@ public class StackItem {
 
 	public String getFileCodes() {
 		return fileCodes;
+	}
+
+	public String getOriFileCodes() {
+		return oriFileCodes;
 	}
 
 	public void setFileCodes(String fileCodes) {

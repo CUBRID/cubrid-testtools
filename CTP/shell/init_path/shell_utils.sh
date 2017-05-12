@@ -29,20 +29,21 @@ function generage_readme {
     backup_dir=$2
 
     freadme=${backup_dir}/readme.txt
-    echo 1.TEST CASE: ${test_case_dir} > $freadme
-    echo 2.CUBRID VERSION: `cubrid_rel | grep CUBRID` >> $freadme
-    echo 3.TEST DATE: `date` >> $freadme
-    echo 4.ENVIRONMENT: >> $freadme
+    echo 1.TEST CASE: `convert_to_git_url.sh ${test_case_dir}` > $freadme
+    echo 2.LOCAL CASE PATH: ${test_case_dir} >> $freadme
+    echo 3.CUBRID VERSION: `cubrid_rel | grep CUBRID` >> $freadme
+    echo 4.TEST DATE: `date` >> $freadme
+    echo 5.ENVIRONMENT: >> $freadme
     set >> $freadme
-    echo 5.ALL PROCESSES: >> $freadme
+    echo 6.ALL PROCESSES: >> $freadme
     ps -ef >> $freadme
-    echo 6.IPCS >> $freadme
+    echo 7.IPCS >> $freadme
     ipcs >> $freadme
-    echo 7.DISK STATUS >> $freadme
+    echo 8.DISK STATUS >> $freadme
     df -h>> $freadme
-    echo 8.LOGGED >> $freadme
+    echo 9.LOGGED >> $freadme
     who >> $freadme
-    echo 9.MEMORY STATUS >> $freadme
+    echo 10.MEMORY STATUS >> $freadme
     free -m >> $freadme
 }
 
@@ -88,7 +89,14 @@ function do_check_more_errors {
 
     cub_build_id=`cubrid_rel | grep CUBRID | awk -F ')' '{print $1}' | awk -F '(' '{print $NF}'`
     current_datetime=`date "+%Y%m%d_%H%M%S"`
-    backup_dir=~/ERROR_BACKUP/AUTO_${cub_build_id}_${current_datetime}
+    backup_name=AUTO_${cub_build_id}_${current_datetime}
+    backup_dir=~/ERROR_BACKUP/${backup_name}
+	host_ip="${TEST_SSH_HOST}"
+	if [ "${host_ip}" = "" ]; then
+	    host_ip=`hostname -i`
+	fi
+	export TEST_INFO_ENV="${USER}@${host_ip}:${TEST_SSH_PORT}"
+	export TEST_INFO_BUILD_ID=${cub_build_id}
 
     if [ $core_dump_cnt -gt 0 ] || [ $fatal_err_cnt -gt $old_fatal_err_cnt -a "$SKIP_CHECK_FATAL_ERROR" != "TRUE" ]; then
         mkdir -p $backup_dir
@@ -105,7 +113,11 @@ function do_check_more_errors {
 		analyzer.sh $core  > analyzer.log 2>&1
 		is_cub_cas=`cat analyzer.log | grep "PROCESS NAME:"|grep "cub_cas"|wc -l`
 		if [ $is_cub_cas -eq 0 ];then
-			cat analyzer.log >> $result_file	
+			issue_title=`grep SUMMARY analyzer.log | head -n 1`
+		    echo \<!--HTMLESCAPESTART--\>\<a class=SHELLCORE href=\"javascript:reportShellCoreIssue\(\'${core}\', \'${backup_name}\', \'${host_ip}\', \'${TEST_SSH_PORT}\', \'${USER}\', \'${cub_build_id}\', \'${issue_title}\' \) \"\>\<i\>\<font color=red\>REPORT ISSUE FOR BELOW CRASH\</font\>\</i\>\</a\>\<!--HTMLESCAPEEND--\> >> $result_file
+			cat analyzer.log >> $result_file
+			core_full_stack_fn=${CUBRID}/`basename $core | sed 's/core/fullstack/g'`
+			analyzer.sh -f $core > ${core_full_stack_fn}
 		else
 			echo "CRASH FROM CUB_CAS:${core}(skip to print call stacks)" >> $result_file
 		fi

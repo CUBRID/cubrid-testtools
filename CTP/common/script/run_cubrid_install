@@ -290,9 +290,9 @@ function checkEnvironmentVariable()
           sed -i '/GCOV_PREFIX/d' $HOME/.bash_profile
           echo "export GCOV_PREFIX=$HOME" >> $HOME/.bash_profile
           echo "export GCOV_PREFIX_STRIP=2" >> $HOME/.bash_profile
-          cd $HOME
-          source .bash_profile
      fi
+     cd $HOME
+     source .bash_profile
 
      cd $curDir
 }
@@ -302,34 +302,64 @@ function InstallBuildForCoverage()
     build_url=$1
     source_url=$2
     buildFile=${build_url##*/}
-    cub="CUBRID"
     curDir=`pwd`
+    cub_folder_name="CUBRID"
     goToInstallationDirectory
+    cubrid service stop >/dev/null 2>&1
     echo ""
     echo "=====install CUBRID $buildFile =========="
     echo ""
-    srcFolder=`echo $buildFile|awk -F '-' '{print $2}'`
-    rm $buildFile >/dev/null 2>&1
-    cubrid service stop >/dev/null 2>&1
-    wget -t 3 -T 120 $build_url
-    if [ -d $cub ]
-    then
-            rm -rf CUBRID
+    if [ -f "$buildFile" ];then
+	rm $buildFile >/dev/null 2>&1
+    fi
+  
+    if [ -d "$cub_folder_name" ];then
+	rm -rf $cub_folder_name
+        mkdir -p $cub_folder_name 
+    else
+	mkdir -p $cub_folder_name
     fi
 
+    cd $cub_folder_name
+    wget -t 3 -T 120 $build_url
+    if [ $? -ne 0 ]
+    then
+	echo ""
+        echo "[ERROR]: Please confirm the build url ${build_url}"
+	exit -1
+    fi
+    
     tar zvxfm $buildFile
-
+    cd -
     mkdir -p build
     cd build
-    sourceFile=${source_url##*/}
-    rm -rf "cubrid-${srcFolder}" >/dev/null 2>&1
-    rm $sourceFile >/dev/null 2>&1
-    wget -t 3 -T 120 $source_url
-    tar zvxfm $sourceFile
-    rm src
-    ln -s "cubrid-${srcFolder}/src"
+    cov_source_file_name=${source_url##*/}
+    build_src_folder_full_name="${cov_source_file_name%-gcov*}" 
+	
+    if [ -f "$cov_source_file_name" ];then
+	rm $cov_source_file_name  >/dev/null 2>&1
+    fi
 
-    rm $sourceFile
+    if [ -d "$build_src_folder_full_name" ];then
+        rm -rf $build_src_folder_full_name
+    fi
+
+    mkdir -p $build_src_folder_full_name
+
+    cd $build_src_folder_full_name
+    wget -t 3 -T 120 $source_url
+    if [ $? -ne 0 ];then
+	echo ""
+	echo "[ERROR] Please confirm the coverage source build url ${source_url}"
+	exit -1
+    fi
+
+    
+    if [ -f "$cov_source_file_name" ];then
+    	tar zvxfm $cov_source_file_name
+    	rm $cov_source_file_name
+    fi
+
     checkEnvironmentVariable
     cd $curDir
     echo INSTALL `date '+%Y%m%d%H%M%s'` $@ >> $HOME/.qacoverage

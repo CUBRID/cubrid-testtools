@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # 
 # Copyright (c) 2016, Search Solution Corporation. All rights reserved.
 # 
@@ -24,27 +24,12 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-function init {
-	return
-}
-
-function list {
-    find $CUBRID/util -name unittests* | grep -v CMake
-}
-
-function execute {
-	unittestlog=".unittest.log"
-	
-    $1 2>&1 | tee ${unittestlog}
-    
-    if [ `cat ${unittestlog} | grep -i 'fail\|Unit tests failed' | wc -l ` -eq 0 -a `cat ${unittestlog} | grep -i 'OK\|success' | wc -l ` -ne 0 ]; then
-    	IS_SUCC=true
-    else
-    	IS_SUCC=false
-    fi
-    rm -rf ${unittestlog}
-}
-
-function finish {
-	return
+function ensure_no_existing_process {
+  process_key=`echo $1 | md5sum | awk '{print $1}'`
+  cnt=`ps -o pid -u $USER h | xargs -i strings -a /proc/{}/environ 2>/dev/null | grep PROCESS_MD5 | grep "$process_key" | wc -l`
+  if [ $cnt -gt 0 ]; then
+      echo ERROR: there is a running process >&2
+      exit 1
+  fi
+  export PROCESS_MD5=${process_key}
 }

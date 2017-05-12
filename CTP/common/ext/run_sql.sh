@@ -58,11 +58,11 @@ function run_sql {
         ctp_type="medium"
         git_repo_name=cubrid-testcases
         ctp_scenario=medium
-    elif [ "$BUILD_SCENARIOS" == "sql" -o "$BUILD_SCENARIOS" == "sql_debug" ]; then
+    elif [ "$BUILD_SCENARIOS" == "sql" -o "$BUILD_SCENARIOS" == "sql_debug" -o "${BUILD_SCENARIOS:0:5}" == "sql-s" ]; then
         ctp_type="sql"
         git_repo_name=cubrid-testcases
         ctp_scenario=sql
-    elif [ "$BUILD_SCENARIOS" == "sql_ext" -o "$BUILD_SCENARIOS" == "sql_ext_debug" ]; then
+    elif [ "$BUILD_SCENARIOS" == "sql_ext" -o "$BUILD_SCENARIOS" == "sql_ext_debug" -o "${BUILD_SCENARIOS:0:9}" == "sql_ext-s" ]; then
         ctp_type="sql"
         git_repo_name=cubrid-testcases-private
         ctp_scenario=sql
@@ -71,8 +71,12 @@ function run_sql {
         echo "Please check and re-send message."
         exit
     fi
-
+    
     run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT}
+
+    if [ "$MKEY_SPARSECHECKOUT" != "" ]; then
+        (set +H; run_sparsefs "${CTP_HOME}/../${git_repo_name}" "${MKEY_SPARSECHECKOUT}")
+    fi
 
     ini.sh -s sql ${ctp_test_conf} scenario '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario
     ini.sh -s sql ${ctp_test_conf} data_file '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario/files

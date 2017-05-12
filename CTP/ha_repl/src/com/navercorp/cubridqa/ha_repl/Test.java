@@ -427,12 +427,14 @@ public class Test {
 		String hitHost;
 		GeneralScriptInput checkScript;
 		String error = null;
+		String coreStack = null;
 		String cat;
 		boolean hit = false;
 
 		for (SSHConnect ssh : allNodeList) {
 			error = null;
 			cat = null;
+			coreStack = null;
 			try {
 				hitHost = ssh.getHost().trim();
 				checkScript = new GeneralScriptInput("find $CUBRID -name \"core.*\" | wc -l");
@@ -441,8 +443,11 @@ public class Test {
 
 				if (!result.trim().equals("0")) {
 					cat = "CORE";
-					error = "FOUND CORE FILE on host " + hitHost;
+					error = "FOUND CORE FILE on host " + ssh.getUser() + "@" + hitHost;
 					this.hasCore = true;
+					
+					checkScript = new GeneralScriptInput("find $CUBRID -name \"core.*\" -exec analyzer.sh {} \\;");
+					coreStack = ssh.execute(checkScript);
 				}
 
 				checkScript = new GeneralScriptInput("grep -r \"FATAL ERROR\" $CUBRID/log/* | wc -l");
@@ -451,9 +456,9 @@ public class Test {
 				if (!result.trim().equals("0")) {
 					if (cat == null) {
 						cat = "FATAL";
-						error = "FOUND FATAL ERROR on host " + hitHost;
+						error = "FOUND FATAL ERROR on host " + ssh.getUser() + "@" + hitHost;
 					} else {
-						error = error + Constants.LINE_SEPARATOR + "FOUND FATAL ERROR on host " + hitHost;
+						error = error + Constants.LINE_SEPARATOR + "FOUND FATAL ERROR on host " + ssh.getUser() + "@" + hitHost;
 					}
 				}
 
@@ -481,6 +486,9 @@ public class Test {
 			error = error + " (" + Constants.DIR_ERROR_BACKUP + "/" + resultId + ".tar.gz)";
 			mlog.println(error);
 			this.userInfo.append(error).append(Constants.LINE_SEPARATOR);
+			if (coreStack != null && coreStack.trim().equals("") == false) {
+				this.userInfo.append(coreStack).append(Constants.LINE_SEPARATOR);
+			}
 			addFail("[NOK] " + error);
 			break;
 		}
@@ -640,14 +648,27 @@ public class Test {
 		return result;
 	}
 
-	private String executeSQL(String sql) {
+	private String executeSQL(String sql, SSHConnect ssh) {
 		String res = "";
 		ResultSet rs = null;
 		Statement stmt = null;
-
+	
 		try {
-			connection = getDBConnection();
+			connection = getDBConnection("master", ssh);
 			stmt = connection.createStatement();
+		} catch (Exception ex) {
+			this.failCount++;
+			this.addFail("[NOK] DB connection creation fail!");
+			if(stmt!=null)
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			return "[NOK] DB connection creation fail!";
+		}
+			
+		try {
 			if (!("".endsWith(sql)) && sql.length() > 0) {
 				if (sql.toUpperCase().trim().startsWith("SELECT")) {
 					rs = stmt.executeQuery(sql);
@@ -680,13 +701,17 @@ public class Test {
 		}
 
 		return res;
-
 	}
 
-	private Connection getDBConnection() throws SQLException {
+	private Connection getDBConnection(String hostName, SSHConnect ssh) throws SQLException {
 		if (connection == null || connection.isClosed()) {
-			String host = hostManager.getInstanceProperty("master." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
-			String port = hostManager.getInstanceProperty("broker.BROKER_PORT");
+			String host = hostManager.getInstanceProperty(hostName + "." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+			String port = hostManager.getInstanceProperty(hostName + "." + ConfigParameterConstants.ROLE_BROKER_AVAILABLE_PORT);
+			if(CommonUtils.isEmpty(port)){
+				port = hostManager.getAvailableBrokerPort(ssh);
+				hostManager.putInstanceProperty(hostName + "." + ConfigParameterConstants.ROLE_BROKER_AVAILABLE_PORT, port);
+			}
+			
 			String url = "jdbc:cubrid:" + host + ":" + port + ":" + hostManager.getTestDb() + ":::";
 			connection = DriverManager.getConnection(url, "dba", "");
 		}
@@ -712,8 +737,8 @@ public class Test {
 
 		String result = "";
 		if (isTest && "jdbc".equals(context.getTestmode())) {
-			result = executeSQL(stmt);
-			result += executeSQL(flag_SQL);
+			result = executeSQL(stmt, ssh);
+			result += executeSQL(flag_SQL, ssh);
 		} else {
 			result = executeScript(ssh, isSQL, isCMD, stmt, isTest);
 		}

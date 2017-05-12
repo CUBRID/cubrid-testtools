@@ -85,12 +85,13 @@ public class Constants {
 		scripts.addCommand("taskkill /F /IM cub_cas.exe");
 		scripts.addCommand("taskkill /F /IM cub_broker.exe");
 		if (inLocal == false) {
-			scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' AND NOT CommandLine LIKE '%%com.navercorp.cubridqa%%') DELETE");
+			scripts.addCommand("wmic PROCESS WHERE \\( name = \\'java.exe\\' AND NOT CommandLine LIKE \\'%service.Server%\\' AND NOT CommandLine LIKE \\'%com.navercorp.cubridqa%\\' \\) DELETE");
 		}
 		scripts.addCommand("taskkill /F /IM cat.exe");
 		scripts.addCommand("taskkill /F /IM ps.exe");
 		scripts.addCommand("taskkill /F /IM sed.exe");
 		scripts.addCommand("taskkill /F /IM awk.exe");
+		scripts.addCommand("taskkill /F /IM dos2unix.exe");
 		return scripts;
 	}
 
@@ -147,11 +148,13 @@ public class Constants {
 			sb.append("taskkill /T /F /IM sh.exe").append(LINE_SEPARATOR);
 			sb.append("wmic PROCESS WHERE ( name = 'java.exe' AND NOT CommandLine LIKE '%%service.Server%%' AND NOT CommandLine LIKE '%%com.navercorp.cubridqa%%') DELETE").append(LINE_SEPARATOR);
 		}
-		sb.append("tasklist").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM cat.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM ps.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM sed.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM awk.exe").append(LINE_SEPARATOR);
+		sb.append("taskkill /T /F /IM dos2unix.exe").append(LINE_SEPARATOR);
+		sb.append("tasklist /V").append(LINE_SEPARATOR);
+		sb.append("netstat -a -b -f -n -o").append(LINE_SEPARATOR);
 		return sb.toString();
 	}
 
@@ -179,10 +182,14 @@ public class Constants {
 		scripts.addCommand(bothKill("echo ${final_list}"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i sleep | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i expect | awk '{print $1}'"));
+		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i dos2unix | awk '{print $1}'"));		
 		if (inLocal == false) {
 			scripts.addCommand(bothKill("ps -u $USER -o pid,cmd| grep -v grep | grep -i '\\.sh' | awk '{print $1}'"));
 		}
 		scripts.addCommand("ps -u $USER -f");
+		scripts.addCommand("ps -ef | grep cub ");
+		scripts.addCommand("netstat -n -e -p -a");		
+		scripts.addCommand("ipcs");
 		return scripts;
 	}
 

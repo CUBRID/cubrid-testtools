@@ -100,7 +100,7 @@ public class TestCaseGithub {
 				if (result != null && result.indexOf("ERROR") != -1) {
 					isSucc = false;
 				}
-				System.out.println(result);
+				System.out.println("Test cases updated results on " + ssh.toString() + ":\n" + result);
 			} catch (Exception e) {
 				isSucc = false;
 				System.out.print("[ERROR] " + e.getMessage());

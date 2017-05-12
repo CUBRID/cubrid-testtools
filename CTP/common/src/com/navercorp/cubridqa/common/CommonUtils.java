@@ -222,7 +222,7 @@ public class CommonUtils {
 		return res;
 	}
 
-	public static String getFileContent(String filename) throws IOException {
+	public static String getFileContent(String filename, boolean trimBlankSpace) throws IOException {
 		File file = new File(filename);
 		if (!file.exists()) {
 			return null;
@@ -237,12 +237,20 @@ public class CommonUtils {
 		while ((line = lineReader.readLine()) != null) {
 			if (line.trim().equals(""))
 				continue;
-			result.append(line.trim()).append('\n');
+			if(trimBlankSpace){
+				result.append(line.trim()).append('\n');
+			}else{
+				result.append(line).append('\n');
+			}
 		}
 		lineReader.close();
 		reader.close();
 		fis.close();
 		return result.toString();
+	}
+
+	public static String getFileContent(String filename) throws IOException{
+		return getFileContent(filename, true);
 	}
 
 	public static ArrayList<String> getLineList(String filename) throws IOException {
@@ -735,4 +743,62 @@ public class CommonUtils {
 		}
 		return value;
 	}
+	
+	public static String getJson(String string) {
+		StringBuilder result = new StringBuilder();
+
+		if (string == null || string.length() == 0) {
+			return result.toString();
+		}
+
+		char b;
+		char c = 0;
+		String hhhh;
+		int i;
+		int len = string.length();
+
+		for (i = 0; i < len; i += 1) {
+			b = c;
+			c = string.charAt(i);
+			switch (c) {
+			case '\\':
+			case '"':
+				result.append('\\');
+				result.append(c);
+				break;
+			case '/':
+				if (b == '<') {
+					result.append('\\');
+				}
+				result.append(c);
+				break;
+			case '\b':
+				result.append("\\b");
+				break;
+			case '\t':
+				result.append("\\t");
+				break;
+			case '\n':
+				result.append("\\n");
+				break;
+			case '\f':
+				result.append("\\f");
+				break;
+			case '\r':
+				result.append("\\r");
+				break;
+			default:
+				if (c < ' ' || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
+					result.append("\\u");
+					hhhh = Integer.toHexString(c);
+					result.append("0000", 0, 4 - hhhh.length());
+					result.append(hhhh);
+				} else {
+					result.append(c);
+				}
+			}
+		}
+		return result.toString();
+	}
+
 }

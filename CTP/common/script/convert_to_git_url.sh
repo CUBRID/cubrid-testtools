@@ -24,27 +24,59 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-function init {
-	return
+function usage()
+{
+	cat <<CCTTPP
+usage: sh convert_to_git_url.sh <the local path of case>
+
+CCTTPP
+
 }
 
-function list {
-    find $CUBRID/util -name unittests* | grep -v CMake
-}
+[ $# -eq 0 ] && usage && exit 1
 
-function execute {
-	unittestlog=".unittest.log"
+
+function convert_to_git_url(){
+        case_path=$1
+	case_dir=""
+	sub_result_path=""
+        case_file_suffix=""
+
+        if [ -f "$case_path" ];then
+		case_dir="${case_path%/*}"
+		case_file_suffix="${case_path##*/}"
+		if [ -z "$case_dir" ] || [ "$case_dir" == "$case_file_suffix" ];then
+			case_dir="."
+		fi
+		
+        elif [ -d "$case_path" ];then
+		case_dir="$case_path"
+        else
+		echo "please confirm your case path is correct! - $case_path" >&2
+                return
+	fi
+
+        cd $case_dir
+        root_git_url=`git remote -v | grep -Ew "^origin"|awk '{print $2}'|head -n 1|tr -d '[[:space:]]'`
+	if [ -z "$root_git_url" ];then
+		echo "please confirm if your case path is a git path - $case_path" >&2
+		return 
+	fi
 	
-    $1 2>&1 | tee ${unittestlog}
-    
-    if [ `cat ${unittestlog} | grep -i 'fail\|Unit tests failed' | wc -l ` -eq 0 -a `cat ${unittestlog} | grep -i 'OK\|success' | wc -l ` -ne 0 ]; then
-    	IS_SUCC=true
-    else
-    	IS_SUCC=false
-    fi
-    rm -rf ${unittestlog}
+        branch_name=`git rev-parse --abbrev-ref HEAD`
+        repo_root_url_prefix=`echo ${root_git_url}|sed 's/\.git$//g'`
+
+        while [ ! -d .git ] && [ ! "`pwd`" = "/" ]
+      	do 
+         	curr_name=$(basename `pwd`)
+          	sub_result_path=${curr_name}/${sub_result_path}
+          	cd ..
+     	done
+
+        full_case_temp_git_path="${repo_root_url_prefix}/blob/${branch_name}/${sub_result_path}${case_file_suffix}"
+
+        echo $full_case_temp_git_path
 }
 
-function finish {
-	return
-}
+convert_to_git_url $1
+
