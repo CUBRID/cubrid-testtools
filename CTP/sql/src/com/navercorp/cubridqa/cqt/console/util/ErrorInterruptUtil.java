@@ -46,7 +46,6 @@ public abstract class ErrorInterruptUtil {
 	@SuppressWarnings("deprecation")
 	public static boolean isCaseRunError(ConsoleBO bo, String caseFile) {
 		if (!ErrorInterrupt.ERROR_INTER) {
-			System.out.println("do nothing for no error int");
 			return false;
 		}
 
