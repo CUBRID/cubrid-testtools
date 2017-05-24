@@ -747,7 +747,7 @@ function do_test()
 	  cd $curDir
 	  
      else   
-     	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $jdbc_config_file_ext $javaArgs 2>&1 >> $log_filename 
+     	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $jdbc_config_file_ext $javaArgs 2>&1 |tee -a $log_filename 
           cd $curDir
      fi
     )
