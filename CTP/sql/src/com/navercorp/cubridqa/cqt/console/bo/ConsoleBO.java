@@ -744,14 +744,13 @@ public class ConsoleBO extends Executor {
 			String exceptionMessage = TestUtil.TEST_CONFIG + " file:" + test.getCharset_file() + System.getProperty("line.separator");
 			String msg = "Set System Parameter Error: ";
 			this.onMessage(msg + exceptionMessage);
-			e.printStackTrace();
 		} finally {
 			if (rs != null) {
 				try {
 					rs.close();
 				} catch (SQLException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					this.onMessage(e.getMessage());
 				}
 			}
 			if (stmt != null) {
