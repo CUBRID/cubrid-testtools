@@ -292,7 +292,7 @@ public class ConsoleAgent {
 				testInfoMap.put("type", type);
 			}
 			int comefrom = "32".equalsIgnoreCase(version) ? COME_FROM_CQT_32 : COME_FROM_CQT_64;
-			runTest(files, type, typeAlias, true, comefrom, charset_xml);
+			runTest(files, type, typeAlias, false, comefrom, charset_xml);
 		}
 	}
 }
