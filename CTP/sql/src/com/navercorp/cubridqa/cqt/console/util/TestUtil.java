@@ -385,7 +385,7 @@ public class TestUtil {
 			for (int i = 0; i < files.length; i++) {
 				String file = dirPath + separator + files[i];
 				File child = new File(file);
-				System.out.println("child.getName: " + child.getName());
+				//System.out.println("child.getName: " + child.getName());
 				if (child.isDirectory() && (!("common".equals(child.getName()) || getAnswer4SQLAndOther(filePath).equals(child.getName())))) {
 					getCaseFiles(test, file, fileList, postFixes);
 				} else {

@@ -112,7 +112,23 @@ if [ $? -ne 0 ];then
 fi
 git branch -D $branch_name
 git fetch auto_update_url
-git checkout -f -b $branch_name -t auto_update_url/$branch_name
+
+echo Begin to check out test cases:
+echo git checkout -f -b $branch_name -t auto_update_url/$branch_name
+while true 
+do
+    git checkout -f -b $branch_name -t auto_update_url/$branch_name 2>checkout.log
+    fail=`cat checkout.log|grep "^error" | grep "not uptodate. Cannot merge" | head -n 1 | awk -F "'" '{print $2}'`
+    if [ "$fail" == "" ]; then
+        break
+    elif [ -f "$fail" ]; then
+        cat checkout.log
+	    echo =\> attempt to fix by deleting $fail.
+        rm -f "$fail"
+    fi
+done
+
+rm -f checkout.log >/dev/null 2>&1
 
 git branch | grep  temp_branch | xargs -i git branch -D {}
 

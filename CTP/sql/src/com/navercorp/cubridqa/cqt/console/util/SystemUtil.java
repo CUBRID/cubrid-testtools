@@ -24,7 +24,9 @@
  */
 package com.navercorp.cubridqa.cqt.console.util;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -110,5 +112,13 @@ public class SystemUtil {
 			}
 		}
 		return list;
+	}
+	
+	public static String getCurrentTime()
+	{
+		Date now = new Date(); 
+		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+		String cur = dateFormat.format( now ); 
+		return cur;
 	}
 }
