@@ -1193,12 +1193,6 @@ public class ConsoleBO extends Executor {
 			while (line != null) {
 				line = line.trim();
 
-				// receive the value of queryplan by previous line
-				boolean sqlQueryPlan = false;
-				if (isQueryplan) {
-					sqlQueryPlan = true;
-				}
-
 				if ("".equals(line) || line.startsWith("--")) {
 					// When this line is "--@queryplan", the next line should
 					// show
@@ -1210,24 +1204,22 @@ public class ConsoleBO extends Executor {
 						line = line.replaceFirst("--\\+", "").trim();
 						ret.append(line + "" + System.getProperty("line.separator"));
 						Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-						sql.setQueryplan(sqlQueryPlan);
+						sql.setQueryplan(isQueryplan);
 						list.add(sql);
 
 						isNewStatement = true;
+						isQueryplan = false;
 						ret = new StringBuilder();
 						paramList = null;
 						isCall = false;
 						connId = "";
-					} else {
-						isQueryplan = false;
 					}
+					
 					line = reader.readLine();
 					lineCount++;
 					continue;
-				} else {
-					isQueryplan = false;
 				}
-
+				
 				boolean isStatement = !(line.startsWith("$"));
 				if (!isStatement) { // parameters
 					paramList = new ArrayList<SqlParam>();
@@ -1327,18 +1319,19 @@ public class ConsoleBO extends Executor {
 					if (!isCall) {
 						if (line.endsWith(";")) {
 							Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-							sql.setQueryplan(sqlQueryPlan);
+							sql.setQueryplan(isQueryplan);
 							list.add(sql);
 						}
 					} else {
 						Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-						sql.setQueryplan(sqlQueryPlan);
+						sql.setQueryplan(isQueryplan);
 						list.add(sql);
 					}
 				}
 
 				if (isStatement && line.endsWith(";")) {
 					isNewStatement = true;
+					isQueryplan = false;
 
 					ret = new StringBuilder();
 					paramList = null;
