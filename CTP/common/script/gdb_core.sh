@@ -49,6 +49,9 @@ then
 elif [ `echo $coreloc|grep "cubrid "|wc -l` -ge 1 ]
 then
     coreloc=cub_admin
+elif [ `echo $coreloc|grep "too many program header sections"|wc -l` -ge 1 ]
+then
+     coreloc=`readelf -n ${corepath}|grep -A 2 'Page Offset'|tail -n 1|awk -F '/|\\' '{print $NF}'`
 else
     echo "analyze file command failed"
     exit
