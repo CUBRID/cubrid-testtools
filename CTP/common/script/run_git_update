@@ -117,7 +117,7 @@ else
         local_branch_name=$branch_name
 fi
 
-git branch -D $branch_name
+git branch -D $local_branch_name
 git fetch auto_update_url
 
 echo Begin to check out test cases:
