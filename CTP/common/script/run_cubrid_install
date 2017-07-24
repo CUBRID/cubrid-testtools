@@ -277,7 +277,7 @@ function InstallBuildForCompat()
 {
     curDir=`pwd` 
     getDir  
-    sh scripts/util_compat_test.sh -sl $1 -dl $2
+    sh util_compat_test.sh -sl $1 -dl $2
     cd $curDir
 }
 

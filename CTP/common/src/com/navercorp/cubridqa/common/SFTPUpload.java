@@ -131,6 +131,9 @@ public class SFTPUpload {
 				deleteLocalPkgTemp(pkgFrom);
 				succ = true;
 			} catch (Exception e) {
+				if (hasProxy == false) {
+					e.printStackTrace();
+				}
 				succ = false;
 			}
 		}
@@ -202,16 +205,11 @@ public class SFTPUpload {
 
 		String oriFn = from.substring(from.indexOf("_") + 1, from.lastIndexOf(".tar.gz") - 2);
 		boolean isSourceDir = from.endsWith("D.tar.gz");
-		String hello;
+		
 
 		try {
 			ssh = new SSHConnect(sshHost, Integer.parseInt(sshPort), sshUser, sshPassword, enableDebug);
-			hello = ssh.execute(new ShellInput("echo OOO${NOT_EXIST}KKK"));
-			if (hello.trim().equals("OOOKKK")) {
-				System.out.println("SSH CONNECTED + " + sshUser + "@" + sshHost);
-			} else {
-				throw new Exception("Fail to connect to host: " + sshHost);
-			}
+			sayHello(ssh, 100, 3);
 
 			System.out.println("[INFO] START TO UPLOAD: " + oriFn);
 
@@ -312,5 +310,34 @@ public class SFTPUpload {
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp("run_upload: upload files to remote host by SFTP protocol", options);
 		System.out.println();
+	}
+	
+	private static void sayHello(SSHConnect ssh, int retryTimes, int intervalSecs) throws Exception {
+		ShellInput script = new ShellInput("echo OOO${NOT_EXIST}KKK");
+		boolean succ = false;
+		String result;
+
+		for (int i = 0; i < retryTimes + 1; i++) {
+			try {
+				result = ssh.execute(script);
+				if (result.trim().equals("OOOKKK")) {
+					succ = true;
+					break;
+				}
+			} catch (Exception e) {
+				if (enableDebug) {
+					e.printStackTrace();
+				}
+			}
+			CommonUtils.sleep(intervalSecs);
+		}
+
+		if (succ) {
+			System.out.println("SSH CONNECTED + " + ssh.user + "@" + ssh.host);
+		} else {
+			String msg = "Fail to connect to " + ssh.user + "@" + ssh.host + " with " + retryTimes + " retries.";
+			System.out.println(msg);
+			throw new Exception(msg);
+		}
 	}
 }

@@ -1185,16 +1185,16 @@ function do_make_tz
                 fi
                 shift
                 ;;
-	     new|extend)
-		if [ "$OS" == "Windows_NT" ]
-		then
-			parameter=`echo $parameter " /$1"`
-		else
-			parameter=`echo $parameter " -g $1"`
-		fi
-		shift
-		;;
-	     # do not check error
+        new|extend)
+        if [ "$OS" == "Windows_NT" ]
+        then
+            parameter=`echo $parameter " /$1"`
+        else
+            parameter=`echo $parameter " -g $1"`
+        fi
+        shift
+        ;;
+        # do not check error
              nocheck)
                 nocheck=1
                 shift
@@ -1209,17 +1209,24 @@ function do_make_tz
 
         if [ ! -d $CUBRID/qa_tzbk ]
         then
-	  echo "Warning: please backup timezone related data before make_tz"
-	fi
+            echo "Warning: please backup timezone related data before make_tz"
+        fi
 
-	if [ "$OS" == "Windows_NT" ]
+        if [ "$OS" == "Windows_NT" ]
         then
           #old_cubrid=`echo $CUBRID`
           #new_lang=`echo ${old_cubrid}|sed 's:/:\\\\:g'`
           #export CUBRID=${new_lang}
           #make_tz.bat $parameter > make_tz.log 2>&1
-          #export CUBRID=${old_cubrid}		  
-          (export CUBRID=`cygpath -w $CUBRID`; make_tz.bat $parameter > make_tz.log 2>&1)
+          #export CUBRID=${old_cubrid}
+          for i in {1..10}
+          do
+            (export CUBRID=`cygpath -w $CUBRID`; make_tz.bat $parameter > make_tz.log 2>&1)
+            cnt=`grep "0 file" make_tz.log | wc -l`
+            if [ $cnt -eq 0 ]; then
+               break
+            fi
+          done
         else
           if [ `is32bit` -eq 1 ]
           then
@@ -1235,12 +1242,14 @@ function do_make_tz
           return 0
         else
           succ_cnt=`grep "The timezone library has been created at" make_tz.log | wc -l`
-          fail_cnt=`grep "fail" make_tz.log | wc -l`
+          fail_cnt=`grep "fail\|0 file" make_tz.log | wc -l`
           if [ "$succ_cnt" -ge 1 -a "$fail_cnt" -eq 0 ]
           then
             write_ok
             return 0
           else
+            echo tail -n 60 make_tz.log
+            tail -n 60 make_tz.log
             write_nok "make_tz failed!!!"
             return 1
           fi
