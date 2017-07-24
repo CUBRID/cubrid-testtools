@@ -278,6 +278,7 @@ function InstallBuildForCompat()
     curDir=`pwd` 
     getDir  
     sh util_compat_test.sh -sl $1 -dl $2
+    echo "Test_Build_URL=$1" >> $CUBRID/qa.conf
     cd $curDir
 }
 
