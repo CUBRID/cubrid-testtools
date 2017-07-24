@@ -60,18 +60,21 @@ while [ $# -ge 1 ];do
 	case $1 in
 	    -s|--role-compat-server)
 		shift
+		gUrl=$1
 		sUrl=$1
 		dUrl=$2
 		tCat="compat"
 		;;
 	    -d|--role-compat-driver)
 		shift
+		gUrl=$1
 		dUrl=$1
 		sUrl=$2
 		tCat="compat"
 		;;
 	    -c|--role-coverage)
 		shift
+		gUrl=$1
 		vUrl=$1
 		cUrl=$2
 		tCat="coverage"
@@ -278,6 +281,7 @@ function InstallBuildForCompat()
     curDir=`pwd` 
     getDir  
     sh util_compat_test.sh -sl $1 -dl $2
+    echo "Test_Build_URL=$gUrl" >> $CUBRID/qa.conf
     cd $curDir
 }
 

@@ -97,7 +97,7 @@ public class Constants {
 
 	private static ShellScriptInput craeteGetVersionScript() {
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("cubrid_rel");
+		scripts.addCommand("cat ${CUBRID}/qa.conf |grep 'Test_Build_URL'||cubrid_rel");
 
 		return scripts;
 	}
