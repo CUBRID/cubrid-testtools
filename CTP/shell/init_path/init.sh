@@ -620,7 +620,7 @@ function init
   fi
   export CUBRID_BITS
   
-  rm $CUBRID/log/* > /dev/null 2>&1
+  rm -rf $CUBRID/log/* > /dev/null 2>&1
 
   if [ $OS = "AIX" ];then
   	cp $init_path/commonforjdbc_aix.jar $init_path/commonforjdbc.jar
