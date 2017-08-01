@@ -66,6 +66,8 @@ cd ${local_svn_source_home}
 svn st ${svnAccountParameters} |grep '~' |awk '{print $NF}' |xargs -i rm -rf {}
 svn st ${svnAccountParameters} |grep '^M' |awk '{print $NF}' |xargs -i rm -rf {}
 svn st ${svnAccountParameters} |grep '!' |awk '{print $NF}' |grep -v "\\." |xargs -i rm -rf {}
+#Update the deleted directory
+svn st ${svnAccountParameters} |grep '!' |awk '{print $NF}' |grep -v "\\." |xargs -i svn up ${svnAccountParameters} {}
 svn cleanup .
 svn revert -R -q .
 svn st ${svnAccountParameters} |grep '?' |awk '{print $NF}' |xargs -i rm -rf {}
