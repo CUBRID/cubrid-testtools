@@ -36,8 +36,10 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
@@ -500,6 +502,40 @@ public class CommonFileUtile {
 		return list;
 	}
 
+	public static List<File> getCoreFiles(String targetDirectory){
+		List<File> list = new ArrayList<File>();
+		File src = new File(targetDirectory);
+		if (src.exists() && src.isDirectory()) {
+			searchCoreFromChildenDirectory(src, list);
+		}else{
+			String fileName = src.getName();
+			String suffer = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
+			if(fileName.toUpperCase().startsWith("CORE.") && StringUtils.isNumeric(suffer)){
+				list.add(src);
+			}
+		}
+		
+		return list;
+		
+	}
+	
+	private static void searchCoreFromChildenDirectory(File file, List<File> list){
+		if (file.exists() && file.isDirectory()) {
+			File[] listFiles = file.listFiles();
+			for (File child : listFiles) {
+				if (child.isDirectory()) {
+					searchCoreFromChildenDirectory(child, list);
+				}else{
+					String fileName = child.getName();
+					String suffer = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
+					if(fileName.toUpperCase().startsWith("CORE.") && StringUtils.isNumeric(suffer)){
+						list.add(child);
+					}
+				}
+			}
+		}
+		
+	}
 	/**
 	 * get the target file in child directory.
 	 * 

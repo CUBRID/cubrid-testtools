@@ -775,6 +775,7 @@ public class TestUtil {
 							result.setAnswerFile(answerFile);
 						}
 						result.setSuccessFul(caseResult.isSuccessFul());
+						result.setHasCore(caseResult.isHasCore());
 						result.setTotalTime(caseResult.getTotalTime());
 						result.setSiteRunTimes(caseResult.getSiteRunTimes());
 						if (!caseResult.isShouldRun()) {

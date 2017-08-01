@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.navercorp.cubridqa.common.coreanalyzer.AnalyzerMain;
 import com.navercorp.cubridqa.cqt.console.Executor;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.ProcessMonitor;
@@ -52,6 +53,7 @@ import com.navercorp.cubridqa.cqt.console.bean.Summary;
 import com.navercorp.cubridqa.cqt.console.bean.Test;
 import com.navercorp.cubridqa.cqt.console.bean.TestCaseSummary;
 import com.navercorp.cubridqa.cqt.console.dao.ConsoleDAO;
+import com.navercorp.cubridqa.cqt.console.util.CommonFileUtile;
 import com.navercorp.cubridqa.cqt.console.util.ConfigureUtil;
 import com.navercorp.cubridqa.cqt.console.util.CubridConnection;
 import com.navercorp.cubridqa.cqt.console.util.CubridUtil;
@@ -456,6 +458,13 @@ public class ConsoleBO extends Executor {
 				}
 				
 				boolean isSucc = caseResult.isSuccessFul();
+				if(!isSucc){
+					List<File> coreFileList = CommonFileUtile.getCoreFiles(CubridUtil.getCubridPath());
+					if (coreFileList != null && coreFileList.size() > 0) {
+							test.putCoreCaseIntoMap(caseFile, coreFileList);
+							caseResult.setHasCore(true);
+					}
+				}
 				printMessage(isSucc?" [OK]": " [NOK]", false, true);
 				if (ErrorInterruptUtil.isCaseRunError(this, caseFile)) {
 					this.onMessage("[ERROR]: Run case interrupt error!");
@@ -465,7 +474,6 @@ public class ConsoleBO extends Executor {
 			if (processMonitor.getCurrentstate() == processMonitor.Status_Stoping)
 				return;
 			if ((test.getType() == Test.TYPE_FUNCTION)) {
-
 				if (saveEveryone) {
 					if (test.getRunMode() != Test.MODE_RUN) {
 						TestUtil.makeSummary(test, test.getCatMap());
@@ -638,6 +646,27 @@ public class ConsoleBO extends Executor {
 		}
 	}
 
+	public void saveCoreCallStackFile(String caseFile, List<File> coreFileList){
+		String prefix = caseFile.substring(0, caseFile.indexOf(".sql"));
+		String coreFile = prefix + ".err";
+		StringBuffer sb = new StringBuffer();
+		for(int i=0; i<coreFileList.size();i++){
+			File coreFileName = coreFileList.get(i);
+			try {
+				String[] callStackInfo = AnalyzerMain.fetchCoreFullStack(coreFileName);
+				String coreName = coreFileName.getName();
+				if(callStackInfo!=null &&callStackInfo.length>1){
+					sb.append("==================" + coreName + "==================");
+					sb.append(callStackInfo[1]);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		CommonFileUtile.writeFile(sb.toString(), coreFile);
+		
+	}
 	/**
 	 * save the answer file .
 	 * 
