@@ -239,6 +239,7 @@ function run_sql_legacy() {
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D" ]; then
         branch=$BUILD_SVN_BRANCH_NEW
         exclude_file_dir=$HOME/dailyqa/$branch/config
+        run_svn_update -f $exclude_file_dir
     fi
     get_best_version_for_exclude_patch_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
     fileName=${exclude_file##*/}
@@ -306,7 +307,7 @@ function run_sql_legacy() {
    
         #instead of typ in summary.info by category value
         if [ -n "$site_type" ];then
-           category=${COMPAT_TEST_CATAGORY}/site/$site_type
+           category=`echo ${COMPAT_TEST_CATAGORY}|sed "s#site#$site_type#g"`
         fi
         sed -i "s/<catPath>${typ}</<catPath>$category</g" summary.info
         cd ..
