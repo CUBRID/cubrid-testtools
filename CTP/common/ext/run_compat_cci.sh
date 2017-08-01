@@ -87,6 +87,7 @@ function run_shell() {
         elif [ "$BUILD_IS_FROM_GIT" == "0" ];then
            exclude_branch=$BUILD_SVN_BRANCH_NEW
            exclude_file_dir=$HOME/dailyqa/$BUILD_SVN_BRANCH_NEW/config
+           run_svn_update -f $exclude_file_dir
            get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
         fi
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
@@ -145,10 +146,12 @@ function run_shell_legacy() {
            run_git_update -f $HOME/cubrid-testcases-private -b $exclude_branch
         elif [ "$BUILD_IS_FROM_GIT" == "0" ];then
            exclude_file_dir=$HOME/dailyqa/$BUILD_SVN_BRANCH_NEW/config
+           run_svn_update -f $exclude_file_dir
         fi
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
         branch=$BUILD_SVN_BRANCH_NEW
         exclude_file_dir=$HOME/dailyqa/$branch/config
+        run_svn_update -f $exclude_file_dir
     fi
     get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
  
@@ -165,25 +168,11 @@ function run_shell_legacy() {
     ln -s $cci shell    
     
     #update cases
-    svnuser=`ini.sh $CTP_HOME/conf/common.conf svn_user`
-    svnpassword=`ini.sh $CTP_HOME/conf/common.conf svn_pwd`
-    cd $HOME/dailyqa/$branch/scenario/shell 
-    svnParams="--username $svnuser --password $svnpassword --non-interactive --no-auth-cache"
-    default_exclude="grep -v '?'|grep -v '!'"
-    tbd_cmd="svn st $svnParams |$default_exclude|awk '{print \$NF}'" 
-    tbd=`eval ${tbd_cmd}`
-    svn cleanup $svnParams
-    if [ "$tbd" != "" ]
-    then
-      svn revert -R $svnParams $tbd
-    fi
-    svn up $svnParams
-    svn revert $svnParams -R *
+    cd $HOME/dailyqa/$branch/scenario
+    run_svn_update -f shell 
 
     #exclude cases
-    cd $HOME/dailyqa/$branch/scenario
-    cat $exclude_file|grep "^shell"|awk '{print "rm -rf " $0}' >delete.sh
-    sh delete.sh
+    cat $exclude_file|grep "^shell"|xargs -i rm -rf {}
  
     #runCCI
     exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh"    
