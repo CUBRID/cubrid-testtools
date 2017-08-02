@@ -647,8 +647,9 @@ public class ConsoleBO extends Executor {
 	}
 
 	public void saveCoreCallStackFile(String caseFile, List<File> coreFileList){
-		String prefix = caseFile.substring(0, caseFile.indexOf(".sql"));
-		String coreFile = prefix + ".err";
+		CaseResult caseResult = (CaseResult) test.getCaseResultFromMap(caseFile);
+		String caseResultDir = caseResult.getResultDir();
+		String coreFile = caseResultDir + File.separator + caseResult.getCaseName() + ".err";
 		StringBuffer sb = new StringBuffer();
 		for(int i=0; i<coreFileList.size();i++){
 			File coreFileName = coreFileList.get(i);
@@ -656,7 +657,8 @@ public class ConsoleBO extends Executor {
 				String[] callStackInfo = AnalyzerMain.fetchCoreFullStack(coreFileName);
 				String coreName = coreFileName.getName();
 				if(callStackInfo!=null &&callStackInfo.length>1){
-					sb.append("==================" + coreName + "==================" + System.getProperty("line.separator"));
+					sb.append(System.getProperty("line.separator") + "==================" + coreName + "==================" + System.getProperty("line.separator"));
+					sb.append("");
 					sb.append(callStackInfo[1]);
 				}
 			} catch (Exception e) {
