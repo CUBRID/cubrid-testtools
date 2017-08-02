@@ -459,7 +459,7 @@ public class ConsoleBO extends Executor {
 				
 				boolean isSucc = caseResult.isSuccessFul();
 				if(!isSucc){
-					List<File> coreFileList = CommonFileUtile.getCoreFiles(CubridUtil.getCubridPath());
+					List<File> coreFileList = CommonFileUtile.getCoreFiles(CubridUtil.getCubridPath(), test.getAllCoreList());
 					if (coreFileList != null && coreFileList.size() > 0) {
 							test.putCoreCaseIntoMap(caseFile, coreFileList);
 							caseResult.setHasCore(true);
@@ -656,7 +656,7 @@ public class ConsoleBO extends Executor {
 				String[] callStackInfo = AnalyzerMain.fetchCoreFullStack(coreFileName);
 				String coreName = coreFileName.getName();
 				if(callStackInfo!=null &&callStackInfo.length>1){
-					sb.append("==================" + coreName + "==================");
+					sb.append("==================" + coreName + "==================" + System.getProperty("line.separator"));
 					sb.append(callStackInfo[1]);
 				}
 			} catch (Exception e) {

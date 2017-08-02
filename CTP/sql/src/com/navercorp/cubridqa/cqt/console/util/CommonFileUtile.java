@@ -36,6 +36,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -502,16 +503,19 @@ public class CommonFileUtile {
 		return list;
 	}
 
-	public static List<File> getCoreFiles(String targetDirectory){
+	public static List<File> getCoreFiles(String targetDirectory, List<String> existsCoreList){
 		List<File> list = new ArrayList<File>();
 		File src = new File(targetDirectory);
 		if (src.exists() && src.isDirectory()) {
-			searchCoreFromChildenDirectory(src, list);
+			searchCoreFromChildenDirectory(src, list, existsCoreList);
 		}else{
 			String fileName = src.getName();
 			String suffer = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
 			if(fileName.toUpperCase().startsWith("CORE.") && StringUtils.isNumeric(suffer)){
-				list.add(src);
+				if(existsCoreList.isEmpty() || !existsCoreList.contains(src.getAbsoluteFile())){
+					list.add(src);
+					existsCoreList.add(src.getAbsolutePath());
+				}
 			}
 		}
 		
@@ -519,17 +523,20 @@ public class CommonFileUtile {
 		
 	}
 	
-	private static void searchCoreFromChildenDirectory(File file, List<File> list){
+	private static void searchCoreFromChildenDirectory(File file, List<File> list, List<String> existsCoreList){
 		if (file.exists() && file.isDirectory()) {
 			File[] listFiles = file.listFiles();
 			for (File child : listFiles) {
 				if (child.isDirectory()) {
-					searchCoreFromChildenDirectory(child, list);
+					searchCoreFromChildenDirectory(child, list, existsCoreList);
 				}else{
 					String fileName = child.getName();
 					String suffer = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
 					if(fileName.toUpperCase().startsWith("CORE.") && StringUtils.isNumeric(suffer)){
-						list.add(child);
+						if(existsCoreList.isEmpty() || !existsCoreList.contains(child.getAbsolutePath())){
+							list.add(child);
+							existsCoreList.add(child.getAbsolutePath());
+						}
 					}
 				}
 			}

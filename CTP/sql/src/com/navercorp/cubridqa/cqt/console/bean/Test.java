@@ -101,6 +101,16 @@ public class Test {
 	private String scenarioRootPath = "";
 	
 	private Map<String, List<File>> coreCaseMap = new HashMap<String, List<File>>();
+	
+	private List<String> allCoreList = new ArrayList<String>();
+
+	public List<String> getAllCoreList() {
+		return allCoreList;
+	}
+
+	public void setAllCoreList(List<String> allCoreList) {
+		this.allCoreList = allCoreList;
+	}
 
 	public Map<String, List<File>> getCoreCaseMap() {
 		return coreCaseMap;
