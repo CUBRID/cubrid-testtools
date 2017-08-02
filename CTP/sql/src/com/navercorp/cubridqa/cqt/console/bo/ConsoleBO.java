@@ -657,19 +657,23 @@ public class ConsoleBO extends Executor {
 		String rootCoreBackupDir = EnvGetter.getenv("CORE_BACKUP_DIR");
 		if (coreFileListSize != 0){
 			headerText.append("SUMMARY:");
+			headerText.append(System.getProperty("line.separator"));
 			if (rootCoreBackupDir != null && rootCoreBackupDir.length() > 0) {
-				headerText.append("CORE_BACKUP_DIR:" + rootCoreBackupDir + File.separator + test.getTestId());
+				headerText.append("CORE_DIR:" + rootCoreBackupDir + File.separator + test.getTestId());
+				headerText.append(System.getProperty("line.separator"));
+			}else{
+				headerText.append("CORE_DIR:" + CubridUtil.getCubridPath());
+				headerText.append(System.getProperty("line.separator"));
 			}
 		}
 		
 		for(int i=0; i<coreFileList.size();i++){
 			File coreFileName = coreFileList.get(i);
-			
 			try {
 				String[] callStackInfo = AnalyzerMain.fetchCoreFullStack(coreFileName);
 				String coreName = coreFileName.getName();
 				if(callStackInfo!=null &&callStackInfo.length>1){
-					headerText.append(coreName + " [" + callStackInfo[3] + "] " + callStackInfo[0]);
+					headerText.append(coreName + " [" + callStackInfo[2] + "] " + callStackInfo[0]);
 					bodyText.append(System.getProperty("line.separator") + "==================" + coreName + "==================" + System.getProperty("line.separator"));
 					bodyText.append("");
 					bodyText.append(callStackInfo[1]);

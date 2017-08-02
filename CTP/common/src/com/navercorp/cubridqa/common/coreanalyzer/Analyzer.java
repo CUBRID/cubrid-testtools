@@ -77,7 +77,7 @@ public class Analyzer {
 	}
 
 	public String[] getCoreFullStack() {
-		String[] result = new String[2];
+		String[] result = new String[3];
 		result[0] = this.summary;
 		result[1] = this.detailStack;
 		result[2] = this.processName;
