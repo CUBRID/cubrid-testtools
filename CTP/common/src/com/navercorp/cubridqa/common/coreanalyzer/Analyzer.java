@@ -80,6 +80,7 @@ public class Analyzer {
 		String[] result = new String[2];
 		result[0] = this.summary;
 		result[1] = this.detailStack;
+		result[2] = this.processName;
 		return result;
 	}
 

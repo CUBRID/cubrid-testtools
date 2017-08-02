@@ -57,6 +57,7 @@ import com.navercorp.cubridqa.cqt.console.util.CommonFileUtile;
 import com.navercorp.cubridqa.cqt.console.util.ConfigureUtil;
 import com.navercorp.cubridqa.cqt.console.util.CubridConnection;
 import com.navercorp.cubridqa.cqt.console.util.CubridUtil;
+import com.navercorp.cubridqa.cqt.console.util.EnvGetter;
 import com.navercorp.cubridqa.cqt.console.util.ErrorInterruptUtil;
 import com.navercorp.cubridqa.cqt.console.util.FileUtil;
 import com.navercorp.cubridqa.cqt.console.util.LogUtil;
@@ -650,23 +651,35 @@ public class ConsoleBO extends Executor {
 		CaseResult caseResult = (CaseResult) test.getCaseResultFromMap(caseFile);
 		String caseResultDir = caseResult.getResultDir();
 		String coreFile = caseResultDir + File.separator + caseResult.getCaseName() + ".err";
-		StringBuffer sb = new StringBuffer();
+		StringBuffer headerText = new StringBuffer();
+		StringBuffer bodyText = new StringBuffer();
+		int coreFileListSize = coreFileList == null ? 0 : coreFileList.size();
+		String rootCoreBackupDir = EnvGetter.getenv("CORE_BACKUP_DIR");
+		if (coreFileListSize != 0){
+			headerText.append("SUMMARY:");
+			if (rootCoreBackupDir != null && rootCoreBackupDir.length() > 0) {
+				headerText.append("CORE_BACKUP_DIR:" + rootCoreBackupDir + File.separator + test.getTestId());
+			}
+		}
+		
 		for(int i=0; i<coreFileList.size();i++){
 			File coreFileName = coreFileList.get(i);
+			
 			try {
 				String[] callStackInfo = AnalyzerMain.fetchCoreFullStack(coreFileName);
 				String coreName = coreFileName.getName();
 				if(callStackInfo!=null &&callStackInfo.length>1){
-					sb.append(System.getProperty("line.separator") + "==================" + coreName + "==================" + System.getProperty("line.separator"));
-					sb.append("");
-					sb.append(callStackInfo[1]);
+					headerText.append(coreName + " [" + callStackInfo[3] + "] " + callStackInfo[0]);
+					bodyText.append(System.getProperty("line.separator") + "==================" + coreName + "==================" + System.getProperty("line.separator"));
+					bodyText.append("");
+					bodyText.append(callStackInfo[1]);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 		
-		CommonFileUtile.writeFile(sb.toString(), coreFile);
+		CommonFileUtile.writeFile(headerText.toString() + bodyText.toString(), coreFile);
 		
 	}
 	/**

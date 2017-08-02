@@ -504,44 +504,31 @@ public class CommonFileUtile {
 	}
 
 	public static List<File> getCoreFiles(String targetDirectory, List<String> existsCoreList){
+		File file = new File(targetDirectory);
 		List<File> list = new ArrayList<File>();
-		File src = new File(targetDirectory);
-		if (src.exists() && src.isDirectory()) {
-			searchCoreFromChildenDirectory(src, list, existsCoreList);
-		}else{
-			String fileName = src.getName();
-			String suffer = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
-			if(fileName.toUpperCase().startsWith("CORE.") && StringUtils.isNumeric(suffer)){
-				if(existsCoreList.isEmpty() || !existsCoreList.contains(src.getAbsoluteFile())){
-					list.add(src);
-					existsCoreList.add(src.getAbsolutePath());
-				}
-			}
-		}
-		
+		if(!file.exists()) return list;
+		searchCoreFromChildenDirectory(file, list, existsCoreList);
 		return list;
 		
 	}
 	
-	private static void searchCoreFromChildenDirectory(File file, List<File> list, List<String> existsCoreList){
-		if (file.exists() && file.isDirectory()) {
-			File[] listFiles = file.listFiles();
-			for (File child : listFiles) {
-				if (child.isDirectory()) {
-					searchCoreFromChildenDirectory(child, list, existsCoreList);
-				}else{
-					String fileName = child.getName();
-					String suffer = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
-					if(fileName.toUpperCase().startsWith("CORE.") && StringUtils.isNumeric(suffer)){
-						if(existsCoreList.isEmpty() || !existsCoreList.contains(child.getAbsolutePath())){
-							list.add(child);
-							existsCoreList.add(child.getAbsolutePath());
-						}
+	private static void searchCoreFromChildenDirectory(File file, List<File> list, List<String> existsCoreList) {
+		File[] listFiles = file.listFiles();
+		for (File child : listFiles) {
+			if (child.isDirectory()) {
+				searchCoreFromChildenDirectory(child, list, existsCoreList);
+			} else {
+				String fileName = child.getName();
+				String suffix = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
+				if (fileName.toUpperCase().startsWith("CORE.") && StringUtils.isNumeric(suffix)) {
+					if (existsCoreList.isEmpty() || !existsCoreList.contains(child.getAbsolutePath())) {
+						list.add(child);
+						existsCoreList.add(child.getAbsolutePath());
 					}
 				}
 			}
 		}
-		
+
 	}
 	/**
 	 * get the target file in child directory.
