@@ -141,14 +141,14 @@ function get_affect_version()
 	affect_ver=""
 	if [ "$ver" ];then
 		version_prefix=`echo $ver|awk -F '.' '{print $1"."$2}'`
-		version_suffer=`echo $ver|awk -F '.' '{print $3}'`
+		patch_no=`echo $ver|awk -F '.' '{print $3}'`
 		if [ "$version_prefix" == "10.2" ];then
 			affect_ver="cherry"		
 		else
-			if [ "$version_suffer" -ne 0 ];then
-				affect_ver="$version_suffer Patch $version_suffer"
+			if [ "$patch_no" -ne 0 ];then
+				affect_ver="$version_prefix Patch $patch_no"
 			else
-				affect_ver="$version_suffer"
+				affect_ver="$version_prefix"
 			fi 
 		fi
 	fi
