@@ -58,6 +58,8 @@ public class CaseResult {
 	private String result;
 
 	private boolean isSuccessFul = true;
+	
+	private boolean hasCore = false;
 
 	private boolean shouldRun = true;
 
@@ -117,6 +119,14 @@ public class CaseResult {
 		this.isSuccessFul = isSuccessFul;
 	}
 
+	public boolean isHasCore() {
+		return hasCore;
+	}
+
+	public void setHasCore(boolean hasCore) {
+		this.hasCore = hasCore;
+	}
+	
 	public boolean isHasAnswer() {
 		return hasAnswer;
 	}

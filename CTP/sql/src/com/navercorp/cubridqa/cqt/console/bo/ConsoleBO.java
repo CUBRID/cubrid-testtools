@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.navercorp.cubridqa.common.coreanalyzer.AnalyzerMain;
 import com.navercorp.cubridqa.cqt.console.Executor;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.ProcessMonitor;
@@ -52,9 +53,11 @@ import com.navercorp.cubridqa.cqt.console.bean.Summary;
 import com.navercorp.cubridqa.cqt.console.bean.Test;
 import com.navercorp.cubridqa.cqt.console.bean.TestCaseSummary;
 import com.navercorp.cubridqa.cqt.console.dao.ConsoleDAO;
+import com.navercorp.cubridqa.cqt.console.util.CommonFileUtile;
 import com.navercorp.cubridqa.cqt.console.util.ConfigureUtil;
 import com.navercorp.cubridqa.cqt.console.util.CubridConnection;
 import com.navercorp.cubridqa.cqt.console.util.CubridUtil;
+import com.navercorp.cubridqa.cqt.console.util.EnvGetter;
 import com.navercorp.cubridqa.cqt.console.util.ErrorInterruptUtil;
 import com.navercorp.cubridqa.cqt.console.util.FileUtil;
 import com.navercorp.cubridqa.cqt.console.util.LogUtil;
@@ -456,6 +459,13 @@ public class ConsoleBO extends Executor {
 				}
 				
 				boolean isSucc = caseResult.isSuccessFul();
+				if(!isSucc){
+					List<File> coreFileList = CommonFileUtile.getCoreFiles(CubridUtil.getCubridPath(), test.getAllCoreList());
+					if (coreFileList != null && coreFileList.size() > 0) {
+							test.putCoreCaseIntoMap(caseFile, coreFileList);
+							caseResult.setHasCore(true);
+					}
+				}
 				printMessage(isSucc?" [OK]": " [NOK]", false, true);
 				if (ErrorInterruptUtil.isCaseRunError(this, caseFile)) {
 					this.onMessage("[ERROR]: Run case interrupt error!");
@@ -465,7 +475,6 @@ public class ConsoleBO extends Executor {
 			if (processMonitor.getCurrentstate() == processMonitor.Status_Stoping)
 				return;
 			if ((test.getType() == Test.TYPE_FUNCTION)) {
-
 				if (saveEveryone) {
 					if (test.getRunMode() != Test.MODE_RUN) {
 						TestUtil.makeSummary(test, test.getCatMap());
@@ -638,6 +647,45 @@ public class ConsoleBO extends Executor {
 		}
 	}
 
+	public void saveCoreCallStackFile(String caseFile, List<File> coreFileList){
+		CaseResult caseResult = (CaseResult) test.getCaseResultFromMap(caseFile);
+		String caseResultDir = caseResult.getResultDir();
+		String coreFile = caseResultDir + File.separator + caseResult.getCaseName() + ".err";
+		StringBuffer headerText = new StringBuffer();
+		StringBuffer bodyText = new StringBuffer();
+		int coreFileListSize = coreFileList == null ? 0 : coreFileList.size();
+		String rootCoreBackupDir = EnvGetter.getenv("CORE_BACKUP_DIR");
+		if (coreFileListSize != 0){
+			headerText.append("SUMMARY:");
+			headerText.append(System.getProperty("line.separator"));
+			if (rootCoreBackupDir != null && rootCoreBackupDir.length() > 0) {
+				headerText.append("CORE_DIR:" + rootCoreBackupDir + File.separator + test.getTestId());
+				headerText.append(System.getProperty("line.separator"));
+			}else{
+				headerText.append("CORE_DIR:" + CubridUtil.getCubridPath());
+				headerText.append(System.getProperty("line.separator"));
+			}
+		}
+		
+		for(int i=0; i<coreFileList.size();i++){
+			File coreFileName = coreFileList.get(i);
+			try {
+				String[] callStackInfo = AnalyzerMain.fetchCoreFullStack(coreFileName);
+				String coreName = coreFileName.getName();
+				if(callStackInfo!=null &&callStackInfo.length>1){
+					headerText.append(coreName + " [" + callStackInfo[2] + "] " + callStackInfo[0]);
+					bodyText.append(System.getProperty("line.separator") + "==================" + coreName + "==================" + System.getProperty("line.separator"));
+					bodyText.append("");
+					bodyText.append(callStackInfo[1]);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		CommonFileUtile.writeFile(headerText.toString() + bodyText.toString(), coreFile);
+		
+	}
 	/**
 	 * save the answer file .
 	 * 
