@@ -91,7 +91,7 @@ function run_sql {
     ini.sh -s "sql/cubrid_ha.conf" ${ctp_test_conf} --update-from-file=$tmptxt --clear-first
 
     #export CORE_BACKUP_DIR for core backup dir
-    export CORE_BACKUP_DIR=${core_backup_root} 
+    export CORE_BACKUP_DIR="${USER}@`hostname -i`${core_backup_root}" 
 
 
     # STEP 4: execute test
