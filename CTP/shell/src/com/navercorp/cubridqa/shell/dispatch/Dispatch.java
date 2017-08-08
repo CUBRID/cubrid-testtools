@@ -134,9 +134,14 @@ public class Dispatch {
 				System.out.println("****************************************");
 				System.out.println("# OF EXCLUDED = " + excluedList.size());
 				System.out.println("****************************************");
+				String checkItem;
 				for (int i = 0; i < excluedList.size(); i++) {
 					for (int j = this.tbdList.size() - 1; j >= 0; j--) {
-						if (this.tbdList.get(j).indexOf(excluedList.get(i)) != -1) {
+						checkItem = this.tbdList.get(j);
+						if (checkItem.endsWith("/") == false) {
+							checkItem = checkItem + "/";
+						}
+						if (checkItem.indexOf(excluedList.get(i)) != -1) {
 							System.out.println("Skipped File(Temp): " + this.tbdList.get(j));
 							this.tempSkippedSize++;
 							this.tempSkippedList.add(this.tbdList.get(j));
@@ -288,6 +293,9 @@ public class Dispatch {
 				continue;
 			if (tc1.startsWith("--"))
 				continue;
+			if (tc1.endsWith("/") == false) {
+				tc1 = tc1 + "/";
+			}
 			testCaseList.add(tc1);
 		}
 		return testCaseList;
