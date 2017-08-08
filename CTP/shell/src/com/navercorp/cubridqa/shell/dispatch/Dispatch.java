@@ -132,16 +132,15 @@ public class Dispatch {
 
 			if (excluedList != null) {
 				System.out.println("****************************************");
-				System.out.println("# OF THE CASE EXCLUDED = " + excluedList.size());
+				System.out.println("# OF EXCLUDED = " + excluedList.size());
 				System.out.println("****************************************");
 				for (int i = 0; i < excluedList.size(); i++) {
-					for (int j = 0; j < this.tbdList.size(); j++) {
+					for (int j = this.tbdList.size() - 1; j >= 0; j--) {
 						if (this.tbdList.get(j).indexOf(excluedList.get(i)) != -1) {
 							System.out.println("Skipped File(Temp): " + this.tbdList.get(j));
 							this.tempSkippedSize++;
 							this.tempSkippedList.add(this.tbdList.get(j));
 							this.tbdList.remove(j);
-							break;
 						}
 					}
 				}
