@@ -112,9 +112,9 @@ function run_sql {
             timestamp=`echo $testResultName|awk -F '_' '{print $5}'`
             mon=`date +'%m'`
             year=`date +'%Y'`
+            core_dirname="${BUILD_SCENARIOS}_${year}${mon}${timestamp}"
             core_path=${core_backup_root}/${testResultName}/${core_dirname}
             mkdir -p ${core_path}
-            
             cat $tmplog |grep '^CORE_FILE:'|awk -F ':' '{print $NF}'|tr -d " " | xargs -i analyzer.sh {} > ${core_path}/${core_dirname}_corestacks.txt
             (cd ${core_path}/..; upload_to_dailysrv ${core_dirname} "./qaresult_en/web/test_error/function/${core_dirname}")
 

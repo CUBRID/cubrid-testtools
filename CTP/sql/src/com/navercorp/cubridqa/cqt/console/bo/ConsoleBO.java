@@ -673,7 +673,7 @@ public class ConsoleBO extends Executor {
 				String[] callStackInfo = AnalyzerMain.fetchCoreFullStack(coreFileName);
 				String coreName = coreFileName.getName();
 				if(callStackInfo!=null &&callStackInfo.length>1){
-					headerText.append(coreName + " [" + callStackInfo[2] + "] " + callStackInfo[0]);
+					headerText.append(coreName + " [" + callStackInfo[2] + "] " + callStackInfo[0] + System.getProperty("line.separator"));
 					bodyText.append(System.getProperty("line.separator") + "==================" + coreName + "==================" + System.getProperty("line.separator"));
 					bodyText.append("");
 					bodyText.append(callStackInfo[1]);
