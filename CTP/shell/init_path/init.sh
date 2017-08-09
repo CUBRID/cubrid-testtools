@@ -56,6 +56,21 @@ function get_broker_port_from_shell_config
   echo $port
 }
 
+# This function is not recommended.
+# It is used to get another available port. 
+function generate_port {
+        generated_port=$1
+        while true; do
+                ((generated_port=${generated_port} + 1 ))
+                is_use=`netstat -ant | awk '{print $4}' | grep -e "\:${generated_port}$"`
+
+                if [ -z "$is_use" ]; then
+                        break
+                fi
+        done
+        echo ${generated_port}
+}
+
 function get_curr_second
 {
 	str=`date +%s`
