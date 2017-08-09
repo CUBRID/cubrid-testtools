@@ -56,7 +56,8 @@ function get_broker_port_from_shell_config
   echo $port
 }
 
-#get another available port 
+# This function is not recommended.
+# It is used to get another available port. 
 function generate_port {
         generated_port=$1
         while true; do
