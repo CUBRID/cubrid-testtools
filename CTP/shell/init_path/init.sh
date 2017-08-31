@@ -47,6 +47,21 @@ then
    CUBRID_CHARSET=en_US
 fi
 
+#get the OS version
+function get_os(){
+osname=`uname`
+case "$osname" in
+	"Linux")
+		echo "Linux";;
+	"AIX")
+		echo "AIX";;
+	*)
+		echo "Windows_NT";;
+esac
+}
+
+export OS=`get_os`
+
 # get broker port from shell_config.xml
 function get_broker_port_from_shell_config
 {
@@ -613,11 +628,6 @@ function init
   full_name=$0
   answer_no=1 
   mode=$1
-  OS=`uname`
-  if [ `echo $OS| grep CYGWIN_NT|wc -l` -eq 1 ]
-  then
-      OS="Windows_NT"
-  fi
   
   if [ "$OS" = "Windows_NT" ]; then
   	export init_path=`cygpath "${init_path}"`
@@ -724,7 +734,6 @@ function init
     fi
   fi
   
-  export OS
 }
 
 # All test script file shoule have description for test scenario.
@@ -1289,19 +1298,6 @@ function revert_tz
 	fi
 }
 
-#get the OS version
-function get_os(){
-osname=`uname`
-case "$osname" in
-	"Linux")
-		echo "Linux";;
-	"AIX")
-		echo "AIX";;
-	*)
-		echo "Windows_NT";;
-esac
-}
-
 function get_bit_ver(){
 is32bit=`file ${CUBRID}/bin/cubrid | grep "32-bit" | wc -l`
 if [ "$is32bit" -eq 1 ] 
@@ -1315,7 +1311,6 @@ echo $BIT_VERSION
 
 #replace gcc to cross platforms
 function xgcc(){
-OS=`get_os`
 BIT_VERSION=`get_bit_ver`
 
 #recive parameters and delete options
