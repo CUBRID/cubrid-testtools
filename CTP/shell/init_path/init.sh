@@ -623,6 +623,8 @@ function init
   	export init_path=`cygpath "${init_path}"`
     export REAL_INIT_PATH=`cygpath -w "${init_path}"`
   	export MINGW_PATH=`cygpath "${MINGW_PATH}"`
+	alias awk="awk -v RS='\r\n|\r|\n'"
+	alias diff="diff -b"
   else 
     export REAL_INIT_PATH=${init_path}
   fi
