@@ -56,4 +56,32 @@ function use_cubrid_main {
     source $HOME/CUBRID/.cubrid.sh
 }
 
+function r_upload {
+    host_key=$1
+    host_opts="-host \"\$${host_key}_IP\" -user \"\$${host_key}_USER\" -password \"$D_DEFAULT_PWD\" -port $D_DEFAULT_PORT" 
+    cmd_opts=""
+    skip=1
+    for item in "$@"; do
+        if [ $skip -eq 1 ]; then
+            skip=0
+            continue
+        fi
+        cmd_opts=$(echo $cmd_opts \'$item\')
+    done
+    eval $init_path/../../common/script/run_upload $host_opts $cmd_opts
+}
 
+function r_download {
+    host_key=$1
+    host_opts="-host \"\$${host_key}_IP\" -user \"\$${host_key}_USER\" -password \"$D_DEFAULT_PWD\" -port $D_DEFAULT_PORT" 
+    cmd_opts=""
+    skip=1
+    for item in "$@"; do
+        if [ $skip -eq 1 ]; then
+            skip=0
+            continue
+        fi
+        cmd_opts=$(echo $cmd_opts \'$item\')
+    done
+    eval $init_path/../../common/script/run_download $host_opts $cmd_opts
+}
