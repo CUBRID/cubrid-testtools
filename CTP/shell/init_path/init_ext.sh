@@ -85,3 +85,13 @@ function r_download {
     done
     eval $init_path/../../common/script/run_download $host_opts $cmd_opts
 }
+
+function check_disk_space_and_notice {
+	expected_space="$1"
+	home_vol=`df -P $HOME | grep -v Filesystem | awk '{print $1}'`
+	mail_addr=`awk -F '=' "/mail_from_address/ {print \\$2}" $init_path/../../conf/common.conf|tr -d '\r'`
+	echo "check_disk_space $home_vol $expected_space $mail_addr" > check_temp.act
+	$init_path/../../common/script/run_action_files check_temp.act
+	rm check_temp.act
+}
+
