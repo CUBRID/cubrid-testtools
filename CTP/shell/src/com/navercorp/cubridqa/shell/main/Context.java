@@ -39,6 +39,7 @@ import java.util.Set;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
+import com.navercorp.cubridqa.shell.dispatch.Selector;
 import com.navercorp.cubridqa.shell.result.FeedbackDB;
 import com.navercorp.cubridqa.shell.result.FeedbackFile;
 import com.navercorp.cubridqa.shell.result.FeedbackNull;
@@ -50,6 +51,8 @@ public class Context {
 	boolean isContinueMode = false;
 
 	ArrayList<String> envList;
+	ArrayList<String> followerList;
+	ArrayList<Selector> selectorList;
 
 	String cubridPackageUrl;
 
@@ -136,6 +139,8 @@ public class Context {
 
 		if (isExecuteAtLocal == false) {
 			this.envList = initEnvList(config);
+			this.followerList = initFollowerList(config);
+			this.selectorList = initSelectorList(config);
 		}
 
 		this.toolHome = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile(Constants.ENV_CTP_HOME_KEY);
@@ -178,10 +183,53 @@ public class Context {
 		Set<Object> set = config.keySet();
 		Iterator<Object> it = set.iterator();
 		String key;
+		String envId;
+		String envType;
 		while (it.hasNext()) {
 			key = (String) it.next();
 			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)) {
-				resultList.add(key.substring(4, key.indexOf("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)));
+				envId = key.substring(ConfigParameterConstants.TEST_INSTANCE_PREFIX.length(), key.indexOf("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX));
+				envType = config.getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX + envId + "." + ConfigParameterConstants.INSTANCE_TYPE);
+				if (envType == null || envType.trim().equals("") || envType.trim().equals("follow") == false) {
+					resultList.add(envId);
+				}
+			}
+		}
+		return resultList;
+	}
+	
+	public static ArrayList<String> initFollowerList(Properties config) {
+		ArrayList<String> resultList = new ArrayList<String>();
+		Set<Object> set = config.keySet();
+		Iterator<Object> it = set.iterator();
+		String key;
+		String envId;
+		String envType;
+		while (it.hasNext()) {
+			key = (String) it.next();
+			if (key.startsWith(ConfigParameterConstants.TEST_INSTANCE_PREFIX) && key.endsWith("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX)) {
+				envId = key.substring(ConfigParameterConstants.TEST_INSTANCE_PREFIX.length(), key.indexOf("." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX));
+				envType = config.getProperty(ConfigParameterConstants.TEST_INSTANCE_PREFIX + envId + "." + ConfigParameterConstants.INSTANCE_TYPE);
+				if (envType != null && envType.trim().equals("follow")) {
+					resultList.add(envId.trim());
+				}
+			}
+		}
+		return resultList;
+	}
+	
+	public static ArrayList<Selector> initSelectorList(Properties config) {
+		ArrayList<Selector> resultList = new ArrayList<Selector>();
+		Set<Object> set = config.keySet();
+		Iterator<Object> it = set.iterator();
+		String key, k, v;
+		Selector s;
+		while (it.hasNext()) {
+			key = (String) it.next();
+			if (key.startsWith(ConfigParameterConstants.TEST_SELECTOR_PREFIX) && key.endsWith("." + ConfigParameterConstants.TEST_SELECTOR_SUFFIX)) {
+				k = key.substring(ConfigParameterConstants.TEST_SELECTOR_PREFIX.length(), key.indexOf("." + ConfigParameterConstants.TEST_SELECTOR_SUFFIX));
+				s = new Selector(k, config.getProperty(key));
+				resultList.add(s);
 			}
 		}
 		return resultList;
@@ -236,6 +284,27 @@ public class Context {
 
 	public ArrayList<String> getEnvList() {
 		return this.envList;
+	}
+	
+	public ArrayList<String> getFollowerList() {
+		return this.followerList;
+	}
+
+	public ArrayList<Selector> getSelectorList() {
+		return this.selectorList;
+	}
+	
+	public Selector getSelector(String id) {
+		if (selectorList == null) {
+			return null;
+		}
+
+		for (Selector s : selectorList) {
+			if (s.getId().equals(id)) {
+				return s;
+			}
+		}
+		return null;
 	}
 
 	public boolean isContinueMode() {

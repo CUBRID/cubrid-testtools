@@ -37,6 +37,8 @@ import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.dispatch.Dispatch;
+import com.navercorp.cubridqa.shell.dispatch.TestCaseRequest;
+import com.navercorp.cubridqa.shell.dispatch.TestNode;
 
 public class Test {
 
@@ -86,6 +88,7 @@ public class Test {
 
 		System.out.println("[ENV START] " + currEnvId);
 
+		TestCaseRequest testCaseRequest;
 		String testCase;
 		Long endTime;
 		String consoleOutput;
@@ -107,11 +110,12 @@ public class Test {
 				}
 			}
 
-			testCase = Dispatch.getInstance().nextTestFile();
+			testCaseRequest = Dispatch.getInstance().nextTestFile(this.currEnvId);
+			testCase = testCaseRequest == null ? null : testCaseRequest.getTestCase();
 			if (testCase == null) {
 				break;
 			}
-
+			
 			consoleOutput = "";
 			this.testCaseFullName = testCase;
 			p = testCase.lastIndexOf("cases");
@@ -122,6 +126,16 @@ public class Test {
 			context.getFeedback().onTestCaseStartEvent(this.testCaseFullName, envIdentify);
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
+			
+			if (testCaseRequest.hasTestNodes() == false) {
+				String result = "Not found expected test server(s) which is " + testCaseRequest.getExpectedMachines() + " defined in test.conf";
+				context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, false, 0, result, envIdentify, false, false, Constants.SKIP_TYPE_NO, 0);
+				Dispatch.getInstance().finish(testCaseRequest);
+				dispatchLog.println(this.testCaseFullName);
+				System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " NOK (not found server: " + testCaseRequest.getExpectedMachines() + ")");
+				workerLog.println("");
+				continue;
+			}
 
 			boolean needRetry = true;
 			int retryCount = 0;
@@ -146,7 +160,7 @@ public class Test {
 				this.hasCore = false;
 
 				try {
-					consoleOutput = runTestCase();
+					consoleOutput = runTestCase(testCaseRequest);
 					doFinalCheck();
 					collectGeneralResult();
 				} catch (Exception e) {
@@ -208,8 +222,16 @@ public class Test {
 					} else {
 						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
 								Constants.SKIP_TYPE_NO, retryCount);
-						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
+						StringBuilder out = new StringBuilder();
+						out.append("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
 								+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + retryCount : "")));
+						if(testCaseRequest.getNodeList().size() > 1) {
+							out.append("\n");
+							for(TestNode n: testCaseRequest.getNodeList()) {
+								out.append("  ").append(n.toString()).append("\n");
+							}
+						}
+						System.out.println(out.toString().trim());
 					}
 
 					workerLog.println("");
@@ -221,6 +243,7 @@ public class Test {
 			if (needDropTestCase) {
 				dropTestCaseAfterTest();
 			}
+			Dispatch.getInstance().finish(testCaseRequest);
 			dispatchLog.println(this.testCaseFullName);
 		}
 
@@ -230,15 +253,15 @@ public class Test {
 		isStopped = true;
 	}
 
-	public String runTestCase() throws Exception {
+	public String runTestCase(TestCaseRequest request) throws Exception {
 		if (this.context.isWindows) {
-			return runTestCase_windows();
+			return runTestCase_windows(request);
 		} else {
-			return runTestCase_linux();
+			return runTestCase_linux(request);
 		}
 	}
 
-	public String runTestCase_windows() throws Exception {
+	public String runTestCase_windows(TestCaseRequest request) throws Exception {
 
 		ShellScriptInput script;
 		String result;
@@ -266,7 +289,7 @@ public class Test {
 		return result;
 	}
 
-	public String runTestCase_linux() throws Exception {
+	public String runTestCase_linux(TestCaseRequest request) throws Exception {
 
 		ShellScriptInput script;
 		String result;
@@ -291,6 +314,20 @@ public class Test {
 
 		script.addCommand("echo > " + testCaseResultName);
 		addSshInfoScript(script);
+		if (CommonUtils.isEmpty(context.getTestCaseBranch())) {
+			script.addCommand("$init_path/prepare.sh 2>&1");
+		} else {
+			script.addCommand("$init_path/prepare.sh --branch \"" + context.getTestCaseBranch().trim() + "\" 2>&1");
+		}
+		if (request.getNodeList() != null && request.getNodeList().size() > 0) {
+			script.addCommand("export D_DEFAULT_PORT=\'" + context.getInstanceProperty(currEnvId, "ssh.port") + "\'");
+			script.addCommand("export D_DEFAULT_PWD=\'" + context.getInstanceProperty(currEnvId, "ssh.pwd") + "\'");
+			for (int n = 0; n < request.getNodeList().size(); n++) {
+				script.addCommand("export D_HOST" + n + "_IP=\'" + request.getNodeList().get(n).getHost().getIp() + "\'");
+				script.addCommand("export D_HOST" + n + "_USER=\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.user") + "\'");
+				script.addCommand("export D_HOST" + n + "_PORT=\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.port") + "\'");
+			}
+		}
 		script.addCommand("sh " + testCaseName + " 2>&1");
 		result = ssh.execute(script);
 

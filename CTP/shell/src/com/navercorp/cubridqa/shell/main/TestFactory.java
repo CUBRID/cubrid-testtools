@@ -112,6 +112,7 @@ public class TestFactory {
 
 		System.out.println("============= DEPLOY ==================");
 		concurrentDeploy(stableEnvList, false);
+		concurrentDeploy(context.getFollowerList(), false);
 		System.out.println("DONE");
 
 		System.out.println("============= TEST ==================");
