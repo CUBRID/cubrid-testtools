@@ -314,20 +314,26 @@ public class Test {
 
 		script.addCommand("echo > " + testCaseResultName);
 		addSshInfoScript(script);
-		if (CommonUtils.isEmpty(context.getTestCaseBranch())) {
-			script.addCommand("$init_path/prepare.sh 2>&1");
+		
+		script.addCommand("if [ -f test.conf ]; then");
+		script.addCommand("echo \\#\\!/bin/sh > .env.sh");
+		if (CommonUtils.isEmpty(context.getTestCaseBranch()) || context.needCleanTestCase() == false) {
+			script.addCommand("echo \\$init_path/prepare.sh >> .env.sh");
 		} else {
-			script.addCommand("$init_path/prepare.sh --branch \"" + context.getTestCaseBranch().trim() + "\" 2>&1");
+			script.addCommand("echo \\$init_path/prepare.sh --branch \\\"" + context.getTestCaseBranch().trim() + "\\\" >> .env.sh");
 		}
 		if (request.getNodeList() != null && request.getNodeList().size() > 0) {
-			script.addCommand("export D_DEFAULT_PORT=\'" + context.getInstanceProperty(currEnvId, "ssh.port") + "\'");
-			script.addCommand("export D_DEFAULT_PWD=\'" + context.getInstanceProperty(currEnvId, "ssh.pwd") + "\'");
+			script.addCommand("echo export D_DEFAULT_PORT=\\\'" + context.getInstanceProperty(currEnvId, "ssh.port") + "\\\' >> .env.sh");
+			script.addCommand("echo export D_DEFAULT_PWD=\\\'" + context.getInstanceProperty(currEnvId, "ssh.pwd") + "\\\' >> .env.sh");
 			for (int n = 0; n < request.getNodeList().size(); n++) {
-				script.addCommand("export D_HOST" + n + "_IP=\'" + request.getNodeList().get(n).getHost().getIp() + "\'");
-				script.addCommand("export D_HOST" + n + "_USER=\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.user") + "\'");
-				script.addCommand("export D_HOST" + n + "_PORT=\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.port") + "\'");
+				script.addCommand("echo export D_HOST" + n + "_IP=\\\'" + request.getNodeList().get(n).getHost().getIp() + "\\\' >> .env.sh");
+				script.addCommand("echo export D_HOST" + n + "_USER=\\\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.user") + "\\\' >> .env.sh");
+				script.addCommand("echo export D_HOST" + n + "_PORT=\\\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.port") + "\\\' >> .env.sh");
 			}
 		}
+		script.addCommand("source .env.sh > prepare.log 2>&1");
+		script.addCommand("fi");
+		
 		script.addCommand("sh " + testCaseName + " 2>&1");
 		result = ssh.execute(script);
 

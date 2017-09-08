@@ -47,4 +47,4 @@ mkdir -p ../.ctp
 cp -rf common/lib/* ../.ctp/
 
 export `grep -E "^grepo_service_url" conf/common.conf | tr -d '\r'`
-"$JAVA_HOME/bin/java" -cp ../.ctp/cubridqa-common.jar com.navercorp.cubridqa.common.grepo.UpgradeMain -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" .; (chmod u+x ./bin/*; chmod u+x ./common/script/*; chmod u+x ./common/ext/*; chmod u+x sql/bin/*; rm -rf ../.ctp >/dev/null 3>&1); echo DONE; cd "${current_user_dir}"; exit
+"$JAVA_HOME/bin/java" -cp ../.ctp/cubridqa-common.jar com.navercorp.cubridqa.common.grepo.UpgradeMain -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" .; (chmod u+x ./bin/*; chmod u+x ./common/script/*; chmod u+x ./common/ext/*; chmod u+x sql/bin/*; chmod u+x shell/init_path/*.sh; rm -rf ../.ctp >/dev/null 3>&1); echo DONE; cd "${current_user_dir}"; exit
