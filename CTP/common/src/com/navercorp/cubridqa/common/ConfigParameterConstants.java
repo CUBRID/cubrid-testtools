@@ -34,6 +34,8 @@ public class ConfigParameterConstants {
 	public static final String TEST_INSTANCE_USER_SUFFIX = "ssh.user";
 	public static final String TEST_INSTANCE_PASSWORD_SUFFIX = "ssh.pwd";
 	public static final String TEST_INSTANCE_RELATED_HOSTS_SUFFIX = "ssh.relatedhosts";
+	public static final String TEST_SELECTOR_PREFIX = "selector.";	
+	public static final String TEST_SELECTOR_SUFFIX= "hosts";
 
 	// Environment variables
 	public static final String CTP_SKIP_UPDATE = "CTP_SKIP_UPDATE";
@@ -58,6 +60,7 @@ public class ConfigParameterConstants {
 	public static final String ROLE_BROKER1 = "broker1";
 	public static final String ROLE_BROKER2 = "broker2";
 	public static final String ROLE_BROKER_AVAILABLE_PORT = "available_port";
+	public static final String INSTANCE_TYPE = "type";
 
 	// Test case configuration parameters
 	public static final String SCENARIO = "scenario";

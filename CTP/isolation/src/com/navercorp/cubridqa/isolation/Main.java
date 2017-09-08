@@ -86,16 +86,6 @@ public class Main {
 		System.out.println("Build Id: " + context.getBuildId());
 		System.out.println("Build Bits: " + context.getBuildBits());
 
-		Log contextSnapshot = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "main_snapshot.properties"), true, false);
-		Properties props = context.getProperties();
-		Set set = props.keySet();
-		for (Object key : set) {
-			contextSnapshot.println(key + "=" + props.getProperty((String) key));
-		}
-		contextSnapshot.println("AUTO_BUILD_ID=" + context.getBuildId());
-		contextSnapshot.println("AUTO_BUILD_BITS=" + context.getBuildBits());
-		contextSnapshot.close();
-
 		TestFactory factory = new TestFactory(context);
 		factory.execute();
 	}

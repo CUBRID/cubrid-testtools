@@ -30,7 +30,9 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Properties;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -43,9 +45,10 @@ public class Dispatch {
 	public static Dispatch instance;
 
 	private Context context;
-
-	private ArrayList<String> tbdList;
+	
 	private int totalTbdSize;
+
+	private ArrayList<TestCaseRequest> tbdList;	
 
 	private ArrayList<String> macroSkippedList;
 	private int macroSkippedSize = 0;
@@ -53,17 +56,44 @@ public class Dispatch {
 	private ArrayList<String> tempSkippedList;
 	private int tempSkippedSize = 0;
 
-	private int nextTestFileIndex;
 	private Log all;
+	
+	private TestNodePool nodePool;
 
 	private boolean isFinished;
 
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
-		this.tbdList = new ArrayList<String>();
+		this.tbdList = new ArrayList<TestCaseRequest>();
 		this.totalTbdSize = 0;
 		this.isFinished = false;
-		this.nextTestFileIndex = -1;
+		
+		nodePool = new TestNodePool();
+		
+		ArrayList<String> nodeList = new ArrayList<String>();
+		nodeList.addAll(context.getEnvList());
+		nodeList.addAll(context.getFollowerList());
+		
+		for(String envId: nodeList) {
+			
+			String paramTypeValue = context.getInstanceProperty(envId, "type");
+			if(paramTypeValue!=null) {
+				paramTypeValue = paramTypeValue.trim();
+			}
+			int type;
+			if (paramTypeValue == null || paramTypeValue.equals("") || paramTypeValue.equals("default")) {
+				type = TestNode.TYPE_DEFAULT;
+			} else if (paramTypeValue.equals("follow")) {
+				type = TestNode.TYPE_FOLLOW;
+			} else if (paramTypeValue.equals("specific")) {
+				type = TestNode.TYPE_SPECIFIC;
+			} else {
+				throw new Exception ("unknown type of instance (Type is " + paramTypeValue + ").");
+			}
+			
+			nodePool.addTestNode(envId, type, context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX));
+		}
+		
 		load();
 	}
 
@@ -75,27 +105,65 @@ public class Dispatch {
 		return instance;
 	}
 
-	public synchronized String nextTestFile() {
-
-		if (isFinished)
+	public synchronized TestCaseRequest nextTestFile(String envId) {
+		if (isFinished) {
 			return null;
+		}
 
-		if (totalTbdSize == 0 || this.nextTestFileIndex >= totalTbdSize) {
+		if (this.tbdList.size() == 0) {
 			isFinished = true;
 			return null;
 		}
-		if (this.nextTestFileIndex < 0) {
-			this.nextTestFileIndex = 0;
+
+		String expectedMachines;
+		TestCaseRequest req;
+		ArrayList<TestNode> borrowNodes;
+		while (this.tbdList.size() > 0) {
+			for (int i = 0; i < this.tbdList.size(); i++) {
+				req = this.tbdList.get(i);
+				expectedMachines = req.getExpectedMachines();
+				if (CommonUtils.isEmpty(expectedMachines)) {					
+					TestNode node = this.nodePool.borrowNode(envId, req.isExclusive());
+					if(node == null) {
+						continue;
+					}
+					req.addTestNode(node);
+					req.setHasTestNodes(true);
+					this.tbdList.remove(i);
+					return req;
+				} else {
+					Selector s = context.getSelector(expectedMachines);
+					if (s == null ) {
+						TestNode node = this.nodePool.borrowNode(envId, req.isExclusive());
+						if(node == null) {
+							continue;
+						}
+						this.tbdList.remove(i);
+						req.setHasTestNodes(false);
+						return req;
+					} else {
+						borrowNodes = this.nodePool.borrowNodes(envId, s.getRule(), req.isExclusive());
+						if (borrowNodes != null && borrowNodes.size() > 0) {
+							req.setNodeList(borrowNodes);
+							req.setHasTestNodes(true);
+							this.tbdList.remove(i);
+							return req;
+						}
+					}
+				}
+			}
 		}
-		String nextTestFile = tbdList.get(this.nextTestFileIndex);
-		this.nextTestFileIndex++;
-		return nextTestFile;
+		return null;
+	}
+	
+	public void finish(TestCaseRequest request) {
+		this.nodePool.returnNodes(request.getNodeList());
 	}
 
 	private void load() throws Exception {
 
 		if (context.isContinueMode()) {
-			this.tbdList = CommonUtils.getLineList(getFileNameForDispatchAll());
+			ArrayList<String> allList = CommonUtils.getLineList(getFileNameForDispatchAll());
 			ArrayList<String> finList;
 
 			File[] subList = new File(context.getCurrentLogDir()).listFiles(new FilenameFilter() {
@@ -106,8 +174,12 @@ public class Dispatch {
 			for (File file : subList) {
 				finList = CommonUtils.getLineList(file.getAbsolutePath());
 				if (finList != null) {
-					this.tbdList.removeAll(finList);
+					allList.removeAll(finList);
 				}
+			}
+			this.tbdList = new ArrayList<TestCaseRequest>();
+			for(String item: allList) {
+				this.tbdList.add(new TestCaseRequest(item, null));
 			}
 		} else {
 			clean();
@@ -137,14 +209,14 @@ public class Dispatch {
 				String checkItem;
 				for (int i = 0; i < excluedList.size(); i++) {
 					for (int j = this.tbdList.size() - 1; j >= 0; j--) {
-						checkItem = this.tbdList.get(j);
+						checkItem = this.tbdList.get(j).getTestCase();
 						if (checkItem.endsWith("/") == false) {
 							checkItem = checkItem + "/";
 						}
 						if (checkItem.indexOf(excluedList.get(i)) != -1) {
 							System.out.println("Skipped File(Temp): " + this.tbdList.get(j));
 							this.tempSkippedSize++;
-							this.tempSkippedList.add(this.tbdList.get(j));
+							this.tempSkippedList.add(this.tbdList.get(j).getTestCase());
 							this.tbdList.remove(j);
 						}
 					}
@@ -152,12 +224,23 @@ public class Dispatch {
 			}
 
 			this.all = new Log(getFileNameForDispatchAll(), false);
-			for (String line : tbdList) {
-				all.println(line);
+			for (TestCaseRequest item: tbdList) {
+				all.println(item.getTestCase());
 			}
 			this.all.close();
 		}
-		this.nextTestFileIndex = -1;
+		
+		ArrayList<TestCaseRequest> replaceWithList = findAllTestCasesHasTestConf();
+		if (replaceWithList != null && replaceWithList.size() > 0) {
+			int index;
+			for (TestCaseRequest item : replaceWithList) {
+				index = this.tbdList.indexOf(item);
+				if (index >= 0) {
+					this.tbdList.set(index, item);
+				}
+			}
+		}
+		
 		this.totalTbdSize = this.tbdList.size();
 		if (this.totalTbdSize == 0) {
 			this.isFinished = true;
@@ -167,8 +250,12 @@ public class Dispatch {
 	private static String getAllTestCaseScripts(String dir) {
 		return "find " + dir + " -name \"*.sh\" -type f -print | xargs -i echo {} | awk -F \"/\" '{ if( $(NF-2)\".sh\"== $NF) print }'";
 	}
+	
+	private static String getAllTestCaseScriptsHasTestConf(String dir) {
+		return "find " + dir + " -name 'test.conf' -type f -exec sh -c \"echo {}; cat {}\" \\;";
+	}
 
-	private ArrayList<String> findAllTestCase() throws Exception {
+	private ArrayList<TestCaseRequest> findAllTestCase() throws Exception {
 		String envId = context.getEnvList().get(0);
 
 		SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId);
@@ -187,15 +274,63 @@ public class Dispatch {
 
 		String[] tcArray = result.split("\n");
 
-		ArrayList<String> testCaseList = new ArrayList<String>();
+		ArrayList<TestCaseRequest> testCaseList = new ArrayList<TestCaseRequest>();
+		TestCaseRequest item;
 		for (String tc : tcArray) {
 			tc = tc.trim();
 			if (tc.equals(""))
 				continue;
-			testCaseList.add(tc);
+			item = new TestCaseRequest(tc, null);
+			testCaseList.add(item);
 		}
 		return testCaseList;
+	}
+	
+	private ArrayList<TestCaseRequest> findAllTestCasesHasTestConf() throws Exception {
+		String envId = context.getEnvList().get(0);
 
+		SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId);
+		ShellScriptInput script;
+		String result;
+
+		try {
+			script = new ShellScriptInput();
+			script.addCommand("cd ");
+			script.addCommand(getAllTestCaseScriptsHasTestConf(context.getTestCaseWorkspace()));
+			result = ssh.execute(script);
+		} finally {
+			if (ssh != null)
+				ssh.close();
+		}
+
+		String[] lineArray = result.split("\n");
+
+		ArrayList<TestCaseRequest> testCaseList = new ArrayList<TestCaseRequest>();
+		TestCaseRequest item = null;
+		String k, v;
+		String[] arr;
+		for (String line : lineArray) {
+			line = line.trim();
+			if (line.equals("") || line.startsWith("#"))
+				continue;
+			if (line.endsWith("cases/test.conf")) {
+				arr = line.split("/");
+				line = CommonUtils.replace(line, "/test.conf", "/" + arr[arr.length - 3] + ".sh");
+				item = new TestCaseRequest(line, new Properties());
+				
+				testCaseList.add(item);
+			} else {
+				int p = line.indexOf(":");
+				if (p != -1) {
+					k = line.substring(0, p);
+					v = line.substring(p + 1);
+					if (item != null)
+						item.setProperty(k, v);
+				}
+			}
+		}
+
+		return testCaseList;
 	}
 
 	private ArrayList<String> findSkippedTestCases() throws Exception {
