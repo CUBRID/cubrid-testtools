@@ -39,11 +39,13 @@ import java.util.Properties;
 public class CheckDiff {
 	public int check(String filePath, String masterName, String slaveOrReplicaName, String fileSuffix) {
 		String masterFile = filePath + "." + masterName + ".dump";
+		String resultFile = filePath.substring(0, filePath.indexOf(".test")) + ".result";
 		String slaveFile = filePath + "." + slaveOrReplicaName + ".dump";
 		String master_slaveOrReplicaDiffFile = filePath + "." + masterName + "." + slaveOrReplicaName + "." + fileSuffix;
 		String master_slaveOrReplicaDiffFileTemp = master_slaveOrReplicaDiffFile + ".temp";
+		String diffPacthResult = master_slaveOrReplicaDiffFile + ".temp.diff"; 
 		String command = "sh -c 'diff " + masterFile + " " + slaveFile + " > " + master_slaveOrReplicaDiffFileTemp + "'";
-		String command1 = "sh -c 'diff " + master_slaveOrReplicaDiffFile + " " + master_slaveOrReplicaDiffFileTemp + "'";
+		String command1 = "sh -c 'diff " + master_slaveOrReplicaDiffFile + " " + master_slaveOrReplicaDiffFileTemp + " > " + diffPacthResult + "'";
 		int result = 0;
 		command = command.replace("\\", "/");
 		command1 = command1.replace("\\", "/");
@@ -93,7 +95,21 @@ public class CheckDiff {
 		{
 			result = -1;
 		}
-		new File(master_slaveOrReplicaDiffFileTemp).delete();
+		
+		if(result!=0){
+			String commandScript = "echo =================================== diff master slave =================================== >" + resultFile;
+			commandScript += "cat " + master_slaveOrReplicaDiffFileTemp + " >> " + resultFile;
+			commandScript += "echo =================================== compare with patch files =================================== >> " + resultFile;
+			commandScript += "cat " + diffPacthResult + " >> " + resultFile;
+			ExecCommand(commandScript);
+			new File(diffPacthResult).delete();
+			new File(master_slaveOrReplicaDiffFileTemp).delete();
+			
+		}else{
+			new File(diffPacthResult).delete();
+			new File(master_slaveOrReplicaDiffFileTemp).delete();
+		}
+		
 		return result;
 	}
 
