@@ -36,6 +36,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Properties;
 
+import com.navercorp.cubridqa.scheduler.common.Constants;
+
 public class CheckDiff {
 	public int check(String filePath, String masterName, String slaveOrReplicaName, String fileSuffix) {
 		String masterFile = filePath + "." + masterName + ".dump";
@@ -97,10 +99,12 @@ public class CheckDiff {
 		}
 		
 		if(result!=0){
-			String commandScript = "echo =================================== diff master slave =================================== >" + resultFile;
-			commandScript += "cat " + master_slaveOrReplicaDiffFileTemp + " >> " + resultFile;
-			commandScript += "echo =================================== compare with patch files =================================== >> " + resultFile;
-			commandScript += "cat " + diffPacthResult + " >> " + resultFile;
+			String commandScript = "echo ====================== Actual difference between Master and Slave ====================== >" + resultFile + Constants.LINE_SEPARATOR;
+			commandScript += "cat " + master_slaveOrReplicaDiffFileTemp + " >> " + resultFile + Constants.LINE_SEPARATOR;
+			commandScript += "if [ -f " + master_slaveOrReplicaDiffFile+  " ];then " + Constants.LINE_SEPARATOR;
+			commandScript += "	 	echo ====================== Expected difference (patch answer) ====================== >> " + resultFile + Constants.LINE_SEPARATOR;
+			commandScript += "		cat " + diffPacthResult + " >> " + resultFile + Constants.LINE_SEPARATOR;
+			commandScript += "fi" + Constants.LINE_SEPARATOR;
 			ExecCommand(commandScript);
 			new File(diffPacthResult).delete();
 			new File(master_slaveOrReplicaDiffFileTemp).delete();
