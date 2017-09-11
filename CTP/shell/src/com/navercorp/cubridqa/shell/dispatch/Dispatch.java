@@ -45,10 +45,10 @@ public class Dispatch {
 	public static Dispatch instance;
 
 	private Context context;
-	
+
 	private int totalTbdSize;
 
-	private ArrayList<TestCaseRequest> tbdList;	
+	private ArrayList<TestCaseRequest> tbdList;
 
 	private ArrayList<String> macroSkippedList;
 	private int macroSkippedSize = 0;
@@ -57,7 +57,7 @@ public class Dispatch {
 	private int tempSkippedSize = 0;
 
 	private Log all;
-	
+
 	private TestNodePool nodePool;
 
 	private boolean isFinished;
@@ -67,17 +67,17 @@ public class Dispatch {
 		this.tbdList = new ArrayList<TestCaseRequest>();
 		this.totalTbdSize = 0;
 		this.isFinished = false;
-		
+
 		nodePool = new TestNodePool();
-		
+
 		ArrayList<String> nodeList = new ArrayList<String>();
 		nodeList.addAll(context.getEnvList());
 		nodeList.addAll(context.getFollowerList());
-		
-		for(String envId: nodeList) {
-			
+
+		for (String envId : nodeList) {
+
 			String paramTypeValue = context.getInstanceProperty(envId, "type");
-			if(paramTypeValue!=null) {
+			if (paramTypeValue != null) {
 				paramTypeValue = paramTypeValue.trim();
 			}
 			int type;
@@ -88,12 +88,12 @@ public class Dispatch {
 			} else if (paramTypeValue.equals("specific")) {
 				type = TestNode.TYPE_SPECIFIC;
 			} else {
-				throw new Exception ("unknown type of instance (Type is " + paramTypeValue + ").");
+				throw new Exception("unknown type of instance (Type is " + paramTypeValue + ").");
 			}
-			
+
 			nodePool.addTestNode(envId, type, context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX));
 		}
-		
+
 		load();
 	}
 
@@ -105,7 +105,22 @@ public class Dispatch {
 		return instance;
 	}
 
-	public synchronized TestCaseRequest nextTestFile(String envId) {
+	public TestCaseRequest nextTestFile(String envId) {
+		TestCaseRequest req;
+		while (this.tbdList.size() > 0) {
+			req = nextTestFileWithOneLoop(envId);
+			if (req != null) {
+				return req;
+			}
+			CommonUtils.sleep(1);
+		}
+
+		isFinished = true;
+		
+		return null;
+	}
+
+	private synchronized TestCaseRequest nextTestFileWithOneLoop(String envId) {
 		if (isFinished) {
 			return null;
 		}
@@ -115,47 +130,50 @@ public class Dispatch {
 			return null;
 		}
 
+		if (nodePool.isAnyAvailable(envId) == false) {
+			return null;
+		}
+
 		String expectedMachines;
 		TestCaseRequest req;
 		ArrayList<TestNode> borrowNodes;
-		while (this.tbdList.size() > 0) {
-			for (int i = 0; i < this.tbdList.size(); i++) {
-				req = this.tbdList.get(i);
-				expectedMachines = req.getExpectedMachines();
-				if (CommonUtils.isEmpty(expectedMachines)) {					
+
+		for (int i = 0; i < this.tbdList.size(); i++) {
+			req = this.tbdList.get(i);
+			expectedMachines = req.getExpectedMachines();
+			if (CommonUtils.isEmpty(expectedMachines)) {
+				TestNode node = this.nodePool.borrowNode(envId, req.isExclusive());
+				if (node == null) {
+					continue;
+				}
+				req.addTestNode(node);
+				req.setHasTestNodes(true);
+				this.tbdList.remove(i);
+				return req;
+			} else {
+				Selector s = context.getSelector(expectedMachines);
+				if (s == null) {
 					TestNode node = this.nodePool.borrowNode(envId, req.isExclusive());
-					if(node == null) {
+					if (node == null) {
 						continue;
 					}
-					req.addTestNode(node);
-					req.setHasTestNodes(true);
 					this.tbdList.remove(i);
+					req.setHasTestNodes(false);
 					return req;
 				} else {
-					Selector s = context.getSelector(expectedMachines);
-					if (s == null ) {
-						TestNode node = this.nodePool.borrowNode(envId, req.isExclusive());
-						if(node == null) {
-							continue;
-						}
+					borrowNodes = this.nodePool.borrowNodes(envId, s.getRule(), req.isExclusive());
+					if (borrowNodes != null && borrowNodes.size() > 0) {
+						req.setNodeList(borrowNodes);
+						req.setHasTestNodes(true);
 						this.tbdList.remove(i);
-						req.setHasTestNodes(false);
 						return req;
-					} else {
-						borrowNodes = this.nodePool.borrowNodes(envId, s.getRule(), req.isExclusive());
-						if (borrowNodes != null && borrowNodes.size() > 0) {
-							req.setNodeList(borrowNodes);
-							req.setHasTestNodes(true);
-							this.tbdList.remove(i);
-							return req;
-						}
 					}
 				}
 			}
 		}
 		return null;
 	}
-	
+
 	public void finish(TestCaseRequest request) {
 		this.nodePool.returnNodes(request.getNodeList());
 	}
@@ -178,7 +196,7 @@ public class Dispatch {
 				}
 			}
 			this.tbdList = new ArrayList<TestCaseRequest>();
-			for(String item: allList) {
+			for (String item : allList) {
 				this.tbdList.add(new TestCaseRequest(item, null));
 			}
 		} else {
@@ -224,12 +242,12 @@ public class Dispatch {
 			}
 
 			this.all = new Log(getFileNameForDispatchAll(), false);
-			for (TestCaseRequest item: tbdList) {
+			for (TestCaseRequest item : tbdList) {
 				all.println(item.getTestCase());
 			}
 			this.all.close();
 		}
-		
+
 		ArrayList<TestCaseRequest> replaceWithList = findAllTestCasesHasTestConf();
 		if (replaceWithList != null && replaceWithList.size() > 0) {
 			int index;
@@ -240,7 +258,7 @@ public class Dispatch {
 				}
 			}
 		}
-		
+
 		this.totalTbdSize = this.tbdList.size();
 		if (this.totalTbdSize == 0) {
 			this.isFinished = true;
@@ -250,7 +268,7 @@ public class Dispatch {
 	private static String getAllTestCaseScripts(String dir) {
 		return "find " + dir + " -name \"*.sh\" -type f -print | xargs -i echo {} | awk -F \"/\" '{ if( $(NF-2)\".sh\"== $NF) print }'";
 	}
-	
+
 	private static String getAllTestCaseScriptsHasTestConf(String dir) {
 		return "find " + dir + " -name 'test.conf' -type f -exec sh -c \"echo {}; cat {}\" \\;";
 	}
@@ -285,7 +303,7 @@ public class Dispatch {
 		}
 		return testCaseList;
 	}
-	
+
 	private ArrayList<TestCaseRequest> findAllTestCasesHasTestConf() throws Exception {
 		String envId = context.getEnvList().get(0);
 
@@ -317,7 +335,7 @@ public class Dispatch {
 				arr = line.split("/");
 				line = CommonUtils.replace(line, "/test.conf", "/" + arr[arr.length - 3] + ".sh");
 				item = new TestCaseRequest(line, new Properties());
-				
+
 				testCaseList.add(item);
 			} else {
 				int p = line.indexOf(":");

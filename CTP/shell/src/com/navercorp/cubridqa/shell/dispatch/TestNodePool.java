@@ -2,7 +2,12 @@ package com.navercorp.cubridqa.shell.dispatch;
 
 import java.util.ArrayList;
 
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
+
 public class TestNodePool {
+
+	private static boolean enableDebug = CommonUtils.convertBoolean(System.getenv(ConfigParameterConstants.CTP_DEBUG_ENABLE), false);
 
 	private ArrayList<TestNode> pool;
 
@@ -18,17 +23,29 @@ public class TestNodePool {
 		}
 		this.pool.add(node);
 	}
-	
+
 	protected synchronized TestNode borrowNode(String envId, boolean exclusive) {
 		TestNode node;
 		for (int i = 0; i < pool.size(); i++) {
 			node = pool.get(i);
 			if (node.isAvailable(exclusive) && node.getEnvId().equals(envId)) {
 				node.activate(exclusive);
+				if (enableDebug) {
+					System.out.println("=>borrow " + envId + ", " + exclusive);
+				}
 				return node;
 			}
 		}
 		return null;
+	}
+
+	protected synchronized boolean isAnyAvailable(String envId) {
+		for (TestNode node : pool) {
+			if (envId.equals(node.getEnvId())) {
+				return node.getHost().isExclusive() == false && node.getHost().reachMaximumClients() == false;
+			}
+		}
+		return false;
 	}
 
 	protected synchronized ArrayList<TestNode> borrowNodes(String leaderEnvId, String rule, boolean exclusive) {
@@ -37,6 +54,9 @@ public class TestNodePool {
 			return null;
 		}
 		for (TestNode node : resultList) {
+			if (enableDebug) {
+				System.out.println("=>borrow " + node.getEnvId() + ", " + exclusive);
+			}
 			node.activate(exclusive);
 		}
 		return resultList;
@@ -98,6 +118,9 @@ public class TestNodePool {
 		for (TestNode n : finishedNodeList) {
 			for (int i = 0; i < pool.size(); i++) {
 				if (this.pool.get(i).getEnvId().equals(n.getEnvId())) {
+					if(enableDebug) {
+						System.out.println("=>return " + n.getEnvId());
+					}
 					this.pool.get(i).deactivate();
 				}
 			}
@@ -249,7 +272,6 @@ public class TestNodePool {
 		pool.returnAllNodes();
 		System.out.println("-----8-----");
 
-		
 		list = pool.borrowNodes("instance2", "*,*", exclusive);
 		System.out.println(list.size() == 2);
 		System.out.println(list.get(0).getEnvId());
@@ -270,7 +292,7 @@ public class TestNodePool {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		for(TestNode node: pool) {
+		for (TestNode node : pool) {
 			sb.append(node.toString()).append("\n");
 		}
 		return sb.toString();
