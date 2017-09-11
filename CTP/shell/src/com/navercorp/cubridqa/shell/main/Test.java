@@ -407,7 +407,8 @@ public class Test {
 
 	public void close() {
 
-		resetProcess();
+		//resetProcess();
+		
 		this.dispatchLog.close();
 		this.workerLog.close();
 

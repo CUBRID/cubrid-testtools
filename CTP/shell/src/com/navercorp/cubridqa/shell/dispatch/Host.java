@@ -43,7 +43,7 @@ public class Host {
 		return "Host [ip=" + ip + ", usedNum=" + usedNum + "]";
 	}
 
-	private boolean reachMaximumClients() {
+	protected boolean reachMaximumClients() {
 		return usedNum >= 3;
 	}
 
@@ -53,5 +53,9 @@ public class Host {
 		} else {
 			return exclusive ? false : !reachMaximumClients();
 		}
+	}
+	
+	public boolean isExclusive() {
+		return exclusive; 
 	}
 }
