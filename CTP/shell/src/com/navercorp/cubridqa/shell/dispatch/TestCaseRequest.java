@@ -24,7 +24,7 @@ public class TestCaseRequest {
 
 	public String getExpectedMachines() {
 		String expectedMachines = props == null ? null : props.getProperty("machines");
-		return expectedMachines == null ? null : expectedMachines.trim();
+		return expectedMachines == null || expectedMachines.trim().equals("") ? null : expectedMachines.trim();
 	}
 
 	public String[] getCubridDeps() {
