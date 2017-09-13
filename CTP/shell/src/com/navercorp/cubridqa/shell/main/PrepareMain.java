@@ -160,6 +160,7 @@ public class PrepareMain {
 					prepareCubridDepts(c.trim());
 				}
 				LocalInvoker.exec("if [ -d ~/.CUBRID_" + cubridVersion + " ]; then mv -f ~/.CUBRID_" + cubridVersion + " ~/CUBRID; fi", false, false);
+				LocalInvoker.exec("if [ -f ~/CUBRID/.cubrid.sh ]; then cp -f ~/CUBRID/.cubrid.sh ~/; fi", false, false);
 
 				File srcFile, destFile;
 				for (String c : cubridDepts) {

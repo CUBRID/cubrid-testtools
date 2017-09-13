@@ -36,6 +36,7 @@ import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
+import com.navercorp.cubridqa.shell.deploy.DeployHA;
 import com.navercorp.cubridqa.shell.dispatch.Dispatch;
 import com.navercorp.cubridqa.shell.dispatch.TestCaseRequest;
 import com.navercorp.cubridqa.shell.dispatch.TestNode;
@@ -126,6 +127,13 @@ public class Test {
 			context.getFeedback().onTestCaseStartEvent(this.testCaseFullName, envIdentify);
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
+			
+			String machinesType = context.getSelectorProperty(testCaseRequest.getExpectedMachines(), "type");
+			if (machinesType != null && machinesType.trim().equalsIgnoreCase("HA") && testCaseRequest.getNodeList().size() >= 2) {
+				DeployHA haDeploy = new DeployHA(context, currEnvId, testCaseRequest.getNodeList().get(1).getEnvId(), workerLog);
+				haDeploy.deploy();
+				haDeploy.close();
+			}
 			
 			if (testCaseRequest.hasTestNodes() == false) {
 				String result = "Not found expected test server(s) which is " + testCaseRequest.getExpectedMachines() + " defined in test.conf";
@@ -464,7 +472,7 @@ public class Test {
 		scripts.addCommand("find ${CUBRID}/ -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
 		scripts.addCommand("find ${CUBRID}/ -name \"core\" | xargs -i rm -rf {} ");
 
-		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
+		ArrayList<String> relatedHosts = getRelatedHosts();
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
@@ -510,7 +518,7 @@ public class Test {
 		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
 		workerLog.println("[INFO] CLEAN PROCESSES: " + result);
 
-		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
+		ArrayList<String> relatedHosts = getRelatedHosts();
 		if (relatedHosts == null || relatedHosts.size() == 0) {
 			return;
 		}
@@ -610,7 +618,7 @@ public class Test {
 			}
 		}
 
-		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
+		ArrayList<String> relatedHosts = getRelatedHosts();
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
@@ -660,7 +668,7 @@ public class Test {
 	public void checkDiskSpace() throws JSchException {
 		checkDiskSpace(ssh, false);
 
-		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
+		ArrayList<String> relatedHosts = getRelatedHosts();
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
@@ -709,7 +717,7 @@ public class Test {
 			workerLog.println("[ERROR] fail to save log on " + e.getMessage());
 		}
 
-		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
+		ArrayList<String> relatedHosts = getRelatedHosts();
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
@@ -738,5 +746,8 @@ public class Test {
 		script.addCommand("export TEST_SSH_USER=" + (CommonUtils.isEmpty(ssh.getUser()) ? "`echo $USER`" : ssh.getUser()));
 		script.addCommand("export TEST_BUIILD_ID=" + context.getTestBuild());
 	}
-
+	
+	protected ArrayList<String> getRelatedHosts() {
+		return context.getRelatedHosts(currEnvId);
+	}
 }

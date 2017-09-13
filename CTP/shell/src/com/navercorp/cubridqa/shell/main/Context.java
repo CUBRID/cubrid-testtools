@@ -624,4 +624,11 @@ public class Context {
 			return name;
 		}
 	}
+	
+	public String getSelectorProperty(String selectorName, String key) {
+		if (CommonUtils.isEmpty(selectorName)) {
+			return null;
+		}
+		return getProperty(ConfigParameterConstants.TEST_SELECTOR_PREFIX + selectorName.trim() + "." + key.trim());
+	}
 }
