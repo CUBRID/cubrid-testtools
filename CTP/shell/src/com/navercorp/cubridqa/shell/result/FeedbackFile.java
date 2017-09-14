@@ -84,11 +84,10 @@ public class FeedbackFile implements Feedback {
 		try {
 			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"));
 			this.task_id = Integer.parseInt(cont.trim());
-			context.setTaskId(task_id);
 		} catch (Exception e) {
-			this.task_id = -1;
-			e.printStackTrace();
+			this.task_id = 0;
 		}
+		context.setTaskId(task_id);
 
 		initStatisticsForContinue();
 		println("[Task Id] is " + this.task_id);

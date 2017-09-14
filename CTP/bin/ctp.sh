@@ -36,7 +36,13 @@ key=`date '+%Y%m%d%H%M%s'`
 file_output=${CTP_HOME}/.output_${key}.log
 file_script=${CTP_HOME}/.script_cont_${key}.sh
 [ ! "${JAVA_HOME}" ] && echo "Please confirm JAVA_HOME is configured!" && exit 1
-"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.ctp.CTP "$@" 2>&1 | tee ${file_output}
+
+debug_opts=""
+if [ ! "${CTP_DEBUG_ENABLE}" = "" -a `echo "Y,YES,TRUE,T,1" | grep -i "${CTP_DEBUG_ENABLE}" | wc -l` -gt 0 ] ; then
+    debug_opts="-server -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000"
+fi
+
+"$JAVA_HOME/bin/java" ${debug_opts} -cp "$JAVA_CPS" com.navercorp.cubridqa.ctp.CTP "$@" 2>&1 | tee ${file_output}
 cat ${file_output} | grep SCRIPTCONT > ${file_script} 
 sh ${file_script} 
 rm -rf ${file_output} ${file_script} >/dev/null 2>&1

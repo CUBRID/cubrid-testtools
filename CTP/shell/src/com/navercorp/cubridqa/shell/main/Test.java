@@ -46,6 +46,7 @@ public class Test {
 	Context context;
 	String currEnvId;
 
+	TestCaseRequest testCaseRequest;
 	String testCaseFullName, testCaseName, testCaseDir, testCaseResultName;
 
 	SSHConnect ssh;
@@ -88,8 +89,7 @@ public class Test {
 	public void runAll() throws JSchException {
 
 		System.out.println("[ENV START] " + currEnvId);
-
-		TestCaseRequest testCaseRequest;
+		
 		String testCase;
 		Long endTime;
 		String consoleOutput;
@@ -128,13 +128,6 @@ public class Test {
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
 			
-			String machinesType = context.getSelectorProperty(testCaseRequest.getExpectedMachines(), "type");
-			if (machinesType != null && machinesType.trim().equalsIgnoreCase("HA") && testCaseRequest.getNodeList().size() >= 2) {
-				DeployHA haDeploy = new DeployHA(context, currEnvId, testCaseRequest.getNodeList().get(1).getEnvId(), workerLog);
-				haDeploy.deploy();
-				haDeploy.close();
-			}
-			
 			if (testCaseRequest.hasTestNodes() == false) {
 				String result = "Not found expected test server(s) which is " + testCaseRequest.getExpectedMachines() + " defined in test.conf";
 				context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, false, 0, result, envIdentify, false, false, Constants.SKIP_TYPE_NO, 0);
@@ -144,10 +137,18 @@ public class Test {
 				workerLog.println("");
 				continue;
 			}
+			
+			String machinesType = context.getSelectorProperty(testCaseRequest.getExpectedMachines(), "type");
+			if (machinesType != null && machinesType.trim().equalsIgnoreCase("HA") && testCaseRequest.getNodeList().size() >= 2) {
+				String slaveIp = context.getInstanceProperty(testCaseRequest.getNodeList().get(1).getEnvId(), ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+				DeployHA haDeploy = new DeployHA(context, currEnvId, slaveIp, workerLog);
+				haDeploy.deploy();
+				haDeploy.close();
+			}
 
 			boolean needRetry = true;
 			int retryCount = 0;
-
+			
 			do {
 				/*
 				 * Reset test environment Kill CUBRID process, clear SSH and
@@ -166,7 +167,7 @@ public class Test {
 				this.isTimeOut = false;
 				this.testCaseSuccess = true;
 				this.hasCore = false;
-
+				
 				try {
 					consoleOutput = runTestCase(testCaseRequest);
 					doFinalCheck();
@@ -324,22 +325,22 @@ public class Test {
 		addSshInfoScript(script);
 		
 		script.addCommand("if [ -f test.conf ]; then");
-		script.addCommand("echo \\#\\!/bin/sh > .env.sh");
+		script.addCommand("  echo \\#\\!/bin/sh > .env.sh");
 		if (CommonUtils.isEmpty(context.getTestCaseBranch()) || context.needCleanTestCase() == false) {
-			script.addCommand("echo \\$init_path/prepare.sh >> .env.sh");
+			script.addCommand("  echo \\$init_path/prepare.sh >> .env.sh");
 		} else {
-			script.addCommand("echo \\$init_path/prepare.sh --branch \\\"" + context.getTestCaseBranch().trim() + "\\\" >> .env.sh");
+			script.addCommand("  echo \\$init_path/prepare.sh --branch \\\"" + context.getTestCaseBranch().trim() + "\\\" >> .env.sh");
 		}
 		if (request.getNodeList() != null && request.getNodeList().size() > 0) {
-			script.addCommand("echo export D_DEFAULT_PORT=\\\'" + context.getInstanceProperty(currEnvId, "ssh.port") + "\\\' >> .env.sh");
-			script.addCommand("echo export D_DEFAULT_PWD=\\\'" + context.getInstanceProperty(currEnvId, "ssh.pwd") + "\\\' >> .env.sh");
+			script.addCommand("  echo export D_DEFAULT_PORT=\\\'" + context.getInstanceProperty(currEnvId, "ssh.port") + "\\\' >> .env.sh");
+			script.addCommand("  echo export D_DEFAULT_PWD=\\\'" + context.getInstanceProperty(currEnvId, "ssh.pwd") + "\\\' >> .env.sh");
 			for (int n = 0; n < request.getNodeList().size(); n++) {
-				script.addCommand("echo export D_HOST" + n + "_IP=\\\'" + request.getNodeList().get(n).getHost().getIp() + "\\\' >> .env.sh");
-				script.addCommand("echo export D_HOST" + n + "_USER=\\\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.user") + "\\\' >> .env.sh");
-				script.addCommand("echo export D_HOST" + n + "_PORT=\\\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.port") + "\\\' >> .env.sh");
+				script.addCommand("  echo export D_HOST" + n + "_IP=\\\'" + request.getNodeList().get(n).getHost().getIp() + "\\\' >> .env.sh");
+				script.addCommand("  echo export D_HOST" + n + "_USER=\\\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.user") + "\\\' >> .env.sh");
+				script.addCommand("  echo export D_HOST" + n + "_PORT=\\\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.port") + "\\\' >> .env.sh");
 			}
 		}
-		script.addCommand("source .env.sh > prepare.log 2>&1");
+		script.addCommand("  source .env.sh > prepare.log 2>&1");
 		script.addCommand("fi");
 		
 		script.addCommand("sh " + testCaseName + " 2>&1");
@@ -472,7 +473,7 @@ public class Test {
 		scripts.addCommand("find ${CUBRID}/ -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
 		scripts.addCommand("find ${CUBRID}/ -name \"core\" | xargs -i rm -rf {} ");
 
-		ArrayList<String> relatedHosts = getRelatedHosts();
+		ArrayList<String> relatedHosts = getRelatedHosts(true);
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
@@ -488,7 +489,6 @@ public class Test {
 						sshRelated.close();
 					}
 				}
-
 			}
 		}
 
@@ -518,7 +518,7 @@ public class Test {
 		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
 		workerLog.println("[INFO] CLEAN PROCESSES: " + result);
 
-		ArrayList<String> relatedHosts = getRelatedHosts();
+		ArrayList<String> relatedHosts = getRelatedHosts(true);
 		if (relatedHosts == null || relatedHosts.size() == 0) {
 			return;
 		}
@@ -618,7 +618,7 @@ public class Test {
 			}
 		}
 
-		ArrayList<String> relatedHosts = getRelatedHosts();
+		ArrayList<String> relatedHosts = getRelatedHosts(true);
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
@@ -668,7 +668,7 @@ public class Test {
 	public void checkDiskSpace() throws JSchException {
 		checkDiskSpace(ssh, false);
 
-		ArrayList<String> relatedHosts = getRelatedHosts();
+		ArrayList<String> relatedHosts = getRelatedHosts(true);
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
@@ -717,7 +717,7 @@ public class Test {
 			workerLog.println("[ERROR] fail to save log on " + e.getMessage());
 		}
 
-		ArrayList<String> relatedHosts = getRelatedHosts();
+		ArrayList<String> relatedHosts = getRelatedHosts(true);
 		if (relatedHosts.size() > 0) {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
@@ -747,7 +747,13 @@ public class Test {
 		script.addCommand("export TEST_BUIILD_ID=" + context.getTestBuild());
 	}
 	
-	protected ArrayList<String> getRelatedHosts() {
-		return context.getRelatedHosts(currEnvId);
+	protected ArrayList<String> getRelatedHosts(boolean ext) {
+		ArrayList<String> list = context.getRelatedHosts(currEnvId);
+		if (ext && this.testCaseRequest != null && this.testCaseRequest.getNodeList().size() > 0) {
+			for (TestNode node : this.testCaseRequest.getNodeList()) {
+				list.add(node.getEnvId());
+			}
+		}
+		return list;
 	}
 }
