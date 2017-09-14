@@ -107,3 +107,212 @@ function get_matched_cubrid_pkg_deps()
         cat $file | grep cubrid_pkg_deps | sed "s/{BUILD_ID}/$build_id/g" |awk -F ": " '{print $2}'
 }
 
+
+function sync_cubrid_config 
+{
+	host_key=$1
+	r_upload $host_key -from $CUBRID/conf/cubrid.conf -to CUBRID/conf/
+	r_upload $host_key -from $CUBRID/conf/cubrid_broker.conf -to CUBRID/conf/
+	r_upload $host_key -from $CUBRID/conf/cubrid_ha.conf -to CUBRID/conf/
+	r_upload $host_key -from $CUBRID/conf/cubrid_locales.txt -to CUBRID/conf/
+}
+
+
+function badckup_one_config 
+{
+	if [ ! -f "$1.origin" ]; then
+		cp $1 $1.origin
+	fi
+}
+
+function restore_one_config {
+	if [ -f "$1.origin" ]; then
+		cp $1.origin $1
+	else
+		echo "The backup file cannot be found"
+	fi
+}
+
+function badckup_cubrid_config_local {
+    badckup_one_config ${CUBRID}/conf/cubrid.conf
+    badckup_one_config ${CUBRID}/conf/cubrid_broker.conf
+    badckup_one_config ${CUBRID}/conf/cubrid_ha.conf
+    badckup_one_config ${CUBRID}/conf/cubrid_locales.txt
+}
+
+function restore_cubrid_config_local {
+    restore_one_config ${CUBRID}/conf/cubrid.conf
+    restore_one_config ${CUBRID}/conf/cubrid_broker.conf
+    restore_one_config ${CUBRID}/conf/cubrid_ha.conf
+    restore_one_config ${CUBRID}/conf/cubrid_locales.txt
+}
+
+
+function backup_cubrid_config {
+    badckup_cubrid_config_local
+    for host in "$@"
+    do
+        rexec $host -c "source $init_path/init_ext.sh; badckup_cubrid_config_local"
+    done
+}
+
+function restore_cubrid_config {
+    restore_cubrid_config_local
+    for host in "$@"
+    do
+        rexec $host -c "source $init_path/init_ext.sh; restore_cubrid_config_local"
+    done
+}
+
+
+function modify_conf_for_ha { 
+
+	sed -i '/ha_node_list/'d ${CUBRID}/conf/cubrid_ha.conf 
+	sed -i '/ha_db_list/'d ${CUBRID}/conf/cubrid_ha.conf   
+
+	echo "$ha_node_list" >> ${CUBRID}/conf/cubrid_ha.conf 
+	echo "ha_db_list=hatestdb" >> ${CUBRID}/conf/cubrid_ha.conf 
+
+	if [ $replica_cnt -gt 0 ]
+	then
+		echo "$ha_replica_list" >> ${CUBRID}/conf/cubrid_ha.conf 
+	fi
+	
+	sed -i '/ha_mode/'d ${CUBRID}/conf/cubrid.conf
+	echo 'ha_mode=on' >> ${CUBRID}/conf/cubrid.conf
+
+	for node in $all_nodes
+	do
+		sync_cubrid_config $node
+	done
+  
+	for node in ${replica_list[@]}
+	do
+		rexec $node -c "sed -i '/ha_mode/'d \${CUBRID}/conf/cubrid.conf"
+		rexec $node -c "echo 'ha_mode=replica' >> \${CUBRID}/conf/cubrid.conf"
+	done
+
+}
+
+
+function usage()
+{
+        exec_name=$(basename $0)
+                cat<<EOF
+                Usage:$exec_name <-s slave_list> <-r replica_list>
+                -s <slave_list>      | slave node list, seperated by ','
+                -r <replica_list>    | replica node list, seperated by ','
+EOF
+
+}
+
+#main function to create ha enviroment
+function setup_ha_environment_new 
+{
+	slaves=""
+	replicas=""
+	all_nodes=""
+
+	while [ $# -ne 0 ]
+	do
+		case $1 in
+			-s)
+				shift
+				slaves=$1
+				;;
+			-r)
+				shift
+				replicas=$1
+				;;
+			*)
+				;;
+		esac
+			shift
+        done
+
+       
+        if [ -n "$slaves" ]
+        then
+                OLD_IFS="$IFS"
+                IFS=","
+                slave_list=($slaves)
+                IFS="$OLD_IFS"
+        else
+                usage
+                exit 1
+        fi    
+    
+        
+        if [ -n "$replicas" ]
+        then
+                OLD_IFS="$IFS"
+                IFS=","
+                replica_list=($replicas)
+                IFS="$OLD_IFS"
+        else
+                usage
+                exit 1
+        fi  
+	
+	host_name=`hostname`
+	ha_node_list="ha_node_list=${D_HOST1_USER}@${host_name}"	
+	slave_cnt=${#slave_list[*]}
+
+	for ((i=0;i<$slave_cnt;i++))
+	do
+		t_hostname=`rexec ${slave_list[$i]} -c "hostname"`
+		ha_node_list="${ha_node_list}:${t_hostname}"
+		all_nodes="${all_nodes}${slave_list[$i]} "
+	done
+
+
+  
+	ha_replica_list="ha_replica_list=${D_HOST1_USER}@"
+	replica_cnt=${#replica_list[*]}
+
+	if [ $replica_cnt -gt 0 ]
+	then
+		t_hostname=`rexec ${replica_list[0]} -c "hostname"`
+		ha_replica_list="${ha_replica_list}${t_hostname}"
+		all_nodes="${all_nodes}${replica_list[0]} "
+	fi
+
+	for ((i=1;i<$replica_cnt;i++))
+	do
+		t_hostname=`rexec ${replica_list[$i]} -c "hostname"`
+		ha_replica_list="${ha_replica_list}:${t_hostname}"		
+		all_nodes="${all_nodes}${replica_list[$i]} "
+	done
+
+	backup_cubrid_config $all_nodes
+	modify_conf_for_ha
+
+	cdir=`pwd`
+	cubrid service stop
+	cubrid deletedb hatestdb
+	rm -rf ${CUBRID}/databases/hatestdb*
+	mkdir -p $CUBRID/databases/hatestdb
+	cd $CUBRID/databases/hatestdb 
+	cubrid createdb hatestdb en_US
+
+	cd $cdir
+
+	for node in $all_nodes
+	do
+		rexec $node -c "cubrid service stop; cubrid deletedb hatestdb; rm -rf ${CUBRID}/databases/hatestdb*; mkdir -p ${CUBRID}/databases/hatestdb; cd ${CUBRID}/databases/hatestdb; cubrid createdb hatestdb en_US"
+	done	
+ }
+
+function revert_ha_environment_new 
+{
+	cubrid service stop
+	cubrid deletedb hatestdb
+	rm -rf ${CUBRID}/databases/hatestdb*
+
+	for node in $all_nodes
+	do
+		rexec $node -c "cubrid service stop; cubrid deletedb hatestdb; rm -rf ${CUBRID}/databases/hatestdb"
+	done
+	
+	restore_cubrid_config $all_nodes
+}
