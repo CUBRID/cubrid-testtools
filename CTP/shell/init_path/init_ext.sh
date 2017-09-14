@@ -95,3 +95,17 @@ function check_disk_space_and_notice {
 	rm check_temp.act
 }
 
+function get_BUILD_ID()
+{
+        build_ver=`cubrid_rel|grep "CUBRID"|awk -F '(' '{print $2}'|sed 's/)//g'`
+        echo $build_ver
+}
+
+function get_cubrid_pkg_reps()
+{
+        file=$1
+        build_id=`get_BUILD_ID`
+        sed -i "s/BUILD_ID/$build_id/g" $file
+}
+
+get_cubrid_pkg_reps test.conf
