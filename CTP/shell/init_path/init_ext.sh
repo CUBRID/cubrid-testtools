@@ -105,7 +105,7 @@ function get_cubrid_pkg_reps()
 {
         file=$1
         build_id=`get_BUILD_ID`
-        sed -i "s/BUILD_ID/$build_id/g" $file
+        sed -i "s/{BUILD_ID}/$build_id/g" $file
 }
 
 get_cubrid_pkg_reps test.conf
