@@ -87,7 +87,7 @@ public class TestMonitor {
 			this.sshRelateds.clear();
 		}
 
-		ArrayList<String> relatedHosts = test.getRelatedHosts();
+		ArrayList<String> relatedHosts = test.getRelatedHosts(false);
 		if (relatedHosts != null && relatedHosts.size() > 0) {
 			SSHConnect s;
 			for (String host : relatedHosts) {

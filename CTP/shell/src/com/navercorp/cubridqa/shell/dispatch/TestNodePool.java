@@ -145,6 +145,13 @@ public class TestNodePool {
 		if (envId == null || envId.trim().equals("")) {
 			return null;
 		}
+		envId = envId.trim();
+		
+		boolean expectDiffIp = false;
+		if(envId.equals("%")) {
+			expectDiffIp = true;
+			envId = "*";
+		}
 
 		boolean isFirstTestNode = existingList.size() == 0;
 		TestNode node;
@@ -166,7 +173,7 @@ public class TestNodePool {
 			if (!isFirstTestNode) {
 				for (int i = 0; i < pool.size(); i++) {
 					node = pool.get(i);
-					if (node.isAvailable(exclusive) && node.getType() == TestNode.TYPE_FOLLOW && contains(existingList, node, exclusive) == false) {
+					if (node.isAvailable(exclusive) && node.getType() == TestNode.TYPE_FOLLOW && contains(existingList, node, exclusive) == false && meetIpConstanit(existingList, node, expectDiffIp)) {
 						return node;
 					}
 				}
@@ -174,7 +181,7 @@ public class TestNodePool {
 
 			for (int i = 0; i < pool.size(); i++) {
 				node = pool.get(i);
-				if (node.isAvailable(exclusive) && node.getType() == TestNode.TYPE_DEFAULT && contains(existingList, node, exclusive) == false) {
+				if (node.isAvailable(exclusive) && node.getType() == TestNode.TYPE_DEFAULT && contains(existingList, node, exclusive) == false && meetIpConstanit(existingList, node, expectDiffIp)) {
 					return node;
 				}
 			}
@@ -200,6 +207,18 @@ public class TestNodePool {
 			}
 		}
 		return false;
+	}
+	
+	private boolean meetIpConstanit(ArrayList<TestNode> list, TestNode checkNode, boolean expectDiffIp) {
+		if (expectDiffIp == false) {
+			return true;
+		}
+		for (TestNode node : list) {
+			if (node.getHost() == checkNode.getHost()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public static void main(String[] args) throws Exception {
