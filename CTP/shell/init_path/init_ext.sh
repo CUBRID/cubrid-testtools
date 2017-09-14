@@ -95,3 +95,15 @@ function check_disk_space_and_notice {
 	rm check_temp.act
 }
 
+function get_cubrid_version()
+{
+        cubrid_rel|grep "CUBRID"|awk -F '(' '{print $2}'|sed 's/)//g'|sed 's/[[:space:]]//g'
+}
+
+function get_matched_cubrid_pkg_deps()
+{
+        file=$1
+        build_id=`get_cubrid_version`
+        cat $file | grep cubrid_pkg_deps | sed "s/{BUILD_ID}/$build_id/g" |awk -F ": " '{print $2}'
+}
+
