@@ -311,7 +311,7 @@ function revert_ha_environment_new
 
 	for node in $all_nodes
 	do
-		rexec $node -c "cubrid service stop; cubrid deletedb hatestdb; rm -rf ${CUBRID}/databases/hatestdb"
+		rexec $node -c "cubrid service stop; cubrid deletedb hatestdb; rm -rf ${CUBRID}/databases/hatestdb*"
 	done
 	
 	restore_cubrid_config $all_nodes
