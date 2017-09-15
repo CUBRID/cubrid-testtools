@@ -232,3 +232,42 @@ function cubrid_ha_destroy {
 	eval "$cmds"
 	restore_cubrid_config
 }
+
+function check_with_loop {
+	loops="$1"
+	commands="$2"
+	expected_text="$3"
+	enable_verify="$4"
+	for ((i=0;i<$loops;i++)); do 
+		if $commands | grep "${expected_text}"; then
+			return
+		fi
+
+		sleep 1
+	done
+
+	if [ "$enable_verify" = "true" ]; then
+		write_nok "Timeout. Commands: ${commands}. Expect: ${expected_text}"
+	fi
+}
+
+function cubrid_ha_start {
+	cubrid hb start
+	check_with_loop 60 "cubrid changemode hatestdb@localhost" "current HA running mode is active" true
+
+	for host in $ha_hosts $@ ; do
+		rexec $host -c "cubrid hb start"
+	done
+
+	cubrid hb status
+}
+
+
+function cubrid_ha_stop {
+	for host in $ha_hosts $@ ; do
+		rexec $host -c "cubrid service stop"
+	done
+
+	cubrid service stop
+}
+
