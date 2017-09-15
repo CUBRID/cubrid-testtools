@@ -31,6 +31,7 @@ import java.util.Date;
 
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
+import com.navercorp.cubridqa.common.SFTP;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -89,7 +90,7 @@ public class Test {
 	public void runAll() throws JSchException {
 
 		System.out.println("[ENV START] " + currEnvId);
-		
+
 		String testCase;
 		Long endTime;
 		String consoleOutput;
@@ -116,7 +117,7 @@ public class Test {
 			if (testCase == null) {
 				break;
 			}
-			
+
 			consoleOutput = "";
 			this.testCaseFullName = testCase;
 			p = testCase.lastIndexOf("cases");
@@ -127,7 +128,7 @@ public class Test {
 			context.getFeedback().onTestCaseStartEvent(this.testCaseFullName, envIdentify);
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
-			
+
 			if (testCaseRequest.hasTestNodes() == false) {
 				String result = "Not found expected test server(s) which is " + testCaseRequest.getExpectedMachines() + " defined in test.conf";
 				context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, false, 0, result, envIdentify, false, false, Constants.SKIP_TYPE_NO, 0);
@@ -137,7 +138,7 @@ public class Test {
 				workerLog.println("");
 				continue;
 			}
-			
+
 			String machinesType = context.getSelectorProperty(testCaseRequest.getExpectedMachines(), "type");
 			if (machinesType != null && machinesType.trim().equalsIgnoreCase("HA") && testCaseRequest.getNodeList().size() >= 2) {
 				String slaveIp = context.getInstanceProperty(testCaseRequest.getNodeList().get(1).getEnvId(), ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
@@ -148,7 +149,7 @@ public class Test {
 
 			boolean needRetry = true;
 			int retryCount = 0;
-			
+
 			do {
 				/*
 				 * Reset test environment Kill CUBRID process, clear SSH and
@@ -168,6 +169,8 @@ public class Test {
 				this.testCaseSuccess = true;
 				this.hasCore = false;
 				
+				syncCubridConfig();
+
 				try {
 					consoleOutput = runTestCase(testCaseRequest);
 					doFinalCheck();
@@ -234,9 +237,9 @@ public class Test {
 						StringBuilder out = new StringBuilder();
 						out.append("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
 								+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + retryCount : "")));
-						if(testCaseRequest.getNodeList().size() > 1) {
+						if (testCaseRequest.getNodeList().size() > 1) {
 							out.append("\n");
-							for(TestNode n: testCaseRequest.getNodeList()) {
+							for (TestNode n : testCaseRequest.getNodeList()) {
 								out.append("  ").append(n.toString()).append("\n");
 							}
 						}
@@ -323,7 +326,7 @@ public class Test {
 
 		script.addCommand("echo > " + testCaseResultName);
 		addSshInfoScript(script);
-		
+
 		script.addCommand("if [ -f test.conf ]; then");
 		script.addCommand("  echo \\#\\!/bin/sh > .env.sh");
 		if (CommonUtils.isEmpty(context.getTestCaseBranch()) || context.needCleanTestCase() == false) {
@@ -342,7 +345,7 @@ public class Test {
 		}
 		script.addCommand("  source .env.sh > prepare.log 2>&1");
 		script.addCommand("fi");
-		
+
 		script.addCommand("sh " + testCaseName + " 2>&1");
 		result = ssh.execute(script);
 
@@ -365,8 +368,8 @@ public class Test {
 		String haPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_HA + "." + "ha_port_id", "59901");
 		String cmPortId = context.getInstanceProperty(this.currEnvId, ConfigParameterConstants.ROLE_CM + "." + "cm_port", "8001");
 
-		ShellScriptInput script = new ShellScriptInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':" + brokerFirstPort + "|:" + brokerSecondPort + "|:"
-				+ cubridPortId + "|:" + haPortId + "|:" + cmPortId + "' | wc -l");
+		ShellScriptInput script = new ShellScriptInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':" + brokerFirstPort + "|:" + brokerSecondPort + "|:" + cubridPortId
+				+ "|:" + haPortId + "|:" + cmPortId + "' | wc -l");
 		while (true) {
 			currentTime = System.currentTimeMillis();
 			len = (currentTime - startTime) / 1000;
@@ -416,8 +419,8 @@ public class Test {
 
 	public void close() {
 
-		//resetProcess();
-		
+		// resetProcess();
+
 		this.dispatchLog.close();
 		this.workerLog.close();
 
@@ -448,7 +451,7 @@ public class Test {
 		scripts.addCommand("ls CUBRID/conf/*");
 		scripts.addCommand("find CUBRID/log -type f -print | xargs -i rm -rf {} ");
 		scripts.addCommand("rm -rf CUBRID/var/*");
-		
+
 		String result = "";
 		try {
 			result = ssh.execute(scripts);
@@ -473,21 +476,16 @@ public class Test {
 		scripts.addCommand("find ${CUBRID}/ -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
 		scripts.addCommand("find ${CUBRID}/ -name \"core\" | xargs -i rm -rf {} ");
 
-		ArrayList<String> relatedHosts = getRelatedHosts(true);
-		if (relatedHosts.size() > 0) {
-			SSHConnect sshRelated;
-			for (String h : relatedHosts) {
-				sshRelated = null;
-				try {
-					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
-					sshRelated.execute(scripts);
-					workerLog.println("[INFO] remove core file successfully on " + h + ".");
-				} catch (Exception e) {
-					workerLog.println("[INFO] fail to remove core file on " + h + ":" + e.getMessage());
-				} finally {
-					if (sshRelated != null) {
-						sshRelated.close();
-					}
+		ArrayList<SSHConnect> relatedHosts = getRelatedConns(true);
+		for (SSHConnect c : relatedHosts) {
+			try {
+				c.execute(scripts);
+				workerLog.println("[INFO] remove core file successfully on " + c.toString() + ".");
+			} catch (Exception e) {
+				workerLog.println("[INFO] fail to remove core file on " + c.toString() + ":" + e.getMessage());
+			} finally {
+				if (c != null) {
+					c.close();
 				}
 			}
 		}
@@ -518,23 +516,20 @@ public class Test {
 		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
 		workerLog.println("[INFO] CLEAN PROCESSES: " + result);
 
-		ArrayList<String> relatedHosts = getRelatedHosts(true);
+		ArrayList<SSHConnect> relatedHosts = getRelatedConns(true);
 		if (relatedHosts == null || relatedHosts.size() == 0) {
 			return;
 		}
 
-		SSHConnect sshRelated;
-		for (String h : relatedHosts) {
-			sshRelated = null;
+		for (SSHConnect c : relatedHosts) {
 			try {
-				sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId);
-				result = CommonUtils.resetProcess(sshRelated, context.isWindows, context.isExecuteAtLocal());
-				workerLog.println("[INFO] CLEAN PROCESSES(" + h + "): " + result);
+				result = CommonUtils.resetProcess(c, context.isWindows, context.isExecuteAtLocal());
+				workerLog.println("[INFO] CLEAN PROCESSES(" + c.toString() + "): " + result);
 			} catch (Exception e) {
-				workerLog.println("[ERROR] CLEAN PROCESSES(" + h + "): " + e.getMessage());
+				workerLog.println("[ERROR] CLEAN PROCESSES(" + c.toString() + "): " + e.getMessage());
 			} finally {
-				if (sshRelated != null) {
-					sshRelated.close();
+				if (c != null) {
+					c.close();
 				}
 			}
 		}
@@ -606,7 +601,7 @@ public class Test {
 		String excludedCoresByAssertLine = context.getProperty(ConfigParameterConstants.IGNORE_CORE_BY_KEYWORDS);
 		if (excludedCoresByAssertLine != null && excludedCoresByAssertLine.trim().equals("") == false) {
 			scripts.addCommand("export EXCLUDED_CORES_BY_ASSERT_LINE=\"" + excludedCoresByAssertLine + "\"");
-		}		
+		}
 		addSshInfoScript(scripts);
 		scripts.addCommand("source $init_path/shell_utils.sh && do_check_more_errors \"" + this.testCaseDir + "\"");
 		if (context.isWindows == false) {
@@ -618,32 +613,29 @@ public class Test {
 			}
 		}
 
-		ArrayList<String> relatedHosts = getRelatedHosts(true);
-		if (relatedHosts.size() > 0) {
-			SSHConnect sshRelated;
-			for (String h : relatedHosts) {
-				sshRelated = null;
-				result = null;
-				try {
-					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
-					result = sshRelated.execute(scripts);
-					String[] itemArrary = result.split("\n");
-					if (itemArrary != null) {
-						for (String item : itemArrary) {
-							if (!item.trim().equals("")) {
-								addResultItem(null, item);
-							}
+		ArrayList<SSHConnect> relatedHosts = getRelatedConns(true);
+
+		for (SSHConnect c : relatedHosts) {
+			result = null;
+			try {
+				result = c.execute(scripts);
+				String[] itemArrary = result.split("\n");
+				if (itemArrary != null) {
+					for (String item : itemArrary) {
+						if (!item.trim().equals("")) {
+							addResultItem(null, item);
 						}
 					}
-				} catch (Exception e) {
-					addResultItem("NOK", "Runtime error. Fail to connect to the related host " + h + ": " + e.getMessage());
-				} finally {
-					if (sshRelated != null) {
-						sshRelated.close();
-					}
+				}
+			} catch (Exception e) {
+				addResultItem("NOK", "Runtime error. Fail to connect to the related host " + c.toString() + ": " + e.getMessage());
+			} finally {
+				if (c != null) {
+					c.close();
 				}
 			}
 		}
+
 	}
 
 	public void addResultItem(String flag, String message) {
@@ -668,13 +660,9 @@ public class Test {
 	public void checkDiskSpace() throws JSchException {
 		checkDiskSpace(ssh, false);
 
-		ArrayList<String> relatedHosts = getRelatedHosts(true);
-		if (relatedHosts.size() > 0) {
-			SSHConnect sshRelated;
-			for (String h : relatedHosts) {
-				sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
-				checkDiskSpace(sshRelated, true);
-			}
+		ArrayList<SSHConnect> relatedHosts = getRelatedConns(true);
+		for (SSHConnect c : relatedHosts) {
+			checkDiskSpace(c, true);
 		}
 	}
 
@@ -682,7 +670,8 @@ public class Test {
 
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
-		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` " + context.getReserveDiskSpaceSize() + " \"" + context.getMailNoticeTo() + "\" \"" + context.getMailNoticeCC() + "\"");
+		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` " + context.getReserveDiskSpaceSize() + " \"" + context.getMailNoticeTo() + "\" \""
+				+ context.getMailNoticeCC() + "\"");
 		String result;
 		long startSecs = System.currentTimeMillis() / 1000;
 		try {
@@ -717,43 +706,109 @@ public class Test {
 			workerLog.println("[ERROR] fail to save log on " + e.getMessage());
 		}
 
-		ArrayList<String> relatedHosts = getRelatedHosts(true);
-		if (relatedHosts.size() > 0) {
-			SSHConnect sshRelated;
-			for (String h : relatedHosts) {
-				sshRelated = null;
-				try {
-					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
-					sshRelated.execute(scripts);
-					sb.append("[INFO] Normal error log locations on related server:" + result).append(Constants.LINE_SEPARATOR);
-					workerLog.println("[INFO] finish save log successfully on " + h + ".");
-				} catch (Exception e) {
-					workerLog.println("[ERROR] fail to save log on " + h + ":" + e.getMessage());
-				} finally {
-					if (sshRelated != null) {
-						sshRelated.close();
-					}
+		ArrayList<SSHConnect> relatedHosts = getRelatedConns(true);
+		for (SSHConnect c : relatedHosts) {
+			try {
+				c.execute(scripts);
+				sb.append("[INFO] Normal error log locations on related server:" + result).append(Constants.LINE_SEPARATOR);
+				workerLog.println("[INFO] finish save log successfully on " + c.toString() + ".");
+			} catch (Exception e) {
+				workerLog.println("[ERROR] fail to save log on " + c.toString() + ":" + e.getMessage());
+			} finally {
+				if (c != null) {
+					c.close();
 				}
 			}
 		}
 		ret = sb.toString();
 		return ret;
 	}
-	
+
 	private void addSshInfoScript(ShellScriptInput script) {
 		script.addCommand("export TEST_SSH_HOST=" + (CommonUtils.isEmpty(ssh.getHost()) ? "`hostname -i`" : ssh.getHost()));
 		script.addCommand("export TEST_SSH_PORT=" + (ssh.getPort() <= 0 ? context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX) : ssh.getPort()));
 		script.addCommand("export TEST_SSH_USER=" + (CommonUtils.isEmpty(ssh.getUser()) ? "`echo $USER`" : ssh.getUser()));
 		script.addCommand("export TEST_BUIILD_ID=" + context.getTestBuild());
 	}
-	
-	protected ArrayList<String> getRelatedHosts(boolean ext) {
-		ArrayList<String> list = context.getRelatedHosts(currEnvId);
-		if (ext && this.testCaseRequest != null && this.testCaseRequest.getNodeList().size() > 0) {
-			for (TestNode node : this.testCaseRequest.getNodeList()) {
-				list.add(node.getEnvId());
+
+	protected ArrayList<SSHConnect> getRelatedConns(boolean ext) {
+
+		ArrayList<SSHConnect> resultList = new ArrayList<SSHConnect>();
+		ArrayList<String> relatedHosts = context.getRelatedHosts(currEnvId);
+
+		SSHConnect ssh;
+		if (relatedHosts != null && relatedHosts.size() > 0) {
+			for (String host : relatedHosts) {
+				try {
+					ssh = ShellHelper.createTestNodeConnect(context, currEnvId, host);
+					resultList.add(ssh);
+				} catch (Exception e) {
+					workerLog.println("[INFO] fail to connect to " + host + ":" + e.getMessage());
+				}
 			}
 		}
-		return list;
+
+		if (ext && this.testCaseRequest != null && this.testCaseRequest.getNodeList().size() > 0) {
+			for (TestNode node : this.testCaseRequest.getNodeList()) {
+				try {
+					ssh = ShellHelper.createTestNodeConnect(context, node.getEnvId());
+					resultList.add(ssh);
+				} catch (Exception e) {
+					workerLog.println("[INFO] fail to connect to " + node.getEnvId() + ":" + e.getMessage());
+				}
+			}
+		}
+		return resultList;
+	}
+	
+	private void syncCubridConfig() {
+		ArrayList<String> finishedIpList = new ArrayList<String>();
+		finishedIpList.add(context.getInstanceProperty(currEnvId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX));
+
+		String localCUBRID = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile("CUBRID");
+		String remoteCUBRID = null;
+
+		ArrayList<SSHConnect> relatedHosts = getRelatedConns(true);
+		SFTP sftp = null;
+		for (SSHConnect c : relatedHosts) {
+			if (finishedIpList.contains(c.getHost())) {
+				c.close();
+				continue;
+			}
+			try {
+				remoteCUBRID = c.execute(new ShellScriptInput("set +x; echo $(cd $CUBRID; pwd)")).trim();
+			} catch (Exception e) {
+				System.out.println("[ERROR] fail to get $CUBRID: " + e.getMessage());
+				c.close();
+				continue;
+			}
+			if (remoteCUBRID.equals("")) {
+				c.close();
+				continue;
+			}
+
+			try {
+				sftp = c.createSFTP();
+				sftp.upload(localCUBRID + "/conf/cubrid.conf", remoteCUBRID + "/conf/cubrid.conf");
+				sftp.upload(localCUBRID + "/conf/cubrid_broker.conf", remoteCUBRID + "/conf/cubrid_broker.conf");
+				sftp.upload(localCUBRID + "/conf/cubrid_ha.conf", remoteCUBRID + "/conf/cubrid_ha.conf");
+				sftp.upload(localCUBRID + "/conf/cm.conf", remoteCUBRID + "/conf/cm.conf");
+				sftp.upload(localCUBRID + "/conf/cubrid_locales.txt", remoteCUBRID + "/conf/cubrid_locales.txt");
+			} catch (Exception e) {
+				System.out.println("[ERROR] fail to upload files to remote: " + e.getMessage());
+			} finally {
+				try {
+					if (sftp != null) {
+						sftp.close();
+					}
+				} catch (Exception e) {
+				}
+				if (c != null) {
+					c.close();
+				}
+			}
+
+			finishedIpList.add(c.getHost());
+		}
 	}
 }
