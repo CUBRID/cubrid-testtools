@@ -32,9 +32,11 @@ import java.rmi.Naming;
 import java.util.Properties;
 
 import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.navercorp.cubridqa.common.SFTP;
 import com.navercorp.cubridqa.shell.service.ShellService;
 
 public class SSHConnect {
@@ -251,7 +253,8 @@ public class SSHConnect {
 	}
 
 	public String getHost() {
-		return host;
+		if(host == null) return host;
+		return host.trim();
 	}
 
 	public int getPort() {
@@ -265,4 +268,8 @@ public class SSHConnect {
 	public String getPwd() {
 		return pwd;
 	}
+	
+	public SFTP createSFTP() throws JSchException {
+		return new SFTP((ChannelSftp) session.openChannel("sftp"));
+	}	
 }

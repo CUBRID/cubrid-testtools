@@ -87,18 +87,7 @@ public class TestMonitor {
 			this.sshRelateds.clear();
 		}
 
-		ArrayList<String> relatedHosts = test.getRelatedHosts(false);
-		if (relatedHosts != null && relatedHosts.size() > 0) {
-			SSHConnect s;
-			for (String host : relatedHosts) {
-				try {
-					s = ShellHelper.createTestNodeConnect(context, test.getCurrentEnvId(), host);
-					this.sshRelateds.add(s);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		this.sshRelateds = test.getRelatedConns(false);
 	}
 
 	public void startMonitor() {
