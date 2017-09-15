@@ -51,7 +51,7 @@ function run_gendata()
 {
    param_options=$*
    perl $RQG_HOME/gendata.pl $param_options
-   if [ $? -ne ];then
+   if [ $? -ne 0 ];then
 	write_nok "generate data fail, please check your parameter $param_options"
    fi
 }
@@ -60,7 +60,7 @@ function run_gengrammar()
 {
    param_options=$*
    perl $RQG_HOME/gengrammar.pl $param_options
-   if [ $? -ne ];then
+   if [ $? -ne 0 ];then
         write_nok "generate Grammar fail, please check your parameter $param_options"
    fi
 	
@@ -70,7 +70,7 @@ function run_gensql()
 {
    param_options=$*
    perl $RQG_HOME/gensql.pl $param_options
-   if [ $? -ne ];then
+   if [ $? -ne 0 ];then
         write_nok "generate sql fail, please check your parameter $param_options"
    fi
 
@@ -80,7 +80,7 @@ function run_gentest()
 {
    param_options=$*
    perl $RQG_HOME/gentest.pl $param_options
-   if [ $? -ne ];then
+   if [ $? -ne 0 ];then
         write_nok "generate test fail, please check your parameter $param_options"
    fi
 
@@ -91,7 +91,7 @@ function run_genall()
 {
    param_options=$*
    perl $RQG_HOME/runall.pl $param_options
-   if [ $? -ne ];then
+   if [ $? -ne 0 ];then
         write_nok "run all test fail, please check your parameter $param_options"
    fi
 
