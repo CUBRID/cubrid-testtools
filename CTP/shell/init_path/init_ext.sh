@@ -232,3 +232,34 @@ function cubrid_ha_destroy {
 	eval "$cmds"
 	restore_cubrid_config
 }
+
+function cubrid_ha_start {
+	cubrid hb start
+
+	for host in $ha_hosts $@ ; do
+		rexec $host -c "cubrid hb start"
+	done
+	
+	for ((i=0;i<150;i++)); do 
+
+		if cubrid changemode hatestdb@localhost | grep "current HA running mode is active"
+		then
+			break
+		fi
+
+		sleep 2
+	done
+
+	if [ $i -eq 150 ]; then
+		echo "NOK: db server is not active after long time"
+	fi
+}
+
+
+function cubrid_ha_stop {
+	for host in $ha_hosts $@ ; do
+		rexec $host -c "cubrid service stop"
+	done
+
+	cubrid service stop
+}
