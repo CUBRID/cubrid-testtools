@@ -47,6 +47,57 @@ function get_all_table_names()
    echo "$tables"
 }
 
+function run_gendata()
+{
+   param_options=$*
+   perl $RQG_HOME/gendata.pl $param_options
+   if [ $? -ne 0 ];then
+	write_nok "generate data fail, please check your parameter $param_options"
+   fi
+}
+
+function run_gengrammar()
+{
+   param_options=$*
+   perl $RQG_HOME/gengrammar.pl $param_options
+   if [ $? -ne 0 ];then
+        write_nok "generate Grammar fail, please check your parameter $param_options"
+   fi
+	
+}
+
+function run_gensql()
+{
+   param_options=$*
+   perl $RQG_HOME/gensql.pl $param_options
+   if [ $? -ne 0 ];then
+        write_nok "generate sql fail, please check your parameter $param_options"
+   fi
+
+}
+
+function run_gentest()
+{
+   param_options=$*
+   perl $RQG_HOME/gentest.pl $param_options
+   if [ $? -ne 0 ];then
+        write_nok "generate test fail, please check your parameter $param_options"
+   fi
+
+}
+
+
+function run_genall()
+{
+   param_options=$*
+   perl $RQG_HOME/runall.pl $param_options
+   if [ $? -ne 0 ];then
+        write_nok "run all test fail, please check your parameter $param_options"
+   fi
+
+}
+
+
 function rqg_do_backup_db()
 {
     pram_count=$#
@@ -72,38 +123,24 @@ function rqg_do_backup_db()
     cd $curDir 
 }
 
-function rqg_check_compare_log()
+
+function rqg_check_db_data()
 {
     curDir=`pwd`
-    log_name=$1
-    if [ -z "$log_name" ];then
-	log_name="compare.log"
-    fi
-
-    cd $cur_path
-    if grep 'data is different between before.log and after.log' $log_name
-    then
-        write_nok
-    else
-        write_ok
-    fi
-
-    cd $curDir
-}
-
-
-function rqg_do_compare_from_tables()
-{
-    curDir=`pwd`
-    from_db_name=$1
-    to_db_name=$2
+    ori_db_name=$1
+    target_db_name=$2
     table_name_list=$3
     cd $cur_path
+
+    if [ ! "$table_name_list" ];then
+	table_name_list=`get_all_table_names $ori_db_name`
+    fi
+
     for tbl in $table_name_list
     do
-	table_name=$tbl
+        table_name=$tbl
         csql -u dba $from_db_name -c "select count(*) from $table_name order by pk" > before.log
-	csql -S -u dba $to_db_name -c "select count(*) from $table_name order by pk" >after.log
+        csql -S -u dba $to_db_name -c "select count(*) from $table_name order by pk" >after.log
 
         # compare row number, if it is equal, then compare data
         sed -i "/row selected/d" before.log
@@ -122,46 +159,8 @@ function rqg_do_compare_from_tables()
     cd $curDir
 }
 
-function rqg_compare_tables_from_2dbs()
-{
-    curDir=`pwd`
-    ori_db_name=$1
-    target_db_name=$2
-    cd $cur_path
-    table_name_list=`get_all_table_names $ori_db_name`
-    rqg_do_compare_from_tables "$ori_db_name" "$target_db_name" "$table_name_list"
 
-    cd $curDir
-}
-
-function rqg_check_db_data()
-{
-    curDir=`pwd`
-    ori_db_name=$1
-    target_db_name=$2
-    compare_log_name=$3
-    if [ -z "$compare_log_name" ];then
-        compare_log_name="compare.log"
-    fi
-    cd $cur_path
-    sed -i "/^#/d" $RQG_YY_ZZ_HOME/replay.sql
-    cp $RQG_YY_ZZ_HOME/replay.sql temp.sql
-    sed -i '$d' temp.sql
-    csql -u dba -i temp.sql -S check >/dev/null 2>&1
-    rqg_compare_tables_from_2dbs $ori_db_name $target_db_name
-    if grep 'data is different between before.log and after.log' $compare_log_name
-    then
-	lastsql=`tail -1 $RQG_YY_ZZ_HOME/replay.sql`
-        csql -u dba -c "$lastsql" -S $target_db_name >/dev/null 2>&1
-	rqg_compare_tables_from_2dbs $ori_db_name $target_db_name
-    fi
-    
-    rqg_check_compare_log $compare_log_name
-
-    cd $curDir
-}
-
-function rqg_check_media_crash_test()
+function rqg_check_restoredb_consistency()
 {
     curDir=`pwd`
     db_name=$1
@@ -193,14 +192,12 @@ function rqg_check_media_crash_test()
     do
          if diff before_${t}.log after_${t}.log >/dev/null
          then
-             echo OK >compare.log
+		write_ok
          else
-             echo "data is different between before.log and after.log" > $compare_log_name
+             	write_nok "data ddis different between before_${t}.log and after_${t}.log"
              break
          fi
     done
-
-    rqg_check_compare_log $compare_log_name
 
     cd $curDir
 }
@@ -313,7 +310,7 @@ function rqg_check_constraint_all()
         db_name="test"
     fi
    
-    if[ ! "$db_user" ];then
+    if [ ! "$db_user" ];then
 	db_user="public"
     fi
 
@@ -405,7 +402,6 @@ function rqg_cubrid_start_server()
 
     retry_count=$2
     if [ ! "$retry_count" ];then
-    then
 	retry_count=1
     fi 
 
@@ -426,6 +422,11 @@ function rqg_cubrid_start_server()
     done
 }
 
+function rqg_cubrid_start_broker()
+{
+   cubrid broker start
+}
+
 function rqg_cubrid_checkdb()
 {
    db_name=$1
@@ -437,7 +438,6 @@ function rqg_cubrid_checkdb()
    fi
 
    checkdb_options=$@
-   db
    cubrid service stop
    sleep 2
 
@@ -481,6 +481,7 @@ function rqg_cubrid_checkcore_and_stoptest()
 function rqg_check_space()
 {
    #TODO 
+   echo "TODO"
 }
 
 
