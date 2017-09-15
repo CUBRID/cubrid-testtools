@@ -39,6 +39,173 @@ function get_dsn_url_with_autocommit_off()
    echo "dbi:cubrid:database=${db_name};host=localhost;port=${port};autocommit=off"
 }
 
+function get_all_table_names()
+{
+   db_name=$1
+   csql -u dba $from -c "select class_name from db_class where is_system_class='NO' and class_name not in(select partition_class_name from db_partition) and owner_name='PUBLIC';" >temp.log
+   tables=`grep "^ *'" temp.log |sed "s/'//g"|sed "s/ //g"`   
+   echo "$tables"
+}
+
+function rqg_do_backup_db()
+{
+    pram_count=$#
+    ori_db_name=$1
+    to_db_name=$2
+    curDir=`pwd`
+    if [ $pram_count -ne 1 ];then
+    	cd $CUBRID/databases
+    	cubrid server stop $to_db_name
+    	cubrid deletedb $to_db_name
+    	[ -d "$to_db_name" ] && rm -rf $to_db_name
+    	mkdir -p $to_db_name
+
+    	cd $to_db_name
+    	cubrid unloaddb $ori_db_name
+    	rqg_cubrid_createdb $to_db_name
+    	cubrid loaddb -i ${ori_db_name}_indexes -d ${ori_db_name}_objects -s ${ori_db_name}_schema -udba $to_db_name
+    else
+	cd $CUBRID/databases/$ori_db_name
+        cubrid backupdb $ori_db_name
+    fi
+
+    cd $curDir 
+}
+
+function rqg_check_compare_log()
+{
+    curDir=`pwd`
+    log_name=$1
+    if [ -z "$log_name" ];then
+	log_name="compare.log"
+    fi
+
+    cd $cur_path
+    if grep 'data is different between before.log and after.log' $log_name
+    then
+        write_nok
+    else
+        write_ok
+    fi
+
+    cd $curDir
+}
+
+
+function rqg_do_compare_from_tables()
+{
+    curDir=`pwd`
+    from_db_name=$1
+    to_db_name=$2
+    table_name_list=$3
+    cd $cur_path
+    for tbl in $table_name_list
+    do
+	table_name=$tbl
+        csql -u dba $from_db_name -c "select count(*) from $table_name order by pk" > before.log
+	csql -S -u dba $to_db_name -c "select count(*) from $table_name order by pk" >after.log
+
+        # compare row number, if it is equal, then compare data
+        sed -i "/row selected/d" before.log
+        sed -i "/row selected/d" after.log
+
+        if diff before.log after.log >/dev/null
+        then
+            write_ok
+        else
+            write_nok "data is different between before.log and after.log"
+            diff before.log after.log
+            break
+        fi
+    done
+
+    cd $curDir
+}
+
+function rqg_compare_tables_from_2dbs()
+{
+    curDir=`pwd`
+    ori_db_name=$1
+    target_db_name=$2
+    cd $cur_path
+    table_name_list=`get_all_table_names $ori_db_name`
+    rqg_do_compare_from_tables "$ori_db_name" "$target_db_name" "$table_name_list"
+
+    cd $curDir
+}
+
+function rqg_check_db_data()
+{
+    curDir=`pwd`
+    ori_db_name=$1
+    target_db_name=$2
+    compare_log_name=$3
+    if [ -z "$compare_log_name" ];then
+        compare_log_name="compare.log"
+    fi
+    cd $cur_path
+    sed -i "/^#/d" $RQG_YY_ZZ_HOME/replay.sql
+    cp $RQG_YY_ZZ_HOME/replay.sql temp.sql
+    sed -i '$d' temp.sql
+    csql -u dba -i temp.sql -S check >/dev/null 2>&1
+    rqg_compare_tables_from_2dbs $ori_db_name $target_db_name
+    if grep 'data is different between before.log and after.log' $compare_log_name
+    then
+	lastsql=`tail -1 $RQG_YY_ZZ_HOME/replay.sql`
+        csql -u dba -c "$lastsql" -S $target_db_name >/dev/null 2>&1
+	rqg_compare_tables_from_2dbs $ori_db_name $target_db_name
+    fi
+    
+    rqg_check_compare_log $compare_log_name
+
+    cd $curDir
+}
+
+function rqg_check_media_crash_test()
+{
+    curDir=`pwd`
+    db_name=$1
+    compare_log_name=$2
+    if [ -z "$compare_log_name" ];then
+         compare_log_name="compare.log"        
+    fi
+
+    table_name_list=`get_all_table_names $db_name`
+    cd $CUBRID/databases
+    for t in "$table_name_list"
+    do
+	 csql -u dba $db_name -c "select * from $t order by pk" >before_${t}.log
+	 sed -i "/row[s] selected/d" before_${t}.log
+    done
+
+    rm ${db_name}/${db_name}
+    cubrid service stop 
+    cubrid restoredb $db_name
+    cubrid server start $db_name
+   
+    for t in "$table_name_list"
+    do
+         csql -u dba $db_name -c "select * from $t order by pk" >after_${t}.log
+	 sed -i "/row[s] selected/d" after_${t}.log
+    done
+
+    for t in "$table_name_list"
+    do
+         if diff before_${t}.log after_${t}.log >/dev/null
+         then
+             echo OK >compare.log
+         else
+             echo "data is different between before.log and after.log" > $compare_log_name
+             break
+         fi
+    done
+
+    rqg_check_compare_log $compare_log_name
+
+    cd $curDir
+}
+
+
 function rqg_check_constraint_unique()
 {
     name=$1
