@@ -235,6 +235,7 @@ function cubrid_ha_destroy {
 
 function cubrid_ha_start {
 	cubrid hb start
+	sleep 5
 
 	for host in $ha_hosts $@ ; do
 		rexec $host -c "cubrid hb start"
