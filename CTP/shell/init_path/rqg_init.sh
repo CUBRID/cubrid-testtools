@@ -124,26 +124,6 @@ function rqg_do_backup_db()
 }
 
 
-function rqg_check_compare_log()
-{
-    curDir=`pwd`
-    log_name=$1
-    if [ -z "$log_name" ];then
-	log_name="compare.log"
-    fi
-
-    cd $cur_path
-    if grep 'data is different between before.log and after.log' $log_name
-    then
-        write_nok
-    else
-        write_ok
-    fi
-
-    cd $curDir
-}
-
-
 function rqg_check_db_data()
 {
     curDir=`pwd`
@@ -445,9 +425,6 @@ function rqg_cubrid_start_server()
 function rqg_cubrid_start_broker()
 {
    cubrid broker start
-   if [ $? -ne 0 ];then
-	echo "start broker fail"
-   fi
 }
 
 function rqg_cubrid_checkdb()
