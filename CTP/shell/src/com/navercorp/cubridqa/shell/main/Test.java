@@ -31,7 +31,6 @@ import java.util.Date;
 
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
-import com.navercorp.cubridqa.common.SFTP;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -748,8 +747,10 @@ public class Test {
 			}
 		}
 
-		if (ext && this.testCaseRequest != null && this.testCaseRequest.getNodeList().size() > 0) {
-			for (TestNode node : this.testCaseRequest.getNodeList()) {
+		if (ext && this.testCaseRequest != null && this.testCaseRequest.getNodeList().size() > 1) {
+			TestNode node;
+			for (int i = 1; i < this.testCaseRequest.getNodeList().size(); i++) {
+				node = testCaseRequest.getNodeList().get(i);
 				try {
 					ssh = ShellHelper.createTestNodeConnect(context, node.getEnvId());
 					resultList.add(ssh);
@@ -765,50 +766,27 @@ public class Test {
 		ArrayList<String> finishedIpList = new ArrayList<String>();
 		finishedIpList.add(context.getInstanceProperty(currEnvId, ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX));
 
-		String localCUBRID = com.navercorp.cubridqa.common.CommonUtils.getEnvInFile("CUBRID");
-		String remoteCUBRID = null;
-
-		ArrayList<SSHConnect> relatedHosts = getRelatedConns(true);
-		SFTP sftp = null;
-		for (SSHConnect c : relatedHosts) {
-			if (finishedIpList.contains(c.getHost())) {
-				c.close();
+		String cmdPrefix, host, port, user, pwd;
+		for (TestNode node : this.testCaseRequest.getNodeList()) {
+			if (finishedIpList.contains(node.getHost().getIp())) {
 				continue;
 			}
 			try {
-				remoteCUBRID = c.execute(new ShellScriptInput("set +x; echo $(cd $CUBRID; pwd)")).trim();
+				host = context.getInstanceProperty(node.getEnvId(), ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+				port = context.getInstanceProperty(node.getEnvId(), ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
+				user = context.getInstanceProperty(node.getEnvId(), ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
+				pwd = context.getInstanceProperty(node.getEnvId(), ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
+				ShellScriptInput scripts = new ShellScriptInput();
+				cmdPrefix = "run_upload -host " + host + " -port " + port + " -user " + user + " -password \"" + pwd + "\" ";
+				scripts.addCommand(cmdPrefix + " -from $CUBRID/conf/cubrid.conf -to CUBRID/conf/cubrid.conf");
+				scripts.addCommand(cmdPrefix + " -from $CUBRID/conf/cubrid_broker.conf -to CUBRID/conf/cubrid_broker.conf");
+				scripts.addCommand(cmdPrefix + " -from $CUBRID/conf/cubrid_ha.conf -to CUBRID/conf/cubrid_ha.conf");
+				ssh.execute(scripts);
 			} catch (Exception e) {
-				System.out.println("[ERROR] fail to get $CUBRID: " + e.getMessage());
-				c.close();
-				continue;
-			}
-			if (remoteCUBRID.equals("")) {
-				c.close();
-				continue;
+				workerLog.println("[INFO] fail to sychronize CUBRID configuration to " + node.getEnvId() + ":" + e.getMessage());
 			}
 
-			try {
-				sftp = c.createSFTP();
-				sftp.upload(localCUBRID + "/conf/cubrid.conf", remoteCUBRID + "/conf/cubrid.conf");
-				sftp.upload(localCUBRID + "/conf/cubrid_broker.conf", remoteCUBRID + "/conf/cubrid_broker.conf");
-				sftp.upload(localCUBRID + "/conf/cubrid_ha.conf", remoteCUBRID + "/conf/cubrid_ha.conf");
-				sftp.upload(localCUBRID + "/conf/cm.conf", remoteCUBRID + "/conf/cm.conf");
-				sftp.upload(localCUBRID + "/conf/cubrid_locales.txt", remoteCUBRID + "/conf/cubrid_locales.txt");
-			} catch (Exception e) {
-				System.out.println("[ERROR] fail to upload files to remote: " + e.getMessage());
-			} finally {
-				try {
-					if (sftp != null) {
-						sftp.close();
-					}
-				} catch (Exception e) {
-				}
-				if (c != null) {
-					c.close();
-				}
-			}
-
-			finishedIpList.add(c.getHost());
+			finishedIpList.add(node.getHost().getIp());
 		}
 	}
 }

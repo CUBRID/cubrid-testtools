@@ -157,6 +157,7 @@ public class Dispatch {
 					if (node == null) {
 						continue;
 					}
+					req.addTestNode(node);
 					this.tbdList.remove(i);
 					req.setHasTestNodes(false);
 					return req;
