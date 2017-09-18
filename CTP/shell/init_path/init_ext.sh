@@ -208,7 +208,10 @@ function cubrid_ha_create {
 	fi
 
 	$ini -s "common" $CUBRID/conf/cubrid.conf ha_mode on
-	
+
+	sed -i 's/ = /=/g' $CUBRID/conf/cubrid.conf
+	sed -i 's/ = /=/g' $CUBRID/conf/cubrid_ha.conf
+
 	sync_cubrid_config_to_remote $ha_hosts
 
 	for host in $replica_hosts; do
@@ -239,7 +242,7 @@ function check_with_loop {
 	expected_text="$3"
 	enable_verify="$4"
 	for ((i=0;i<$loops;i++)); do 
-		if $commands | grep "${expected_text}"; then
+		if $commands | grep -E "${expected_text}"; then
 			return
 		fi
 
@@ -253,7 +256,7 @@ function check_with_loop {
 
 function cubrid_ha_start {
 	cubrid hb start
-	check_with_loop 60 "cubrid changemode hatestdb@localhost" "current HA running mode is active" true
+	check_with_loop 60 "cubrid changemode hatestdb@localhost" "current HA running mode is active|to-be-active" true
 
 	for host in $ha_hosts $@ ; do
 		rexec $host -c "cubrid hb start"
@@ -264,6 +267,14 @@ function cubrid_ha_start {
 
 
 function cubrid_ha_stop {
+	for host in $ha_hosts $@ ; do
+		rexec $host -c "cubrid hb stop"
+	done
+
+	cubrid hb stop
+}
+
+function cubrid_service_stop {
 	for host in $ha_hosts $@ ; do
 		rexec $host -c "cubrid service stop"
 	done
