@@ -328,7 +328,7 @@ function rqg_check_constraint_all()
 
 function rqg_cubrid_createdb()
 {
-    db_name=
+    db_name=$1
     param_count=$#
     if [ $param_count -eq 0 ];then
        db_name="test"
@@ -339,6 +339,18 @@ function rqg_cubrid_createdb()
     else
        cubrid_createdb $*
     fi
+}
+
+function rqg_cubrid_cleandb()
+{
+    db_name=$1
+    param_count=$#
+    if [ $param_count -eq 0 ];then
+       db_name="test"
+    fi
+
+    cubrid server stop $db_name
+    cubrid deletedb $db_name
 }
 
 function rqg_kill_all_cub_process()
@@ -486,5 +498,5 @@ function rqg_check_space()
 
 
 cur_case_path=`pwd`
-export TESTCASE_HOME=`search_in_upper_path $cur_case_path ../config`
+export TESTCASE_HOME=`search_in_upper_path $cur_case_path config`/..
 
