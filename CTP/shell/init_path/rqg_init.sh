@@ -498,5 +498,5 @@ function rqg_check_space()
 
 
 cur_case_path=`pwd`
-export TESTCASE_HOME=`search_in_upper_path $cur_case_path ../config`/..
+export TESTCASE_HOME=`search_in_upper_path $cur_case_path config`/..
 
