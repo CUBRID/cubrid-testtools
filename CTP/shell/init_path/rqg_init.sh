@@ -79,9 +79,16 @@ function run_gensql()
 function run_gentest()
 {
    param_options=$*
-   perl $RQG_HOME/gentest.pl $param_options
+   perl $RQG_HOME/gentest.pl $param_options > gentest.log 2<&1
    if [ $? -ne 0 ];then
         write_nok "generate test fail, please check your parameter $param_options"
+   else
+        if [ `grep 'Test completed successfully' gentest.log|wc -l` -eq 1 ];then
+                rm gentest.log >/dev/null
+                write_ok
+        else
+                write_nok "generate test is not completed successfully, please confirm gentest.log"
+        fi
    fi
 
 }
