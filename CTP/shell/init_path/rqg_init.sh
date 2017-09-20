@@ -448,19 +448,17 @@ function rqg_cubrid_start_broker()
 
 function rqg_cubrid_checkdb()
 {
-   db_name=$1
-   checkdb_options=""
-   if [ ! "$db_name" ];then
-	db_name="test"
+   checkdb_options="$1"
+   if [ ! "$checkdb_options" ];then
+	checkdb_options="test"
    else
 	checkdb_options=$@
    fi
 
-   checkdb_options=$@
    cubrid service stop
    sleep 2
 
-   cubrid checkdb -S $checkdb_options $db_name > _checkdb.log 2>&1
+   cubrid checkdb -S $checkdb_options > _checkdb.log 2>&1
    if [ $? -ne 0 ];then
         sed -i 'a\Fail to execute checkdb utility with the standalone mode!\n' _checkdb.log
 	write_nok _checkdb.log
