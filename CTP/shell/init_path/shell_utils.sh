@@ -51,7 +51,7 @@ function do_check_more_errors {
     test_case_dir=$1
     test_case_dir=${test_case_dir%/cases*}
     case_name=`echo ${test_case_dir##*/}`
-    result_file=${test_case_dir}/cases/${case_name}.result
+    result_file_full_name=${test_case_dir}/cases/${case_name}.result
 
     if [  $EXCLUDED_CORES_BY_ASSERT_LINE ]; then
       find $init_path $CUBRID $test_case_dir -name "core*" -type f > temp_assert_log
@@ -82,6 +82,7 @@ function do_check_more_errors {
     find $init_path $CUBRID $test_case_dir -name "core*" -type f>temp_log
     core_dump_cnt=`cat temp_log|wc -l`
     fatal_err_cnt=`grep -r -n "FATAL ERROR" $CUBRID/log/* | wc -l`
+    old_fatal_err_cnt=0
     if [ -f $CUBRID/log/qa_fatal_error_count.log ]
     then
 	old_fatal_err_cnt=`cat $CUBRID/log/qa_fatal_error_count.log`
@@ -106,26 +107,26 @@ function do_check_more_errors {
         host_ip=`hostname -i`
         if [ $core_dump_cnt -gt 0 ]; then
  	        out=" : NOK found core file on host "$host_ip"("$backup_dir")"
-            echo $out >> $result_file
+            echo $out >> $result_file_full_name
             echo $out
 	    while read core
 	    do
 		analyzer.sh $core  > analyzer.log 2>&1
 		is_cub_cas=`cat analyzer.log | grep "PROCESS NAME:"|grep "cub_cas"|wc -l`
 		if [ $is_cub_cas -eq 0 ];then
-			issue_title=`grep SUMMARY analyzer.log | head -n 1`
-		    echo \<!--HTMLESCAPESTART--\>\<a class=SHELLCORE href=\"javascript:reportShellCoreIssue\(\'${core}\', \'${backup_name}\', \'${host_ip}\', \'${TEST_SSH_PORT}\', \'${USER}\', \'${cub_build_id}\', \'${issue_title}\' \) \"\>\<i\>\<font color=red\>REPORT ISSUE FOR BELOW CRASH\</font\>\</i\>\</a\>\<!--HTMLESCAPEEND--\> >> $result_file
-			cat analyzer.log >> $result_file
-			core_full_stack_fn=${CUBRID}/`basename $core | sed 's/core/fullstack/g'`
-			analyzer.sh -f $core > ${core_full_stack_fn}
+			  issue_title=`grep SUMMARY analyzer.log | head -n 1`
+		    echo \<!--HTMLESCAPESTART--\>\<a class=SHELLCORE href=\"javascript:reportShellCoreIssue\(\'${core}\', \'${backup_name}\', \'${host_ip}\', \'${TEST_SSH_PORT}\', \'${USER}\', \'${cub_build_id}\', \'${issue_title}\' \) \"\>\<i\>\<font color=red\>REPORT ISSUE FOR BELOW CRASH\</font\>\</i\>\</a\>\<!--HTMLESCAPEEND--\> >> $result_file_full_name
+			  cat analyzer.log >> $result_file_full_name
+			  core_full_stack_fn=${CUBRID}/`basename $core | sed 's/core/fullstack/g'`
+			  analyzer.sh -f $core > ${core_full_stack_fn}
 		else
-			echo "CRASH FROM CUB_CAS:${core}(skip to print call stacks)" >> $result_file
+			  echo "CRASH FROM CUB_CAS:${core}(skip to print call stacks)" >> $result_file_full_name
 		fi
 	    done < temp_log
         fi
         if [ $fatal_err_cnt -gt 0 ]; then
             out=" : NOK found fatal error on host "$host_ip"("$backup_dir")"
-            echo $out >> $result_file
+            echo $out >> $result_file_full_name
             echo $out
         fi
         cp -rf $CUBRID $backup_dir/CUBRID
@@ -160,7 +161,7 @@ function do_save_snapshot_by_type {
     kind=$2
     test_case_dir=${test_case_dir%/cases*}
     case_name=`echo ${test_case_dir##*/}`
-    result_file=${test_case_dir}/cases/${case_name}.result
+    result_file_full_name=${test_case_dir}/cases/${case_name}.result
     cub_build_id=`cubrid_rel | grep CUBRID | awk -F ')' '{print $1}' | awk -F '(' '{print $NF}'`
     current_datetime=`date "+%Y%m%d_%H%M%S"`
     
@@ -181,5 +182,5 @@ function do_save_snapshot_by_type {
     rm -rf ${backup_fname}
     cd - 2>&1 >/dev/null
     host_ip=`hostname -i`
-    echo " : NOK found ${kind} error on host $host_ip (${backup_dir})" >> ${result_file}
+    echo " : NOK found ${kind} error on host $host_ip (${backup_dir})" >> ${result_file_full_name}
 }
