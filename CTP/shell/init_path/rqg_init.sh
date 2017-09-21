@@ -147,7 +147,7 @@ function rqg_check_db_data()
     do
         table_name=$tbl
         csql -u dba $from_db_name -c "select count(*) from $table_name order by pk" > before.log
-        csql -S -u dba $to_db_name -c "select count(*) from $table_name order by pk" >after.log
+        csql -S -u dba $target_db_name -c "select count(*) from $table_name order by pk" >after.log
 
         # compare row number, if it is equal, then compare data
         sed -i "/row selected/d" before.log
