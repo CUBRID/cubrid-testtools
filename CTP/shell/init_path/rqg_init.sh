@@ -441,6 +441,27 @@ function rqg_cubrid_start_server()
     done
 }
 
+function rqg_check_start_server()
+{
+    db_name=$1
+    rqg_cubrid_start_server $db_name
+
+    if [ -f start_status.log ];then
+        if grep 'cubrid server start: success' start_status.log
+        then
+             write_ok
+             rm start_status.log >/dev/null
+        else
+            isRunning=`ps -u $USER -o pid,comm|grep -v grep|grep cub_server|wc -l`
+            if [ $isRunning -ne 0 ];then
+                write_ok
+            else
+                write_nok
+            fi
+        fi
+    fi
+}
+
 function rqg_cubrid_start_broker()
 {
    cubrid broker start
