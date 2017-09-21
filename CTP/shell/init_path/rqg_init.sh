@@ -79,9 +79,16 @@ function run_gensql()
 function run_gentest()
 {
    param_options=$*
-   perl $RQG_HOME/gentest.pl $param_options
+   perl $RQG_HOME/gentest.pl $param_options > gentest.log 2<&1
    if [ $? -ne 0 ];then
         write_nok "generate test fail, please check your parameter $param_options"
+   else
+        if [ `grep 'Test completed successfully' gentest.log|wc -l` -eq 1 ];then
+                rm gentest.log >/dev/null
+                write_ok
+        else
+                write_nok "generate test is not completed successfully, please confirm gentest.log"
+        fi
    fi
 
 }
@@ -434,6 +441,27 @@ function rqg_cubrid_start_server()
     done
 }
 
+function rqg_check_start_server()
+{
+    db_name=$1
+    rqg_cubrid_start_server $db_name
+
+    if [ -f start_status.log ];then
+        if grep 'cubrid server start: success' start_status.log
+        then
+             write_ok
+             rm start_status.log >/dev/null
+        else
+            isRunning=`ps -u $USER -o pid,comm|grep -v grep|grep cub_server|wc -l`
+            if [ $isRunning -ne 0 ];then
+                write_ok
+            else
+                write_nok
+            fi
+        fi
+    fi
+}
+
 function rqg_cubrid_start_broker()
 {
    cubrid broker start
@@ -441,19 +469,17 @@ function rqg_cubrid_start_broker()
 
 function rqg_cubrid_checkdb()
 {
-   db_name=$1
-   checkdb_options=""
-   if [ ! "$db_name" ];then
-	db_name="test"
+   checkdb_options="$1"
+   if [ ! "$checkdb_options" ];then
+	checkdb_options="test"
    else
 	checkdb_options=$@
    fi
 
-   checkdb_options=$@
    cubrid service stop
    sleep 2
 
-   cubrid checkdb -S $checkdb_options $db_name > _checkdb.log 2>&1
+   cubrid checkdb -S $checkdb_options > _checkdb.log 2>&1
    if [ $? -ne 0 ];then
         sed -i 'a\Fail to execute checkdb utility with the standalone mode!\n' _checkdb.log
 	write_nok _checkdb.log
