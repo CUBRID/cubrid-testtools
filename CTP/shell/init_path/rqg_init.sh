@@ -147,7 +147,7 @@ function rqg_check_db_data()
     do
         table_name=$tbl
         csql -u dba $from_db_name -c "select count(*) from $table_name order by pk" > before.log
-        csql -S -u dba $to_db_name -c "select count(*) from $table_name order by pk" >after.log
+        csql -S -u dba $target_db_name -c "select count(*) from $table_name order by pk" >after.log
 
         # compare row number, if it is equal, then compare data
         sed -i "/row selected/d" before.log
@@ -171,10 +171,6 @@ function rqg_check_restoredb_consistency()
 {
     curDir=`pwd`
     db_name=$1
-    compare_log_name=$2
-    if [ -z "$compare_log_name" ];then
-         compare_log_name="compare.log"        
-    fi
 
     table_name_list=`get_all_table_names $db_name`
     cd $CUBRID/databases
