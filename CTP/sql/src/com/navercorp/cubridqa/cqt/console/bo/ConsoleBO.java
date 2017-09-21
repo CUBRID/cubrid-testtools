@@ -35,6 +35,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -42,6 +43,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.navercorp.cubridqa.common.coreanalyzer.AnalyzerMain;
 import com.navercorp.cubridqa.cqt.console.Executor;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.ProcessMonitor;
@@ -51,9 +53,11 @@ import com.navercorp.cubridqa.cqt.console.bean.Summary;
 import com.navercorp.cubridqa.cqt.console.bean.Test;
 import com.navercorp.cubridqa.cqt.console.bean.TestCaseSummary;
 import com.navercorp.cubridqa.cqt.console.dao.ConsoleDAO;
+import com.navercorp.cubridqa.cqt.console.util.CommonFileUtile;
 import com.navercorp.cubridqa.cqt.console.util.ConfigureUtil;
 import com.navercorp.cubridqa.cqt.console.util.CubridConnection;
 import com.navercorp.cubridqa.cqt.console.util.CubridUtil;
+import com.navercorp.cubridqa.cqt.console.util.EnvGetter;
 import com.navercorp.cubridqa.cqt.console.util.ErrorInterruptUtil;
 import com.navercorp.cubridqa.cqt.console.util.FileUtil;
 import com.navercorp.cubridqa.cqt.console.util.LogUtil;
@@ -413,23 +417,30 @@ public class ConsoleBO extends Executor {
 			processMonitor.setProcessName(test.getTestId());
 			processMonitor.setProcessDesc(TestUtil.getResultPreDir(test.getTestId()));
 			boolean endfile = false;
-			for (int i = 0; i < caseFileList.size(); i++) {
+			int currentCount = 0;
+			int totalCaseCount = caseFileList.size();
+			
+			for (int i = 0; i < totalCaseCount; i++) {
 				if (processMonitor.getCurrentstate() == processMonitor.Status_Stoping) {
 					break;
 				} else if (processMonitor.getCurrentstate() == processMonitor.Status_Starting) {
 					processMonitor.setCurrentstate(processMonitor.Status_Started);
 				}
-				endfile = i == caseFileList.size() - 1;
+				endfile = i == totalCaseCount - 1;
 				String caseFile = (String) caseFileList.get(i);
+				currentCount++;
+				NumberFormat format = NumberFormat.getPercentInstance();
+				format.setMinimumFractionDigits(2);
+				float ratio = (float) currentCount / totalCaseCount * 100;
+				String completeRatio = format.format((ratio / 100.0));
+				printMessage("Testing " + caseFile + " ("+ currentCount + "/"+ totalCaseCount +" " + completeRatio + ")", true, false);
+				
 				CaseResult caseResult = test.getCaseResultFromMap(caseFile);
 				if (caseResult == null || !caseResult.isShouldRun()) {
 					processMonitor.setCompleteFile(processMonitor.getCompleteFile() + 1);
 					processMonitor.setFailedFile(processMonitor.getFailedFile() + 1);
 					continue;
 				}
-				String message = "[caseFile]:" + caseFile;
-				this.onMessage(message);
-				System.out.println(message);
 
 				int testType = caseResult.getType();
 				processMonitor.setCurrentfiletype(testType);
@@ -446,14 +457,24 @@ public class ConsoleBO extends Executor {
 					}
 					caseResult.setResult("");
 				}
+				
+				boolean isSucc = caseResult.isSuccessFul();
+				if(!isSucc){
+					List<File> coreFileList = CommonFileUtile.getCoreFiles(CubridUtil.getCubridPath(), test.getAllCoreList());
+					if (coreFileList != null && coreFileList.size() > 0) {
+							test.putCoreCaseIntoMap(caseFile, coreFileList);
+							caseResult.setHasCore(true);
+					}
+				}
+				printMessage(isSucc?" [OK]": " [NOK]", false, true);
 				if (ErrorInterruptUtil.isCaseRunError(this, caseFile)) {
+					this.onMessage("[ERROR]: Run case interrupt error!");
 					break;
 				}
 			}
 			if (processMonitor.getCurrentstate() == processMonitor.Status_Stoping)
 				return;
 			if ((test.getType() == Test.TYPE_FUNCTION)) {
-
 				if (saveEveryone) {
 					if (test.getRunMode() != Test.MODE_RUN) {
 						TestUtil.makeSummary(test, test.getCatMap());
@@ -626,6 +647,45 @@ public class ConsoleBO extends Executor {
 		}
 	}
 
+	public void saveCoreCallStackFile(String caseFile, List<File> coreFileList){
+		CaseResult caseResult = (CaseResult) test.getCaseResultFromMap(caseFile);
+		String caseResultDir = caseResult.getResultDir();
+		String coreFile = caseResultDir + File.separator + caseResult.getCaseName() + ".err";
+		StringBuffer headerText = new StringBuffer();
+		StringBuffer bodyText = new StringBuffer();
+		int coreFileListSize = coreFileList == null ? 0 : coreFileList.size();
+		String rootCoreBackupDir = EnvGetter.getenv("CORE_BACKUP_DIR");
+		if (coreFileListSize != 0){
+			headerText.append("SUMMARY:");
+			headerText.append(System.getProperty("line.separator"));
+			if (rootCoreBackupDir != null && rootCoreBackupDir.length() > 0) {
+				headerText.append("CORE_DIR:" + rootCoreBackupDir + File.separator + test.getTestId());
+				headerText.append(System.getProperty("line.separator"));
+			}else{
+				headerText.append("CORE_DIR:" + CubridUtil.getCubridPath());
+				headerText.append(System.getProperty("line.separator"));
+			}
+		}
+		
+		for(int i=0; i<coreFileList.size();i++){
+			File coreFileName = coreFileList.get(i);
+			try {
+				String[] callStackInfo = AnalyzerMain.fetchCoreFullStack(coreFileName);
+				String coreName = coreFileName.getName();
+				if(callStackInfo!=null &&callStackInfo.length>1){
+					headerText.append(coreName + " [" + callStackInfo[2] + "] " + callStackInfo[0] + System.getProperty("line.separator"));
+					bodyText.append(System.getProperty("line.separator") + "==================" + coreName + "==================" + System.getProperty("line.separator"));
+					bodyText.append("");
+					bodyText.append(callStackInfo[1]);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		CommonFileUtile.writeFile(headerText.toString() + bodyText.toString(), coreFile);
+		
+	}
 	/**
 	 * save the answer file .
 	 * 
@@ -732,14 +792,13 @@ public class ConsoleBO extends Executor {
 			String exceptionMessage = TestUtil.TEST_CONFIG + " file:" + test.getCharset_file() + System.getProperty("line.separator");
 			String msg = "Set System Parameter Error: ";
 			this.onMessage(msg + exceptionMessage);
-			e.printStackTrace();
 		} finally {
 			if (rs != null) {
 				try {
 					rs.close();
 				} catch (SQLException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					this.onMessage(e.getMessage());
 				}
 			}
 			if (stmt != null) {
@@ -789,7 +848,7 @@ public class ConsoleBO extends Executor {
 				try {
 					Thread.sleep(5000);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					this.onMessage(e.getMessage());
 				}
 				timer += 5;
 				String message = "Server status is not alive, CQT will try to check it again after  " + timer + " seconds!!";
@@ -871,7 +930,7 @@ public class ConsoleBO extends Executor {
 		}
 
 		for (int i = 0; i < test.getSqlRunTime(); i++) {
-			System.out.println((new StringBuilder()).append("Now Running File  ..... \t").append(caseFile));
+			this.onMessage((new StringBuilder()).append("Now Running File  ..... \t").append(caseFile).toString());
 			if (processMonitor.getCurrentstate() == processMonitor.Status_Stoping) {
 				return null;
 			}
@@ -957,12 +1016,10 @@ public class ConsoleBO extends Executor {
 					if (isOn) {
 						conn.setAutoCommit(isOn);
 						String message = "@" + test.getConnId() + ": autocommit " + isOn;
-						System.out.println("--- set autocommit -- " + isOn);
 						this.onMessage(message);
 					} else if (isOff) {
 						conn.setAutoCommit(!isOff);
 						String message = "@" + test.getConnId() + ": autocommit " + !isOff;
-						System.out.println("--- set autocommit -- " + !isOff);
 						this.onMessage(message);
 					} else if (isHoldCasOn) {
 						try {
@@ -971,7 +1028,6 @@ public class ConsoleBO extends Executor {
 							Method method = conn.getClass().getMethod("setCASChangeMode", new Class[] { int.class });
 							method.invoke(conn, new Object[] { CUBRIDConnection.CAS_CHANGE_MODE_KEEP });
 
-							System.out.println("--- hold cas -- " + isHoldCasOn);
 							this.onMessage(message);
 						} catch (Exception e) {
 							String message = "Exception: the current version can't support hold cas!";
@@ -982,7 +1038,6 @@ public class ConsoleBO extends Executor {
 							String message = "@" + test.getConnId() + ": hold cas " + isHoldCasOff;
 							Method method = conn.getClass().getMethod("setCASChangeMode", new Class[] { int.class });
 							method.invoke(conn, new Object[] { CUBRIDConnection.CAS_CHANGE_MODE_AUTO });
-							System.out.println("--- hold cas -- " + isHoldCasOff);
 							this.onMessage(message);
 						} catch (Exception e) {
 							String message = "Exception: the current version can't support hold cas!";
@@ -1011,7 +1066,7 @@ public class ConsoleBO extends Executor {
 				if (i == 0) {
 					result.append(e.getMessage() + System.getProperty("line.separator"));
 				}
-				e.printStackTrace();
+				this.onMessage(e.getMessage());
 			} finally {
 				if (i == 0) {
 					caseResult.setResult(result.toString());
@@ -1139,7 +1194,7 @@ public class ConsoleBO extends Executor {
 						stmt.close();
 
 					} catch (SQLException e) {
-						e.printStackTrace();
+						this.onMessage(e.getMessage());
 					}
 				}
 			}
@@ -1186,12 +1241,6 @@ public class ConsoleBO extends Executor {
 			while (line != null) {
 				line = line.trim();
 
-				// receive the value of queryplan by previous line
-				boolean sqlQueryPlan = false;
-				if (isQueryplan) {
-					sqlQueryPlan = true;
-				}
-
 				if ("".equals(line) || line.startsWith("--")) {
 					// When this line is "--@queryplan", the next line should
 					// show
@@ -1203,24 +1252,22 @@ public class ConsoleBO extends Executor {
 						line = line.replaceFirst("--\\+", "").trim();
 						ret.append(line + "" + System.getProperty("line.separator"));
 						Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-						sql.setQueryplan(sqlQueryPlan);
+						sql.setQueryplan(isQueryplan);
 						list.add(sql);
 
 						isNewStatement = true;
+						isQueryplan = false;
 						ret = new StringBuilder();
 						paramList = null;
 						isCall = false;
 						connId = "";
-					} else {
-						isQueryplan = false;
 					}
+					
 					line = reader.readLine();
 					lineCount++;
 					continue;
-				} else {
-					isQueryplan = false;
 				}
-
+				
 				boolean isStatement = !(line.startsWith("$"));
 				if (!isStatement) { // parameters
 					paramList = new ArrayList<SqlParam>();
@@ -1320,18 +1367,19 @@ public class ConsoleBO extends Executor {
 					if (!isCall) {
 						if (line.endsWith(";")) {
 							Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-							sql.setQueryplan(sqlQueryPlan);
+							sql.setQueryplan(isQueryplan);
 							list.add(sql);
 						}
 					} else {
 						Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-						sql.setQueryplan(sqlQueryPlan);
+						sql.setQueryplan(isQueryplan);
 						list.add(sql);
 					}
 				}
 
 				if (isStatement && line.endsWith(";")) {
 					isNewStatement = true;
+					isQueryplan = false;
 
 					ret = new StringBuilder();
 					paramList = null;
@@ -1618,12 +1666,10 @@ public class ConsoleBO extends Executor {
 					if (isOn) {
 						conn.setAutoCommit(isOn);
 						String message = "@" + test.getConnId() + ": autocommit " + isOn;
-						System.out.println("--- set autocommit -- " + isOn);
 						bo.onMessage("[THREAD:" + index + "]" + message);
 					} else if (isOff) {
 						conn.setAutoCommit(!isOff);
 						String message = "@" + test.getConnId() + ": autocommit " + !isOff;
-						System.out.println("--- set autocommit -- " + !isOff);
 						bo.onMessage("[THREAD:" + index + "]" + message);
 					} else if (isHoldCasOn) {
 						try {
@@ -1632,23 +1678,23 @@ public class ConsoleBO extends Executor {
 							Method method = conn.getClass().getMethod("setCASChangeMode", new Class[] { int.class });
 							method.invoke(conn, new Object[] { CUBRIDConnection.CAS_CHANGE_MODE_KEEP });
 
-							System.out.println("--- hold cas -- " + isHoldCasOn);
+							bo.onMessage("--- hold cas -- " + isHoldCasOn);
 						} catch (Exception e) {
 							String message = "Exception: the current version can't support hold cas!";
-							System.out.println(message);
+							bo.onMessage(message);
 						}
 					} else if (isHoldCasOff) {
 						try {
 							String message = "@" + test.getConnId() + ": hold cas " + isHoldCasOff;
 							Method method = conn.getClass().getMethod("setCASChangeMode", new Class[] { int.class });
 							method.invoke(conn, new Object[] { CUBRIDConnection.CAS_CHANGE_MODE_AUTO });
-							System.out.println("--- hold cas -- " + isHoldCasOff);
+							bo.onMessage("--- hold cas -- " + isHoldCasOff);
 						} catch (Exception e) {
 							String message = "Exception: the current version can't support hold cas!";
-							System.out.println(message);
+							bo.onMessage(message);
 						}
 					} else {
-						System.out.println("--- use default autocommit -- " + conn.getAutoCommit());
+						//System.out.println("--- use default autocommit -- " + conn.getAutoCommit());
 						String message = "@" + test.getDbId() + "/" + test.getConnId() + ":" + sql.getScript();
 						bo.onMessage("[THREAD:" + index + "]" + message);
 

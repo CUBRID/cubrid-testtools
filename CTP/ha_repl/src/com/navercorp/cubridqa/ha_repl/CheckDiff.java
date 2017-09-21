@@ -36,14 +36,18 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Properties;
 
+import com.navercorp.cubridqa.scheduler.common.Constants;
+
 public class CheckDiff {
 	public int check(String filePath, String masterName, String slaveOrReplicaName, String fileSuffix) {
 		String masterFile = filePath + "." + masterName + ".dump";
+		String resultFile = filePath.substring(0, filePath.indexOf(".test")) + ".result";
 		String slaveFile = filePath + "." + slaveOrReplicaName + ".dump";
 		String master_slaveOrReplicaDiffFile = filePath + "." + masterName + "." + slaveOrReplicaName + "." + fileSuffix;
 		String master_slaveOrReplicaDiffFileTemp = master_slaveOrReplicaDiffFile + ".temp";
+		String diffPacthResult = master_slaveOrReplicaDiffFile + ".temp.diff"; 
 		String command = "sh -c 'diff " + masterFile + " " + slaveFile + " > " + master_slaveOrReplicaDiffFileTemp + "'";
-		String command1 = "sh -c 'diff " + master_slaveOrReplicaDiffFile + " " + master_slaveOrReplicaDiffFileTemp + "'";
+		String command1 = "sh -c 'diff " + master_slaveOrReplicaDiffFile + " " + master_slaveOrReplicaDiffFileTemp + " > " + diffPacthResult + "'";
 		int result = 0;
 		command = command.replace("\\", "/");
 		command1 = command1.replace("\\", "/");
@@ -93,7 +97,23 @@ public class CheckDiff {
 		{
 			result = -1;
 		}
-		new File(master_slaveOrReplicaDiffFileTemp).delete();
+		
+		if(result!=0){
+			String commandScript = "echo ====================== Actual difference between Master and Slave ====================== >" + resultFile + Constants.LINE_SEPARATOR;
+			commandScript += "cat " + master_slaveOrReplicaDiffFileTemp + " >> " + resultFile + Constants.LINE_SEPARATOR;
+			commandScript += "if [ -f " + master_slaveOrReplicaDiffFile+  " ];then " + Constants.LINE_SEPARATOR;
+			commandScript += "	 	echo ====================== Expected difference (patch answer) ====================== >> " + resultFile + Constants.LINE_SEPARATOR;
+			commandScript += "		cat " + diffPacthResult + " >> " + resultFile + Constants.LINE_SEPARATOR;
+			commandScript += "fi" + Constants.LINE_SEPARATOR;
+			ExecCommand(commandScript);
+			new File(diffPacthResult).delete();
+			new File(master_slaveOrReplicaDiffFileTemp).delete();
+			
+		}else{
+			new File(diffPacthResult).delete();
+			new File(master_slaveOrReplicaDiffFileTemp).delete();
+		}
+		
 		return result;
 	}
 

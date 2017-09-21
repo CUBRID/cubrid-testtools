@@ -39,6 +39,7 @@ public class AnalyzerMain {
 	public static void main(String[] args) throws Exception {
 		Options options = new Options();
 		options.addOption("s", "save", false, "Save core stack and BTS issue key");
+		options.addOption("f", "full", false, "Only show full stack");
 		options.addOption("h", "help", false, "Show Help");
 
 		CommandLineParser parser = null;
@@ -61,6 +62,13 @@ public class AnalyzerMain {
 		File coreFile = new File(args1[0]);
 		if (!coreFile.exists()) {
 			showHelp("Not exists for " + coreFile.getAbsolutePath(), options);
+			return;
+		}
+
+		if (cmd.getArgs().length == 1 && cmd.hasOption("f")) {
+			String[] result = fetchCoreFullStack(coreFile);
+			System.out.println("SUMMARY:" + result[0]);
+			System.out.println(result[1]);
 			return;
 		}
 
@@ -92,7 +100,7 @@ public class AnalyzerMain {
 
 	private static void showCore(File coreFile) throws Exception {
 		Analyzer analyzer = new Analyzer(coreFile.getAbsolutePath());
-		analyzer.analyze();
+		analyzer.analyze(false);
 
 		analyzer.showCoreInformation();
 		CoreBO bo = new CoreBO();
@@ -111,6 +119,12 @@ public class AnalyzerMain {
 				printCoreResult("REGRESSION ISSUE", "Please report it to BTS. " + getIssueKeyList(beanList, 0));
 			}
 		}
+	}
+
+	public static String[] fetchCoreFullStack(File coreFile) throws Exception {
+		Analyzer analyzer = new Analyzer(coreFile.getAbsolutePath());
+		analyzer.analyze(true);
+		return analyzer.getCoreFullStack();
 	}
 
 	private static String getIssueKeyList(ArrayList<IssueBean> list, int start) {
@@ -135,7 +149,7 @@ public class AnalyzerMain {
 
 	private static void saveCoreAndIssue(File coreFile, String issueKey) throws Exception {
 		Analyzer analyzer = new Analyzer(coreFile.getAbsolutePath());
-		analyzer.analyze();
+		analyzer.analyze(false);
 
 		CoreBO bo = new CoreBO();
 		IssueBean bean;

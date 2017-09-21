@@ -24,6 +24,7 @@
  */
 package com.navercorp.cubridqa.cqt.console;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -178,6 +179,13 @@ public class ConsoleAgent {
 					SiteRunTimesList.add(caseResult.getSiteRunTimes());
 
 				}
+				
+				Map<String, List<File>> coreFileCaseMap = test.getCoreCaseMap();
+				if (coreFileCaseMap != null && coreFileCaseMap.size() > 0) {
+					for (String key : coreFileCaseMap.keySet()) {
+						bo.saveCoreCallStackFile(key, coreFileCaseMap.get(key));
+					}
+				}
 
 			}
 		} catch (Exception e) {
@@ -292,7 +300,7 @@ public class ConsoleAgent {
 				testInfoMap.put("type", type);
 			}
 			int comefrom = "32".equalsIgnoreCase(version) ? COME_FROM_CQT_32 : COME_FROM_CQT_64;
-			runTest(files, type, typeAlias, true, comefrom, charset_xml);
+			runTest(files, type, typeAlias, false, comefrom, charset_xml);
 		}
 	}
 }

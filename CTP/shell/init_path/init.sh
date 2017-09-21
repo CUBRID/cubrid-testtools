@@ -47,6 +47,25 @@ then
    CUBRID_CHARSET=en_US
 fi
 
+#get the OS version
+function get_os(){
+osname=`uname`
+case "$osname" in
+	"Linux")
+		echo "Linux";;
+	"AIX")
+		echo "AIX";;
+	*)
+		echo "Windows_NT";;
+esac
+}
+
+export OS=`get_os`
+
+if [ "$OS" = "Windows_NT" ]; then
+	alias diff="diff -a -b"
+fi
+
 # get broker port from shell_config.xml
 function get_broker_port_from_shell_config
 {
@@ -54,6 +73,21 @@ function get_broker_port_from_shell_config
   port=${port#*>}
   port=${port%<*}
   echo $port
+}
+
+# This function is not recommended.
+# It is used to get another available port. 
+function generate_port {
+        generated_port=$1
+        while true; do
+                ((generated_port=${generated_port} + 1 ))
+                is_use=`netstat -ant | awk '{print $4}' | grep -e "\:${generated_port}$"`
+
+                if [ -z "$is_use" ]; then
+                        break
+                fi
+        done
+        echo ${generated_port}
 }
 
 function get_curr_second
@@ -170,6 +204,7 @@ function get_best_compat_file
    fileName=$1
    current_server=$2
    cci_driver=$3   
+   newfilename=""
    
    if [ "$OS" = "Windows_NT" ]
    then
@@ -208,8 +243,6 @@ function get_best_compat_file
         best_driver=""
      fi
    fi
-
-   newfilename=""
    
    if [ "$best_driver" == "" ]
    then    
@@ -277,14 +310,34 @@ function compare_result_between_files
 
   cci_driver=""
   server=""
+
+  if [ $# -lt 2 ]
+  then
+     write_nok "Please input two files to compare"
+     return
+  fi
+
   if [ -f $CUBRID/qa.conf ]
   then
      cci_driver=`grep 'CCI_Version' $CUBRID/qa.conf|awk -F= '{print $2}'`
      server=`grep 'Server_Version' $CUBRID/qa.conf|awk -F= '{print $2}'`
   fi
-  
+   
   left=`get_best_compat_file $1 $server $cci_driver`
   right=`get_best_compat_file $2 $server $cci_driver`
+
+  if [ "$left" == "" ]
+  then
+     write_nok "Cannot find the proper file for $1 to compare"
+     return
+  fi
+
+  if [ "$right" == "" ]
+  then
+     write_nok "Cannot find the proper file for $2 to compare"
+     return
+  fi
+
   dos2unix $left
   dos2unix $right
 
@@ -579,11 +632,6 @@ function init
   full_name=$0
   answer_no=1 
   mode=$1
-  OS=`uname`
-  if [ `echo $OS| grep CYGWIN_NT|wc -l` -eq 1 ]
-  then
-      OS="Windows_NT"
-  fi
   
   if [ "$OS" = "Windows_NT" ]; then
   	export init_path=`cygpath "${init_path}"`
@@ -689,7 +737,6 @@ function init
        touch $result_file
     fi
   fi
- 
   export OS
 }
 
@@ -1132,6 +1179,21 @@ function delete_make_locale
 }
 
 
+function backup_tz
+{
+        if [ ! -d $CUBRID/qa_tzbk ]
+        then
+          mkdir $CUBRID/qa_tzbk
+	  cp -rf $CUBRID/timezones/tzdata $CUBRID/qa_tzbk/
+	  cp -f $CUBRID/lib/libcubrid_timezones* $CUBRID/qa_tzbk/
+
+	  if [ -d $CUBRID/databases/demodb ]
+	  then
+	     cp -rf $CUBRID/databases/demodb $CUBRID/qa_tzbk/
+          fi
+        fi
+}
+
 # execute make_tz tool
 # usage: do_make_tz [debug|release] [new|update|extend database_name] [nocheck]
 function do_make_tz
@@ -1151,28 +1213,16 @@ function do_make_tz
                 fi
                 shift
                 ;;
-	     new|update)
-		if [ "$OS" == "Windows_NT" ]
-		then
-			parameter=`echo $parameter " /$1"`
-		else
-			parameter=`echo $parameter " -g $1"`
-		fi
-		shift
-		;;
-	     extend)
-		# dbname should be given after "extend" option
-		if [ "$OS" == "Windows_NT" ]
-                then
-                        parameter=`echo $parameter " /extend"`
-                else
-                        parameter=`echo $parameter " -g extend"`
-                fi
-                shift
-		parameter=`echo $parameter " -d $1"`
-                shift
-                ;;
-	     # do not check error
+        new|extend)
+        if [ "$OS" == "Windows_NT" ]
+        then
+            parameter=`echo $parameter " /$1"`
+        else
+            parameter=`echo $parameter " -g $1"`
+        fi
+        shift
+        ;;
+        # do not check error
              nocheck)
                 nocheck=1
                 shift
@@ -1185,6 +1235,11 @@ function do_make_tz
         done
         echo $parameter
 
+        if [ ! -d $CUBRID/qa_tzbk ]
+        then
+            echo "Warning: please backup timezone related data before make_tz"
+        fi
+
         if [ "$OS" == "Windows_NT" ]
         then
           #old_cubrid=`echo $CUBRID`
@@ -1192,7 +1247,14 @@ function do_make_tz
           #export CUBRID=${new_lang}
           #make_tz.bat $parameter > make_tz.log 2>&1
           #export CUBRID=${old_cubrid}
-          (export CUBRID=`cygpath -w $CUBRID`; make_tz.bat $parameter > make_tz.log 2>&1)
+          for i in {1..10}
+          do
+            (export CUBRID=`cygpath -w $CUBRID`; make_tz.bat $parameter > make_tz.log 2>&1)
+            cnt=`grep "0 file" make_tz.log | wc -l`
+            if [ $cnt -eq 0 ]; then
+               break
+            fi
+          done
         else
           if [ `is32bit` -eq 1 ]
           then
@@ -1208,12 +1270,14 @@ function do_make_tz
           return 0
         else
           succ_cnt=`grep "The timezone library has been created at" make_tz.log | wc -l`
-          fail_cnt=`grep "fail" make_tz.log | wc -l`
+          fail_cnt=`grep "fail\|0 file" make_tz.log | wc -l`
           if [ "$succ_cnt" -ge 1 -a "$fail_cnt" -eq 0 ]
           then
             write_ok
             return 0
           else
+            echo tail -n 60 make_tz.log
+            tail -n 60 make_tz.log
             write_nok "make_tz failed!!!"
             return 1
           fi
@@ -1221,18 +1285,21 @@ function do_make_tz
         fi
 }
 
+function revert_tz
+{
+	if [ -d $CUBRID/qa_tzbk ]
+	then
+		rm -rf $CUBRID/timezones/tzdata
+		cp -rf $CUBRID/qa_tzbk/tzdata $CUBRID/timezones/
+		rm -f $CUBRID/lib/libcubrid_timezones*
+		cp -f $CUBRID/qa_tzbk/libcubrid_timezones* $CUBRID/lib/
 
-#get the OS version
-function get_os(){
-osname=`uname`
-case "$osname" in
-	"Linux")
-		echo "Linux";;
-	"AIX")
-		echo "AIX";;
-	*)
-		echo "Windows_NT";;
-esac
+		if [ -d $CUBRID/qa_tzbk/demodb ]
+		then
+			rm -rf $CUBRID/databases/demodb
+			cp -rf $CUBRID/qa_tzbk/demodb $CUBRID/databases/
+		fi
+	fi
 }
 
 function get_bit_ver(){
@@ -1248,7 +1315,6 @@ echo $BIT_VERSION
 
 #replace gcc to cross platforms
 function xgcc(){
-OS=`get_os`
 BIT_VERSION=`get_bit_ver`
 
 #recive parameters and delete options

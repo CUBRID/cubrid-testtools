@@ -103,11 +103,11 @@ public class CheckRequirement {
 
 	private void checkDiskSpace() {
 		this.log.println("==> Check disk space ");
-		this.log.println("If insufficient available disk space (<2G), you will receive a mail in '" + context.getMailNoticeTo() + "'. And checking will hang till you resovle it.");
+		this.log.println("If insufficient available disk space (<" + context.getReserveDiskSpaceSize() + "), you will receive a mail in '" + context.getMailNoticeTo() + "'. And checking will hang till you resovle it.");
 
 		GeneralScriptInput scripts = new GeneralScriptInput();
 		scripts.addCommand("source ${CTP_HOME}/common/script/util_common.sh");
-		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G \"" + context.getMailNoticeTo() + "\"" + " \"" + context.getMailNoticeCC() + "\"");
+		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` " + context.getReserveDiskSpaceSize() + " \"" + context.getMailNoticeTo() + "\"" + " \"" + context.getMailNoticeCC() + "\"");
 		String result;
 		try {
 			result = ssh.execute(scripts);

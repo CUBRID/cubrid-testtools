@@ -329,9 +329,9 @@ function config_qa_tool()
      else
      	build_ver_type=""
      	qa_db_xml_path=${CTP_HOME}/sql/configuration/Function_Db/${db_name}_qa.xml
-     	avaliable_broker_port=`awk '/SERVICE[[:space:]]*=[[:space:]]*ON/, /BROKER_PORT/' $CUBRID/conf/cubrid_broker.conf|grep BROKER_PORT|grep -v '#'|awk -F '=' '{print $2}'|head -1| tr -d ' '`
+     	avaliable_broker_port=`awk '/SERVICE[[:space:]]*=[[:space:]]*ON/, /BROKER_PORT/' $CUBRID/conf/cubrid_broker.conf|grep BROKER_PORT|grep -v '#'|awk -F '=' '{print $2}'|head -1| tr -d ' ' | tr -d '\r'`
      	db_url="<dburl>jdbc:cubrid:localhost:${avaliable_broker_port}:${db_name}:::</dburl>"
-     	sed -i "s#<dburl>.*</dburl>#$db_url#g" $qa_db_xml_path
+	sed -i "s#<dburl>.*</dburl>#$db_url#g" $qa_db_xml_path
      	if [ "$cubrid_bits" == "32" ];then
         	  build_ver_type="32bits"
      	else
@@ -747,7 +747,7 @@ function do_test()
 	  cd $curDir
 	  
      else   
-     	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $jdbc_config_file_ext $javaArgs 2>&1 >> $log_filename 
+     	  "$JAVA_HOME/bin/java" -Xms1024m -XX:+UseParallelGC -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.ConsoleAgent runCQT ${scenario_category} ${scenario_alias} ${cubrid_bits} $jdbc_config_file_ext $javaArgs 2>&1 |tee -a $log_filename 
           cd $curDir
      fi
     )
@@ -795,8 +795,9 @@ function do_summary_and_clean()
      [ "$sql_interactive" == "yes" ] && return
 
      coreCount=0
-     resultDirTemp=`cat ${log_filename}|grep "^Result Root Dir"|head -n 1`
+     resultDirTemp=`cat ${log_filename}|grep "^Result Root Dir"|head -n 1 | tr -d '\r'`
      resultDir=${resultDirTemp#*:}
+     resultDir=`echo $resultDir|tr -d '[[:space:]]'`
      if [ "$interface_type" == "cci" ];then
 	 generate_summary_info $resultDir	          		
      else

@@ -134,5 +134,7 @@ public class Constants {
 	public static final int BUILD_TYPE_SERVER_SH_AIX_64 = 6;
 	public static final int BUILD_TYPE_JDBC_JAR = 7;
 	public static final int BUILD_TYPE_SERVER_SH_LINUX_X86_64_AND_JDBC = 8;
+	
+	public static final int MAX_STORE_ID_FOR_DAILY_BUILD = 50; 
 
 }

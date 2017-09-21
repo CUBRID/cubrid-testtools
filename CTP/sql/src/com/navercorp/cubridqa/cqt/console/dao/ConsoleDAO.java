@@ -295,7 +295,7 @@ public class ConsoleDAO extends Executor {
 	}
 
 	public void execute(Connection conn, Sql sql, boolean isPrintQueryPlan) {
-		System.out.println("sql.getType: " + sql.getType());
+		this.onMessage("sql.getType: " + sql.getType());
 		if (sql.getType() == Sql.TYPE_CALL) {
 			executeCall(conn, sql);
 		} else if (sql.getType() == Sql.TYPE_PRE_STMT) {
@@ -520,7 +520,7 @@ public class ConsoleDAO extends Executor {
 				sb = null;
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			this.onMessage(e.getMessage());
 			sql.setResult(getExceptionMessage(e, test.isEditorExecute()));
 		} finally {
 			try {
@@ -625,11 +625,10 @@ public class ConsoleDAO extends Executor {
 				queryPlan = null;
 			}
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-			e.printStackTrace();
+			this.onMessage(e.getMessage());
 			sql.setResult(getExceptionMessage(e, test.isEditorExecute()));
 		} catch (Exception e2) {
-			e2.printStackTrace();
+			this.onMessage(e2.getMessage());
 			sql.setResult("Error:-" + 10000 + System.getProperty("line.separator"));
 		} finally {
 			try {
@@ -656,7 +655,7 @@ public class ConsoleDAO extends Executor {
 		Statement st = null;
 		try {
 			st = conn.createStatement();
-			System.out.println("sql.getScript: " + sql.getScript());
+			//System.out.println("sql.getScript: " + sql.getScript());
 			boolean isRs = st.execute(sql.getScript());
 			getAllResult(st, isRs, sql);
 			String script = sql.getScript().trim().toUpperCase();
@@ -672,22 +671,22 @@ public class ConsoleDAO extends Executor {
 		} catch (SQLException e) {
 			sql.setResult(getExceptionMessage(e, test.isEditorExecute()));
 			// e.printStackTrace();
-			System.out.println(e.getMessage());
+			this.onMessage(e.getMessage());
 		} catch (SecurityException e) {
 			// e.printStackTrace();
-			System.out.println(e.getMessage());
+			this.onMessage(e.getMessage());
 		} catch (NoSuchMethodException e) {
 			// e.printStackTrace();
-			System.out.println(e.getMessage());
+			this.onMessage(e.getMessage());
 		} catch (IllegalArgumentException e) {
 			// e.printStackTrace();
-			System.out.println(e.getMessage());
+			this.onMessage(e.getMessage());
 		} catch (IllegalAccessException e) {
 			// e.printStackTrace();
-			System.out.println(e.getMessage());
+			this.onMessage(e.getMessage());
 		} catch (InvocationTargetException e) {
 			// e.printStackTrace();
-			System.out.println(e.getMessage());
+			this.onMessage(e.getMessage());
 		} finally {
 			try {
 				if (st != null) {
@@ -789,11 +788,11 @@ public class ConsoleDAO extends Executor {
 				}
 				ret.append(System.getProperty("line.separator"));
 			}
-			System.out.println("+++++++++++++++++++record begin++++++++++++++++++++");
-			System.out.println(ret);
-			System.out.println("+++++++++++++++++++record end++++++++++++++++++++");
+			this.onMessage("+++++++++++++++++++record begin++++++++++++++++++++");
+			this.onMessage(ret.toString());
+			this.onMessage("+++++++++++++++++++record end++++++++++++++++++++");
 		} catch (Exception e) {
-			e.printStackTrace();
+			this.onMessage(e.getMessage());
 		} finally {
 			try {
 				if (rs != null) {

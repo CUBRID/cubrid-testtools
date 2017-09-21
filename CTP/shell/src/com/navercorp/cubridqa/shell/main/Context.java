@@ -82,6 +82,8 @@ public class Context {
 	String defaultDbCharset;
 
 	boolean enableCheckDiskSpace = false;
+	
+	String reserveDiskSpaceSize;
 
 	String mailNoticeTo;
 
@@ -163,6 +165,7 @@ public class Context {
 		this.ctpBranchName = getPropertyFromEnv(ConfigParameterConstants.CTP_BRANCH_NAME, "master");
 		this.skipToSaveSuccCase = com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.FEEDBACK_DB_SKIP_SAVE_SUCC_TESTCASE_YES_OR_NO, "false").trim());
 		this.testCategory = getProperty(ConfigParameterConstants.TEST_CATEGORY, getResultName()).trim();
+		this.reserveDiskSpaceSize = getProperty(ConfigParameterConstants.RESERVE_DISK_SPACE_SIZE, ConfigParameterConstants.RESERVE_DISK_SPACE_SIZE_DEFAULT_VALUE).trim();
 	}
 
 	public void setLogDir(String category) {
@@ -512,6 +515,10 @@ public class Context {
 
 	public boolean enableCheckDiskSpace() {
 		return enableCheckDiskSpace;
+	}
+	
+	public String getReserveDiskSpaceSize() {
+		return this.reserveDiskSpaceSize;
 	}
 
 	public boolean isSkipToSaveSuccCase() {

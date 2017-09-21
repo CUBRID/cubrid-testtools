@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.isolation.deploy.Deploy;
 import com.navercorp.cubridqa.isolation.deploy.TestCaseGithub;
 import com.navercorp.cubridqa.isolation.dispatch.Dispatch;
@@ -63,6 +64,7 @@ public class TestFactory {
 		ArrayList<String> stableEnvList = (ArrayList<String>) context.getEnvList().clone();
 
 		if (context.isContinueMode()) {
+			createSnapshotForConfiguration();
 			feedback.onTaskContinueEvent();
 			System.out.println("============= FETCH TEST CASES ==================");
 			Dispatch.init(context);
@@ -78,7 +80,8 @@ public class TestFactory {
 			System.out.println("DONE");
 
 		} else {
-			com.navercorp.cubridqa.common.CommonUtils.cleanFilesByDirectory(context.getCurrentLogDir());
+			CommonUtils.cleanFilesByDirectory(context.getCurrentLogDir());
+			createSnapshotForConfiguration();
 			checkRequirement(context);
 			feedback.onTaskStartEvent(context.getCubridPackageUrl());
 			System.out.println("============= UPDATE TEST CASES ==================");
@@ -353,5 +356,17 @@ public class TestFactory {
 			}
 		}
 		return true;
+	}
+	
+	private void createSnapshotForConfiguration() {
+		Log contextSnapshot = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "main_snapshot.properties"), true, false);
+		Properties props = context.getProperties();
+		Set set = props.keySet();
+		for (Object key : set) {
+			contextSnapshot.println(key + "=" + props.getProperty((String) key));
+		}
+		contextSnapshot.println("AUTO_BUILD_ID=" + context.getBuildId());
+		contextSnapshot.println("AUTO_BUILD_BITS=" + context.getBuildBits());
+		contextSnapshot.close();
 	}
 }

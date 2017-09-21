@@ -58,11 +58,11 @@ function run_sql {
         ctp_type="medium"
         git_repo_name=cubrid-testcases
         ctp_scenario=medium
-    elif [ "$BUILD_SCENARIOS" == "sql" -o "$BUILD_SCENARIOS" == "sql_debug" ]; then
+    elif [ "$BUILD_SCENARIOS" == "sql" -o "$BUILD_SCENARIOS" == "sql_debug" -o "${BUILD_SCENARIOS:0:5}" == "sql-s" ]; then
         ctp_type="sql"
         git_repo_name=cubrid-testcases
         ctp_scenario=sql
-    elif [ "$BUILD_SCENARIOS" == "sql_ext" -o "$BUILD_SCENARIOS" == "sql_ext_debug" ]; then
+    elif [ "$BUILD_SCENARIOS" == "sql_ext" -o "$BUILD_SCENARIOS" == "sql_ext_debug" -o "${BUILD_SCENARIOS:0:9}" == "sql_ext-s" ]; then
         ctp_type="sql"
         git_repo_name=cubrid-testcases-private
         ctp_scenario=sql
@@ -71,8 +71,12 @@ function run_sql {
         echo "Please check and re-send message."
         exit
     fi
-
+    
     run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT}
+
+    if [ "$MKEY_SPARSECHECKOUT" != "" ]; then
+        (set +H; run_sparsefs "${CTP_HOME}/../${git_repo_name}" "${MKEY_SPARSECHECKOUT}")
+    fi
 
     ini.sh -s sql ${ctp_test_conf} scenario '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario
     ini.sh -s sql ${ctp_test_conf} data_file '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario/files
@@ -85,6 +89,10 @@ function run_sql {
     ini.sh -s "sql/cubrid.conf" ${ctp_test_conf} test_mode yes
     ini.sh -s "sql/cubrid_ha.conf" ${ctp_test_conf} | util_filter_supported_parameters.sh > $tmptxt
     ini.sh -s "sql/cubrid_ha.conf" ${ctp_test_conf} --update-from-file=$tmptxt --clear-first
+
+    #export CORE_BACKUP_DIR for core backup dir
+    export CORE_BACKUP_DIR="${USER}@`hostname -i`${core_backup_root}" 
+
 
     # STEP 4: execute test
     export _JAVA_OPTIONS=-Dfile.encoding=utf8
@@ -104,10 +112,9 @@ function run_sql {
             timestamp=`echo $testResultName|awk -F '_' '{print $5}'`
             mon=`date +'%m'`
             year=`date +'%Y'`
-            core_dirname=${BUILD_SCENARIOS}_${year}${mon}${timestamp:0:8}
+            core_dirname="${BUILD_SCENARIOS}_${year}${mon}${timestamp}"
             core_path=${core_backup_root}/${testResultName}/${core_dirname}
             mkdir -p ${core_path}
-            
             cat $tmplog |grep '^CORE_FILE:'|awk -F ':' '{print $NF}'|tr -d " " | xargs -i analyzer.sh {} > ${core_path}/${core_dirname}_corestacks.txt
             (cd ${core_path}/..; upload_to_dailysrv ${core_dirname} "./qaresult_en/web/test_error/function/${core_dirname}")
 

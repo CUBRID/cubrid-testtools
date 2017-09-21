@@ -37,6 +37,7 @@ public class Compare {
 	String sqlFilename;
 	String answerFilename;
 	String resultFilename;
+	String errorContent;
 
 	TestReader tr0;
 	ResultReader rr1;
@@ -44,6 +45,7 @@ public class Compare {
 
 	StringBuffer result;
 	int anchorIndex = 1;
+	
 
 	public Compare(String filename0, String filename1, String filename2) throws Exception {
 
@@ -118,6 +120,17 @@ public class Compare {
 		}
 
 		out("</table>");
+		if (this.errorContent != null && this.errorContent.length() > 0) {
+			out("<br>");
+			out("<table width='80%' border=0><tr><td>");
+			out("<hr width=100% align=left>");
+			out("<a id=FID_N_" + (anchorIndex++) + " href='#FID_N_" + anchorIndex + "'></a>");
+			out("<pre>");
+			out(this.errorContent.trim());
+			out("</pre>");
+			out("</table>");
+			out("<i>END</i>");
+		}
 		out("</body>");
 		out("</html>");
 	}
@@ -248,5 +261,9 @@ public class Compare {
 	public LinkedList<Diff> lineCompare(String s1, String s2) {
 		diff_match_patch dmp = new diff_match_patch();
 		return dmp.diff_main(s1, s2);
+	}
+
+	public void setErrorContent(String errorContent) {
+		this.errorContent = errorContent;
 	}
 }

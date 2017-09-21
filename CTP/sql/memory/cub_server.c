@@ -33,11 +33,11 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define MEM_PATH 13 //the length of "/result/memory"
+#define MEM_PATH 14 //the length of "/result/memory"
 char *current_date (char *strd);
 char *cubrid_version (char *strv);
 char *ctp_home = NULL;
-char memory_main_info[128] = { 0x00 };
+//char memory_main_info[128] = { 0x00 };
 
 int
 main (int argc, char *argv[])
@@ -64,20 +64,20 @@ main (int argc, char *argv[])
   memset (valgrind_out_dir, 0, LEN);
   sprintf (valgrind_out_dir, "%s%s", ctp_home, "/result/memory");
   
-  strcpy(memory_main_info, valgrind_out_dir);
+  //strcpy(memory_main_info, valgrind_out_dir);
 
   struct stat stat_buf;
 
   const char *option1 = "--trace-children=yes";
   const char *option2 = "--leak-check=full";
   const char *option3 = "--error-limit=no";
-  const char *option4 = "--xml=yes";
+  const char *option4 = "--date-time=yes";
+  //const char *option4 = "--expensive-definedness-checks=yes";
   const char *option5 = "--track-origins=yes";
   const char *option6 = "--num-callers=30"; 
-  const char *option7 = "--error-limit=no";
   char log_file[128] = { 0x00 };
   char t[128] = { 0x00 };
-  strcpy (t, "--xml-file=");
+  strcpy (t, "--log-file=");
 
   if (access (valgrind_out_dir, F_OK) < 0)
     {
@@ -88,14 +88,14 @@ main (int argc, char *argv[])
 	}
     }
 
-  sprintf (filename, "%s/memory_server.xml", valgrind_out_dir);
-  sprintf (log_file, "%s%s", t, filename);
+  sprintf (filename, "%s/memory_server", valgrind_out_dir);
+  sprintf (log_file, "%s%s%s", t, filename, "_%p.log");
   p = getenv ("CUBRID");
   if (p == NULL)
     return -1;
 
   sprintf (server_exe_path, "%s/bin/server.exe", p);
-  execl (valgrind_path, valgrind_path, log_file, default_sup, option4, option2, option6, option7, server_exe_path, argv[1], NULL);
+  execl (valgrind_path, valgrind_path, log_file, default_sup, option2, option3, option4, option5, option6, server_exe_path, argv[1], NULL);
 
   if (valgrind_out_dir != NULL)
     free (valgrind_out_dir);

@@ -218,7 +218,7 @@ public class CubridConnManager {
 
 				String dbConfFile = dbPath + "/" + connGroup + ".xml";
 
-				System.out.println(" ===== dbConfFile " + dbConfFile);
+				//System.out.println(" ===== dbConfFile " + dbConfFile);
 				DefTestDB dbConf = (DefTestDB) XstreamHelper.fromXml(dbConfFile);
 				if ("dbcp".equalsIgnoreCase(dbConf.getConnectionType())) {
 					String url = dbConf.getDburl();
@@ -235,7 +235,7 @@ public class CubridConnManager {
 						dataSource.setUrl(url + "?charset=" + dbConf.getCharSet());
 					}
 
-					System.out.println(" ===== dbConf.getCharSet() " + dbConf.getCharSet());
+					//System.out.println(" ===== dbConf.getCharSet() " + dbConf.getCharSet());
 
 					dataSource.setDefaultAutoCommit(false);
 					DataBaseDefine.put(connGroup, dataSource);

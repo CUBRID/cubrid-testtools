@@ -85,7 +85,12 @@ public class ManualSender {
 		String BUILD_SVN_BRANCH = CommonUtils.getSVNBranch(conf.getProperty("svn.trunk.version"), BUILD_ID);
 		String BUILD_SVN_BRANCH_NEW = CommonUtils.getSVNBranchIgnorePatch(conf.getProperty("svn.trunk.version"), BUILD_ID);
 		String BUILD_URLS = url;
-		String BUILD_URLS_KR = conf.getWebBaseUrl_Kr() + "/" + BUILD_ID + "/drop/" + fileName;
+		String BUILD_URLS_KR = null;
+		if (CommonUtils.isEmpty(conf.getWebBaseUrl_Kr())) {
+			BUILD_URLS_KR = BUILD_URLS;
+		} else {
+			BUILD_URLS_KR = conf.getWebBaseUrl_Kr() + "/" + BUILD_ID + "/drop/" + fileName;
+		}
 		String BUILD_URLS_KR_REPO1 = conf.getWebBaseUrl_KrRepo1() == null ? null : conf.getWebBaseUrl_KrRepo1() + "/" + BUILD_ID + "/drop/" + fileName;
 
 		String BUILD_URLS_CNT = String.valueOf(allUrls.length);
@@ -156,8 +161,12 @@ public class ManualSender {
 					return;
 				}
 				message.setProperty(Constants.MSG_BUILD_URLS + "_" + i, allUrls[i]);
-				message.setProperty(Constants.MSG_BUILD_URLS_KR + "_" + i, conf.getWebBaseUrl_Kr() + "/" + BUILD_ID + "/drop/" + fn);
-				if (conf.getWebBaseUrl_KrRepo1() != null) {
+				if (CommonUtils.isEmpty(conf.getWebBaseUrl_Kr())) {
+					message.setProperty(Constants.MSG_BUILD_URLS_KR + "_" + i, allUrls[i]);
+				} else {
+					message.setProperty(Constants.MSG_BUILD_URLS_KR + "_" + i, conf.getWebBaseUrl_Kr() + "/" + BUILD_ID + "/drop/" + fn);
+				}
+				if (CommonUtils.isEmpty(conf.getWebBaseUrl_KrRepo1()) == false) {
 					message.setProperty(Constants.MSG_BUILD_URLS_KR_REPO1 + "_" + i, conf.getWebBaseUrl_KrRepo1() + "/" + BUILD_ID + "/drop/" + fn);
 				}
 			}

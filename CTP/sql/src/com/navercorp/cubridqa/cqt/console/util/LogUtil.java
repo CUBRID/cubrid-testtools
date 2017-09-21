@@ -47,7 +47,7 @@ public class LogUtil {
 		} catch (Exception e) {
 		}
 
-		message = date + ": " + message + System.getProperty("line.separator");
+		message = "[" + date + "]: " + message + System.getProperty("line.separator");
 		FileUtil.writeToFile(logId + ".log", message, true);
 	}
 

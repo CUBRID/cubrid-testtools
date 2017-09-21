@@ -76,7 +76,7 @@ public class CUBJob implements Job {
 		}
 	}
 
-	private void processBuild(CUBJobContext jctx, File buildRootFile, Properties lastProps) {
+	public void processBuild(CUBJobContext jctx, File buildRootFile, Properties lastProps) {
 
 		String buildId = buildRootFile.getName();
 		String simpliedBuildId = CommonUtils.toSimplifiedBuildId(buildId);
@@ -110,7 +110,7 @@ public class CUBJob implements Job {
 
 		if (msgSended) {
 			String url = jctx.getMainConfigure().getProperty("url.notice_new_build");
-			if (url != null) {
+			if (url != null && url.trim().equals("") == false) {
 				try {
 					url = CommonUtils.replace(url, "{buildId}", buildId);
 					HttpUtil.getHtmlSource(url);
@@ -132,12 +132,15 @@ public class CUBJob implements Job {
 		filename = CommonUtils.concatFile(filename, listenFilename);
 
 		File exactFile = new File(filename);
-		FileReady fready = new FileReady(exactFile, true);
-		try {
-			fready.waitFile();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+		
+		if (jctx.getMainConfigure().isWaitFileReady()) {
+			FileReady fready = new FileReady(exactFile, true);
+			try {
+				fready.waitFile();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
 		}
 		if (exactFile.exists() == false) {
 			return null;
@@ -228,7 +231,7 @@ public class CUBJob implements Job {
 		log.close();
 	}
 
-	public Collection<File> getAllMaxBuild(CUBJobContext jctx) {
+	public Collection<File> getAllMaxBuild(final CUBJobContext jctx) {
 		ArrayList<File> freshList = new ArrayList<File>();
 
 		String root = jctx.getMainConfigure().getRepoRoot();
@@ -237,7 +240,7 @@ public class CUBJob implements Job {
 		File[] storeList = rootFile.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.startsWith("store_");
+				return  CommonUtils.isValidStore(name, jctx.getMainConfigure().isExtendStore());
 			}
 		});
 

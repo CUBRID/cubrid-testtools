@@ -102,10 +102,9 @@ function run_sql {
         (cd $testResultPath/..; upload_to_dailysrv "./$testResultName" "./qa_repository/function_cci_for_sql/y`date +%Y`/m`date +%-m`/$testResultName")
 
         if [ `cat $tmplog |grep '^CORE_FILE:' | wc -l` -gt 0 ]; then
-            timestamp=`echo $testResultName|awk -F '_' '{print $5}'`
-            mon=`date +'%m'`
-            year=`date +'%Y'`
-            core_dirname=${BUILD_SCENARIOS}_${year}${mon}${timestamp:0:8}
+            datestr=`cat $testResultPath/summary_info |grep execute_date|awk -F '=' '{print $(NF)}'`
+            timestamp=`date -d "$datestr" +%Y%m%d%H%M%S`
+            core_dirname=${BUILD_SCENARIOS}_${timestamp}
             core_path=${core_backup_root}/${testResultName}/${core_dirname}
             mkdir -p ${core_path}
             
@@ -134,7 +133,7 @@ function run_sql_legacy {
     
     #STEP 1: CLEAN
     runAction sql_by_cci.act
-    (cd $HOME/ccqt; sh upgrade.sh)
+    (cd $HOME/ccqt/scripts; sh ./upgrade.sh)
     (cd $HOME/dailyqa/$BUILD_SVN_BRANCH/scenario/$BUILD_SCENARIOS
      svn up
      cd $HOME/dailyqa/$BUILD_SVN_BRANCH

@@ -290,6 +290,7 @@ public class Test {
 		}
 
 		script.addCommand("echo > " + testCaseResultName);
+		addSshInfoScript(script);
 		script.addCommand("sh " + testCaseName + " 2>&1");
 		result = ssh.execute(script);
 
@@ -393,7 +394,8 @@ public class Test {
 		scripts.addCommand("rm -rf CUBRID/lib/libcubrid_all_locales.dll");
 		scripts.addCommand("ls CUBRID/conf/*");
 		scripts.addCommand("find CUBRID/log -type f -print | xargs -i rm -rf {} ");
-
+		scripts.addCommand("rm -rf CUBRID/var/*");
+		
 		String result = "";
 		try {
 			result = ssh.execute(scripts);
@@ -413,6 +415,7 @@ public class Test {
 		scripts.addCommand("cp -rf ~/.CUBRID_SHELL_FM/databases/* ${CUBRID}/databases/");
 		scripts.addCommand("rm -rf ${CUBRID}/lib/libcubrid_??_??.so");
 		scripts.addCommand("rm -rf ${CUBRID}/lib/libcubrid_all_locales.so");
+		scripts.addCommand("rm -rf ${CUBRID}/var/* >/dev/null 2>&1");
 		scripts.addCommand("find ${CUBRID}/log -type f -print | xargs -i rm -rf {} ");
 		scripts.addCommand("find ${CUBRID}/ -name \"core.[0-9][0-9]*\" | xargs -i rm -rf {} ");
 		scripts.addCommand("find ${CUBRID}/ -name \"core\" | xargs -i rm -rf {} ");
@@ -541,7 +544,7 @@ public class Test {
 		}
 	}
 
-	private void doFinalCheck() {
+	private synchronized void doFinalCheck() {
 		String result = null;
 
 		ShellScriptInput scripts = new ShellScriptInput("source /dev/stdin <<EOF");
@@ -551,8 +554,8 @@ public class Test {
 		String excludedCoresByAssertLine = context.getProperty(ConfigParameterConstants.IGNORE_CORE_BY_KEYWORDS);
 		if (excludedCoresByAssertLine != null && excludedCoresByAssertLine.trim().equals("") == false) {
 			scripts.addCommand("export EXCLUDED_CORES_BY_ASSERT_LINE=\"" + excludedCoresByAssertLine + "\"");
-		}
-
+		}		
+		addSshInfoScript(scripts);
 		scripts.addCommand("source $init_path/shell_utils.sh && do_check_more_errors \"" + this.testCaseDir + "\"");
 		if (context.isWindows == false) {
 			try {
@@ -627,11 +630,13 @@ public class Test {
 
 		ShellScriptInput scripts = new ShellScriptInput();
 		scripts.addCommand("source ${init_path}/../../common/script/util_common.sh");
-		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` 2G " + context.getMailNoticeTo());
+		scripts.addCommand("check_disk_space `df -P $HOME | grep -v Filesystem | awk '{print $1}'` " + context.getReserveDiskSpaceSize() + " \"" + context.getMailNoticeTo() + "\" \"" + context.getMailNoticeCC() + "\"");
 		String result;
+		long startSecs = System.currentTimeMillis() / 1000;
 		try {
 			result = ssh1.execute(scripts);
-			workerLog.println("[INFO] Check disk space PASS on " + ssh1.toString());
+			long endSecs = System.currentTimeMillis() / 1000;
+			workerLog.println("[INFO] Check disk space PASS on " + ssh1.toString() + "(elapse: " + (endSecs - startSecs) + " seconds)");
 		} catch (Exception e) {
 			workerLog.println("[FAIL] Check disk space FAIL on " + ssh1.toString());
 			workerLog.println(e.getMessage());
@@ -647,6 +652,7 @@ public class Test {
 	public String doSaveNormalErrorLog() throws JSchException {
 		String ret = "";
 		ShellScriptInput scripts = new ShellScriptInput();
+		addSshInfoScript(scripts);
 		scripts.addCommand("source $init_path/shell_utils.sh && do_save_normal_error_logs \"" + this.testCaseDir + "\"");
 		StringBuffer sb = new StringBuffer();
 		String result = "";
@@ -680,6 +686,13 @@ public class Test {
 		}
 		ret = sb.toString();
 		return ret;
+	}
+	
+	private void addSshInfoScript(ShellScriptInput script) {
+		script.addCommand("export TEST_SSH_HOST=" + (CommonUtils.isEmpty(ssh.getHost()) ? "`hostname -i`" : ssh.getHost()));
+		script.addCommand("export TEST_SSH_PORT=" + (ssh.getPort() <= 0 ? context.getProperty("default." + ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX) : ssh.getPort()));
+		script.addCommand("export TEST_SSH_USER=" + (CommonUtils.isEmpty(ssh.getUser()) ? "`echo $USER`" : ssh.getUser()));
+		script.addCommand("export TEST_BUIILD_ID=" + context.getTestBuild());
 	}
 
 }

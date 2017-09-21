@@ -43,7 +43,7 @@ public abstract class Executor {
 	public static final int PRINT_UI = 1;
 
 	public static final int PRINT_LOG = 2;
-
+	
 	protected long startTime;
 
 	protected long endTime;
@@ -108,16 +108,30 @@ public abstract class Executor {
 	public void onMessage(String message) {
 		switch (printType) {
 		case PRINT_STDOUT:
-			System.out.println(message);
+			//System.out.println(message);
 			break;
 		case PRINT_UI:
-			ConsoleAgent.addMessage(message + System.getProperty("line.separator"));
+			//ConsoleAgent.addMessage(message + System.getProperty("line.separator"));
 			break;
 		case PRINT_LOG:
-			LogUtil.log(logId, message);
+			//LogUtil.log(logId, message);
 		}
 	}
-
+	
+	public void printMessage(String message, boolean header, boolean newLine){
+		if(message == null) return;
+		
+		if(header){
+			System.out.print("[" + SystemUtil.getCurrentTime() + "] " + message);
+		}else{
+			System.out.print(message);
+		}
+		
+		if(newLine){
+			System.out.println();
+		}
+	}
+	
 	public String[] getEnvs() {
 		Object[] envs = envList.toArray();
 		String[] ret = new String[envs.length];

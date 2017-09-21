@@ -42,7 +42,7 @@ public class CheckAllStack {
 			System.out.println("**********************************************************************");
 
 			try {
-				current = Analyzer.extractCoreStackDigest(bean.getDetailStack());
+				current = Analyzer.extractCoreStackDigest(bean.getDetailStack())[1];
 				expected = bean.getDigestStack();
 
 				if (current.equals(expected)) {

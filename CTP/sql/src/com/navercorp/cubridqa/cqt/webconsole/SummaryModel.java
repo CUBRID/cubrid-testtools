@@ -79,6 +79,14 @@ public class SummaryModel {
 					summaryData.put(key, value);
 				}
 			}
+			
+			String summayFn = dir.getAbsolutePath() + File.separatorChar + "summary_info";
+			String line = Util.readFileOneLine(summayFn, "test_error=");
+			if (line != null && line.indexOf("=Y") != -1) {
+				summaryData.put("test_error", "Y");
+			} else {
+				summaryData.put("test_error", "N");
+			}
 		} else {
 			this.dir = dir.getCanonicalPath();
 			File f = new File(this.dir);
@@ -212,6 +220,7 @@ public class SummaryModel {
 
 		for (String line : summaryList) {
 			firstColon = line.lastIndexOf(":");
+			if(firstColon == -1) continue;
 			key = line.substring(0, firstColon).trim();
 			if (key.equals("msg_id")) {
 				continue;
