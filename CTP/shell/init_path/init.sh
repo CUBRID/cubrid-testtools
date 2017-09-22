@@ -1513,4 +1513,23 @@ function AIX_NOT_SUPPORTED {
     return
 }
 
+#Usage: compare_perf_time <base_time> <check_time> <tolerance> <nok_desc>
+function compare_perf_time {
+        local base_time=$1
+        local check_time=$2
+        local tolerance=$3
+        local nok_desc=$4
+
+        local expect_maxtime=`awk "BEGIN{print (${base_time}*(1+${tolerance}))}"`
+        local pass=`awk "BEGIN{if (${check_time} <= ${expect_maxtime}) print 1; else print 0}"`
+
+        if [ ${pass} -eq 1 ]; then
+            write_ok
+            return 0
+    else
+        write_nok $nok_desc
+        return 1
+    fi
+}
+
 source $init_path/shell_utils.sh
