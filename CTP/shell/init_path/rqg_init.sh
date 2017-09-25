@@ -56,6 +56,12 @@ function run_gendata()
    fi
 }
 
+function run_gendata_without_check()
+{
+   param_options=$*
+   perl $RQG_HOME/gendata.pl $param_options
+}
+
 function run_gengrammar()
 {
    param_options=$*
@@ -66,6 +72,13 @@ function run_gengrammar()
 	
 }
 
+function run_gengrammar_without_check()
+{
+   param_options=$*
+   perl $RQG_HOME/gengrammar.pl $param_options
+}
+
+
 function run_gensql()
 {
    param_options=$*
@@ -73,6 +86,12 @@ function run_gensql()
    if [ $? -ne 0 ];then
         write_nok "generate sql fail, please check your parameter $param_options"
    fi
+}
+
+function run_gensql_without_check()
+{
+   param_options=$*
+   perl $RQG_HOME/gensql.pl $param_options
 
 }
 
@@ -93,6 +112,11 @@ function run_gentest()
 
 }
 
+function run_gentest_without_check()
+{
+   param_options=$*
+   perl $RQG_HOME/gentest.pl $param_options
+}
 
 function run_genall()
 {
@@ -104,6 +128,11 @@ function run_genall()
 
 }
 
+function run_genall_without_check()
+{
+   param_options=$*
+   perl $RQG_HOME/runall.pl $param_options
+}
 
 function rqg_do_backup_db()
 {
