@@ -28,7 +28,11 @@ function get_dsn_url_with_autocommit_on()
 {
     db_name=$1
     port=$2
-    echo "dbi:cubrid:database=${db_name};host=localhost;port=${port};autocommit=on"
+    host_name=$3
+    if [ -z "$host_name" ];then
+	host_name="localhost"
+    fi
+    echo "dbi:cubrid:database=${db_name};host=${host_name};port=${port};autocommit=on"
 }
 
 
@@ -36,13 +40,17 @@ function get_dsn_url_with_autocommit_off()
 {
    db_name=$1
    port=$2
-   echo "dbi:cubrid:database=${db_name};host=localhost;port=${port};autocommit=off"
+   host_name=$3
+   if [ -z "$host_name" ];then
+       host_name="localhost"
+   fi
+   echo "dbi:cubrid:database=${db_name};host=${host_name};port=${port};autocommit=off"
 }
 
 function get_all_table_names()
 {
    db_name=$1
-   csql -u dba $from -c "select class_name from db_class where is_system_class='NO' and class_name not in(select partition_class_name from db_partition) and owner_name='PUBLIC';" >temp.log
+   csql -u dba $from -c "select class_name from db_class where is_system_class='NO' and class_name not in(select partition_class_name from db_partition) and owner_name='PUBLIC';" $db_name >temp.log
    tables=`grep "^ *'" temp.log |sed "s/'//g"|sed "s/ //g"`   
    echo "$tables"
 }
