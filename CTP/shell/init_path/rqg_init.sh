@@ -26,31 +26,31 @@
 
 function get_dsn_url_with_autocommit_on()
 {
-    db_name_local=$1
+    local db_name=$1
     port=$2
     host_name=$3
     if [ -z "$host_name" ];then
 	host_name="localhost"
     fi
-    echo "dbi:cubrid:database=${db_name_local};host=${host_name};port=${port};autocommit=on"
+    echo "dbi:cubrid:database=${db_name};host=${host_name};port=${port};autocommit=on"
 }
 
 
 function get_dsn_url_with_autocommit_off()
 {
-   db_name_local=$1
+   local db_name=$1
    port=$2
    host_name=$3
    if [ -z "$host_name" ];then
        host_name="localhost"
    fi
-   echo "dbi:cubrid:database=${db_name_local};host=${host_name};port=${port};autocommit=off"
+   echo "dbi:cubrid:database=${db_name};host=${host_name};port=${port};autocommit=off"
 }
 
 function get_all_table_names()
 {
-   db_name_local=$1
-   csql -u dba  -c "select class_name from db_class where is_system_class='NO' and class_name not in(select partition_class_name from db_partition) and owner_name='PUBLIC';" $db_name_local >temp.log
+   local db_name=$1
+   csql -u dba $from -c "select class_name from db_class where is_system_class='NO' and class_name not in(select partition_class_name from db_partition) and owner_name='PUBLIC';" $db_name >temp.log
    tables=`grep "^ *'" temp.log |sed "s/'//g"|sed "s/ //g"`   
    echo "$tables"
 }
@@ -207,24 +207,24 @@ function rqg_check_db_data()
 function rqg_check_restoredb_consistency()
 {
     curDir=`pwd`
-    db_name_local=$1
+    local db_name=$1
 
-    table_name_list=`get_all_table_names $db_name_local`
+    table_name_list=`get_all_table_names $db_name`
     cd $CUBRID/databases
-    cd ${db_name_local}
+    cd ${db_name}
     for t in $table_name_list
     do
-	 csql -u dba $db_name_local -c "select * from $t order by pk" >before_${t}.log
+	 csql -u dba $db_name -c "select * from $t order by pk" >before_${t}.log
 	 sed -i "/row[s] selected/d" before_${t}.log
     done
 
     cubrid service stop 
-    cubrid restoredb $db_name_local
-    cubrid server start $db_name_local
+    cubrid restoredb $db_name
+    cubrid server start $db_name
    
     for t in $table_name_list
     do
-         csql -u dba $db_name_local -c "select * from $t order by pk" >after_${t}.log
+         csql -u dba $db_name -c "select * from $t order by pk" >after_${t}.log
 	 sed -i "/row[s] selected/d" after_${t}.log
     done
 
@@ -246,12 +246,12 @@ function rqg_check_restoredb_consistency()
 function rqg_check_constraint_unique()
 {
     name=$1
-    db_name_local=$2
-    if [ ! "$db_name_local" ];then
-        db_name_local="test"
+    local db_name=$2
+    if [ ! "$db_name" ];then
+        db_name="test"
     fi
 
-    csql -udba $db_name_local > temp 2>&1 <<CCCSQL
+    csql -udba $db_name > temp 2>&1 <<CCCSQL
 ;sc $name
 
 CCCSQL
@@ -260,7 +260,7 @@ CCCSQL
     grep '^\s*UNIQUE' temp|sed 's/.*(//g'|sed 's/)\s*//g' >>column.log
     while read value
     do
-	hit_cnt=`csql -u dba ${db_name_local} -c "select 'NOK' from ${name} group by ${value} having count(*) >1" | wc -l`
+	hit_cnt=`csql -u dba ${db_name} -c "select 'NOK' from ${name} group by ${value} having count(*) >1" | wc -l`
         if [ $hit_cnt -gt 0 ];then
 	      write_nok "Violate unique constraint on ${name}.${value}: $hit_cnt"
         else  
@@ -275,12 +275,12 @@ CCCSQL
 function rqg_check_constraint_notnull()
 {
     name=$1
-    db_name_local=$2
-    if [ ! "$db_name_local" ];then
-        db_name_local="test"
+    local db_name=$2
+    if [ ! "$db_name" ];then
+        db_name="test"
     fi
 
-    csql -udba $db_name_local > temp 2>&1 <<CCCSQL
+    csql -udba $db_name > temp 2>&1 <<CCCSQL
 ;sc $name
 
 CCCSQL
@@ -288,7 +288,7 @@ CCCSQL
     columns=`cat temp|grep 'NOT NULL'|awk '{print $1}'`
     for value in ${columns[*]}
     do
-    	cnt=`csql -u dba $db_name_local -c "select 'CNT:'||count(*) from $name where $value IS NULL" | grep "CNT:0" | wc -l`
+    	cnt=`csql -u dba $db_name -c "select 'CNT:'||count(*) from $name where $value IS NULL" | grep "CNT:0" | wc -l`
 	if [ $cnt -eq 0 ];then
 	     write_ok "${name}.${value}"
         else
@@ -304,12 +304,12 @@ CCCSQL
 function rqg_check_constraint_fk()
 {
     name=$1
-    db_name_local=$2
-    if [ ! "$db_name_local" ];then
-        db_name_local="test"
+    local db_name=$2
+    if [ ! "$db_name" ];then
+        db_name="test"
     fi
     
-    csql -udba $db_name_local > temp 2>&1 <<CCCSQL
+    csql -udba $db_name > temp 2>&1 <<CCCSQL
 ;sc $name
 
 CCCSQL
@@ -324,13 +324,13 @@ CCCSQL
         columns=`echo $line|sed 's/.*(//g'|sed 's/).*$//g'`
         fname=`echo $line|sed 's/.*REFERENCES //g'|sed 's/ ON.*$//g'`
         
-        csql -udba $db_name_local > temp 2>&1 <<CCCSQL
+        csql -udba $db_name > temp 2>&1 <<CCCSQL
 ;sc $fname
 
 CCCSQL
         fcolumns=`grep 'PRIMARY KEY' temp|sed 's/.*(//g'|sed 's/)\s*//g'`
-        csql -u dba $db_name_local -c "select 'RAW', ${columns} from $name" | grep RAW >child.log
-        csql -u dba $db_name_local -c "select 'RAW', ${fcolumns} from $fname" | grep RAW >father.log
+        csql -u dba $db_name -c "select 'RAW', ${columns} from $name" | grep RAW >child.log
+        csql -u dba $db_name -c "select 'RAW', ${fcolumns} from $fname" | grep RAW >father.log
 	cnt=`cat child.log | grep -v -f father.log | wc -l`
         if [ $cnt -gt 0 ];then
 	    write_nok "$line violate fk constraint"
@@ -344,23 +344,23 @@ CCCSQL
 
 function rqg_check_constraint_all()
 {
-    db_name_local=$1
+    local db_name=$1
     db_user=$2
-    if [ ! "$db_name_local" ];then
-        db_name_local="test"
+    if [ ! "$db_name" ];then
+        db_name="test"
     fi
    
     if [ ! "$db_user" ];then
 	db_user="public"
     fi
 
-    csql -u dba $db_name_local -c "select class_name from db_class where owner_name='${db_user}' and is_system_class='NO' and class_type='CLASS'" >tables.log
+    csql -u dba $db_name -c "select class_name from db_class where owner_name='${db_user}' and is_system_class='NO' and class_type='CLASS'" >tables.log
     sed -n '/=============/,$p' tables.log|grep "^\s*'"|sed -e "s/^\s*'//g" -e "s/'\s*$//g" >tables
     while read tname
     do
-       rqg_check_constraint_unique $tname $db_name_local
-       rqg_check_constraint_notnull $tname $db_name_local
-       rqg_check_constraint_fk $tname $db_name_local
+       rqg_check_constraint_unique $tname $db_name
+       rqg_check_constraint_notnull $tname $db_name
+       rqg_check_constraint_fk $tname $db_name
     done <tables
 
     rm -f tables tables.log    
@@ -368,14 +368,14 @@ function rqg_check_constraint_all()
 
 function rqg_cubrid_createdb()
 {
-    db_name_local=$1
+    local db_name=$1
     param_count=$#
     if [ $param_count -eq 0 ];then
-       db_name_local="test"
+       db_name="test"
     fi
 
-    if [ "$db_name_local" ];then
-       cubrid_createdb $db_name_local
+    if [ "$db_name" ];then
+       cubrid_createdb $db_name
     else
        cubrid_createdb $*
     fi
@@ -383,14 +383,14 @@ function rqg_cubrid_createdb()
 
 function rqg_cubrid_cleandb()
 {
-    db_name_local=$1
+    local db_name=$1
     param_count=$#
     if [ $param_count -eq 0 ];then
-       db_name_local="test"
+       db_name="test"
     fi
 
-    cubrid server stop $db_name_local
-    cubrid deletedb $db_name_local
+    cubrid server stop $db_name
+    cubrid deletedb $db_name
 }
 
 function rqg_kill_all_cub_process()
@@ -404,12 +404,12 @@ function rqg_kill_all_cub_process()
 
 function recovery_test_begin()
 {
-    db_name_local=$1
-    if [ ! "$db_name_local" ];then
-	db_name_local="test"
+    local db_name=$1
+    if [ ! "$db_name" ];then
+	db_name="test"
     fi
 
-    cubrid server stop $db_name_local
+    cubrid server stop $db_name
     cubrid broker stop
 
     change_db_parameter "fault_injection_test=recovery"
@@ -417,15 +417,15 @@ function recovery_test_begin()
     change_db_parameter "error_log_size=2147483647"
     change_db_parameter "call_stack_dump_activation_list=-588"
     
-    rqg_check_start_server $db_name_local
+    rqg_check_start_server $db_name
     cubrid broker start    
 }
 
 function recovery_test_end()
 {
-    db_name_local=$1
-    if [ ! "$db_name_local" ];then
-        db_name_local="test"
+    local db_name=$1
+    if [ ! "$db_name" ];then
+        db_name="test"
     fi
     cubrid service stop
     sed -i "/fault_injection_test/d" $CUBRID/conf/cubrid.conf
@@ -433,7 +433,7 @@ function recovery_test_end()
     sed -i "/error_log_size/d" $CUBRID/conf/cubrid.conf
     sed -i "/call_stack_dump_activation_list/d" $CUBRID/conf/cubrid.conf
 
-    rqg_check_start_server $db_name_local
+    rqg_check_start_server $db_name
     
 
 }
@@ -447,9 +447,9 @@ function rqg_kill_cub_server()
 
 function rqg_cubrid_start_server()
 {
-    db_name_local=$1
-    if [ ! "$db_name_local" ];then
-        db_name_local="test"
+    local db_name=$1
+    if [ ! "$db_name" ];then
+        db_name="test"
     fi
 
     retry_count=$2
@@ -464,7 +464,7 @@ function rqg_cubrid_start_server()
     
     for((r=0;r<${retry_count};r++))
     do
-       cubrid server start $db_name_local 1>start_status.log 2>&1
+       cubrid server start $db_name 1>start_status.log 2>&1
        if [ $? -eq 0 ]
        then
 	   break
@@ -476,8 +476,8 @@ function rqg_cubrid_start_server()
 
 function rqg_check_start_server()
 {
-    db_name_local=$1
-    rqg_cubrid_start_server $db_name_local
+    local db_name=$1
+    rqg_cubrid_start_server $db_name
 
     if [ -f start_status.log ];then
         if grep 'cubrid server start: success' start_status.log
@@ -524,14 +524,14 @@ function rqg_cubrid_checkdb()
 
 function rqg_cubrid_vacuumdb()
 {
-   db_name_local=$1
-   if [ ! "$db_name_local" ];then
-	db_name_local="test"
+   local db_name=$1
+   if [ ! "$db_name" ];then
+	db_name="test"
    fi
    cubrid service stop
    sleep 2
    
-   cubrid vacuumdb -S $db_name_local > _vacuumdb.log 2>&1
+   cubrid vacuumdb -S $db_name > _vacuumdb.log 2>&1
    if [ $? -ne 0 ];then
 	sed -i '1 a\Fail to execute vacuumdb utility with the standalone mode! \n'  _vacuumdb.log
 	write_nok _vacuumdb.log
