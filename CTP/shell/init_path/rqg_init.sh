@@ -26,7 +26,7 @@
 
 function get_dsn_url_with_autocommit_on()
 {
-    db_name=$1
+    local db_name=$1
     port=$2
     host_name=$3
     if [ -z "$host_name" ];then
@@ -38,7 +38,7 @@ function get_dsn_url_with_autocommit_on()
 
 function get_dsn_url_with_autocommit_off()
 {
-   db_name=$1
+   local db_name=$1
    port=$2
    host_name=$3
    if [ -z "$host_name" ];then
@@ -49,8 +49,8 @@ function get_dsn_url_with_autocommit_off()
 
 function get_all_table_names()
 {
-   db_name=$1
-   csql -u dba $from -c "select class_name from db_class where is_system_class='NO' and class_name not in(select partition_class_name from db_partition) and owner_name='PUBLIC';" $db_name >temp.log
+   local db_name=$1
+   csql -u dba -c "select class_name from db_class where is_system_class='NO' and class_name not in(select partition_class_name from db_partition) and owner_name='PUBLIC';" $db_name >temp.log
    tables=`grep "^ *'" temp.log |sed "s/'//g"|sed "s/ //g"`   
    echo "$tables"
 }
@@ -183,8 +183,8 @@ function rqg_check_db_data()
     for tbl in $table_name_list
     do
         table_name=$tbl
-        csql -u dba $from_db_name -c "select count(*) from $table_name order by pk" > before.log
-        csql -S -u dba $target_db_name -c "select count(*) from $table_name order by pk" >after.log
+        csql -u dba $ori_db_name -c "select count(*) from $table_name order by pk" > before.log
+        csql -u dba $target_db_name -c "select count(*) from $table_name order by pk" >after.log
 
         # compare row number, if it is equal, then compare data
         sed -i "/row selected/d" before.log
@@ -207,28 +207,28 @@ function rqg_check_db_data()
 function rqg_check_restoredb_consistency()
 {
     curDir=`pwd`
-    db_name=$1
+    local db_name=$1
 
     table_name_list=`get_all_table_names $db_name`
     cd $CUBRID/databases
-    for t in "$table_name_list"
+    cd ${db_name}
+    for t in $table_name_list
     do
 	 csql -u dba $db_name -c "select * from $t order by pk" >before_${t}.log
 	 sed -i "/row[s] selected/d" before_${t}.log
     done
 
-    rm ${db_name}/${db_name}
     cubrid service stop 
     cubrid restoredb $db_name
     cubrid server start $db_name
    
-    for t in "$table_name_list"
+    for t in $table_name_list
     do
          csql -u dba $db_name -c "select * from $t order by pk" >after_${t}.log
 	 sed -i "/row[s] selected/d" after_${t}.log
     done
 
-    for t in "$table_name_list"
+    for t in $table_name_list
     do
          if diff before_${t}.log after_${t}.log >/dev/null
          then
@@ -246,7 +246,7 @@ function rqg_check_restoredb_consistency()
 function rqg_check_constraint_unique()
 {
     name=$1
-    db_name=$2
+    local db_name=$2
     if [ ! "$db_name" ];then
         db_name="test"
     fi
@@ -275,7 +275,7 @@ CCCSQL
 function rqg_check_constraint_notnull()
 {
     name=$1
-    db_name=$2
+    local db_name=$2
     if [ ! "$db_name" ];then
         db_name="test"
     fi
@@ -304,7 +304,7 @@ CCCSQL
 function rqg_check_constraint_fk()
 {
     name=$1
-    db_name=$2
+    local db_name=$2
     if [ ! "$db_name" ];then
         db_name="test"
     fi
@@ -344,7 +344,7 @@ CCCSQL
 
 function rqg_check_constraint_all()
 {
-    db_name=$1
+    local db_name=$1
     db_user=$2
     if [ ! "$db_name" ];then
         db_name="test"
@@ -368,7 +368,7 @@ function rqg_check_constraint_all()
 
 function rqg_cubrid_createdb()
 {
-    db_name=$1
+    local db_name=$1
     param_count=$#
     if [ $param_count -eq 0 ];then
        db_name="test"
@@ -383,7 +383,7 @@ function rqg_cubrid_createdb()
 
 function rqg_cubrid_cleandb()
 {
-    db_name=$1
+    local db_name=$1
     param_count=$#
     if [ $param_count -eq 0 ];then
        db_name="test"
@@ -404,7 +404,7 @@ function rqg_kill_all_cub_process()
 
 function recovery_test_begin()
 {
-    db_name=$1
+    local db_name=$1
     if [ ! "$db_name" ];then
 	db_name="test"
     fi
@@ -423,7 +423,7 @@ function recovery_test_begin()
 
 function recovery_test_end()
 {
-    db_name=$1
+    local db_name=$1
     if [ ! "$db_name" ];then
         db_name="test"
     fi
@@ -447,7 +447,7 @@ function rqg_kill_cub_server()
 
 function rqg_cubrid_start_server()
 {
-    db_name=$1
+    local db_name=$1
     if [ ! "$db_name" ];then
         db_name="test"
     fi
@@ -476,7 +476,7 @@ function rqg_cubrid_start_server()
 
 function rqg_check_start_server()
 {
-    db_name=$1
+    local db_name=$1
     rqg_cubrid_start_server $db_name
 
     if [ -f start_status.log ];then
@@ -524,7 +524,7 @@ function rqg_cubrid_checkdb()
 
 function rqg_cubrid_vacuumdb()
 {
-   db_name=$1
+   local db_name=$1
    if [ ! "$db_name" ];then
 	db_name="test"
    fi
