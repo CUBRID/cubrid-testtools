@@ -50,7 +50,7 @@ function get_dsn_url_with_autocommit_off()
 function get_all_table_names()
 {
    local db_name=$1
-   csql -u dba $from -c "select class_name from db_class where is_system_class='NO' and class_name not in(select partition_class_name from db_partition) and owner_name='PUBLIC';" $db_name >temp.log
+   csql -u dba -c "select class_name from db_class where is_system_class='NO' and class_name not in(select partition_class_name from db_partition) and owner_name='PUBLIC';" $db_name >temp.log
    tables=`grep "^ *'" temp.log |sed "s/'//g"|sed "s/ //g"`   
    echo "$tables"
 }
