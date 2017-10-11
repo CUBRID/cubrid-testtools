@@ -419,7 +419,7 @@ function clean_fault_injection_cores()
    	 analyzer.sh $x  > analyzer.log 2>&1
    	 if [ -f analyzer.log ];then
    	     local is_fault_injection=`cat analyzer.log|grep -w "fi_handler_random_exit"|wc -l`
-	     local is_cub_server_process=`cat analyzer.log|grep "cub_server"|wc -l`
+	     local is_cub_server_process=`cat analyzer.log|grep "PROCESS NAME"|grep "cub_server"|wc -l`
    	     if [ $is_cub_server_process -ne 0 -a $is_fault_injection -eq 0 ];then
 		  let "ne_fault_injection_cub_server_core_count++"
 	     else
