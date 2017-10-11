@@ -101,7 +101,7 @@ public class MakeFile {
 		} finally {
 			try {
 				if (newLine)
-					pw.write(File.separator);
+					pw.write(System.getProperty("line.separator"));
 				pw.flush();
 			} catch (Exception e) {
 				throw new RuntimeException(e);

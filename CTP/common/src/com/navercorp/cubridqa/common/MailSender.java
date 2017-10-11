@@ -185,6 +185,30 @@ public class MailSender {
 		InternetAddress c = new InternetAddress(cc);
 		send(f, t, c, title, mailContent);
 	}
+	
+	public void sendBatch(String from, String to, String cc, String title, String mailContent) throws Exception {
+		InternetAddress f = new InternetAddress(from);
+		ArrayList<InternetAddress> toList = new ArrayList<InternetAddress>();
+		ArrayList<InternetAddress> ccList = null;
+		String[] arr = to.split(",");
+		for(String s: arr) {
+			if(CommonUtils.isEmpty(s)) {
+				continue;
+			}
+			toList.add(new InternetAddress(s));
+		}
+		if (CommonUtils.isEmpty(cc) == false) {
+			ccList = new ArrayList<InternetAddress>();
+			arr = cc.split(",");
+			for(String s: arr) {
+				if(CommonUtils.isEmpty(s)) {
+					continue;
+				}
+				ccList.add(new InternetAddress(s));
+			}
+		}
+		send(f, toList, ccList, title, mailContent);
+	}
 
 	public void send(InternetAddress from, InternetAddress to, InternetAddress cc, String title, String mailContent) throws Exception {
 		ArrayList<InternetAddress> toList = new ArrayList<InternetAddress>();
@@ -194,7 +218,7 @@ public class MailSender {
 		ccList.add(cc);
 		send(from, toList, ccList, title, mailContent);
 	}
-
+	
 	public void send(InternetAddress from, ArrayList<InternetAddress> to, ArrayList<InternetAddress> cc, String title, String mailContent) throws Exception {
 		Properties prop = System.getProperties();
 		prop.put("mail.smtp.host", "localhost");
@@ -212,7 +236,7 @@ public class MailSender {
 			addrs[i] = to.get(i);
 		}
 
-		if (cc != null) {
+		if (cc != null && cc.size() > 0 ) {
 			ccAddrs = new Address[cc.size()];
 			for (int j = 0; j < ccAddrs.length; j++) {
 				ccAddrs[j] = cc.get(j);
