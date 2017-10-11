@@ -47,6 +47,7 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -67,7 +68,7 @@ public class RunShellMain {
 	public final static String TOKEN_FOR_END = "========";
 	public static final String REPORT_DATE_FM = "yyyy-MM-dd HH:mm:ss.SSS";
 
-	private Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
+	private Scheduler scheduler = null;
 
 	String testCaseName;
 	String testCaseDir;
@@ -240,8 +241,17 @@ public class RunShellMain {
 		}
 
 		if (enableReport) {
-			scheduler.shutdown();
 			sendMailReport(resultType);
+		}
+	}
+
+	private void close() {
+		if (scheduler != null) {
+			try {
+				scheduler.shutdown();
+			} catch (SchedulerException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -249,6 +259,7 @@ public class RunShellMain {
 		if (CommonUtils.isEmpty(this.reportCron)) {
 			throw new Exception("[ERROR] not set crontab");
 		}
+		this.scheduler = StdSchedulerFactory.getDefaultScheduler();
 		JobDataMap jobmap = new JobDataMap();
 		jobmap.put("test", this);
 		JobDetail job = JobBuilder.newJob(ManualReportJob.class).withIdentity("run_shell_job", "group").setJobData(jobmap).build();
@@ -712,7 +723,11 @@ public class RunShellMain {
 		String config = cmd.getOptionValue("config");
 		RunShellMain main = new RunShellMain(testCaseDir, testCaseName, keepUpdated, withLoop, enableReport, reportCron, mailTo, mailCc, issueNo, extendScript, config);
 
-		main.run();
+		try {
+			main.run();
+		} finally {
+			main.close();
+		}
 	}
 }
 
