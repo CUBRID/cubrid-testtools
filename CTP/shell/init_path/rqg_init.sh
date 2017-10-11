@@ -418,7 +418,7 @@ function clean_fault_injection_cores()
     for x in `find $CUBRID $RQG_HOME . -name "core.*"`;do
    	 analyzer.sh $x  > analyzer.log 2>&1
    	 if [ -f analyzer.log ];then
-   	     local is_fault_injection=`cat analyzer.log|grep "CORE FILE"|grep "fault_injection"|wc -l`
+   	     local is_fault_injection=`cat analyzer.log|grep -w "fi_handler_random_exit"|wc -l`
 	     local is_cub_server_process=`cat analyzer.log|grep "cub_server"|wc -l`
    	     if [ $is_cub_server_process -ne 0 -a $is_fault_injection -eq 0 ];then
 		  let "ne_fault_injection_cub_server_core_count++"
@@ -430,7 +430,7 @@ function clean_fault_injection_cores()
          rm analyzer.log >/dev/null 2>&1
     done 
 
-    if [ $ne_fault_injection_cub_server_core_count -ne 0 ];then
+    if [ $ne_fault_injection_cub_server_core_count -eq 0 ];then
 	find $CUBRID $RQG_HOME . -name "core.[0-9][0-9]*"|xargs -i rm -rf {}
     fi
 }
