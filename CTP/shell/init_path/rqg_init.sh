@@ -106,17 +106,23 @@ function run_gensql_without_check()
 function run_gentest()
 {
    param_options=$*
+   local res=0
    perl $RQG_HOME/gentest.pl $param_options > gentest.log 2<&1
    if [ $? -ne 0 ];then
         write_nok "generate test fail, please check your parameter $param_options"
+        res=1
    else
         if [ `grep 'Test completed successfully' gentest.log|wc -l` -eq 1 ];then
                 rm gentest.log >/dev/null
                 write_ok
+                res=0
         else
                 write_nok "generate test is not completed successfully, please confirm gentest.log"
+		res=1
         fi
    fi
+
+   return $res
 
 }
 
@@ -374,6 +380,11 @@ function rqg_cubrid_createdb()
        db_name="test"
     fi
 
+    is_exists_db=`cat $CUBRID/databases/databases.txt |grep $db_name|wc -l`
+    if [ "$is_exists_db" -a $is_exists_db -ne 0 ];then
+       rqg_cubrid_cleandb $db_name
+    fi
+
     if [ "$db_name" ];then
        cubrid_createdb $db_name
     else
@@ -401,6 +412,30 @@ function rqg_kill_all_cub_process()
     ps -u $USER -o pid,comm|grep -v grep|grep cub_master|awk '{print $1}'|xargs kill -9 {} >/dev/null 2>&1
 }
 
+function is_fault_injection_core()
+{
+    local core_file=$1
+    local default_core_type=0
+    if [ -z "$core_file" ];then
+	echo $default_core_type
+        return
+    fi
+
+    analyzer.sh $core_file  > analyzer.log 2>&1
+    if [ -f analyzer.log ];then
+    	is_fault_injection=`cat analyzer.log|grep "CORE FILE"|grep "fault_injection"|wc -l`
+	if [ $is_fault_injection -ne 0 ];then
+	    default_core_type=1
+	else
+	    default_core_type=0
+	fi
+
+        rm analyzer.log >/dev/null 2>&1
+    fi
+   
+        
+    echo $default_core_type
+}
 
 function recovery_test_begin()
 {
@@ -434,7 +469,14 @@ function recovery_test_end()
     sed -i "/call_stack_dump_activation_list/d" $CUBRID/conf/cubrid.conf
 
     rqg_check_start_server $db_name
-    
+   
+    #to check if core files are fault injection
+    for x in `find $CUBRID $RQG_HOME . -name "core.*"`;do
+	local is_fault_injection=`is_fault_injection_core $x`
+	if [ $is_fault_injection -ne 0 ];then
+	    rm $x
+        fi
+    done
 
 }
 
