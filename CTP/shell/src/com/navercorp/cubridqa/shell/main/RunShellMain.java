@@ -668,7 +668,7 @@ public class RunShellMain {
 		options.addOption(null, "mailto", true, "The TO who receive mail");
 		options.addOption(null, "mailcc", true, "The CC who receive mail");
 		options.addOption(null, "issue", true, "Url link to issue CBRD-xxxx. This info will be described in mail text");
-		options.addOption(null, "extend-script ", true, "Extended script file to define how to execute test case and verify failure.");
+		options.addOption(null, "extend-script", true, "Extended script file to define how to execute test case and verify failure.");
 		// options.addOption(null, "config ", true, "provide a configuration
 		// file which store parameters used by scenarios.");
 
