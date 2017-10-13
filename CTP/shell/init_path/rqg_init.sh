@@ -180,17 +180,30 @@ function rqg_check_db_data()
     ori_db_name=$1
     target_db_name=$2
     table_name_list=$3
+    local target_db_status=0
+    local ori_db_status=0
     cd $cur_path
 
     if [ ! "$table_name_list" ];then
 	table_name_list=`get_all_table_names $ori_db_name`
     fi
 
+    target_db_status=`cubrid server status|grep -v "@"|grep -w $target_db_name|wc -l`
+    ori_db_status=`cubrid server status|grep -v "@"|grep -w $ori_db_status|wc -l`
     for tbl in $table_name_list
     do
         table_name=$tbl
-        csql -u dba $ori_db_name -c "select count(*) from $table_name order by pk" > before.log
-        csql -u dba $target_db_name -c "select count(*) from $table_name order by pk" >after.log
+        if [ $ori_db_status -ne 0 ];then
+            csql -u dba $ori_db_name -c "select count(*) from $table_name order by pk" > before.log
+        else
+            csql -u dba $ori_db_name -c "select count(*) from $table_name order by pk" -S > before.log
+        fi
+
+        if [ $target_db_status -ne 0 ];then
+            csql -u dba $target_db_name -c "select count(*) from $table_name order by pk" >after.log
+	else
+	    csql -u dba $target_db_name -c "select count(*) from $table_name order by pk" -S >after.log
+        fi
 
         # compare row number, if it is equal, then compare data
         sed -i "/row selected/d" before.log
