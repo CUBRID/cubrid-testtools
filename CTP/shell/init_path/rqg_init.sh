@@ -445,6 +445,9 @@ function clean_fault_injection_cores()
 
     if [ $ne_fault_injection_cub_server_core_count -eq 0 ];then
 	find $CUBRID $RQG_HOME . -name "core.[0-9][0-9]*"|xargs -i rm -rf {}
+	write_ok
+    else
+	write_nok
     fi
 }
 
