@@ -76,12 +76,15 @@ public class RunShellMain {
 	private boolean withLoop = false;
 	private boolean enableReport = false;
 	private String reportCron;
+	private Boolean promptContinue = null;
 	String mailTo;
 	String mailCc;
 	String issueNo;
 	private String extendScript;
 	private boolean extendVerify = false;
 	private String config;
+	private int maxLoop = -1;
+	private int maxTimeInSecs = -1;
 
 	private MakeFile testLog;
 	private ResultSummary report;
@@ -102,7 +105,7 @@ public class RunShellMain {
 	String cubridBuildsUrl;
 
 	public RunShellMain(String testCaseDir, String testCaseName, boolean keepUpdated, boolean withLoop, boolean enableReport, String reportCron, String mailTo, String mailCc, String issueNo,
-			String extendScript, String config) throws Exception {
+			String extendScript, String config, Boolean promptContinue, int maxLoop, int maxTimeInSecs) throws Exception {
 		this.testCaseDir = testCaseDir;
 		this.testCaseName = testCaseName;
 		this.keepUpdated = keepUpdated;
@@ -114,6 +117,11 @@ public class RunShellMain {
 		this.issueNo = issueNo;
 		this.extendScript = extendScript;
 		this.config = config;
+		if (promptContinue != null) {
+			this.promptContinue = promptContinue;
+		}
+		this.maxLoop = maxLoop;
+		this.maxTimeInSecs = maxTimeInSecs;
 
 		init();
 	}
@@ -138,11 +146,20 @@ public class RunShellMain {
 
 		if (this.report.getCategorySize() > 0) {
 			System.out.println(report.getSummary());
-			if (continueConfirm()) {
-				restoreCubridConfiguration();
+			if (promptContinue == null) {
+				if (continueConfirm()) {
+					restoreCubridConfiguration();
+				} else {
+					this.report.resetData();
+					this.testLog.println(TOKEN_FOR_END);
+				}
 			} else {
-				this.report.resetData();
-				this.testLog.println(TOKEN_FOR_END);
+				if (promptContinue == true) {
+					restoreCubridConfiguration();
+				} else {
+					this.report.resetData();
+					this.testLog.println(TOKEN_FOR_END);
+				}
 			}
 		}
 
@@ -184,7 +201,14 @@ public class RunShellMain {
 		System.out.println("Test parameters: ");
 		System.out.println("   testcase     :\t" + testCaseDir + File.separator + testCaseName + ".sh");
 		System.out.println("   update-build :\t" + keepUpdated);
-		System.out.println("   loop         :\t" + withLoop);
+		String loopDesc;
+		if (withLoop) {
+			loopDesc = " (" + (maxLoop == Integer.MAX_VALUE ? "max" : String.valueOf(maxLoop)) + " loops, ";
+			loopDesc = loopDesc + (maxTimeInSecs == Integer.MAX_VALUE ? "max" : String.valueOf(maxTimeInSecs)) + " seconds)";
+		} else {
+			loopDesc = "";
+		}
+		System.out.println("   loop         :\t" + withLoop + loopDesc);
 		System.out.println("   enable-report:\t" + enableReport);
 		System.out.println("   report-cron  :\t" + reportCron);
 		System.out.println("   mailto       :\t" + mailTo);
@@ -199,9 +223,10 @@ public class RunShellMain {
 		CommonUtils.sleep(1);
 		System.out.println("");
 
+		Date initDate = new Date();
 		Date startDate = null, endDate = null;
 		String resultType = "STOP";
-		for (int i = 0; i < (withLoop ? Integer.MAX_VALUE : 1); i++) {
+		for (int i = 0; i < (withLoop ? maxLoop : 1); i++) {
 			System.out.println("LOOP: " + (i + 1));
 			try {
 				if (keepUpdated) {
@@ -234,6 +259,10 @@ public class RunShellMain {
 				break;
 			}
 
+			if ((new Date().getTime() - initDate.getTime()) / 1000.0 >= this.maxTimeInSecs) {
+				break;
+			}
+
 			File stopFile = new File(this.testCaseDir + File.separator + "STOP");
 			if (stopFile.exists()) {
 				break;
@@ -243,6 +272,8 @@ public class RunShellMain {
 		if (enableReport) {
 			sendMailReport(resultType);
 		}
+		
+		System.out.println(report.getSummary());
 	}
 
 	private void close() {
@@ -669,6 +700,10 @@ public class RunShellMain {
 		options.addOption(null, "mailcc", true, "The CC who receive mail");
 		options.addOption(null, "issue", true, "Url link to issue CBRD-xxxx. This info will be described in mail text");
 		options.addOption(null, "extend-script", true, "Extended script file to define how to execute test case and verify failure.");
+		options.addOption(null, "prompt-continue", true, "true or false to load previous data");
+		options.addOption(null, "maxloop", true, "Set max loop to execute test");
+		options.addOption(null, "maxtime", true, "Set max time in seconds to execute test");
+
 		// options.addOption(null, "config ", true, "provide a configuration
 		// file which store parameters used by scenarios.");
 
@@ -721,7 +756,31 @@ public class RunShellMain {
 		String issueNo = cmd.getOptionValue("issue");
 		String extendScript = cmd.getOptionValue("extend-script");
 		String config = cmd.getOptionValue("config");
-		RunShellMain main = new RunShellMain(testCaseDir, testCaseName, keepUpdated, withLoop, enableReport, reportCron, mailTo, mailCc, issueNo, extendScript, config);
+		String promptContinueStrValue = cmd.getOptionValue("prompt-continue");
+		Boolean promptContinue = null;
+		if (CommonUtils.isEmpty(promptContinueStrValue)) {
+			promptContinue = null;
+		} else {
+			promptContinue = CommonUtils.convertBoolean(promptContinueStrValue);
+		}
+		String maxLoopStrValue = cmd.getOptionValue("maxloop");
+		int maxLoop;
+		if (CommonUtils.isEmpty(maxLoopStrValue)) {
+			maxLoop = Integer.MAX_VALUE;
+		} else {
+			maxLoop = Integer.parseInt(maxLoopStrValue);
+		}
+
+		String maxTimeInSecsStrValue = cmd.getOptionValue("maxtime");
+		int maxTimeInSecs;
+		if (CommonUtils.isEmpty(maxTimeInSecsStrValue)) {
+			maxTimeInSecs = Integer.MAX_VALUE;
+		} else {
+			maxTimeInSecs = Integer.parseInt(maxTimeInSecsStrValue);
+		}
+
+		RunShellMain main = new RunShellMain(testCaseDir, testCaseName, keepUpdated, withLoop, enableReport, reportCron, mailTo, mailCc, issueNo, extendScript, config, promptContinue, maxLoop,
+				maxTimeInSecs);
 
 		try {
 			main.run();
