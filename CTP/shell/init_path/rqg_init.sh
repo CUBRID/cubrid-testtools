@@ -189,7 +189,7 @@ function rqg_check_db_data()
     fi
 
     target_db_status=`cubrid server status|grep -v "@"|grep -w $target_db_name|wc -l`
-    ori_db_status=`cubrid server status|grep -v "@"|grep -w $ori_db_status|wc -l`
+    ori_db_status=`cubrid server status|grep -v "@"|grep -w $ori_db_name|wc -l`
     for tbl in $table_name_list
     do
         table_name=$tbl
