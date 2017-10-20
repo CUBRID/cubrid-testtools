@@ -130,7 +130,7 @@ The section guides users to quickly start SQL test with CTP, for the more catego
  - Prepare
 	* For local test
 		* Make sure to set JAVA_HOME and the required environment variables correctly
-		* Since RQG is one extension of SHELL, so if you want to execute RQG test, you need checkout ``random_query_generator`` tool firstly, and export RQG_HOME environment 
+		* Since RQG is one extension of SHELL, so if you want to execute RQG test, you need check out ``random_query_generator`` tool firstly, and export RQG_HOME environment 
 		  variable to the path of ``random_query_generator`` tool 
 		* Check out the SHELL test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)
 		* Check out CTP and configure CTP/conf/shell.conf for testing
