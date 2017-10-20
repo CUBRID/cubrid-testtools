@@ -131,6 +131,8 @@ The section guides users to quickly start SQL test with CTP, for the more catego
  - Prepare
 	* For local test
 		* Make sure to set JAVA_HOME and the required environment variables correctly
+		* Since RQG is one extension of SHELL, so if you want to execute RQG test, you need checkout ``random_query_generator`` tool firstly, and export RQG_HOME environment 
+		  variable to the path of ``random_query_generator`` tool 
 		* Check out the SHELL test cases (e.g., check out or create the test cases at the ${HOME}/cubrid-testcases/shell directory)
 		* Check out CTP and configure CTP/conf/shell.conf for testing
 		```
@@ -164,7 +166,7 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 			env.instance1.broker2.BROKER_PORT=35500
 			```
 			``` 	   
-			# Define the path of test cases used for testing, it should be checked out on test instance node. For SHELL HEAVY, SHELL LONG and HA SHELL, scenario should be configured accordingly.
+			# Define the path of test cases used for testing, it should be checked out on test instance node. For SHELL HEAVY, SHELL LONG, RQG and HA SHELL, scenario should be configured accordingly.
 			scenario=${HOME}/cubrid-testcases/shell
 			```
 			```
@@ -405,6 +407,9 @@ It's not required that you execute the build for CTP, unless you make some chang
      #!/bin/sh
      # to initialize the environment variables which are required by case
      . $init_path/init.sh
+     # to support RQG regression, the environment variables and functions in rqg_init.sh should be initialized, so just need uncomment the below statement($init_path/rqg_init.sh), 
+     # if you want to understand the functions which will be used in RQG case, please refer to $init_path/rqg_init.sh  
+     # . $init_path/rqg_init.sh
      init test
      dbname=tmpdb
 
