@@ -42,7 +42,6 @@ The section guides users to quickly start SQL test with CTP, for the more catego
  	* Check out the scenarios from [cubrid-testcases](https://github.com/CUBRID/cubrid-testcases) project or prepare your own test cases for testing
  	* Check out CTP and update the value of ``scenario`` parameter within ``CTP/conf/sql.conf`` to point to the path of your scenarios. For the current existing ``SQL`` test, you need to make sure the parameters `` java_stored_procedure=yes``, ``test_mode=yes`` and ``ha_mode=yes`` are configured
  	* **Example** ``sql.conf`` for scenario, data file and some important parameters changes
- 	* 
 	  ```
 	  # SQL section - a section for CTP tool configuration when executing SQL/MEDIUM testing
 	  [sql]
