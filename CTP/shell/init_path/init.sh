@@ -1521,7 +1521,7 @@ function compare_perf_time {
             write_ok
             return 0
     else
-        write_nok $nok_desc
+        write_nok "$nok_desc"
         return 1
     fi
 }
