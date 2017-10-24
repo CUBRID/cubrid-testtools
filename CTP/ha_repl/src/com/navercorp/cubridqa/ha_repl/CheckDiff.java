@@ -36,7 +36,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Properties;
 
-import com.navercorp.cubridqa.scheduler.common.Constants;
+import com.navercorp.cubridqa.common.Constants;
 
 public class CheckDiff {
 	public int check(String filePath, String masterName, String slaveOrReplicaName, String fileSuffix) {
