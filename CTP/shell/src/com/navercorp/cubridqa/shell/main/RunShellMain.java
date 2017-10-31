@@ -165,6 +165,7 @@ public class RunShellMain {
 
 		if (CommonUtils.isEmpty(extendScript) == false) {
 			StringBuilder scripts = new StringBuilder();
+			scripts.append("export PATH=.:$PATH").append("\n");
 			scripts.append("source " + CommonUtils.getLinuxStylePath(extendScript)).append("\n");
 			scripts.append("typeset -F").append("\n");
 			String result = LocalInvoker.exec(scripts.toString(), false, false);
@@ -381,6 +382,7 @@ public class RunShellMain {
 
 		if (this.extendVerify) {
 			StringBuilder checkScripts = new StringBuilder();
+			checkScripts.append("export PATH=.:$PATH").append("\n");
 			checkScripts.append("source " + CommonUtils.getLinuxStylePath(extendScript)).append("\n");
 			checkScripts.append("verify " + CommonUtils.getLinuxStylePath(this.testCaseDir) + " " + this.testCaseName + ".result").append("\n");
 			String result = LocalInvoker.exec(checkScripts.toString(), false, false);
