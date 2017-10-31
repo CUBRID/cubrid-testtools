@@ -36,6 +36,6 @@ public class ManualReportJob implements Job {
 	@Override
 	public void execute(JobExecutionContext ctx) throws JobExecutionException {
 		RunShellMain test = (RunShellMain) ctx.getJobDetail().getJobDataMap().get("test");
-		test.sendMailReport("STATUS");
+		test.sendMailReport("STATUS", null);
 	}
 }

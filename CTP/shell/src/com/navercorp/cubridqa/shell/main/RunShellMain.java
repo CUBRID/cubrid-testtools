@@ -226,8 +226,10 @@ public class RunShellMain {
 		Date initDate = new Date();
 		Date startDate = null, endDate = null;
 		String resultType = "STOP";
+		String errorInfo = null;
 		for (int i = 0; i < (withLoop ? maxLoop : 1); i++) {
 			System.out.println("LOOP: " + (i + 1));
+			errorInfo = null;
 			try {
 				if (keepUpdated) {
 					upgradeCubrid();
@@ -246,6 +248,7 @@ public class RunShellMain {
 							+ dateToString(endDate, REPORT_DATE_FM) + "\t" + "FALSE");
 
 					ShellTestException e1 = (ShellTestException) e;
+					errorInfo = e1.getInfo();
 					if (e1.getErrorCode() == ERROR_TEST_NOK) {
 						resultType = "QUIT(NOK)";
 					} else {
@@ -254,8 +257,10 @@ public class RunShellMain {
 				} else {
 					System.out.println("[ERROR] " + e.getMessage());
 					e.printStackTrace();
+					errorInfo = e.getMessage();
 					resultType = "QUIT(FAIL2)";
 				}
+				System.out.println("\nResult: " + resultType + "\n" + errorInfo + "\n");
 				break;
 			}
 
@@ -270,7 +275,7 @@ public class RunShellMain {
 		}
 
 		if (enableReport) {
-			sendMailReport(resultType);
+			sendMailReport(resultType, errorInfo);
 		}
 		
 		System.out.println(report.getSummary());
@@ -320,7 +325,7 @@ public class RunShellMain {
 		restoreCubridConfiguration();
 		loadCubridMeta();
 
-		sendMailReport("UPGRADE(" + this.cubridBuildId + ")");
+		sendMailReport("UPGRADE(" + this.cubridBuildId + ")", null);
 	}
 
 	private void backupCubridConfiguration() throws IOException {
@@ -380,28 +385,28 @@ public class RunShellMain {
 			checkScripts.append("verify " + CommonUtils.getLinuxStylePath(this.testCaseDir) + " " + this.testCaseName + ".result").append("\n");
 			String result = LocalInvoker.exec(checkScripts.toString(), false, false);
 			if (result.indexOf("NOK") != -1) {
-				throw new ShellTestException(ERROR_TEST_NOK);
+				throw new ShellTestException(ERROR_TEST_NOK, result);
 			} else if (result.indexOf("OK") == -1) {
-				throw new ShellTestException(ERROR_EMPTY_RESULT);
+				throw new ShellTestException(ERROR_EMPTY_RESULT, result);
 			}
 		} else {
 			String result = null;
 			try {
 				result = CommonUtils.getFileContent(this.testCaseDir + File.separator + this.testCaseName + ".result");
 			} catch (Exception e) {
-				throw new ShellTestException(ERROR_READ_FILE, e);
+				throw new ShellTestException(ERROR_READ_FILE, e.getMessage());
 			}
 			if (CommonUtils.isEmpty(result)) {
-				throw new ShellTestException(ERROR_EMPTY_RESULT);
+				throw new ShellTestException(ERROR_EMPTY_RESULT, "Unknown. The result file is empty.");
 			}
 
 			if (result.indexOf("NOK") != -1) {
-				throw new ShellTestException(ERROR_TEST_NOK);
+				throw new ShellTestException(ERROR_TEST_NOK, result);
 			}
 		}
 	}
 
-	public synchronized void sendMailReport(String resultType) {
+	public synchronized void sendMailReport(String resultType, String errorInfo) {
 		if (CommonUtils.isEmpty(mailTo)) {
 			System.err.println("[ERROR] not found mail receiver when deliver report");
 			return;
@@ -415,7 +420,7 @@ public class RunShellMain {
 		String title = "[QA] re-test " + testCaseDir + "/" + testCaseName + ".sh [" + this.cubridBuildId + ", " + report.getTotalTimes() + ", " + userInfo + "] - " + resultType;
 		System.out.println("[INFO] begin to send mail report " + new Date().toString() + "\n" + title);
 		try {
-			sender.sendBatch(mailFrom, mailTo, mailCc, title, report.getMailContent());
+			sender.sendBatch(mailFrom, mailTo, mailCc, title, report.getMailContent(errorInfo));
 		} catch (Exception e) {
 			System.err.println("[ERROR] fail to deliver mail report");
 			e.printStackTrace();
@@ -792,9 +797,15 @@ public class RunShellMain {
 
 class ShellTestException extends Exception {
 	private int code;
+	private String info;
 
 	public ShellTestException(int code) {
+		this(code, (String)null);
+	}
+	
+	public ShellTestException(int code, String info) {
 		this.code = code;
+		this.info = info;
 	}
 
 	public ShellTestException(int code, Exception e) {
@@ -804,6 +815,10 @@ class ShellTestException extends Exception {
 
 	public int getErrorCode() {
 		return this.code;
+	}
+	
+	public String getInfo() {
+		return this.info;
 	}
 }
 
@@ -874,7 +889,7 @@ class ResultSummary {
 		return true;
 	}
 
-	public String getMailContent() {
+	public String getMailContent(String errorInfo) {
 		String separator = "<br>";
 		StringBuilder result = new StringBuilder();
 		result.append("<pre>").append(separator);
@@ -893,6 +908,12 @@ class ResultSummary {
 		result.append(separator);
 		result.append("<b>Current</b>: ").append(test.cubridRelCont).append(separator);
 		result.append(separator);
+		
+		if (CommonUtils.isEmpty(errorInfo) == false) {
+			result.append("<b>Result</b>: ").append(separator);
+			result.append("<font color=red>").append(errorInfo).append("</font>");
+			result.append(separator);
+		}
 
 		result.append("<b>Test status</b>:").append(separator);
 		if (list.size() == 0) {
