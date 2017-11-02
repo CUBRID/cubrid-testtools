@@ -125,14 +125,22 @@ public class PrepareMain {
 	}
 
 	private void prepare() throws Exception {
+		ArrayList<String> errors = new ArrayList<String>();
 		String[] pkgDeps = testcaseReq.getCubridPkgDeps();
 
 		if (pkgDeps != null && pkgDeps.length > 0) {
 			if (CommonUtils.isEmpty(this.cubridBuildsUrl)) {
-				System.err.println("[ERROR] Not found the URL of CUBRID build list.");
+				String err = "[ERROR] Not found the URL of CUBRID build list.";
+				System.err.println(err);
+				errors.add(err);
 			} else {
 				for (String p : pkgDeps) {
-					preparePkgDepts(p);
+					try {
+						preparePkgDepts(p);
+					} catch (Exception e) {
+						e.printStackTrace();
+						errors.add(e.getMessage());
+					}
 				}
 			}
 		}
@@ -140,10 +148,17 @@ public class PrepareMain {
 		String[] repoDeps = testcaseReq.getRepoDeps();
 		if (repoDeps != null && repoDeps.length > 0) {
 			if (CommonUtils.isEmpty(branch)) {
-				System.out.println("SKIP to update dependent repositories for absence of branch");
+				String err = "[ERROR] SKIP to update dependent repositories for absence of branch";
+				System.err.println(err);
+				errors.add(err);
 			} else {
 				for (String r : repoDeps) {
-					prepareRepoDepts(r, branch);
+					try {
+						prepareRepoDepts(r, branch);
+					} catch (Exception e) {
+						e.printStackTrace();
+						errors.add(e.getMessage());
+					}
 				}
 			}
 		}
@@ -152,18 +167,31 @@ public class PrepareMain {
 		String[] cubridDepts = testcaseReq.getCubridDeps();
 		if (cubridDepts != null && cubridDepts.length > 0) {
 			if (CommonUtils.isEmpty(this.cubridBuildsUrl)) {
-				System.err.println("[ERROR] Not found the URL of CUBRID build list.");
+				String err = "[ERROR] Not found the URL of CUBRID build list.";
+				System.err.println(err);
+				errors.add(err);				
 			} else {
 				LocalInvoker.exec("if [ -d ~/CUBRID ]; then rm -rf ~/.CUBRID_" + cubridVersion + "; mv -f ~/CUBRID ~/.CUBRID_" + cubridVersion + "; fi", false, false);
 
+				ArrayList<String> exList = new ArrayList<String>();
 				for (String c : cubridDepts) {
-					prepareCubridDepts(c.trim());
+					try {
+						prepareCubridDepts(c.trim());
+					} catch (Exception e) {
+						e.printStackTrace();
+						exList.add(c);
+						errors.add(e.getMessage());
+					}
 				}
+				
 				LocalInvoker.exec("if [ -d ~/.CUBRID_" + cubridVersion + " ]; then mv -f ~/.CUBRID_" + cubridVersion + " ~/CUBRID; fi", false, false);
 				LocalInvoker.exec("if [ -f ~/CUBRID/.cubrid.sh ]; then cp -f ~/CUBRID/.cubrid.sh ~/; fi", false, false);
-
+				
 				File srcFile, destFile;
 				for (String c : cubridDepts) {
+					if(exList.contains(c)) {
+						continue;
+					}
 					c = "CUBRID_" + c.trim();
 					srcFile = new File(Constants.ENV_HOME + File.separator + "CUBRID" + File.separator + "conf" + File.separator + "cubrid.conf");
 					destFile = new File(Constants.ENV_HOME + File.separator + c + File.separator + "conf" + File.separator + "cubrid.conf");
@@ -194,6 +222,17 @@ public class PrepareMain {
 					syncConfiguration(srcFile, destFile, "common", "ha_db_list");
 				}
 			}
+		}
+		
+		System.out.println("-----------------------------------");
+		if (errors.size() == 0) {
+			System.out.println(" RESULT: PASS");
+		} else {
+			System.out.println(" RESULT: FAIL");
+			for (String e : errors) {
+				System.out.println(" " + e);
+			}
+			System.out.println();
 		}
 	}
 
@@ -255,7 +294,7 @@ public class PrepareMain {
 		String content = getHtmlSourceOfCubridList();
 		int hit = content.indexOf(buildId);
 		if (hit == -1) {
-			throw new Exception("Not found " + buildId + " in CUBRID build list.");
+			throw new Exception("[ERROR] Not found " + buildId + " in CUBRID build list.");
 		}
 		int start, end;
 		start = content.lastIndexOf("'", hit);
