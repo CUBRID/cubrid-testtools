@@ -218,8 +218,16 @@ function cubrid_ha_create {
 		rexec $host -c "sh \$init_path/../../bin/ini.sh -s common \$CUBRID/conf/cubrid.conf ha_mode replica"
 	done
 
-	cmds="(mkdir -p \$CUBRID/databases/hatestdb; cd \$CUBRID/databases/hatestdb; cubrid createdb hatestdb en_US)"
-	eval $cmds
+        build_ver=`cubrid_rel|grep "CUBRID"|awk -F '(' '{print $2}'|sed 's/)//g'`
+        cubrid_major=${build_ver%%.*}
+        cubrid_minor=`echo $build_ver|awk -F '.' '{print $2}'`
+        if [ $cubrid_major -ge 9 -a $cubrid_minor -gt 1 ] || [ $cubrid_major -ge 10 ]
+        then
+	   cmds="(mkdir -p \$CUBRID/databases/hatestdb; cd \$CUBRID/databases/hatestdb; cubrid createdb hatestdb en_US)"
+	else
+           cmds="(mkdir -p \$CUBRID/databases/hatestdb; cd \$CUBRID/databases/hatestdb; cubrid createdb hatestdb)" 
+        fi
+        eval $cmds
 	for node in $ha_hosts; do
 		rexec $node -c "$cmds"
 	done
