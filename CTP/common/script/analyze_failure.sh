@@ -194,7 +194,8 @@ function gen_data_template()
 	affect_version=`get_affect_version $build_id`
 	echo "" > core_file.info
 	for x in `find ./ -name "core.[0-9]*"`;do
-		echo `file $x|awk -F '/' '{print $NF}'` >> core_file.info
+                core_file_name_with_separator="`basename $x`:"
+		echo `file $x|sed "s#^.*${core_file_name_with_separator}#${core_file_name_with_separator}#g"` >> core_file.info
 	done
 
 	summary_info=`cat core_full_stack.txt|grep "SUMMARY:"|sed 's/SUMMARY://g'`
