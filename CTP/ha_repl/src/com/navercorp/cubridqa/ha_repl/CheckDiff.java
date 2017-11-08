@@ -25,154 +25,34 @@
 
 package com.navercorp.cubridqa.ha_repl;
 
-import java.io.BufferedReader;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.util.Properties;
-
 import com.navercorp.cubridqa.common.CommonUtils;
-import com.navercorp.cubridqa.common.Constants;
 import com.navercorp.cubridqa.common.LocalInvoker;
 
 public class CheckDiff {
 	public int check(String filePath, String masterName, String slaveOrReplicaName, String fileSuffix) {
 		String masterFile = filePath + "." + masterName + ".dump";
-		String resultFile = filePath + ".result";
 		String slaveFile = filePath + "." + slaveOrReplicaName + ".dump";
 		String master_slaveOrReplicaDiffFile = filePath + "." + masterName + "." + slaveOrReplicaName + "." + fileSuffix;
 		String master_slaveOrReplicaDiffFileTemp = master_slaveOrReplicaDiffFile + ".temp";
-		String diffPacthResult = master_slaveOrReplicaDiffFile + ".temp.diff"; 
-		String command = "sh -c 'diff " + masterFile + " " + slaveFile + " > " + master_slaveOrReplicaDiffFileTemp + "'";
-		String command1 = "sh -c 'diff " + master_slaveOrReplicaDiffFile + " " + master_slaveOrReplicaDiffFileTemp + " > " + diffPacthResult + "'";
-		int result = 0;
-		command = command.replace("\\", "/");
-		command1 = command1.replace("\\", "/");
-
-		Properties prop = new Properties(System.getProperties());
-		String OS = prop.getProperty("os.name");
-
-		if (OS.contains("Windows")) {
-			if (ExecCommand(command) != 0) {
-				result = ExecCommand(command1);
-			}
-		} else if (OS.contains("Linux")) {
-			File file = new File(filePath + ".sh");
-			try {
-				OutputStream out;
-				out = new FileOutputStream(file);
-				String str = command;
-				byte[] b = str.getBytes();
-				out.write(b);
-				out.close();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			command = "sh " + filePath + ".sh";
-			if (ExecCommand(command) != 0) {
-				File file1 = new File(filePath + "1.sh");
-				try {
-					OutputStream out;
-					out = new FileOutputStream(file1);
-					String str = command1;
-					byte[] b = str.getBytes();
-					out.write(b);
-					out.close();
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				command1 = "sh " + filePath + "1.sh";
-				result = ExecCommand(command1);
-				file1.delete();
-			}
-			file.delete();
-		} else // other OS
-		{
-			result = -1;
-		}
 		
-		if(result!=0){
-			String commandScript = "echo ====================== Actual difference between Master and Slave ====================== >" + resultFile + Constants.LINE_SEPARATOR;
-			commandScript += "cat " + master_slaveOrReplicaDiffFileTemp + " >> " + resultFile + Constants.LINE_SEPARATOR;
-			commandScript += "if [ -f " + master_slaveOrReplicaDiffFile+  " ];then " + Constants.LINE_SEPARATOR;
-			commandScript += "	 	echo ====================== Expected difference (patch answer) ====================== >> " + resultFile + Constants.LINE_SEPARATOR;
-			commandScript += "		cat " + diffPacthResult + " >> " + resultFile + Constants.LINE_SEPARATOR;
-			commandScript += "fi" + Constants.LINE_SEPARATOR;
-			int shellType = CommonUtils.getShellType(false);
-			LocalInvoker.exec(commandScript, shellType, false);
-			new File(diffPacthResult).delete();
-			new File(master_slaveOrReplicaDiffFileTemp).delete();
-			
-		}else{
-			new File(diffPacthResult).delete();
-			new File(master_slaveOrReplicaDiffFileTemp).delete();
-		}
-		
-		return result;
-	}
-
-	private int ExecCommand(String command) {
-		int exitVal = 0;
-		try {
-			Runtime rt = Runtime.getRuntime();
-			Process proc;
-			proc = rt.exec(command);
-			// any error message?
-			StreamGobbler errorGobbler = new StreamGobbler(proc.getErrorStream(), "ERROR");
-
-			// any output?
-			StreamGobbler outputGobbler = new StreamGobbler(proc.getInputStream(), "OUTPUT");
-
-			// kick them off
-			errorGobbler.start();
-			outputGobbler.start();
-
-			// any error???
-			exitVal = proc.waitFor();
-			System.out.println("ExitValue: " + exitVal);
-		} catch (IOException e) {
-			e.printStackTrace();
-			exitVal = -1;
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			exitVal = -1;
-		}
-		return exitVal;
-	}
-
-	class StreamGobbler extends Thread {
-		InputStream is;
-		String type;
-
-		StreamGobbler(InputStream is, String type) {
-			this.is = is;
-			this.type = type;
-		}
-
-		public void run() {
-			try {
-				InputStreamReader isr = new InputStreamReader(is);
-				BufferedReader br = new BufferedReader(isr);
-				String line = null;
-				while ((line = br.readLine()) != null)
-					System.out.println(type + ">" + line);
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
-			}
-		}
-	}
-
-	public static void main(String[] args) {
-		CheckDiff checkDiff = new CheckDiff();
-		checkDiff.check("E:\\Informations\\Projects\\CUBRID_HA\\HA\\ha_repl_fm\\.\\test\\sql\\_02_user_authorization\\_02_authorization\\_002_revoke\\cases\\1061", "master", "slave1", "diff_1");
+		StringBuilder scripts = new StringBuilder();
+		scripts.append("diff " + masterFile + " " + slaveFile + " >" + master_slaveOrReplicaDiffFileTemp + " 2>&1\n");
+		scripts.append("if [ $? -eq 0 ]; then\n");
+		scripts.append("    echo PASS \n");
+		scripts.append("else\n");
+		scripts.append("    if [ -f "+ master_slaveOrReplicaDiffFile +" ]; then");
+		scripts.append("        diff " + master_slaveOrReplicaDiffFile + " " + master_slaveOrReplicaDiffFileTemp + "\n");
+		scripts.append("        if [ $? -eq 0 ]; then\n");
+		scripts.append("            echo PASS\n");
+		scripts.append("        else\n");
+		scripts.append("            echo FAIL\n");
+		scripts.append("        fi\n");
+		scripts.append("    else\n");
+		scripts.append("        echo FAIL\n");
+		scripts.append("    fi\n");
+		scripts.append("fi\n");
+		int shellType = CommonUtils.getShellType(false);
+		String result = LocalInvoker.exec(scripts.toString(), shellType, false);
+		return result.indexOf("PASS") != -1 ? 0: 1;
 	}
 }
