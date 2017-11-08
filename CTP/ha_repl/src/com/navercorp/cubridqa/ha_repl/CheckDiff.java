@@ -36,7 +36,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Properties;
 
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Constants;
+import com.navercorp.cubridqa.common.LocalInvoker;
 
 public class CheckDiff {
 	public int check(String filePath, String masterName, String slaveOrReplicaName, String fileSuffix) {
@@ -105,7 +107,8 @@ public class CheckDiff {
 			commandScript += "	 	echo ====================== Expected difference (patch answer) ====================== >> " + resultFile + Constants.LINE_SEPARATOR;
 			commandScript += "		cat " + diffPacthResult + " >> " + resultFile + Constants.LINE_SEPARATOR;
 			commandScript += "fi" + Constants.LINE_SEPARATOR;
-			ExecCommand(commandScript);
+			int shellType = CommonUtils.getShellType(false);
+			LocalInvoker.exec(commandScript, shellType, false);
 			new File(diffPacthResult).delete();
 			new File(master_slaveOrReplicaDiffFileTemp).delete();
 			
