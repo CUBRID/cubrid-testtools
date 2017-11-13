@@ -69,7 +69,7 @@ function run_cci()
    case_file=`readlink -f $1`
    port=`cat $CUBRID/conf/cubrid_broker.conf| grep "^SERVICE\|^BROKER_PORT" |grep -A1 "ON" | grep BROKER_PORT|tail -n 1|awk -F '=' '{print $NF}'|tr -d '[[:space:]]'`
    result_folder="schedule_cdriver_`uname`_${scenario_alias_in_interactive}_`date +"%Y%m%d%H%M%S"`_${bits_in_interactive}"
-   mkdir -p $CTP_HOME/result/sql_by_cci
+   [ ! -d "$CTP_HOME/result/sql_by_cci" ] && mkdir -p $CTP_HOME/result/sql_by_cci
    cd $CTP_HOME/sql_by_cci
    sh compile.sh >/dev/null 2>&1
    cd -

@@ -321,7 +321,7 @@ function config_qa_tool()
 {
      curDir=`pwd`
      if [ "$interface_type" == "cci" ];then
-	mkdir -p $CTP_HOME/result/sql_by_cci	
+	[ ! -d "$CTP_HOME/result/sql_by_cci" ] && mkdir -p $CTP_HOME/result/sql_by_cci	
 	cd $CTP_HOME/sql_by_cci
         echo ""> interface_verify.h 
 	sh compile.sh
