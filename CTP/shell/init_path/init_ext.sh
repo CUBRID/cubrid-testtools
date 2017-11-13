@@ -150,10 +150,10 @@ function restore_cubrid_config_on_remote {
 
 function sync_cubrid_config_to_remote {
 	for host in $@ ; do 
-		r_upload $host -from $CUBRID/conf/cubrid.conf -to CUBRID/conf/
-		r_upload $host -from $CUBRID/conf/cubrid_broker.conf -to CUBRID/conf/
-		r_upload $host -from $CUBRID/conf/cubrid_ha.conf -to CUBRID/conf/
-		r_upload $host -from $CUBRID/conf/cubrid_locales.txt -to CUBRID/conf/
+		r_upload $host -from $CUBRID/conf/cubrid.conf -to $CUBRID/conf/
+		r_upload $host -from $CUBRID/conf/cubrid_broker.conf -to $CUBRID/conf/
+		r_upload $host -from $CUBRID/conf/cubrid_ha.conf -to $CUBRID/conf/
+		r_upload $host -from $CUBRID/conf/cubrid_locales.txt -to $CUBRID/conf/
 	done
 }
 
@@ -218,7 +218,7 @@ function cubrid_ha_create {
 		rexec $host -c "sh \$init_path/../../bin/ini.sh -s common \$CUBRID/conf/cubrid.conf ha_mode replica"
 	done
 
-	cmds="(mkdir -p \$CUBRID/databases/hatestdb; cd \$CUBRID/databases/hatestdb; cubrid createdb hatestdb en_US)"
+	cmds="(mkdir -p \$CUBRID/databases/hatestdb; cd \$CUBRID/databases/hatestdb;source \$init_path/init.sh; cubrid_createdb hatestdb)"
 	eval $cmds
 	for node in $ha_hosts; do
 		rexec $node -c "$cmds"
