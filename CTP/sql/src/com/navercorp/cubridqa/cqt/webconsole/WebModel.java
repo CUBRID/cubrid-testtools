@@ -61,31 +61,33 @@ public class WebModel {
 
 		html.append("<table align='left' width=85% border=1 cellspacing=0><thead><tr>");
 		html.append("<td> Details</td>");
-		html.append("<td> total</td>");
-		html.append("<td> success</td>");
-		html.append("<td> fail</td>");
-		html.append("<td> totalTime(msec)</td>");
+		html.append("<td align=middle> total</td>");
+		html.append("<td align=middle> success</td>");
+		html.append("<td align=middle> fail</td>");
+		html.append("<td align=middle> totalTime(msec)</td>");
 		html.append("<td> build</td>");
 		html.append("<td> OS</td>");
 		html.append("<td> Comment </td>");
 		html.append("</tr></thead>");
 
 		String fail;
+		String warn;
 		SummaryModel model;
 		for (File test : fileList) {
 			model = new SummaryModel(test, true);
 			html.append("<tr>");
-			html.append("<td>&nbsp;<a href='show.jsp?p=" + test.getAbsolutePath() + "'>" + model.getDispName() + "</a> </td>");
-			html.append("<td>&nbsp;" + model.getMoreData("total") + " </td>");
-			html.append("<td>&nbsp;" + model.getMoreData("success") + " </td>");
+			html.append("<td>&nbsp;<a href='show.jsp?p=" + test.getAbsolutePath() + "' target=_blank>" + model.getDispName() + "</a> </td>");
+			html.append("<td align=right>&nbsp;" + model.getMoreData("total") + " </td>");
+			html.append("<td align=right>&nbsp;" + model.getMoreData("success") + " </td>");
 			fail = model.getMoreData("fail");
+			warn = model.getMoreData("test_error");
 			if (fail == null || fail.equals("") || fail.trim().equals("0")) {
 				fail = "0";
 				html.append("<td>&nbsp;" + fail + "</td>");
 			} else {
-				html.append("<td>&nbsp;<a href='failure.jsp?p=" + test.getAbsolutePath() + "'>" + model.getMoreData("fail") + "</a> </td>");
+				html.append("<td align=right>&nbsp;<a href='failure.jsp?p=" + test.getAbsolutePath() + "' target=_blank>" + (warn != null && warn.equals("Y") ? "<img src='image/warn.png' width=11 height=13 border=0/>&nbsp;" : "") + model.getMoreData("fail") + "</a> </td>");
 			}
-			html.append("<td>&nbsp;" + model.getMoreData("totalTime") + " </td>");
+			html.append("<td  align=right>&nbsp;" + model.getMoreData("totalTime") + " </td>");
 			html.append("<td>&nbsp;" + model.getMoreData("build") + " (" + model.getMoreData("version") + ") </td>");
 			html.append("<td>&nbsp;" + model.getMoreData("os") + " </td>");
 			html.append("<td>&nbsp;" + model.getComment() + " </td>");
@@ -139,13 +141,15 @@ public class WebModel {
 		} else {
 			html.append("<table align='left' width=95% border=1 cellspacing=0>");
 
+			File errFile;
 			for (int i = 0; i < list.size(); i++) {
 				sqlFilename = list.get(i).getAbsolutePath();
+				errFile = new File(sqlFilename.substring(0, sqlFilename.lastIndexOf(".")) + ".err");				
 				testResultRoot = getScheduleFolerName(sqlFilename);
 				label = sqlFilename.substring(sqlFilename.lastIndexOf(testResultRoot) + testResultRoot.length() + 1);
 				label = CommonUtils.replace(label, "\\", "/");
 				link = "compare.jsp?p=" + sqlFilename;
-				html.append("<tr><td width=30>" + (i + 1) + "</td><td><a href=" + link + " target=_blank>" + label + "</a></td></tr>");
+				html.append("<tr><td width=30>" + (i + 1) + "</td><td><a href=" + link + " target=_blank>" + label + (errFile.exists() ? "&nbsp;<img src='image/warn.png' width=11 height=13 border=0/>" : "") + "</a></td></tr>");
 			}
 			html.append("</table>");
 		}
@@ -165,6 +169,7 @@ public class WebModel {
 		// + "answers" + File.separator + sqlFilename.substring(p2,
 		// sqlFilename.lastIndexOf(".sql")) + ".answer";
 		String resultFilename = sqlFilename.substring(0, sqlFilename.lastIndexOf(".")) + ".result";
+		String errorFilename = sqlFilename.substring(0, sqlFilename.lastIndexOf(".")) + ".err";
 		String answerFilename = sqlFilename.substring(0, sqlFilename.lastIndexOf(".")) + ".answer";
 
 		String snapshot = resultFilename + "_diff_snapshot";
@@ -174,7 +179,13 @@ public class WebModel {
 			return Util.readFile(snapshot);
 		} else {
 			Compare compare = new Compare(sqlFilename, answerFilename, resultFilename);
+			
+			file = new File(errorFilename);
+			if(file.exists()) {
+				compare.setErrorContent(Util.readFile(errorFilename));
+			}			
 			compare.compare();
+			
 			content = compare.getResult();
 			Util.writeFile(snapshot, content);
 		}

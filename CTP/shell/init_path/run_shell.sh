@@ -23,42 +23,12 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
+
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
-
-corepath=$1
-command=$2
-output=$3
-
-coreloc=`file ${corepath}`
-
-if [ `echo $coreloc|grep "cub_admin"|wc -l` -ge 1 ]
+export init_path=$CTP_HOME/shell/init_path
+JAVA_CPS=${CTP_HOME}/shell/lib/cubridqa-shell.jar:${CTP_HOME}/common/sched/lib/cubridqa-scheduler.jar
+if [ "$OSTYPE" == "cygwin" ]
 then
-    coreloc=cub_admin
-elif [ `echo $coreloc|grep "cub_server"|wc -l` -ge 1 ]
-then
-    coreloc=cub_server
-elif [ `echo $coreloc|grep "cub_cas"|wc -l` -ge 1 ]
-then
-    coreloc=cub_cas
-elif [ `echo $coreloc|grep "cub_master"|wc -l` -ge 1 ]
-then
-    coreloc=cub_master
-elif [ `echo $coreloc|grep "csql"|wc -l` -ge 1 ]
-then
-    coreloc=csql
-elif [ `echo $coreloc|grep "cubrid "|wc -l` -ge 1 ]
-then
-    coreloc=cub_admin
-else
-    echo "analyze file command failed"
-    exit
+    JAVA_CPS=`cygpath -wpm $JAVA_CPS`
 fi
-
-if [ `echo $coreloc|grep "csql"|wc -l` -ge 1 -o `echo $coreloc|grep "cub_cas"|wc -l` -ge 1 ]
-then
-    # if csql,cub_cas, then print error Message with 'p *er_Msg'
-    sed -i "/^quit/i\p \*er_Msg" ${command}
-    gdb -c "$corepath" "$coreloc" -x $command |tee $output
-else
-    gdb -c "$corepath" "$coreloc" -x $command |tee $output
-fi
+"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.shell.main.RunShellMain "$@"

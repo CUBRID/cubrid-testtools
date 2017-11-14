@@ -25,7 +25,9 @@
 package com.navercorp.cubridqa.cqt.console.bean;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -97,6 +99,26 @@ public class Test {
 	private boolean needDebugHint = false;
 
 	private String scenarioRootPath = "";
+	
+	private Map<String, List<File>> coreCaseMap = new HashMap<String, List<File>>();
+	
+	private List<String> allCoreList = new ArrayList<String>();
+
+	public List<String> getAllCoreList() {
+		return allCoreList;
+	}
+
+	public void setAllCoreList(List<String> allCoreList) {
+		this.allCoreList = allCoreList;
+	}
+
+	public Map<String, List<File>> getCoreCaseMap() {
+		return coreCaseMap;
+	}
+	
+	public void putCoreCaseIntoMap(String caseFile, List<File> flist){
+		this.coreCaseMap.put(caseFile, flist);
+	}
 
 	public String getScenarioRootPath() {
 		return scenarioRootPath;

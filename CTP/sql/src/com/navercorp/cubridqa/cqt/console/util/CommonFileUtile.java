@@ -36,8 +36,11 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
@@ -500,6 +503,33 @@ public class CommonFileUtile {
 		return list;
 	}
 
+	public static List<File> getCoreFiles(String targetDirectory, List<String> existsCoreList){
+		File file = new File(targetDirectory);
+		List<File> list = new ArrayList<File>();
+		if(!file.exists()) return list;
+		searchCoreFromChildenDirectory(file, list, existsCoreList);
+		return list;
+		
+	}
+	
+	private static void searchCoreFromChildenDirectory(File file, List<File> list, List<String> existsCoreList) {
+		File[] listFiles = file.listFiles();
+		for (File child : listFiles) {
+			if (child.isDirectory()) {
+				searchCoreFromChildenDirectory(child, list, existsCoreList);
+			} else {
+				String fileName = child.getName();
+				String suffix = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
+				if (fileName.toUpperCase().startsWith("CORE.") && StringUtils.isNumeric(suffix)) {
+					if (existsCoreList.isEmpty() || !existsCoreList.contains(child.getAbsolutePath())) {
+						list.add(child);
+						existsCoreList.add(child.getAbsolutePath());
+					}
+				}
+			}
+		}
+
+	}
 	/**
 	 * get the target file in child directory.
 	 * 

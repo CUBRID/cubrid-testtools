@@ -47,6 +47,25 @@ then
    CUBRID_CHARSET=en_US
 fi
 
+#get the OS version
+function get_os(){
+osname=`uname`
+case "$osname" in
+	"Linux")
+		echo "Linux";;
+	"AIX")
+		echo "AIX";;
+	*)
+		echo "Windows_NT";;
+esac
+}
+
+export OS=`get_os`
+
+if [ "$OS" = "Windows_NT" ]; then
+	alias diff="diff -a -b"
+fi
+
 # get broker port from shell_config.xml
 function get_broker_port_from_shell_config
 {
@@ -54,6 +73,21 @@ function get_broker_port_from_shell_config
   port=${port#*>}
   port=${port%<*}
   echo $port
+}
+
+# This function is not recommended.
+# It is used to get another available port. 
+function generate_port {
+        generated_port=$1
+        while true; do
+                ((generated_port=${generated_port} + 1 ))
+                is_use=`netstat -ant | awk '{print $4}' | grep -e "\:${generated_port}$"`
+
+                if [ -z "$is_use" ]; then
+                        break
+                fi
+        done
+        echo ${generated_port}
 }
 
 function get_curr_second
@@ -598,11 +632,6 @@ function init
   full_name=$0
   answer_no=1 
   mode=$1
-  OS=`uname`
-  if [ `echo $OS| grep CYGWIN_NT|wc -l` -eq 1 ]
-  then
-      OS="Windows_NT"
-  fi
   
   if [ "$OS" = "Windows_NT" ]; then
   	export init_path=`cygpath "${init_path}"`
@@ -708,7 +737,6 @@ function init
        touch $result_file
     fi
   fi
-  
   export OS
 }
 
@@ -1185,16 +1213,16 @@ function do_make_tz
                 fi
                 shift
                 ;;
-	     new|extend)
-		if [ "$OS" == "Windows_NT" ]
-		then
-			parameter=`echo $parameter " /$1"`
-		else
-			parameter=`echo $parameter " -g $1"`
-		fi
-		shift
-		;;
-	     # do not check error
+        new|extend)
+        if [ "$OS" == "Windows_NT" ]
+        then
+            parameter=`echo $parameter " /$1"`
+        else
+            parameter=`echo $parameter " -g $1"`
+        fi
+        shift
+        ;;
+        # do not check error
              nocheck)
                 nocheck=1
                 shift
@@ -1209,17 +1237,24 @@ function do_make_tz
 
         if [ ! -d $CUBRID/qa_tzbk ]
         then
-	  echo "Warning: please backup timezone related data before make_tz"
-	fi
+            echo "Warning: please backup timezone related data before make_tz"
+        fi
 
-	if [ "$OS" == "Windows_NT" ]
+        if [ "$OS" == "Windows_NT" ]
         then
           #old_cubrid=`echo $CUBRID`
           #new_lang=`echo ${old_cubrid}|sed 's:/:\\\\:g'`
           #export CUBRID=${new_lang}
           #make_tz.bat $parameter > make_tz.log 2>&1
-          #export CUBRID=${old_cubrid}		  
-          (export CUBRID=`cygpath -w $CUBRID`; make_tz.bat $parameter > make_tz.log 2>&1)
+          #export CUBRID=${old_cubrid}
+          for i in {1..10}
+          do
+            (export CUBRID=`cygpath -w $CUBRID`; make_tz.bat $parameter > make_tz.log 2>&1)
+            cnt=`grep "0 file" make_tz.log | wc -l`
+            if [ $cnt -eq 0 ]; then
+               break
+            fi
+          done
         else
           if [ `is32bit` -eq 1 ]
           then
@@ -1235,12 +1270,14 @@ function do_make_tz
           return 0
         else
           succ_cnt=`grep "The timezone library has been created at" make_tz.log | wc -l`
-          fail_cnt=`grep "fail" make_tz.log | wc -l`
+          fail_cnt=`grep "fail\|0 file" make_tz.log | wc -l`
           if [ "$succ_cnt" -ge 1 -a "$fail_cnt" -eq 0 ]
           then
             write_ok
             return 0
           else
+            echo tail -n 60 make_tz.log
+            tail -n 60 make_tz.log
             write_nok "make_tz failed!!!"
             return 1
           fi
@@ -1265,19 +1302,6 @@ function revert_tz
 	fi
 }
 
-#get the OS version
-function get_os(){
-osname=`uname`
-case "$osname" in
-	"Linux")
-		echo "Linux";;
-	"AIX")
-		echo "AIX";;
-	*)
-		echo "Windows_NT";;
-esac
-}
-
 function get_bit_ver(){
 is32bit=`file ${CUBRID}/bin/cubrid | grep "32-bit" | wc -l`
 if [ "$is32bit" -eq 1 ] 
@@ -1291,7 +1315,6 @@ echo $BIT_VERSION
 
 #replace gcc to cross platforms
 function xgcc(){
-OS=`get_os`
 BIT_VERSION=`get_bit_ver`
 
 #recive parameters and delete options
@@ -1405,14 +1428,16 @@ function cubrid_createdb()
 
 function search_in_upper_path {
    curr_path=$1
-   dest_file=$2
-   if [ -f ${curr_path}/${dest_file} ]; then
-       echo $(cd ${curr_path}; pwd)/${dest_file}
+   dest_name=$2
+   if [ -f ${curr_path}/${dest_name} ]; then
+       echo $(cd ${curr_path}; pwd)/${dest_name}
+   elif [ -d ${curr_path}/${dest_name} ];then
+       echo $(cd ${curr_path}/${dest_name}; pwd)
    else
        if [ "$(cd ${curr_path}/..; pwd)" == "/" ]; then
            return 
        else
-           search_in_upper_path ${curr_path}/.. ${dest_file}
+           search_in_upper_path ${curr_path}/.. ${dest_name}
        fi
    fi
 }
@@ -1488,4 +1513,4 @@ function AIX_NOT_SUPPORTED {
     return
 }
 
-
+source $init_path/shell_utils.sh

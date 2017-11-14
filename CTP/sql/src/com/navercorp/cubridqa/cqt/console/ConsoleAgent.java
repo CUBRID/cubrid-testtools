@@ -24,6 +24,7 @@
  */
 package com.navercorp.cubridqa.cqt.console;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -177,6 +178,13 @@ public class ConsoleAgent {
 					CaseResult caseResult = (CaseResult) test.getCaseResultFromMap(caseFile);
 					SiteRunTimesList.add(caseResult.getSiteRunTimes());
 
+				}
+				
+				Map<String, List<File>> coreFileCaseMap = test.getCoreCaseMap();
+				if (coreFileCaseMap != null && coreFileCaseMap.size() > 0) {
+					for (String key : coreFileCaseMap.keySet()) {
+						bo.saveCoreCallStackFile(key, coreFileCaseMap.get(key));
+					}
 				}
 
 			}

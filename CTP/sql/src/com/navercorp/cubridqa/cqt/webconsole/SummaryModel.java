@@ -79,6 +79,14 @@ public class SummaryModel {
 					summaryData.put(key, value);
 				}
 			}
+			
+			String summayFn = dir.getAbsolutePath() + File.separatorChar + "summary_info";
+			String line = Util.readFileOneLine(summayFn, "test_error=");
+			if (line != null && line.indexOf("=Y") != -1) {
+				summaryData.put("test_error", "Y");
+			} else {
+				summaryData.put("test_error", "N");
+			}
 		} else {
 			this.dir = dir.getCanonicalPath();
 			File f = new File(this.dir);
