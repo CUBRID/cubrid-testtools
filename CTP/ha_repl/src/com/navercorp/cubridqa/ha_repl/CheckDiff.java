@@ -32,7 +32,7 @@ public class CheckDiff {
 	public int check(String filePath, String masterName, String slaveOrReplicaName, String fileSuffix) {
 		String masterFile = filePath + "." + masterName + ".dump";
 		String slaveFile = filePath + "." + slaveOrReplicaName + ".dump";
-		String master_slaveOrReplicaDiffFile = filePath + "." + masterName + "." + slaveOrReplicaName + "." + fileSuffix;
+		String master_slaveOrReplicaDiffFile = filePath + "." + masterName + ".slave1." + fileSuffix;
 		String master_slaveOrReplicaDiffFileTemp = master_slaveOrReplicaDiffFile + ".temp";
 		
 		StringBuilder scripts = new StringBuilder();
