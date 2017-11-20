@@ -407,25 +407,40 @@ public class RunShellMain {
 			}
 		}
 	}
-
+	
 	public synchronized void sendMailReport(String resultType, String errorInfo) {
+		for (int i = 0; i < 10; i++) {
+			try {
+				sendMailReport(resultType, errorInfo, i + 1);
+				break;
+			} catch (ShellTestException e) {
+				if (e.getErrorCode() == 3) {
+					System.err.println("[ERROR] fail to deliver mail report (" + (i + 1) + ")");
+					e.printStackTrace();
+					CommonUtils.sleep(10);
+				} else {
+					System.err.println(e.getMessage());
+					break;
+				}
+			}
+		}
+	}
+
+	private void sendMailReport(String resultType, String errorInfo, int index) throws ShellTestException {
 		if (CommonUtils.isEmpty(mailTo)) {
-			System.err.println("[ERROR] not found mail receiver when deliver report");
-			return;
+			throw new ShellTestException(1, "[ERROR] not found mail receiver when deliver report");
 		}
 		MailSender sender = MailSender.getInstance();
 		String mailFrom = Constants.MAIL_FROM;
 		if (CommonUtils.isEmpty(mailFrom)) {
-			System.err.println("[ERROR] not found mail sender when deliver report");
-			return;
+			throw new ShellTestException(2, "[ERROR] not found mail sender when deliver report");
 		}
 		String title = "[QA] re-test " + testCaseDir + "/" + testCaseName + ".sh [" + this.cubridBuildId + ", " + report.getTotalTimes() + ", " + userInfo + "] - " + resultType;
 		System.out.println("[INFO] begin to send mail report " + new Date().toString() + "\n" + title);
 		try {
 			sender.sendBatch(mailFrom, mailTo, mailCc, title, report.getMailContent(errorInfo));
 		} catch (Exception e) {
-			System.err.println("[ERROR] fail to deliver mail report");
-			e.printStackTrace();
+			throw new ShellTestException(3, e);
 		}
 	}
 
