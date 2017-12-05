@@ -67,6 +67,7 @@ public class RunShellMain {
 	private final static String RESULT_TEST_LOG = "test.log";
 	public final static String TOKEN_FOR_END = "========";
 	public static final String REPORT_DATE_FM = "yyyy-MM-dd HH:mm:ss.SSS";
+	public static final String STORE_FOR_MANUAL_BUILD = "store_99";
 
 	private Scheduler scheduler = null;
 
@@ -466,6 +467,8 @@ public class RunShellMain {
 
 	private static ArrayList<String> getCubridPkgListOfNewerBuild(String cubridBuildId, String allBuildsUrl) throws Exception {
 		String source = getHtmlSource(allBuildsUrl, true);
+		
+		boolean isManualBuildTest = source.indexOf(STORE_FOR_MANUAL_BUILD + cubridBuildId) != -1;
 
 		String mainVersion = getMainVersion(cubridBuildId);
 		int maxLastNum = getLastNumberInVersion(cubridBuildId);
@@ -475,12 +478,27 @@ public class RunShellMain {
 		int stepIndex = -1;
 		int start, end;
 		String sha = "";
+		String pathPrefix;
 		while (true) {
 			stepIndex = source.indexOf(mainVersion, stepIndex + 1);
 			if (stepIndex == -1) {
 				break;
 			}
 
+			start = source.lastIndexOf("'", stepIndex);
+			if (start != -1) {
+				pathPrefix = source.substring(start, stepIndex);
+				if (isManualBuildTest) {
+					if (pathPrefix.indexOf(STORE_FOR_MANUAL_BUILD) == -1) {
+						continue;
+					}
+				} else {
+					if (pathPrefix.indexOf(STORE_FOR_MANUAL_BUILD) != -1) {
+						continue;
+					}
+				}
+			}	
+			
 			end = source.indexOf("'", stepIndex);
 			if (end != -1) {
 				currBuildId = source.substring(stepIndex, end);
