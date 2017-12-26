@@ -29,12 +29,27 @@
 # according to result of comparing with a test result and an answer
 set -x
 
+function get_host_property {
+    local host_key=$1
+    local prop_name="\$${host_key}_$2"
+    local host_value=`eval echo $prop_name`
+    prop_name="\$D_DEFAULT_$2"
+    local default_value=`eval echo $prop_name`
+    
+    if [ -n "${host_value}" ]; then
+        echo "${host_value}"
+    else
+        echo "${default_value}"
+    fi
+}
 
 function rexec {
-    host_key=$1
-    host_opts="-host \"\$${host_key}_IP\" -user \"\$${host_key}_USER\" -password \"$D_DEFAULT_PWD\" -port $D_DEFAULT_PORT" 
-    cmd_opts=""
-    skip=1
+    local host_key=$1
+    local host_pwd=`get_host_property ${host_key} PWD`
+    local host_port=`get_host_property ${host_key} PORT`
+    local host_opts="-host \"\$${host_key}_IP\" -user \"\$${host_key}_USER\" -password \"${host_pwd}\" -port ${host_port}" 
+    local cmd_opts=""
+    local skip=1
     for item in "$@"; do
         if [ $skip -eq 1 ]; then
             skip=0
@@ -45,22 +60,13 @@ function rexec {
     eval $init_path/../../common/script/run_remote_script $host_opts $cmd_opts
 }
 
-
-function use_cubrid {
-    #todo: need improve
-    source $HOME/CUBRID_$1/.cubrid.sh
-}
-
-function use_cubrid_main {
-    #todo: need improve
-    source $HOME/CUBRID/.cubrid.sh
-}
-
 function r_upload {
-    host_key=$1
-    host_opts="-host \"\$${host_key}_IP\" -user \"\$${host_key}_USER\" -password \"$D_DEFAULT_PWD\" -port $D_DEFAULT_PORT" 
-    cmd_opts=""
-    skip=1
+    local host_key=$1
+    local host_pwd=`get_host_property ${host_key} PWD`
+    local host_port=`get_host_property ${host_key} PORT`
+    local host_opts="-host \"\$${host_key}_IP\" -user \"\$${host_key}_USER\" -password \"${host_pwd}\" -port ${host_port}" 
+    local cmd_opts=""
+    local skip=1
     for item in "$@"; do
         if [ $skip -eq 1 ]; then
             skip=0
@@ -72,10 +78,12 @@ function r_upload {
 }
 
 function r_download {
-    host_key=$1
-    host_opts="-host \"\$${host_key}_IP\" -user \"\$${host_key}_USER\" -password \"$D_DEFAULT_PWD\" -port $D_DEFAULT_PORT" 
-    cmd_opts=""
-    skip=1
+    local host_key=$1
+    local host_pwd=`get_host_property ${host_key} PWD`
+    local host_port=`get_host_property ${host_key} PORT`    
+    local host_opts="-host \"\$${host_key}_IP\" -user \"\$${host_key}_USER\" -password \"${host_pwd}\" -port ${host_port}" 
+    local cmd_opts=""
+    local skip=1
     for item in "$@"; do
         if [ $skip -eq 1 ]; then
             skip=0
@@ -84,6 +92,16 @@ function r_download {
         cmd_opts=$(echo $cmd_opts \'$item\')
     done
     eval $init_path/../../common/script/run_download $host_opts $cmd_opts
+}
+
+function use_cubrid {
+    #todo: need improve
+    source $HOME/CUBRID_$1/.cubrid.sh
+}
+
+function use_cubrid_main {
+    #todo: need improve
+    source $HOME/CUBRID/.cubrid.sh
 }
 
 function check_disk_space_and_notice {
