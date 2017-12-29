@@ -74,7 +74,7 @@ main (int argc, char *argv[])
   const char *option4 = "--date-time=yes";
   //const char *option4 = "--expensive-definedness-checks=yes";
   const char *option5 = "--track-origins=yes";
-  const char *option6 = "--num-callers=50"; 
+  const char *option6 = "--num-callers=30"; 
   char log_file[128] = { 0x00 };
   char t[128] = { 0x00 };
   strcpy (t, "--log-file=");
