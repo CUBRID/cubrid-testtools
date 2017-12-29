@@ -127,16 +127,16 @@ function get_matched_cubrid_pkg_deps()
 
 
 function backup_file {
-	if [ ! -f "$1.origin" ]; then
-		cp $1 $1.origin
+	if [ ! -f "$1.org" ]; then
+		cp $1 $1.org
 	fi
 }
 
 function restore_file {
-	if [ -f "$1.origin" ]; then
-		cp -f $1.origin $1
+	if [ -f "$1.org" ]; then
+		cp -f $1.org $1
 	else
-		echo "Not find file: $1.origin" >&2
+		echo "Not find file: $1.org" >&2
 	fi
 }
 
