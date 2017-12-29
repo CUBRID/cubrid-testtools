@@ -64,7 +64,7 @@ function convert_to_git_url(){
 	fi
 	
         branch_name=`git rev-parse --abbrev-ref HEAD`
-        repo_root_url_prefix=`echo ${root_git_url}|sed 's/\.git$//g'`
+        repo_root_url_prefix=`echo ${root_git_url}|sed 's/\.git$//g'|sed 's#//.*github\.com#//github.com#g'`
 
         while [ ! -d .git ] && [ ! "`pwd`" = "/" ]
       	do 
