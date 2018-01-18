@@ -114,43 +114,39 @@ function doCompile()
 function packageBuildsAndUploadpackages()
 {
    curDir=`pwd`
-   build_succ=`cat $build_log|grep "\[OK\] Building"|wc -l`
-   install_ok=`cat $build_log|grep "\[OK\] Installing"|wc -l`
-   if [ $build_succ -ne 0 -a $install_ok -ne 0 ];then
-	cov_binary_package_name="CUBRID-${BUILD_ID}-gcov-Linux.x86_64.tar.gz"
-	cov_source_package_name="cubrid-${BUILD_ID}-gcov-src-Linux.x86_64.tar.gz"
-
-	coverage_kr_host=`ini ${CTP_HOME}/conf/coverage.conf covarage_build_server_kr_host`
-	coverage_kr_usr=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_usr`
-	coverage_kr_password=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_pwd`
-	coverage_kr_port=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_port`
-	coverage_kr_build_target_dir=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_target_dir`
-
-        coverage_cn_host=`ini ${CTP_HOME}/conf/coverage.conf covarage_build_server_cn_host`
-        coverage_cn_usr=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_cn_usr`
-        coverage_cn_password=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_cn_pwd`
-        coverage_cn_port=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_cn_port`
-	if [ ! "$coverage_cn_port" ];then
-		coverage_cn_port="22"
-	fi
-        coverage_cn_build_target_dir="$BUILD_ABSOLUTE_PATH"
-
-	
-        cd $source_code_dir
-	cat ${CTP_HOME}/conf/coverage.conf |grep -v '_pwd' > ./coverage.conf
-	tar zvcf $cov_source_package_name . 2>&1 >> $build_log
-
-        run_remote_script -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -c "cd ${coverage_kr_build_target_dir};mkdir -p ${BUILD_ID}/drop;"
-        run_upload -from "$cov_source_package_name" -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -to "$coverage_kr_build_target_dir/${BUILD_ID}/drop"
-        run_upload -from "$cov_source_package_name" -user "$coverage_cn_usr" -password "$coverage_cn_password" -host "$coverage_cn_host" -port "$coverage_cn_port" -to "$BUILD_ABSOLUTE_PATH"
-        	
-        cd ${build_home}/${binary_build_folder}
-	mkdir -p databases
-        tar zvcf $cov_binary_package_name . 2>&1 >> $build_log
-
-        run_upload -from "$cov_binary_package_name" -user "$coverage_cn_usr" -password "$coverage_cn_password" -host "$coverage_cn_host" -port "$coverage_cn_port" -to "$BUILD_ABSOLUTE_PATH"
-        run_upload -from "$cov_binary_package_name" -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -to "$coverage_kr_build_target_dir/${BUILD_ID}/drop"
-  fi
+   cov_binary_package_name="CUBRID-${BUILD_ID}-gcov-Linux.x86_64.tar.gz"
+   cov_source_package_name="cubrid-${BUILD_ID}-gcov-src-Linux.x86_64.tar.gz"
+   
+   coverage_kr_host=`ini ${CTP_HOME}/conf/coverage.conf covarage_build_server_kr_host`
+   coverage_kr_usr=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_usr`
+   coverage_kr_password=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_pwd`
+   coverage_kr_port=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_port`
+   coverage_kr_build_target_dir=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_kr_target_dir`
+   
+   coverage_cn_host=`ini ${CTP_HOME}/conf/coverage.conf covarage_build_server_cn_host`
+   coverage_cn_usr=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_cn_usr`
+   coverage_cn_password=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_cn_pwd`
+   coverage_cn_port=`ini ${CTP_HOME}/conf/coverage.conf coverage_build_server_cn_port`
+   if [ ! "$coverage_cn_port" ];then
+   	coverage_cn_port="22"
+   fi
+   coverage_cn_build_target_dir="$BUILD_ABSOLUTE_PATH"
+   
+   
+   cd $source_code_dir
+   cat ${CTP_HOME}/conf/coverage.conf |grep -v '_pwd' > ./coverage.conf
+   tar zvcf $cov_source_package_name . 2>&1 >> $build_log
+   
+   run_remote_script -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -c "cd ${coverage_kr_build_target_dir};mkdir -p ${BUILD_ID}/drop;"
+   run_upload -from "$cov_source_package_name" -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -to "$coverage_kr_build_target_dir/${BUILD_ID}/drop"
+   run_upload -from "$cov_source_package_name" -user "$coverage_cn_usr" -password "$coverage_cn_password" -host "$coverage_cn_host" -port "$coverage_cn_port" -to "$BUILD_ABSOLUTE_PATH"
+   	
+   cd ${build_home}/${binary_build_folder}
+   mkdir -p databases
+   tar zvcf $cov_binary_package_name . 2>&1 >> $build_log
+   
+   run_upload -from "$cov_binary_package_name" -user "$coverage_cn_usr" -password "$coverage_cn_password" -host "$coverage_cn_host" -port "$coverage_cn_port" -to "$BUILD_ABSOLUTE_PATH"
+   run_upload -from "$cov_binary_package_name" -user "$coverage_kr_usr" -password "$coverage_kr_password" -host "$coverage_kr_host" -port "$coverage_kr_port" -to "$coverage_kr_build_target_dir/${BUILD_ID}/drop"
    cd $curDir
 }
 
