@@ -109,6 +109,9 @@ public class GeneralLocalTest {
 		String[] arr = output.getOutput().split("\n");
 		ArrayList<String> list = new ArrayList<String>();
 		for (String i : arr) {
+			if(i.trim().equals("")) {
+				continue;
+			}
 			list.add(i);
 		}
 		return list;

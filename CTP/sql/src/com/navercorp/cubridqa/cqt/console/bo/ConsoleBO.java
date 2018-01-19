@@ -1359,9 +1359,9 @@ public class ConsoleBO extends Executor {
 						String tmpSQL = line;
 						String hint_sql = addHintForSQL(tmpSQL, isNewStatement, lineCount, sqlFile);
 
-						ret.append(hint_sql + "" + System.getProperty("line.separator"));
+						ret.append(hint_sql + "\n");
 					} else {
-						ret.append(line + "" + System.getProperty("line.separator"));
+						ret.append(line + "\n");
 					}
 
 					if (!isCall) {

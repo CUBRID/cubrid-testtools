@@ -344,10 +344,12 @@ then
     sh ${scriptPath}/analyzer.sh --full "${coreFile}" > core.info
     
     # check correctness of core info
-    if [ `grep "[0-9 x a-f]* * in * ??*" core.info|wc -l` -gt 0 ] 
+    if [ `grep 'SUMMARY:null' core.info|wc -l` -ne 0 ] 
     then
-        colorecho "Error: CUBRID version isn't consistent with core file, please modify core info in template.txt"
+        colorecho "Error: The SUMMARY is null. Please confirm the core stack."
         coreerr=1
+    elif [ `grep "[0-9 x a-f]* * in * ??*" core.info|wc -l` -gt 0 ];then
+	colorecho "Warning: The call stack info of core contains non-normal information, you may need check it."
     fi
     
     # core info is right, present it
