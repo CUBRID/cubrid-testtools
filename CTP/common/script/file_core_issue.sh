@@ -344,7 +344,7 @@ then
     sh ${scriptPath}/analyzer.sh --full "${coreFile}" > core.info
     
     # check correctness of core info
-    if [ `grep "[0-9 x a-f]* * in * ??*" core.info|wc -l` -gt 0 ] 
+    if [ `grep "[0-9 x a-f]* * in * ??*" core.info|wc -l` -gt 0 ] && [ `grep 'SUMMARY:null' core.info|wc -l` -ne 0 ] 
     then
         colorecho "Error: CUBRID version isn't consistent with core file, please modify core info in template.txt"
         coreerr=1
