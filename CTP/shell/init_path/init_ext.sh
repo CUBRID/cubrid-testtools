@@ -179,8 +179,9 @@ ha_hosts=""
 
 #usage example: cubrid_ha_create -s D_HOST1,D_HOST2,... -r D_HOST1,D_HOST2,...
 function cubrid_ha_create {
-	slave_hosts=""
-	replica_hosts=""
+	local slave_hosts=""
+	local replica_hosts=""
+	local params=""
 
 	while [ $# -ne 0 ]; do
 		case $1 in
