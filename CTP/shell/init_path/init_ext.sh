@@ -179,8 +179,9 @@ ha_hosts=""
 
 #usage example: cubrid_ha_create -s D_HOST1,D_HOST2,... -r D_HOST1,D_HOST2,...
 function cubrid_ha_create {
-	slave_hosts=""
-	replica_hosts=""
+	local slave_hosts=""
+	local replica_hosts=""
+	local params=""
 
 	while [ $# -ne 0 ]; do
 		case $1 in
@@ -193,6 +194,7 @@ function cubrid_ha_create {
 				replica_hosts=`echo $1 | sed "s/,/ /g"`
 				;;
 			*)
+                                params="$params $1"	
 				;;
 		esac
 		shift
@@ -236,7 +238,7 @@ function cubrid_ha_create {
 		rexec $host -c "sh \$init_path/../../bin/ini.sh -s common \$CUBRID/conf/cubrid.conf ha_mode replica"
 	done
 
-	cmds="(mkdir -p \$CUBRID/databases/hatestdb; cd \$CUBRID/databases/hatestdb;source \$init_path/init.sh; cubrid_createdb hatestdb)"
+	cmds="(mkdir -p \$CUBRID/databases/hatestdb; cd \$CUBRID/databases/hatestdb;source \$init_path/init.sh; cubrid_createdb hatestdb \$params)"
 	eval $cmds
 	for node in $ha_hosts; do
 		rexec $node -c "$cmds"
