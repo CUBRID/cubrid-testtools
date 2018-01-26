@@ -369,6 +369,19 @@ function InstallBuildForCoverage()
     echo INSTALL `date '+%Y%m%d%H%M%s'` $@ >> $HOME/.qacoverage
 }
 
+function needDevToolSet()
+{
+    version=$1
+    major_version=$(echo $version | cut -d . -f 1)
+    minor_version=$(echo $version | cut -d . -f 2)
+    if [ $major_version -ge 10 -a $minor_version -ge 2 ];then
+	echo true
+    else
+	echo false
+    fi 
+
+}
+
 function BuildAndInstallForUnitTest()
 {
     build_url=$1
@@ -395,14 +408,29 @@ function BuildAndInstallForUnitTest()
     tar -zvxf $buildFile 
     cp -rf ${buildName}/* $cub/  
     cd $cub
-    
-    if [ "$tCat" == "unit-release" ];then
-	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-        make -j
-    else
-	cmake -DCMAKE_BUILD_TYPE=Debug
-        make -j
+    if [ -f VERSION ]; then
+    	version_file=VERSION
+    elif [ -f VERSION-DIST ]; then
+    	version_file=VERSION-DIST
     fi
+    version=$(cat $version_file)
+  
+    configure_options="-DCMAKE_BUILD_TYPE=Debug"
+    if [ "$tCat" == "unit-release" ];then
+	configure_options="-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+    fi
+    	 
+    if [ "`needDevToolSet ${version}`" == "true" ];then
+	[ -f "/opt/rh/devtoolset-6/enable" ] && echo "[Error]: devtoolset-6 is not found" && exit 1
+	(
+	  source /opt/rh/devtoolset-6/enable
+	  cmake ${configure_options}
+          make -j
+	)
+    else
+	  cmake ${configure_options}
+          make -j
+    fi 
     
     cd $HOME   
     rm $buildFile
