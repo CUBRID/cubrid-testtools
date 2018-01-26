@@ -421,7 +421,7 @@ function BuildAndInstallForUnitTest()
     fi
     	 
     if [ "`needDevToolSet ${version}`" == "true" ];then
-	[ -f "/opt/rh/devtoolset-6/enable" ] && echo "[Error]: devtoolset-6 is not found" && exit 1
+	[ ! -f "/opt/rh/devtoolset-6/enable" ] && echo "[Error]: devtoolset-6 is not found" && exit 1
 	(
 	  source /opt/rh/devtoolset-6/enable
 	  cmake ${configure_options}
