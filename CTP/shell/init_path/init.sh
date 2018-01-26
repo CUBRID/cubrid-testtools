@@ -969,6 +969,7 @@ function xkill
           do
 	          if [ "${pid}" == "${svr_id}" ]; then
 	          	is_in_white_list=1
+			break
 	          fi
           done
           if [ "${is_in_white_list}" == "0" ]; then
@@ -976,7 +977,7 @@ function xkill
           fi
        done
    else
-       for pid in `ps -u $USER -o pid,comm | grep $1 | grep -v grep | awk '{print $1}'`
+       for pid in `ps -u $USER -f | grep "$1" | grep -v grep | awk '{print $2}'`
        do
            kill -9 $pid
        done
