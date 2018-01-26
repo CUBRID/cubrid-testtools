@@ -987,9 +987,9 @@ function xkill
    else
        if [ $fullCommand -eq 1 ]
        then
-	pids=`ps -u $USER -o pid,command | grep "$strkill" | grep -v grep | awk '{print $1}'`
+		pids=`ps -u $USER -o pid,command | grep "$strkill" | grep -v grep | awk '{print $1}'`
        else
-	pids=`ps -u $USER -o pid,comm | grep "$strkill" | grep -v grep | awk '{print $1}'`
+		pids=`ps -u $USER -o pid,comm | grep "$strkill" | grep -v grep | awk '{print $1}'`
        fi 
 
        for pid in $pids
