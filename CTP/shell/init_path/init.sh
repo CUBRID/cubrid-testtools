@@ -952,11 +952,19 @@ function remove_space_character
 # it equals to: pkill cub
 function xkill
 {
-   strkill=$1
+   strkill=""
+   fullCommand=0
 
-   if [ "$strkill" = "" ]
+   if [ $# -eq 1 ]
    then
-       return
+       strkill=$1
+   elif [ $# -eq 2 ] && [ "$1" == "-f" ]
+   then
+	strkill=$2
+	fullCommand=1
+   else
+	echo "Usage: xkill [-f] \"KeyWord\""
+	return
    fi
    
    if [ "$OS" == Windows_NT ]
@@ -969,6 +977,7 @@ function xkill
           do
 	          if [ "${pid}" == "${svr_id}" ]; then
 	          	is_in_white_list=1
+			break
 	          fi
           done
           if [ "${is_in_white_list}" == "0" ]; then
@@ -976,7 +985,14 @@ function xkill
           fi
        done
    else
-       for pid in `ps -u $USER -o pid,comm | grep $1 | grep -v grep | awk '{print $1}'`
+       if [ $fullCommand -eq 1 ]
+       then
+		pids=`ps -u $USER -o pid,command | grep "$strkill" | grep -v grep | awk '{print $1}'`
+       else
+		pids=`ps -u $USER -o pid,comm | grep "$strkill" | grep -v grep | awk '{print $1}'`
+       fi 
+
+       for pid in $pids
        do
            kill -9 $pid
        done

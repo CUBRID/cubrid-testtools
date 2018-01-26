@@ -26,17 +26,16 @@
 
 package com.navercorp.cubridqa.common;
 
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import javax.mail.Address;
+import javax.mail.Authenticator;
 import javax.mail.Message;
+import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -45,9 +44,14 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-import org.masukomi.aspirin.Aspirin;
-import org.masukomi.aspirin.listener.AspirinListener;
-import org.masukomi.aspirin.listener.ResultState;
+import org.masukomi.aspirin.AspirinInternal;
+import org.masukomi.aspirin.delivery.DeliveryContext;
+import org.masukomi.aspirin.delivery.DeliveryManager;
+import org.masukomi.aspirin.delivery.SendMessage;
+import org.masukomi.aspirin.dns.ResolveHost;
+import org.masukomi.aspirin.store.mail.MailStore;
+import org.masukomi.aspirin.store.queue.QueueInfo;
+import org.masukomi.aspirin.store.queue.QueueStore;
 
 public class MailSender {
 
@@ -219,16 +223,20 @@ public class MailSender {
 		send(from, toList, ccList, title, mailContent);
 	}
 
-	public void send(InternetAddress from, ArrayList<InternetAddress> to, ArrayList<InternetAddress> cc, String title, String mailContent) throws Exception {
+	public synchronized void send(InternetAddress from, ArrayList<InternetAddress> to, ArrayList<InternetAddress> cc, String title, String mailContent) throws Exception {
+
+		System.out.println("MAIL START (" + new Date() + ")");
+		
 		Properties prop = System.getProperties();
 		prop.put("mail.smtp.host", "localhost");
+		MimeMessage message = new MimeMessage(Session.getDefaultInstance(prop, new Authenticator() {
+		}));
 
-		MimeMessage message = Aspirin.createNewMimeMessage();
 		message.setSubject(title);
 		message.setContent(mailContent, "text/html");
 		message.setSentDate(new Date());
 		message.setFrom(from);
-
+		
 		Address[] addrs = new Address[to.size()];
 		Address[] ccAddrs = null;
 		for (int i = 0; i < addrs.length; i++) {
@@ -248,25 +256,37 @@ public class MailSender {
 		if (ccAddrs != null && ccAddrs.length > 0) {
 			message.addRecipients(Message.RecipientType.CC, ccAddrs);
 		}
-		
-		Aspirin.add(message);
-		final CountDownLatch stop = new CountDownLatch(1);
-		Aspirin.addListener(new AspirinListener() {
 
-			@Override
-			public void delivered(String id, String mail, ResultState state, String result) {
-				System.out.println(id);
-				System.out.println(mail);
-				System.out.println(state);
-				System.out.println(result);
-				if (state.equals(ResultState.FINISHED)) {
-					Aspirin.shutdown();
-					stop.countDown();
-					System.out.println("MAIL DONE");
-				}
-			}
-		});
-		stop.await(600, TimeUnit.SECONDS);
+		message.saveChanges();
+		
+		DeliveryManager deliveryManager = new DeliveryManager();
+		deliveryManager.add(message);
+		
+		MailStore mstore = AspirinInternal.getConfiguration().getMailStore();
+		QueueStore qstore = AspirinInternal.getConfiguration().getQueueStore();
+		QueueInfo qinfo;
+		DeliveryContext dctx;
+		MimeMessage m;
+		ResolveHost rh = (ResolveHost) deliveryManager.getDeliveryHandler(ResolveHost.class.getCanonicalName());
+		SendMessage sm = (SendMessage) deliveryManager.getDeliveryHandler(SendMessage.class.getCanonicalName());
+		while (true) {
+			qinfo = qstore.next();
+			if (qinfo == null)
+				break;
+
+			m = mstore.get(qinfo.getMailid());
+			if (m == null)
+				break;
+
+			dctx = new DeliveryContext();
+			dctx.setQueueInfo(qinfo);
+			dctx.setMessage(m);
+
+			rh.handle(dctx);
+			sm.handle(dctx);
+			deliveryManager.join();
+		}	
+		System.out.println("MAIL DONE (" + new Date() + ")");
 	}
 
 	public static Properties getProperties(String filename) throws IOException {
