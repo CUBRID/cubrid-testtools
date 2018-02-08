@@ -29,7 +29,7 @@ function init {
 }
 
 function list {
-    find $CUBRID/util -name unittests* | grep -v CMake
+    find $CUBRID/util -name unittests* 2>/dev/null | grep -v CMake
 }
 
 function execute {
