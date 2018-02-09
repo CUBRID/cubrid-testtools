@@ -366,7 +366,7 @@ function InstallBuildForCoverage()
 
     checkEnvironmentVariable
     cd $curDir
-    echo INSTALL `date '+%Y%m%d%H%M%s'` $@ >> $HOME/.qacoverage
+    echo INSTALL `date '+%Y%m%d%H%M%s'` $@ 2>&1 | tee -a $HOME/.qacoverage
 }
 
 function needDevToolSet()
@@ -435,21 +435,21 @@ function BuildAndInstallForUnitTest()
     cd $HOME   
     rm $buildFile
     rm -rf ${buildName}
-    echo "INSTALL `date '+%Y%m%d%H%M%s'` $@" >> $HOME/.unitTestInstall.log
+    echo "INSTALL `date '+%Y%m%d%H%M%s'` $@" 2>&1 |tee -a $HOME/.unitTestInstall.log
     cd $curDir
 }
 
 if [ "$tCat" == "general" ]
 then
-     InstallBuildForGeneral $gUrl  > $HOME/.buildinstall.log 2>&1
+     InstallBuildForGeneral $gUrl 2>&1 | tee $HOME/.buildinstall.log
 elif [ "$tCat" == "compat" ]
 then
-     InstallBuildForCompat $sUrl $dUrl > $HOME/.buildinstall.log 2>&1
+     InstallBuildForCompat $sUrl $dUrl 2>&1 | tee $HOME/.buildinstall.log
 elif [ "$tCat" == "coverage" ]
 then
-     InstallBuildForCoverage $vUrl $cUrl > $HOME/.qacoverage.log 2>&1
+     InstallBuildForCoverage $vUrl $cUrl 2>&1 | tee $HOME/.qacoverage.log
 elif [ "$tCat" == "unit-release" ] || [ "$tCat" == "unit-debug" ];then
-     BuildAndInstallForUnitTest $gUrl > $HOME/.unitTestInstall.log 2>&1
+     BuildAndInstallForUnitTest $gUrl 2>&1 | tee $HOME/.unitTestInstall.log
 else
      echo "[ERROR]: Please confirm your parameters - $@ !!"
 fi
