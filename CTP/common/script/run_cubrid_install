@@ -153,6 +153,15 @@ function IsGitExtensionBuild()
    fi
 }
 
+function print_current_machine_status ()
+{
+  echo ""
+  ps -u $USER f
+  echo ""
+  df -h
+  echo ""
+}
+
 function InstallBuildBySh()
 {
     build_url=$1
@@ -171,6 +180,7 @@ function InstallBuildBySh()
 		chmod 777 $buildFile
     else
     	echo "[ERROR]: Please confirm build url ${build_url}"
+	print_current_machine_status
     fi
     
     cubrid service stop >/dev/null 2>&1
@@ -192,6 +202,7 @@ n
 EOF
 	   if [ $? -ne 0 ];then
 	   		echo "[ERROR]: Please confirm build file name - $buildFile"
+			print_current_machine_status
 	   fi
 	   rm $buildFile
 	   cd ..
@@ -203,6 +214,7 @@ yes
 EOF
 	if [ $? -ne 0 ];then
 	   		echo "[ERROR]: Please confirm build file name - $buildFile"
+ 			print_current_machine_status
 	fi
     . ~/.cubrid.sh
     fi
@@ -234,11 +246,13 @@ function InstallBuildByPackage()
     wget -t 3 -T 120 $build_url
     if [ $? -ne 0 ];then
     	echo "[ERROR]: Please confirm build url - ${build_url}"
+	print_current_machine_status
     fi
     
     eval $command $buildFile $commandOpts ./CUBRID
     if [ $? -ne 0 ];then
     	echo "[ERROR]: Please confirm build file - ${buildFile}"
+	print_current_machine_status
     fi
     
     if [ -d ./CUBRID/CUBRID ]; then
@@ -333,6 +347,7 @@ function InstallBuildForCoverage()
     then
 	echo ""
         echo "[ERROR]: Please confirm the build url ${build_url}"
+	print_current_machine_status
 	exit -1
     fi
     
@@ -358,6 +373,7 @@ function InstallBuildForCoverage()
     if [ $? -ne 0 ];then
 	echo ""
 	echo "[ERROR] Please confirm the coverage source build url ${source_url}"
+	print_current_machine_status
 	exit -1
     fi
 
@@ -402,6 +418,11 @@ function BuildAndInstallForUnitTest()
 
     rm $buildFile >/dev/null 2>&1
     wget -t 3 -T 120 $build_url
+    if [ $? -ne 0 ];then
+	echo "[ERROR] download build fail with url $build_url"
+	print_current_machine_status
+    fi
+
     if [ -d $cub ]
     then
             rm -rf $cub
