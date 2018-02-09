@@ -214,6 +214,7 @@ function InstallBuildByPackage()
 {
     command=$1
     build_url=$2
+    commandOpts=$3
     buildFile=${build_url##*/}
     cub="CUBRID"
     curDir=`pwd`
@@ -226,14 +227,16 @@ function InstallBuildByPackage()
     cubrid service stop >/dev/null 2>&1
     if [ -d $cub ]
     then
-            rm -rf CUBRID
+            rm -rf CUBRID/*
+    else
+	    mkdir -p CUBRID
     fi
     wget -t 3 -T 120 $build_url
     if [ $? -ne 0 ];then
     	echo "[ERROR]: Please confirm build url - ${build_url}"
     fi
     
-    `eval $command $buildFile -d ./CUBRID`
+    eval $command $buildFile $commandOpts ./CUBRID
     if [ $? -ne 0 ];then
     	echo "[ERROR]: Please confirm build file - ${buildFile}"
     fi
@@ -259,13 +262,13 @@ function InstallBuildForGeneral()
 	InstallBuildBySh $url
     elif [ "$buildType" == "zip" ]
     then
-	InstallBuildByPackage "unzip " $url
+	InstallBuildByPackage "unzip " $url "-d"
     elif [ "$buildType" == "gz" ]
     then
-	InstallBuildByPackage "tar zvxf " $url
+	InstallBuildByPackage "tar zvxf " $url "-C"
     elif [ "$buildType" == "tar" ]
     then
-        echo "TODO"
+	InstallBuildByPackage "tar vxf " $url "-C"
     elif [ "$buildType" == "rpm" ]
     then
 	echo "TODO"
