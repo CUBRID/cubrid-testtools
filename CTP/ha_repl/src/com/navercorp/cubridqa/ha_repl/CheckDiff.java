@@ -36,12 +36,12 @@ public class CheckDiff {
 		String master_slaveOrReplicaDiffFileTemp = master_slaveOrReplicaDiffFile + ".temp";
 		
 		StringBuilder scripts = new StringBuilder();
-		scripts.append("diff " + masterFile + " " + slaveFile + " >" + master_slaveOrReplicaDiffFileTemp + " 2>&1\n");
+		scripts.append("diff '" + masterFile + "' '" + slaveFile + "' > '" + master_slaveOrReplicaDiffFileTemp + "' 2>&1\n");
 		scripts.append("if [ $? -eq 0 ]; then\n");
 		scripts.append("    echo PASS \n");
 		scripts.append("else\n");
-		scripts.append("    if [ -f "+ master_slaveOrReplicaDiffFile +" ]; then");
-		scripts.append("        diff " + master_slaveOrReplicaDiffFile + " " + master_slaveOrReplicaDiffFileTemp + "\n");
+		scripts.append("    if [ -f '"+ master_slaveOrReplicaDiffFile +"' ]; then");
+		scripts.append("        diff '" + master_slaveOrReplicaDiffFile + "' '" + master_slaveOrReplicaDiffFileTemp + "'\n");
 		scripts.append("        if [ $? -eq 0 ]; then\n");
 		scripts.append("            echo PASS\n");
 		scripts.append("        else\n");
