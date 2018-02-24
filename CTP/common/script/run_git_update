@@ -104,12 +104,14 @@ git clean -df
 git reset -- .
 git clean -df
 
-git fetch auto_update_url
-if [ $? -ne 0 ];then
-		git branch | grep  temp_branch | xargs -i git branch -D {}
-        echo "[ERROR]: Please confirm your permission!"
-        exit
-fi
+while true
+do
+    timeout 600s git fetch auto_update_url
+    if [ $? -eq 0 ];then
+         break
+    fi
+    sleep 3
+done
 
 if [[ "$branch_name" == *\/* ]];then
         local_branch_name=`echo $branch_name|sed 's#/#_#g'`
