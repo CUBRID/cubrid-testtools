@@ -104,6 +104,13 @@ git clean -df
 git reset -- .
 git clean -df
 
+if [[ "$branch_name" == *\/* ]];then
+        local_branch_name=`echo $branch_name|sed 's#/#_#g'`
+else
+        local_branch_name=$branch_name
+fi
+
+git branch -D $local_branch_name
 while true
 do
     timeout 600s git fetch auto_update_url
@@ -112,15 +119,6 @@ do
     fi
     sleep 3
 done
-
-if [[ "$branch_name" == *\/* ]];then
-        local_branch_name=`echo $branch_name|sed 's#/#_#g'`
-else
-        local_branch_name=$branch_name
-fi
-
-git branch -D $local_branch_name
-git fetch auto_update_url
 
 echo Begin to check out test cases:
 echo git checkout -f -b $local_branch_name -t auto_update_url/$branch_name
