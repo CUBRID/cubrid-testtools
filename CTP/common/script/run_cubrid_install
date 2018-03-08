@@ -401,6 +401,27 @@ function needDevToolSet()
 
 }
 
+function change_url_to_local {
+    local search_file=$1
+    local search_key=$2
+    local cache_dir=$HOME/CACHE
+    local url=`grep URL ${search_file} | grep "${search_key}" | awk -F "URL" '{print $NF}'`
+    local file=`echo $url| awk -F '/' '{print $NF}'`
+    if [ "$url" == "" -o "$file" == "" ]; then
+        return 1
+    fi
+    if [ ! -f ${cache_dir}/$file ]; then
+        (mkdir -p $cache_dir 2>/dev/null; cd $cache_dir; wget -t 5 -T 120 $url >/dev/null 2>&1)
+    fi
+
+    if [ -f ${cache_dir}/$file ]; then
+        sed -i "s#URL *$url#URL ${cache_dir}/$file#g" ${search_file}
+        return 0
+    fi
+    return 1
+}
+
+
 function BuildAndInstallForUnitTest()
 {
     build_url=$1
@@ -438,7 +459,10 @@ function BuildAndInstallForUnitTest()
     	version_file=VERSION-DIST
     fi
     version=$(cat $version_file)
-  
+
+    change_url_to_local ./CMakeLists.txt "http://thrysoee.dk/editline/"  
+    change_url_to_local ./CMakeLists.txt "https://github.com/Tencent/rapidjson/archive/"  
+
     configure_options="-DCMAKE_BUILD_TYPE=Debug"
     if [ "$tCat" == "unit-release" ];then
 	configure_options="-DCMAKE_BUILD_TYPE=RelWithDebInfo"
