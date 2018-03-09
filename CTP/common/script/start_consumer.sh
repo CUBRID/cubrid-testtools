@@ -154,6 +154,8 @@ function updateCodes()
 	    fi
 
 	    echo "#!/bin/bash " > $HOME/.autoUpdate.sh
+	    echo "export HOME=$HOME" >> $HOME/.autoUpdate.sh
+	    echo "export USER=$USER" >> $HOME/.autoUpdate.sh
 	    echo "if [ -f ~/.bash_profile ]; " >> $HOME/.autoUpdate.sh
 	    echo "then " >> $HOME/.autoUpdate.sh
 	    echo "	  . ~/.bash_profile " >> $HOME/.autoUpdate.sh

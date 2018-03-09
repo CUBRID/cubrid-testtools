@@ -153,6 +153,15 @@ function IsGitExtensionBuild()
    fi
 }
 
+function print_current_machine_status ()
+{
+  echo ""
+  ps -u $USER f
+  echo ""
+  df -h
+  echo ""
+}
+
 function InstallBuildBySh()
 {
     build_url=$1
@@ -171,6 +180,7 @@ function InstallBuildBySh()
 		chmod 777 $buildFile
     else
     	echo "[ERROR]: Please confirm build url ${build_url}"
+	print_current_machine_status
     fi
     
     cubrid service stop >/dev/null 2>&1
@@ -192,6 +202,7 @@ n
 EOF
 	   if [ $? -ne 0 ];then
 	   		echo "[ERROR]: Please confirm build file name - $buildFile"
+			print_current_machine_status
 	   fi
 	   rm $buildFile
 	   cd ..
@@ -203,6 +214,7 @@ yes
 EOF
 	if [ $? -ne 0 ];then
 	   		echo "[ERROR]: Please confirm build file name - $buildFile"
+ 			print_current_machine_status
 	fi
     . ~/.cubrid.sh
     fi
@@ -214,6 +226,7 @@ function InstallBuildByPackage()
 {
     command=$1
     build_url=$2
+    commandOpts=$3
     buildFile=${build_url##*/}
     cub="CUBRID"
     curDir=`pwd`
@@ -226,16 +239,20 @@ function InstallBuildByPackage()
     cubrid service stop >/dev/null 2>&1
     if [ -d $cub ]
     then
-            rm -rf CUBRID
+            rm -rf CUBRID/*
+    else
+	    mkdir -p CUBRID
     fi
     wget -t 3 -T 120 $build_url
     if [ $? -ne 0 ];then
     	echo "[ERROR]: Please confirm build url - ${build_url}"
+	print_current_machine_status
     fi
     
-    `eval $command $buildFile -d ./CUBRID`
+    eval $command $buildFile $commandOpts ./CUBRID
     if [ $? -ne 0 ];then
     	echo "[ERROR]: Please confirm build file - ${buildFile}"
+	print_current_machine_status
     fi
     
     if [ -d ./CUBRID/CUBRID ]; then
@@ -259,13 +276,13 @@ function InstallBuildForGeneral()
 	InstallBuildBySh $url
     elif [ "$buildType" == "zip" ]
     then
-	InstallBuildByPackage "unzip " $url
+	InstallBuildByPackage "unzip " $url "-d"
     elif [ "$buildType" == "gz" ]
     then
-	InstallBuildByPackage "tar zvxf " $url
+	InstallBuildByPackage "tar zvxf " $url "-C"
     elif [ "$buildType" == "tar" ]
     then
-        echo "TODO"
+	InstallBuildByPackage "tar vxf " $url "-C"
     elif [ "$buildType" == "rpm" ]
     then
 	echo "TODO"
@@ -330,6 +347,7 @@ function InstallBuildForCoverage()
     then
 	echo ""
         echo "[ERROR]: Please confirm the build url ${build_url}"
+	print_current_machine_status
 	exit -1
     fi
     
@@ -355,6 +373,7 @@ function InstallBuildForCoverage()
     if [ $? -ne 0 ];then
 	echo ""
 	echo "[ERROR] Please confirm the coverage source build url ${source_url}"
+	print_current_machine_status
 	exit -1
     fi
 
@@ -366,8 +385,42 @@ function InstallBuildForCoverage()
 
     checkEnvironmentVariable
     cd $curDir
-    echo INSTALL `date '+%Y%m%d%H%M%s'` $@ >> $HOME/.qacoverage
+    echo INSTALL `date '+%Y%m%d%H%M%s'` $@ 2>&1 | tee -a $HOME/.qacoverage
 }
+
+function needDevToolSet()
+{
+    version=$1
+    major_version=$(echo $version | cut -d . -f 1)
+    minor_version=$(echo $version | cut -d . -f 2)
+    if [ $major_version -ge 10 -a $minor_version -ge 2 ];then
+	echo true
+    else
+	echo false
+    fi 
+
+}
+
+function change_url_to_local {
+    local search_file=$1
+    local search_key=$2
+    local cache_dir=$HOME/CACHE
+    local url=`grep URL ${search_file} | grep "${search_key}" | awk -F "URL" '{print $NF}'`
+    local file=`echo $url| awk -F '/' '{print $NF}'`
+    if [ "$url" == "" -o "$file" == "" ]; then
+        return 1
+    fi
+    if [ ! -f ${cache_dir}/$file ]; then
+        (mkdir -p $cache_dir 2>/dev/null; cd $cache_dir; wget -t 5 -T 120 $url >/dev/null 2>&1)
+    fi
+
+    if [ -f ${cache_dir}/$file ]; then
+        sed -i "s#URL *$url#URL ${cache_dir}/$file#g" ${search_file}
+        return 0
+    fi
+    return 1
+}
+
 
 function BuildAndInstallForUnitTest()
 {
@@ -386,6 +439,11 @@ function BuildAndInstallForUnitTest()
 
     rm $buildFile >/dev/null 2>&1
     wget -t 3 -T 120 $build_url
+    if [ $? -ne 0 ];then
+	echo "[ERROR] download build fail with url $build_url"
+	print_current_machine_status
+    fi
+
     if [ -d $cub ]
     then
             rm -rf $cub
@@ -395,33 +453,51 @@ function BuildAndInstallForUnitTest()
     tar -zvxf $buildFile 
     cp -rf ${buildName}/* $cub/  
     cd $cub
-    
-    if [ "$tCat" == "unit-release" ];then
-	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-        make -j
-    else
-	cmake -DCMAKE_BUILD_TYPE=Debug
-        make -j
+    if [ -f VERSION ]; then
+    	version_file=VERSION
+    elif [ -f VERSION-DIST ]; then
+    	version_file=VERSION-DIST
     fi
+    version=$(cat $version_file)
+
+    change_url_to_local ./CMakeLists.txt "http://thrysoee.dk/editline/"  
+    change_url_to_local ./CMakeLists.txt "https://github.com/Tencent/rapidjson/archive/"  
+
+    configure_options="-DCMAKE_BUILD_TYPE=Debug"
+    if [ "$tCat" == "unit-release" ];then
+	configure_options="-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+    fi
+    	 
+    if [ "`needDevToolSet ${version}`" == "true" ];then
+	[ ! -f "/opt/rh/devtoolset-6/enable" ] && echo "[Error]: devtoolset-6 is not found" && exit 1
+	(
+	  source /opt/rh/devtoolset-6/enable
+	  cmake ${configure_options}
+          make -j
+	)
+    else
+	  cmake ${configure_options}
+          make -j
+    fi 
     
     cd $HOME   
     rm $buildFile
     rm -rf ${buildName}
-    echo "INSTALL `date '+%Y%m%d%H%M%s'` $@" >> $HOME/.unitTestInstall.log
+    echo "INSTALL `date '+%Y%m%d%H%M%s'` $@" 2>&1 |tee -a $HOME/.unitTestInstall.log
     cd $curDir
 }
 
 if [ "$tCat" == "general" ]
 then
-     InstallBuildForGeneral $gUrl  > $HOME/.buildinstall.log 2>&1
+     InstallBuildForGeneral $gUrl 2>&1 | tee $HOME/.buildinstall.log
 elif [ "$tCat" == "compat" ]
 then
-     InstallBuildForCompat $sUrl $dUrl > $HOME/.buildinstall.log 2>&1
+     InstallBuildForCompat $sUrl $dUrl 2>&1 | tee $HOME/.buildinstall.log
 elif [ "$tCat" == "coverage" ]
 then
-     InstallBuildForCoverage $vUrl $cUrl > $HOME/.qacoverage.log 2>&1
+     InstallBuildForCoverage $vUrl $cUrl 2>&1 | tee $HOME/.qacoverage.log
 elif [ "$tCat" == "unit-release" ] || [ "$tCat" == "unit-debug" ];then
-     BuildAndInstallForUnitTest $gUrl > $HOME/.unitTestInstall.log 2>&1
+     BuildAndInstallForUnitTest $gUrl 2>&1 | tee $HOME/.unitTestInstall.log
 else
      echo "[ERROR]: Please confirm your parameters - $@ !!"
 fi

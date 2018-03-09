@@ -240,7 +240,7 @@ public class jdbc_cubrid415 {
 			Connection con = DriverManager.getConnection("jdbc:default:connection:"); 
 	
 			((CUBRIDConnection)con).setCharset("euc_kr"); 
-			String query = "select * from kor"; 
+			String query = "select * from kor order by id,name"; 
 			Statement stmt = con.createStatement(); 
 			ResultSet rs = stmt.executeQuery(query); 
 			((CUBRIDResultSet) rs).setReturnable(); 
@@ -282,7 +282,7 @@ public class jdbc_cubrid415 {
 			Connection con = DriverManager.getConnection("jdbc:default:connection:"); 
 	
 			((CUBRIDConnection)con).setCharset("euc_kr"); 
-			String query = "select * from kor"; 
+			String query = "select * from kor order by id,name"; 
 			Statement stmt = con.createStatement(); 
 			ResultSet rs = stmt.executeQuery(query); 
 			return rs; 

@@ -82,7 +82,7 @@ public class FileReady {
 				break;
 			}
 			if (isAllFilesCompleted()) {
-				saveLog("all");
+				//saveLog("all");
 				break;
 			}
 			CommonUtils.sleep(10);
