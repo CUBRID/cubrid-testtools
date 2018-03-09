@@ -46,8 +46,12 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.masukomi.aspirin.AspirinInternal;
 import org.masukomi.aspirin.delivery.DeliveryContext;
+import org.masukomi.aspirin.delivery.DeliveryManager;
 import org.masukomi.aspirin.delivery.SendMessage;
 import org.masukomi.aspirin.dns.ResolveHost;
+import org.masukomi.aspirin.store.mail.MailStore;
+import org.masukomi.aspirin.store.queue.QueueInfo;
+import org.masukomi.aspirin.store.queue.QueueStore;
 
 public class MailSender {
 
@@ -104,7 +108,7 @@ public class MailSender {
 		if (cmd.hasOption("br")) {
 			content = CommonUtils.replace(content, "\n", "<br>");
 		}
-		
+
 		String[] toList = to.split(",");
 		ArrayList<InternetAddress> toAdrrList = new ArrayList<InternetAddress>();
 		ArrayList<InternetAddress> ccAdrrList = new ArrayList<InternetAddress>();
@@ -186,6 +190,30 @@ public class MailSender {
 		send(f, t, c, title, mailContent);
 	}
 
+	public void sendBatch(String from, String to, String cc, String title, String mailContent) throws Exception {
+		InternetAddress f = new InternetAddress(from);
+		ArrayList<InternetAddress> toList = new ArrayList<InternetAddress>();
+		ArrayList<InternetAddress> ccList = null;
+		String[] arr = to.split(",");
+		for (String s : arr) {
+			if (CommonUtils.isEmpty(s)) {
+				continue;
+			}
+			toList.add(new InternetAddress(s));
+		}
+		if (CommonUtils.isEmpty(cc) == false) {
+			ccList = new ArrayList<InternetAddress>();
+			arr = cc.split(",");
+			for (String s : arr) {
+				if (CommonUtils.isEmpty(s)) {
+					continue;
+				}
+				ccList.add(new InternetAddress(s));
+			}
+		}
+		send(f, toList, ccList, title, mailContent);
+	}
+
 	public void send(InternetAddress from, InternetAddress to, InternetAddress cc, String title, String mailContent) throws Exception {
 		ArrayList<InternetAddress> toList = new ArrayList<InternetAddress>();
 		toList.add(to);
@@ -195,43 +223,70 @@ public class MailSender {
 		send(from, toList, ccList, title, mailContent);
 	}
 
-	public void send(InternetAddress from, ArrayList<InternetAddress> to, ArrayList<InternetAddress> cc, String title, String mailContent) throws Exception {
+	public synchronized void send(InternetAddress from, ArrayList<InternetAddress> to, ArrayList<InternetAddress> cc, String title, String mailContent) throws Exception {
+
+		System.out.println("MAIL START (" + new Date() + ")");
+		
 		Properties prop = System.getProperties();
 		prop.put("mail.smtp.host", "localhost");
 		MimeMessage message = new MimeMessage(Session.getDefaultInstance(prop, new Authenticator() {
 		}));
-		// MimeMessage message = Aspirin.createNewMimeMessage();
+
 		message.setSubject(title);
 		message.setContent(mailContent, "text/html");
 		message.setSentDate(new Date());
 		message.setFrom(from);
-
+		
 		Address[] addrs = new Address[to.size()];
 		Address[] ccAddrs = null;
 		for (int i = 0; i < addrs.length; i++) {
 			addrs[i] = to.get(i);
+			System.out.println("TO: " + addrs[i]);
 		}
 
-		if (cc != null) {
+		if (cc != null && cc.size() > 0) {
 			ccAddrs = new Address[cc.size()];
 			for (int j = 0; j < ccAddrs.length; j++) {
 				ccAddrs[j] = cc.get(j);
+				System.out.println("CC: " + ccAddrs[j]);
 			}
 		}
 
 		message.addRecipients(Message.RecipientType.TO, addrs);
-		message.addRecipients(Message.RecipientType.CC, ccAddrs);
+		if (ccAddrs != null && ccAddrs.length > 0) {
+			message.addRecipients(Message.RecipientType.CC, ccAddrs);
+		}
 
-		AspirinInternal.getDeliveryManager().add(message);
+		message.saveChanges();
+		
+		DeliveryManager deliveryManager = new DeliveryManager();
+		deliveryManager.add(message);
+		
+		MailStore mstore = AspirinInternal.getConfiguration().getMailStore();
+		QueueStore qstore = AspirinInternal.getConfiguration().getQueueStore();
+		QueueInfo qinfo;
+		DeliveryContext dctx;
+		MimeMessage m;
+		ResolveHost rh = (ResolveHost) deliveryManager.getDeliveryHandler(ResolveHost.class.getCanonicalName());
+		SendMessage sm = (SendMessage) deliveryManager.getDeliveryHandler(SendMessage.class.getCanonicalName());
+		while (true) {
+			qinfo = qstore.next();
+			if (qinfo == null)
+				break;
 
-		DeliveryContext dctx = new DeliveryContext();
-		dctx.setQueueInfo(AspirinInternal.getConfiguration().getQueueStore().next());
-		dctx.setMessage(message);
+			m = mstore.get(qinfo.getMailid());
+			if (m == null)
+				break;
 
-		ResolveHost rh = (ResolveHost) AspirinInternal.getDeliveryManager().getDeliveryHandler(ResolveHost.class.getCanonicalName());
-		rh.handle(dctx);
-		SendMessage sm = (SendMessage) AspirinInternal.getDeliveryManager().getDeliveryHandler(SendMessage.class.getCanonicalName());
-		sm.handle(dctx);
+			dctx = new DeliveryContext();
+			dctx.setQueueInfo(qinfo);
+			dctx.setMessage(m);
+
+			rh.handle(dctx);
+			sm.handle(dctx);
+			deliveryManager.join();
+		}	
+		System.out.println("MAIL DONE (" + new Date() + ")");
 	}
 
 	public static Properties getProperties(String filename) throws IOException {

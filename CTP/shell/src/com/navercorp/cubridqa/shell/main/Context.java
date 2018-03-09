@@ -176,6 +176,8 @@ public class Context {
 	public void setLogDir(String category) {
 		this.rootLogDir = getToolHome() + "/result/" + category;
 		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
+		com.navercorp.cubridqa.common.CommonUtils.ensureExistingDirectory(this.rootLogDir);
+		com.navercorp.cubridqa.common.CommonUtils.ensureExistingDirectory(this.currentLogDir);
 	}
 
 	public static ArrayList<String> initEnvList(Properties config) {

@@ -800,5 +800,14 @@ public class CommonUtils {
 		}
 		return result.toString();
 	}
-
+	
+	public static void ensureExistingDirectory(String path) {
+		if (isEmpty(path)) {
+			return;
+		}
+		File f = new File(path);
+		if (f.exists() == false) {
+			f.mkdirs();
+		}
+	}
 }

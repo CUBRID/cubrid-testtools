@@ -267,6 +267,8 @@ public class Context {
 	public void setLogDir(String category) {
 		this.rootLogDir = ctpHome + "/result/" + category;
 		this.currentLogDir = this.rootLogDir + "/current_runtime_logs";
+		com.navercorp.cubridqa.common.CommonUtils.ensureExistingDirectory(this.rootLogDir);
+		com.navercorp.cubridqa.common.CommonUtils.ensureExistingDirectory(this.currentLogDir);
 	}
 
 	public String getCurrentLogDir() {

@@ -167,9 +167,9 @@ public class Test {
 		String stmt;
 		String actualResult;
 		int stmtCount = 0;
-		boolean isDML;
 		ArrayList<String> checkSQLs;
 		StringBuffer msg;
+		boolean isSQL, isCMD;
 		try {
 			tr = new TestReader(f, this.commonReader);
 			main: while (true) {
@@ -179,7 +179,6 @@ public class Test {
 
 				stmtCount++;
 
-				// added by cn15209 for compare master ,slaveAndReplica log
 				msg = new StringBuffer();
 				msg.append(Constants.LINE_SEPARATOR).append("----------------------------------- Stmt ").append(stmtCount);
 				msg.append("(line: ").append(tr.lineNum).append(") -----------------------------------");
@@ -197,71 +196,46 @@ public class Test {
 					} else {
 						log("[RESULT] " + Constants.LINE_SEPARATOR + actualResult);
 					}
-				} else if (tr.isCheck()) {
-
-					// start to verify dml
-					isDML = stmt.equals("$HC_CHECK_FOR_DML");
-					if (isDML) {
+				} else if (tr.isCheck()) {					
+					if (stmt.equals("$HC_CHECK_FOR_DML")) {
 						checkSQLs = getCheckSQLForDML();
-
-						for (int i = 0; i < checkSQLs.size(); i++) {
-							log(checkSQLs.get(i));
-							checkCount++;
-							try {
-								if (!runCheckWithRetry(true, false, checkSQLs.get(i))) {
-									failCount++;
-									String info = "[NOK]" // + f.toString()
-											+ ": [" + tr.lineNum + "]" + checkSQLs.get(i);
-									addFail(info);
-									log(info);
-								} else {
-									log("[OK]" // + f.toString()
-											+ ": [" + tr.lineNum + "]" + checkSQLs.get(i));
-								}
-
-							} catch (SyncException e) {
-								failCount++;
-								String info = "[NOK]" // + f.toString()
-										+ ": [" + tr.lineNum + "]" + checkSQLs.get(i) + "(FAIL TO SYNC. BREAK!!!)";
-								addFail(info);
-								mlog.println("FAIL TO SYNC. BREAK.");
-								log(info);
-								break main;
-							} catch (Exception e) {
-								failCount++;
-								String info = "[NOK]" // + f.toString()
-										+ ": [" + tr.lineNum + "]" + checkSQLs.get(i) + "(" + e.getMessage() + ")";
-								addFail("[NOK]" // + f.toString()
-										+ ": [" + tr.lineNum + "]" + checkSQLs.get(i) + "(NOT EQUAL)");
-								log(info);
-							}
-
-						}
+						isSQL = true;
+						isCMD = false;
 					} else {
+						checkSQLs = new ArrayList<String>();
+						checkSQLs.add(stmt);
+						isSQL = tr.isSQL();
+						isCMD = tr.isCMD();
+					}
+
+					for (int i = 0; i < checkSQLs.size(); i++) {
+						log(checkSQLs.get(i));
 						checkCount++;
 						try {
-							if (!runCheckWithRetry(tr.isSQL(), tr.isCMD(), stmt)) {
+							if (runCheckWithRetry(isSQL, isCMD, checkSQLs.get(i))) {
+								log("[OK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i));								
+							} else {
 								failCount++;
-								String info = "[NOK]" // + f.toString()
-										+ ": [" + tr.lineNum + "]" + stmt;
+								String info = "[NOK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i);
 								addFail(info);
 								log(info);
-							} else {
-								log("[OK]" // + f.toString()
-										+ ": [" + tr.lineNum + "]" + stmt);
 							}
+						} catch (SyncException e) {
+							failCount++;
+							String info = "[NOK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i) + "(FAIL TO SYNC. BREAK!!!)";
+							addFail(info);
+							mlog.println("FAIL TO SYNC. BREAK.");
+							log(info);
+							break main;
 						} catch (Exception e) {
 							failCount++;
-							String info = "[NOK]" // + f.toString()
-									+ ": [" + tr.lineNum + "]" + stmt + "(" + e.getMessage() + ")";
-							addFail("[NOK]" // + f.toString()
-									+ ": [" + tr.lineNum + "]" + stmt + "(NOT EQUAL)");
+							String info = "[NOK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i) + "(" + e.getMessage() + ")";
+							addFail("[NOK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i) + "(NOT EQUAL)");
 							log(info);
 						}
 					}
 				}
 			}
-
 		} catch (Exception e) {
 			mlog.println(e.getMessage());
 		} finally {
@@ -269,7 +243,6 @@ public class Test {
 				try {
 					connection.close();
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -277,7 +250,6 @@ public class Test {
 
 		}
 
-		// checkCUBRIDLogFile();
 		boolean hasBigError = checkCoresAndErrors();
 
 		String succFlag = verifyResults(hasBigError, failCount, logFilename);

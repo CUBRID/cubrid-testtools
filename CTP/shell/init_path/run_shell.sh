@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # 
 # Copyright (c) 2016, Search Solution Corporation. All rights reserved.
 # 
@@ -24,27 +24,11 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
-function init {
-	return
-}
-
-function list {
-    find $CUBRID/util -name unittests* 2>/dev/null | grep -v CMake
-}
-
-function execute {
-	unittestlog=".unittest.log"
-	
-    $1 2>&1 | tee ${unittestlog}
-    
-    if [ `cat ${unittestlog} | grep -i 'fail\|Unit tests failed' | wc -l ` -eq 0 -a `cat ${unittestlog} | grep -i 'OK\|success' | wc -l ` -ne 0 ]; then
-    	IS_SUCC=true
-    else
-    	IS_SUCC=false
-    fi
-    rm -rf ${unittestlog}
-}
-
-function finish {
-	return
-}
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+export init_path=$CTP_HOME/shell/init_path
+JAVA_CPS=${CTP_HOME}/shell/lib/cubridqa-shell.jar:${CTP_HOME}/common/sched/lib/cubridqa-scheduler.jar
+if [ "$OSTYPE" == "cygwin" ]
+then
+    JAVA_CPS=`cygpath -wpm $JAVA_CPS`
+fi
+"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.shell.main.RunShellMain "$@"

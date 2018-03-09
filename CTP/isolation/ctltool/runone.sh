@@ -62,6 +62,11 @@ function format_ctl_result()
         sed -i "s/(.*) has been unilaterally aborted by the system/has been unilaterally aborted by the system/g" $1
 	sed -i 's/STATUS: forcefully killing pid [0-9]*/STATUS: forcefully killing pid ?/g' $1
 	sed -i 's/key: [0-9]*(OID:/key: ?(OID:/g' $1
+	sed -i 's/\: [0-9]*|[0-9]*|[0-9]*/\: ?/g' $1
+	for i in `cat -n $1 | grep "ERROR RETURNED" | grep "You are waiting for user" | awk '{print $1}'`; do 
+	    sed -i "${i}s/`hostname`/localhost/g" $1
+	    sed -E -i "${i}s/([0-9])+/?/g" $1
+	done
     else
         echo "Please input an file name"
     fi
@@ -74,12 +79,6 @@ function format_ctl_result_oracle()
     else
         echo "Please input an file name"
     fi
-}
-
-#format number like 0|123|456
-function format_number_output
-{
-    sed -i 's/\: [0-9]*|[0-9]*|[0-9]*/\: ?/g' $1
 }
 
 function usage
@@ -279,7 +278,6 @@ function run_test_case
 		if [ ${client} = "qaoracle" ]; then
 		format_ctl_result_oracle $casedir/result/${casename}.log
 		fi 
-	   format_number_output $casedir/result/${casename}.log
 	fi
 
 	# 3. check

@@ -62,6 +62,10 @@ esac
 
 export OS=`get_os`
 
+if [ "$OS" = "Windows_NT" ]; then
+	alias diff="diff -a -b"
+fi
+
 # get broker port from shell_config.xml
 function get_broker_port_from_shell_config
 {
@@ -734,6 +738,7 @@ function init
     fi
   fi
   
+  export OS
 }
 
 # All test script file shoule have description for test scenario.
@@ -948,11 +953,19 @@ function remove_space_character
 # it equals to: pkill cub
 function xkill
 {
-   strkill=$1
+   strkill=""
+   fullCommand=0
 
-   if [ "$strkill" = "" ]
+   if [ $# -eq 1 ]
    then
-       return
+       strkill=$1
+   elif [ $# -eq 2 ] && [ "$1" == "-f" ]
+   then
+	strkill=$2
+	fullCommand=1
+   else
+	echo "Usage: xkill [-f] \"KeyWord\""
+	return
    fi
    
    if [ "$OS" == Windows_NT ]
@@ -965,6 +978,7 @@ function xkill
           do
 	          if [ "${pid}" == "${svr_id}" ]; then
 	          	is_in_white_list=1
+			break
 	          fi
           done
           if [ "${is_in_white_list}" == "0" ]; then
@@ -972,7 +986,14 @@ function xkill
           fi
        done
    else
-       for pid in `ps -u $USER -o pid,comm | grep $1 | grep -v grep | awk '{print $1}'`
+       if [ $fullCommand -eq 1 ]
+       then
+		pids=`ps -u $USER -o pid,command | grep "$strkill" | grep -v grep | awk '{print $1}'`
+       else
+		pids=`ps -u $USER -o pid,comm | grep "$strkill" | grep -v grep | awk '{print $1}'`
+       fi 
+
+       for pid in $pids
        do
            kill -9 $pid
        done
@@ -1424,14 +1445,16 @@ function cubrid_createdb()
 
 function search_in_upper_path {
    curr_path=$1
-   dest_file=$2
-   if [ -f ${curr_path}/${dest_file} ]; then
-       echo $(cd ${curr_path}; pwd)/${dest_file}
+   dest_name=$2
+   if [ -f ${curr_path}/${dest_name} ]; then
+       echo $(cd ${curr_path}; pwd)/${dest_name}
+   elif [ -d ${curr_path}/${dest_name} ];then
+       echo $(cd ${curr_path}/${dest_name}; pwd)
    else
        if [ "$(cd ${curr_path}/..; pwd)" == "/" ]; then
            return 
        else
-           search_in_upper_path ${curr_path}/.. ${dest_file}
+           search_in_upper_path ${curr_path}/.. ${dest_name}
        fi
    fi
 }
@@ -1525,3 +1548,6 @@ function compare_perf_time {
         return 1
     fi
 }
+
+source $init_path/shell_utils.sh
+

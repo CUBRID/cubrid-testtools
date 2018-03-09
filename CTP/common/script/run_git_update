@@ -104,13 +104,6 @@ git clean -df
 git reset -- .
 git clean -df
 
-git fetch auto_update_url
-if [ $? -ne 0 ];then
-		git branch | grep  temp_branch | xargs -i git branch -D {}
-        echo "[ERROR]: Please confirm your permission!"
-        exit
-fi
-
 if [[ "$branch_name" == *\/* ]];then
         local_branch_name=`echo $branch_name|sed 's#/#_#g'`
 else
@@ -118,7 +111,14 @@ else
 fi
 
 git branch -D $local_branch_name
-git fetch auto_update_url
+while true
+do
+    timeout 600s git fetch auto_update_url
+    if [ $? -eq 0 ];then
+         break
+    fi
+    sleep 3
+done
 
 echo Begin to check out test cases:
 echo git checkout -f -b $local_branch_name -t auto_update_url/$branch_name
