@@ -340,6 +340,7 @@ public class Test {
 				script.addCommand("  echo export D_HOST" + n + "_IP=\\\'" + request.getNodeList().get(n).getHost().getIp() + "\\\' >> .env.sh");
 				script.addCommand("  echo export D_HOST" + n + "_USER=\\\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.user") + "\\\' >> .env.sh");
 				script.addCommand("  echo export D_HOST" + n + "_PORT=\\\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.port") + "\\\' >> .env.sh");
+				script.addCommand("  echo export D_HOST" + n + "_PWD=\\\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.pwd") + "\\\' >> .env.sh");
 			}
 		}
 		script.addCommand("  source .env.sh > prepare.log 2>&1");
