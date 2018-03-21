@@ -170,14 +170,14 @@ public class TestNodePool {
 		}
 
 		if (envId.equals("*")) {
-			if (!isFirstTestNode) {
-				for (int i = 0; i < pool.size(); i++) {
-					node = pool.get(i);
-					if (node.isAvailable(exclusive) && node.getType() == TestNode.TYPE_FOLLOW && contains(existingList, node, exclusive) == false && meetIpConstanit(existingList, node, expectDiffIp)) {
-						return node;
-					}
-				}
-			}
+//			if (!isFirstTestNode) {
+//				for (int i = 0; i < pool.size(); i++) {
+//					node = pool.get(i);
+//					if (node.isAvailable(exclusive) && node.getType() == TestNode.TYPE_FOLLOW && contains(existingList, node, exclusive) == false && meetIpConstanit(existingList, node, expectDiffIp)) {
+//						return node;
+//					}
+//				}
+//			}
 
 			for (int i = 0; i < pool.size(); i++) {
 				node = pool.get(i);

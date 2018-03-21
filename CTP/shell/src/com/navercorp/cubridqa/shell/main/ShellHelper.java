@@ -68,6 +68,10 @@ public class ShellHelper {
 			String port = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
 			String user = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
 			String pwd = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PASSWORD_SUFFIX);
+			
+			if(user.trim().equals("root")) {
+				throw new RuntimeException("root is denied to connect.");
+			}
 
 			ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
 		}
