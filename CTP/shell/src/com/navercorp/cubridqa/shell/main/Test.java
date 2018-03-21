@@ -343,6 +343,7 @@ public class Test {
 				script.addCommand("  echo export D_HOST" + n + "_PWD=\\\'" + context.getInstanceProperty(request.getNodeList().get(n).getEnvId(), "ssh.pwd") + "\\\' >> .env.sh");
 			}
 		}
+		script.addCommand("  cat .env.sh");
 		script.addCommand("  source .env.sh > prepare.log 2>&1");
 		script.addCommand("fi");
 

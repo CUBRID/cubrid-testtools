@@ -260,6 +260,32 @@ public class DeployOneNode {
 		} else {
 			scripts.addCommand("ini.sh -s 'broker' -u MASTER_SHM_ID=" + cubridBrokerSHMId + " $CUBRID/conf/cubrid_broker.conf");
 		}
+		
+		String shmId;
+		
+		// cubrid_broker.conf: %query_editor/APPL_SERVER_SHM_ID
+		shmId = this.context.getInstanceProperty(this.currentEnvId, ConfigParameterConstants.ROLE_BROKER1 + "." + "APPL_SERVER_SHM_ID");
+		if (CommonUtils.isEmpty(shmId)) {
+			String brokerPort = this.context.getInstanceProperty(this.currentEnvId, ConfigParameterConstants.ROLE_BROKER1 + "." + "BROKER_PORT");
+			if (!CommonUtils.isEmpty(brokerPort)) {
+				shmId = brokerPort;
+			}
+		}
+		if (!CommonUtils.isEmpty(shmId)) {
+			scripts.addCommand("ini.sh -s '%query_editor' -u APPL_SERVER_SHM_ID=" + shmId + " $CUBRID/conf/cubrid_broker.conf");
+		}
+		
+		// cubrid_broker.conf: %BROKER1/APPL_SERVER_SHM_ID
+		shmId = this.context.getInstanceProperty(this.currentEnvId, ConfigParameterConstants.ROLE_BROKER2 + "." + "APPL_SERVER_SHM_ID");
+		if (CommonUtils.isEmpty(shmId)) {
+			String brokerPort = this.context.getInstanceProperty(this.currentEnvId, ConfigParameterConstants.ROLE_BROKER2 + "." + "BROKER_PORT");
+			if (!CommonUtils.isEmpty(brokerPort)) {
+				shmId = brokerPort;
+			}
+		}
+		if (!CommonUtils.isEmpty(shmId)) {
+			scripts.addCommand("ini.sh -s '%BROKER1' -u APPL_SERVER_SHM_ID=" + shmId + " $CUBRID/conf/cubrid_broker.conf");
+		}
 
 		String result = "";
 
