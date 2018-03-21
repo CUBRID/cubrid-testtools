@@ -188,15 +188,20 @@ public class PrepareMain {
 				LocalInvoker.exec("if [ -f ~/CUBRID/.cubrid.sh ]; then cp -f ~/CUBRID/.cubrid.sh ~/; fi", false, false);
 				
 				File srcFile, destFile;
+				String[] vers;
 				for (String c : cubridDepts) {
 					if(exList.contains(c)) {
 						continue;
 					}
-					c = "CUBRID_" + c.trim();
+					c = c.trim();
+					vers = c.split("\\.");
+					c = "CUBRID_" + c;
 					srcFile = new File(Constants.ENV_HOME + File.separator + "CUBRID" + File.separator + "conf" + File.separator + "cubrid.conf");
 					destFile = new File(Constants.ENV_HOME + File.separator + c + File.separator + "conf" + File.separator + "cubrid.conf");
 					syncConfiguration(srcFile, destFile, "common", "cubrid_port_id");
-					syncConfiguration(srcFile, destFile, "common", "inquire_on_exit");
+					if (Integer.parseInt(vers[0]) >= 10) {
+						syncConfiguration(srcFile, destFile, "common", "inquire_on_exit");	
+					}					
 					syncConfiguration(srcFile, destFile, "common", "error_log_size");
 
 					srcFile = new File(Constants.ENV_HOME + File.separator + "CUBRID" + File.separator + "conf" + File.separator + "cubrid_broker.conf");
