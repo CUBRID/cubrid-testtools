@@ -726,8 +726,7 @@ public class CommonUtils {
 	}
 
 	public static boolean supportInquireOnExit(String buildId) {
-		String arr[] = buildId.split("\\.");
-		return Integer.parseInt(arr[0]) >= 10;
+		return greaterThanVersion(buildId, Constants.HAVE_INQUIRE_ON_EXIT_10) >= 0;
 	}
 
 	public static String translateVariable(String value) {

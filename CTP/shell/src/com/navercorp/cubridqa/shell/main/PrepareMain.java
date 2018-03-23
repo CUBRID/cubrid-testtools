@@ -188,24 +188,24 @@ public class PrepareMain {
 				LocalInvoker.exec("if [ -f ~/CUBRID/.cubrid.sh ]; then cp -f ~/CUBRID/.cubrid.sh ~/; fi", false, false);
 				
 				File srcFile, destFile;
-				String[] vers;
-				for (String c : cubridDepts) {
-					if(exList.contains(c)) {
+				String currBuildDir;
+				for (String currBuildId : cubridDepts) {
+					currBuildId = currBuildId.trim();
+					if(exList.contains(currBuildId)) {
 						continue;
 					}
-					c = c.trim();
-					vers = c.split("\\.");
-					c = "CUBRID_" + c;
+										
+					currBuildDir = "CUBRID_" + currBuildId;
 					srcFile = new File(Constants.ENV_HOME + File.separator + "CUBRID" + File.separator + "conf" + File.separator + "cubrid.conf");
-					destFile = new File(Constants.ENV_HOME + File.separator + c + File.separator + "conf" + File.separator + "cubrid.conf");
+					destFile = new File(Constants.ENV_HOME + File.separator + currBuildDir + File.separator + "conf" + File.separator + "cubrid.conf");
 					syncConfiguration(srcFile, destFile, "common", "cubrid_port_id");
-					if (Integer.parseInt(vers[0]) >= 10) {
+					if (CommonUtils.supportInquireOnExit(currBuildId)) {
 						syncConfiguration(srcFile, destFile, "common", "inquire_on_exit");	
 					}					
 					syncConfiguration(srcFile, destFile, "common", "error_log_size");
 
 					srcFile = new File(Constants.ENV_HOME + File.separator + "CUBRID" + File.separator + "conf" + File.separator + "cubrid_broker.conf");
-					destFile = new File(Constants.ENV_HOME + File.separator + c + File.separator + "conf" + File.separator + "cubrid_broker.conf");
+					destFile = new File(Constants.ENV_HOME + File.separator + currBuildDir + File.separator + "conf" + File.separator + "cubrid_broker.conf");
 					syncConfiguration(srcFile, destFile, "broker", "MASTER_SHM_ID");
 					syncConfiguration(srcFile, destFile, "%query_editor", "SERVICE");
 					syncConfiguration(srcFile, destFile, "%query_editor", "BROKER_PORT");
@@ -217,11 +217,11 @@ public class PrepareMain {
 					syncConfiguration(srcFile, destFile, "%BROKER1", "SQL_LOG");
 
 					srcFile = new File(Constants.ENV_HOME + File.separator + "CUBRID" + File.separator + "conf" + File.separator + "cm.conf");
-					destFile = new File(Constants.ENV_HOME + File.separator + c + File.separator + "conf" + File.separator + "cm.conf");
+					destFile = new File(Constants.ENV_HOME + File.separator + currBuildDir + File.separator + "conf" + File.separator + "cm.conf");
 					syncConfiguration(srcFile, destFile, "cmd", "cm_port");
 
 					srcFile = new File(Constants.ENV_HOME + File.separator + "CUBRID" + File.separator + "conf" + File.separator + "cubrid_ha.conf");
-					destFile = new File(Constants.ENV_HOME + File.separator + c + File.separator + "conf" + File.separator + "cubrid_ha.conf");
+					destFile = new File(Constants.ENV_HOME + File.separator + currBuildDir + File.separator + "conf" + File.separator + "cubrid_ha.conf");
 					syncConfiguration(srcFile, destFile, "common", "ha_port_id");
 					syncConfiguration(srcFile, destFile, "common", "ha_node_list");
 					syncConfiguration(srcFile, destFile, "common", "ha_db_list");

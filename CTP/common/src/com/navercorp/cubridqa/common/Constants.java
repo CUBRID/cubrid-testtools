@@ -64,4 +64,5 @@ public class Constants {
 
 	public static final String HAVE_CHARSET_10 = "10.0.0.0074";
 	public static final String HAVE_CHARSET_9 = "9.2.0.0067";
+	public static final String HAVE_INQUIRE_ON_EXIT_10 = "10.0.0.1101";
 }

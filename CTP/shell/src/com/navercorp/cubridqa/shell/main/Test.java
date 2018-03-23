@@ -344,7 +344,7 @@ public class Test {
 			}
 		}
 		script.addCommand("  cat .env.sh");
-		script.addCommand("  source .env.sh > prepare.log 2>&1");
+		script.addCommand("  source .env.sh > prepare.out 2>&1");
 		script.addCommand("fi");
 
 		script.addCommand("sh " + testCaseName + " 2>&1");
