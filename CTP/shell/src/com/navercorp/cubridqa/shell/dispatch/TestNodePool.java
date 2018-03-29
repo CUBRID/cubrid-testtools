@@ -53,11 +53,19 @@ public class TestNodePool {
 		if (resultList == null) {
 			return null;
 		}
+		
+		ArrayList<String> ips = new ArrayList<String>();
 		for (TestNode node : resultList) {
 			if (enableDebug) {
 				System.out.println("=>borrow " + node.getEnvId() + ", " + exclusive);
 			}
-			node.activate(exclusive);
+			
+			if (ips.contains(node.getHost().getIp())) {
+				node.activate(false);
+			} else {
+				node.activate(exclusive);
+			}
+			ips.add(node.getHost().getIp());
 		}
 		return resultList;
 	}
