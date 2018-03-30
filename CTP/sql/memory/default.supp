@@ -41,7 +41,7 @@
 }
 
 {
-   I think this is glibc's ultra optimised getenv doing 2 byte reads
+   I think this is glibc\'s ultra optimised getenv doing 2 byte reads
    exp-sgcheck:SorG
    fun:getenv
 }
@@ -3835,5 +3835,16 @@
    fun:spage_is_unknown_slot
    ...
    fun:*_server_abort
+}
+
+{
+   css_send_heartbeat_data
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:send
+   fun:_Z23css_send_heartbeat_dataP14css_conn_entryPKci
+   ...
+   fun:_Z16net_server_startPKc
+   fun:(below main)
 }
 
