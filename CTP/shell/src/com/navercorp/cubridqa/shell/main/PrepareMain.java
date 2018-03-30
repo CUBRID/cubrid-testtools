@@ -332,7 +332,7 @@ public class PrepareMain {
 			return null;
 		}
 		if (this.htmlSourceOfCubridList == null) {
-			this.htmlSourceOfCubridList = HttpUtil.getHtmlSource(this.cubridBuildsUrl);
+			this.htmlSourceOfCubridList = getHtmlSource(this.cubridBuildsUrl, 10);
 		}
 		return this.htmlSourceOfCubridList;
 	}
@@ -340,7 +340,7 @@ public class PrepareMain {
 	private ArrayList<String> getCubridPkgList(String buildId, String url) throws Exception {
 		ArrayList<String> resultList = new ArrayList<String>();
 
-		String content = HttpUtil.getHtmlSource(url);
+		String content = getHtmlSource(url, 10);
 		StringBuilder contentFormat = new StringBuilder();
 		for (int i = 0; i < content.length(); i++) {
 			if (content.charAt(i) == '\"' || content.charAt(i) == '=' || content.charAt(i) == '<' || content.charAt(i) == '>') {
@@ -454,6 +454,22 @@ public class PrepareMain {
 		if (CommonUtils.isEmpty(value) == false) {
 			destIni.put(section, key, value, true);
 		}
+	}
+
+	public static String getHtmlSource(String url, int retry) throws Exception {
+		String source = null;
+		for (int i = retry + 1; i > 0; i--) {
+			try {
+				source = HttpUtil.getHtmlSource(url);
+				break;
+			} catch (Exception e) {
+				if (i == 1) {
+					throw e;
+				}
+				CommonUtils.sleep(5);
+			}
+		}
+		return source;
 	}
 
 	public String getCubridVersion() {
