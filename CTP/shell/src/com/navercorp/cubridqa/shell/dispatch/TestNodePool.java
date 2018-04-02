@@ -135,6 +135,37 @@ public class TestNodePool {
 		}
 	}
 
+	protected boolean checkRule(String rule) {
+		rule = CommonUtils.replace(rule, "|", ",");
+		rule = CommonUtils.replace(rule, ";", ",");
+		String[] list = rule.split(",");
+		boolean find = false;
+		for (String envId : list) {
+			if (CommonUtils.isEmpty(envId)) {
+				continue;
+			}
+			if (envId.trim().equals("%")) {
+				continue;
+			}
+
+			if (envId.trim().equals("*")) {
+				continue;
+			}
+			find = false;
+			for (TestNode node : pool) {
+				if (node.getEnvId().equals(envId.trim())) {
+					find = true;
+					break;
+				}
+			}
+			if (!find) {
+				return false;
+			}
+
+		}
+		return true;
+	}
+
 	private void returnAllNodes() {
 		returnNodes(this.pool);
 	}
