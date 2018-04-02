@@ -152,7 +152,7 @@ public class Dispatch {
 				return req;
 			} else {
 				Selector s = context.getSelector(expectedMachines);
-				if (s == null) {
+				if (s == null || !this.nodePool.checkRule(s.getRule())) {
 					TestNode node = this.nodePool.borrowNode(envId, req.isExclusive());
 					if (node == null) {
 						continue;
