@@ -319,3 +319,29 @@ function wait_replication_done
 	csql -udba hatestdb -c "drop table wait_for_slave"
 }
 
+# Get oid from 'cubrid diagdb -d 5 $db'
+# OID = 0|193|2 --> 193/2/0 (used for systemtap format)
+function get_oid(){
+file=$1
+key1=$2
+m1=`cat $file |grep -n -w "$key1"|awk -F':' '{print $1}'`
+m1=$((m1+1))
+key2=`cat $file |awk "NR==$m1{print}"|awk -F',' '{print $2}'|awk -F'|' '{print $2"/"$3"/0"}'`
+echo $key2
+}
+
+function replace_class_name_with_oid(){
+db=$1
+expect_result=$2
+cubrid service stop
+cubrid server stop $db
+cubrid  diagdb -d 5 $db >tmp5.log
+# all classes: cat tmp5.log|grep -w TRAN_INDEX|awk  '{print $2}' 
+for t in `cat tmp5.log|grep -w TRAN_INDEX|awk  '{print $2}'`
+do
+    m=`get_oid tmp5.log "$t"`
+    sed -i "s#($t)#($m)#g" $expect_result
+
+done
+}
+
