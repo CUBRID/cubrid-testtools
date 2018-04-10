@@ -48,6 +48,9 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 
 	  # The location of your testing scenario
 	  scenario=${HOME}/cubrid-testcases/sql
+	  
+	  # The excluded file list, all directories or files in testcase_exclude_from_file will not be executed by CTP
+	  testcase_exclude_from_file=${CTP_HOME}/conf/exclusions.txt
 
 	  # SQL cubrid.conf section - a section for cubrid.conf configuration
 	  [sql/cubrid.conf]
