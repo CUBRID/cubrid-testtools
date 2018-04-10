@@ -38,6 +38,7 @@ import java.sql.Types;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -324,6 +325,7 @@ public class ConsoleBO extends Executor {
 			String[] postFixes = TestUtil.getCaseFilePostFix(file);
 			TestUtil.getCaseFiles(test, file, test.getCaseFileList(), postFixes);
 			filterExcludedCaseFile(test.getCaseFileList(), filter, file);
+			
 		}
 	}
 	
@@ -332,18 +334,18 @@ public class ConsoleBO extends Executor {
 			return;
 		}
 		
+		Iterator<String> sListIterator = fileList.iterator();
 		List<String> excludeFileList = TestUtil.getExcludedFileList(filter);
-		if((excludeFileList!=null && excludeFileList.size()>0) && (fileList !=null && fileList.size()>0)){
-			for(int i=0; i<fileList.size();i++){
-				String caseFile = fileList.get(i).trim();
-				String caseRalativePath = caseFile.substring(scenarioRootPath.length());
-				for(int j=0; j<excludeFileList.size();j++){
-					if(caseRalativePath.indexOf(excludeFileList.get(j))>=0){
-						fileList.remove(i);
-					}
+		while(sListIterator.hasNext()){  
+		    String caseFile = sListIterator.next();  
+		    String caseRalativePath = caseFile.substring(scenarioRootPath.length());
+		    for(int j=0; j<excludeFileList.size();j++){
+				if(caseRalativePath.indexOf(excludeFileList.get(j).trim())>=0){
+					sListIterator.remove(); 
+					break;
 				}
 			}
-		}
+		} 
 	}
 
 	/**
