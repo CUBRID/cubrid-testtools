@@ -343,6 +343,33 @@ public class TestUtil {
 		
 		return ret;
 	}
+	
+	/*
+	 * filter out the excluded case file 
+	 * @param fileList
+	 * @param filter file
+	 * @param scenarioRootPath case root path
+	 */
+	public static void filterExcludedCaseFile(List<String> fileList, String filter, String scenarioRootPath){
+		if (scenarioRootPath == null ||filter == null || fileList == null) {
+			return;
+		}
+		
+		Iterator<String> sListIterator = fileList.iterator();
+		List<String> excludeFileList = TestUtil.getExcludedFileList(filter);
+		if(excludeFileList == null || excludeFileList.size() == 0) return;
+		
+		while(sListIterator.hasNext()){  
+		    String caseFile = sListIterator.next();  
+		    String caseRalativePath = caseFile.substring(scenarioRootPath.length());
+		    for(int j=0; j<excludeFileList.size();j++){
+				if(CommonUtils.containPath(caseRalativePath, excludeFileList.get(j).trim())){
+					sListIterator.remove(); 
+					break;
+				}
+			}
+		} 
+	}
 
 	/**
 	 * get all the cases file .

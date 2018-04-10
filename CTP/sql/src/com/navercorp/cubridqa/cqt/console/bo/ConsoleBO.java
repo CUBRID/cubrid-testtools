@@ -325,31 +325,11 @@ public class ConsoleBO extends Executor {
 			}
 			String[] postFixes = TestUtil.getCaseFilePostFix(file);
 			TestUtil.getCaseFiles(test, file, test.getCaseFileList(), postFixes);
-			filterExcludedCaseFile(test.getCaseFileList(), filter, file);
+			TestUtil.filterExcludedCaseFile(test.getCaseFileList(), filter, file);
 			
 		}
 	}
 	
-	private void filterExcludedCaseFile(List<String> fileList, String filter, String scenarioRootPath){
-		if (scenarioRootPath == null ||filter == null || fileList == null) {
-			return;
-		}
-		
-		Iterator<String> sListIterator = fileList.iterator();
-		List<String> excludeFileList = TestUtil.getExcludedFileList(filter);
-		if(excludeFileList == null || excludeFileList.size() == 0) return;
-		
-		while(sListIterator.hasNext()){  
-		    String caseFile = sListIterator.next();  
-		    String caseRalativePath = caseFile.substring(scenarioRootPath.length());
-		    for(int j=0; j<excludeFileList.size();j++){
-				if(CommonUtils.containFile(caseRalativePath, excludeFileList.get(j).trim())){
-					sListIterator.remove(); 
-					break;
-				}
-			}
-		} 
-	}
 
 	/**
 	 * build the test .

@@ -66,7 +66,7 @@ public class CommonUtils {
 		}
 	}
 	
-	public static boolean containFile(String p1, String p2){
+	public static boolean containPath(String p1, String p2){
 		boolean res = false;
 		if (p1 == null || p1.length() == 0)
 			return res;
