@@ -45,6 +45,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.navercorp.cubridqa.common.coreanalyzer.AnalyzerMain;
+import com.navercorp.cubridqa.cqt.common.CommonUtils;
 import com.navercorp.cubridqa.cqt.console.Executor;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.ProcessMonitor;
@@ -342,7 +343,7 @@ public class ConsoleBO extends Executor {
 		    String caseFile = sListIterator.next();  
 		    String caseRalativePath = caseFile.substring(scenarioRootPath.length());
 		    for(int j=0; j<excludeFileList.size();j++){
-				if(caseRalativePath.indexOf(excludeFileList.get(j).trim())>=0){
+				if(CommonUtils.containFile(caseRalativePath, excludeFileList.get(j).trim())){
 					sListIterator.remove(); 
 					break;
 				}
