@@ -336,6 +336,8 @@ public class ConsoleBO extends Executor {
 		
 		Iterator<String> sListIterator = fileList.iterator();
 		List<String> excludeFileList = TestUtil.getExcludedFileList(filter);
+		if(excludeFileList == null || excludeFileList.size() == 0) return;
+		
 		while(sListIterator.hasNext()){  
 		    String caseFile = sListIterator.next();  
 		    String caseRalativePath = caseFile.substring(scenarioRootPath.length());
