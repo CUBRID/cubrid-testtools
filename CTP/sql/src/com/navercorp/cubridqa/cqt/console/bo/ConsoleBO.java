@@ -305,16 +305,44 @@ public class ConsoleBO extends Executor {
 			}
 			String file = files[i];
 			String db = null;
+			String filter = null;
 			int position = file.toLowerCase().indexOf("?db=");
 			if (position != -1) {
 				file = files[i].substring(0, position);
-				db = files[i].substring(position + "?db=".length());
+				if(files[i].indexOf("&filter=")>=0){
+					db = files[i].substring(position + "?db=".length(), files[i].indexOf("&filter="));
+					filter = files[i].substring(files[i].indexOf("&filter=") + "&filter=".length());
+				}else{
+					db = files[i].substring(position + "?db=".length());
+				}
+				
 				test.setDbId(db);
+				test.setCaseFilter(filter);
 				test.setScenarioRootPath(file);
 				dao.addDb(db);
 			}
 			String[] postFixes = TestUtil.getCaseFilePostFix(file);
 			TestUtil.getCaseFiles(test, file, test.getCaseFileList(), postFixes);
+			filterExcludedCaseFile(test.getCaseFileList(), filter, file);
+		}
+	}
+	
+	private void filterExcludedCaseFile(List<String> fileList, String filter, String scenarioRootPath){
+		if (scenarioRootPath == null ||filter == null || fileList == null) {
+			return;
+		}
+		
+		List<String> excludeFileList = TestUtil.getExcludedFileList(filter);
+		if((excludeFileList!=null && excludeFileList.size()>0) && (fileList !=null && fileList.size()>0)){
+			for(int i=0; i<fileList.size();i++){
+				String caseFile = fileList.get(i).trim();
+				String caseRalativePath = caseFile.substring(scenarioRootPath.length());
+				for(int j=0; j<excludeFileList.size();j++){
+					if(caseRalativePath.indexOf(excludeFileList.get(j))>=0){
+						fileList.remove(i);
+					}
+				}
+			}
 		}
 	}
 
