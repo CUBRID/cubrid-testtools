@@ -37,6 +37,7 @@ log_dir=""
 log_filename=""
 cubrid_root_dir=""
 scenario_repo_root=""
+testcase_exclude_file=""
 cubrid_ver_p1=""
 cubrid_ver_p2=""
 cubrid_ver_p3=""
@@ -102,6 +103,7 @@ function do_init()
     log_filename=cqt.log
     cubrid_root_dir=$CUBRID
     scenario_repo_root=$HOME/dailyqa
+    cubrid_createdb_opts=""
     cubrid_ver_p1=""
     cubrid_ver_p2=""
     cubrid_ver_p3=""
@@ -148,6 +150,9 @@ function do_init()
 
     scenario_repo_root=`ini -s sql ${config_file_main} scenario`
     [ ! -d "$scenario_repo_root" -a ! -f "$scenario_repo_root" ] && echo "please make sure your scenario directory" && exit 1
+
+	testcase_exclude_file=`ini -s sql ${config_file_main} testcase_exclude_from_file`
+    cubrid_createdb_opts=`ini -s sql ${config_file_main} cubrid_createdb_opts`
 
     scenario_alias=`ini -s sql ${config_file_main} test_category`
     if [ -z "$scenario_alias" ]
@@ -469,11 +474,11 @@ function do_create_db()
    
      if [ $cubrid_ver_p1 -ge 9 -a $cubrid_ver_p2 -gt 1 ] || [ $cubrid_ver_p1 -ge 10 ]
      then
-          echo "cubrid createdb $db_name $db_charset"
-          cubrid createdb $db_name $db_charset 2>&1 >> $log_filename
+          echo "cubrid createdb $cubrid_createdb_opts $db_name $db_charset"
+          cubrid createdb $cubrid_createdb_opts $db_name $db_charset 2>&1 >> $log_filename
      else
-          echo "cubrid createdb $db_name"
-          cubrid createdb $db_name 2>&1 >> $log_filename
+          echo "cubrid createdb $cubrid_createdb_opts $db_name"
+          cubrid createdb $cubrid_createdb_opts $db_name 2>&1 >> $log_filename
      fi
   
      if [ "${scenario_full_name}" == "medium" ];then
@@ -725,8 +730,13 @@ function do_test()
             scenario_repo_root=${scenario_repo_root}/
          fi
      fi
-
-     javaArgs="${scenario_repo_root}?db=${db_name}_qa"
+     
+     
+     if [ -z "$testcase_exclude_file" ];then
+        javaArgs="${scenario_repo_root}?db=${db_name}_qa"
+     else
+        javaArgs="${scenario_repo_root}?db=${db_name}_qa&filter=$testcase_exclude_file"
+     fi
      
      if [ "$sql_interactive" == "yes" ];then
          (export CLASSPATH=${CLASSPATH}${separator}${CPCLASSES}

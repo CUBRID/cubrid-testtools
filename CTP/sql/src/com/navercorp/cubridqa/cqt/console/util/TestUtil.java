@@ -27,9 +27,11 @@ package com.navercorp.cubridqa.cqt.console.util;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -40,6 +42,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.StringTokenizer;
 
+import com.navercorp.cubridqa.cqt.common.CommonUtils;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.Summary;
 import com.navercorp.cubridqa.cqt.console.bean.SummaryInfo;
@@ -325,6 +328,48 @@ public class TestUtil {
 		String[] ret = new String[] { TestUtil.ScenarioTypes };
 		return ret;
 	}
+	
+	public static List<String> getExcludedFileList(String file){
+		List<String> ret = new ArrayList<String>();
+		if(file == null){
+			return ret;
+		}
+		
+		try {
+			ret = CommonUtils.getLineList(file);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return ret;
+	}
+	
+	/*
+	 * filter out the excluded case file 
+	 * @param fileList
+	 * @param filter file
+	 * @param scenarioRootPath case root path
+	 */
+	public static void filterExcludedCaseFile(List<String> fileList, String filter, String scenarioRootPath){
+		if (scenarioRootPath == null ||filter == null || fileList == null) {
+			return;
+		}
+		
+		Iterator<String> sListIterator = fileList.iterator();
+		List<String> excludeFileList = TestUtil.getExcludedFileList(filter);
+		if(excludeFileList == null || excludeFileList.size() == 0) return;
+		
+		while(sListIterator.hasNext()){  
+		    String caseFile = sListIterator.next();  
+		    String caseRalativePath = caseFile.substring(scenarioRootPath.length());
+		    for(int j=0; j<excludeFileList.size();j++){
+				if(CommonUtils.containPath(caseRalativePath, excludeFileList.get(j).trim())){
+					sListIterator.remove(); 
+					break;
+				}
+			}
+		} 
+	}
 
 	/**
 	 * get all the cases file .
@@ -341,6 +386,7 @@ public class TestUtil {
 		}
 
 		String localPath = StringUtil.replaceSlashBasedSystem(filePath);
+		
 		File dir = new File(localPath);
 		if (!dir.exists()) {
 			return;
