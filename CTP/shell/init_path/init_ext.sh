@@ -319,3 +319,35 @@ function wait_replication_done
 	csql -udba hatestdb -c "drop table wait_for_slave"
 }
 
+function replace_oid_with_class_name()
+{
+        [ $# -lt 2 ] && return
+
+        local oid_file=$1
+        local db_name=$2
+	local server_status=0
+	[ -z "$db_name" ] || [ ! -s "$oid_file" ] && return
+
+	rm dialog.data >/dev/null 2>&1
+	cubrid server status >server_status.log 2>&1
+        if [ `grep "Server $db_name" |wc -l` -gt 0 ];then
+	    cubrid server stop $db_name
+	    server_status=1
+	fi
+	
+        cubrid  diagdb -o dialog.data -d 5 $db_name
+	sed -i ':t;N;s/TRAN_INDEX = -1\n//;b t' dialog.data
+        oid_list=`grep -onE '([-]*[0-9]+\|[-]*[0-9]+\|[-]*[0-9]+)' $oid_file |awk -F ':' '{print $2}'|sort|uniq`
+	for x in $oid_list
+	do
+	    class_name=`grep "$x" dialog.data|awk '{print $2}'|tr -d ' '`
+	    sed -i "s/($x)/(?|?|?, $class_name)/g" $oid_file    
+	done
+
+	if [ $server_status -eq 1 ];then
+	    cubrid server start $db_name
+	fi
+
+	rm dialog.data >/dev/null 2>&1
+	rm server_status.log >/dev/null 2>&1
+}
