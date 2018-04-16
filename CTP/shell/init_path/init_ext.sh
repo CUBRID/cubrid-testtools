@@ -336,7 +336,7 @@ function replace_oid_with_class_name()
 	fi
 	
         cubrid  diagdb -o dialog.data -d 5 $db_name
-	sed -i ':t;N;s/TRAN_INDEX = -1\n//;b t' dialog.data
+	sed -i ':t;N;s/TRAN_INDEX =.*\n//;b t' dialog.data
         oid_list=`grep -onE '([-]*[0-9]+\|[-]*[0-9]+\|[-]*[0-9]+)' $oid_file |awk -F ':' '{print $2}'|sort|uniq`
 	for x in $oid_list
 	do
