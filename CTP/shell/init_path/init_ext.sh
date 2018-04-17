@@ -199,6 +199,16 @@ function cubrid_ha_create {
 		esac
 		shift
 	done
+	
+	if [ "$slave_hosts" != "D_HOST*" ]; then
+		echo "Usage: please specify at least one slave node"
+		exit 1
+	fi
+
+	if [ "$replica_hosts" != "D_HOST*" ]; then
+		echo "Usage: please specify at least one replica node"
+		exit 1
+	fi
 
 	ha_hosts="$slave_hosts $replica_hosts"
 
