@@ -188,10 +188,26 @@ function cubrid_ha_create {
 			-s)
 				shift
 				slave_hosts=`echo $1 | sed "s/,/ /g"`
+				echo $slave_hosts
+				for host in $slave_hosts; do
+					if ! (eval echo \$${host}_IP | grep "[0-9].*\.[0-9].*\.[0-9].*\.[0-9].*"); then
+					echo "ERROR: ${host}_IP is not specified or ${host}_IP is invalid"
+					exit 1
+				fi
+				done
+
 				;;
 			-r)
 				shift
 				replica_hosts=`echo $1 | sed "s/,/ /g"`
+				echo $replica_hosts
+				for host in $replica_hosts; do
+					if ! (eval echo \$${host}_IP | grep "[0-9].*\.[0-9].*\.[0-9].*\.[0-9].*"); then
+					echo "ERROR: ${host}_IP is not specified or ${host}_IP is invalid"
+					exit 1
+				fi
+				done
+
 				;;
 			*)
                                 params="$params $1"	
@@ -200,16 +216,6 @@ function cubrid_ha_create {
 		shift
 	done
 	
-	if [ "$slave_hosts" != "D_HOST*" ]; then
-		echo "Usage: please specify at least one slave node"
-		exit 1
-	fi
-
-	if [ "$replica_hosts" != "D_HOST*" ]; then
-		echo "Usage: please specify at least one replica node"
-		exit 1
-	fi
-
 	ha_hosts="$slave_hosts $replica_hosts"
 
 	backup_cubrid_config
