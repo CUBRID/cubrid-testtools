@@ -191,9 +191,9 @@ function cubrid_ha_create {
 				echo $slave_hosts
 				for host in $slave_hosts; do
 					if ! (eval echo \$${host}_IP | grep "[0-9].*\.[0-9].*\.[0-9].*\.[0-9].*"); then
-					echo "ERROR: ${host}_IP is not specified or ${host}_IP is invalid"
-					exit 1
-				fi
+						echo "ERROR: ${host}_IP is not specified or ${host}_IP is invalid"
+						exit 1
+					fi
 				done
 
 				;;
@@ -203,9 +203,9 @@ function cubrid_ha_create {
 				echo $replica_hosts
 				for host in $replica_hosts; do
 					if ! (eval echo \$${host}_IP | grep "[0-9].*\.[0-9].*\.[0-9].*\.[0-9].*"); then
-					echo "ERROR: ${host}_IP is not specified or ${host}_IP is invalid"
-					exit 1
-				fi
+						echo "ERROR: ${host}_IP is not specified or ${host}_IP is invalid"
+						exit 1
+					fi
 				done
 
 				;;
