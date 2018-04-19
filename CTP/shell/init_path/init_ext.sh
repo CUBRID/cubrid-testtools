@@ -330,7 +330,7 @@ function replace_oid_with_class_name()
 
 	rm dialog.data >/dev/null 2>&1
 	cubrid server status >server_status.log 2>&1
-        if [ `grep "Server $db_name" |wc -l` -gt 0 ];then
+        if [ `grep "Server $db_name" server_status.log|wc -l` -gt 0 ];then
 	    cubrid server stop $db_name
 	    server_status=1
 	fi
@@ -340,8 +340,16 @@ function replace_oid_with_class_name()
         oid_list=`grep -onE '([-]*[0-9]+\|[-]*[0-9]+\|[-]*[0-9]+)' $oid_file |awk -F ':' '{print $2}'|sort|uniq`
 	for x in $oid_list
 	do
-	    class_name=`grep "$x" dialog.data|awk '{print $2}'|tr -d ' '`
-	    sed -i "s/($x)/(?|?|?, $class_name)/g" $oid_file    
+	    if [ "$x" == "-1|-1|-1" ];then
+		continue
+	    fi
+
+	    class_name=`grep -w "$x" dialog.data|awk '{print $2}'|tr -d ' '`
+	    if [ -n "$class_name" ];then
+	    	sed -i "s/($x)/(?|?|?, $class_name)/g" $oid_file
+	    else
+		sed -i "s/($x)/(?|?|?)/g" $oid_file
+	    fi    
 	done
 
 	if [ $server_status -eq 1 ];then
