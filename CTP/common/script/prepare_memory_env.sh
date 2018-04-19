@@ -25,6 +25,7 @@
 #
 
 request_opts="setup"
+export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
 
 function prepare()
 {
@@ -43,18 +44,14 @@ function prepare()
 
 function check_env()
 {
-   if [ ! -d  "$CTP_HOME" ];then
-	echo "Do not set CTP_HOME environment variable"
-   	exit
-   fi
-  
    if [ ! -d  "$VALGRIND_HOME" ];then
-	echo "Do not set VALGRIND_HOME environment variable"
+	echo "Check VALGRIND_HOME environment variable and make sure the directory of VALGRIND_HOME exists"
+	echo "Make sure your valgrind installed is from https://github.com/CUBRID/cubrid-testtools-internal/tree/master/valgrind"
         exit
    fi
 
    if [ ! -d  "$CUBRID" ];then
-        echo "Do not set VALGRIND_HOME environment variable"
+        echo "Check CUBRID environment variable and make sure the directory of CUBRID exists"
         exit
    fi
 }
@@ -64,11 +61,16 @@ function prepare_memory_env()
     cur_dir=`pwd`
     echo "Preparing..."
     cd $CUBRID/bin
-    mv cub_server server.exe
-    mv cub_cas cas.exe
+    if [ ! -f server.exe ];then
+    	mv cub_server server.exe
+    fi
 
-    cp $CTP_HOME/sql/memory/cub_cas.c .
-    cp $CTP_HOME/sql/memory/cub_server.c .
+    if [ ! -f cas.exe ];then	
+   	 mv cub_cas cas.exe
+    fi
+
+    cp -f $CTP_HOME/sql/memory/cub_cas.c .
+    cp -f $CTP_HOME/sql/memory/cub_server.c .
     
     gcc -o cub_server cub_server.c
     gcc -o cub_cas cub_cas.c 
@@ -86,8 +88,12 @@ function clean_memory_env()
     echo "Starting to clean..."
     cur_dir=`pwd`
     cd $CUBRID/bin
-    mv server.exe cub_server
-    mv cas.exe cub_cas
+    if [ -f server.exe ];then
+    	mv server.exe cub_server
+    fi
+    if [ -f cas.exe ];then
+    	mv cas.exe cub_cas
+    fi
     
     if [ -f "$CUBRID/bin/cub_cas.c" ];then
 	rm $CUBRID/bin/cub_cas.c
