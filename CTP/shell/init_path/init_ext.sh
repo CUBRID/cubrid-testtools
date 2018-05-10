@@ -238,7 +238,7 @@ function cubrid_ha_create {
 		rexec $host -c "sh \$init_path/../../bin/ini.sh -s common \$CUBRID/conf/cubrid.conf ha_mode replica"
 	done
 
-	cmds="(mkdir -p \$CUBRID/databases/hatestdb; cd \$CUBRID/databases/hatestdb;source \$init_path/init.sh; cubrid_createdb hatestdb \$params)"
+	cmds="(mkdir -p \$CUBRID/databases/hatestdb; cd \$CUBRID/databases/hatestdb;source \$init_path/init.sh; cubrid_createdb hatestdb $params)"
 	eval $cmds
 	for node in $ha_hosts; do
 		rexec $node -c "$cmds"
