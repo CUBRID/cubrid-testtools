@@ -67,7 +67,8 @@ public class RunShellMain {
 	private final static String RESULT_TEST_LOG = "test.log";
 	public final static String TOKEN_FOR_END = "========";
 	public static final String REPORT_DATE_FM = "yyyy-MM-dd HH:mm:ss.SSS";
-	public static final String STORE_FOR_MANUAL_BUILD = "store_99";
+	public static final String STORE_FOR_MANUAL_BUILD_S99 = "store_99";
+	public static final String STORE_FOR_MANUAL_BUILD_S98 = "store_98";
 
 	private Scheduler scheduler = null;
 
@@ -104,9 +105,10 @@ public class RunShellMain {
 	String cubridRelType;
 
 	String cubridBuildsUrl;
+	String nextBuildUrl;
 
 	public RunShellMain(String testCaseDir, String testCaseName, boolean keepUpdated, boolean withLoop, boolean enableReport, String reportCron, String mailTo, String mailCc, String issueNo,
-			String extendScript, String config, Boolean promptContinue, int maxLoop, int maxTimeInSecs) throws Exception {
+			String extendScript, String config, Boolean promptContinue, int maxLoop, int maxTimeInSecs, String nextBuildUrl) throws Exception {
 		this.testCaseDir = testCaseDir;
 		this.testCaseName = testCaseName;
 		this.keepUpdated = keepUpdated;
@@ -123,6 +125,10 @@ public class RunShellMain {
 		}
 		this.maxLoop = maxLoop;
 		this.maxTimeInSecs = maxTimeInSecs;
+		this.nextBuildUrl = nextBuildUrl;
+		if (this.nextBuildUrl != null) {
+			this.nextBuildUrl = this.nextBuildUrl.trim();
+		}
 
 		init();
 	}
@@ -202,7 +208,7 @@ public class RunShellMain {
 		String extendedFunctions = extendVerify ? "verify" : "";
 		System.out.println("Test parameters: ");
 		System.out.println("   testcase     :\t" + testCaseDir + File.separator + testCaseName + ".sh");
-		System.out.println("   update-build :\t" + keepUpdated);
+		System.out.println("   update-build :\t" + keepUpdated + (keepUpdated && CommonUtils.isEmpty(nextBuildUrl) == false ? "(" + nextBuildUrl + ")" : ""));
 		String loopDesc;
 		if (withLoop) {
 			loopDesc = " (" + (maxLoop == Integer.MAX_VALUE ? "max" : String.valueOf(maxLoop)) + " loops, ";
@@ -373,6 +379,7 @@ public class RunShellMain {
 		if (CommonUtils.isEmpty(cubridBuildId)) {
 			throw new Exception("Unknown CUBRID version");
 		}
+		this.cubridBuildId = this.cubridBuildId.trim();
 	}
 
 	private void runOnce() throws Exception {
@@ -452,7 +459,7 @@ public class RunShellMain {
 	private String findNewerCubridPackageUrl() {
 		ArrayList<String> pkgUrlList;
 		try {
-			pkgUrlList = getCubridPkgListOfNewerBuild(this.cubridBuildId, this.cubridBuildsUrl);
+			pkgUrlList = getCubridPkgListOfNewerBuild(this.cubridBuildId, this.cubridBuildsUrl, this.nextBuildUrl);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -465,10 +472,26 @@ public class RunShellMain {
 		}
 	}
 
-	private static ArrayList<String> getCubridPkgListOfNewerBuild(String cubridBuildId, String allBuildsUrl) throws Exception {
+	private static ArrayList<String> getCubridPkgListOfNewerBuild(String cubridBuildId, String allBuildsUrl, String nextBuildUrl) throws Exception {
 		String source = getHtmlSource(allBuildsUrl, true);
+
+		if (!CommonUtils.isEmpty(nextBuildUrl)) {
+			String nextBuildId;
+			if (nextBuildUrl.toLowerCase().startsWith("http://")) {
+				nextBuildId = getHtmlSource(nextBuildUrl, false);
+			} else {
+				nextBuildId = CommonUtils.getFileContent(nextBuildUrl);
+			}
+			if (nextBuildId != null) {
+				nextBuildId = nextBuildId.trim();
+			}
+			if (!CommonUtils.isEmpty(nextBuildId) && cubridBuildId.equals(nextBuildId) == false) {
+				return getCubridPkgUrlList(nextBuildId, getBuildBaseUrl(source, nextBuildId));
+			}
+			return null;
+		}
 		
-		boolean isManualBuildTest = source.indexOf(STORE_FOR_MANUAL_BUILD + cubridBuildId) != -1;
+		boolean isManualBuildTest = source.indexOf(STORE_FOR_MANUAL_BUILD_S99 + "/" + cubridBuildId) != -1 || source.indexOf(STORE_FOR_MANUAL_BUILD_S98 + "/" + cubridBuildId) != -1;
 
 		String mainVersion = getMainVersion(cubridBuildId);
 		int maxLastNum = getLastNumberInVersion(cubridBuildId);
@@ -489,11 +512,11 @@ public class RunShellMain {
 			if (start != -1) {
 				pathPrefix = source.substring(start, stepIndex);
 				if (isManualBuildTest) {
-					if (pathPrefix.indexOf(STORE_FOR_MANUAL_BUILD) == -1) {
+					if (pathPrefix.indexOf(STORE_FOR_MANUAL_BUILD_S99) == -1 && pathPrefix.indexOf(STORE_FOR_MANUAL_BUILD_S98) == -1) {
 						continue;
 					}
 				} else {
-					if (pathPrefix.indexOf(STORE_FOR_MANUAL_BUILD) != -1) {
+					if (pathPrefix.indexOf(STORE_FOR_MANUAL_BUILD_S99) != -1 || pathPrefix.indexOf(STORE_FOR_MANUAL_BUILD_S98) != -1) {
 						continue;
 					}
 				}
@@ -515,7 +538,6 @@ public class RunShellMain {
 			}
 		}
 
-		String buildBaseUrl = null;
 		if (maxLastNum == baseLastNum) {
 			return null;
 		} else {
@@ -523,25 +545,30 @@ public class RunShellMain {
 			if (CommonUtils.isEmpty(sha) == false) {
 				maxBuildId = maxBuildId + "-" + sha;
 			}
-			start = source.indexOf(maxBuildId);
-			if (start == -1) {
-				return null;
-			}
-			start = source.lastIndexOf("'", start) + 1;
-			if (start == -1) {
-				return null;
-			}
-			end = source.indexOf("'", start);
-			if (end == -1) {
-				return null;
-			}
-			buildBaseUrl = source.substring(start, end) + "/drop/";
 
-			if (buildBaseUrl != null && buildBaseUrl.startsWith("http:") == false) {
-				return null;
-			}
-			return getCubridPkgUrlList(maxBuildId, buildBaseUrl);
+			return getCubridPkgUrlList(maxBuildId, getBuildBaseUrl(source, maxBuildId));
 		}
+	}
+	
+	private static String getBuildBaseUrl(String source, String buildId) {
+		int start = source.indexOf(buildId);
+		if (start == -1) {
+			return null;
+		}
+		start = source.lastIndexOf("'", start) + 1;
+		if (start == -1) {
+			return null;
+		}
+		int end = source.indexOf("'", start);
+		if (end == -1) {
+			return null;
+		}
+		String buildBaseUrl = source.substring(start, end) + "/drop/";
+
+		if (buildBaseUrl.startsWith("http:") == false) {
+			return null;
+		}
+		return buildBaseUrl;
 	}
 
 	private static ArrayList<String> getCubridPkgUrlList(String buildId, String buildBaseUrl) throws Exception {
@@ -733,6 +760,7 @@ public class RunShellMain {
 	public static void main(String[] args) throws Exception {
 		Options options = new Options();
 		options.addOption(null, "update-build", false, "Upgrade CUBRID build when new build comes. The 4th figure in version number will be used to compare.");
+		options.addOption(null, "next-build-url", true, "Find next build in the url");
 		options.addOption(null, "loop", false, "Execute with loop infinitely till there is failure checked.");
 		options.addOption(null, "enable-report", false, "Enable to send report for test status");
 		options.addOption(null, "report-cron", true, "Define a time to send a mail");
@@ -791,6 +819,7 @@ public class RunShellMain {
 		boolean withLoop = cmd.hasOption("loop");
 		boolean enableReport = cmd.hasOption("enable-report");
 		String reportCron = cmd.getOptionValue("report-cron");
+		String nextBuildUrl = cmd.getOptionValue("next-build-url");
 		String mailTo = cmd.getOptionValue("mailto");
 		String mailCc = cmd.getOptionValue("mailcc");
 		String issueNo = cmd.getOptionValue("issue");
@@ -820,7 +849,7 @@ public class RunShellMain {
 		}
 
 		RunShellMain main = new RunShellMain(testCaseDir, testCaseName, keepUpdated, withLoop, enableReport, reportCron, mailTo, mailCc, issueNo, extendScript, config, promptContinue, maxLoop,
-				maxTimeInSecs);
+				maxTimeInSecs, nextBuildUrl);
 
 		try {
 			main.run();
