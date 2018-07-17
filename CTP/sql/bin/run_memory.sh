@@ -153,6 +153,7 @@ function format_results()
    mkdir -p $result_folder
    rm ./$result_folder/* 2>/dev/null
    cp $CTP_HOME/result/memory/* $CTP_HOME/result/$result_folder
+   cp $run_log $CTP_HOME/result/$result_folder
 
    testing_result=`cat $run_log|grep 'Test Result Directory:'|grep -v grep|awk -F ':' '{print $2}'|tr -d ' '`
 
