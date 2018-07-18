@@ -153,7 +153,7 @@ function format_results()
    mkdir -p $result_folder
    rm ./$result_folder/* 2>/dev/null
    cp $CTP_HOME/result/memory/* $CTP_HOME/result/$result_folder
-   cp $run_log $CTP_HOME/result/$result_folder
+   cp $run_log $CTP_HOME/result/$result_folder/run_sql.out
 
    testing_result=`cat $run_log|grep 'Test Result Directory:'|grep -v grep|awk -F ':' '{print $2}'|tr -d ' '`
 
@@ -184,7 +184,7 @@ rename_process
 do_process_mock
 
 
-sh $CTP_HOME/sql/bin/run.sh -s ${scenario_category} -f $config_file_main 2>&1 > ${CTP_HOME}/result/${memory_log}
+sh $CTP_HOME/sql/bin/run.sh -s ${scenario_category} -f $config_file_main | tee ${CTP_HOME}/result/${memory_log}
 
 # stop services and collect memory results
 stop_and_collect_memory_result
