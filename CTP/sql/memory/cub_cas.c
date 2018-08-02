@@ -68,10 +68,15 @@ main (int argc, char *argv[])
   const char *option1 = "--trace-children=yes";
   const char *option2 = "--leak-check=full";
   const char *option3 = "--error-limit=no";
-  const char *option4 = "--date-time=yes";
+  //const char *option4 = "--date-time=yes";
   //const char *option4 = "--expensive-definedness-checks=yes";
   const char *option5 = "--track-origins=yes";
   const char *option6 = "--num-callers=50"; 
+  char *option4 = NULL;
+  option4 = getenv ("TIME_OPTION");
+  if (option4 == NULL)
+    option4 = "--date-time=yes";
+
   char log_file[128] = { 0x00 };
   char t[128] = { 0x00 };
   strcpy (t, "--log-file=");
