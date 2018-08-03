@@ -57,26 +57,19 @@ done
 
 function check_valgrind()
 {
-   if [ `echo $PATH|grep -c 'valgrind/bin'` -eq 0 ];then
-       echo "Please confirm that your valgrin is installed and properly added \$VALGRIND_HOME/bin to the PATH."
+   valgrind_util=`which valgrind`
+   if [ -z $valgrind_util ];then
+       echo "ERROR: Please confirm that your valgrin is installed and added into PATH."
        exit 1
    else
-       OLD_IFS="$IFS"
-       IFS=":"
-       path_arr=($PATH)
-       for p in ${path_arr[@]}; do
-           if [ `echo $p |grep -c 'valgrind/bin'` -eq 1 ];then
-               export VALGRIND_HOME=${p%/bin} 
-           fi
-       done
-       IFS="${OLD_IFS}"
+       export VALGRIND_HOME=$(cd $(dirname $valgrind_util)/..; pwd) 
    fi
 
    if [ `valgrind --help|grep -c "\-\-date\-time=" ` -gt 0 ];then
        export TIME_OPTION="--date-time=yes"
    else
        export TIME_OPTION="--time-stamp=yes"
-       echo "[NOTE] Current valgrind does not support the --date-time=yes option, so replace it with --time-stamp=yes."
+       echo "NOTE: Current valgrind does not support the --date-time=yes option, so replace it with --time-stamp=yes."
        echo "If you want to use the --date-time=yes option, please get the optimized valgrind from https://github.com/CUBRID/cubrid-testtools-internal/tree/master/valgrind."
    fi
 }
