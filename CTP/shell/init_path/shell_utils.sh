@@ -53,46 +53,6 @@ function do_check_more_errors {
     case_name=`echo ${test_case_dir##*/}`
     result_file_full_name=${test_case_dir}/cases/${case_name}.result
 
-      if [  -f "$CTP_CORE_EXCLUDE_FILE" ]; then
-      find $init_path $CUBRID $test_case_dir -name "core*" -type f > temp_assert_log
-      local hit_all_cnt=0
-      local hit_server_cnt=0
-      local all_core_cnt=0
-      local all_server_core_cnt=0
-
-      local curr_is_server=0
-      local curr_hit=0
-      while read core
-      do
-         all_core_cnt=`expr $all_core_cnt + 1`
-
-         analyzer.sh $core  > analyzer.log 2>&1
-
-         curr_hit=`cat analyzer.log | grep -aE -f "$CTP_CORE_EXCLUDE_FILE" |wc -l`
-         if [ $curr_hit -gt 0 ]; then
-           hit_all_cnt=`expr $hit_all_cnt + 1`
-         fi
-
-         curr_is_server=`cat analyzer.log | grep "PROCESS NAME" | grep "cub_server" |wc -l`
-         if [ $curr_is_server -gt 0 ]; then            
-            all_server_core_cnt=`expr $all_server_core_cnt + 1`
-            if [ $curr_hit -gt 0 ]; then
-               hit_server_cnt=`expr $hit_server_cnt + 1`
-            fi
-         fi
-      done < temp_assert_log
-
-      if [ $hit_all_cnt -eq $all_core_cnt ] || [ $all_server_core_cnt -gt 0 -a $all_server_core_cnt -eq $hit_server_cnt ]; then
-        while read core
-        do
-          rm -rf $core
-        done < temp_assert_log
-      fi
-    fi
-
-
-    find $init_path $CUBRID $test_case_dir -name "core*" -type f>temp_log
-    core_dump_cnt=`cat temp_log|wc -l`
     fatal_err_cnt=`grep -r -n "FATAL ERROR" $CUBRID/log/* | wc -l`
     old_fatal_err_cnt=0
     if [ -f $CUBRID/log/qa_fatal_error_count.log ]
@@ -100,41 +60,97 @@ function do_check_more_errors {
 	old_fatal_err_cnt=`cat $CUBRID/log/qa_fatal_error_count.log`
     fi
 
+    local all_core_cnt=0
+    local all_server_core_cnt=0
+    local all_cas_core_cnt=0
+
+    local hit_all_cnt=0
+    local hit_server_cnt=0
+    local hit_cas_cnt=0
+
+    local curr_is_server=0
+    local curr_is_cas=0
+    local curr_hit=0
+
+    find $init_path $CUBRID $test_case_dir -name "core*" -type f > temp_assert_log
+    all_core_cnt=`cat temp_assert_log | wc -l`
+
+
+    while read core_file
+    do
+	curr_hit=0
+	core_name=`basename $core_file`
+	analyzer.sh $core_file  > analyzer_${core_name}.log 2>&1
+
+	if [  -f "$CTP_CORE_EXCLUDE_FILE" ]; then
+	    curr_hit=`cat analyzer_${core_name}.log | grep -aE -f "$CTP_CORE_EXCLUDE_FILE" |wc -l`
+	    if [ $curr_hit -gt 0 ]; then
+	       hit_all_cnt=`expr $hit_all_cnt + 1`
+	    fi
+	fi
+	 
+	 
+	curr_is_server=`cat analyzer_${core_name}.log | grep "PROCESS NAME" | grep "cub_server" |wc -l`
+	curr_is_cas=`cat analyzer_${core_name}.log | grep "PROCESS NAME" | grep "cub_cas" |wc -l`
+
+	if [ $curr_is_server -gt 0 ]; then            
+	    all_server_core_cnt=`expr $all_server_core_cnt + 1`
+	    if [ $curr_hit -gt 0 ]; then
+	       hit_server_cnt=`expr $hit_server_cnt + 1`
+	    fi
+	elif [ $curr_is_cas -gt 0 ]; then
+	    all_cas_core_cnt=`expr $all_cas_core_cnt + 1`
+	    if [ $curr_hit -gt 0 ]; then
+	       hit_cas_cnt=`expr $hit_cas_cnt + 1`
+	    fi
+	fi
+    done < temp_assert_log
+
+    if [ $hit_all_cnt -eq $all_core_cnt ] || [ $all_server_core_cnt -gt 0 -a $all_server_core_cnt -eq $hit_server_cnt ]; then
+	cat temp_assert_log | xargs rm -rf
+	all_core_cnt=0
+
+	if [ $fatal_err_cnt -eq $old_fatal_err_cnt -o "$SKIP_CHECK_FATAL_ERROR" == "TRUE" ]; then
+	    ## do not need check the cores and fatal errors
+	    return
+	fi
+    fi
+
     cub_build_id=`cubrid_rel | grep CUBRID | awk -F ')' '{print $1}' | awk -F '(' '{print $NF}'`
     current_datetime=`date "+%Y%m%d_%H%M%S"`
     backup_name=AUTO_${cub_build_id}_${current_datetime}
     backup_dir=~/ERROR_BACKUP/${backup_name}
-	host_ip="${TEST_SSH_HOST}"
-	if [ "${host_ip}" = "" ]; then
-	    host_ip=`hostname -i`
-	fi
-	export TEST_INFO_ENV="${USER}@${host_ip}:${TEST_SSH_PORT}"
-	export TEST_INFO_BUILD_ID=${cub_build_id}
+    host_ip="${TEST_SSH_HOST}"
+    if [ "${host_ip}" = "" ]; then
+	host_ip=`hostname -i`
+    fi
+    export TEST_INFO_ENV="${USER}@${host_ip}:${TEST_SSH_PORT}"
+    export TEST_INFO_BUILD_ID=${cub_build_id}
 
-    if [ $core_dump_cnt -gt 0 ] || [ $fatal_err_cnt -gt $old_fatal_err_cnt -a "$SKIP_CHECK_FATAL_ERROR" != "TRUE" ]; then
+    if [ $all_core_cnt -gt 0 ] || [ $fatal_err_cnt -gt $old_fatal_err_cnt -a "$SKIP_CHECK_FATAL_ERROR" != "TRUE" ]; then
         mkdir -p $backup_dir
 
         generage_readme ${test_case_dir} ${backup_dir}
 
-        host_ip=`hostname -i`
-        if [ $core_dump_cnt -gt 0 ]; then
- 	        out=" : NOK found core file on host "$host_ip"("$backup_dir")"
+        if [ $all_core_cnt -gt 0 ]; then
+ 	    out=" : NOK found core file on host "$host_ip"("$backup_dir")"
             echo $out >> $result_file_full_name
             echo $out
-	    while read core
+
+	    while read core_file
 	    do
-		analyzer.sh $core  > analyzer.log 2>&1
-		is_cub_cas=`cat analyzer.log | grep "PROCESS NAME:"|grep "cub_cas"|wc -l`
-		if [ $is_cub_cas -eq 0 ];then
-			  issue_title=`grep SUMMARY analyzer.log | head -n 1`
-		    echo \<!--HTMLESCAPESTART--\>\<a class=SHELLCORE href=\"javascript:reportShellCoreIssue\(\'${core}\', \'${backup_name}\', \'${host_ip}\', \'${TEST_SSH_PORT}\', \'${USER}\', \'${cub_build_id}\', \'${issue_title}\' \) \"\>\<i\>\<font color=red\>REPORT ISSUE FOR BELOW CRASH\</font\>\</i\>\</a\>\<!--HTMLESCAPEEND--\> >> $result_file_full_name
-			  cat analyzer.log >> $result_file_full_name
-			  core_full_stack_fn=${CUBRID}/`basename $core | sed 's/core/fullstack/g'`
-			  analyzer.sh -f $core > ${core_full_stack_fn}
+		core_name=`basename $core_file`
+		is_cub_cas=`cat analyzer_${core_name}.log | grep "PROCESS NAME:"|grep "cub_cas"|wc -l`
+		if [ $is_cub_cas -eq 0 ] || [ $all_cas_core_cnt -eq $all_core_cnt ];then
+		    issue_title=`grep SUMMARY analyzer_${core_name}.log | head -n 1`
+		    echo \<!--HTMLESCAPESTART--\>\<a class=SHELLCORE href=\"javascript:reportShellCoreIssue\(\'${core_file}\', \'${backup_name}\', \'${host_ip}\', \'${TEST_SSH_PORT}\', \'${USER}\', \'${cub_build_id}\', \'${issue_title}\' \) \"\>\<i\>\<font color=red\>REPORT ISSUE FOR BELOW CRASH\</font\>\</i\>\</a\>\<!--HTMLESCAPEEND--\> >> $result_file_full_name
+		    cat analyzer_${core_name}.log >> $result_file_full_name
+		    core_full_stack_fn=${CUBRID}/`echo $core_name | sed 's/core_name/fullstack/g'`
+		    analyzer.sh -f $core_file > ${core_full_stack_fn}
 		else
-			  echo "CRASH FROM CUB_CAS:${core}(skip to print call stacks)" >> $result_file_full_name
+		    echo "CRASH FROM CUB_CAS:${core_file}(skip to print call stacks)" >> $result_file_full_name
 		fi
-	    done < temp_log
+	    done < temp_assert_log
         fi
         if [ $fatal_err_cnt -gt 0 ]; then
             out=" : NOK found fatal error on host "$host_ip"("$backup_dir")"
