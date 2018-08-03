@@ -53,24 +53,36 @@ function do_check_more_errors {
     case_name=`echo ${test_case_dir##*/}`
     result_file_full_name=${test_case_dir}/cases/${case_name}.result
 
-    if [  $EXCLUDED_CORES_BY_ASSERT_LINE ]; then
+      if [  -f "$CTP_CORE_EXCLUDE_FILE" ]; then
       find $init_path $CUBRID $test_case_dir -name "core*" -type f > temp_assert_log
-      exclude_assert=0
-      all_core=`cat temp_assert_log|wc -l`
-      while read core
-        do
-         analyzer.sh $core  > analyzer.log 2>&1
-         count_analyzer=`cat analyzer.log | grep -E "$EXCLUDED_CORES_BY_ASSERT_LINE" |wc -l`
-         if [ $count_analyzer -eq 0 ]
-         then
-           break
-         else
-           exclude_assert=`expr $exclude_assert + 1`
-         fi
-        done < temp_assert_log
+      local hit_all_cnt=0
+      local hit_server_cnt=0
+      local all_core_cnt=0
+      local all_server_core_cnt=0
 
-      if [ $exclude_assert -eq $all_core ]
-      then
+      local curr_is_server=0
+      local curr_hit=0
+      while read core
+      do
+         all_core_cnt=`expr $all_core_cnt + 1`
+
+         analyzer.sh $core  > analyzer.log 2>&1
+
+         curr_hit=`cat analyzer.log | grep -aE -f "$CTP_CORE_EXCLUDE_FILE" |wc -l`
+         if [ $curr_hit -gt 0 ]; then
+           hit_all_cnt=`expr $hit_all_cnt + 1`
+         fi
+
+         curr_is_server=`cat analyzer.log | grep "PROCESS NAME" | grep "cub_server" |wc -l`
+         if [ $curr_is_server -gt 0 ]; then            
+            all_server_core_cnt=`expr $all_server_core_cnt + 1`
+            if [ $curr_hit -gt 0 ]; then
+               hit_server_cnt=`expr $hit_server_cnt + 1`
+            fi
+         fi
+      done < temp_assert_log
+
+      if [ $hit_all_cnt -eq $all_core_cnt ] || [ $all_server_core_cnt -gt 0 -a $all_server_core_cnt -eq $hit_server_cnt ]; then
         while read core
         do
           rm -rf $core

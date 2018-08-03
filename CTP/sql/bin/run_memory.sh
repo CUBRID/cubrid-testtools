@@ -54,6 +54,26 @@ while getopts "s:f:h:" opt; do
      esac
 done
 
+
+function check_valgrind()
+{
+   valgrind_util=`which valgrind`
+   if [ -z $valgrind_util ];then
+       echo "ERROR: Please confirm that your valgrind is installed and added into PATH."
+       exit 1
+   else
+       export VALGRIND_HOME=$(cd $(dirname $valgrind_util)/..; pwd) 
+   fi
+
+   if [ `valgrind --help|grep -c "\-\-date\-time=" ` -gt 0 ];then
+       export TIME_OPTION="--date-time=yes"
+   else
+       export TIME_OPTION="--time-stamp=yes"
+       echo "NOTE: Current valgrind does not support the --date-time=yes option, so replace it with --time-stamp=yes."
+       echo "If you want to use the --date-time=yes option, please get the optimized valgrind from https://github.com/CUBRID/cubrid-testtools-internal/tree/master/valgrind."
+   fi
+}
+
 function clean_results()
 {
    curDir=`pwd`
@@ -69,7 +89,6 @@ function clean_results()
 
    cd $curDir
 }
-
 
 function rename_process()
 {
@@ -153,6 +172,7 @@ function format_results()
    mkdir -p $result_folder
    rm ./$result_folder/* 2>/dev/null
    cp $CTP_HOME/result/memory/* $CTP_HOME/result/$result_folder
+   cp $run_log $CTP_HOME/result/$result_folder/run_sql.out
 
    testing_result=`cat $run_log|grep 'Test Result Directory:'|grep -v grep|awk -F ':' '{print $2}'|tr -d ' '`
 
@@ -173,6 +193,9 @@ function format_results()
    cd $curDir
 }
 
+#check valgrind path and --date-time option
+check_valgrind
+
 #clean up memory results
 clean_results
 
@@ -183,7 +206,7 @@ rename_process
 do_process_mock
 
 
-sh $CTP_HOME/sql/bin/run.sh -s ${scenario_category} -f $config_file_main 2>&1 > ${CTP_HOME}/result/${memory_log}
+sh $CTP_HOME/sql/bin/run.sh -s ${scenario_category} -f $config_file_main | tee ${CTP_HOME}/result/${memory_log}
 
 # stop services and collect memory results
 stop_and_collect_memory_result
