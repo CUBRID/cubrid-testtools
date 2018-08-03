@@ -54,6 +54,26 @@ while getopts "s:f:h:" opt; do
      esac
 done
 
+
+function check_valgrind()
+{
+   valgrind_util=`which valgrind`
+   if [ -z $valgrind_util ];then
+       echo "ERROR: Please confirm that your valgrind is installed and added into PATH."
+       exit 1
+   else
+       export VALGRIND_HOME=$(cd $(dirname $valgrind_util)/..; pwd) 
+   fi
+
+   if [ `valgrind --help|grep -c "\-\-date\-time=" ` -gt 0 ];then
+       export TIME_OPTION="--date-time=yes"
+   else
+       export TIME_OPTION="--time-stamp=yes"
+       echo "NOTE: Current valgrind does not support the --date-time=yes option, so replace it with --time-stamp=yes."
+       echo "If you want to use the --date-time=yes option, please get the optimized valgrind from https://github.com/CUBRID/cubrid-testtools-internal/tree/master/valgrind."
+   fi
+}
+
 function clean_results()
 {
    curDir=`pwd`
@@ -69,7 +89,6 @@ function clean_results()
 
    cd $curDir
 }
-
 
 function rename_process()
 {
@@ -173,6 +192,9 @@ function format_results()
    echo "======================="  
    cd $curDir
 }
+
+#check valgrind path and --date-time option
+check_valgrind
 
 #clean up memory results
 clean_results
