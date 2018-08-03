@@ -59,7 +59,7 @@ function check_valgrind()
 {
    valgrind_util=`which valgrind`
    if [ -z $valgrind_util ];then
-       echo "ERROR: Please confirm that your valgrin is installed and added into PATH."
+       echo "ERROR: Please confirm that your valgrind is installed and added into PATH."
        exit 1
    else
        export VALGRIND_HOME=$(cd $(dirname $valgrind_util)/..; pwd) 
