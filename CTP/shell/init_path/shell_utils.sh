@@ -146,6 +146,7 @@ function do_check_more_errors {
                  is_cub_server=`cat ${core_brief_stack_fn} | grep "PROCESS NAME:"|grep "cub_server"|wc -l`
                  if [ ${is_cub_server} -gt 0 ]; then
                       has_cub_server_crash=1
+                      break
                  fi
             done < temp_log
 
