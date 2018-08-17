@@ -72,6 +72,24 @@
 
 ##----------------------------------------------------------------------##
 
+##################### ADD ###################
+## CBRD-22235,CBRD-22023,CBRD-21967 not a bug
+{
+   filter_out_update_crc32
+   Memcheck:Value8
+   fun:update_crc32
+   fun:crc32_write
+   fun:md_write
+   fun:_gcry_md_hash_buffer
+   fun:gcry_md_hash_buffer
+   fun:_Z*
+   ...
+   fun:_Z*
+   fun:execute_native_thread_routine
+   fun:start_thread
+   fun:clone
+}
+
 #Add by Nathan
 ####BEGIN
 {
