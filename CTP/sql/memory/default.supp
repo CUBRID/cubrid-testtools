@@ -82,9 +82,9 @@
    fun:md_write
    fun:_gcry_md_hash_buffer
    fun:gcry_md_hash_buffer
-   fun:_Z
+   fun:_Z*
    ...
-   fun:_Z
+   fun:_Z*
    fun:execute_native_thread_routine
    fun:start_thread
    fun:clone
