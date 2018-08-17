@@ -72,6 +72,57 @@
 
 ##----------------------------------------------------------------------##
 
+##################### ADD DATE ###################  20180816
+## CBRD-22235, not a bug
+{
+   filter_out_update_crc32
+   Memcheck:Value8
+   fun:update_crc32
+   fun:crc32_write
+   fun:md_write
+   fun:_gcry_md_hash_buffer
+   fun:gcry_md_hash_buffer
+   fun:_Z11crypt_crc32PN9cubthread5entryEPKciPi
+   fun:_ZL27logpb_compute_page_checksumPN9cubthread5entryEP8log_pagePi
+   fun:_ZL23logpb_set_page_checksumPN9cubthread5entryEP8log_page
+   fun:_ZL25logpb_writev_append_pagesPN9cubthread5entryEPP8log_pagei
+   fun:_ZL28logpb_flush_all_append_pagesPN9cubthread5entryE
+   fun:_Z24logpb_flush_pages_directPN9cubthread5entryE
+   fun:_ZN21log_flush_daemon_task7executeERN9cubthread5entryE
+   fun:_ZN9cubthread6daemon17loop_with_contextINS_5entryEEEvPS0_PNS_15context_managerIT_EEPNS_4taskIS5_EEPKc
+   fun:_ZNSt12_Bind_simpleIFPFvPN9cubthread6daemonEPNS0_15context_managerINS0_5entryEEEPNS0_4taskIS4_EEPKcES2_S6_S9_SB_EE9_M_invokeIJLm0ELm1ELm2ELm3EEEEvSt12_Index_tupleIJXspT_EEE
+   fun:_ZNSt12_Bind_simpleIFPFvPN9cubthread6daemonEPNS0_15context_managerINS0_5entryEEEPNS0_4taskIS4_EEPKcES2_S6_S9_SB_EEclEv
+   fun:_ZNSt6thread11_State_implISt12_Bind_simpleIFPFvPN9cubthread6daemonEPNS2_15context_managerINS2_5entryEEEPNS2_4taskIS6_EEPKcES4_S8_SB_SD_EEE6_M_runEv
+   fun:execute_native_thread_routine
+   fun:start_thread
+   fun:clone
+}
+
+## CBRD-22023, not a bug
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:update_crc32
+   fun:crc32_write
+   fun:md_write
+   fun:_gcry_md_hash_buffer
+   fun:gcry_md_hash_buffer
+   fun:_Z11crypt_crc32PN9cubthread5entryEPKciPi
+   fun:_ZL27logpb_compute_page_checksumPN9cubthread5entryEP8log_pagePi
+   fun:_ZL23logpb_set_page_checksumPN9cubthread5entryEP8log_page
+   fun:_Z24logpb_write_page_to_diskPN9cubthread5entryEP8log_pagel
+   fun:_ZL28logpb_flush_all_append_pagesPN9cubthread5entryE
+   fun:_Z24logpb_flush_pages_directPN9cubthread5entryE
+   fun:_ZN21log_flush_daemon_task7executeERN9cubthread5entryE
+   fun:_ZN9cubthread6daemon17loop_with_contextINS_5entryEEEvPS0_PNS_15context_managerIT_EEPNS_4taskIS5_EEPKc
+   fun:_ZNSt12_Bind_simpleIFPFvPN9cubthread6daemonEPNS0_15context_managerINS0_5entryEEEPNS0_4taskIS4_EEPKcES2_S6_S9_SB_EE9_M_invokeIJLm0ELm1ELm2ELm3EEEEvSt12_Index_tupleIJXspT_EEE
+   fun:_ZNSt12_Bind_simpleIFPFvPN9cubthread6daemonEPNS0_15context_managerINS0_5entryEEEPNS0_4taskIS4_EEPKcES2_S6_S9_SB_EEclEv
+   fun:_ZNSt6thread11_State_implISt12_Bind_simpleIFPFvPN9cubthread6daemonEPNS2_15context_managerINS2_5entryEEEPNS2_4taskIS6_EEPKcES4_S8_SB_SD_EEE6_M_runEv
+   fun:execute_native_thread_routine
+   fun:start_thread
+   fun:clone
+}
+
 #Add by Nathan
 ####BEGIN
 {
