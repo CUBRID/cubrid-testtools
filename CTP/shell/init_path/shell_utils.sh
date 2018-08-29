@@ -212,8 +212,8 @@ function do_save_snapshot_by_type {
     backup_dir=~/ERROR_BACKUP/${backup_fname}
 
     mkdir -p ${backup_dir}
-    cp -rf $CUBRID ${backup_dir}
-    cp -r ${test_case_dir} ${backup_dir}
+    cp -rfp $CUBRID ${backup_dir}
+    cp -rp ${test_case_dir} ${backup_dir}
     cubrid_fail_file=${test_case_dir}/cubrid_failure_desc.txt
     if [ -f ${cubrid_fail_file} ]; then
         mv ${cubrid_fail_file} ${backup_dir}
