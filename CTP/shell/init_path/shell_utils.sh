@@ -172,9 +172,9 @@ function do_check_more_errors {
             echo $out >> $result_file_full_name
             echo $out
         fi
-        cp -rf $CUBRID $backup_dir/CUBRID
-        cp -rf $test_case_dir $backup_dir
-        cp -rf $init_path $backup_dir/init_path
+        cp -rfp $CUBRID $backup_dir/CUBRID
+        cp -rfp $test_case_dir $backup_dir
+        cp -rfp $init_path $backup_dir/init_path
 	cd ~/ERROR_BACKUP
 	tar zcvf AUTO_${cub_build_id}_${current_datetime}.tar.gz AUTO_${cub_build_id}_${current_datetime}
 	rm -rf AUTO_${cub_build_id}_${current_datetime}
