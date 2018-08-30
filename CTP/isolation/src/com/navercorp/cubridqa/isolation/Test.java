@@ -181,39 +181,39 @@ public class Test {
 		if (tc.startsWith("/") == false) {
 			tc = "$HOME/" + tc;
 		}
+
 		script.addCommand("sh runone.sh -r " + (context.getRetryTimes() + 1) + " " + tc + " " + context.getTestCaseTimeoutInSec() + " " + context.getTestingDatabase() + " 2>&1");
 		result = ssh.execute(script);
 		workerLog.println(result);
 
-		processCoreFile();
+		boolean passFlag = true;
+		if (result.indexOf("flag: NOK") != -1) {
+			passFlag = false;
+		}
 
-		String[] itemArrary = result.split("\n");
-		if (itemArrary == null) {
-			return false;
-		} else {
-			Properties props = new Properties();
-			String[] pair;
-			for (String item : itemArrary) {
-				pair = item.split(":");
-				if (pair.length == 2) {
-					props.put(pair[0].trim().toLowerCase(), pair[1].trim().toUpperCase());
-				}
-			}
-			String core = props.getProperty("core", "").trim();
-			if (core.equals("") == false) {
-				this.hasCore = true;
-				this.addResultItem("NOK", "FOUND CORE(S): " + core);
-			}
+		boolean foundCore = result.indexOf("found core file") != -1;
+		boolean foundFatal = result.indexOf("found fatal error") != -1;
+		if (foundCore || foundFatal) {
+			passFlag = false;
+			this.hasCore = true;
 
-			String flag = props.getProperty("flag", "").trim();
-			if (flag.equals("TIMEOUT")) {
-				this.addResultItem("NOK", "TIMEOUT");
-				isTimeOut = true;
-				return false;
-			} else {
-				return (!hasCore) && flag.equals("OK");
+			if (foundCore) {
+				this.addResultItem("NOK", "Found core(s)");
+			}
+			if (foundFatal) {
+				this.addResultItem("NOK", "Found fatal error(s).");
 			}
 		}
+
+		if (passFlag == true) {
+			passFlag = result.indexOf("flag: OK") != -1;
+			if (passFlag == false) {
+				this.addResultItem("NOK", "Not found OK or NOK word.");
+			}
+		}
+		return passFlag;
+
+		// processCoreFile();
 	}
 
 	private void processCoreFile() throws Exception {
