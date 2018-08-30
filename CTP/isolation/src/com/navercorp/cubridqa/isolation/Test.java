@@ -191,17 +191,13 @@ public class Test {
 			passFlag = false;
 		}
 
-		boolean foundCore = result.indexOf("found core file") != -1;
-		boolean foundFatal = result.indexOf("found fatal error") != -1;
-		if (foundCore || foundFatal) {
+		ArrayList<String> errors = extractItems(result, "found core file");
+		errors.addAll(extractItems(result, "found fatal error"));
+		if (errors.size() > 0) {
 			passFlag = false;
 			this.hasCore = true;
-
-			if (foundCore) {
-				this.addResultItem("NOK", "Found core(s)");
-			}
-			if (foundFatal) {
-				this.addResultItem("NOK", "Found fatal error(s).");
+			for (String e : errors) {
+				this.addResultItem("NOK", e);
 			}
 		}
 
@@ -214,6 +210,37 @@ public class Test {
 		return passFlag;
 
 		// processCoreFile();
+	}
+	
+	private static ArrayList<String> extractItems(String source, String find) {
+		ArrayList<String> resultList = new ArrayList<String>();
+		if (source == null) {
+			return resultList;
+		}
+		int startPos = 0, endPos;
+		String item;
+		while (true) {
+			startPos = source.indexOf(find, startPos);
+			if (startPos == -1) {
+				break;
+			}
+			endPos = source.indexOf("\n", startPos);
+			if (endPos == -1) {
+				item = source.substring(startPos);
+			} else {
+				item = source.substring(startPos, endPos);
+				startPos = endPos;
+			}
+			item = item.trim();
+			if (resultList.contains(item) == false) {
+				resultList.add(item);
+			}
+
+			if (endPos == -1) {
+				break;
+			}
+		}
+		return resultList;
 	}
 
 	private void processCoreFile() throws Exception {
