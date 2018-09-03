@@ -34,6 +34,8 @@ export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
 JAVA_CPS=${CTP_HOME}/common/lib/cubridqa-common.jar
 source $CTP_HOME/common/script/process_safe.sh
 
+CORE_STACK_LIMIT=30000
+
 function usage
 {
     cat <<CCTTPP
@@ -175,7 +177,8 @@ function gen_data_template()
 	core_file_path=$1
 	core_full_stack_text_file_path=$2
 	need_analyze_core=$3
-        if [ ! "$core_file_path" ] || [ ! -f "$core_file_path" ];then
+    
+    if [ ! "$core_file_path" ] || [ ! -f "$core_file_path" ];then
 		echo ""
 		echo "[Skip]: core file $core_file_path does not exist!"
  		return
@@ -183,9 +186,9 @@ function gen_data_template()
 
 	if [ "$need_analyze_core" == "true" ];then
 		export_CUBRID_environment
-		analyzer.sh -f $core_file_path > core_full_stack.txt
+		analyzer.sh -f $core_file_path | head -c ${CORE_STACK_LIMIT} > core_full_stack.txt
 	else
-		cat $core_full_stack_text_file_path > core_full_stack.txt	
+		cat $core_full_stack_text_file_path | head -c ${CORE_STACK_LIMIT} > core_full_stack.txt	
 	fi
 
 	build_version=`cat readme.txt |grep "CUBRID VERSION"|grep -v grep|awk -F ':' 'BEGIN{OFS=":"} {$1="";print $0}'|sed 's/^://g'|sed 's/^[ \t]*//g'`
