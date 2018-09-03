@@ -34,6 +34,7 @@ import com.navercorp.cubridqa.isolation.dispatch.Dispatch;
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
+import com.navercorp.cubridqa.common.coreanalyzer.CommonUtil;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class Test {
@@ -187,7 +188,9 @@ public class Test {
 		workerLog.println(result);
 
 		boolean passFlag = true;
-		if (result.indexOf("flag: NOK") != -1) {
+		int p1 = result.lastIndexOf("flag: NOK");
+		int p2 = result.lastIndexOf("flag: OK");
+		if (p1 > p2) {
 			passFlag = false;
 		}
 
@@ -202,9 +205,9 @@ public class Test {
 		}
 
 		if (passFlag == true) {
-			passFlag = result.indexOf("flag: OK") != -1;
+			passFlag = p2 != -1;
 			if (passFlag == false) {
-				this.addResultItem("NOK", "Not found OK or NOK word.");
+				this.addResultItem("NOK", "Not found OK word.");
 			}
 		}
 		return passFlag;
@@ -232,6 +235,8 @@ public class Test {
 				startPos = endPos;
 			}
 			item = item.trim();
+			item = CommonUtil.replace(item, "\'", "").trim();
+			
 			if (resultList.contains(item) == false) {
 				resultList.add(item);
 			}
