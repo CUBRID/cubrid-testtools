@@ -812,6 +812,9 @@ function do_summary_and_clean()
 	 generate_summary_info $resultDir	          		
      else
      	resultSummaryInfoFile=${resultDir}/main.info
+	echo "cubrid_rel:`cubrid_rel|grep CUBRID`" >> $resultSummaryInfoFile
+	echo "user:${USER}" >> $resultSummaryInfoFile
+	echo "machine:`hostname -i`" >> $resultSummaryInfoFile
      	[ ! -f $resultSummaryInfoFile ] && echo "No Results!! please confirm your scenario path include valid case script(the current scenairo path:$scenario_repo_root)" && exit 1
      	failNum=`cat $resultSummaryInfoFile|grep 'fail:'|awk -F ':' '{print $2}'`
      	succNum=`cat $resultSummaryInfoFile|grep 'success:'|awk -F ':' '{print $2}'`
