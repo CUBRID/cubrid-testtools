@@ -26,22 +26,22 @@
  
 if [ $# -ne 1 ]
 then
-    echo -e "Usage: killtree.sh <pid>" 
+    echo -e "Usage: sh kill_process_tree.sh <pid>" 
     exit 
 fi
 
 function killtree() {
 
-    local _pid=$1
-    kill -stop ${_pid}
+    local pid=$1
+    kill -stop ${pid}
 
-    for _child in $(ps -o pid --no-headers --ppid ${_pid});
+    for child_pid in $(ps -o pid --no-headers --ppid ${pid});
     do
-        killtree ${_child} 
+        killtree ${child_pid} 
     done
 
-    kill -9 ${_pid}
-    echo "kill -9 ${_pid}"
+    kill -9 ${pid}
+    echo "kill -9 ${pid}"
 }
 
 killtree $1
