@@ -41,7 +41,7 @@
 }
 
 {
-   I think this is glibc's ultra optimised getenv doing 2 byte reads
+   I think this is glibc\'s ultra optimised getenv doing 2 byte reads
    exp-sgcheck:SorG
    fun:getenv
 }
@@ -71,6 +71,24 @@
 #     if Param: name of system call param
 
 ##----------------------------------------------------------------------##
+
+##################### ADD ###################
+## CBRD-22235,CBRD-22023,CBRD-21967 not a bug
+{
+   filter_out_update_crc32
+   Memcheck:Value8
+   fun:update_crc32
+   fun:crc32_write
+   fun:md_write
+   fun:_gcry_md_hash_buffer
+   fun:gcry_md_hash_buffer
+   fun:_Z*
+   ...
+   fun:_Z*
+   fun:execute_native_thread_routine
+   fun:start_thread
+   fun:clone
+}
 
 #Add by Nathan
 ####BEGIN
@@ -3835,5 +3853,16 @@
    fun:spage_is_unknown_slot
    ...
    fun:*_server_abort
+}
+
+{
+   css_send_heartbeat_data
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:send
+   fun:_Z23css_send_heartbeat_dataP14css_conn_entryPKci
+   ...
+   fun:_Z16net_server_startPKc
+   fun:(below main)
 }
 

@@ -38,12 +38,14 @@ import java.sql.Types;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.navercorp.cubridqa.common.coreanalyzer.AnalyzerMain;
+import com.navercorp.cubridqa.cqt.common.CommonUtils;
 import com.navercorp.cubridqa.cqt.console.Executor;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.ProcessMonitor;
@@ -305,18 +307,29 @@ public class ConsoleBO extends Executor {
 			}
 			String file = files[i];
 			String db = null;
+			String filter = null;
 			int position = file.toLowerCase().indexOf("?db=");
 			if (position != -1) {
 				file = files[i].substring(0, position);
-				db = files[i].substring(position + "?db=".length());
+				if(files[i].indexOf("&filter=")>=0){
+					db = files[i].substring(position + "?db=".length(), files[i].indexOf("&filter="));
+					filter = files[i].substring(files[i].indexOf("&filter=") + "&filter=".length());
+				}else{
+					db = files[i].substring(position + "?db=".length());
+				}
+				
 				test.setDbId(db);
+				test.setCaseFilter(filter);
 				test.setScenarioRootPath(file);
 				dao.addDb(db);
 			}
 			String[] postFixes = TestUtil.getCaseFilePostFix(file);
 			TestUtil.getCaseFiles(test, file, test.getCaseFileList(), postFixes);
+			TestUtil.filterExcludedCaseFile(test.getCaseFileList(), filter, file);
+			
 		}
 	}
+	
 
 	/**
 	 * build the test .
