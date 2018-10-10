@@ -37,6 +37,7 @@ log_dir=""
 log_filename=""
 cubrid_root_dir=""
 scenario_repo_root=""
+testcase_exclude_file=""
 cubrid_ver_p1=""
 cubrid_ver_p2=""
 cubrid_ver_p3=""
@@ -150,6 +151,7 @@ function do_init()
     scenario_repo_root=`ini -s sql ${config_file_main} scenario`
     [ ! -d "$scenario_repo_root" -a ! -f "$scenario_repo_root" ] && echo "please make sure your scenario directory" && exit 1
 
+	testcase_exclude_file=`ini -s sql ${config_file_main} testcase_exclude_from_file`
     cubrid_createdb_opts=`ini -s sql ${config_file_main} cubrid_createdb_opts`
 
     scenario_alias=`ini -s sql ${config_file_main} test_category`
@@ -728,8 +730,13 @@ function do_test()
             scenario_repo_root=${scenario_repo_root}/
          fi
      fi
-
-     javaArgs="${scenario_repo_root}?db=${db_name}_qa"
+     
+     
+     if [ -z "$testcase_exclude_file" ];then
+        javaArgs="${scenario_repo_root}?db=${db_name}_qa"
+     else
+        javaArgs="${scenario_repo_root}?db=${db_name}_qa&filter=$testcase_exclude_file"
+     fi
      
      if [ "$sql_interactive" == "yes" ];then
          (export CLASSPATH=${CLASSPATH}${separator}${CPCLASSES}
@@ -805,6 +812,9 @@ function do_summary_and_clean()
 	 generate_summary_info $resultDir	          		
      else
      	resultSummaryInfoFile=${resultDir}/main.info
+	echo "cubrid_rel:`cubrid_rel|grep CUBRID`" >> $resultSummaryInfoFile
+	echo "user:${USER}" >> $resultSummaryInfoFile
+	echo "machine:`hostname -i`" >> $resultSummaryInfoFile
      	[ ! -f $resultSummaryInfoFile ] && echo "No Results!! please confirm your scenario path include valid case script(the current scenairo path:$scenario_repo_root)" && exit 1
      	failNum=`cat $resultSummaryInfoFile|grep 'fail:'|awk -F ':' '{print $2}'`
      	succNum=`cat $resultSummaryInfoFile|grep 'success:'|awk -F ':' '{print $2}'`

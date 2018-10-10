@@ -196,8 +196,9 @@ public class Test {
 					} else {
 						log("[RESULT] " + Constants.LINE_SEPARATOR + actualResult);
 					}
-				} else if (tr.isCheck()) {					
-					if (stmt.equals("$HC_CHECK_FOR_DML")) {
+				} else if (tr.isCheck()) {
+					boolean checkDML = stmt.equals("$HC_CHECK_FOR_DML");
+					if (checkDML) {
 						checkSQLs = getCheckSQLForDML();
 						isSQL = true;
 						isCMD = false;
@@ -209,7 +210,9 @@ public class Test {
 					}
 
 					for (int i = 0; i < checkSQLs.size(); i++) {
-						log(checkSQLs.get(i));
+						if (checkDML) {
+							log(checkSQLs.get(i));
+						}
 						checkCount++;
 						try {
 							if (runCheckWithRetry(isSQL, isCMD, checkSQLs.get(i))) {

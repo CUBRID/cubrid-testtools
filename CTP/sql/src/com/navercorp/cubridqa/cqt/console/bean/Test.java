@@ -51,6 +51,8 @@ public class Test {
 	public static String urlProperties = "";
 
 	private String testId;
+	
+	private String caseFilter;
 
 	private String testType;
 
@@ -303,6 +305,14 @@ public class Test {
 		return testId;
 	}
 
+	public String getCaseFilter() {
+		return caseFilter;
+	}
+
+	public void setCaseFilter(String caseFilter) {
+		this.caseFilter = caseFilter;
+	}
+	
 	public Summary getSummary() {
 		return summary;
 	}

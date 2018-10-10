@@ -405,7 +405,7 @@ function change_url_to_local {
     local search_file=$1
     local search_key=$2
     local cache_dir=$HOME/CACHE
-    local url=`grep URL ${search_file} | grep "${search_key}" | awk -F "URL" '{print $NF}'`
+    local url=`grep URL ${search_file} | grep "${search_key}" | awk -F "URL" '{print $NF}' | sed 's/["()]//g' | tr -d ' '`
     local file=`echo $url| awk -F '/' '{print $NF}'`
     if [ "$url" == "" -o "$file" == "" ]; then
         return 1
@@ -415,7 +415,7 @@ function change_url_to_local {
     fi
 
     if [ -f ${cache_dir}/$file ]; then
-        sed -i "s#URL *$url#URL ${cache_dir}/$file#g" ${search_file}
+        sed -i "s#${url}#${cache_dir}/${file}#g" ${search_file}
         return 0
     fi
     return 1
@@ -462,6 +462,10 @@ function BuildAndInstallForUnitTest()
 
     change_url_to_local ./CMakeLists.txt "http://thrysoee.dk/editline/"  
     change_url_to_local ./CMakeLists.txt "https://github.com/Tencent/rapidjson/archive/"  
+    change_url_to_local ./CMakeLists.txt "https://github.com/libexpat/libexpat/releases/download/R_2_2_5/"  
+    change_url_to_local ./CMakeLists.txt "http://www.digip.org/jansson/releases/jansson-2.10.tar.gz"  
+    change_url_to_local ./CMakeLists.txt "http://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz"  
+    change_url_to_local ./CMakeLists.txt "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.27.tar.bz2"  
 
     configure_options="-DCMAKE_BUILD_TYPE=Debug"
     if [ "$tCat" == "unit-release" ];then

@@ -40,6 +40,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
 
+import com.navercorp.cubridqa.cqt.console.util.TestUtil;
+
 public class CommonUtils {
 
 	public static Properties getConfig(String configFile) {
@@ -62,6 +64,25 @@ public class CommonUtils {
 				}
 			}
 		}
+	}
+	
+	public static boolean containPath(String p1, String p2){
+		boolean res = false;
+		if (p1 == null || p1.length() == 0)
+			return res;
+		if (p2 == null || p2.length() == 0)
+			return res;
+		
+		p1 = p1.trim().replace('\\', '/');
+		p2 = p2.trim().replace('\\', '/');
+		
+		p2 = (p2.endsWith("/") || p2.endsWith(TestUtil.ScenarioTypes)) ? p2 : p2 + "/";
+		
+		if(p1.indexOf(p2)>=0){
+			res = true;
+		}
+		
+		return res;
 	}
 
 	public static String concatFile(String p1, String p2) {

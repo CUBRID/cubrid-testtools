@@ -96,7 +96,7 @@ function doCompile()
 	fi
 
 	sh build.sh -m coverage -p $binary_build_dir 2>&1 |tee $build_log
-	if [ $? -ne 0 ];then
+	if [ $? -ne 0 ] || [ `grep "Building failed" $build_log|wc -l` -ne 0 ];then
 	    echo ""
 	    echo "Fail, please check the compile log -> $build_log"
 	    exit -1
