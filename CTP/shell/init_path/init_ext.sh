@@ -304,7 +304,7 @@ function cubrid_service_stop {
 
 function wait_replication_done
 {
-	csql -udba hatestdb -c "create table wait_for_slave(a int primary key, b varchar(20));insert into wait_for_slave values(999, 'replication finished');"
+	csql -udba hatestdb@localhost -c "create table wait_for_slave(a int primary key, b varchar(20));insert into wait_for_slave values(999, 'replication finished');"
 
 	if [ $# -eq 0 ]; then
 		hosts="$ha_hosts"
@@ -313,10 +313,10 @@ function wait_replication_done
 	fi
 
 	for host in $hosts; do
-		rexec $host -c "csql -udba -c \"select b from wait_for_slave\" hatestdb" -tillcontains "replication finished" -interval 2
+		rexec $host -c "csql -udba -c \"select b from wait_for_slave\" hatestdb@localhost" -tillcontains "replication finished" -interval 2
 	done
 
-	csql -udba hatestdb -c "drop table wait_for_slave"
+	csql -udba hatestdb@localhost -c "drop table wait_for_slave"
 }
 
 function replace_oid_with_class_name()
