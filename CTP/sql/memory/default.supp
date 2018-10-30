@@ -73,7 +73,7 @@
 ##----------------------------------------------------------------------##
 
 ##################### ADD ###################
-## CBRD-22235,CBRD-22023,CBRD-21967 not a bug
+## CBRD-22023 not a bug
 {
    filter_out_update_crc32
    Memcheck:Value8
@@ -89,6 +89,20 @@
    fun:start_thread
    fun:clone
 }
+
+## CBRD-22235,CBRD-21967 not a bug
+{
+   filter_out_logpb_flush
+   Memcheck:Cond
+   ...
+   fun:_ZL28logpb_flush_all_append_pagesPN9cubthread5entryE
+   fun:_ZL16logpb_end_appendPN9cubthread5entryEP14log_rec_header
+   fun:_ZL24logpb_append_next_recordPN9cubthread5entryEP14log_prior_node
+   fun:_ZL27logpb_append_prior_lsa_listPN9cubthread5entryEP14log_prior_node
+   fun:_Z31logpb_prior_lsa_append_all_listPN9cubthread5entryE
+   ...
+}
+
 
 #Add by Nathan
 ####BEGIN
