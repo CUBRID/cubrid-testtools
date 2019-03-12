@@ -20,7 +20,6 @@
 	<classpathentry kind="lib" path="common/lib/httpclient-4.2.5.jar"/>
 	<classpathentry kind="lib" path="common/lib/httpcore-4.2.4.jar"/>
 	<classpathentry kind="lib" path="common/lib/ini4j-0.5.4-jdk14.jar"/>
-	<classpathentry kind="lib" path="common/lib/jsch-0.1.49.jar"/>
 	<classpathentry kind="lib" path="common/lib/log4j-1.2.16.jar"/>
 	<classpathentry kind="lib" path="common/lib/slf4j-api-1.7.19.jar"/>
 	<classpathentry kind="lib" path="common/lib/slf4j-log4j12-1.7.19.jar"/>
@@ -48,5 +47,6 @@
 	<classpathentry kind="lib" path="common/sched/lib/hawtbuf-1.9.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="jdbc/lib/junit-4.8.2.jar"/>
+	<classpathentry kind="lib" path="common/lib/jsch-0.1.55.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

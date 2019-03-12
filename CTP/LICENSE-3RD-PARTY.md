@@ -130,7 +130,7 @@ Author: jQuery Foundation
 Website: https://jquery.org/  
 License: [MIT License](https://jquery.org/license/)  
 
-#### Jsch 0.1.49
+#### Jsch 0.1.55
 Author: Atsuhiko Yamanaka, JCraft, Inc.  
 Website: http://www.jcraft.com/jsch/  
 License: [BSD 3-Clause License](http://www.jcraft.com/jsch/LICENSE.txt)  
