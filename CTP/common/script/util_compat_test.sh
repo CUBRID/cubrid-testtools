@@ -217,6 +217,10 @@ function config_cci_test_environment()
         rm -f cas_cci.h cas_error.h
         cp ${CUBRID}_${dirver_bk}/include/cas_cci.h .
         cp ${CUBRID}_${dirver_bk}/include/cas_error.h .
+        if [ -e ${CUBRID}_${dirver_bk}/include/dbtran_def.h ]
+        then
+             cp ${CUBRID}_${dirver_bk}/include/dbtran_def.h . 
+        fi  
 	
         #save driver and server info
         echo "CCI_Version=${the1st}" >$CUBRID/qa.conf
