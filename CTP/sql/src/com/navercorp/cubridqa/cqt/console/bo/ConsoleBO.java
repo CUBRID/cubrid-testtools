@@ -1098,14 +1098,14 @@ public class ConsoleBO extends Executor {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			}
+			}			
 
 			if (test.isQaview()) {
 				for (Connection conn : ConnList) {
 					try {
 
 						if (conn.getAutoCommit() == false)
-							this.onMessage("[QA REVIEW] FOGOT TO RESET AUTOCOMMIT" + " (" + caseFile + ")");
+							printMessage("[QA REVIEW] FOGOT TO RESET AUTOCOMMIT" + " (" + caseFile + ")", false, true);
 
 						conn.setAutoCommit(true);
 
@@ -1113,36 +1113,38 @@ public class ConsoleBO extends Executor {
 
 						sql = "select class_name,class_type from db_class where is_system_class<>'YES'";
 						rs = stmt.executeQuery(sql);
+						int aaaaaaaa=1;
 						while (rs.next()) {
-							this.onMessage("[QA REVIEW] FOGOT TO DELETE " + rs.getString(1) + " with " + rs.getString(2) + " type" + " (" + caseFile + ")");
+							printMessage("[QA REVIE FOGOT TO DELETE " + rs.getString(1) + " with " + rs.getString(2) + " type" + " (" + caseFile + ")", false, true);
+							aaaaaaaa = aaaaaaaa +1 ;
 						}
 						rs.close();
 
 						sql = "select name from db_serial";
 						rs = stmt.executeQuery(sql);
 						while (rs.next()) {
-							this.onMessage("[QA REVIEW] FOGOT TO DELETE serial " + rs.getString(1) + " (" + caseFile + ")");
+							printMessage("[QA REVIEW] FOGOT TO DELETE serial " + rs.getString(1) + " (" + caseFile + ")", false, true);
 						}
 						rs.close();
 
 						sql = "select name from db_trigger";
 						rs = stmt.executeQuery(sql);
 						while (rs.next()) {
-							this.onMessage("[QA REVIEW] FOGOT TO DELETE trigger " + rs.getString(1) + " (" + caseFile + ")");
+							printMessage("[QA REVIEW] FOGOT TO DELETE trigger " + rs.getString(1) + " (" + caseFile + ")", false, true);
 						}
 						rs.close();
 
 						sql = "select name from db_user where name not in ('DBA', 'PUBLIC');";
 						rs = stmt.executeQuery(sql);
 						while (rs.next()) {
-							this.onMessage("[QA REVIEW] FOGOT TO DELETE user " + rs.getString(1) + " (" + caseFile + ")");
+							printMessage("[QA REVIEW] FOGOT TO DELETE user " + rs.getString(1) + " (" + caseFile + ")", false, true);
 						}
 						rs.close();
 
 						sql = "select sp_name from db_stored_procedure";
 						rs = stmt.executeQuery(sql);
 						while (rs.next()) {
-							this.onMessage("[QA REVIEW] FOGOT TO DELETE SP " + rs.getString(1) + " (" + caseFile + ")");
+							printMessage("[QA REVIEW] FOGOT TO DELETE SP " + rs.getString(1) + " (" + caseFile + ")", false, true);
 						}
 						rs.close();
 
@@ -1152,7 +1154,7 @@ public class ConsoleBO extends Executor {
 						while (rs.next()) {
 							user = rs.getString(1);
 							if (!user.equalsIgnoreCase("DBA")) {
-								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY USER: " + user + " (" + caseFile + ")");
+								printMessage("[QA REVIEW] FOGOT TO RECOVERY USER: " + user + " (" + caseFile + ")", false, true);
 							}
 						}
 						rs.close();
@@ -1178,19 +1180,19 @@ public class ConsoleBO extends Executor {
 
 						if (charset == 4) {
 							if (!collation.equalsIgnoreCase("euckr_bin")) {
-								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")");
+								printMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")", false, true);
 							}
 						} else if (charset == 5) {
 							if (!collation.equalsIgnoreCase("utf8_bin")) {
-								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")");
+								printMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")", false, true);
 							}
 						} else if (charset == 3) {
 							if (!collation.equalsIgnoreCase("iso88591_bin")) {
-								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")");
+								printMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")", false, true);
 							}
 						} else {
 							if (!collation.equalsIgnoreCase("iso88591_bin")) {
-								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")");
+								printMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")", false, true);
 							}
 						}
 
@@ -1207,7 +1209,7 @@ public class ConsoleBO extends Executor {
 						stmt.close();
 
 					} catch (SQLException e) {
-						this.onMessage(e.getMessage());
+						printMessage(e.getMessage(), false, true);
 					}
 				}
 			}
