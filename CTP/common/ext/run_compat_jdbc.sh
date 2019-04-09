@@ -139,9 +139,14 @@ function run_sql() {
     #exclude cases and do patch for some case
     cd ${CTP_HOME}/../${git_repo_name}
     run_git_update -f . -b $branch
-    cat $exclude_file|grep "^${ctp_scenario}"|xargs -i rm -rf {}
-    cd ${ctp_scenario}
-    patch -p0 -f < $patch_file
+    if [ -s $exclude_file ] ;then
+       cat $exclude_file|grep "^${ctp_scenario}"|xargs -i rm -rf {}
+    fi 
+    git status .
+    cd ${ctp_scenario} 
+    if [ -s $patch_file ] ;then
+        patch -p0 -f < $patch_file
+    fi
     cd ${CTP_HOME}/..
 
     ini.sh -s sql ${TEST_RUNTIME_CONF} scenario '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario
