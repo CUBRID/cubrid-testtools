@@ -124,7 +124,7 @@ function do_check_more_errors {
 	if [ "${host_ip}" = "" ]; then
 	    host_ip=`hostname -i`
 	fi
-	export TEST_INFO_ENV="${USER}@${host_ip}:${TEST_SSH_PORT}"
+	export TEST_INFO_ENV="ssh -p ${TEST_SSH_PORT} ${USER}@${host_ip}"
 	export TEST_INFO_BUILD_ID=${cub_build_id}
 
     if [ $core_dump_cnt -gt 0 ] || [ $fatal_err_cnt -gt $old_fatal_err_cnt -a "$SKIP_CHECK_FATAL_ERROR" != "TRUE" ]; then
