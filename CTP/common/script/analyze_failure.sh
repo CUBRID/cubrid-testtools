@@ -27,6 +27,7 @@
 core_file_name=
 error_msg_keyword=
 pkg_file=
+login_info=""
 fix_backup_dir_name="do_not_delete_core"
 json_create_suffix="_CREATE.json"
 json_comment_suffix="_COMMENT.json"
@@ -39,16 +40,17 @@ CORE_STACK_LIMIT=30000
 function usage
 {
     cat <<CCTTPP
-Usage: sh analyze_failure.sh {-c core_file_name|-e error_msg_keywords} [-p] package-file-path-for-failures
+Usage: sh analyze_failure.sh {-c core_file_name|-e error_msg_keywords} -p package-file-path-for-failures [-l gateway_ip:port]
        Valid options :
         [-c]         : core file name
-	[-e]         : error message keywords 
+        [-e]         : error message keywords 
         [-p]	     : package file path for failures
+        [-l]         : optional. 'gateway:port' to ensure to login destination host from gateway
 CCTTPP
         exit 1
 }
 
-while getopts "c:e:p:h" opt; do
+while getopts "c:e:p:h:l" opt; do
   	case $opt in
                 c)
                     core_file_name="$OPTARG"
@@ -58,6 +60,9 @@ while getopts "c:e:p:h" opt; do
                     ;;
                 p)
                     pkg_file="$OPTARG"
+                    ;;
+                l)
+                    login_info="$OPTARG"
                     ;;
 		\?)
 		    usage
@@ -222,7 +227,15 @@ JSON_TPL_CALL_STACK_INFO=json_file:issue_create_desc.out
 ISSUEFILDDATA
 
 	#generate comment data file content
-	user_info=`cat readme.txt |grep TEST_INFO_ENV|grep -v export|awk -F '=' '{print $NF}'`
+	user_info=""
+	if [ "${login_info}" == "" ]; then
+		user_info=`cat readme.txt |grep TEST_INFO_ENV|grep -v export|awk -F '=' '{print $NF}'`
+	else
+		gateway_ip=`echo ${login_info} | awk -F ":" '{print $1}'`
+		mapping_port=`echo ${login_info} | awk -F ":" '{print $2}'`
+		user_info="ssh -p ${mapping_port} ${USER}@${gateway_ip}"
+	fi
+
 	related_case=`cat readme.txt |grep "TEST CASE:"|grep -v grep|grep -v freadme|sed 's/^.*TEST CASE://g'|tr -d '[[:space:]]'`
 	is_only_demodb=`find ./ -name "*_vinf"|grep -v "demodb_vinf"|wc -l`
 	if [ $is_only_demodb -eq 0 ];then
@@ -240,8 +253,7 @@ ISSUEFILDDATA
 user@IP: $user_info
 pwd: <please use general password>
 
-*All Info*
-${user_info%:*}:${curDir}
+*All Info*: ${curDir}
 *Core Location:* ${curDir}/${core_file_path}
 *DB-Volume Location:* ${db_volume_info}
 *Error Log Location:* ${curDir}/CUBRID/log
