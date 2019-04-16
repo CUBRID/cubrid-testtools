@@ -50,7 +50,7 @@ CCTTPP
         exit 1
 }
 
-while getopts "c:e:p:h:l" opt; do
+while getopts "c:e:p:h:l:" opt; do
   	case $opt in
                 c)
                     core_file_name="$OPTARG"
