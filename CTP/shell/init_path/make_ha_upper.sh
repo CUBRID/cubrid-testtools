@@ -301,8 +301,8 @@ function stop_ha_master
 #main function to create ha enviroment
 function setup_ha_environment 
 {
-   masterHostName="$HOSTNAME"
-   slaveHostName=`run_on_slave -c "hostname"`
+   masterHostName=`hostname -f`
+   slaveHostName=`run_on_slave -c "hostname -f"`
    
    #parse build version
    parse_build_version
