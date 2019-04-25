@@ -120,8 +120,8 @@ function format_hb_status()
 {
     master_cname=`hostname -f`
     slave_cname=`run_on_slave -c "hostname -f"`
-    sed -i "s/current $master_cname/current host1/g" $1
-    sed -i "s/current $slave_cname/current host2/g" $1
+    sed -i "s/$master_cname/host1/g" $1
+    sed -i "s/$slave_cname/host2/g" $1
     sed -i "s/$masterHostName/host1/g" $1
     sed -i "s/$slaveHostName/host2/g" $1
     sed -i "s/pid [0-9].*,/pid ,/g" $1
