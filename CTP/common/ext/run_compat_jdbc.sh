@@ -142,6 +142,7 @@ function run_sql() {
     cd ${ctp_scenario} 
     if [ -s $patch_file ] ;then
         patch -p0 -f < $patch_file
+        patch_re=`echo $?`
     fi
     cd ..
     if [ -s $exclude_file ] ;then
@@ -179,6 +180,11 @@ function run_sql() {
         name=$testResultName
     fi
     upload_to_dailysrv "$name" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$name"
+    if [ $patch_re -eq 0 -a -d $tmpdir ]
+    then
+       cd ${CTP_HOME}
+       rm -rf $tmpdir
+    fi
     cd $curdir
 }
 
