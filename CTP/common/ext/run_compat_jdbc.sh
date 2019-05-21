@@ -140,9 +140,12 @@ function run_sql() {
     fi
 
     cd ${ctp_scenario} 
-    if [ -s $patch_file ] ;then
+    if [ -s $patch_file ] 
+    then
         patch -p0 -f < $patch_file
         patch_re=`echo $?`
+    else
+        patch_re=0 
     fi
     cd ..
     if [ -s $exclude_file ] ;then
