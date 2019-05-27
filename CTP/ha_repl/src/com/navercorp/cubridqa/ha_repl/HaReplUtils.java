@@ -109,9 +109,9 @@ public class HaReplUtils {
 		if (result.indexOf("fail") != -1) {
 			throw new Exception("fail to create on master.");
 		}
-		boolean succ = waitDatabaseReady(master, hostManager.getTestDb(), "to-be-active", log, MAX_TRY_WAIT_STATUS);
+		boolean succ = waitDatabaseReady(master, hostManager.getTestDb(), "(to-be-active|is active)", log, MAX_TRY_WAIT_STATUS);
 		if (!succ)
-			throw new Exception("timeout when wait to-be-active in master");
+			throw new Exception("timeout when wait 'to-be-active' or 'is active' in master");
 
 		ArrayList<SSHConnect> slaveAndReplicaList = hostManager.getAllSlaveAndReplicaList();
 		for (SSHConnect ssh : slaveAndReplicaList) {
@@ -138,10 +138,11 @@ public class HaReplUtils {
 	private static boolean waitDatabaseReady(SSHConnect ssh, String dbName, String expectedStatus, Log log, int maxTry) throws Exception {
 		GeneralScriptInput script = new GeneralScriptInput("cubrid changemode " + dbName);
 		String result;
+		String side = "[\\s\\S]*";
 		while (maxTry-- > 0) {
 			result = ssh.execute(script);
 			log.println(result);
-			if (result.indexOf(expectedStatus) != -1) {
+			if (Pattern.matches(side + expectedStatus + side, result)) {
 				return true;
 			}
 			CommonUtils.sleep(1);
