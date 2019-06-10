@@ -132,6 +132,19 @@ public class Test {
 
 	private void executeTest(File f) {
 		this.currentTestFile = f.getAbsolutePath();
+		
+		//do clean
+		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
+		GeneralScriptInput checkScript;
+		for (SSHConnect ssh : allNodeList) {
+			try {
+				checkScript = new GeneralScriptInput("if [ -d \"${CUBRID}\" ];then find ${CUBRID} -name \"core.*\" -exec rm -rf {} \\; ;fi");
+				ssh.execute(checkScript);
+				mlog.println("clean core files: " + ssh.toString());
+			} catch (Exception e) {
+				mlog.println("fail to clean core files: " + e.getMessage());
+			}
+		}
 
 		context.getFeedback().onTestCaseStartEvent(this.currentTestFile, this.hostManager.getEnvId());
 
@@ -217,21 +230,18 @@ public class Test {
 						try {
 							if (runCheckWithRetry(isSQL, isCMD, checkSQLs.get(i))) {
 								log("[OK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i));								
-							} else {
-								failCount++;
+							} else {								
 								String info = "[NOK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i);
 								addFail(info);
 								log(info);
 							}
 						} catch (SyncException e) {
-							failCount++;
 							String info = "[NOK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i) + "(FAIL TO SYNC. BREAK!!!)";
 							addFail(info);
 							mlog.println("FAIL TO SYNC. BREAK.");
 							log(info);
 							break main;
-						} catch (Exception e) {
-							failCount++;
+						} catch (Exception e) {							
 							String info = "[NOK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i) + "(" + e.getMessage() + ")";
 							addFail("[NOK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i) + "(NOT EQUAL)");
 							log(info);
@@ -252,19 +262,21 @@ public class Test {
 			tr.close();
 
 		}
+		
+		int failResolveMode = context.getHaSyncFailureResolveMode();
+		
+		boolean backupYn = failResolveMode == Constants.HA_SYNC_FAILURE_RESOLVE_MODE_CONTINUE;
 
-		boolean hasBigError = checkCoresAndErrors();
+		boolean testcasePassed = verifyResults(logFilename, backupYn);  //hasCore has been updated
 
-		String succFlag = verifyResults(hasBigError, failCount, logFilename);
-
-		if (hasBigError == false && !succFlag.equals("SUCC")) {
-			if (context.isFailureBackup()) {
-				String backupDir = collectMoreInfoWhenFail();
-				this.addFail("More fail information: " + backupDir);
-			}
+		if (context.isFailureBackup() && hasCore == false && testcasePassed == false) {
+			String backupDir = collectMoreInfoWhenFail();
+			this.addFail("More fail information: " + backupDir);
 		}
+		
+		String resultType = testcasePassed ? "OK" : "NOK";
 
-		mlog.println("[" + succFlag + "] " + f.getAbsolutePath());
+		mlog.println("[" + resultType + "] " + f.getAbsolutePath());
 		log("===========================================================================================");
 		log("");
 		log("");
@@ -280,11 +292,14 @@ public class Test {
 
 		long endTime = System.currentTimeMillis();
 
-		context.getFeedback().onTestCaseStopEvent(currentTestFile, succFlag != null && succFlag.equals("SUCC"), endTime - startTime, userInfo.toString(), hostManager.getEnvId(), false, hasCore,
+		context.getFeedback().onTestCaseStopEvent(currentTestFile, testcasePassed, endTime - startTime, userInfo.toString(), hostManager.getEnvId(), false, hasCore,
 				Constants.SKIP_TYPE_NO);
-		System.out.println("[TESTCASE] " + currentTestFile + " " + (endTime - startTime) + "ms " + hostManager.getEnvId() + " " + (hasCore ? "FOUND CORE" : "") + " "
-				+ ((succFlag != null && succFlag.equals("SUCC")) ? "[OK]" : "[NOK]"));
-
+		
+		System.out.println("[TESTCASE] " + currentTestFile + " " + (endTime - startTime) + "ms " + hostManager.getEnvId() + " " + "[" + resultType + "]");
+		if (hasCore) {
+			System.out.println("Found core or fatal error.");
+		}
+		
 		Iterator logHashTableIterator = this.logHashTable.entrySet().iterator();
 		while (logHashTableIterator.hasNext()) {
 			Entry entry = (Entry) logHashTableIterator.next();
@@ -292,6 +307,22 @@ public class Test {
 		}
 
 		masterDumpLog.close();
+		
+		if (testcasePassed == false) {
+			
+			if (failResolveMode == Constants.HA_SYNC_FAILURE_RESOLVE_MODE_STOP) {
+				String message = "Test failed for " + currentTestFile + " in " + hostManager.getEnvId() +". Quit!\n";
+				System.out.println(message);
+				mlog.println(message);
+				mlog.close();
+				System.exit(1);
+			} if (failResolveMode == Constants.HA_SYNC_FAILURE_RESOLVE_MODE_WAIT) {				
+				acceptConfirm("Test failed for " + currentTestFile + " in " + hostManager.getEnvId() +". Press 'Y' and Enter to continue: ");
+				System.out.println("continue");
+			} else {
+				//continue
+			}
+		}		
 	}
 
 	private boolean runCheckWithRetry(boolean isSQL, boolean isCMD, String stmt) throws SyncException {
@@ -325,29 +356,29 @@ public class Test {
 		return sameData;
 	}
 
-	private String verifyResults(boolean hasBigError, int _failCount, String logFilename) {
+	private boolean verifyResults(String logFilename, boolean backupYn) {
+		
+		checkCoresAndErrors(backupYn);
 
-		if (hasBigError) {
-			return "FAIL";
+		if (this.failCount > 0 || this.fail100List.size() > 0) {
+			return false;
 		}
 
-		if (_failCount == 0) {
-			return "SUCC";
-		}
 		try {
 			Iterator logHashTableIterator = this.logHashTable.entrySet().iterator();
 			while (logHashTableIterator.hasNext()) {
 				Entry entry = (Entry) logHashTableIterator.next();
 				CheckDiff checkDiff = new CheckDiff();
 				if (checkDiff.check(logFilename, "master", (String) entry.getKey(), context.getDiffMode()) != 0) {
-					return "FAIL";
+					return false;
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return "UNKNOWN";
+			this.addFail("[NOK] " + e.getMessage());
+			return false;
 		}
-		return "SUCC";
+		return true;
 	}
 
 	private boolean checkResult(ArrayList<String> actualResultList, String expectResult) {
@@ -396,7 +427,7 @@ public class Test {
 		return dir;
 	}
 
-	private boolean checkCoresAndErrors() {
+	private void checkCoresAndErrors(boolean backupYn) {
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
 		String result;
 		String hitHost;
@@ -404,7 +435,6 @@ public class Test {
 		String error = null;
 		String coreStack = null;
 		String cat;
-		boolean hit = false;
 
 		for (SSHConnect ssh : allNodeList) {
 			error = null;
@@ -419,7 +449,6 @@ public class Test {
 				if (!result.trim().equals("0")) {
 					cat = "CORE";
 					error = "FOUND CORE FILE on host " + ssh.getUser() + "@" + hitHost;
-					this.hasCore = true;
 					
 					checkScript = new GeneralScriptInput("find $CUBRID -name \"core.*\" -exec analyzer.sh {} \\;");
 					coreStack = ssh.execute(checkScript);
@@ -446,39 +475,29 @@ public class Test {
 				continue;
 			}
 
-			hit = true;
-			String resultId = getResultId(context.getFeedback().getTaskId(), hitHost, cat, context.getBuildId());
-			for (SSHConnect ssh1 : allNodeList) {
-				try {
-					result = ssh1.execute(getBackupScripts(resultId, this.currentTestFile));
-					mlog.println("Execute environement backup: " + cat);
-					mlog.println(result);
-				} catch (Exception e) {
-					mlog.println("fail to check error: " + e.getMessage() + " in " + ssh.toString());
+			if (backupYn) {
+				String resultId = getResultId(context.getFeedback().getTaskId(), hitHost, cat, context.getBuildId());
+				for (SSHConnect ssh1 : allNodeList) {
+					try {
+						result = ssh1.execute(getBackupScripts(resultId, this.currentTestFile));
+						mlog.println("Execute environement backup: " + cat);
+						mlog.println(result);
+					} catch (Exception e) {
+						mlog.println("fail to check error: " + e.getMessage() + " in " + ssh.toString());
+					}
+				}
+				error = error + " (" + Constants.DIR_ERROR_BACKUP + "/" + resultId + ".tar.gz)";
+				mlog.println(error);
+
+				this.userInfo.append(error).append(Constants.LINE_SEPARATOR);
+				if (coreStack != null && coreStack.trim().equals("") == false) {
+					this.userInfo.append(coreStack).append(Constants.LINE_SEPARATOR);
 				}
 			}
 
-			error = error + " (" + Constants.DIR_ERROR_BACKUP + "/" + resultId + ".tar.gz)";
-			mlog.println(error);
-			this.userInfo.append(error).append(Constants.LINE_SEPARATOR);
-			if (coreStack != null && coreStack.trim().equals("") == false) {
-				this.userInfo.append(coreStack).append(Constants.LINE_SEPARATOR);
-			}
-			addFail("[NOK] " + error);
-			break;
+			addFail("[NOK] " + error);			
+			this.hasCore = true; //both cores and fatal errors
 		}
-
-		for (SSHConnect ssh : allNodeList) {
-			try {
-				checkScript = new GeneralScriptInput("if [ -d \"${CUBRID}\" ];then find ${CUBRID} -name \"core.*\" -exec rm -rf {} \\; ;fi");
-				result = ssh.execute(checkScript);
-				mlog.println("clean core files: " + ssh.toString());
-			} catch (Exception e) {
-				mlog.println("fail to clean core files: " + e.getMessage());
-			}
-		}
-
-		return hit;
 	}
 
 	private static GeneralScriptInput getBackupScripts(String resultId, String testCase) {
@@ -524,7 +543,6 @@ public class Test {
 				if (result.equals("0")) {
 					mlog.println(" DONE");
 				} else {
-					this.failCount++;
 					addFail("[NOK]" + ssh + " HIT INTERNAL ERROR");
 					mlog.println(" DONE HIT INTERNAL ERROR" + Constants.LINE_SEPARATOR);
 				}
@@ -535,6 +553,7 @@ public class Test {
 	}
 
 	private void addFail(String info) {
+		this.failCount ++;
 		if (fail100List.size() < FAIL_MAX_STAT)
 			this.fail100List.add(info);
 	}
@@ -632,7 +651,6 @@ public class Test {
 			connection = getDBConnection("master", ssh);
 			stmt = connection.createStatement();
 		} catch (Exception ex) {
-			this.failCount++;
 			this.addFail("[NOK] DB connection creation fail!");
 			if(stmt!=null)
 				try {
@@ -886,7 +904,7 @@ public class Test {
 			}
 
 			end_time = System.currentTimeMillis();
-			if ((end_time - start_time) > 600000) {
+			if ((end_time - start_time) > context.getHaSyncDetectTimeoutInMs()) {
 				mlog.println(" SYNC TIMEOUT (" + calcTimeInterval(start_time) + ")");
 				throw new SyncException();
 			}
@@ -934,5 +952,35 @@ public class Test {
 	private static String calcTimeInterval(long start_time) {
 		long end_time = System.currentTimeMillis();
 		return ((end_time - start_time) / 1000) + " seconds";
+	}
+	
+	private static void acceptConfirm(String message) {
+
+		try {
+			int avail = System.in.available();
+			for (int i = 0; i < avail; i++) {
+				System.in.read();
+			}
+		} catch (Exception e) {
+		}
+
+		synchronized (Dispatch.getInstance()) {
+			int c = 0;
+			System.out.print(message);
+			while (true) {
+				try {
+					c = System.in.read();
+				} catch (Exception e) {
+					e.printStackTrace();
+					continue;
+				}
+				if (c == 'Y') {
+					break;
+				}
+				if (c == '\n') {
+					System.out.print(message);
+				}
+			}
+		}
 	}
 }

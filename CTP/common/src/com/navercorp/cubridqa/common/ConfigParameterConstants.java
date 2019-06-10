@@ -69,6 +69,10 @@ public class ConfigParameterConstants {
 	public static final String TESTCASE_TIMEOUT_IN_SECS = "testcase_timeout_in_secs";
 	public static final String TESTCASE_RETRY_NUM = "testcase_retry_num";
 	public static final String TESTCASE_ADDITIONAL_ANSWER = "testcase_additional_answer";
+	
+	// ha_repl
+	public static final String HA_SYNC_DETECT_TIMEOUT_IN_SECS = "ha_sync_detect_timeout_in_secs";
+	public static final String HA_SYNC_FAILURE_RESOLVE_MODE = "ha_sync_failure_resolve_mode";
 
 	// Test tool configuration parameters
 	public static final String IGNORE_CORE_BY_KEYWORDS = "ignore_core_by_keywords";
