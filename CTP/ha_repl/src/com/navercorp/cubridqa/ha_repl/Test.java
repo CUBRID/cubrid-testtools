@@ -358,12 +358,16 @@ public class Test {
 
 	private boolean verifyResults(String logFilename, boolean backupYn) {
 		
-		checkCoresAndErrors(backupYn);
-
-		if (this.failCount > 0 || this.fail100List.size() > 0) {
+		ArrayList<String> failures = checkCoresAndErrors(backupYn);
+		if (failures != null && failures.size() > 0) {
+			this.hasCore = true;
+			for (String f : failures) {
+				this.addFail(f);
+			}
 			return false;
 		}
 
+		boolean withPatch = true;
 		try {
 			Iterator logHashTableIterator = this.logHashTable.entrySet().iterator();
 			while (logHashTableIterator.hasNext()) {
@@ -372,12 +376,24 @@ public class Test {
 				if (checkDiff.check(logFilename, "master", (String) entry.getKey(), context.getDiffMode()) != 0) {
 					return false;
 				}
+				if (!checkDiff.hasPatch()) {
+					withPatch = false;
+				}
+			}
+			
+			if(withPatch) {
+				return true;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			this.addFail("[NOK] " + e.getMessage());
 			return false;
+		}	
+		
+		if (this.failCount > 0 || this.fail100List.size() > 0) {
+			return false;
 		}
+		
 		return true;
 	}
 
@@ -427,7 +443,7 @@ public class Test {
 		return dir;
 	}
 
-	private void checkCoresAndErrors(boolean backupYn) {
+	private ArrayList<String> checkCoresAndErrors(boolean backupYn) {
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
 		String result;
 		String hitHost;
@@ -435,6 +451,7 @@ public class Test {
 		String error = null;
 		String coreStack = null;
 		String cat;
+		ArrayList<String> failures = new ArrayList<String>();
 
 		for (SSHConnect ssh : allNodeList) {
 			error = null;
@@ -495,9 +512,9 @@ public class Test {
 				}
 			}
 
-			addFail("[NOK] " + error);			
-			this.hasCore = true; //both cores and fatal errors
+			failures.add("[NOK] " + error);			
 		}
+		return failures;
 	}
 
 	private static GeneralScriptInput getBackupScripts(String resultId, String testCase) {
