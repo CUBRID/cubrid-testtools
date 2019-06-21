@@ -60,6 +60,7 @@ public class Context {
 	String scenario;
 	private int haSyncDetectTimeoutInMs;
 	private int haSyncFailureResolveMode;
+	private boolean updateStatsOnCatalogClasses = false;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -107,6 +108,8 @@ public class Context {
 				haSyncFailureResolveMode = com.navercorp.cubridqa.ha_repl.common.Constants.HA_SYNC_FAILURE_RESOLVE_MODE_CONTINUE;
 			}
 		}
+		
+		this.updateStatsOnCatalogClasses = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.HA_UPDATE_STATISTICS_ON_CATALOG_CLASSES_YN, "FALSE").trim());
 	}
 
 	public ArrayList<String> getTestEnvList() {
@@ -279,5 +282,9 @@ public class Context {
 	
 	public int getHaSyncFailureResolveMode() {
 		return this.haSyncFailureResolveMode;
-	}	
+	}
+	
+	public boolean isUpdateStatsOnCatalogClasses() {
+		return this.updateStatsOnCatalogClasses;
+	}
 }
