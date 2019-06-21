@@ -73,6 +73,7 @@ public class ConfigParameterConstants {
 	// ha_repl
 	public static final String HA_SYNC_DETECT_TIMEOUT_IN_SECS = "ha_sync_detect_timeout_in_secs";
 	public static final String HA_SYNC_FAILURE_RESOLVE_MODE = "ha_sync_failure_resolve_mode";
+	public static final String HA_UPDATE_STATISTICS_ON_CATALOG_CLASSES_YN = "update_statistics_on_catalog_classes_yn";
 
 	// Test tool configuration parameters
 	public static final String IGNORE_CORE_BY_KEYWORDS = "ignore_core_by_keywords";

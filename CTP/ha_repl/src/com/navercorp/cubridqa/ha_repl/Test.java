@@ -47,6 +47,7 @@ import com.navercorp.cubridqa.shell.common.SyncException;
 
 public class Test {
 	public final static int FAIL_MAX_STAT = 100;
+	public final static String SQL_UPDATE_STATS_CLASSES = "update statistics on catalog classes";
 
 	InstanceManager hostManager;
 	Log mlog;
@@ -216,6 +217,9 @@ public class Test {
 						isSQL = true;
 						isCMD = false;
 					} else {
+						if (context.isUpdateStatsOnCatalogClasses()) {
+							executeSqlOnMaster(SQL_UPDATE_STATS_CLASSES);
+						}
 						checkSQLs = new ArrayList<String>();
 						checkSQLs.add(stmt);
 						isSQL = tr.isSQL();
@@ -230,7 +234,7 @@ public class Test {
 						try {
 							if (runCheckWithRetry(isSQL, isCMD, checkSQLs.get(i))) {
 								log("[OK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i));								
-							} else {								
+							} else {
 								String info = "[NOK]" + ": [" + tr.lineNum + "]" + checkSQLs.get(i);
 								addFail(info);
 								log(info);
@@ -726,6 +730,17 @@ public class Test {
 			connection = DriverManager.getConnection(url, "dba", "");
 		}
 		return connection;
+	}
+	
+	private String executeSqlOnMaster(String query) throws Exception {
+		SSHConnect ssh = hostManager.getHost("master");
+		String result;
+		if (context.getTestmode().equals("jdbc")) {
+			result = executeSQL(query, ssh);
+		} else {
+			result = executeScript(ssh, true, false, query, false);
+		}
+		return result;
 	}
 
 	private String executeOnMaster(boolean isSQL, boolean isCMD, String stmt, boolean isTest) throws Exception {
