@@ -97,7 +97,7 @@ public class TestReader {
 			} else if (line.startsWith("cmd")) {
 				p1 = line.indexOf(":");
 				if (p1 == -1) {
-					isSQL = true;
+					isSQL = false;
 					this.hostId = null;
 					isCMD = false;
 					return line;
