@@ -24,7 +24,12 @@
  */
 package com.navercorp.cubridqa.ha_repl;
 
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Set;
@@ -35,9 +40,12 @@ import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.shell.common.GeneralScriptInput;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
+import cubrid.jdbc.driver.CUBRIDConnection;
+
 public class InstanceManager {
 
 	private Hashtable<String, SSHConnect> hostTable;
+	private HashMap<String, Connection> jdbcConnMap;
 	private String currEnvId;
 	private Context context;
 	private String testDb;
@@ -46,6 +54,7 @@ public class InstanceManager {
 		this.currEnvId = currEnvId;
 		this.context = context;
 		this.hostTable = new Hashtable<String, SSHConnect>();
+		this.jdbcConnMap = new HashMap<String, Connection>();
 		this.testDb = context.getProperty(ConfigParameterConstants.CUBRID_TESTDB_NAME, "xdb");
 
 		addHost("master", -1);
@@ -105,15 +114,15 @@ public class InstanceManager {
 		}
 		return value;
 	}
-	
-	public void putInstanceProperty(String key, String val){
+
+	public void putInstanceProperty(String key, String val) {
 		String keyFullName = ConfigParameterConstants.TEST_INSTANCE_PREFIX + currEnvId + "." + key;
 		this.context.config.put(keyFullName, val);
 	}
-	
 
-	public String getAvailableBrokerPort(SSHConnect ssh){
-		if(ssh == null) return "";
+	public String getAvailableBrokerPort(SSHConnect ssh) {
+		if (ssh == null)
+			return "";
 		GeneralScriptInput script = new GeneralScriptInput(Constants.GET_BROKER_PORT_CMD);
 		String result = "";
 		try {
@@ -121,10 +130,10 @@ public class InstanceManager {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return result.trim();
 	}
-	
+
 	public String getTestDb() {
 		return this.testDb;
 	}
@@ -194,7 +203,42 @@ public class InstanceManager {
 		return list;
 	}
 
+	public ArrayList<Connection> getAllJdbcConns(String preHost) {
+		ArrayList<Connection> list = new ArrayList<Connection>();
+		Connection conn = this.jdbcConnMap.get(preHost);
+		if (conn != null) {
+			list.add(conn);
+			return list;
+		}
+
+		int index = 1;
+		while (true) {
+			conn = this.jdbcConnMap.get(preHost + (index++));
+			if (conn == null)
+				break;
+			list.add(conn);
+		}
+		return list;
+	}
+
+	private Connection createJdbcConn(String hostId) throws SQLException {
+		SSHConnect ssh = this.hostTable.get(hostId);
+
+		String host = getInstanceProperty(hostId + "." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
+		String port = getInstanceProperty(hostId + "." + ConfigParameterConstants.ROLE_BROKER_AVAILABLE_PORT);
+		if (CommonUtils.isEmpty(port)) {
+			port = getAvailableBrokerPort(ssh);
+			putInstanceProperty(hostId + "." + ConfigParameterConstants.ROLE_BROKER_AVAILABLE_PORT, port);
+		}
+		String url = "jdbc:cubrid:" + host + ":" + port + ":" + getTestDb() + ":::";
+		Connection conn = DriverManager.getConnection(url, "dba", "");
+		return conn;
+	}
+
 	public void close() {
+
+		clearJdbcConns();
+
 		for (String hostId : hostTable.keySet()) {
 			try {
 				removeHost(hostId);
@@ -220,5 +264,62 @@ public class InstanceManager {
 
 	public String getEnvId() {
 		return this.currEnvId;
+	}
+
+	public Connection getMasterJdbcConn() {
+		return this.jdbcConnMap.get("master");
+	}
+
+	public void openJdbcConns() {
+		Connection conn;
+		for (String hostId : hostTable.keySet()) {
+			if(hostId.equals("master") == false) {
+				//tbd: remove in the future
+				continue;
+			}
+			//always be master
+			try {
+				conn = createJdbcConn(hostId);
+				this.jdbcConnMap.put(hostId, conn);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public int changeJdbcCasMode(boolean holdCas) {
+		int casMode = holdCas ? CUBRIDConnection.CAS_CHANGE_MODE_KEEP : CUBRIDConnection.CAS_CHANGE_MODE_AUTO;
+		Connection conn;
+		int affected = 0;
+		for (String hostId : this.jdbcConnMap.keySet()) {
+			conn = this.jdbcConnMap.get(hostId);
+			try {
+				Method method = conn.getClass().getMethod("setCASChangeMode", new Class[] { int.class });
+				method.invoke(conn, new Object[] { casMode });
+				affected ++;
+			} catch (Exception e) {
+				System.err.println("ERROR: failed to change cas hold. " + e.getMessage());
+			}
+		}
+		return affected;
+	}
+
+	public void resetJdbcConns() {
+		clearJdbcConns();
+		openJdbcConns();
+	}
+
+	public void clearJdbcConns() {
+		Set set = this.jdbcConnMap.keySet();
+		Iterator it = set.iterator();
+		Connection conn;
+		while (it.hasNext()) {
+			conn = this.jdbcConnMap.get(it.next());
+			try {
+				conn.close();
+			} catch (Exception e) {
+			}
+		}
+		this.jdbcConnMap.clear();
 	}
 }
