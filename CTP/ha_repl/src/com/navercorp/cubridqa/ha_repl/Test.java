@@ -100,7 +100,12 @@ public class Test {
 			}
 
 			if (isFinalDatabaseDirty() || haveLeapInCurrTestCase != haveLeapInLastDB) {
+				if (haveLeapInCurrTestCase != haveLeapInLastDB) {
+					mlog.println("ERROR: found different tz_leap_second_support (db: " + haveLeapInLastDB + ", case: " + haveLeapInCurrTestCase);
+				}
 				HaReplUtils.rebuildFinalDatabase(context, hostManager, mlog, haveLeapInCurrTestCase ? "tz_leap_second_support=yes" : "");
+			} else {
+				mlog.println("Needn't rebuild database.");
 			}
 
 			haveLeapInLastDB = haveLeapInCurrTestCase;
@@ -818,13 +823,16 @@ public class Test {
 
 	private boolean isFinalDatabaseDirty() {
 		boolean result;
+		int loop = 1;
 		while (true) {
 			try {
+				mlog.println("Begin to check whether database is dirty ... try " + loop);
 				result = __isDatabaseDirty();
 				break;
 			} catch (Exception e) {
-				mlog.println("got error whether database is dirty : " + e.getMessage());
+				mlog.println("got error when check whether database is dirty: " + e.getMessage());
 			}
+			loop ++;
 		}
 		return result;
 	}
@@ -833,15 +841,13 @@ public class Test {
 		ArrayList<SSHConnect> allHosts = hostManager.getAllNodeList();
 
 		StringBuffer s = new StringBuffer();
-		s.append("select 'FAIL['||sum(c)||']' flag from ( ");
-		s.append("    select count(*) c from db_class where is_system_class='NO' and upper(class_name)<>'QA_SYSTEM_TB_FLAG'  union all ");
-		s.append("    select count(*) c from db_stored_procedure union all ");
-		s.append("    select count(*) c from db_trig union all ");
-		s.append("    select count(*) c from db_partition union all ");
-		s.append("    select count(*) c from db_meth_file union all ");
-		s.append("    select count(*) c from db_serial union all ");
-		s.append("    select count(*) c from db_user where name not in ('DBA', 'PUBLIC') ");
-		s.append("    ); ");
+		s.append("select 'TABLE'||':db_class' check_table, t.* from db_class t where is_system_class='NO' and upper(class_name)<>'QA_SYSTEM_TB_FLAG';");
+		s.append("select 'TABLE'||':db_stored_procedure', t.* from db_stored_procedure t; ");
+		s.append("select 'TABLE'||':db_trig', t.* from db_trig t; ");
+		s.append("select 'TABLE'||':db_partition', t.* from db_partition t; ");
+		s.append("select 'TABLE'||':db_meth_file', t.* from db_meth_file t; ");
+		s.append("select 'TABLE'||':db_serial', t.* from db_serial t; ");
+		s.append("select 'TABLE'||':db_user', t.* from db_user t where name not in ('DBA', 'PUBLIC'); ");
 
 		GeneralScriptInput script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"" + s.toString() + "\"");
 		GeneralScriptInput scriptMode = new GeneralScriptInput("cubrid changemode " + hostManager.getTestDb());
@@ -853,13 +859,19 @@ public class Test {
 			result = ssh.execute(scriptMode);
 			if (i == 0) {
 				if (result.indexOf("is active") == -1) {
+					mlog.println("ERROR: 'active' status is expected on node " + ssh);
+					mlog.println(result);					
 					return true;
 				}
 			} else if (result.indexOf("is standby") == -1) {
+				mlog.println("ERROR: 'standby' status is expected on node " + ssh);
+				mlog.println(result);
 				return true;
 			}
 			result = ssh.execute(script);
-			if (result.indexOf("FAIL[0]") == -1) {
+			if (result.indexOf("TABLE:") != -1) {
+				mlog.println("ERROR: remained: " + ssh);
+				mlog.println(result);
 				return true;
 			}
 		}
