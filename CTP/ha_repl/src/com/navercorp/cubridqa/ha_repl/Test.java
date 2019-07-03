@@ -26,7 +26,6 @@ package com.navercorp.cubridqa.ha_repl;
 
 import java.io.File;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -37,7 +36,6 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.navercorp.cubridqa.common.CommonUtils;
-import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 import com.navercorp.cubridqa.ha_repl.dispatch.Dispatch;
@@ -64,7 +62,6 @@ public class Test {
 	boolean testCompleted;
 	String currentTestFile;
 	Context context;
-	Connection connection = null;
 
 	public Test(Context context, String envId) throws Exception {
 		this.context = context;
@@ -103,7 +100,12 @@ public class Test {
 			}
 
 			if (isFinalDatabaseDirty() || haveLeapInCurrTestCase != haveLeapInLastDB) {
+				if (haveLeapInCurrTestCase != haveLeapInLastDB) {
+					mlog.println("ERROR: found different tz_leap_second_support (db: " + haveLeapInLastDB + ", case: " + haveLeapInCurrTestCase + ")");
+				}
 				HaReplUtils.rebuildFinalDatabase(context, hostManager, mlog, haveLeapInCurrTestCase ? "tz_leap_second_support=yes" : "");
+			} else {
+				mlog.println("Needn't rebuild database.");
 			}
 
 			haveLeapInLastDB = haveLeapInCurrTestCase;
@@ -122,13 +124,6 @@ public class Test {
 		this.finishedLog.close();
 		this.mlog.close();
 		this.hostManager.close();
-		try {
-			if (this.connection != null && !this.connection.isClosed()) {
-				this.connection.close();
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private void executeTest(File f) {
@@ -170,12 +165,7 @@ public class Test {
 		long startTime = System.currentTimeMillis();
 
 		clearDatabaseLog();
-		try {
-			connection.close();
-		} catch (Exception e) {
-			mlog.println(e.getMessage());
-		}
-		connection = null;
+		this.hostManager.resetJdbcConns();
 
 		TestReader tr = null;
 		String stmt;
@@ -184,6 +174,8 @@ public class Test {
 		ArrayList<String> checkSQLs;
 		StringBuffer msg;
 		boolean isSQL, isCMD;
+		HoldCasCheck holdCasCheck;
+		int holdCasAffected;
 		try {
 			tr = new TestReader(f, this.commonReader);
 			main: while (true) {
@@ -192,6 +184,16 @@ public class Test {
 					break;
 
 				stmtCount++;
+				
+				//tbd: put into here to avoid to revise existing answer
+				holdCasCheck = HoldCasCheck.check(stmt);
+				if (holdCasCheck.isHoldCas()) {
+					holdCasAffected = hostManager.changeJdbcCasMode(holdCasCheck.isSwitchOn());
+					mlog.println("");
+					mlog.println("[Line:" + tr.lineNum + "] " + stmt);
+					mlog.println(holdCasAffected + " connection(s) affected.");					
+					continue;
+				}
 
 				msg = new StringBuffer();
 				msg.append(Constants.LINE_SEPARATOR).append("----------------------------------- Stmt ").append(stmtCount);
@@ -199,11 +201,11 @@ public class Test {
 				msg.append(Constants.LINE_SEPARATOR).append("[STMT-").append((tr.isTest() ? "TEST]" : (tr.isCheck() ? "CHECK]" : "")));
 				msg.append(("[Line:" + tr.lineNum + "]")).append(stmt);
 				log(msg.toString());
-
+				
 				if (tr.isTest()) {
 					testCount++;
 					mlog.println("");
-					mlog.println("[Line:" + tr.lineNum + "]" + stmt);
+					mlog.println("[Line:" + tr.lineNum + "] " + stmt);
 					actualResult = executeOnMaster(tr.isSQL(), tr.isCMD(), stmt, true);
 					if (actualResult.equals("")) {
 						log("[RESULT] (N/A)");
@@ -255,16 +257,9 @@ public class Test {
 			}
 		} catch (Exception e) {
 			mlog.println(e.getMessage());
-		} finally {
-			if (connection != null) {
-				try {
-					connection.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
+		} finally {			
 			tr.close();
-
+			this.hostManager.clearJdbcConns();
 		}
 		
 		int failResolveMode = context.getHaSyncFailureResolveMode();
@@ -337,11 +332,13 @@ public class Test {
 		do {
 			try {
 				expectResult = executeOnMaster(isSQL, isCMD, stmt, false);
-
+				
 				actualResultList = executeOnSlaveAndReplica(isSQL, isCMD, stmt, false);
 				if (checkResult(actualResultList, expectResult)) {
 					sameData = true;
 					break;
+				} else {
+					mlog.println("Fail. Retry to compare.");
 				}
 			} catch (SyncException e) {
 				throw e;
@@ -663,14 +660,13 @@ public class Test {
 		return result;
 	}
 
-	private String executeSQL(String sql, SSHConnect ssh) {
+	private String executeSQL(String sql, Connection conn) {
 		String res = "";
 		ResultSet rs = null;
 		Statement stmt = null;
 	
 		try {
-			connection = getDBConnection("master", ssh);
-			stmt = connection.createStatement();
+			stmt = conn.createStatement();
 		} catch (Exception ex) {
 			this.addFail("[NOK] DB connection creation fail!");
 			if(stmt!=null)
@@ -683,20 +679,19 @@ public class Test {
 		}
 			
 		try {
-			if (!("".endsWith(sql)) && sql.length() > 0) {
-				if (sql.toUpperCase().trim().startsWith("SELECT")) {
-					rs = stmt.executeQuery(sql);
-					res += printdata(rs);
-				} else if (sql.toUpperCase().trim().startsWith("INSERT") || sql.toUpperCase().trim().startsWith("UPDATE") || sql.toUpperCase().trim().startsWith("DELETE")) {
-					int rs_num = stmt.executeUpdate(sql);
-					res += rs_num + Constants.LINE_SEPARATOR;
+			String uppperSql = sql.trim().toUpperCase();			
+			if (uppperSql.startsWith("SELECT")) {
+				rs = stmt.executeQuery(sql);
+				res += printdata(rs);
+			} else if (uppperSql.startsWith("INSERT") || uppperSql.startsWith("UPDATE") || uppperSql.startsWith("DELETE")) {
+				int rs_num = stmt.executeUpdate(sql);
+				res += rs_num + Constants.LINE_SEPARATOR;
+			} else {
+				boolean st = stmt.execute(sql);
+				if (st) {
+					res += "1" + Constants.LINE_SEPARATOR;
 				} else {
-					boolean st = stmt.execute(sql);
-					if (st) {
-						res += "1" + Constants.LINE_SEPARATOR;
-					} else {
-						res += "0" + Constants.LINE_SEPARATOR;
-					}
+					res += "0" + Constants.LINE_SEPARATOR;
 				}
 			}
 
@@ -717,27 +712,12 @@ public class Test {
 		return res;
 	}
 
-	private Connection getDBConnection(String hostName, SSHConnect ssh) throws SQLException {
-		if (connection == null || connection.isClosed()) {
-			String host = hostManager.getInstanceProperty(hostName + "." + ConfigParameterConstants.TEST_INSTANCE_HOST_SUFFIX);
-			String port = hostManager.getInstanceProperty(hostName + "." + ConfigParameterConstants.ROLE_BROKER_AVAILABLE_PORT);
-			if(CommonUtils.isEmpty(port)){
-				port = hostManager.getAvailableBrokerPort(ssh);
-				hostManager.putInstanceProperty(hostName + "." + ConfigParameterConstants.ROLE_BROKER_AVAILABLE_PORT, port);
-			}
-			
-			String url = "jdbc:cubrid:" + host + ":" + port + ":" + hostManager.getTestDb() + ":::";
-			connection = DriverManager.getConnection(url, "dba", "");
-		}
-		return connection;
-	}
-	
 	private String executeSqlOnMaster(String query) throws Exception {
-		SSHConnect ssh = hostManager.getHost("master");
 		String result;
 		if (context.getTestmode().equals("jdbc")) {
-			result = executeSQL(query, ssh);
+			result = executeSQL(query, hostManager.getMasterJdbcConn());
 		} else {
+			SSHConnect ssh = hostManager.getHost("master");
 			result = executeScript(ssh, true, false, query, false);
 		}
 		return result;
@@ -762,8 +742,9 @@ public class Test {
 
 		String result = "";
 		if (isTest && "jdbc".equals(context.getTestmode())) {
-			result = executeSQL(stmt, ssh);
-			result += executeSQL(flag_SQL, ssh);
+			Connection conn = hostManager.getMasterJdbcConn();
+			result = executeSQL(stmt, conn);
+			result += executeSQL(flag_SQL, conn);
 		} else {
 			result = executeScript(ssh, isSQL, isCMD, stmt, isTest);
 		}
@@ -771,8 +752,9 @@ public class Test {
 		if (isTest && oriStmt != null) {
 			String u = CommonUtils.replace(oriStmt, " ", "").toUpperCase();
 			boolean shouldExecuteOnSlave = u.indexOf("SETSYSTEMPARAMETERS") != -1 && u.indexOf("TZ_LEAP_SECOND_SUPPORT") == -1;
-
+			
 			if (shouldExecuteOnSlave) {
+				result = result.trim();
 				ArrayList<SSHConnect> slaveAndReplicaList = hostManager.getAllSlaveAndReplicaList();
 				for (SSHConnect ssh1 : slaveAndReplicaList) {
 					result = executeScript(ssh1, true, false, oriStmt, true);
@@ -781,7 +763,7 @@ public class Test {
 		}
 
 		if (isTest) {
-			log(result);
+			log(result);  //should be deleted
 		}
 		return result;
 	}
@@ -841,13 +823,16 @@ public class Test {
 
 	private boolean isFinalDatabaseDirty() {
 		boolean result;
+		int loop = 1;
 		while (true) {
 			try {
+				mlog.println("Begin to check whether database is dirty ... try " + loop);
 				result = __isDatabaseDirty();
 				break;
 			} catch (Exception e) {
-				mlog.println("got error whether database is dirty : " + e.getMessage());
+				mlog.println("got error when check whether database is dirty: " + e.getMessage());
 			}
+			loop ++;
 		}
 		return result;
 	}
@@ -856,15 +841,13 @@ public class Test {
 		ArrayList<SSHConnect> allHosts = hostManager.getAllNodeList();
 
 		StringBuffer s = new StringBuffer();
-		s.append("select 'FAIL['||sum(c)||']' flag from ( ");
-		s.append("    select count(*) c from db_class where is_system_class='NO' and upper(class_name)<>'QA_SYSTEM_TB_FLAG'  union all ");
-		s.append("    select count(*) c from db_stored_procedure union all ");
-		s.append("    select count(*) c from db_trig union all ");
-		s.append("    select count(*) c from db_partition union all ");
-		s.append("    select count(*) c from db_meth_file union all ");
-		s.append("    select count(*) c from db_serial union all ");
-		s.append("    select count(*) c from db_user where name not in ('DBA', 'PUBLIC') ");
-		s.append("    ); ");
+		s.append("select 'TABLE'||':db_class' check_table, t.* from db_class t where is_system_class='NO' and upper(class_name)<>'QA_SYSTEM_TB_FLAG';");
+		s.append("select 'TABLE'||':db_stored_procedure', t.* from db_stored_procedure t; ");
+		s.append("select 'TABLE'||':db_trig', t.* from db_trig t; ");
+		s.append("select 'TABLE'||':db_partition', t.* from db_partition t; ");
+		s.append("select 'TABLE'||':db_meth_file', t.* from db_meth_file t; ");
+		s.append("select 'TABLE'||':db_serial', t.* from db_serial t; ");
+		s.append("select 'TABLE'||':db_user', t.* from db_user t where name not in ('DBA', 'PUBLIC'); ");
 
 		GeneralScriptInput script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"" + s.toString() + "\"");
 		GeneralScriptInput scriptMode = new GeneralScriptInput("cubrid changemode " + hostManager.getTestDb());
@@ -876,13 +859,19 @@ public class Test {
 			result = ssh.execute(scriptMode);
 			if (i == 0) {
 				if (result.indexOf("is active") == -1) {
+					mlog.println("ERROR: 'active' status is expected on node " + ssh);
+					mlog.println(result);					
 					return true;
 				}
 			} else if (result.indexOf("is standby") == -1) {
+				mlog.println("ERROR: 'standby' status is expected on node " + ssh);
+				mlog.println(result);
 				return true;
 			}
 			result = ssh.execute(script);
-			if (result.indexOf("FAIL[0]") == -1) {
+			if (result.indexOf("TABLE:") != -1) {
+				mlog.println("ERROR: remained: " + ssh);
+				mlog.println(result);
 				return true;
 			}
 		}

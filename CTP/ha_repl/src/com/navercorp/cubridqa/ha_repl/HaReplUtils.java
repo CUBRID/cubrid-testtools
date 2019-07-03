@@ -40,18 +40,20 @@ public class HaReplUtils {
 
 	public static void rebuildFinalDatabase(Context context, InstanceManager hostManager, Log log, String... params) {
 		int maxTry = 5;
+		int loop = 1;
 		while (maxTry-- > 0) {
 			try {
+				log.println("DATABASE IS DIRTY. REBUILD ... try " + loop);
 				__rebuildDatabase(context, hostManager, log, params);
 				break;
 			} catch (Exception e) {
 				log.println("Rebuild DB Error: " + e.getMessage());
 			}
+			loop ++;
 		}
 	}
 
 	private static void __rebuildDatabase(Context context, InstanceManager hostManager, Log log, String... params) throws Exception {
-		log.println("DATABASE IS DIRTY. REBUILD...");
 
 		ArrayList<SSHConnect> allHosts = hostManager.getAllNodeList();
 

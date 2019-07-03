@@ -34,6 +34,7 @@ import java.io.LineNumberReader;
 import java.io.OutputStreamWriter;
 
 import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.ha_repl.HoldCasCheck;
 import com.navercorp.cubridqa.ha_repl.common.Constants;
 
 public class SQLFileReader {
@@ -323,6 +324,7 @@ public class SQLFileReader {
 		boolean isCreateTableOrClass = false;
 		boolean isEnumType = false;
 		EditLine editLine = null;
+		HoldCasCheck holdCasCheck;
 		while ((line = lineReader.readLine()) != null) {
 			line = line.trim();
 
@@ -334,8 +336,13 @@ public class SQLFileReader {
 				}
 				continue;
 			}
-			if (line.startsWith("--"))
+			if (line.startsWith("--")) {
+				holdCasCheck = HoldCasCheck.checkRaw(line);
+				if (holdCasCheck.isHoldCas()) {
+					out.write("$HOLDCAS_" + (holdCasCheck.isSwitchOn() ? "ON" : "OFF") + Constants.LINE_SEPARATOR);
+				}
 				continue;
+			}
 
 			// edited by cn15209 20120627
 			editLine = editLineForCreateTableOrClass(line, isCreateTableOrClass, isEnumType);
