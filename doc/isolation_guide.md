@@ -936,9 +936,9 @@ $
 4. See the testing progress in the QA homepage.   
 Click the build number, find the isolation/isolation_debug category, you can see the related information from the table.   
 In this picture, current test rate is 21.5%, no failied test case yet.   
-![isolation_test_in_progress](./doc/isolation/isolation_test_in_progress.png)   
+![isolation_test_in_progress](./isolation_image/isolation_test_in_progress.png)   
 When the test finished, you can see the test rate is 100%.   
-![isolation_test_finish](./doc/isolation/isolation_test_finish.png)   
+![isolation_test_finish](./isolation_image/isolation_test_finish.png)   
 ## 3.4 Execute code coverage test of isolation
 To execute code coverage test of isolation, you also need to send a testing message.   
 1. Login to the message server: `message@192.168.1.91`.   
@@ -996,35 +996,35 @@ For code coverage test, it doesn't show the progress in the QA homepage.  You ca
 # 4. Verification
 ## 4.1 Verify isolation/isolation_debug test result  
 Go to QA homepage and click the CI build, wait for the `Function` page loading, then check if there are `isolation` and `isolation_debug` results.  
-![isolation_verify1](./doc/isolation/isolation_verify1.png)  
+![isolation_verify1](./isolation_image/isolation_verify1.png)  
     * Total: The number of test cases, it counts all the `.ctl` files in the `scenario` path.
     * Testing: The number of test cases that should be executed. It excepts the test cases that defined in `~/cubrid-testcases/isolation/config/daily_regression_test_excluded_list_linux.conf`.
 ### Check if there is a result
 If there shows 'NO RESULT (OR RUNNING)'as bellow, you need to find the reason.  
-![isolation_no_result](./doc/isolation/isolation_no_result.png)  
+![isolation_no_result](./isolation_image/isolation_no_result.png)  
 Sometimes the CI build comes late, so that the test started late; or there is another test like manual build or ha_shell tests executed before the CI build. In this case, just wait for the test finish and then verify the results.  
 ### Test Rate should be 100%
 It means the `Testing` is equal to the sum of `Success` and `Fail(Total)`.
 ### Verified Rate should be 100%
 If there is a failed test case, you need to verify it.
-![isolation_verify2](./doc/isolation/isolation_verify2.png) 
+![isolation_verify2](./isolation_image/isolation_verify2.png) 
 Click the failed number, it shows the list of failed test cases. 
-![isolation_verify3](./doc/isolation/isolation_verify3.png) 
+![isolation_verify3](./isolation_image/isolation_verify3.png) 
 Click the test case, it shows the test case, answer, and result. 
-![isolation_verify4](./doc/isolation/isolation_verify4.png) 
+![isolation_verify4](./isolation_image/isolation_verify4.png) 
 Analyze the failure, then fix/revise the test case and verify it.
-![isolation_verify5](./doc/isolation/isolation_verify5.png) 
+![isolation_verify5](./isolation_image/isolation_verify5.png) 
 If you want to reproduce the failure by csql, you can refer to [Execute isolation test case by csql](#execute-isolation-test-case-by-csql).  
 You can refer to the test case modification history for changes to the unstable test case and revise required.   
 https://github.com/CUBRID/cubrid-testcases/commits/develop/isolation   
 
-## 4.2 Verify code coverage testing result  
+## 4.2 Verify code coverage testing result   
 Go to QA homepage and find the 'code coverage' node in the left area, click the link of latest result.  
-![codecov1](./doc/isolation/codecov1.png)  
-Click the tpcc link.   
-![codecov2](./doc/isolation/codecov2.png)  
+![codecov1](./isolation_image/isolation_codecov1.png)   
+Click the isolation link.   
+![codecov2](./isolation_image/isolation_codecov2.png)   
 There is a coverage rate of lines. Its coverage rate of lines is usually in 38%~39%. You can see the expected rate from http://jira.cubrid.org/browse/CUBRIDQA-851.
-![codecov3](./doc/isolation/codecov3.png)  
+![codecov3](./isolation_image/isolation_codecov3.png)   
 If the coverage does not meet expectation, you need to determine the cause and re-execute the test.
 ## 4.3 Report issues
 Here are the issues that you can refer to.
