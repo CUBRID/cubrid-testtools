@@ -43,30 +43,39 @@ sudo passwd  dev
  sudo chage -E 2999-1-1 -m 0 -M 99999 dev
  ```
 ## 3.2 install software packages
-Required software packages: java sdk(version should lager than v1.6), lrzsz, bc.  
+Required software packages: jdk, lcov, bc, lrzsz.   
+
+|software|version|usage|  
+|---|---|---|  
+|jdk|1.8.0 (need larger than 1.6)|run CTP, run shell test case|  
+|lcov|lcov-1.11|run code coverage test|  
+|bc|latest version|run shell test case|  
+|lrzsz|latest version|debug shell test case|  
+
 These are installed by root user and can be used by all the users.  
 
 ## 3.3 Deploy controller node
-### install CTP
-**Step 1** download CTP  
-*method 1:* install from git  
+### install CTP   
+**Step 1: download CTP**  
+
+*method 1: install from git*    
 ```
 cd ~
 git colne https://github.com/CUBRID/cubrid-testtools.git
 cd cubrid-testtools
 git checkout develop
 cp -rf ~/cubrid-testtools/CTP ~
-```
-*method 2:* install from out server  
+```  
+*method 2: install from our server*     
 ```
 cd ~
 wget http://192.168.1.91:8080/REPO_ROOT/CTP.tar.gz
 tar zxvf CTP.tar.gz
-```
+```  
 Usually, we use method 2.
 
-**Step 2** set configuration files  
-*~/CTP/conf/common.conf*  
+**Step 2: set CTP configuration files**    
+*~/CTP/conf/common.conf*   
 ```
 git_user=cubridqa
 git_pwd=GITPASSWORD
@@ -188,7 +197,9 @@ feedback_db_user=dba
 feedback_db_pwd=
 ```
 shell_template.conf will be copied to \~/CTP/conf/shell_runtime.conf when test is started.  
-For more details about the parameters, plese refer to CTP guide.  
+For more details about the parameters, please refer to CTP guide.  
+
+### set ~/.bash_profile 
 *~/.bash_profile*  
 ```
 # .bash_profile
@@ -208,7 +219,90 @@ export CTP_BRANCH_NAME="develop"
 export CTP_SKIP_UPDATE=0
 ```
 
+### create a script to start consumer
+~/start_test.sh
+```
+nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_LINUX -exec run_shell &
+```
+Execute the script to start listening the test message after deployment. This will start a shell test when the consumer receive the test message.
+```
+cd ~
+sh start_test.sh
+```
+
+## 3.4 Deploy worker node  
+### install CTP
+This step is the as 'install CTP' on controller node. Plese refer to [install CTP](#install_CTP).  
+### set ~/.bash_profile
+*~/.bash_profile*
+```
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/.local/bin:$HOME/bin
+
+export CTP_HOME=$HOME/CTP
+## init_path is used when we run shell case manually on this machine.
+export init_path=$CTP_HOME/shell/init_path
+
+export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$PATH
+
+export CTP_BRANCH_NAME="develop"
+export CTP_SKIP_UPDATE=0
+
+. ~/.cubrid.sh
+export GCOV_PREFIX=/home/shell
+export GCOV_PREFIX_STRIP=2
+ulimit -c unlimited
+```
+
+### deploy test cases
+```
+git clone --no-checkout https://github.com/CUBRID/cubrid-testcases-private-ex.git
+cd ~/cubrid-testcases-private-ex
+git config core.sparseCheckout true
+echo 'shell/*' > ~/cubrid-testcases-private-ex/.git/info/sparse-checkout
+git checkout develop
+```
+
+### make directories for test
+```
+cd
+mkdir do_not_delete_core
+mkdir ERROR_BACKUP
+```
+
+### create .cubrid.sh file 
+If cubrid has never been installed on the machine, we need create file '.cubrid.sh' at $HOME path manually
+*.cubrid.sh file:*   
+```
+CUBRID=/home/shell/CUBRID
+CUBRID_DATABASES=$CUBRID/databases
+if [ "x${LD_LIBRARY_PATH}x" = xx ]; then
+  LD_LIBRARY_PATH=$CUBRID/lib
+else
+  LD_LIBRARY_PATH=$CUBRID/lib:$LD_LIBRARY_PATH
+fi
+SHLIB_PATH=$LD_LIBRARY_PATH
+LIBPATH=$LD_LIBRARY_PATH
+PATH=$CUBRID/bin:$PATH
+export CUBRID
+export CUBRID_DATABASES
+export LD_LIBRARY_PATH
+export SHLIB_PATH
+export LIBPATH
+export PATH
+```
+
 # 4 Regression Test
+We execute shell test for each CI build, and execute code coverage test monthly. Both of these test are started automatically when the controller receive a test message. We just need to prepare the conf files, verify the test results, and report issues.
+
 
 
 # 5 Execute Test
