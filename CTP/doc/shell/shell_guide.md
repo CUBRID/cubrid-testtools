@@ -303,6 +303,44 @@ export PATH
 # 4 Regression Test
 We execute shell test for each CI build, and execute code coverage test monthly. Both of these test are started automatically when the controller receive a test message. We just need to prepare the conf files, verify the test results, and report issues.
 
+# 4.1	Set conf files for regression test
+Edit the file: ~/CTP/conf/shell_template.conf.  
+shell_template.conf will be copied to \~/CTP/conf/shell_runtime.conf when test is started.  
+For more details, please refer to ['install CTP'](#install_CTP)
+
+# 4.2 Verify dailyqa test results
+## Result overview
+Open qahome in browser, then select build number. 'Function Result' page will be displayed.
+Find shell and shell_debug in linux part, and find shell in windows part.
+![shell_linux](./image1.png)
+![shell_windows](./image2.png)
+In the overview page, we should check the values in all the colomns. The most important check items are:  
+1. Whether the test is completed ('Test Rate' column)
+2. How many cases are failed('Failed' columns)
+3. The elapse time of the case ('Elapse Time' column). The elapse time of the test should not be longer than the elapse time of the previous should too much.  
+
+## verfy the failed cases
+Click the link in this image to open the online verification page.  
+![online_verify1](./image3.png)  
+On the verification page, click 'Log in' to login.  
+![online_verify2](./image4.png)  
+After logging in, we can start to verify the failed cases online.    
+![online_verify3](./image5.png)    
+**Click the link in 'Case File' column to check the case and the screen output.**  
+![online_verify6](./image8.png)  
+**'[history]':** check the test case history failure   
+*history page*    
+![online_verify4](./image6.png)   
+**'[verify]':** open the case's verification page to write the verification result   
+*case verification page*   
+![online_verify5](./image7.png)  
+On this page:
+1. select a failure reason.  
+2. write some comments in 'Reason content'  
+3. write the issue number in 'New issues' or 'New issues'  
+4. click the button at the bottom to close this page.  
+Fix: I am sure of this verication result.  
+Save: I am not sure of this verication result. I will decide it later.  
 
 
 # 5 Execute Test
