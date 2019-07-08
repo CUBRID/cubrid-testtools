@@ -1,4 +1,4 @@
-# Sysbench Test Guide
+# Shell Test Guide
 # 1 Test Introduction
 Shell test is an important test suit in cubrid test.  
 It contains almost all the feature test and some performance test which cannot be test by sql test or other test suits.  
@@ -303,13 +303,13 @@ export PATH
 # 4 Regression Test
 We execute shell test for each CI build, and execute code coverage test monthly. Both of these test are started automatically when the controller receive a test message. We just need to prepare the conf files, verify the test results, and report issues.
 
-# 4.1	Set conf files for regression test
+## 4.1	Set conf files for regression test
 Edit the file: ~/CTP/conf/shell_template.conf.  
 shell_template.conf will be copied to \~/CTP/conf/shell_runtime.conf when test is started.  
 For more details, please refer to ['install CTP'](#install_CTP)
 
-# 4.2 Verify dailyqa test results
-## Result overview
+## 4.2 Verify dailyqa test results
+### Result overview
 Open qahome in browser, then select build number. 'Function Result' page will be displayed.
 Find shell and shell_debug in linux part, and find shell in windows part.
 ![shell_linux](./image1.png)
@@ -319,7 +319,7 @@ In the overview page, we should check the values in all the colomns. The most im
 2. How many cases are failed('Failed' columns)
 3. The elapse time of the case ('Elapse Time' column). The elapse time of the test should not be longer than the elapse time of the previous should too much.  
 
-## verfy the failed cases
+### verfy the failed cases
 Click the link in this image to open the online verification page.  
 ![online_verify1](./image3.png)  
 On the verification page, click 'Log in' to login.  
@@ -342,13 +342,60 @@ On this page:
 Fix: I am sure of this verication result.  
 Save: I am not sure of this verication result. I will decide it later.  
 
+Sometimes, we cannot find the failure reason from the screen output directly. At this time, we need login the test machine, go to the case path, check the logs. If we still cannot find the failure reason from the logs, we should run the case step by step on this machine to find the failure reason.
 
-# 5 Execute Test
+## 4.3 Verify code coverage test result
+Go to QA homepage and find the 'code coverage' node in the left area, click the link of the latest result.  
+
+## 4.4 Report issues
+### Crash issue  
+If there is a crash, report it following the rules in this link: [‘How to Report Regression Crash Issues’](http://jira.cubrid.org/browse/CUBRIDQA-1?focusedCommentId=4739244&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4739244)  
+
+### normal issue  
+If the the test result is as expected, first we should confirm whether it is revise required. If not, report it as an issue on jira.   
+
+# 5 Execute Test  
+# 5.1 Execute a single test case  
+To execute a single test case, we juse need to login a test machine, and go to the case path, and then execute shell command 'sh case_name.sh'.  
+
+# 5.2 Execute a shell test  
+We can use the regression tools to trigger a test.  
+1. Change the parameters in ~/CTP/conf/shell_template.conf on controller node.    
+2. Send a message to start the test  
+Login: message@192.168.1.91  
+Send test message as:  
+```
+sender.sh QUEUE_CUBRID_QA_SHELL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8330-d4d8464/drop/CUBRID-10.2.0.8330-d4d8464-Linux.x86_64.sh shell default
+```
+3. Start consumer on the controller node  
+If the consumer is not started, login the controller node to start it.  
+```
+cd ~
+sh start_test.sh 
+```
+4. Check test result  
+The results will be uploaded to qahome automatically. You can follow section 4.2 to check the test results.  
 
 # 6 Code Coverage Test
+For code coverage test, just need to send a message.  
+Login: message@192.168.1.91  
+Send test message as:  
+```
+cd ~/manual
+sh sender_code_coverage_testing_message.sh Queue:QUEUE_CUBRID_QA_SHELL_LINUX Build URL:http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz Source URL:http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz Category:shell
+```
+The result will be uploaded to qahome automatically.  
+To check the result, please refer to ['Verify code coverage test result'](#Verify-code-coverage-test-result) 
 
 # 7 Run test manually
+1. Login controller node.
+2. Set the conf file ~/CTP/conf/shell_template.conf.
+3. run ctp
+```
+ctp.sh shell -c conf/shell_template.conf
+```
 
 # 8 Tips
 
 # 9 shell case standards
+
