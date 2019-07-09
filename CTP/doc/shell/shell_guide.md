@@ -399,10 +399,8 @@ To check the result, please refer to ['Verify code coverage test result'](#Verif
 ctp.sh shell -c conf/shell_template.conf
 ```
 
-# 8 Tips
-
-# 9 shell case standards
-## 9.1 case path standard
+# 8 shell case standards
+## 8.1 case path standard
 ### new feature path:  
 We create folders for each cubrid version like this:  
 ```
@@ -423,7 +421,7 @@ _10_1h  _10_2h  _11_1h  _11_2h  _12_1h  _12_2h  _13_1h  _13_2h  _14_1h  _14_2h  
 The folder name means the date when we added this case.  
 For example, I verified an issue and I need add cases for it on 6/1/2019. I need add these cases in '\_19_1h'.  
 
-## 9.2 the beginning of the case
+## 8.2 the beginning of the case
 ```
 #!/bin/bash
 . $init_path/init.sh
@@ -431,7 +429,7 @@ init test
 ```
 These lines will export system variables, import all the functions.  
 
-## 9.3 the end of the case
+## 8.3 the end of the case
 ```
 cubrid service stop
 cubrid deleted $dbname
@@ -440,7 +438,7 @@ finish
 The command 'cubrid deletedb' will check whether there are core files and fatal error generated in the case, and backup db volumns, core files, logs.   
 'finish' is a function in init.sh, which will revert all the conf files to the original status.    
 
-## 9.4 'cubrid' script
+## 8.4 'cubrid' script
 When execute 'init test' at the beginning of the case, '${init_path}/../../bin:${init_path}/../../common/script' is added to PATH:  
 ```
 PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
@@ -451,8 +449,25 @@ It will check whether there are core files and fatal error generated in the case
 *'cubrid checkdb':*  
 It will check whether checkdb is failed, and if it is, backup db volumns, logs, core files. Then execute $CUBRID/bin/cubrid checkdb.  
 
-## 9.5 functions in init.sh
+## 8.5 functions in init.sh
 I will introduce some important functions in init.sh. They are frequently used in shell test cases.  
+
+### init
+'init test' is used at the beginning of each case.  
+These lines will do many init operations, such as: export system variables, import all the functions.  
+
+### finish
+Used at the end of each test case.
+1. cubrid service stop  
+2. release_broker_sharedmemory  
+3. revert all the conf files to original ones  
+
+### WINDOWS_NOT_SUPPORTED/LINUX_NOT_SUPPORTED
+Indicate that the case will not be run on windows or linux platform.
+
+### cubrid_createdb
+Used to createdb. This is used to make 'cubrid createdb' utility to be compatible with leagcy builds.  
+Before CUBRID 9.1, locale parameter is not supported in 'cubrid createdb'.
 
 ### write_ok/write_nok  
 Used to assert the test point.  
@@ -489,6 +504,19 @@ change_ha_parameter "ha_enable_sql_logging=true"
 change_ha_parameter "ha_copy_log_max_archives=100"
 ```
 
+### get_broker_port_from_shell_config
+Used to get broker port.
+```
+port=`get_broker_port_from_shell_config`
+javac *.java
+java Test_Batch $port $dbname > batch.log 2>&1
+```
+We should get broker port from the runtime environment, instead of write it in the java/c file directly.  
+Another method we used is:  
+```
+port=`cubrid broker status -b | grep broker1 |awk '{print $4}'`
+```
+
 ### xgcc
 Used to compile c/c++ files on both linux and windows platforms.
 Examples:   
@@ -499,6 +527,126 @@ xgcc -pthread -o multiple  multiple.c
 ```
 
 ### do_make_locale
-Used to make_locale on both linux and windows platforms.
+Used to make_locale on both linux and windows platforms.  
+Parameter introduction:    
+*force:*  
+If we do not add this parameter, the function will check whether the file '$CUBRID/lib/libcubrid_all_locales.so' exists first. If the file exists, it will return immediately and skip 'make_locale'. If we add 'force' parameter, the function will call make_locale in any case.  
+*nocheck:*  
+do not check make_locale result.  
+*debug/release:*  
+It will be used in make_locale. For example, if we use 'do_make_locale force debug', the fucntion will call 'make_locale.sh -t 64 -m debug'.  
+*locale value:*
+It will be used in make_locale. For example, if we use 'do_make_locale force zh_CN', the fucntion will call 'make_locale.sh -t 64 zh_CN'.   
+Example:  
+```
+cp $CUBRID/conf/cubrid_locales.all.txt $CUBRID/conf/cubrid_locales.txt
+do_make_locale force
+```
+
+### delete_make_locale
+Revert the make_locale results. Change CUBRID to its original locale status.
+
+### do_make_tz
+Used to make_tz on both linux and windows platforms.    
+Examples:  
+```
+do_make_tz
+do_make_tz new
+do_make_tz extend
+do_make_tz release extend
+do_make_tz new nocheck
+```
+
+### revert_tz
+Revert the make_tz results. Change CUBRID to its original timezone status.
+
+### xkill
+Used to kill the processes on both linux and windows platforms.   
+Both pid and process name can be used as a parameter.  
+When using '-f', it means it will search in the full process name.  
+For example:
+```
+if [ $OS == "Windows_NT" ]
+then
+        xkill -f "cub_admin"
+else
+        xkill -f "statdump"
+fi
+```
+
+Without '-f', this command will be excuted on linux:  
+```
+$ ps -u $USER -o pid,comm
+   PID COMMAND
+114832 sshd
+120255 cub_master
+120257 cub_server
+121785 cubrid
+121786 cub_admin
+121816 ps
+```
+With '-f', this command will be excuted: 
+
+```
+$ ps -u $USER -o pid,command
+   PID COMMAND
+114832 sshd: cuiman@pts/0,pts/1
+120255 cub_master
+120257 cub_server demodb
+121785 cubrid statdump            
+121786 cubrid statdump demodb -i 1
+121789 ps -u cuiman -o pid,command
+```
+In this case 'xkill -f "statdump"', the processes cannot be killed whithout -f paramenter.
+
+Other examples:  
+```
+xkill $pid
+xkill cub_server
+xkill -f "statdump"
+```
+
+### xkill_pid
+Used to kill the processes on both linux and windows platforms.  
+Only process id can be used as a parameter.  
+```
+xkill_pid $pid
+```
+
+### format_csql_output
+Used to remove the time related lines in csql output file.  
+```
+csql -u dba demodb -c 'select count(*) from game' > test.log 2>&1
+format_csql_output test.log
+```
+Before use this function:  
+```
+$ cat test.log
+
+=== <Result of SELECT Command in Line 1> ===
+
+     count(*)
+=============
+         8653
+
+1 row selected. (0.006435 sec) Committed.
+```
+After use this function:  
+```
+$ cat test.log               
+
+=== <Result of SELECT Command in Line 1> ===
+
+     count(*)
+=============
+         8653
+
+```
+
+### format_query_plan
+Used to format query plan.
+
+### format_path_output. 
+Used to format path.
 
 
