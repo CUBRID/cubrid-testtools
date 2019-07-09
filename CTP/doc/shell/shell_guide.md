@@ -2,7 +2,6 @@
 # 1 Test Introduction
 Shell test is an important test suit in cubrid test.  
 It contains almost all the feature test and some performance test which cannot be test by sql test or other test suits.  
-The shell test cases url: [https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell]( https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell)  
 
 # 2 Tools Introduction
 CTP is the only test tool which is used in shell test.   
@@ -403,4 +402,103 @@ ctp.sh shell -c conf/shell_template.conf
 # 8 Tips
 
 # 9 shell case standards
+## 9.1 case path standard
+### new feature path:  
+We create folders for each cubrid version like this:  
+```
+PATH/TO/shell/_34_banana_pie
+PATH/TO/shell/_35_cherry
+```
+Please add the cases for new new features in the related folder.  
+
+### cases added for jira issues:
+We create a folder for test cases added for jira issues.  
+```
+PATH/TO/shell/_06_issues
+```
+The folder contains sub folders like this:  
+```
+_10_1h  _10_2h  _11_1h  _11_2h  _12_1h  _12_2h  _13_1h  _13_2h  _14_1h  _14_2h  _15_1h  _15_2h  _16_2h  _17_1h  _17_2h  _18_1h  _18_2h  _19_1h
+```
+The folder name means the date when we added this case.  
+For example, I verified an issue and I need add cases for it on 6/1/2019. I need add these cases in '\_19_1h'.  
+
+## 9.2 the beginning of the case
+```
+#!/bin/bash
+. $init_path/init.sh
+init test
+```
+These lines will export system variables, import all the functions.  
+
+## 9.3 the end of the case
+```
+cubrid service stop
+cubrid deleted $dbname
+finish
+```
+The command 'cubrid deletedb' will check whether there are core files and fatal error generated in the case, and backup db volumns, core files, logs.   
+'finish' is a function in init.sh, which will revert all the conf files to the original status.    
+
+## 9.4 'cubrid' script
+When execute 'init test' at the beginning of the case, '${init_path}/../../bin:${init_path}/../../common/script' is added to PATH:  
+```
+PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
+```
+'cubrid' script in init_path will be used instead of $CUBRID/bin/cubrid in the case.  
+*'cubrid deletedb':*  
+It will check whether there are core files and fatal error generated in the case. If there are, backup db volumns, core files, logs. Then execute $CUBRID/bin/cubrid deletedb.  
+*'cubrid checkdb':*  
+It will check whether checkdb is failed, and if it is, backup db volumns, logs, core files. Then execute $CUBRID/bin/cubrid checkdb.  
+
+## 9.5 functions in init.sh
+I will introduce some important functions in init.sh. They are frequently used in shell test cases.  
+
+### write_ok/write_nok  
+Used to assert the test point.  
+Example:  
+```
+cnt1=`cat result.log | grep "error" | wc -l`
+
+if [ -s result.log ] && [ $cnt1 -eq 0 ]; then
+        write_ok
+else
+        write_nok result.log
+fi
+```
+
+### compare_result_between_files
+compare_result_between_files filename1 filename2
+Used to compare the actual result to the expected result.  
+Examples:  
+```
+compare_result_between_files test.answer test.log
+compare_result_between_files master_data.answer slave_data.log
+```
+
+### change_db_parameter/change_broker_parameter/change_ha_parameter
+Used to change the db/broker/ha parameters in the conf files.  
+When you need to change the parameters in the conf files, better to use these functions.  
+Examples:   
+```
+change_db_parameter "java_stored_procedure=yes"
+change_db_parameter "log_max_archives=1
+change_broker_parameter "SQL_LOG=ON"
+change_broker_parameter "MAX_NUM_APPL_SERVER=5"
+change_ha_parameter "ha_enable_sql_logging=true"
+change_ha_parameter "ha_copy_log_max_archives=100"
+```
+
+### xgcc
+Used to compile c/c++ files on both linux and windows platforms.
+Examples:   
+```
+xgcc -o test test.c
+xgcc -o execute_batch utils.c execute_batch.c
+xgcc -pthread -o multiple  multiple.c
+```
+
+### do_make_locale
+Used to make_locale on both linux and windows platforms.
+
 
