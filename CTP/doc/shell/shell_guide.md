@@ -346,9 +346,14 @@ Sometimes, we cannot find the failure reason from the screen output directly. At
 
 ## 4.3 Verify code coverage test result
 Go to QA homepage and find the 'code coverage' node in the left area, click the link of the latest result.  
+![code coverage 1](./image19.png)
+Click 'shell' link.  
+![code coverage 2](./image10.png)  
+Check the value of 'Coverage' column. The coverage value should not lower than previous code coverage test result.  
+![code coverage 3](./image11.png) 
 
 ## 4.4 Report issues
-### Crash issue  
+### crash issue  
 If there is a crash, report it following the rules in this link: [‘How to Report Regression Crash Issues’](http://jira.cubrid.org/browse/CUBRIDQA-1?focusedCommentId=4739244&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4739244)  
 
 ### normal issue  
