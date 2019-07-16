@@ -67,6 +67,8 @@ public class Context {
 	private boolean reInstallTestBuildYn = false;
 	private String scenario;
 	private boolean isExecuteAtLocal = false;
+	private boolean backupCoreFile = true;
+	private String testdb_name;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -94,6 +96,7 @@ public class Context {
 
 		this.shouldUpdateTestCase = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TESTCASE_UPDATE_YES_OR_NO, "false")) && !CommonUtils.isEmpty(getTestCaseBranch());
 		this.isWindows = getTestPlatform().equalsIgnoreCase("windows");
+		this.isContinueMode = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TEST_CONTINUE_YES_OR_NO, "false"));
 		this.isContinueMode = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.TEST_CONTINUE_YES_OR_NO, "false"));
 
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
@@ -177,6 +180,10 @@ public class Context {
 		return this.isWindows;
 	}
 
+	public boolean getBackupCoreFile() {
+		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.BACKUP_CORE_FILE_YES_OR_NO, "yes"));
+	}
+	
 	public String getTestCaseTimeoutInSec() {
 		return getProperty(ConfigParameterConstants.TESTCASE_TIMEOUT_IN_SECS, String.valueOf(Integer.MAX_VALUE));
 	}

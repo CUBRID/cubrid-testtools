@@ -182,8 +182,13 @@ public class Test {
 		if (tc.startsWith("/") == false) {
 			tc = "$HOME/" + tc;
 		}
+		
+		String backupCoreOption="";
+		if (!context.getBackupCoreFile()) {
+			backupCoreOption=" -n ";
+		}
 
-		script.addCommand("sh runone.sh -r " + (context.getRetryTimes() + 1) + " " + tc + " " + context.getTestCaseTimeoutInSec() + " " + context.getTestingDatabase() + " 2>&1");
+		script.addCommand("sh runone.sh "+ backupCoreOption +" -r " + (context.getRetryTimes() + 1) + " " + tc + " " + context.getTestCaseTimeoutInSec() + " " + context.getTestingDatabase() + " 2>&1");
 		result = ssh.execute(script);
 		workerLog.println(result);
 

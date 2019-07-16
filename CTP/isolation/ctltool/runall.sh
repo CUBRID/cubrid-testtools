@@ -34,15 +34,18 @@ Usage: $0 [options] <scenario dir>
         [-t]          : enable TAP output mode
         [-r times]    : retry times. default value: 1
         [-N]          : non-recursive subdir
-	[-e file]     : excluded case list file
+        [-e file]     : excluded case list file
 _END
         exit 1
 }
 
 echo "[`date +'%F %T'`] Running... $0 $@" > runall.log
 
-while getopts ":tr:Re:h" opt; do
+while getopts ":ntr:Re:h" opt; do
   case $opt in
+    n)
+    runonearg="$runonearg -n"
+    ;;
     t)
     runonearg="$runonearg -t"
     ;;
