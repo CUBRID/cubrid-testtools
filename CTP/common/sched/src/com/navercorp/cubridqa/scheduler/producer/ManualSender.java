@@ -45,6 +45,7 @@ public class ManualSender {
 			return;
 		}
 
+		boolean isMysql = false;
 		boolean isI18N = false;
 		boolean isDBIMG = false;
 		String queue = args[0];
@@ -81,6 +82,9 @@ public class ManualSender {
 		String fileName = arr[arr.length - 1];
 		String BUILD_ID = arr[arr.length - 3];
 		String BUILD_STORE_ID = arr[arr.length - 4];
+		if(BUILD_STORE_ID.contains("mysql")) {
+			isMysql = true;
+		}
 
 		String BUILD_SVN_BRANCH = CommonUtils.getSVNBranch(conf.getProperty("svn.trunk.version"), BUILD_ID);
 		String BUILD_SVN_BRANCH_NEW = CommonUtils.getSVNBranchIgnorePatch(conf.getProperty("svn.trunk.version"), BUILD_ID);
@@ -107,18 +111,26 @@ public class ManualSender {
 		String BUILD_CREATE_TIME = String.valueOf(file.lastModified());
 
 		String BUILD_BIT = "";
-		if (fileName.indexOf("-linux.x86_64") != -1) {
-			BUILD_BIT = "64";
-		} else if (fileName.indexOf("-linux.i386") != -1) {
-			BUILD_BIT = "32";
-		} else if (fileName.indexOf("-x64-") != -1) {
-			BUILD_BIT = "64";
-		} else if (fileName.indexOf("-x86-") != -1) {
-			BUILD_BIT = "32";
-		} else if (fileName.indexOf("ppc64") != -1) {
-			BUILD_BIT = "64";
+		if (isMysql) {
+			if (fileName.indexOf("x86_64") != -1) {
+				BUILD_BIT = "64";
+			} else {
+				BUILD_BIT = "0";
+			}
 		} else {
-			BUILD_BIT = "0";
+			if (fileName.indexOf("-linux.x86_64") != -1) {
+				BUILD_BIT = "64";
+			} else if (fileName.indexOf("-linux.i386") != -1) {
+				BUILD_BIT = "32";
+			} else if (fileName.indexOf("-x64-") != -1) {
+				BUILD_BIT = "64";
+			} else if (fileName.indexOf("-x86-") != -1) {
+				BUILD_BIT = "32";
+			} else if (fileName.indexOf("ppc64") != -1) {
+				BUILD_BIT = "64";
+			} else {
+				BUILD_BIT = "0";
+			}
 		}
 
 		String BUILD_SCENARIOS = scenario;
@@ -172,7 +184,12 @@ public class ManualSender {
 			}
 		}
 
-		String isBuildFromGit = Integer.parseInt(CommonUtils.getFirstVersion(BUILD_ID)) >= 10 ? "1" : "0";
+		String isBuildFromGit="";
+		if (isMysql) {
+			isBuildFromGit = "1";
+		} else {
+			isBuildFromGit = Integer.parseInt(CommonUtils.getFirstVersion(BUILD_ID)) >= 10 ? "1" : "0";
+		}
 
 		message.setProperty(Constants.MSG_BUILD_URLS_CNT, BUILD_URLS_CNT);
 		message.setProperty(Constants.MSG_BUILD_ID, BUILD_ID);
