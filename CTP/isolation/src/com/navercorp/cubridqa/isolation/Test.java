@@ -184,7 +184,7 @@ public class Test {
 		}
 		
 		String backupCoreOption="";
-		if (!context.getBackupCoreFile()) {
+		if (!context.isBackupCoreFile()) {
 			backupCoreOption=" -n ";
 		}
 
