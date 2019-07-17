@@ -76,6 +76,7 @@ public class ConfigParameterConstants {
 	public static final String HA_UPDATE_STATISTICS_ON_CATALOG_CLASSES_YN = "update_statistics_on_catalog_classes_yn";
 
 	// Test tool configuration parameters
+	public static final String BACKUP_CORE_FILE_YES_OR_NO = "backup_core_file_yn";
 	public static final String IGNORE_CORE_BY_KEYWORDS = "ignore_core_by_keywords";
 	public static final String LARGE_SPACE_DIR = "large_space_dir";
 	
