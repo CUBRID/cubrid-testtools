@@ -33,8 +33,8 @@ sudo useradd dev
 ```
 Set password as our common password for user shell and user dev.  
 ```
-sudo passwd  shell
-sudo passwd  dev
+sudo passwd shell
+sudo passwd dev
 ```
  Set these users' password to never expire.  
  ```
@@ -277,8 +277,8 @@ mkdir ERROR_BACKUP
 ```
 
 ### create .cubrid.sh file 
-If cubrid has never been installed on the machine, we need create file '.cubrid.sh' at $HOME path manually
-*.cubrid.sh file:*   
+If cubrid has never been installed on the machine, we need create file '.cubrid.sh' at $HOME path manually.  
+*.cubrid.sh file:*    
 ```
 CUBRID=/home/shell/CUBRID
 CUBRID_DATABASES=$CUBRID/databases
@@ -309,13 +309,15 @@ For more details, please refer to ['install CTP'](#install_CTP)
 ## 4.2 Verify dailyqa test results
 ### Result overview
 Open qahome in browser, then select build number. 'Function Result' page will be displayed.
-Find shell and shell_debug in linux part, and find shell in windows part.
+Find shell and shell_debug in linux part, and find shell in windows part.  
 ![shell_linux](./image1.png)
 ![shell_windows](./image2.png)
+If there are crash failures, an alarm icon will appear in the 'Total' column, like this:  
+![shell_crash](./image12.png)  
 In the overview page, we should check the values in all the colomns. The most important check items are:  
 1. Whether the test is completed ('Test Rate' column)
 2. How many cases are failed('Failed' columns)
-3. The elapse time of the case ('Elapse Time' column). The elapse time of the test should not be longer than the elapse time of the previous should too much.  
+3. The elapse time of the test ('Elapse Time' column). The elapse time of the test should not be longer than the elapse time of the previous build too much.    
 
 ### verfy the failed cases
 Click the link in this image to open the online verification page.  
@@ -340,7 +342,8 @@ On this page:
 Fix: I am sure of this verication result.  
 Save: I am not sure of this verication result. I will decide it later.  
 
-Sometimes, we cannot find the failure reason from the screen output directly. At this time, we need login the test machine, go to the case path, check the logs. If we still cannot find the failure reason from the logs, we should run the case step by step on this machine to find the failure reason.
+Sometimes, we cannot find the failure reason from the screen output directly. At this time, we need login the test machine, go to the case path, check the logs. If we still cannot find the failure reason from the logs, we should run the case step by step on this machine to find the failure reason.  
+We should verify the crash failures first.  
 
 ## 4.3 Verify code coverage test result
 Go to QA homepage and find the 'code coverage' node in the left area, click the link of the latest result.  
