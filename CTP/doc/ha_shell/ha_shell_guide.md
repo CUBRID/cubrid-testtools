@@ -292,10 +292,59 @@ For the online verification, please refer to shell test guide:
 (I will add the link here after shell guide is merged)
 
 ## 4.3 Verify code coverage test result
-please refer to shell test guide:
-(I will add the link here after shell guide is merged)
+please refer to shell test guide.  
 
 ## 4.4 Report issues
-please refer to shell test guide:
-(I will add the link here after shell guide is merged)
+please refer to shell test guide.  
+
+# 5 Execute Test  
+# 5.1 Execute a single test case  
+To execute a single test case, we juse need to login a test machine, and go to the case path, and then execute shell command 'sh case_name.sh'. 
+
+# 5.2 Execute a HA shell test  
+We can use the regression tools to trigger a test.  
+1. Change the parameters in ~/CTP/conf/shell_template.conf on controller node.    
+2. Send a message to start the test  
+Login: message@192.168.1.91  
+Send test message as:  
+```
+sender.sh QUEUE_CUBRID_QA_SHELL_HA_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8330-d4d8464/drop/CUBRID-10.2.0.8330-d4d8464-Linux.x86_64.sh ha_shell default
+```
+3. Start consumer on the controller node  
+If the consumer is not started, login the controller node to start it.  
+```
+cd ~
+sh start_test.sh 
+```
+4. Check test result  
+The results will be uploaded to qahome automatically. You can follow ['4.2 Verify dailyqa test results'](#4.2_Verify_dailyqa_test_results) to check the test results. 
+
+# 6 Code Coverage Test
+Please refer to shell test guide.  
+
+# 7 Run test manually
+1. Login controller node.
+2. Set the conf file ~/CTP/conf/shell_template.conf.
+3. run ctp
+```
+ctp.sh shell -c conf/shell_template.conf
+```
+
+# 8 HA shell case standards
+## 8.1 case path standard
+### new feature path:  
+We created folders for each cubrid version like this:  
+```
+PATH/TO/HA/shell/_27_features_920
+PATH/TO/HA/shell/_28_features_930
+PATH/TO/HA/shell/_29_banana_qa
+PATH/TO/HA/shell/_30_banana_pie
+PATH/TO/HA/shell/_31_cherry
+```
+
+### cases added for jira issues:
+We created a folder for test cases added for jira issues.  
+```
+PATH/TO/HA/shell/_12_bts_issue
+```
 
