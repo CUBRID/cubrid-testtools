@@ -380,7 +380,7 @@ cd ~
 sh start_test.sh 
 ```
 4. Check test result  
-The results will be uploaded to qahome automatically. You can follow section 4.2 to check the test results.  
+The results will be uploaded to qahome automatically. You can follow ['4.2 Verify dailyqa test results'](#4.2_Verify_dailyqa_test_results) to check the test results. 
 
 # 6 Code Coverage Test
 For code coverage test, just need to send a message.  
@@ -651,4 +651,17 @@ Used to format query plan.
 ### format_path_output. 
 Used to format path.
 
+# 9 excluded list
+If the case will block the test (eg. it hangs in regression test and the issue will not be fixed recently), we should add the case to the excluded list.  
+For shell test, we have two 'excluded_list' files:
+```
+shell/config/daily_regression_test_excluded_list_linux.conf
+shell/config/daily_regression_test_excluded_list_windows.conf
+```
+
+For example, if we need add case 'shell/_06_issues/_18_1h/bug_bts_12583' in linux excluded list, we should add these lines in file shell/config/daily_regression_test_excluded_list_linux.conf
+```
+#CBRD-21358 (add comment in this line to record the reason of adding this case in the exclude list)
+shell/_06_issues/_18_1h/bug_bts_12583
+```
 
