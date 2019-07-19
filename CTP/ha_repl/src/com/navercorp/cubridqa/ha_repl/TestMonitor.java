@@ -158,7 +158,9 @@ public class TestMonitor {
 		String currPID, lastPID = null;
 
 		GeneralScriptInput script = new GeneralScriptInput("cubrid killtran -d " + hostManager.getTestDb() + "| grep sql | awk '{print $4}'");
-		GeneralScriptInput resolveScript = new GeneralScriptInput("csql -u  dba " + hostManager.getTestDb() + " -c \"drop table qa_system_tb_flag\"");
+		String spt = "cd $CUBRID" + Constants.LINE_SEPARATOR;
+		script += "csql -u  dba " + hostManager.getTestDb() + " -c \"drop table qa_system_tb_flag\"";
+		GeneralScriptInput resolveScript = new GeneralScriptInput(spt);
 
 		boolean needResolve;
 		for (SSHConnect ssh : slaveList) {
