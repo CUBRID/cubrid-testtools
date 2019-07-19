@@ -17,7 +17,7 @@ sudo useradd shell_ctrl
 ```
 Set password as our common password for user shell_ctrl.  
 ```
-sudo passwd  shell_ctrl
+sudo passwd shell_ctrl
 ```
  Set the user's password to never expire.  
  ```
@@ -25,7 +25,7 @@ sudo passwd  shell_ctrl
  ```
  
 ### worker nodes
-We need create two new users: shell, dev.
+We need create two new users: shell, dev.  
 Login root user and execute:  
 ```
 sudo useradd shell
@@ -49,14 +49,13 @@ Required software packages: jdk, lcov, bc, lrzsz.
 |jdk|1.8.0 (need larger than 1.6)|run CTP, run shell test case|  
 |lcov|lcov-1.11|run code coverage test|  
 |bc|latest version|run shell test case|  
-|lrzsz|latest version|debug shell test case|  
+|lrzsz|latest version|upload/download files|  
 
-These are installed by root user and can be used by all the users.  
+These software packages are installed by root user and can be used by all the users.  
 
 ## 3.3 Deploy controller node
 ### install CTP   
-**Step 1: download CTP**  
-
+**Step 1: download CTP**   
 *method 1: install from git*    
 ```
 cd ~
@@ -231,7 +230,7 @@ sh start_test.sh
 
 ## 3.4 Deploy worker node  
 ### install CTP
-This step is the as 'install CTP' on controller node. Plese refer to [install CTP](#install_CTP).  
+This step is the same as 'install CTP' on controller node. Plese refer to [install CTP](#install_CTP).  
 ### set ~/.bash_profile
 *~/.bash_profile*
 ```
