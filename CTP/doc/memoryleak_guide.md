@@ -1,31 +1,31 @@
 # 1. Test Objective
-`MemoryLeak` test is aimed to detect memory error in CUBRID. It runs the `sql` and `medium` test cases with [Memcheck](http://valgrind.org/docs/manual/mc-manual.html) tool of [Valgrind](http://valgrind.org/).
+`MemoryLeak` test is aimed to detect memory error in CUBRID. It runs the [sql](https://github.com/CUBRID/cubrid-testcases/tree/develop/sql) and [medium](https://github.com/CUBRID/cubrid-testcases/tree/develop/medium) test cases with [Memcheck](http://valgrind.org/docs/manual/mc-manual.html) tool of [Valgrind](http://valgrind.org/).
 
 
 # 2. Deploy Regression Test Environment 
 ## 2.1 Test Machines
-We are deployed ten test instances on two test machines for daily regression test.
-No. | Hostname|IP|User Name| Deployment
---|--|--|--|--|--
--	| func40	| 192.168.1.115|root | Valgrind
--	| func41	| 192.168.1.116|root | Valgrind
-1	| func40	| 192.168.1.115|memory1 |CTP, cubrid-testcases, CUBRID
-2	| func40	| 192.168.1.115|memory2 |CTP, cubrid-testcases, CUBRID
-3	| func40	| 192.168.1.115|memory3 |CTP, cubrid-testcases, CUBRID
-4	| func40	| 192.168.1.115|memory4 |CTP, cubrid-testcases, CUBRID
-5	| func40	| 192.168.1.115|memory5 |CTP, cubrid-testcases, CUBRID
-6	| func41	| 192.168.1.116|memory1 |CTP, cubrid-testcases, CUBRID
-7	| func41	| 192.168.1.116|memory2 |CTP, cubrid-testcases, CUBRID
-8	| func41	| 192.168.1.116|memory3 |CTP, cubrid-testcases, CUBRID
-9	| func41	| 192.168.1.116|memory4 |CTP, cubrid-testcases, CUBRID
-10	| func41	| 192.168.1.116|memory5 |CTP, cubrid-testcases, CUBRID
+We deployed ten test instances on two test machines for MemoryLeak daily regression test.  
+
+|No. | Hostname|IP|User Name| Deployment
+|--|--|--|--|--
+|  | func40 | 192.168.1.115|root | Valgrind
+|  | func41 | 192.168.1.116|root | Valgrind
+|1 | func40 | 192.168.1.115|memory1 |CTP, cubrid-testcases, CUBRID
+|2 | func40 | 192.168.1.115|memory2 |CTP, cubrid-testcases, CUBRID
+|3 | func40 | 192.168.1.115|memory3 |CTP, cubrid-testcases, CUBRID
+|4 | func40 | 192.168.1.115|memory4 |CTP, cubrid-testcases, CUBRID
+|5 | func40 | 192.168.1.115|memory5 |CTP, cubrid-testcases, CUBRID
+|6 | func41 | 192.168.1.116|memory1 |CTP, cubrid-testcases, CUBRID
+|7 | func41 | 192.168.1.116|memory2 |CTP, cubrid-testcases, CUBRID
+|8 | func41 | 192.168.1.116|memory3 |CTP, cubrid-testcases, CUBRID
+|9 | func41 | 192.168.1.116|memory4 |CTP, cubrid-testcases, CUBRID
+|10 | func41 | 192.168.1.116|memory5 |CTP, cubrid-testcases, CUBRID
+
 ## 2.2 Install Valgrind
 Install Valgrind to each machines.
 1. Login as `root` user  
-2. Checkout Valgrind source code  
-For ease of use, we did some changes bases on Valgrind 3.12.0.   
-You can see the changes from https://github.com/CUBRID/cubrid-testtools-internal/commits/develop/valgrind and get source code from https://github.com/CUBRID/cubrid-testtools-internal/tree/develop/valgrind.   
-Pleaes use this valgrind to test CUBRID.  
+2. Checkout Valgrind source code from repository    
+For ease of use, we did some changes bases on Valgrind 3.12.0. You can see the changes from https://github.com/CUBRID/cubrid-testtools-internal/commits/develop/valgrind and get source code from https://github.com/CUBRID/cubrid-testtools-internal/tree/develop/valgrind.  
     ```bash
     git clone https://github.com/CUBRID/cubrid-testtools-internal.git
     cd cubrid-testtools-internal/
@@ -53,7 +53,7 @@ Pleaes use this valgrind to test CUBRID.
     valgrind-3.12.0
     ```
 ## 2.3 Install CTP
-Install CTP to all instances.
+Install CTP to all ten instances.
 1. Checkout git repository  
     ```bash
     cd ~
@@ -102,7 +102,8 @@ Install CTP to all instances.
     . ~/.cubrid.sh
     ```
 4. Set the `CTP/conf/sql_local.conf` file.   
-The config settings are almost same as its on sql/medium test. The difference is, `MemoryLeak` test need to set `enable_memory_leak=yes`, `java_stored_procedure=no`, and `log_compress=false`.
+The config settings are almost same as its on sql/medium test. The difference is, `MemoryLeak` test need to set **`enable_memory_leak=yes`**, **`java_stored_procedure=no`**, and **`log_compress=false`**.   
+Set different numbers to `cubrid_port_id`,`ha_port_id`,`BROKER_PORT`,`APPL_SERVER_SHM_ID`, and `MASTER_SHM_ID` in different users on the same machine.
     ```
     [sql]
     # Use valgrind to run the test.
@@ -185,7 +186,7 @@ The config settings are almost same as its on sql/medium test. The difference is
     # To change the identifier of shared memory to avoid conflict to cause server start fail
     MASTER_SHM_ID=35612
     ```
-    Note: Please set different cubrid related ports like cubrid_port_id and ha_port_id on each user. 
+    
     
 ## 2.4 Checkout test cases
 Checkout test cases to all instances.  
@@ -230,7 +231,7 @@ We are using debug build to run the `MemoryLeak` test in daily QA. The message q
     cd  ~/manual/
     sh sender_memory_sql.sh <build id> <medium|sql|sql_ext>
     ```
-    For example,
+    For example, send a message to run a sql memoryleak test:
     ```
     $ cd  ~/manual/
     $ sh sender_memory_sql.sh 10.2.0.8270-c897055 sql        
@@ -301,11 +302,11 @@ We are using debug build to run the `MemoryLeak` test in daily QA. The message q
     ```
     You can see it will generate 21 test messages. 
 
-## 3.2 Modify job.conf  
-Because the `MemoryLeak` test costs a lot of time to execute, we seperated the sql test cases into 21 groups and execute them in parallel. You can set them in the `/home/message/CTP/conf/job.conf` file at message server `message@192.168.1.91`.   
-You can click the 'Test perid' link in the QA homepage to see the it online.  
+## 3.2 Separated SQL test cases
+Because the `MemoryLeak` test costs a lot of time to execute, we separated the sql test cases into 21 groups and execute them in parallel(see [CUBRIDQA-147](http://jira.cubrid.org/browse/CUBRIDQA-147)). You can set them in the `$CTP_HOME/conf/job.conf` file at message server `message@192.168.1.91`.   
+You can click the `Test perid` link in the QA homepage,   
 ![job_period.conf](./memoryleak_image/job_period.png)   
-It links to the [job.conf](http://192.168.1.86:8080/qaresult/job/job.conf) file.     
+it links to the `job.conf`.
 ![job.conf](./memoryleak_image/job_conf.png)   
 ```
 # Define test name 
@@ -547,10 +548,10 @@ Run the test as [3.4.2 Run memoryleak test](#342-run-memoryleak-test).
     log.tar.gz                memory_cub_cas_24031.log  memory_cub_cas_24034.log  memory_cub_cas_24362.log  memory_server_24053.log  summary_info
     main.info                 memory_cub_cas_24032.log  memory_cub_cas_24360.log  memory_cub_cas_24363.log  run_sql.out              summary.info
     memory_cub_cas_24030.log  memory_cub_cas_24033.log  memory_cub_cas_24361.log  memory_cub_cas_24364.log  sql                      summary.xml
-    $ vi memory_server_24053.log
     ```
     You can find the suppression like below.  
     ``` 
+    $ vi memory_server_24053.log
     {
     <insert_a_suppression_name_here>
     Memcheck:Cond
@@ -581,7 +582,7 @@ Run the test as [3.4.2 Run memoryleak test](#342-run-memoryleak-test).
     }
     ...
     ```
-    >Note: The suppression in this case is just for example, this error already fixed in [CBRD-23045](http://jira.cubrid.org/browse/CBRD-23045).   
+    >Note: The suppression in this case is just to give an example, this error already fixed in [CBRD-23045](http://jira.cubrid.org/browse/CBRD-23045). We don't need to add it to [suppression file](https://github.com/CUBRID/cubrid-testtools/blob/develop/CTP/sql/memory/default.supp).   
 4. Copy the suppression to `CTP/sql/memory/default.supp` like below, then tun test again to check if it works.
     ```
     ## CBRD-22235, CBRD-22023 not a bug
