@@ -651,14 +651,14 @@ Used to format query plan.
 ### format_path_output. 
 Used to format path.
 
-# 9 excluded list
+# 9 excluded list  
+The cases in the excluded list will not be run in regression test.  
 If the case will block the test (eg. it hangs in regression test and the issue will not be fixed recently), we should add the case to the excluded list.  
 For shell test, we have two 'excluded_list' files:
 ```
 shell/config/daily_regression_test_excluded_list_linux.conf
 shell/config/daily_regression_test_excluded_list_windows.conf
 ```
-
 For example, if we need add case 'shell/_06_issues/_18_1h/bug_bts_12583' in linux excluded list, we should add these lines in file shell/config/daily_regression_test_excluded_list_linux.conf
 ```
 #CBRD-21358 (add comment in this line to record the reason of adding this case in the exclude list)
