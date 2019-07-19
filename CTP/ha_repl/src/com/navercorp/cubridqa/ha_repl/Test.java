@@ -578,7 +578,7 @@ public class Test {
 
 	private ArrayList<String> getCheckSQLForDML() throws Exception {
 		SSHConnect ssh = hostManager.getHost("master");
-		String script = "cd $CUBRID" + Constants.LINE_SEPARATOR;
+		String script = "cd $CUBRID;";
 		script += "csql -u dba "
 				+ hostManager.getTestDb()
 				+ " -c \"select 'FIND'||'_'||'PK_CLASS', class_name, count(*) from db_attribute where class_name in (select distinct class_name from db_index where is_primary_key='YES' and class_name in (select class_name from db_class where is_system_class='NO' and lower(class_name)<>'qa_system_tb_flag')) group by class_name;\" | grep 'FIND_PK_CLASS' ";
@@ -773,7 +773,7 @@ public class Test {
 		ArrayList<String> resultList = new ArrayList<String>();
 		String result = null;
 		SSHConnect masterSsh = hostManager.getHost("master");
-		String spt = "cd $CUBRID" + Constants.LINE_SEPARATOR;
+		String spt = "cd $CUBRID;";
 		spt += "csql -u dba " + hostManager.getTestDb() + " -c \"select 'EXP' ||'ECT-'|| v from qa_system_tb_flag;\" | grep EXPECT";
 		GeneralScriptInput script = new GeneralScriptInput(spt);
 
@@ -852,10 +852,9 @@ public class Test {
 		s.append("select 'TABLE'||':db_serial', t.* from db_serial t; ");
 		s.append("select 'TABLE'||':db_user', t.* from db_user t where name not in ('DBA', 'PUBLIC'); ");
  
-		String spt = "cd $CUBRID;";
-		spt += "csql -u dba " + hostManager.getTestDb() + " -c \"" + s.toString() + "\""; 
 		 
-		GeneralScriptInput script = new GeneralScriptInput(spt);
+		GeneralScriptInput script = new GeneralScriptInput("cd $CUBRID");
+               script.addCommand("csql -u dba " + hostManager.getTestDb() + " -c \"" + s.toString() + "\"");
 		GeneralScriptInput scriptMode = new GeneralScriptInput("cubrid changemode " + hostManager.getTestDb());
 
 		String result;
