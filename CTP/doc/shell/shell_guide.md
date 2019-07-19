@@ -404,7 +404,7 @@ ctp.sh shell -c conf/shell_template.conf
 # 8 shell case standards
 ## 8.1 case path standard
 ### new feature path:  
-We create folders for each cubrid version like this:  
+We created folders for each cubrid version like this:  
 ```
 PATH/TO/shell/_34_banana_pie
 PATH/TO/shell/_35_cherry
@@ -412,7 +412,7 @@ PATH/TO/shell/_35_cherry
 Please add the cases for new new features in the related folder.  
 
 ### cases added for jira issues:
-We create a folder for test cases added for jira issues.  
+We created a folder for test cases added for jira issues.  
 ```
 PATH/TO/shell/_06_issues
 ```
