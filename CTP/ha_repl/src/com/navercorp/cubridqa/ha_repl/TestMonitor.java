@@ -149,15 +149,16 @@ public class TestMonitor {
 	}
 
 	public String getCurrentChangeMode(SSHConnect ssh) throws Exception {
-		GeneralScriptInput scriptMode = new GeneralScriptInput("cubrid changemode " + hostManager.getTestDb());
+		GeneralScriptInput scriptMode = new GeneralScriptInput("cd $CUBRID");
+		scriptMode.addCommand("cubrid changemode " + hostManager.getTestDb());
 		return ssh.execute(scriptMode);
 	}
 
 	public void resolveSlaveIsBlocked() throws Exception {
 		String result;
 		String currPID, lastPID = null;
-
-		GeneralScriptInput script = new GeneralScriptInput("cubrid killtran -d " + hostManager.getTestDb() + "| grep sql | awk '{print $4}'");
+		GeneralScriptInput script = new GeneralScriptInput("cd $CUBRID");
+		script.addCommand("cubrid killtran -d " + hostManager.getTestDb() + "| grep sql | awk '{print $4}'");
 		String spt = "cd $CUBRID;";
 		spt += "csql -u  dba " + hostManager.getTestDb() + " -c \"drop table qa_system_tb_flag\"";
 		GeneralScriptInput resolveScript = new GeneralScriptInput(spt);

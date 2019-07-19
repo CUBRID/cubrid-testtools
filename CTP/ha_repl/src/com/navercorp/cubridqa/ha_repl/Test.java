@@ -817,7 +817,8 @@ public class Test {
 			result = ssh.execute(csql);
 
 		} else if (isCMD) {
-			GeneralScriptInput cmd = new GeneralScriptInput(stmt + " 2>&1");
+			GeneralScriptInput cmd = new GeneralScriptInput("cd $CUBRID");
+			cmd.addCommand(stmt + " 2>&1");
 			result = ssh.execute(cmd);
 		}
 
@@ -851,11 +852,11 @@ public class Test {
 		s.append("select 'TABLE'||':db_meth_file', t.* from db_meth_file t; ");
 		s.append("select 'TABLE'||':db_serial', t.* from db_serial t; ");
 		s.append("select 'TABLE'||':db_user', t.* from db_user t where name not in ('DBA', 'PUBLIC'); ");
- 
-		 
 		GeneralScriptInput script = new GeneralScriptInput("cd $CUBRID");
-               script.addCommand("csql -u dba " + hostManager.getTestDb() + " -c \"" + s.toString() + "\"");
-		GeneralScriptInput scriptMode = new GeneralScriptInput("cubrid changemode " + hostManager.getTestDb());
+		script.addCommand("csql -u dba " + hostManager.getTestDb() + " -c \""
+				+ s.toString() + "\"");
+		GeneralScriptInput scriptMode = new GeneralScriptInput("cd $CUBRID");
+		scriptMode.addCommand("cubrid changemode " + hostManager.getTestDb());
 
 		String result;
 		SSHConnect ssh;
@@ -900,9 +901,6 @@ public class Test {
 		SSHConnect masterNode = hostManager.getHost("master");
 		GeneralScriptInput script;
 
-		//String spt = "cd $CUBRID"  + Constants.LINE_SEPARATOR;
-		//spt += "csql -u dba " + hostManager.getTestDb() + " -c \"drop table QA_SYSTEM_TB_FLAG;\"" + Constants.LINE_SEPARATOR;
-		
 		String spt = "cd $CUBRID;";
 		spt += "csql -u dba " + hostManager.getTestDb() + " -c \"drop table QA_SYSTEM_TB_FLAG;\"";
 		script = new GeneralScriptInput(spt);
@@ -918,7 +916,9 @@ public class Test {
 	}
 
 	private boolean waitDataReplicated(SSHConnect ssh, long expectedFlagId) throws Exception {
-		GeneralScriptInput script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"select 'GO'||'OD-'||v FROM QA_SYSTEM_TB_FLAG \" | grep GOOD");
+		String spt = "cd $CUBRID;";
+		spt += "csql -u dba " + hostManager.getTestDb() + " -c \"select 'GO'||'OD-'||v FROM QA_SYSTEM_TB_FLAG \" | grep GOOD";
+		GeneralScriptInput script = new GeneralScriptInput(spt);
 		String result;
 		int index = 1;
 
