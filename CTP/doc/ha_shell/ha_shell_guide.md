@@ -246,7 +246,7 @@ mkdir ERROR_BACKUP
 ```
 
 ### create .cubrid.sh file 
-If cubrid has never been installed on the machine, we need create file '.cubrid.sh' at $HOME path manually
+If cubrid has never been installed on the machine, we need create file '.cubrid.sh' at $HOME path manually.  
 *.cubrid.sh file:*   
 ```
 CUBRID=/home/shell/CUBRID
@@ -269,3 +269,33 @@ export PATH
 
 # 4 Regression Test
 We execute HA shell test for each CI build, and execute code coverage test monthly. Both of these test are started automatically when the controller receive a test message. We just need to prepare the conf files, verify the test results, and report issues.
+
+## 4.1	Set conf files for regression test
+Edit the file: ~/CTP/conf/shell_template.conf.  
+shell_template.conf will be copied to \~/CTP/conf/shell_runtime.conf when test is started.  
+For more details, please refer to ['install CTP'](#install_CTP)
+
+## 4.2 Verify dailyqa test results
+### Result overview
+Open qahome in browser, then select build number. 'Function Result' page will be displayed.
+Find ha_shell in linux part.    
+![ha_shell1](./image1.png)  
+In the overview page, we should check the values in all the colomns. The most important check items are:  
+1. Whether the test is completed ('Test Rate' column)
+2. How many cases are failed('Failed' columns)
+3. The elapse time of the test ('Elapse Time' column). The elapse time of the test should not be longer than the elapse time of the previous build too much.  
+
+### verfy the failed cases
+Click the link in this image to open the online verification page.  
+![online_verify1](./image3.png)  
+For the online verification, please refer to shell test guide:
+(I will add the link here after shell guide is merged)
+
+## 4.3 Verify code coverage test result
+please refer to shell test guide:
+(I will add the link here after shell guide is merged)
+
+## 4.4 Report issues
+please refer to shell test guide:
+(I will add the link here after shell guide is merged)
+
