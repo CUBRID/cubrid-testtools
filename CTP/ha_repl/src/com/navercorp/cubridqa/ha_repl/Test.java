@@ -908,7 +908,7 @@ public class Test {
 		
 		this.globalFlag++;
 		spt = "cd $CUBRID;";
-		spt += "csql -u dba " + hostManager.getTestDb() + "-c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values (" + this.globalFlag + ");\"";
+		spt += "csql -u dba " + hostManager.getTestDb() + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values (" + this.globalFlag + ");\"";
 		script = new GeneralScriptInput(spt);
 		masterNode.execute(script);
 		
