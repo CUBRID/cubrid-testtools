@@ -331,6 +331,10 @@ ctp.sh shell -c conf/shell_template.conf
 ```
 
 # 8 HA shell case standards
+HA shell case is a special kind of shell test case. It should fowllow all the shell test case standards.   
+For shell case standards, please refer to shell test guide.   
+In this section, I will only introduce the contents which are not included in shell test guide.  
+
 ## 8.1 case path standard
 ### new feature path:  
 We created folders for each cubrid version like this:  
@@ -347,4 +351,124 @@ We created a folder for test cases added for jira issues.
 ```
 PATH/TO/HA/shell/_12_bts_issue
 ```
+
+## 8.2 the beginning of the case
+```bash
+#!/bin/bash
+set -x
+. $init_path/init.sh
+. $init_path/make_ha.sh
+init test
+setup_ha_environment
+```
+
+These lines will export system variables, import all the functions.  
+'init.sh' contains all the common functions for shell test cases.   
+*make_ha.sh*  
+'make_ha.sh' will source make_ha_upper.sh( >=8.4) or make_ha_lower.sh( <8.4) according to cubrid versions.
+```
+if [ $is_R40 -eq 1 ]; then
+        . $init_path/make_ha_upper.sh
+else
+        . $init_path/make_ha_lower.sh
+fi
+```
+make_ha_upper.sh and make_ha_lower.sh contain all the common functions for ha shell test cases.  
+
+*setup_ha_environment*  
+setup_ha_environment is used to setup a HA environment which contains one master node, and one slave node.  
+The current machine is used as the master node, and slave node is set in ~/CTP/shell/init_path/HA.properties.  
+Example of HA.properties:  
+```
+##Configure HA enviorment.
+
+MASTER_SERVER_IP = 192.168.1.83
+MASTER_SERVER_USER = ha
+MASTER_SERVER_PW = uV9b3KMp5%%
+MASTER_SERVER_SSH_PORT = 22
+SLAVE_SERVER_IP = 192.168.1.93
+SLAVE_SERVER_USER = ha
+SLAVE_SERVER_PW = uV9b3KMp5%%
+SLAVE_SERVER_SSH_PORT = 22
+#set port numbers according to different users
+CUBRID_PORT_ID = 1568
+HA_PORT_ID = 59907
+MASTER_SHM_ID = 1568
+BROKER_PORT1 = 30090
+APPL_SERVER_SHM_ID1 = 30090
+BROKER_PORT2 = 33091
+APPL_SERVER_SHM_ID2 = 33091
+CM_PORT = 8001
+```
+If you need to run a HA shell, you need to edit HA.properties first.  
+In regression test,  file 'HA.properties' is configured by CTP.  
+CTP read info from file ~/CTP/conf/shell_template.conf on controller node, and set $init_path/HA.properties on each master node. 
+
+For example:  
+$init_path/HA.properties on node ha@192.168.1.83:
+```
+##Configure HA enviorment.
+
+MASTER_SERVER_IP = 192.168.1.83
+MASTER_SERVER_USER = ha
+MASTER_SERVER_PW = uV9b3KMp5%%
+MASTER_SERVER_SSH_PORT = 22
+SLAVE_SERVER_IP = 192.168.1.93
+SLAVE_SERVER_USER = ha
+SLAVE_SERVER_PW = uV9b3KMp5%%
+SLAVE_SERVER_SSH_PORT = 22
+#set port numbers according to different users
+CUBRID_PORT_ID = 1568
+HA_PORT_ID = 59907
+MASTER_SHM_ID = 1568
+BROKER_PORT1 = 30090
+APPL_SERVER_SHM_ID1 = 30090
+BROKER_PORT2 = 33091
+APPL_SERVER_SHM_ID2 = 33091
+CM_PORT = 8001
+
+```
+This is depend on file ~/CTP/conf/shell_template.conf on controller node:  
+
+
+```
+default.ssh.port=22
+default.ssh.user=ha
+default.ssh.pwd=uV9b3KMp5%%
+default.cubrid.cubrid_port_id = 1568
+default.broker1.BROKER_PORT = 30090
+default.broker2.BROKER_PORT = 33091
+default.broker1.APPL_SERVER_SHM_ID=30090
+default.broker2.APPL_SERVER_SHM_ID=33091
+default.ha.ha_port_id = 59907
+
+#master node
+env.83.ssh.host=192.168.1.83
+#slave node
+env.83.ssh.relatedhosts=192.168.1.93
+...
+```
+
+## 8.3 the end of the case
+```bash
+cubrid service stop
+revert_ha_environment
+finish
+```
+'revert_ha_environment' function:  revert all the conf files to the original status on master node and slave node. 
+
+## 8.4 functions in make_ha_upper.sh
+### setup_ha_environment  
+Please refer to ['8.2 the beginning of the case'](#8.2_the_beginning_of_the_case)  
+
+### revert_ha_environment  
+Please refer to ['8.3 the end of the case'](#8.3_the_end_of_the_case)  
+
+### format_hb_status
+
+### wait_for_slave
+
+### wait_for_slave_failover
+
+### add_ha_db
 
