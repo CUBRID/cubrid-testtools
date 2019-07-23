@@ -578,7 +578,8 @@ public class Test {
 
 	private ArrayList<String> getCheckSQLForDML() throws Exception {
 		SSHConnect ssh = hostManager.getHost("master");
-		String script = "csql -u dba "
+		String script = "cd $CUBRID;";
+		script += "csql -u dba "
 				+ hostManager.getTestDb()
 				+ " -c \"select 'FIND'||'_'||'PK_CLASS', class_name, count(*) from db_attribute where class_name in (select distinct class_name from db_index where is_primary_key='YES' and class_name in (select class_name from db_class where is_system_class='NO' and lower(class_name)<>'qa_system_tb_flag')) group by class_name;\" | grep 'FIND_PK_CLASS' ";
 		GeneralScriptInput csql = new GeneralScriptInput(script);
@@ -771,9 +772,10 @@ public class Test {
 	private ArrayList<String> executeOnSlaveAndReplica(boolean isSQL, boolean isCMD, String stmt, boolean isTest) throws Exception {
 		ArrayList<String> resultList = new ArrayList<String>();
 		String result = null;
-
 		SSHConnect masterSsh = hostManager.getHost("master");
-		GeneralScriptInput script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"select 'EXP' ||'ECT-'|| v from qa_system_tb_flag;\" | grep EXPECT");
+		String spt = "cd $CUBRID;";
+		spt += "csql -u dba " + hostManager.getTestDb() + " -c \"select 'EXP' ||'ECT-'|| v from qa_system_tb_flag;\" | grep EXPECT";
+		GeneralScriptInput script = new GeneralScriptInput(spt);
 
 		long expectedFlagId = -1;
 		if (isSQL && !isTest) {
@@ -805,7 +807,8 @@ public class Test {
 
 		String result = null;
 		if (isSQL) {
-			String script = "csql -u dba " + hostManager.getTestDb() + " 2>&1 << EOF" + Constants.LINE_SEPARATOR;
+			String script = "cd $CUBRID" + Constants.LINE_SEPARATOR;
+			script += "csql -u dba " + hostManager.getTestDb() + " 2>&1 << EOF" + Constants.LINE_SEPARATOR;
 			script += ";time off" + Constants.LINE_SEPARATOR;
 			script += stmt + Constants.LINE_SEPARATOR;
 			script += "EOF" + Constants.LINE_SEPARATOR;
@@ -814,7 +817,8 @@ public class Test {
 			result = ssh.execute(csql);
 
 		} else if (isCMD) {
-			GeneralScriptInput cmd = new GeneralScriptInput(stmt + " 2>&1");
+			GeneralScriptInput cmd = new GeneralScriptInput("cd $CUBRID");
+			cmd.addCommand(stmt + " 2>&1");
 			result = ssh.execute(cmd);
 		}
 
@@ -848,9 +852,11 @@ public class Test {
 		s.append("select 'TABLE'||':db_meth_file', t.* from db_meth_file t; ");
 		s.append("select 'TABLE'||':db_serial', t.* from db_serial t; ");
 		s.append("select 'TABLE'||':db_user', t.* from db_user t where name not in ('DBA', 'PUBLIC'); ");
-
-		GeneralScriptInput script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"" + s.toString() + "\"");
-		GeneralScriptInput scriptMode = new GeneralScriptInput("cubrid changemode " + hostManager.getTestDb());
+		GeneralScriptInput script = new GeneralScriptInput("cd $CUBRID");
+		script.addCommand("csql -u dba " + hostManager.getTestDb() + " -c \""
+				+ s.toString() + "\"");
+		GeneralScriptInput scriptMode = new GeneralScriptInput("cd $CUBRID");
+		scriptMode.addCommand("cubrid changemode " + hostManager.getTestDb());
 
 		String result;
 		SSHConnect ssh;
@@ -895,19 +901,24 @@ public class Test {
 		SSHConnect masterNode = hostManager.getHost("master");
 		GeneralScriptInput script;
 
-		script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"drop table QA_SYSTEM_TB_FLAG;\"");
+		String spt = "cd $CUBRID;";
+		spt += "csql -u dba " + hostManager.getTestDb() + " -c \"drop table QA_SYSTEM_TB_FLAG;\"";
+		script = new GeneralScriptInput(spt);
 		masterNode.execute(script);
-
+		
 		this.globalFlag++;
-		script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values ("
-				+ this.globalFlag + ");\"");
+		spt = "cd $CUBRID;";
+		spt += "csql -u dba " + hostManager.getTestDb() + " -c \"create table QA_SYSTEM_TB_FLAG (v BIGINT primary key);insert into QA_SYSTEM_TB_FLAG values (" + this.globalFlag + ");\"";
+		script = new GeneralScriptInput(spt);
 		masterNode.execute(script);
-
+		
 		mlog.println("DONE");
 	}
 
 	private boolean waitDataReplicated(SSHConnect ssh, long expectedFlagId) throws Exception {
-		GeneralScriptInput script = new GeneralScriptInput("csql -u dba " + hostManager.getTestDb() + " -c \"select 'GO'||'OD-'||v FROM QA_SYSTEM_TB_FLAG \" | grep GOOD");
+		String spt = "cd $CUBRID;";
+		spt += "csql -u dba " + hostManager.getTestDb() + " -c \"select 'GO'||'OD-'||v FROM QA_SYSTEM_TB_FLAG \" | grep GOOD";
+		GeneralScriptInput script = new GeneralScriptInput(spt);
 		String result;
 		int index = 1;
 

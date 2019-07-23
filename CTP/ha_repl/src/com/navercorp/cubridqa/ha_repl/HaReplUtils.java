@@ -138,7 +138,8 @@ public class HaReplUtils {
 	}
 
 	private static boolean waitDatabaseReady(SSHConnect ssh, String dbName, String expectedStatus, Log log, int maxTry) throws Exception {
-		GeneralScriptInput script = new GeneralScriptInput("cubrid changemode " + dbName);
+		GeneralScriptInput script = new GeneralScriptInput("cd $CUBRID");
+		script.addCommand("cubrid changemode " + dbName);
 		String result;
 		String side = "[\\s\\S]*";
 		while (maxTry-- > 0) {
