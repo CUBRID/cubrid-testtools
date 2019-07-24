@@ -828,7 +828,7 @@ To execute code coverage test of isolation, you also need to send a testing mess
     sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_CC_BASIC http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz isolation
     ```
 	* the first url is a build for testing code coverage.
-	* the sconde url is the source code of the build.
+	* the second url is the source code of the build.
 	
     For example, to execute the isolation code coverage test on 10.2.0.8362-fbf9d84 build, you need to send a test message like below. 
     ```bash
