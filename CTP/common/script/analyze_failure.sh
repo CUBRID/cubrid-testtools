@@ -227,13 +227,11 @@ JSON_TPL_CALL_STACK_INFO=json_file:issue_create_desc.out
 ISSUEFILDDATA
 
 	#generate comment data file content
-	user_info=""
-	if [ "${login_info}" == "" ]; then
-		user_info=`cat readme.txt |grep TEST_INFO_ENV|grep -v export|awk -F '=' '{print $NF}'`
-	else
+	user_info=`cat readme.txt |grep TEST_INFO_ENV|grep -v export|awk -F '=' '{print $NF}'|sed "s/'//g"`
+	if [ ! "${login_info}" == "" ]; then
 		gateway_ip=`echo ${login_info} | awk -F ":" '{print $1}'`
 		mapping_port=`echo ${login_info} | awk -F ":" '{print $2}'`
-		user_info="ssh -p ${mapping_port} ${USER}@${gateway_ip}"
+		user_info="ssh -p ${mapping_port} ${USER}@${gateway_ip} or ${user_info}"
 	fi
 
 	related_case=`cat readme.txt |grep "TEST CASE:"|grep -v grep|grep -v freadme|sed 's/^.*TEST CASE://g'|tr -d '[[:space:]]'`
