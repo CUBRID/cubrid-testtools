@@ -88,21 +88,22 @@ public class FileProcess {
 		if (extConfig == null || extKeys == null) {
 			sendMessage(queue, scenario, 4, null, this.msgProps);
 		} else {
-
 			ArrayList<Properties> list;
 			String[] arr = extKeys.split(",");
-			for (String k : arr) {
-				if (k == null)
+			String k;
+			for (String key : arr) {
+				if (key == null)
 					continue;
-				k = k.trim();
-				if (k.equals(""))
+				key = key.trim();
+				if (key.equals(""))
 					continue;
-				k = CommonUtils.replace(k, "{version}", CommonUtils.getVersion(buildId));
-
+				
+				k = CommonUtils.replace(key, "{version}", CommonUtils.getVersion(buildId));
 				list = GeneralExtendedSuite.getInstance(conf, extConfig, false).getMsgProperties(k);
+				
 				if (list == null || list.size() == 0) {
-					String s = CommonUtils.replace(k, "{version}", CommonUtils.getVersionIgnorePatch(buildId));
-					list = GeneralExtendedSuite.getInstance(conf, extConfig, false).getMsgProperties(s);
+					k = CommonUtils.replace(key, "{version}", CommonUtils.getVersionIgnorePatch(buildId));
+					list = GeneralExtendedSuite.getInstance(conf, extConfig, false).getMsgProperties(k);
 				}
 				if (list != null) {
 					for (Properties props : list) {
