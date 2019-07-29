@@ -228,12 +228,10 @@ ISSUEFILDDATA
 
 	#generate comment data file content
 	user_info=`cat readme.txt |grep TEST_INFO_ENV|grep -v export|awk -F '=' '{print $NF}'|sed "s/'//g"`
-	if [ "${login_info}" == "" ]; then
-		prt_user_info=$user_info
-	else
+	if [ ! "${login_info}" == "" ]; then
 		gateway_ip=`echo ${login_info} | awk -F ":" '{print $1}'`
 		mapping_port=`echo ${login_info} | awk -F ":" '{print $2}'`
-		prt_user_info="ssh -p ${mapping_port} ${USER}@${gateway_ip} or ${user_info}"
+		user_info="ssh -p ${mapping_port} ${USER}@${gateway_ip} or ${user_info}"
 	fi
 
 	related_case=`cat readme.txt |grep "TEST CASE:"|grep -v grep|grep -v freadme|sed 's/^.*TEST CASE://g'|tr -d '[[:space:]]'`
@@ -250,7 +248,7 @@ ISSUEFILDDATA
 
 	cat > issue_comment_desc.out << ISSUECOMMENTDESC
 *Test Server:*
-user@IP: $prt_user_info
+user@IP: $user_info
 pwd: <please use general password>
 
 *All Info*: ${curDir}
