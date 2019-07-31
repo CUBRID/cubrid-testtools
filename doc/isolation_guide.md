@@ -1321,3 +1321,11 @@ In cbrd_21900.ctl, `MC: setup NUM_CLIENTS = 2;`, so open two csql.
     csql> ;ex
     ```
 You can see the [cbrd_21900.answer](https://github.com/CUBRID/cubrid-testcases/blob/develop/isolation/_01_ReadCommitted/issues/_18_1h/answer/cbrd_21900.answer) to check if the result is same as expectaion.
+
+# 7. Appendix
+## 7.1 format_ctl_result function
+When a change of CUBRID leads the answer changed, we may need to modify the `format_ctl_result` function to sabilize the test result.
+See https://github.com/CUBRID/cubrid-testtools/blob/develop/CTP/isolation/ctltool/runone.sh#L48
+
+## 7.2 backup_core_file_yn option
+If there is a crash during the isolation test, the tool can backup the core and CUBRID to `$HOME/error_backup` folder. If you don't want to backup them, you can add `backup_core_file_yn=no`(default value is yes) to the config file.  For `runone.sh`, you can use `-n` option. Please see [CUBRIDQA-950](http://jira.cubrid.org/browse/CUBRIDQA-950) for detail.
