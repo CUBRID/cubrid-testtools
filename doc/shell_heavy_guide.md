@@ -207,20 +207,14 @@ For FT(Full Test, usually perform it before release), we also need to perform `s
 You can choose the `ALL`, `OK`, and `NOK` filters as you need.  
 * If it shows 'NO RESULT (OR RUNNING)' as bellow, you need to find the reason. 
 ![verify3](./shell_heavy_image/verify3.png)    
-Usually, the test didn't start. Because the `shell_long`, `RQG`, and `shell_heavy` are executed sequentially, it just waiting for other tests finish. You can check it from the [Test Machines](http://10.113.153.154:10086/qaresult/monitor/checkQueue.nhn) link in the QA homepage.  
+Usually, it caused by insufficient disk space or test is waiting for shell_long or RQG tests finish. The `shell_long`, `RQG`, and `shell_heavy` are executed sequentially. You can check it from the [Test Machines](http://10.113.153.154:10086/qaresult/monitor/checkQueue.nhn) link in the QA homepage.  
 ![verify_queue](./shell_heavy_image/verify_queue.png)  
+    
+### Verify Failed test cases
+Please refer to [result overview](https://github.com/CUBRID/cubrid-testtools/blob/a066d8861858fa49885c77796515890b3f35b062/CTP/doc/shell/shell_guide.md#result-overview) and [verfy the failed cases](https://github.com/CUBRID/cubrid-testtools/blob/a066d8861858fa49885c77796515890b3f35b062/CTP/doc/shell/shell_guide.md#verfy-the-failed-cases) of shell guide. 
 
-    * Insufficient disk space   
-### Check Elapse Time
-Usually a shell_heavy test takes 20000s ~ 30000s, if the test didn't finished in 30000s, you need to check why the test is so slow. It may because there is a server crash, server hangs up, or performance drop. In this case, you need to open a bug.
-
-Test is not finished as expected
-If the CI build comes on time as usual, then you need to check why the test is so slow. It may because there is a server crash, server hangs up, or performance drop. In this case, you need to open a bug.
-
-Insufficient disk space
-Some test case executed failed ,and on the value of Total column, we may see Server crash graphic identifier
-
-###  Check Failures
+### Check Elapse Time  
+Usually a shell_heavy test takes 20000s ~ 30000s, if the test didn't finished in 30000s, you need to check why the test is so slow. It may because there is a server crash, server hangs up, or performance drop.
 
 ## 3.3 Run Code Coverage Test
 Code coverage test starts on the last Sunday of each month.
