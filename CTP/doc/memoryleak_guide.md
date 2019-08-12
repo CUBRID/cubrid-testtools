@@ -22,9 +22,9 @@ We deployed ten test instances on two test machines for MemoryLeak daily regress
 |10 | func41 | 192.168.1.116|memory5 |CTP, cubrid-testcases, CUBRID
 
 ## 2.2 Install Valgrind
-Install Valgrind to each machines.
+Install Valgrind to each machine.
 1. Login as `root` user  
-2. Checkout Valgrind source code from repository    
+2. Checkout Valgrind source code from the repository    
 For ease of use, we did some changes bases on Valgrind 3.12.0. You can see the changes from https://github.com/CUBRID/cubrid-testtools-internal/commits/develop/valgrind and get source code from https://github.com/CUBRID/cubrid-testtools-internal/tree/develop/valgrind.  
     ```bash
     git clone https://github.com/CUBRID/cubrid-testtools-internal.git
@@ -47,7 +47,7 @@ For ease of use, we did some changes bases on Valgrind 3.12.0. You can see the c
     export PATH=$VALGRIND_HOME/bin:$PATH
     ```
 5. Check  
-    Check whether the valgrind is installed successfully.
+    Check whether the Valgrind is installed successfully.
     ```
     $ valgrind --version
     valgrind-3.12.0
@@ -63,7 +63,7 @@ Install CTP to all ten instances.
     cp -rf CTP ~/
     ```
 2. Configure `common.conf`  
-    Create a file `~/CTP/conf/touch common.conf`, then add following contents to it.  
+    Create a file `~/CTP/conf/common.conf`, then add following contents to it.  
     ```
     git_user=cubridqa
     git_pwd=PASSWORD
@@ -115,7 +115,7 @@ Set different numbers to `cubrid_port_id`,`ha_port_id`,`BROKER_PORT`,`APPL_SERVE
     # Configure an alias name for testing result
     test_category=sql
 
-    # Configuration file for jdbc connection initialization, just ignore it when executing SQL_BY_CCI
+    # Configuration file for JDBC connection initialization, just ignore it when executing SQL_BY_CCI
     jdbc_config_file=test_default.xml
 
     # Configure database charset for db creation
@@ -144,7 +144,7 @@ Set different numbers to `cubrid_port_id`,`ha_port_id`,`BROKER_PORT`,`APPL_SERVE
     # To change port of cubrid_port_id to avoid port conflict
     cubrid_port_id=1850
 
-    # In order to simulate the scenario customer use
+    # To simulate the scenario customer use
     ha_mode=yes
 
     # To reduce the lock wait time to fast testing execution
@@ -176,7 +176,7 @@ Set different numbers to `cubrid_port_id`,`ha_port_id`,`BROKER_PORT`,`APPL_SERVE
     # To change broker port to avoid port conflict
     BROKER_PORT=33561
 
-    # To change ID of shared memory used by CAS
+    # To change the ID of shared memory used by CAS
     APPL_SERVER_SHM_ID=33561
 
 
@@ -303,7 +303,7 @@ We are using debug build to run the `MemoryLeak` test in daily QA. The message q
     You can see it will generate 21 test messages. 
 
 ## 3.2 Separated SQL test cases
-Because the `MemoryLeak` test costs a lot of time to execute, we separated the sql test cases into 21 groups and execute them in parallel(see [CUBRIDQA-147](http://jira.cubrid.org/browse/CUBRIDQA-147)). You can set them in the `$CTP_HOME/conf/job.conf` file at message server `message@192.168.1.91`.   
+Because the `MemoryLeak` test costs a lot of time to execute, we separated the SQL test cases into 21 groups and execute them in parallel(see [CUBRIDQA-147](http://jira.cubrid.org/browse/CUBRIDQA-147)). You can set them in the `$CTP_HOME/conf/job.conf` file at message server `message@192.168.1.91`.   
 You can click the `Test perid` link in the QA homepage,   
 ![job_period.conf](./memoryleak_image/job_period.png)   
 it links to the `job.conf`.
@@ -330,17 +330,17 @@ job_github_lin64_debug.test.sql_s3.MKEY_SPARSECHECKOUT=sql/_04_operator_function
 1. Click the build number, then click the `MemoryLeak` tab.   
 ![verify_results_exists](./memoryleak_image/verify_results_exists.png)   
 2. Go throuth the `Scenario` column, check whether there are `medium` and all the  `sql-01` to `sql-s21last` results exists.   
-If there are some of scenarios don't shows the result, you need to check the reason. Usually they are in progress or tests are in the queue. You can see the status from http://192.168.1.86:8080/qaresult/monitor/checkQueue.nhn and see the `QUEUE_CUBRID_QA_MEMORY_LEAK_LINUX_GIT` queue.
+If there are some scenarios don't show the result, you need to check the reason. Usually, they are in progress or tests are in the queue. You can see the status of `QUEUE_CUBRID_QA_MEMORY_LEAK_LINUX_GIT` queue from http://192.168.1.86:8080/qaresult/monitor/checkQueue.nhn.
 ### Check whether there is a new Memoryleak detected  
-Click each result files to see the valgrind logs. See `memory_cub_cas_14069.log` as below:  
+Click each result files to see the Valgrind logs. See `memory_cub_cas_14069.log` as below:  
 ![verify_valgrind_log](./memoryleak_image/verify_valgrind_log.png)  
  If the `Result File Size(Byte)` is small than 3000, the result file has no detected error. See `memory_cub_cas_24962.log` as below:
 ![verify_valgrind_log2](./memoryleak_image/verify_valgrind_log2.png)  
 
-But in this way there are too many files need to check and it's hard to check all the call stacks by manually. So we add the `Analyze all results` function to show the distinct call statcks from all of the result files. 
+But in this way, there are too many files need to check and it's hard to check all the call stacks by manually. So we add the `Analyze all results` function to show the distinct call stacks from all of the result files. 
 1. Click the `Analyze all results` in the `MemoryLeak` tab page.  
 ![verify_valgrind_analyze1](./memoryleak_image/verify_valgrind_analyze1.png)  
-By default, it analyzes the top 6 lines in call stack, and shows the distinct call statics. In the following picture, there are 7 different stacks. If you want to compare more lines, you can choose from the drop-down box.
+By default, it analyzes the top 6 lines in the call stack and shows the distinct call statics. In the following picture, there are 7 different stacks. If you want to compare more lines, you can choose from the drop-down box.
 ![verify_valgrind_analyze2](./memoryleak_image/verify_valgrind_analyze2.png)  
 2. Check each call stack to judge whether it is a new error.  
 Some of them are known issues like:  
@@ -352,7 +352,7 @@ If it is a new memory leak, then [open a bug issue](#33-report-an-issue).
 
 ## 3.3 Report an issue
 Open a `MemoryLeak` issue, there are some rules you need to follow. 
-1. Summary should start with `[Memoryleak]`.
+1. The summary should start with `[Memoryleak]`.
 2. `Test BUild`, `Test OS`, and `Call Stack` are required in the Description.
 3. Add the corresponding result link in the comment.   
 
@@ -364,7 +364,7 @@ Here are some issues you can refer to:
 More issues: http://jira.cubrid.org/issues/?jql=project%20%3D%20CBRD%20AND%20status%20in%20(Resolved%2C%20Closed)%20AND%20text%20~%20%22memoryleak%22%20ORDER%20BY%20created%20DESC
 
 ## 3.4 Find a Reproduce Scenario
-Some times the developer will ask qa to find a reproduce scenario like: 
+Some times the developer will ask QA to find a reproduce scenario like: 
 * http://jira.cubrid.org/browse/CBRD-22877?focusedCommentId=4754042&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4754042  
 * http://jira.cubrid.org/browse/CBRD-23045?focusedCommentId=4754819&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4754819  
 
@@ -376,13 +376,13 @@ Take http://jira.cubrid.org/browse/CBRD-23045 as an example.
 http://192.168.1.86:8080/qaresult/memory_leak/memory_sql_10.2.0.8372-1639b9c_20190710165511/memory_server_21437.log  
 You can see the memoryleak records at `==2019-07-10 07:12:53 21437==`. 
 ![repro-1](./memoryleak_image/repro-1.png)  
-    >Note: The valgrin recoreds UTC time in the valgrind log on the test machines in Korea. See http://jira.cubrid.org/browse/CUBRIDQA-897. So the actual executed time is need to add nine hours. 
+    >Note: The Valgrind records UTC in the Valgrind log on the test machines in Korea. See http://jira.cubrid.org/browse/CUBRIDQA-897. So the actual executed time is needed to add nine hours. 
 2. Modify the link to the result folder:  
 http://192.168.1.86:8080/qaresult/memory_leak/memory_sql_10.2.0.8372-1639b9c_20190710165511/  
 ![result_folder](./memoryleak_image/result_folder.png)  
 3. Open the `run_sql.out` file:  
 http://192.168.1.86:8080/qaresult/memory_leak/memory_sql_10.2.0.8372-1639b9c_20190710165511/run_sql.out  
-Find the test cases that executed before `2019-07-10 16:12:53`. 
+Find the test cases executed before `2019-07-10 16:12:53`. 
 ![repro-2](./memoryleak_image/repro-2.png)  
 4. Refer to the date-time, you can filter out the test cases that may lead to memoryleak. Then you can narrow down the scope run the test cases until you find the smallest set that can reproduce the memory leak.    
 ### 3.4.2 Run memoryleak test
@@ -393,11 +393,11 @@ Note:
     * If run the medium test cases, `data_file=${CTP_HOME}/../cubrid-testcases/medium/files` must be set. You can get the data file from  https://github.com/CUBRID/cubrid-testcases/tree/develop/medium/files. 
     * Change `need_make_locale=<yes|no>` as you need. Set it to 'no' saves time.
 
-2. modify `scenario` path in the `test.conf`.        
+2. modify the `scenario` path in the `test.conf`.        
     ```
     scenario=${HOME}/cubrid-testcases/sql/_30_banana_pie_qa/issue_20399_default_ext/cases/alter_add_default.sql
     ```
-    Scenario can be a file or a folder. When run a test case folder, you'd better to remove the test cases that are not reproduce scenarios, so that you can reduce execution time.
+    A scenario can be a file or a folder. 
 3. Run test. 
     ```
     ctp.sh <sql|medium> -c ./test.conf
@@ -479,7 +479,7 @@ Note:
 
 # 4. Writing suppression file 
 The suppression file we use in memoryleak test is [CTP/sql/memory/default.supp](https://github.com/CUBRID/cubrid-testtools/blob/develop/CTP/sql/memory/default.supp)  
-Some errors reported by valgrind are not an issue, then we need to suppress it. For example, http://jira.cubrid.org/browse/CBRD-22235 is the issue that not a bug and we added it to the suppression file. 
+Some errors reported by Valgrind are not an issue, then we need to suppress it. For example, http://jira.cubrid.org/browse/CBRD-22235 is the issue that not a bug and we added it to the suppression file. 
 1. find the reproduce scenario.
 2. add `--gen-suppressions=all` option to `CTP/sql/memory/cub_server.c` and `CTP/sql/memory/cub_cas.c` files
     ```c
