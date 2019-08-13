@@ -1,11 +1,110 @@
 # Shell Test Guide
 # 1 Test Introduction
 Shell test is an important test suit in cubrid test.  
-It contains almost all the feature test and some performance test which cannot be test by sql test or other test suits.  
+It contains almost all the feature test and some performance test which cannot be tested by sql test or other test suits.   
+For examples:
+* check wheter a cubrid utility works well  
+* check whether the error message of a sql statement is expected  
+* check a specific cubrid parameter works
 
-# 2 Tools Introduction
+# 2 CTP Introduction
 CTP is the only test tool which is used in shell test.   
-Source URL: [https://github.com/CUBRID/cubrid-testtools](https://github.com/CUBRID/cubrid-testtools)
+Source URL: [https://github.com/CUBRID/cubrid-testtools](https://github.com/CUBRID/cubrid-testtools)  
+## 2.1 Configuration
+Example:  
+*~/CTP/conf/shell.conf* 
+```
+#these parameters are used to set cubrid.conf and cubrid_broker.conf
+default.cubrid.cubrid_port_id=1568
+default.broker1.BROKER_PORT=10090
+default.broker1.APPL_SERVER_SHM_ID=10090
+default.broker2.BROKER_PORT=13091
+default.broker2.APPL_SERVER_SHM_ID=13091
+default.ha.ha_port_id=19909
+
+#set the worker nodes
+env.104.ssh.host=192.168.1.104
+env.104.ssh.port=22
+env.104.ssh.user=shell
+env.104.ssh.pwd=PASSWORD
+
+env.105.ssh.host=192.168.1.105
+env.105.ssh.port=22
+env.105.ssh.user=shell
+env.105.ssh.pwd=PASSWORD
+
+env.106.ssh.host=192.168.1.106
+env.106.ssh.port=22
+env.106.ssh.user=shell
+env.106.ssh.pwd=PASSWORD
+
+#specify the case path and exclude list file
+scenario=${HOME}/cubrid-testcases-private-ex/shell
+testcase_exclude_from_file=${HOME}/cubrid-testcases-private-ex/shell/config/daily_regression_test_excluded_list_linux.conf
+
+#specify the build url
+cubrid_download_url=http://127.0.0.1/REPO_ROOT/store_02/10.1.0.6876-f9026f8/drop/CUBRID-10.1.0.6876-f9026f8-Linux.x86_64.sh
+
+test_continue_yn=false
+
+#Whether update cases before test
+testcase_update_yn=true
+testcase_git_branch=develop
+testcase_timeout_in_secs=604800
+test_platform=linux
+test_category=shell
+testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
+testcase_retry_num=0
+delete_testcase_after_each_execution_yn=false
+enable_check_disk_space_yn=true
+owner_email=Mandy<cui.man@navercorp.com>
+
+#set test result feed back type: file or database
+feedback_type=file
+feedback_notice_qahome_url=http://192.168.1.86:8080/qaresult/shellImportAction.nhn?main_id=<MAINID>
+
+git_user=cubridqa
+git_email=dl_cubridqa_bj_internal@navercorp.com
+git_pwd=N6P0Sm5U7h
+
+#these parameters are used when feedback_type=database
+feedback_db_host=192.168.1.86
+feedback_db_port=33080
+feedback_db_name=qaresu
+feedback_db_user=dba
+feedback_db_pwd=
+```
+For the introduction of other parameters, please refer to CTP tool guide.  
+
+## 2.2 Execute shell test
+On controller node:  
+```
+cd ~/CTP/bin
+ctp.sh shell -c ~/CTP/conf/shell.conf
+```
+## 2.3 Check test results
+### feedback_type=file
+If we set 'feedback_type=file', we need check the test results in file 'CTP/result/shell/current_runtime_logs/runtime.log'.  
+The runtime output is sored in files named like 'CTP/result/shell/current_runtime_logs/test_104.log', 'CTP/result/shell/current_runtime_logs/test_105.log', 'CTP/result/shell/current_runtime_logs/test_106.log'.  
+
+### feedback_type=database
+If we set 'feedback_type=database', we need check the test results on qahome page.  
+For details, please refer to ['4.2 Verify dailyqa test results'](#4.2-Verify-dailyqa-test-results).  
+This is also the way we used in regression test.
+
+## 2.4 Excluded list  
+The cases in the excluded list will not be run in the test.  
+If the case will block the test (eg. it hangs in regression test and the issue will not be fixed recently), we should add the case to the excluded list.  
+For shell test, we have two 'excluded_list' files:
+```
+shell/config/daily_regression_test_excluded_list_linux.conf
+shell/config/daily_regression_test_excluded_list_windows.conf
+```
+For example, if we need add case 'shell/_06_issues/_18_1h/bug_bts_12583' in linux excluded list, we should add these lines in file shell/config/daily_regression_test_excluded_list_linux.conf
+```
+#CBRD-21358 (add comment in this line to record the reason of adding this case in the exclude list)
+shell/_06_issues/_18_1h/bug_bts_12583
+```
 
 # 3 Test Deployments
 ## 3.1 create and set users  
@@ -25,21 +124,18 @@ sudo passwd shell_ctrl
  ```
  
 ### worker nodes
-We need create two new users: shell, dev.  
+We need create a new user: shell.  
 Login root user and execute:  
 ```
 sudo useradd shell
-sudo useradd dev
 ```
-Set password as our common password for user shell and user dev.  
+Set password as our common password for user shell.  
 ```
 sudo passwd shell
-sudo passwd dev
 ```
- Set these users' password to never expire.  
+ Set user's password to never expire.  
  ```
  sudo chage -E 2999-1-1 -m 0 -M 99999 shell
- sudo chage -E 2999-1-1 -m 0 -M 99999 dev
  ```
 ## 3.2 install software packages
 Required software packages: jdk, lcov, bc, lrzsz.   
@@ -54,9 +150,8 @@ Required software packages: jdk, lcov, bc, lrzsz.
 These software packages are installed by root user and can be used by all the users.  
 
 ## 3.3 Deploy controller node
-### install CTP   
+### Install CTP   
 **Step 1: download CTP**   
-*method 1: install from git*    
 ```
 cd ~
 git colne https://github.com/CUBRID/cubrid-testtools.git
@@ -64,13 +159,6 @@ cd cubrid-testtools
 git checkout develop
 cp -rf ~/cubrid-testtools/CTP ~
 ```  
-*method 2: install from our server*     
-```
-cd ~
-wget http://192.168.1.91:8080/REPO_ROOT/CTP.tar.gz
-tar zxvf CTP.tar.gz
-```  
-Usually, we use method 2.
 
 **Step 2: set CTP configuration files**    
 *~/CTP/conf/common.conf*   
@@ -94,8 +182,8 @@ qahome_server_port=22
 qahome_server_user=qahome
 qahome_server_pwd=PASSWORD
 
-activemq_user=admin
-activemq_pwd=admin
+activemq_user=ADMINUSER
+activemq_pwd=ADMINPASSWORD
 activemq_url=failover:tcp://192.168.1.91:61616?wireFormat.maxInactivityDurationInitalDelay=30000
 
 mail_from_nickname=CUBRIDQA_BJ
@@ -197,7 +285,7 @@ feedback_db_pwd=
 shell_template.conf will be copied to \~/CTP/conf/shell_runtime.conf when test is started.  
 For more details about the parameters, please refer to CTP guide.  
 
-### set ~/.bash_profile 
+### Set ~/.bash_profile 
 *~/.bash_profile*  
 ```
 # .bash_profile
@@ -217,7 +305,7 @@ export CTP_BRANCH_NAME="develop"
 export CTP_SKIP_UPDATE=0
 ```
 
-### create a script to start consumer
+### Create a script to start consumer
 ~/start_test.sh
 ```
 nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_LINUX -exec run_shell &
@@ -229,9 +317,9 @@ sh start_test.sh
 ```
 
 ## 3.4 Deploy worker node  
-### install CTP
+### Install CTP
 This step is the same as 'install CTP' on controller node. Plese refer to [install CTP](#install_CTP).  
-### set ~/.bash_profile
+### Set ~/.bash_profile
 *~/.bash_profile*
 ```
 # .bash_profile
@@ -260,7 +348,7 @@ export GCOV_PREFIX_STRIP=2
 ulimit -c unlimited
 ```
 
-### deploy test cases
+### Deploy test cases
 ```
 git clone --no-checkout https://github.com/CUBRID/cubrid-testcases-private-ex.git
 cd ~/cubrid-testcases-private-ex
@@ -269,14 +357,14 @@ echo 'shell/*' > ~/cubrid-testcases-private-ex/.git/info/sparse-checkout
 git checkout develop
 ```
 
-### make directories for test
+### Make directories for test
 ```
 cd
 mkdir do_not_delete_core
 mkdir ERROR_BACKUP
 ```
 
-### create .cubrid.sh file 
+### Create .cubrid.sh file 
 If cubrid has never been installed on the machine, we need create file '.cubrid.sh' at $HOME path manually.  
 *.cubrid.sh file:*    
 ```
@@ -650,18 +738,3 @@ Used to format query plan.
 
 ### format_path_output. 
 Used to format path.
-
-# 9 excluded list  
-The cases in the excluded list will not be run in regression test.  
-If the case will block the test (eg. it hangs in regression test and the issue will not be fixed recently), we should add the case to the excluded list.  
-For shell test, we have two 'excluded_list' files:
-```
-shell/config/daily_regression_test_excluded_list_linux.conf
-shell/config/daily_regression_test_excluded_list_windows.conf
-```
-For example, if we need add case 'shell/_06_issues/_18_1h/bug_bts_12583' in linux excluded list, we should add these lines in file shell/config/daily_regression_test_excluded_list_linux.conf
-```
-#CBRD-21358 (add comment in this line to record the reason of adding this case in the exclude list)
-shell/_06_issues/_18_1h/bug_bts_12583
-```
-
