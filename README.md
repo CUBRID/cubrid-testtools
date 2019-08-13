@@ -1,7 +1,7 @@
 # cubrid-testtools
 This repository includes functional tools to test CUBRID. 
 
-## CTP
+## Quick Start
 CTP is designed to execute all kinds of functional testings for CUBRID. See [CTP/README.md](CTP/README.md) for details.  
 
 ## Functional Testing Guide 
@@ -15,9 +15,10 @@ CTP is designed to execute all kinds of functional testings for CUBRID. See [CTP
 * [HA_repl]() (TBD)
 * [Isolation](./doc/isolation_guide.md)
 * [RQG]() (TBD)
+* [Unit test]() (TBD)
+* [JDBC]() (TBD)
 * [JDBC Compatibility]() (TBD)
 * [CCI Compatibility]() (TBD)
 * [MemoryLeak](./doc/memoryleak_guide.md)
-* [Unit test]() (TBD)
 * [Code Coverage]() (TBD)
 
