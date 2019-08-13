@@ -57,7 +57,7 @@ testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
 testcase_retry_num=0
 delete_testcase_after_each_execution_yn=false
 enable_check_disk_space_yn=true
-owner_email=Mandy<cui.man@navercorp.com>
+owner_email=cui.man@navercorp.com
 
 #set test result feed back type: file or database
 feedback_type=file
