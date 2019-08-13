@@ -76,12 +76,15 @@ feedback_db_pwd=
 ```
 For the introduction of other parameters, please refer to CTP tool guide.  
 
-## 2.2 Execute shell test
-On controller node:  
+## 2.2 Execute shell test manually
+1. Login controller node
+2. Set the conf file ~/CTP/conf/shell.conf
+3. Run ctp 
 ```
 cd ~/CTP/bin
-ctp.sh shell -c ~/CTP/conf/shell.conf
+./ctp.sh shell -c ~/CTP/conf/shell.conf
 ```
+
 ## 2.3 Check test results
 ### feedback_type=file
 If we set 'feedback_type=file', we need check the test results in file 'CTP/result/shell/current_runtime_logs/runtime.log'.  
@@ -452,7 +455,7 @@ If the the test result is as expected, first we should confirm whether it is rev
 # 5.1 Execute a single test case  
 To execute a single test case, we juse need to login a test machine, and go to the case path, and then execute shell command 'sh case_name.sh'.  
 
-# 5.2 Execute a shell test  
+# 5.2 Execute a shell test by sending message
 We can use the regression tools to trigger a test.  
 1. Change the parameters in ~/CTP/conf/shell_template.conf on controller node.    
 2. Send a message to start the test  
@@ -481,16 +484,9 @@ sh sender_code_coverage_testing_message.sh Queue:QUEUE_CUBRID_QA_SHELL_LINUX Bui
 The result will be uploaded to qahome automatically.  
 To check the result, please refer to ['Verify code coverage test result'](#Verify-code-coverage-test-result) 
 
-# 7 Run test manually
-1. Login controller node.
-2. Set the conf file ~/CTP/conf/shell_template.conf.
-3. run ctp
-```
-ctp.sh shell -c conf/shell_template.conf
-```
 
-# 8 shell case standards
-## 8.1 case path standard
+# 7 shell case standards
+## 7.1 case path standard
 ### new feature path:  
 We created folders for each cubrid version like this:  
 ```
@@ -511,7 +507,7 @@ _10_1h  _10_2h  _11_1h  _11_2h  _12_1h  _12_2h  _13_1h  _13_2h  _14_1h  _14_2h  
 The folder name means the date when we added this case.  
 For example, I verified an issue and I need add cases for it on 6/1/2019. I need add these cases in '\_19_1h'.  
 
-## 8.2 the beginning of the case
+## 7.2 the beginning of the case
 ```
 #!/bin/bash
 . $init_path/init.sh
@@ -519,7 +515,7 @@ init test
 ```
 These lines will export system variables, import all the functions.  
 
-## 8.3 the end of the case
+## 7.3 the end of the case
 ```
 cubrid service stop
 cubrid deleted $dbname
@@ -528,7 +524,7 @@ finish
 The command 'cubrid deletedb' will check whether there are core files and fatal error generated in the case, and backup db volumns, core files, logs.   
 'finish' is a function in init.sh, which will revert all the conf files to the original status.    
 
-## 8.4 'cubrid' script
+## 7.4 'cubrid' script
 When execute 'init test' at the beginning of the case, '${init_path}/../../bin:${init_path}/../../common/script' is added to PATH:  
 ```
 PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
@@ -539,7 +535,7 @@ It will check whether there are core files and fatal error generated in the case
 *'cubrid checkdb':*  
 It will check whether checkdb is failed, and if it is, backup db volumns, logs, core files. Then execute $CUBRID/bin/cubrid checkdb.  
 
-## 8.5 functions in init.sh
+## 7.5 functions in init.sh
 I will introduce some important functions in init.sh. They are frequently used in shell test cases.  
 
 ### init
@@ -738,3 +734,4 @@ Used to format query plan.
 
 ### format_path_output. 
 Used to format path.
+
