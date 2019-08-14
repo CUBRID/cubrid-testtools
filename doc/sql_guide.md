@@ -331,8 +331,7 @@ Reference to CTP description: [CTP_README](https://github.com/CUBRID/cubrid-test
   ```
   ======================================  Welcome to Interactive Mode ======================================  
   Usage: 
-      help         print the u
-sage of interactive
+      help         print the usage of interactive
       run <arg>    the path of case file to run
       run_cci <arg>    the path of case file to run_cci by cci driver
       quit         quit interactive mode 
@@ -359,7 +358,7 @@ sage of interactive
 * medium test
    * cubrid createdb testdb en_US  
    * cubrid loaddb -u dba -d mdb_objects -s mdb_schema -i mdb_indexes  testdb
-     It¡®s difference between sql and medium,  there is a unload file cubrid-testcases/medium/files/mdb.tar.gz that is used to medium test.(The files mdb_indexes,mdb_schema and mdb_objects are in the mdb.tar.gz archive)
+     ItÂ¡Â®s difference between sql and medium,  there is a unload file cubrid-testcases/medium/files/mdb.tar.gz that is used to medium test.(The files mdb_indexes,mdb_schema and mdb_objects are in the mdb.tar.gz archive)
    * cubrid server start testdb
    * csql -u dba testdb  
    
@@ -372,7 +371,7 @@ Go to QA homepage and click the CI build, wait for the page loading, then click 
 
 * Code coverage test  
 	* VERIFY CODE COVERAGE TESTING RESULT  
-	Go to QA homepage and find the ¡®code coverage¡¯ node in the left area, click the link of latest result.  
+	Go to QA homepage and find the Â¡Â®code coverageÂ¡Â¯ node in the left area, click the link of latest result.  
 	![coverage](./sql_image/coverage.png)  
 	Click the Category(sql,medium,sql_by_cci) link.   
 	![category](./sql_image/category.png)  
