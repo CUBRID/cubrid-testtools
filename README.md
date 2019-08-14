@@ -1,8 +1,14 @@
 # cubrid-testtools
 This repository includes functional tools to test CUBRID. 
 
+## CTP (CUBRID Test Program)
+
+CTP is designed to execute all kinds of functional testings for CUBRID.
+
+[How to install CTP](doc/ctp_install.md)
+
 ## Quick Start
-CTP is designed to execute all kinds of functional testings for CUBRID. See [CTP/README.md](CTP/README.md) for details.  
+See [CTP/README.md](CTP/README.md) for a quick start.
 
 ## Functional Testing Guide 
 * [SQL/MEDIUM]() (TBD) 
