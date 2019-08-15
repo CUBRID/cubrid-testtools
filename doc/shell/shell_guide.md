@@ -1,11 +1,14 @@
 # Shell Test Guide
 # 1 Test Introduction
-Shell test is an important test suit in cubrid test.  
-It contains almost all the feature test and some performance test which cannot be tested by sql test or other test suits.   
+Shell test suite is used to execute CUBRID functional test in a very flexible way. SHELL test cases are written in Linux shell programing language. Shell test case can integrate others programing languages, like Java, C, Perl.   
+Shell test cases contain almost all the feature test and some performance test which cannot be tested by sql test or other test suites.   
 For examples:
 * check wheter a cubrid utility works well  
 * check whether the error message of a sql statement is expected  
 * check a specific cubrid parameter works
+
+Shell test case path: [https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell](https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell)  
+Shell test is contained by daily regression test. The test cases are run on both release build and debug build.  
 
 # 2 CTP Introduction
 CTP is the only test tool which is used in shell test.   
@@ -14,7 +17,9 @@ Source URL: [https://github.com/CUBRID/cubrid-testtools](https://github.com/CUBR
 Example:  
 *~/CTP/conf/shell.conf* 
 ```
-#these parameters are used to set cubrid.conf and cubrid_broker.conf
+# These parameters are used to set cubrid.conf, cubrid_broker.conf and cubrid_ha.conf
+# We can add the parameters as needed.
+# For example, if we need change set 'error_log_size = 800000000', just need add line 'default.cubrid.error_log_size = 800000000' here.
 default.cubrid.cubrid_port_id=1568
 default.broker1.BROKER_PORT=10090
 default.broker1.APPL_SERVER_SHM_ID=10090
@@ -22,7 +27,11 @@ default.broker2.BROKER_PORT=13091
 default.broker2.APPL_SERVER_SHM_ID=13091
 default.ha.ha_port_id=19909
 
-#set the worker nodes
+# Set the worker nodes
+# This is used when we run the shell test remotely.
+# We can add or delete the worker nodes randomly, even when the test is running.
+# In this example, two worker nodes are used. 
+# If no worker nodes are specified, the test will be run on current user of local machine (the controller node is used as worker node).
 env.104.ssh.host=192.168.1.104
 env.104.ssh.port=22
 env.104.ssh.user=shell
@@ -33,39 +42,43 @@ env.105.ssh.port=22
 env.105.ssh.user=shell
 env.105.ssh.pwd=PASSWORD
 
-env.106.ssh.host=192.168.1.106
-env.106.ssh.port=22
-env.106.ssh.user=shell
-env.106.ssh.pwd=PASSWORD
-
-#specify the case path and exclude list file
+# Specify the case path and exclude list file
 scenario=${HOME}/cubrid-testcases-private-ex/shell
 testcase_exclude_from_file=${HOME}/cubrid-testcases-private-ex/shell/config/daily_regression_test_excluded_list_linux.conf
 
-#specify the build url
+# Specify the build url
 cubrid_download_url=http://127.0.0.1/REPO_ROOT/store_02/10.1.0.6876-f9026f8/drop/CUBRID-10.1.0.6876-f9026f8-Linux.x86_64.sh
 
+# When the test is interrupted and started again, we can choose wheter to run it continuously or re-run it.
 test_continue_yn=false
 
 #Whether update cases before test
 testcase_update_yn=true
 testcase_git_branch=develop
 testcase_timeout_in_secs=604800
+
 test_platform=linux
 test_category=shell
+
+# If the macro is included in the case, it will be excluded from the test.
+# For example, if 'LINUX_NOT_SUPPORTED' is included in the case, it will not be run in linux shell test.
 testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
+
+# When the case is failed, we can re-run it. This paramter specify the max time we want to re-run the failed case.
 testcase_retry_num=0
+
+# Some times there is not enough disk space on the test machine, so we need to delete all the files under the test case path after the case is run.
 delete_testcase_after_each_execution_yn=false
 enable_check_disk_space_yn=true
 owner_email=cui.man@navercorp.com
 
-#set test result feed back type: file or database
+# set test result feed back type: file or database
 feedback_type=file
 feedback_notice_qahome_url=http://192.168.1.86:8080/qaresult/shellImportAction.nhn?main_id=<MAINID>
 
 git_user=cubridqa
 git_email=dl_cubridqa_bj_internal@navercorp.com
-git_pwd=N6P0Sm5U7h
+git_pwd=GITPASSWORD
 
 #these parameters are used when feedback_type=database
 feedback_db_host=192.168.1.86
@@ -76,7 +89,7 @@ feedback_db_pwd=
 ```
 For the introduction of other parameters, please refer to CTP tool guide.  
 
-## 2.2 Execute shell test manually
+## 2.2 Execute shell test
 1. Login controller node
 2. Set the conf file ~/CTP/conf/shell.conf
 3. Run ctp 
@@ -88,12 +101,12 @@ cd ~/CTP/bin
 ## 2.3 Check test results
 ### feedback_type=file
 If we set 'feedback_type=file', we need check the test results in file 'CTP/result/shell/current_runtime_logs/runtime.log'.  
-The runtime output is sored in files named like 'CTP/result/shell/current_runtime_logs/test_104.log', 'CTP/result/shell/current_runtime_logs/test_105.log', 'CTP/result/shell/current_runtime_logs/test_106.log'.  
+The runtime output is sored in files named like 'CTP/result/shell/current_runtime_logs/test_105.log', 'CTP/result/shell/current_runtime_logs/test_106.log'.  
 
 ### feedback_type=database
 If we set 'feedback_type=database', we need check the test results on qahome page.  
 For details, please refer to ['4.2 Verify dailyqa test results'](#4.2-Verify-dailyqa-test-results).  
-This is also the way we used in regression test.
+This is also the way we used in daily regression test.
 
 ## 2.4 Excluded list  
 The cases in the excluded list will not be run in the test.  
@@ -110,7 +123,23 @@ shell/_06_issues/_18_1h/bug_bts_12583
 ```
 
 # 3 Test Deployments
-## 3.1 create and set users  
+## 3.1 Test Machines
+|Role|User|IP|Hostname|
+|---|---|---|---|
+|controller node|shell_ctrl|192.168.1.104|func29|
+|worker node|shell|192.168.1.104|func29|
+|worker node|shell|192.168.1.105|func30|
+|worker node|shell|192.168.1.106|func31|
+|worker node|shell|192.168.1.107|func32|
+|worker node|shell|192.168.1.108|func33|
+|worker node|shell|192.168.1.109|func34|
+|worker node|shell|192.168.1.110|func35|
+|worker node|shell|192.168.1.111|func36|
+|worker node|shell|192.168.1.112|func37|
+|worker node|shell|192.168.1.113|func38|
+|worker node|shell|192.168.1.114|func39|
+
+## 3.2 create and set users  
 ### controller node
 We need create a new user: shell_ctrl.
 Login root user and execute:  
@@ -140,7 +169,7 @@ sudo passwd shell
  ```
  sudo chage -E 2999-1-1 -m 0 -M 99999 shell
  ```
-## 3.2 install software packages
+## 3.3 install software packages
 Required software packages: jdk, lcov, bc, lrzsz.   
 
 |software|version|usage|  
@@ -152,7 +181,7 @@ Required software packages: jdk, lcov, bc, lrzsz.
 
 These software packages are installed by root user and can be used by all the users.  
 
-## 3.3 Deploy controller node
+## 3.4 Deploy controller node
 ### Install CTP   
 **Step 1: download CTP**   
 ```
@@ -319,7 +348,7 @@ cd ~
 sh start_test.sh
 ```
 
-## 3.4 Deploy worker node  
+## 3.5 Deploy worker node  
 ### Install CTP
 This step is the same as 'install CTP' on controller node. Plese refer to [install CTP](#install_CTP).  
 ### Set ~/.bash_profile
@@ -507,24 +536,41 @@ _10_1h  _10_2h  _11_1h  _11_2h  _12_1h  _12_2h  _13_1h  _13_2h  _14_1h  _14_2h  
 The folder name means the date when we added this case.  
 For example, I verified an issue and I need add cases for it on 6/1/2019. I need add these cases in '\_19_1h'.  
 
-## 7.2 the beginning of the case
+## 7.2 shell case template
 ```
-#!/bin/bash
+#!/bin/sh
+# Initialize the environment variables, and import all the functions. 
 . $init_path/init.sh
 init test
-```
-These lines will export system variables, import all the functions.  
 
-## 7.3 the end of the case
-```
+
+dbname=tmpdb
+
+cubrid_createdb $dbname
+
+# Test steps
+
+# Check the result
+if [condition]
+then
+       write_ok
+else
+       write_nok
+fi
+
 cubrid service stop
-cubrid deleted $dbname
-finish
-```
-The command 'cubrid deletedb' will check whether there are core files and fatal error generated in the case, and backup db volumns, core files, logs.   
-'finish' is a function in init.sh, which will revert all the conf files to the original status.    
 
-## 7.4 'cubrid' script
+# The command 'cubrid deletedb' will check whether there are core files and fatal error generated in the case, and backup db volumns, core files, logs.  
+cubrid deletedb $dbname
+
+# Clean environment, such as delete the jave class files
+
+# 'finish' is a function in init.sh, which will revert all the conf files to the original status.
+finish
+
+``` 
+
+## 7.3 'cubrid' script
 When execute 'init test' at the beginning of the case, '${init_path}/../../bin:${init_path}/../../common/script' is added to PATH:  
 ```
 PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
@@ -535,7 +581,7 @@ It will check whether there are core files and fatal error generated in the case
 *'cubrid checkdb':*  
 It will check whether checkdb is failed, and if it is, backup db volumns, logs, core files. Then execute $CUBRID/bin/cubrid checkdb.  
 
-## 7.5 functions in init.sh
+## 7.4 functions in init.sh
 I will introduce some important functions in init.sh. They are frequently used in shell test cases.  
 
 ### init
@@ -732,6 +778,6 @@ $ cat test.log
 ### format_query_plan
 Used to format query plan.
 
-### format_path_output. 
-Used to format path.
+### format_path_output
+Used to format CUBRID installation path.
 
