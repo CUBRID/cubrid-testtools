@@ -180,7 +180,7 @@ Follow the steps at [2.2.1 Install CTP](#221-install-ctp), install the CTP to ea
     run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64.sh
     ```
 # 3. Regression Tests
-We perform shell_heavy test for every CI builds and perform shell_heavy code coverage test for monthly. You can find the settings from http://10.113.153.154:10086/qaresult/job/job.conf   
+We perform shell_heavy test for every CI builds and perform shell_heavy code coverage test for monthly. You can find the settings from http://qahome.cubrid.org/qaresult/job/job.conf   
 ## 3.1 Daily Regressoin test
 When the build server has a new build and meet the conditions of the crontab task, a shell_leavy test will be executed. If there is something wrong and need to run shell_leavy test again, you can send a test message.
 ### Check for test config  
