@@ -225,7 +225,7 @@ To facilitate the execution of various test requirements.This chapter describes 
     4|Test node|sqlbycci|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT|run_sql_by_cci
     5|Test node|sql|192.168.1.77|func02|QUEUE_CUBRID_QA_SQL_PERF_LINUX|run_sql
     6|Test node|qa|192.168.1.161|winfunc01|QUEUE_CUBRID_QA_SQL_WIN64|run_sql  
-* Install reference [General Deployment](#General_Deployment) 
+* Install reference [General Deployment](#general-deployment) 
 * Configurations CTP
     * touch and configure ~/CTP/conf/common.conf  
         ```
@@ -403,4 +403,3 @@ Go to QA homepage and click the CI build, wait for the page loading, then click 
     /path/to/cases/case_file.sql  
     /path/to/cases/case_file.queryPlan  (make sure to output query plan info)  
     ![queryplan](./sql_image/queryplan.png)
-
