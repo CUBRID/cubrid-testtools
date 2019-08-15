@@ -223,7 +223,7 @@ To facilitate the execution of various test requirements.This chapter describes 
             * Edit 'path'  
             add '%JAVA_HOME%\bin C:\cygwin64\bin' in the 'path'.  
         * Install CTP  
-            * Please follow the guide to install CTP. [Install CTP](#Install_CTP) 
+            * Please follow the guide to install CTP. 
             * touch ~/CTP/conf/sql_local.conf  
             Here is the config file that we use for current daily QA test: sql_local.conf  
 
@@ -243,7 +243,7 @@ To facilitate the execution of various test requirements.This chapter describes 
         4|Test node|sqlbycci|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT|run_sql_by_cci
         5|Test node|sql|192.168.1.77|func02|QUEUE_CUBRID_QA_SQL_PERF_LINUX|run_sql
         6|Test node|qa|192.168.1.161|winfunc01|QUEUE_CUBRID_QA_SQL_WIN64|run_sql  
-    * Install reference [General Deployment](#General_Deployment)  
+    * Install reference General Deployment 
     * Configurations CTP
         * touch and configure ~/CTP/conf/common.conf  
             ```
@@ -292,24 +292,12 @@ To facilitate the execution of various test requirements.This chapter describes 
         nohup start_consumer.sh -q [QUEUE_NAME] -exec [run_name] &
         ```
     * sh start_test.sh  
-# 3 CTP Introduction  
+# 3 Perform the test
 This is an implementation of SQL functions that we used to test CUBRID. 
 
 * CTP Tool  
 CTP is a testing tool for an open source project CUBRID. It is written in Java and easy to execute tests with a simple configuration
-Reference to CTP description：[CTP_README](https://github.com/CUBRID/cubrid-testtools/blob/develop/CTP/README.md)
-* Enable configuration listening  
-  * touch start_test.sh  
-    ```
-    stop_consumer.sh 
-
-    prefix=`date "+%Y%m%d%H%M%S"`
-    cp nohup.out nohup.out.$prefix
-    echo "" > nohup.out
-
-    nohup start_consumer.sh -q [QUEUE_NAME] -exec [run_name] &
-    ```
-  * sh start_test.sh  
+Reference to CTP description：[CTP_README](https://github.com/CUBRID/cubrid-testtools/blob/develop/CTP/README.md) 
 * send test message  
   login message@192.168.1.91 and send test message like:  
   ```
@@ -438,4 +426,3 @@ Go to QA homepage and click the CI build, wait for the page loading, then click 
     /path/to/cases/case_file.sql  
     /path/to/cases/case_file.queryPlan  (make sure to output query plan info)  
     ![queryplan](./sql_image/queryplan.png)
-
