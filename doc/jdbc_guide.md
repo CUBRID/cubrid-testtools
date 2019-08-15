@@ -9,16 +9,16 @@ CTP as test tool can be used to execute CUBRID jdbc test cases which are located
 
 Let's show an example that how to execute jdbc test via CTP.
 
-### Check out jdbc test cases
+### Step 1: Check out jdbc test cases
 
     cd ~/
     git clone https://github.com/CUBRID/cubrid-testcases-private.git
     git checkout develop  
 
-### Install CTP
+### Step 2: Install CTP
 Please follow [the guide to install CTP](ctp_install.md).
 
-### Configure test
+### Step 3: Prepare for test configuration
 
 File CTP/conf/jdbc.conf:
 
@@ -49,12 +49,12 @@ File CTP/conf/jdbc.conf:
     # Define the identifier of shared memory to avoid conflict
     MASTER_SHM_ID = 33122
 
-### Execute jdbc test
+### Step 4: Execute jdbc test
 
     cd CTP
     sh ctp.sh jdbc -c ./conf/jdbc.conf
 
-### Examine the results
+### Step 5: Examine the results
 
 When the test is completed, you can find the results and logs from CTP/result/jdbc/current_runtime_logs
 run_case_details.log shows all the details of case running.
