@@ -383,4 +383,11 @@ File `jdbc.properties` configures JDBC connection parameters.
 
   After test, related test result will be shown in QA homepage.
   
-  
+## 5.2 Verify test Results  
+
+* ### Check if there is JDBC test result
+
+    Open QA home (http://qahome.cubrid.org), navigate to find JDBC test result as below. If there is no any result, you need to find the reason out.
+    
+    
+
