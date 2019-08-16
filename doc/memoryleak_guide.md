@@ -330,7 +330,7 @@ job_github_lin64_debug.test.sql_s3.MKEY_SPARSECHECKOUT=sql/_04_operator_function
 1. Click the build number, then click the `MemoryLeak` tab.   
 ![verify_results_exists](./memoryleak_image/verify_results_exists.png)   
 2. Go throuth the `Scenario` column, check whether there are `medium` and all the  `sql-01` to `sql-s21last` results exists.   
-If there are some scenarios don't show the result, you need to check the reason. Usually, they are in progress or tests are in the queue. You can see the status of `QUEUE_CUBRID_QA_MEMORY_LEAK_LINUX_GIT` queue from http://192.168.1.86:8080/qaresult/monitor/checkQueue.nhn.
+If there are some scenarios don't show the result, you need to check the reason. Usually, they are in progress or tests are in the queue. You can see the status of `QUEUE_CUBRID_QA_MEMORY_LEAK_LINUX_GIT` queue from http://qahome.cubrid.org/qaresult/monitor/checkQueue.nhn.
 ### Check whether there is a new Memoryleak detected  
 Click each result files to see the Valgrind logs. See `memory_cub_cas_14069.log` as below:  
 ![verify_valgrind_log](./memoryleak_image/verify_valgrind_log.png)  
@@ -373,15 +373,15 @@ then you need to execute the specific scenarios by manually.
 Take http://jira.cubrid.org/browse/CBRD-23045 as an example.   
 ### 3.4.1 Find the corresponding test cases
 1. Open the result file:   
-http://192.168.1.86:8080/qaresult/memory_leak/memory_sql_10.2.0.8372-1639b9c_20190710165511/memory_server_21437.log  
+http://qahome.cubrid.org/qaresult/memory_leak/memory_sql_10.2.0.8372-1639b9c_20190710165511/memory_server_21437.log  
 You can see the memoryleak records at `==2019-07-10 07:12:53 21437==`. 
 ![repro-1](./memoryleak_image/repro-1.png)  
     >Note: The Valgrind records UTC in the Valgrind log on the test machines in Korea. See http://jira.cubrid.org/browse/CUBRIDQA-897. So the actual executed time is needed to add nine hours. 
 2. Modify the link to the result folder:  
-http://192.168.1.86:8080/qaresult/memory_leak/memory_sql_10.2.0.8372-1639b9c_20190710165511/  
+http://qahome.cubrid.org/qaresult/memory_leak/memory_sql_10.2.0.8372-1639b9c_20190710165511/  
 ![result_folder](./memoryleak_image/result_folder.png)  
 3. Open the `run_sql.out` file:  
-http://192.168.1.86:8080/qaresult/memory_leak/memory_sql_10.2.0.8372-1639b9c_20190710165511/run_sql.out  
+http://qahome.cubrid.org/qaresult/memory_leak/memory_sql_10.2.0.8372-1639b9c_20190710165511/run_sql.out  
 Find the test cases executed before `2019-07-10 16:12:53`. 
 ![repro-2](./memoryleak_image/repro-2.png)  
 4. Refer to the date-time, you can filter out the test cases that may lead to memoryleak. Then you can narrow down the scope run the test cases until you find the smallest set that can reproduce the memory leak.    
