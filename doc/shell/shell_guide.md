@@ -78,7 +78,7 @@ cd ~/CTP/bin
 nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
 ```
 
-## 2.2 CTP Usage Introducetion 
+## 2.2 CTP Usage Introduction 
 ### Set the configuration file
 *~/CTP/conf/shell.conf* 
 ```
