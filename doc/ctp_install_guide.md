@@ -60,13 +60,13 @@
 
 ## 2. Install CTP as Regression Test in Linux platform
 
-Follow last chapter to install CTP as general installation. Then let's continue to support regression test.
+  Follow last chapter to install CTP as general installation. Then let's continue to support regression test.
 
 * ### Provide Common Configuration
 
-Common configuration will be used by many script files in CTP located in CTP/common/script.
+    Common configuration will be used by many script files in CTP located in CTP/common/script.
 
-File ~/CTP/conf/common.conf:
+    File ~/CTP/conf/common.conf:
 
       git_user=<git user>
       git_pwd=<git password>
@@ -100,13 +100,13 @@ File ~/CTP/conf/common.conf:
 
 * ### Add CTP environment variables to `.bash_profile`
 
-File .bash_prifle
+  File .bash_prifle
 
-    # CTP HOME
-    export CTP_HOME=$HOME/CTP
-    
-    # Whether to update CTP when execute `CTP/common/script/upgrade.sh`. 
-    export CTP_SKIP_UPDATE=0
+      # CTP HOME
+      export CTP_HOME=$HOME/CTP
 
-    # Branch used when upgrade CTP
-    export CTP_BRANCH_NAME=develop
+      # Whether to update CTP when execute `CTP/common/script/upgrade.sh`. 
+      export CTP_SKIP_UPDATE=0
+
+      # Branch used when upgrade CTP
+      export CTP_BRANCH_NAME=develop
