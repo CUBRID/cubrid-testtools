@@ -183,44 +183,9 @@ These software packages are installed by root user and can be used by all the us
 
 ## 3.4 Deploy controller node
 ### Install CTP   
-**Step 1: download CTP**   
-```
-cd ~
-git colne https://github.com/CUBRID/cubrid-testtools.git
-cd cubrid-testtools
-git checkout develop
-cp -rf ~/cubrid-testtools/CTP ~
-```  
+Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md)
 
-**Step 2: set CTP configuration files**    
-*~/CTP/conf/common.conf*   
-```
-git_user=cubridqa
-git_pwd=GITPASSWORD
-git_email=dl_cubridqa_bj_internal@navercorp.com
-default_ssh_pwd=PASSWORD
-default_ssh_port=22
-
-grepo_service_url=rmi://192.168.1.91:11099
-coverage_controller_pwd=PASSWORD
-
-qahome_db_driver=cubrid.jdbc.driver.CUBRIDDriver
-qahome_db_url=jdbc:cubrid:192.168.1.86:33080:qaresu:dba::
-qahome_db_user=dba
-qahome_db_pwd=
-
-qahome_server_host=192.168.1.86
-qahome_server_port=22
-qahome_server_user=qahome
-qahome_server_pwd=PASSWORD
-
-activemq_user=ADMINUSER
-activemq_pwd=ADMINPASSWORD
-activemq_url=failover:tcp://192.168.1.91:61616?wireFormat.maxInactivityDurationInitalDelay=30000
-
-mail_from_nickname=CUBRIDQA_BJ
-mail_from_address=dl_cubridqa_bj_internal@navercorp.com
-```
+### Set shell configure file  
 *~/CTP/conf/shell_template.conf* 
 ```
 default.cubrid.cubrid_port_id=1568
@@ -350,7 +315,8 @@ sh start_test.sh
 
 ## 3.5 Deploy worker node  
 ### Install CTP
-This step is the same as 'install CTP' on controller node. Plese refer to [install CTP](#install_CTP).  
+Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md)
+
 ### Set ~/.bash_profile
 *~/.bash_profile*
 ```
