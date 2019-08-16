@@ -84,9 +84,7 @@ File CTP/result/jdbc/current_runtime_logs/run_case_details.log:
     [INFO]: Fail Case:2
 
 
-## 2.2 JDBC test usage via CTP
-
-### Configuration introduction
+## 2.2 Completed configuration parameters
 
 CTP ships an example configuration file under CTP/conf/jdbc.conf. You may change it as your requirement or create your own configuration file. Here is full parameters used:
     
@@ -130,7 +128,7 @@ CTP ships an example configuration file under CTP/conf/jdbc.conf. You may change
     # All parameters in this section will be set to section 'broker' in cubrid_broker.conf.    
     MASTER_SHM_ID = 33122
     
-### Test cases introduction
+## 2.3 Test cases introduction
 
 Test cases locate in https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/JDBC/test_jdbc.
 
@@ -156,7 +154,9 @@ File `jdbc.properties` configures JDBC connection parameters.
     jdbc.port=33000
     jdbc.dbname=tdb
     
-Below is an example of test cases:
+# 3. JDBC Test Case Specification
+
+* ### Example a jdbc test case
 
 Source: https://github.com/CUBRID/cubrid-testcases-private/blob/develop/interface/JDBC/test_jdbc/src/com/cubrid/jdbc/test/spec/connection/TestReadOnly.java
 
@@ -204,14 +204,24 @@ Source: https://github.com/CUBRID/cubrid-testcases-private/blob/develop/interfac
         }
     }
 
-# 3. JDBC Test Case Specification
 
-**Annotation:**
 
-  **@Test:** annotate a test case for following method.
-    
-  **@Ignore:** annotate test case will be ignored during runtime.
+* ###  Annotation `@Test` declares a test case
 
+        @Test
+        public void test1() throws SQLException {
+            conn().setReadOnly(false);
+            Assert.assertEquals(false, conn().isReadOnly());
+        }
+
+* ###  Annotation `@Ignore` declares test case will be ignored during runtime
+
+        @Ignore
+        @Test
+        public void test2() throws SQLException {
+            conn().setReadOnly(true);
+            Assert.assertEquals(true, conn().isReadOnly());
+        }
 
 # 4. Regression Test Deployment
 
