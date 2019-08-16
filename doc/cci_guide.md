@@ -1,5 +1,5 @@
 # 1. Test Objective
-The cci test is aimed to test CUBRID CCI driver. We write cci test cases to test all kinds of CCI Applications, such as `cci_connect()`, `cci_connect_with_url()`, `cci_cursor()`, `cci_fetch()`, `cci_get_data()`, `cci_get_result_info()` and so on. Actually cci test is a branch of shell test, the only difference is that cci shell scripts must execute C codes using CUBRID CCI API.
+The cci test is aimed to test CUBRID CCI driver. We write cci test cases to test all kinds of CCI Applications, such as `cci_connect()`, `cci_connect_with_url()`, `cci_cursor()`, `cci_fetch()`, `cci_get_data()`, `cci_get_result_info()` and so on. Actually cci test is a branch of shell test, the only difference is that cci shell scripts must execute C codes which include CUBRID CCI API.
 
 
 # 2. Execute CCI Test
@@ -252,7 +252,7 @@ _02_adv     _04_db    _06_bind  _09_datetime  _11_other   _13_enhancement  _14_E
     [SHELL] TEST END (Tue Aug 13 18:33:10 KST 2019)
     [SHELL] ELAPSE TIME: 39 seconds
     ```
- 4. Test logs
+ 4. Test logs  
     During the test, the test logs are generated to CTP/result/shell/current_runtime_logs, after test finish, current_runtime_logs will be backuped as a .tar.gz file.
     ```
     $ cd ~/CTP/result/shell/
@@ -262,7 +262,7 @@ _02_adv     _04_db    _06_bind  _09_datetime  _11_other   _13_enhancement  _14_E
     check_local.log  dispatch_tc_ALL.txt        feedback.log              monitor_local.log  test_local.log
     current_task_id  dispatch_tc_FIN_local.txt  main_snapshot.properties  runtime.log        test_status.data
     ``` 
-5. Test results
+5. Test results   
     The results of each test case are generated to the same path with test cases.
     ```
     $ cd $HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch
@@ -351,9 +351,9 @@ _02_adv     _04_db    _06_bind  _09_datetime  _11_other   _13_enhancement  _14_E
 
 # 3. Deploy Regression Tests Environment
 ## 3.1 Test Machine
-**Controller node**: It listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.
+**Controller node**: It listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.  
 **Test node**: It executes test cases.
-For current daily regression test, controller node and test node are the same one.
+For current daily regression test, controller node and test node are the same one.  
 <table>
   <tr>
     <th>No.</th>
@@ -374,7 +374,7 @@ For current daily regression test, controller node and test node are the same on
 ## 3.2 Deploy Tests Environment
 ### On controller & test node
 * Install CTP
-  - Please follow [install CTP](#21-install-ctp).
+  - Please follow [install CTP](#21-install-ctp).  
     Configure CTP/conf/common.conf as below:
     ```bash
     $ cat common.conf 
@@ -404,8 +404,8 @@ For current daily regression test, controller node and test node are the same on
     mail_from_nickname=CUBRIDQA_BJ
     mail_from_address=dl_cubridqa_bj_internal@navercorp.com
     ```
-  - touch ~/CTP/conf/shell_template.conf
-    Here is the config file which we used for current daily cci regresion test: shell_template.conf
+  - touch ~/CTP/conf/shell_template.conf     
+    Here is the config file which we used for current daily cci regresion test: shell_template.conf 
     ```bash
     $ cat shell_template.conf 
     default.cubrid.cubrid_port_id=1568
@@ -457,8 +457,8 @@ For current daily regression test, controller node and test node are the same on
     cd ~
     git clone https://github.com/CUBRID/cubrid-testcases-private.git 
     ```
-* Install necessary shell commands
-  cci test cases use killall command, centos7 can not find this command
+* Install necessary shell commands   
+  cci test cases use killall command, centos7 can not find this command   
    ```bash
    yum install psmisc
    ```    
@@ -521,8 +521,8 @@ $ tail -f nohup.out
     log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
     ```
 ### Check running status
-* Check log on controller node
-    login cci@192.168.1.78, check nohup.out log
+* Check log on controller node   
+    login cci@192.168.1.78, check nohup.out log   
     the whole information for one test message is like below:
     ```bash
     $ cd ~
@@ -779,8 +779,8 @@ $ tail -f nohup.out
     Clean msg id from queue file
     END_TIME:2019-08-13 23:26:19 KST
     ```
-* Check queue on [qahome page](http://qahome.cubrid.org/qaresult) 
-  Please find queue monitor by `QA homepage` -> `Left tree menu` -> `Monitor` -> `Check queue`. You may see cci item and find what test is running.
+* Check queue on [qahome page](http://qahome.cubrid.org/qaresult)    
+  Please find queue monitor by `QA homepage` -> `Left tree menu` -> `Monitor` -> `Check queue`. You may see cci item and find what test is running.   
 
 ### Verify test result
 please see [Verify cci/cci_debug test result](#51-verify-ccicci_debug-test-result)
@@ -793,12 +793,12 @@ cd ~/manual/
 sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz cci
 ```
 >Note: 
-`$ sh sender_code_coverage_testing_message.sh`   
-`Usage: sh  sender_code_coverage_testing_message queue url1 url2 category`
-`Queue:$1` 
-`Build URL:$2`
-`Source URL:$3`
-`Category:$4 `
+`$ sh sender_code_coverage_testing_message.sh`    
+`Usage: sh  sender_code_coverage_testing_message queue url1 url2 category`    
+`Queue:$1`   
+`Build URL:$2`   
+`Source URL:$3`   
+`Category:$4 `  
 
 ### Check running status
 Please see [Check running status](#check-running-status)
@@ -808,44 +808,50 @@ Please see [Verify code coverage test result](#52-verify-code-coverage-test-resu
 # 5. Verification
 ## 5.1 Verify cci/cci_debug test result
 ### Check test result
-If cci/cci_debug are not tested completely, you need to send a message to test it again, you can check the value of `Test Rate` or check executed cases(success cases plus fail cases).
-If there are failures, you need to verify them.
-When there are crash, the fail will marked with red graph.
+If cci/cci_debug are not tested completely, you need to send a message to test it again, you can check the value of `Test Rate` or check executed cases(success cases plus fail cases).   
+If there are failures, you need to verify them.   
+When there are crash, the fail will marked with red alert icon.   
 
-click [qahome](http://qahome.cubrid.org/qaresult)->click `build number`->find `cci/cci_debug` item
+open [qahome](http://qahome.cubrid.org/qaresult)->select `build number`->select `Functions` page ->find `cci/cci_debug` item
 ![cci/cci_debug test results](./cci_image/test_results.png)
-Above cci_debug test has failure, one test case executed failed, you need to investigate it
+Above cci_debug test has failure: one test case executed failed, and it has core, you need to investigate it.   
 
 
-below cci/cci_debug are tested completely and there are no failure,you can check the value of `Fail`
+below cci/cci_debug are tested completely(`Test Rate` is 100%, `Fail Rate` is 0%) and there are no failure(`Fail` is 0).  
 ![cci/cci_debug test results no failure](./cci_image/test_results_2.png)
 
-### Check failure list
-Click the number of fail,you can enter into the failure list
-1. All failed test cases in list are not be verified
+ For cci/cci_debug in `Functions` page, we need to check all the column values. The most important check items are:
+Whether the test is completed ('Test Rate' column)  
+How many cases are failed('Fail' columns,include total and new columns)  
+The elapse time of the test ('Elapse Time' column). The elapse time of this test should not be longer than the previous build too much.
+
+### Check failure list, verify failed cases
+Click the number of fail,you can enter into the failure list    
+1. All failed test cases in list are not be verified   
 ![failure list](./cci_image/failure_list.png)
 
-2. All failed test cases in list have been verified
+2. All failed test cases in list have been verified   
 ![verified test cases](./cci_image/failure_list_verified.png)
 
-3. How to verify the failure
-please find reason of this case executed failed, you can refer to [failure detail page](#check-failure-detail) or reproduce it again.
-click `verify`->select `revise required/test case/environment/bugs/unknown` type -> fill in `Reason content` or `issues`
-`New issues` : It is link to a jira issue which reported by this case
-`Revise required issues`: It is link to a jira issue which lead to change in test case and answer
-When we judge the type of reason for failure is bug, we must fill in CUBRID jira issues.
-When we judge the type of reason for failure is revise required, we need to fill in related jira issues.
-Other failures  maybe caused by test case or environment(eg: execute time are different on machines, test case is unstable which need be enhanced)
+3. How to verify the failure     
+please find reason of this case executed failed, you can refer to [failure detail page](#check-failure-detail) or reproduce it again.    
+click `verify`->select `revise required/test case/environment/bugs/unknown` type -> fill in `Reason content`, `New issues` or `Revise required issues`.    
+`New issues` : It is link to a jira issue which reported by this case   
+`Revise required issues`: It is link to a jira issue which lead to change in test case and answer   
+When we judge the type of reason for failure is bug, we must fill in CUBRID jira issues.   
+When we judge the type of reason for failure is revise required, we need to fill in related jira issues.   
+Other failures  maybe caused by test case or environment(eg: execute time are different on machines, test case is unstable which need be enhanced)    
 ![fill in reason](./cci_image/failure_reason.png)
 ![reported bug](./cci_image/failure_bug.png)
 
-### Check failure detail
-each failed test case has own detail page,for example:
+### Check failure detail 
+each failed test case has own detail page,for example:   
 1. click [interface/CCI/shell/_20_cci/_14_ENUM/_02_bind/cases/_02_bind.sh](
 http://qahome.cubrid.org/qaresult/showfile.nhn?treeId=&level=&summaryName=&catPath=&name=&m=showCaseFile&statid=22260&itemid=2144516&tc=cci_debug&buildId=10.1.3.7751-d5aea626a&filePath=interface%2FCCI%2Fshell%2F_20_cci%2F_14_ENUM%2F_02_bind%2Fcases%2F_02_bind.sh&isNew=&isSuccessFul=false) in failure list
 
 2. check left `Case` and right `Running Log` ,you will find what happend. It also show current test case link to github
     **failure detail page:**
+    
     ![details](./cci_image/failure_detail.png)
 
     **case:** 
@@ -996,15 +1002,15 @@ http://qahome.cubrid.org/qaresult/showfile.nhn?treeId=&level=&summaryName=&catPa
 ![cci code coverage](./cci_image/cci_code_coverage.png)
 
 We need check the value of `lines`, it is 33.9% on above graph, we need compare this result with before test
-Code coverage should not drop too much.
+Code coverage should not drop too much. For cci, it stays around 33%.  
 
 
 # 6. CCI Test Case
 ## 6.1 Writing specification of test case
 ## Test cases path
-1. new feature path
-for example: cubrid-testcases-private/interface/CCI/shell/_20_cci/_28_features_841
-     _28_features_841: it show us the features for 8.4.1
+1. new feature path    
+for example: cubrid-testcases-private/interface/CCI/shell/_20_cci/_28_features_841    
+     _28_features_841: it show us the features for 8.4.1    
     ```
     $ ls _28_features_841
     issue_12530_logintime
@@ -1017,10 +1023,10 @@ for example: cubrid-testcases-private/interface/CCI/shell/_20_cci/_28_features_8
     issue_12530_logintime_cg_pro_cor.answer  issue_12530_logintime_cg_pro_cor.sh  test.c
     $ 
     ``` 
-2. cases added for jira issues
-We create a folder based on issue number
-bug_bts_12616 map to CUBRIDSUS-12616
-cbrd_12616 map to CBRD-12616
+2. cases added for jira issues    
+We create a folder based on issue number   
+bug_bts_12616 maps to CUBRIDSUS-12616   
+cbrd_12616 maps to CBRD-12616    
     ```
     $ cd _12_issue/
     $ ls
@@ -1037,8 +1043,8 @@ cbrd_12616 map to CBRD-12616
     bug_bts_12584  bug_bts_14026  bug_bts_5633   bug_bts_7047  bug_bts_7516  bug_bts_7832  bug_bts_8675  bug_bts_9042
     ```
 ## Test case template
-The cci test case is similar with the shell test case
-please see [shell guide](https://github.com/CUBRID/cubrid-testtools/blob/9682453b59344850b51385628bf8718bf27393e1/doc/shell/shell_guide.md#72-shell-case-template)
+The cci test case is similar with the shell test case    
+please see [shell guide](https://github.com/CUBRID/cubrid-testtools/blob/9682453b59344850b51385628bf8718bf27393e1/doc/shell/shell_guide.md#72-shell-case-template)     
 Compared to the shell, the code we need to add is like below: 
 ```bash
 xgcc -o test test.c
@@ -1046,7 +1052,7 @@ xgcc -o test test.c
 ```
 
 ## function in `init.sh`
-Please refer to [shell guide](https://github.com/CUBRID/cubrid-testtools/blob/9682453b59344850b51385628bf8718bf27393e1/doc/shell/shell_guide.md#74-functions-in-initsh)
+Please refer to [shell guide](https://github.com/CUBRID/cubrid-testtools/blob/9682453b59344850b51385628bf8718bf27393e1/doc/shell/shell_guide.md#74-functions-in-initsh)      
 The most commonly used function is [xgcc](https://github.com/CUBRID/cubrid-testtools/blob/9682453b59344850b51385628bf8718bf27393e1/doc/shell/shell_guide.md#xgcc).
 for example:
 ```
@@ -1058,18 +1064,18 @@ xgcc -o testbug9351 *.cpp -I${CUBRID}/include -L${CUBRID}/lib -lcascci ${MODE} -
 
 ## Write .C file
 ### Common steps
-1. include .h file
-`cas_cci.h`, `stdio.h` and so on
-2. define variables
-`user`,`port`,`query`, `database_name` and so on
-3. write main function or other functions
+1. include .h file  
+`cas_cci.h`, `stdio.h` and so on  
+2. define variables   
+`user`,`port`,`query`, `database_name` and so on   
+3. write main function or other functions   
     ```
     int main()
     {
-        //main code, it should include the simple CCI API execution process
+        //main code, it should include the CCI API execution code
     }
     ```
-4. the whole CCI API execution process 
+4. CCI API execution code   
     ```
     con=cci_connect(...)
     if (con < 0)
@@ -1209,7 +1215,7 @@ handle_error:
 }
 
 ```
-### Details
+### Supplement
 #### include head file
 below is the base
 ```C
@@ -1238,8 +1244,8 @@ T_CCI_COL_INFO *col_info;
 T_CCI_CUBRID_STMT stmt_type; 
 char *query = "select * from code"; 
 ```
-The T_CCI_ERROR object is most commonly defined. It is used in the CCI API. We need to print cci_error.err_msg and cci_error.err_code, 
-for example: 
+The T_CCI_ERROR object is most commonly defined. It is used in the CCI API.   
+We need to print cci_error.err_msg and cci_error.err_code, for example: 
 ```C
 cci_execute(req,0,0,&cci_error)
 ```
@@ -1255,15 +1261,22 @@ char sql[SQL_MAXNUM][56] = {"drop table if exists t1",
 ```
 `user`, `passwod` and url can be used in `cci_connect_with_url(url, user, passwd)`
 
-
-
+#### CCI API 
+* Opening a database connection handle (related functions: cci_connect(), cci_connect_with_url())   
+* Getting the request handle for the prepared statement (related function: cci_prepare())     
+* Binding data to the prepared statement (related function: cci_bind_param())    
+* Executing the prepared statement (related function: cci_execute())    
+* Processing the execution result (related functions: cci_cursor(), cci_fetch(), cci_get_data(), cci_get_result_info())     
+* Closing the request handle (related function: cci_close_req_handle())   
+* Closing the database connection handle (related function: cci_disconnect())     
+* Using database connection pool (related functions: cci_property_create(), cci_property_destroy(), cci_property_set(), cci_datasource_create(), cci_datasource_destroy(), cci_datasource_borrow(), cci_datasource_release(), cci_datasource_change_property())     
 
 ## 6.2 CCI API reference
-CCI API refer to [CUBRID manual](https://www.cubrid.org/manual/en/10.1/api/cciapi.html)
+Please refer to [CUBRID manual](https://www.cubrid.org/manual/en/10.1/api/cciapi.html)     
 for example:
 ![cci_execute](./cci_image/CCI_API.png)
 
-## 6.3 Execute cci case single
+## 6.3 Execute cci case alone  
 1. Actually we just execute shell scripts
 ```bash
 $ cd cubrid-testcases-private/interface/CCI/shell/_20_cci/_28_features_844/issue_12530/issue_12530_01/cases
@@ -1655,7 +1668,8 @@ test.c-560 cci_connect Connection timed out                   | EXECUTE 1: drop 
                                                               > prepareStatement error : -20004,Cannot communicate with serve
                                                               > [T] Elapsed: 1000
 ```
-Above show us that it executed failed, reason: **test.c-560 cci_connect Connection timed out** 
+Above show us that this case executed failed, reason: **test.c-560 cci_connect Connection timed out**     
+Line 560 of test.c failed to execute.     
 
 **vim test.c, it corresponds to the following code:**
 ```C
@@ -1667,8 +1681,8 @@ Above show us that it executed failed, reason: **test.c-560 cci_connect Connecti
     }
 
 ```
-we can know that `cci_connect_with_url` execute failed.
-**add debug code: print the variable of url**
+we can know that `cci_connect_with_url` execute failed.    
+**add debug code: print the variable of url**    
 ```C
      if (connection < 0)
      {   
@@ -1678,12 +1692,12 @@ we can know that `cci_connect_with_url` execute failed.
          TEST_END;
      }  
 ```
-we get the output:
+we get the output:    
 ```
  test.c-560 cci_connect Connection timed out
  url: cci:cubrid:xseed080.kdev:33000:bug_12530:dba::
 ```
-**find the reason at last: hostname in url is error**
-We find that the test cases is not correct ,then need to enhance it.
+**find the reason at last: hostname in url is error**    
+We find that the test cases is not correct ,then need to enhance it.      
 
 
