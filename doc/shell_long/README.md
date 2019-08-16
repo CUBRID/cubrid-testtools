@@ -1,13 +1,14 @@
 # 1. Test Objective  
-The document is to introduce how to test shell_long via CTP. It is similiar with shell test with CTP.For some shell cases, it spend so much time which affects the end of shell regression test, then remove them to shell_long test category.    
+This guide is to introduce how to execute shell_long test suite via test tool CTP.  The shell_long test case specification is exactly same as general SHELL test case's. The only difference between them is that shell_long test cases ask a little long time to execute.     
 
-# 2. Tools Introduction  
-## 2.1 CTP tools
-Please refer to [README.md](https://github.com/CUBRID/cubrid-testtools/blob/develop/CTP/README.md) of CTP  
-the CTP usage for shell_long is as below
+# 2. Test Introduction  
+## 2.1 CTP test tool
+Please refer to [ctp usage for shell](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell/shell_guide.md#2-ctp-introduction)   
+the CTP usage for shell_long regression test is as below   
 ```bash
 ctp.sh shell -c ~/CTP/conf/shell_runtime.conf
 ```
+for regression test, we will copy `shell_template_for_shell_long.conf` to `shell_runtime.conf`   
 ```
 BUILD_SCENARIOS="shell_long"
 shell_config_template=${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf
@@ -15,50 +16,35 @@ shell_fm_test_conf="${CTP_HOME}/conf/shell_runtime.conf"
 cp -f ${shell_config_template} ${shell_fm_test_conf}
 ctp.sh shell -c $shell_fm_test_conf
 ```
-## 2.2 Common Tools
-Common tool means the tool which is used by many test suits. For common tools, cubrid_common,cubrid_scheduler, core_analyzer are used in shell_long test for legacy,but now they have been integrated into CTP.
-```bash
-cd ~/CTP/common/script
-$ ls -l |awk '{print $NF}' 
-248
-analyze_failure.sh
-analyzer.sh
-commit_config_file
-convert_to_git_url.sh
-crash_template_ha.sh
-crash_template_single.sh
-file_core_issue.sh
-gdb_core.sh
-generate_build_test.sh
-issue.sh
-kill_process_tree.sh
-prepare_memory_env.sh
-process_safe.sh
-report_issue.sh
-run_action_files
-run_coverage_collect_and_upload
-run_cubrid_install
-run_download
-run_general_feedback
-run_git_update
-run_grepo_fetch
-run_mail_send
-run_remote_script
-run_sparsefs
-run_svn_update
-run_upload
-sender.sh
-start_consumer.sh
-start_grepo_server.sh
-start_producer.sh
-stop_consumer.sh
-upgrade.sh
-util_common.sh
-util_compat_test.sh
-util_file_param.sh
-util_filter_supported_parameters.sh
-util_install_build.sh
+## 2.2  Shell_long Test Cases
+The existed shell long test cases are located in `path/to/cubrid-testcases-private/longcase/shell`  
 ```
+$ cd cubrid-testcases-private/longcase/
+$ find ./ -name "*.sh"                              
+./5hour/bug_bts_16594/cases/bug_bts_16594.sh
+./5hour/bug_bts_4707/cases/bug_bts_4707.sh
+./5hour/bug_bts_7288/cases/bug_bts_7288.sh
+./5hour/bug_bts_16581/cases/bug_bts_16581.sh
+./5hour/bug_bts_6753_2/cases/bug_bts_6753_2.sh
+./5hour/bug_bts_6785/cases/bug_bts_6785.sh
+./5hour/bug_bts_6396/cases/bug_bts_6396.sh
+./1hour/bug_bts_15629/cases/bug_bts_15629.sh
+./1hour/bug_bts_15419_1_asc/cases/bug_bts_15419_1_asc.sh
+./1hour/bug_bts_5222/cases/bug_bts_5222.sh
+./1hour/bug_bts_17881/cases/bug_bts_17881.sh
+./1hour/bug_bts_18031/cases/bug_bts_18031.sh
+./1hour/bug_bts_9382/cases/bug_bts_9382.sh
+./1hour/bug_bts_15419_1_desc/cases/bug_bts_15419_1_desc.sh
+./1hour/bug_bts_15419_2_asc/cases/bug_bts_15419_2_asc.sh
+./1hour/bug_bts_7350/cases/bug_bts_7350.sh
+./1hour/_02_cursor_stress/cases/_02_cursor_stress.sh
+...
+./2hour/_02_cursor_stress/cases/_02_cursor_stress.sh
+./2hour/bug_bts_10009/cases/bug_bts_10009.sh
+./2hour/bug_bts_9969/cases/bug_bts_9969.sh
+```
+How to write new shell_long test cases   
+please see [shell long cases specification](#5-test-case-specification)
 
 # 3. Deploy Shell_long Regression Test
 In this section, we will introduce how to deploy the Shell_long Regression Test Environment.  
@@ -148,10 +134,11 @@ git clone https://github.com/CUBRID/cubrid-testtools.git
 cd ~/cubrid-testtools/
 git checkout develop
 ```
-### On Controller node
-1. Install CTP  
-Please follow [the guide to install CTP](http://jira.cubrid.org/browse/CUBRIDQA-835?focusedCommentId=4753733&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4753733).  
-2. touch ~/CTP/conf/shell_template_for_shell_long.conf
+### On Controller node  
+1. Install CTP      
+Please follow [the guide to install CTP](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md).
+
+2. touch ~/CTP/conf/shell_template_for_shell_long.conf    
 Here is the config file that we use for current daily QA test:
  ```
 $ cat shell_template_for_shell_long.conf 
@@ -222,7 +209,7 @@ feedback_db_pwd=
 When you need to test shell_long_debug, then need to copy `~/CTP/conf/shell_template_for_shell_long.conf` as `~/CTP/conf/shell_template_for_shell_long_debug.conf` 
 
 3. touch start_test.sh  
-```
+```bash
  cat ~/start_test.sh
 
 # If only need to listen the shell_long test message
@@ -231,7 +218,7 @@ When you need to test shell_long_debug, then need to copy `~/CTP/conf/shell_temp
 # We use one controllar to listening shell_heavy, shell_long, and RQG test messages in dailyqa.
 nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_HEAVY_LINUX,QUEUE_CUBRID_QA_RQG,QUEUE_CUBRID_QA_SHELL_LONG_LINUX -exec run_shell,run_shell,run_shell &   
 ```
- 4. Update ~/.bash_profile
+ 4. Update ~/.bash_profile    
  ```
  $ cat .bash_profile 
 # .bash_profile
@@ -265,7 +252,7 @@ PATH=$JAVA_HOME/bin:$HOME/CTP/common/script:$PATH
 
 ### On Test nodes
 1. Install CTP  
-Please follow [the guide to install CTP](http://jira.cubrid.org/browse/CUBRIDQA-835?focusedCommentId=4753733&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4753733).
+Please follow [the guide to install CTP](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md).
 2. Check out test cases from git to $HOME/
 ```
 cd ~
@@ -641,251 +628,8 @@ finish
 ```
     
 ## 5.4 Common Functions For Shell_long Cases  
-* cubrid_createdb $dbname  
-Sometimes CUBRID need charset to create databases,eg:      
-For CUBRID 9 or higher: cubrid createdb testdb en_us  
-For CUBRID 8 or lower: cubrid createdb testdb  
+please refer to [shell guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#74-functions-in-initsh)
 
-```
-function cubrid_createdb()
-{
-    ##parse build version
-    parse_build_version
-    if [ $cubrid_major -ge 9 -a $cubrid_minor -gt 1 ] || [ $cubrid_major -ge 10 ]
-    then
-        cubrid createdb $* $CUBRID_CHARSET
-    else
-        cubrid createdb $*
-    fi
-}
+**Notice: you can view $init_path/init.sh for more information**  
 
-```
-
-
-* get_broker_port_from_shell_config  
-Sometimes we can not get broker port from `cubrid broker status -b |grep broker1 |awk '{print $4}'`.    
-We just get port from shell_config.xml,since the $CUBRID/conf/cubrid_broker.conf will be updated as shell_config.xml configured.      
-```
-# get broker port from shell_config.xml
-function get_broker_port_from_shell_config
-{
-  port=`awk '/<port>/' $init_path/shell_config.xml`
-  port=${port#*>}
-  port=${port%<*}
-  echo $port
-}
-
-```
-* format_csql_output  
-The result of csql execution may have some info about time, it is unstable,we need format this result.    
-The saved answer file can not appear unstable info,sush as time,ip and so on.  
-```
-function format_csql_output
-{
-    if [ -n "$1" ];then
-        #sed -e '/SQL statement execution time/d' $1 > outputtmp.txt
-        #sed  "s/(.* sec)//g" $1 > outputtmp.txt
-        sed -i '/SQL statement execution time/d' $1
-        sed -i '/(.* sec)/d' $1
-        sed -i '/Committed./d' $1
-    else
-        echo "Please input an file name"
-    fi
-}
-```
-* compare_result_between_files  
-We can use this function to compare test results with expected results.   
-Refer to [Example Test Cases](#Example-Test-Cases)    
-`compare_result_between_files result_3.log bug_bts_14571.answer`    
-bug_bts_14571.answer is the expect answer which we have saved,once the actual result is different from the expected result,the
-test cases run failed.we need to find fail reason.  
-
-```
-function compare_result_between_files
-{
-
-  cci_driver=""
-  server=""
-
-  if [ $# -lt 2 ]
-  then
-     write_nok "Please input two files to compare"
-     return
-  fi
-
-  if [ -f $CUBRID/qa.conf ]
-  then
-     cci_driver=`grep 'CCI_Version' $CUBRID/qa.conf|awk -F= '{print $2}'`
-     server=`grep 'Server_Version' $CUBRID/qa.conf|awk -F= '{print $2}'`
-  fi
-
-  left=`get_best_compat_file $1 $server $cci_driver`
-  right=`get_best_compat_file $2 $server $cci_driver`
-
-  if [ "$left" == "" ]
-  then
-     write_nok "Cannot find the proper file for $1 to compare"
-     return
-  fi
-
-  if [ "$right" == "" ]
-  then
-     write_nok "Cannot find the proper file for $2 to compare"
-     return
-  fi
-
-  dos2unix $left
-  dos2unix $right
-
-  echo "start to compare files: diff $left $right"  
-  if [ "$3" = "error" ]
-  then
-        if diff $left $right -b
-        then
-                write_nok
-                echo "diff $left $right failed" >> $result_file
-                #diff $left $right -y >> $result_file
-                diff $left $right -y |tee -a $result_file
-        else
-                write_ok
-        fi
-        let "answer_no = answer_no + 1"
-  else
-        if diff $left $right -b
-        then
-                write_ok
-        else
-                write_nok
-                echo "diff $left $right failed" >> $result_file
-                #diff $left $right -y >> $result_file
-                diff $left $right -y |tee -a $result_file
-        fi
-        let "answer_no = answer_no + 1"
-  fi
-}
-```
-* write_ok and write_nok  
-When the result meets expectations,we use write_ok,otherwise we use write_nok.   
-Refer to [Example Test Cases](#Example-Test-Cases)    
-```
-function write_ok 
-{
-  if [ -z "$1" ]
-  then
-        echo "----------------- $case_no : OK"
-        echo "$case_name-$case_no : OK" >>  ${cur_path}/$result_file
-        let "case_no = case_no + 1"
-  else
-        echo "----------------- $case_no : OK " $1
-        echo "$case_name-$case_no : OK " $1 >>  ${cur_path}/$result_file
-        let "case_no = case_no + 1"
-  fi
-}
-
-```
-```
-function write_nok
-{
-  if [ -z "$1" ]
-  then
-        echo "----------------- $case_no : NOK"
-        echo "$case_name-$case_no : NOK" >> ${cur_path}/$result_file
-        internal_err=`grep "Internal Error" $CUBRID/log/server/*.err | wc -l`
-        if [ $internal_err -gt 0 ]
-        then
-            grep "Internal Error" $CUBRID/log/server/*.err >> ${cur_path}/$result_file
-        fi
-        let "case_no = case_no + 1"
-  elif [ -f "$1" ];
-  then
-        echo "$case_name-$case_no : NOK"  >> ${cur_path}/$result_file
-        cat $1 >> ${cur_path}/$result_file
-        let "case_no = case_no + 1"
-  else
-        echo "----------------- $case_no : NOK" $1
-        echo "$case_name-$case_no : NOK" $1 >> ${cur_path}/$result_file
-        let "case_no = case_no + 1"
-  fi
-}
-```
-
-* finish  
-After the test have completed,we need clear test environment to avoid affect other shell cases  
-Refer to [Example Test Cases](#Example-Test-Cases)  
-```
-function finish {
-#  rm -f *.err *.log >/dev/null 2>&1
-  rm -f userver.err.* >/dev/null 2>&1
-  rm -f uclient.err.* >/dev/null 2>&1
-  rm -f client.err.* >/dev/null 2>&1
-  rm -rf ./lob
-  cubrid service stop
-  pkill cub >/dev/null 2>&1
-  if [ $need_count_time -eq 1 ]; then
-        count_time
-  fi
-  release_broker_sharedmemory
-  delete_ini
-  restore_all_conf
-  echo "[INFO] TEST STOP (`date`)"
-}
-```
-* format_query_plan  
-When the result have query plan,it maybe unstable,we need use this function.  
-```
-format_query_plan  result${i}.log
-```
-
-* xkill_pid  
-This function is used for kill process 
-```
-xkill_pid $java_pid
-```
-
-* do_make_locale   
-run make_locale.sh or make_locale.bat for linux or windows  
-```
-do_make_locale release
-do_make_locale debug
-do_make_locale
-```
-
-* xgcc  
-compile C code on linux or windows platform.  
-```
-xgcc -I${CUBRID}/include -L${CUBRID}/lib -lcascci ${MODE}  -o test2 test2.c
-xgcc -o cci cci.c -lpthread
-xgcc -g -o testbug9251 sus9251.c 
-xgcc -o test test.c
-```
-
-
-**Notice: there are other common functions,you can refer to $init_path/init.sh**  
-
-## 5.5 Daily Shell_long Test Cases Path  
-Path: cubrid-testcases-private/longcase/shell  
-```
-$ find ./ -name "*.sh"                              
-./5hour/bug_bts_16594/cases/bug_bts_16594.sh
-./5hour/bug_bts_4707/cases/bug_bts_4707.sh
-./5hour/bug_bts_7288/cases/bug_bts_7288.sh
-./5hour/bug_bts_16581/cases/bug_bts_16581.sh
-./5hour/bug_bts_6753_2/cases/bug_bts_6753_2.sh
-./5hour/bug_bts_6785/cases/bug_bts_6785.sh
-./5hour/bug_bts_6396/cases/bug_bts_6396.sh
-./1hour/bug_bts_15629/cases/bug_bts_15629.sh
-./1hour/bug_bts_15419_1_asc/cases/bug_bts_15419_1_asc.sh
-./1hour/bug_bts_5222/cases/bug_bts_5222.sh
-./1hour/bug_bts_17881/cases/bug_bts_17881.sh
-./1hour/bug_bts_18031/cases/bug_bts_18031.sh
-./1hour/bug_bts_9382/cases/bug_bts_9382.sh
-./1hour/bug_bts_15419_1_desc/cases/bug_bts_15419_1_desc.sh
-./1hour/bug_bts_15419_2_asc/cases/bug_bts_15419_2_asc.sh
-./1hour/bug_bts_7350/cases/bug_bts_7350.sh
-./1hour/_02_cursor_stress/cases/_02_cursor_stress.sh
-...
-./2hour/_02_cursor_stress/cases/_02_cursor_stress.sh
-./2hour/bug_bts_10009/cases/bug_bts_10009.sh
-./2hour/bug_bts_9969/cases/bug_bts_9969.sh
-```
 
