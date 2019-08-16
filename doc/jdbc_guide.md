@@ -106,7 +106,7 @@ CTP ships an example configuration file under CTP/conf/jdbc.conf. You may change
     feedback_db_port = 33080
     feedback_db_name = qaresu
     feedback_db_user = dba
-    feedback_db_pwd =
+    feedback_db_pwd = ********
     
     # Notice test completion event to QA homepage once test has been done.
     feedback_notice_qahome_url = http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>
@@ -230,5 +230,100 @@ File `jdbc.properties` configures JDBC connection parameters.
     Many assertions can be used in test cases.    
 
 # 4. Regression Test Deployment
+
+## 4.1 Deployment overview
+
+For daily regression test of jdbc, there is only one server required.
+
+Test server: jdbc@192.168.1.98
+
+Installed components:
+
+** Test tool: CTP
+** Test case: cubrid_testcases_private
+** Test objective: CUBRID
+
+## 4.1 Installation
+
+* ### Install CTP as regression test
+
+    Please follow guide below to install CTP to `$HOME/CTP`:
+    https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#2-install-ctp-as-regression-test-in-linux-platform
+
+* ### Configure jdbc test
+
+    File $HOME/CTP/conf/jdbc_template.conf
+
+        [common]
+        # Define the location of your testing scenario
+        scenario = ${HOME}/cubrid-testcases-private/interface/JDBC/test_jdbc
+        git_user = <git user>
+        git_pwd = <git password>
+        git_email = <git email address>
+        test_platform = linux
+        test_category = jdbc
+        build_bits = 64bits
+        owner_email = fan.zaiqiang@navercorp.com
+        feedback_type = database
+        feedback_db_host = 192.168.1.86
+        feedback_db_port = 33080
+        feedback_db_name = qaresu
+        feedback_db_user = dba
+        feedback_db_pwd = ********
+        feedback_notice_qahome_url = http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>
+
+        # JDBC cubrid.conf section - a section for cubrid.conf configuration
+        [jdbc/cubrid.conf]
+        # To change port of cubrid_port_id to avoid port conflict
+        cubrid_port_id = 1822
+
+        # JDBC cubrid_broker.conf query editor section - a section to change parameters under query_editor
+        [jdbc/cubrid_broker.conf/%query_editor]
+        # To close one service to avoid port conflict and reduce configuration complexity
+        SERVICE = OFF
+
+        # JDBC cubrid_broker.conf broker1 section - a section to change parameters under broker1
+        [jdbc/cubrid_broker.conf/%BROKER1]
+        # To change broker port to avoid port conflict, if you are sure the port will not conflict, just ignore.
+        BROKER_PORT = 33120
+        # To change ID of shared memory used by CAS, if you are sure the port will not conflict, just ignore.
+        APPL_SERVER_SHM_ID = 33120
+
+        # JDBC cubrid_broker.conf broker section - a section to configure parameters under broker section
+        [jdbc/cubrid_broker.conf/broker]
+        # To change the identifier of shared memory to avoid conflict to cause server start fail
+        MASTER_SHM_ID = 33122
+
+* ### Check out test cases
+
+        cd $HOME
+        git clone https://github.com/CUBRID/cubrid-testcases-private.git
+
+* ### Modify .bash_profile
+
+        [jdbc@func23 ~]$ cat .bash_profile 
+
+        # .bash_profile
+
+        # Get the aliases and functions
+        if [ -f ~/.bashrc ]; then
+                . ~/.bashrc
+        fi
+
+        # User specific environment and startup programs
+        export CTP_HOME=$HOME/CTP
+        export CTP_SKIP_UPDATE=0
+        export CTP_BRANCH_NAME=develop
+        export JAVA_HOME=$HOME/jdk1.6.0_22
+        export PATH=$JAVA_HOME/bin:$CTP_HOME/bin:$CTP_HOME/common/script:$PATH:$HOME/.local/bin:$HOME/bin
+        export LD_LIBRARY_PATH=$HOME/CUBRID/bin:$LD_LIBRARY_PATH        
+
+        . ~/.cubrid.sh
+        
+* ### Add quick start script file
+
+    File ~/start_test.sh
+    
+        start_consumer.sh -q QUEUE_CUBRID_QA_JDBC_UNITTEST_LINUX_GIT -exec run_jdbc    
 
 # 5. Regression Test Sustaining
