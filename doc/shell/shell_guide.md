@@ -159,7 +159,7 @@ For the introduction of other parameters, please refer to CTP tool guide.
 **2. Run CTP**
 ```
 cd ~/CTP/bin
-./ctp.sh shell -c ~/CTP/conf/shell.conf
+nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
 ```
 
 ### Check test results
