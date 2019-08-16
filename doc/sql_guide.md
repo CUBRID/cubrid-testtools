@@ -136,7 +136,7 @@ Use the msi installation file to install cubrid for the first time.
     4|Test node|sqlbycci|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT|run_sql_by_cci
     5|Test node|sql|192.168.1.77|func02|QUEUE_CUBRID_QA_SQL_PERF_LINUX|run_sql
     6|Test node|qa|192.168.1.161|winfunc01|QUEUE_CUBRID_QA_SQL_WIN64|run_sql  
-* Install reference [General SQL Test (Developer)](#General-SQL-Test-(Developer)) 
+* Install reference [General SQL Test (Developer)](#general-sql-test-developer) 
 * Linux Queue configure    
     touch start_test.sh  
     ```
