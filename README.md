@@ -14,7 +14,7 @@ See [CTP/README.md](CTP/README.md) for a quick start.
 * [SQL/MEDIUM]() (TBD) 
 * [SQL_BY_CCI]() (TBD)
 * [Shell]() (TBD)
-* [Shell_heavy]() (TBD)
+* [Shell_heavy](./doc/shell_heavy_guide.md) 
 * [Shell_long]() (TBD)
 * [Shell_HA]() (TBD)
 * [CCI]() (TBD)
