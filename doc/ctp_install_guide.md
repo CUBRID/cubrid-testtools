@@ -58,5 +58,55 @@
               ctp.sh webconsole start #start web console to view sql test results
 
 
-## 2. Install CTP in Windows platform
+## 2. Install CTP as Regression Test in Linux platform
 
+Follow last chapter to install CTP as general installation. Then let's continue to support regression test.
+
+* ### Provide Common Configuration
+
+Common configuration will be used by many script files in CTP located in CTP/common/script.
+
+File ~/CTP/conf/common.conf:
+
+      git_user=<git user>
+      git_pwd=<git password>
+      git_email=<email address>
+      default_ssh_pwd=<password for ssh connect>
+      default_ssh_port=<port for ssh connect>
+
+      # Update CTP itself from local repository
+      grepo_service_url=rmi://192.168.1.91:11099
+      coverage_controller_pwd=<ssh password for code coverage controller>
+
+      # Define JDBC parameters to QA home database server
+      qahome_db_driver=cubrid.jdbc.driver.CUBRIDDriver
+      qahome_db_url=jdbc:cubrid:192.168.1.86:33080:qaresu:dba::
+      qahome_db_user=dba
+      qahome_db_pwd=
+
+      # Define SSH connect to QA homepage server
+      qahome_server_host=192.168.1.86
+      qahome_server_port=22
+      qahome_server_user=<user for ssh connect>
+      qahome_server_pwd=<password for ssh connect>
+
+      # Define ActiveMQ parameters for message service
+      activemq_user=<user>
+      activemq_pwd=<password>
+      activemq_url=failover:tcp://192.168.1.91:61616?wireFormat.maxInactivityDurationInitalDelay=30000
+
+      mail_from_nickname=CUBRIDQA_BJ
+      mail_from_address=dl_cubridqa_bj_internal@navercorp.com
+
+* ### Add CTP environment variables to `.bash_profile`
+
+File .bash_prifle
+
+    # CTP HOME
+    export CTP_HOME=$HOME/CTP
+    
+    # Whether to update CTP when execute `CTP/common/script/upgrade.sh`. 
+    export CTP_SKIP_UPDATE=0
+
+    # Branch used when upgrade CTP
+    export CTP_BRANCH_NAME=develop
