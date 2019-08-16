@@ -158,51 +158,51 @@ File `jdbc.properties` configures JDBC connection parameters.
 
 * ### Example a jdbc test case
 
-Source: https://github.com/CUBRID/cubrid-testcases-private/blob/develop/interface/JDBC/test_jdbc/src/com/cubrid/jdbc/test/spec/connection/TestReadOnly.java
+  Source: https://github.com/CUBRID/cubrid-testcases-private/blob/develop/interface/JDBC/test_jdbc/src/com/cubrid/jdbc/test/spec/connection/TestReadOnly.java
 
-    package com.cubrid.jdbc.test.spec.connection;
+        package com.cubrid.jdbc.test.spec.connection;
 
-    import java.sql.DatabaseMetaData;
-    import java.sql.SQLException;
+        import java.sql.DatabaseMetaData;
+        import java.sql.SQLException;
 
-    import org.junit.Assert;
-    import org.junit.Ignore;
-    import org.junit.Test;
+        import org.junit.Assert;
+        import org.junit.Ignore;
+        import org.junit.Test;
 
-    import com.cubrid.jdbc.test.spec.GeneralTestCase;
+        import com.cubrid.jdbc.test.spec.GeneralTestCase;
 
-    public class TestReadOnly extends GeneralTestCase {
+        public class TestReadOnly extends GeneralTestCase {
 
-        @Test
-        public void test1() throws SQLException {
-            conn().setReadOnly(false);
-            Assert.assertEquals(false, conn().isReadOnly());
-        }
-        
-        @Ignore
-        @Test
-        public void test2() throws SQLException {
-            conn().setReadOnly(true);
-            Assert.assertEquals(true, conn().isReadOnly());
-        }
-
-        @Test
-        public void test3() throws SQLException {
-            DatabaseMetaData dmd = conn().getMetaData();
-
-            if (dmd.isReadOnly()) {
-                Assert.assertEquals(true, conn().isReadOnly());
-            } else {
+            @Test
+            public void test1() throws SQLException {
+                conn().setReadOnly(false);
                 Assert.assertEquals(false, conn().isReadOnly());
             }
-        }
 
-        @Test
-        public void test4() throws SQLException {
-            DatabaseMetaData dmd = conn().getMetaData();
-            Assert.assertEquals(false, dmd.isReadOnly());
+            @Ignore
+            @Test
+            public void test2() throws SQLException {
+                conn().setReadOnly(true);
+                Assert.assertEquals(true, conn().isReadOnly());
+            }
+
+            @Test
+            public void test3() throws SQLException {
+                DatabaseMetaData dmd = conn().getMetaData();
+
+                if (dmd.isReadOnly()) {
+                    Assert.assertEquals(true, conn().isReadOnly());
+                } else {
+                    Assert.assertEquals(false, conn().isReadOnly());
+                }
+            }
+
+            @Test
+            public void test4() throws SQLException {
+                DatabaseMetaData dmd = conn().getMetaData();
+                Assert.assertEquals(false, dmd.isReadOnly());
+            }
         }
-    }
 
 
 
@@ -222,6 +222,12 @@ Source: https://github.com/CUBRID/cubrid-testcases-private/blob/develop/interfac
             conn().setReadOnly(true);
             Assert.assertEquals(true, conn().isReadOnly());
         }
+
+* ###  Test cases follow jUnit framework
+
+    jUnit version: junit-4.8.2
+    
+    Many assertions can be used in test cases.    
 
 # 4. Regression Test Deployment
 
