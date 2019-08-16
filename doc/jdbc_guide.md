@@ -233,15 +233,25 @@ File `jdbc.properties` configures JDBC connection parameters.
 
 ## 4.1 Deployment overview
 
-For daily regression test of jdbc, there is only one server required.
-
-Test server: jdbc@192.168.1.98
-
-Installed components:
-
-** Test tool: CTP
-** Test case: cubrid_testcases_private
-** Test objective: CUBRID
+<table>
+<tr>
+<th>Description</th>
+<th>User Name</th>
+<th>IP</th>
+<th>Hostname</th>
+<th>Tools to deploy</th>
+</tr>
+<tr class="even">
+<td>Test node</td>
+<td>jdbc</td>
+<td>192.168.1.98</td>
+<td>func23</td>
+<td> CUBRID <br>
+ CTP <br>
+ cubrid_testcases_private <br>
+ </td>
+</tr>
+</table>
 
 ## 4.1 Installation
 
