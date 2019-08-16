@@ -352,34 +352,34 @@ File `jdbc.properties` configures JDBC connection parameters.
 
   Log into message server (message@192.168.1.91) first.
 
-    [message@qa03 ~]$ sender.sh QUEUE_CUBRID_QA_JDBC_UNITTEST_LINUX_GIT http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh jdbc default
+        [message@qa03 ~]$ sender.sh QUEUE_CUBRID_QA_JDBC_UNITTEST_LINUX_GIT http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh jdbc default
 
-    Message: 
+        Message: 
 
-    Message Content: Test for build 10.2.0.8396-1bc28b2 by CUBRID QA Team, China
-    MSG_ID = 190816-190515-440-000001
-    MSG_PRIORITY = 4
-    BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop
-    BUILD_BIT=0
-    BUILD_CREATE_TIME=1565376350000
-    BUILD_GENERATE_MSG_WAY=MANUAL
-    BUILD_ID=10.2.0.8396-1bc28b2
-    BUILD_IS_FROM_GIT=1
-    BUILD_PACKAGE_PATTERN=CUBRID-{1}-Linux.x86_64.sh
-    BUILD_SCENARIOS=jdbc
-    BUILD_SCENARIO_BRANCH_GIT=develop
-    BUILD_SEND_DELAY=573565
-    BUILD_SEND_TIME=1565949915439
-    BUILD_STORE_ID=store_01
-    BUILD_SVN_BRANCH=RB-10.2.0
-    BUILD_SVN_BRANCH_NEW=RB-10.2.0
-    BUILD_TYPE=general
-    BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh
-    BUILD_URLS_CNT=1
-    BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh
+        Message Content: Test for build 10.2.0.8396-1bc28b2 by CUBRID QA Team, China
+        MSG_ID = 190816-190515-440-000001
+        MSG_PRIORITY = 4
+        BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop
+        BUILD_BIT=0
+        BUILD_CREATE_TIME=1565376350000
+        BUILD_GENERATE_MSG_WAY=MANUAL
+        BUILD_ID=10.2.0.8396-1bc28b2
+        BUILD_IS_FROM_GIT=1
+        BUILD_PACKAGE_PATTERN=CUBRID-{1}-Linux.x86_64.sh
+        BUILD_SCENARIOS=jdbc
+        BUILD_SCENARIO_BRANCH_GIT=develop
+        BUILD_SEND_DELAY=573565
+        BUILD_SEND_TIME=1565949915439
+        BUILD_STORE_ID=store_01
+        BUILD_SVN_BRANCH=RB-10.2.0
+        BUILD_SVN_BRANCH_NEW=RB-10.2.0
+        BUILD_TYPE=general
+        BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh
+        BUILD_URLS_CNT=1
+        BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh
 
 
-    Do you accept above message [Y/N]: Y
+        Do you accept above message [Y/N]: Y
 
   After test, related test result will be shown in QA homepage.
   
