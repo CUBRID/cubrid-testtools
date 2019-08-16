@@ -44,7 +44,7 @@ $ find ./ -name "*.sh"
 ./2hour/bug_bts_9969/cases/bug_bts_9969.sh
 ```
 How to write new shell_long test cases   
-please see [shell long cases specification](#5-test-case-specification)
+please see [shell long cases specification](#5test-case-specification)
 
 # 3. Deploy Shell_long Regression Test
 In this section, we will introduce how to deploy the Shell_long Regression Test Environment.  
