@@ -2,7 +2,7 @@
 
 ## 1. Install CTP in Linux platform
 
-  ### Step 1: Install Java
+* ### Step 1: Install Java
 
   Java 6 or higher version is required.
 
@@ -11,7 +11,7 @@
       export JAVA_HOME=/path/to/jdk
       export PATH=$JAVA_HOME/bin:$PATH
 
-  ### Step 2: Download and install CTP
+* ### Step 2: Download and install CTP
 
   Download CTP and deploy it to path $HOME/CTP as below:
 
@@ -25,7 +25,7 @@
 
       export PATH=$HOME/CTP/bin:$HOME/CTP/common/script:$PATH
 
-  ### Step 3: Show help to confirm result
+* ### Step 3: Show help to confirm result
 
       [fanzq@fmdev059 ~]$ ctp.sh -h
       Welcome to use CUBRID Test Program (CTP)
