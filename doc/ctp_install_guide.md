@@ -110,3 +110,7 @@
 
       # Branch used when upgrade CTP
       export CTP_BRANCH_NAME=develop
+
+## 3. Install CTP in Windows platform
+
+  TBD
