@@ -16,7 +16,7 @@ Let's show an example that how to execute jdbc test via CTP.
     git checkout develop  
 
 ### Step 2: Install CTP
-Please follow [the guide to install CTP](ctp_install.md).
+Please follow [the guide to install CTP](ctp_install_guide.md).
 
 ### Step 3: Prepare for test configuration
 
@@ -77,9 +77,9 @@ File CTP/result/jdbc/current_runtime_logs/run_case_details.log:
 
 ## 2.2 JDBC test usage via CTP
 
-### Introduce configuration
+### Configuration introduction
 
-Full configuration 
+CTP ships an example configuration file under CTP/conf/jdbc.conf. You may change it as your requirement or create your own configuration file. Here is parameters used:
     
     [common]
     # Define the location of your testing scenario
