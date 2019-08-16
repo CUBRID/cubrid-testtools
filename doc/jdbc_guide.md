@@ -9,16 +9,25 @@ CTP as test tool can be used to execute CUBRID jdbc test cases which are located
 
 Let's show an example that how to execute jdbc test via CTP.
 
-### Step 1: Check out jdbc test cases
+### Step 1: Prepare for tested database
+
+Suppose that you have already installed CUBRID. Then, let's create a database that we plan to test.
+
+    cubrid createdb jdbcdb en_US
+    cubrid server start jdbcdb
+    cubrid broker start    
+
+### Step 2: Prepare for jdbc test cases
 
     cd ~/
     git clone https://github.com/CUBRID/cubrid-testcases-private.git
     git checkout develop  
 
-### Step 2: Install CTP
+### Step 3: Install CTP
+
 Please follow [the guide to install CTP](ctp_install_guide.md).
 
-### Step 3: Prepare for test configuration
+### Step 4: Prepare for test configuration
 
 File CTP/conf/jdbc.conf:
 
@@ -38,13 +47,13 @@ File CTP/conf/jdbc.conf:
 
     [jdbc/cubrid_broker.conf/broker]
     MASTER_SHM_ID = 33122
-
-### Step 4: Execute jdbc test
+    
+### Step 5: Execute jdbc test
 
     cd CTP
     sh ctp.sh jdbc -c ./conf/jdbc.conf
 
-### Step 5: Examine the results
+### Step 6: Examine the results
 
 When the test is completed, you can find the results and from directory as below:
 
@@ -79,7 +88,7 @@ File CTP/result/jdbc/current_runtime_logs/run_case_details.log:
 
 ### Configuration introduction
 
-CTP ships an example configuration file under CTP/conf/jdbc.conf. You may change it as your requirement or create your own configuration file. Here is parameters used:
+CTP ships an example configuration file under CTP/conf/jdbc.conf. You may change it as your requirement or create your own configuration file. Here is full parameters used:
     
     [common]
     # Define the location of your testing scenario
@@ -120,8 +129,89 @@ CTP ships an example configuration file under CTP/conf/jdbc.conf. You may change
     [jdbc/cubrid_broker.conf/broker]
     # All parameters in this section will be set to section 'broker' in cubrid_broker.conf.    
     MASTER_SHM_ID = 33122
+    
+### Test cases introduction
+
+Test cases locate in https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/JDBC/test_jdbc.
+
+    [jdbc@func23 test_jdbc]$ pwd
+    /home/jdbc/cubrid-testcases-private/interface/JDBC/test_jdbc
+    [jdbc@func23 test_jdbc]$ ls -l
+    total 32
+    -rw-rw-r--. 1 jdbc jdbc  1666 Mar  6 16:19 build.xml
+    -rw-rw-r--  1 jdbc jdbc   185 Aug 15 17:16 jdbc.properties
+    drwxrwxr-x. 2 jdbc jdbc  4096 Aug 15 17:16 lib
+    drwxrwxr-x. 8 jdbc jdbc    84 Mar  6 16:19 src
+    [jdbc@func23 test_jdbc]$ 
+    
+All test cases are written in Java program language under jUnit framework.
+
+File `jdbc.properties` configures JDBC connection parameters. 
+
+    jdbc.driverClassName=cubrid.jdbc.driver.CUBRIDDriver
+    jdbc.url=jdbc:cubrid:localhost:33000:tdb:::
+    jdbc.username=dba
+    jdbc.password=
+    jdbc.ip=localhost
+    jdbc.port=33000
+    jdbc.dbname=tdb
+    
+Below is an example of test cases:
+
+Source: https://github.com/CUBRID/cubrid-testcases-private/blob/develop/interface/JDBC/test_jdbc/src/com/cubrid/jdbc/test/spec/connection/TestReadOnly.java
+
+    package com.cubrid.jdbc.test.spec.connection;
+
+    import java.sql.DatabaseMetaData;
+    import java.sql.SQLException;
+
+    import org.junit.Assert;
+    import org.junit.Ignore;
+    import org.junit.Test;
+
+    import com.cubrid.jdbc.test.spec.GeneralTestCase;
+
+    public class TestReadOnly extends GeneralTestCase {
+
+        @Test
+        public void test1() throws SQLException {
+            conn().setReadOnly(false);
+            Assert.assertEquals(false, conn().isReadOnly());
+        }
+        
+        @Ignore
+        @Test
+        public void test2() throws SQLException {
+            conn().setReadOnly(true);
+            Assert.assertEquals(true, conn().isReadOnly());
+        }
+
+        @Test
+        public void test3() throws SQLException {
+            DatabaseMetaData dmd = conn().getMetaData();
+
+            if (dmd.isReadOnly()) {
+                Assert.assertEquals(true, conn().isReadOnly());
+            } else {
+                Assert.assertEquals(false, conn().isReadOnly());
+            }
+        }
+
+        @Test
+        public void test4() throws SQLException {
+            DatabaseMetaData dmd = conn().getMetaData();
+            Assert.assertEquals(false, dmd.isReadOnly());
+        }
+    }
 
 # 3. JDBC Test Case Specification
+
+**Annotation:**
+
+  **@Test:** annotate a test case for following method.
+    
+  **@Ignore:** annotate test case will be ignored during runtime.
+
 
 # 4. Regression Test Deployment
 
