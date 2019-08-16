@@ -1,5 +1,5 @@
 # Shell Test Guide
-# 1 Test Introduction
+# 1 Test Objective
 Shell test suite is used to execute CUBRID functional test in a very flexible way. SHELL test cases are written in Linux shell programing language. Shell test case can integrate others programing languages, like Java, C, Perl.   
 Shell test cases contain almost all the feature test and some performance test which cannot be tested by sql test or other test suites.   
 For examples:
@@ -10,11 +10,76 @@ For examples:
 Shell test case path: [https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell](https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell)  
 Shell test is contained by daily regression test. The test cases are run on both release build and debug build.  
 
-# 2 CTP Introduction
+# 2 Shell test via CTP
 CTP is the only test tool which is used in shell test.   
 Source URL: [https://github.com/CUBRID/cubrid-testtools](https://github.com/CUBRID/cubrid-testtools)  
-## 2.1 Configuration
-Example:  
+## 2.1 Quick start
+**1. install CTP**  
+Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md)  
+
+**2. checkout shell cases**  
+```bash
+cd ~
+git clone https://github.com/CUBRID/cubrid-testcases-private-ex.git
+cd ~/cubrid-testcases-private-ex 
+git checkout develop
+```
+
+**3. set configuration file**  
+*~/CTP/conf/shell.conf* 
+```
+# These parameters are used to set cubrid.conf, cubrid_broker.conf and cubrid_ha.conf
+# We can add the parameters as needed.
+# For example, if we need change set 'error_log_size = 800000000', just need add line 'default.cubrid.error_log_size = 800000000' here.
+default.cubrid.cubrid_port_id=1568
+default.broker1.BROKER_PORT=10090
+default.broker1.APPL_SERVER_SHM_ID=10090
+default.broker2.BROKER_PORT=13091
+default.broker2.APPL_SERVER_SHM_ID=13091
+default.ha.ha_port_id=19909
+
+# Specify the case path and exclude list file
+scenario=${HOME}/cubrid-testcases-private-ex/shell
+testcase_exclude_from_file=${HOME}/cubrid-testcases-private-ex/shell/config/daily_regression_test_excluded_list_linux.conf
+
+# When the test is interrupted and started again, we can choose wheter to run it continuously or re-run it.
+test_continue_yn=false
+
+#Whether update cases before test
+testcase_update_yn=false
+
+testcase_timeout_in_secs=604800
+test_platform=linux
+test_category=shell
+
+# If the macro is included in the case, it will be excluded from the test.
+# For example, if 'LINUX_NOT_SUPPORTED' is included in the case, it will not be run in linux shell test.
+testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
+
+# When the case is failed, we can re-run it. This paramter specify the max time we want to re-run the failed case.
+testcase_retry_num=0
+
+# Some times there is not enough disk space on the test machine, so we need to delete all the files under the test case path after the case is run.
+delete_testcase_after_each_execution_yn=false
+enable_check_disk_space_yn=true
+owner_email=cui.man@navercorp.com
+
+# set test result feed back type: file or database
+feedback_type=file
+feedback_notice_qahome_url=http://192.168.1.86:8080/qaresult/shellImportAction.nhn?main_id=<MAINID>
+
+```
+
+**4. install build**
+
+**5. start test**
+```
+cd ~/CTP/bin
+nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
+```
+
+## 2.2 CTP Usage Introducetion 
+### Set the configuration file
 *~/CTP/conf/shell.conf* 
 ```
 # These parameters are used to set cubrid.conf, cubrid_broker.conf and cubrid_ha.conf
@@ -89,26 +154,25 @@ feedback_db_pwd=
 ```
 For the introduction of other parameters, please refer to CTP tool guide.  
 
-## 2.2 Execute shell test
-1. Login controller node
-2. Set the conf file ~/CTP/conf/shell.conf
-3. Run ctp 
+### Execute shell test
+**1. Login controller node**  
+**2. Run CTP**
 ```
 cd ~/CTP/bin
 ./ctp.sh shell -c ~/CTP/conf/shell.conf
 ```
 
-## 2.3 Check test results
-### feedback_type=file
+### Check test results
+*feedback_type=file*  
 If we set 'feedback_type=file', we need check the test results in file 'CTP/result/shell/current_runtime_logs/runtime.log'.  
 The runtime output is sored in files named like 'CTP/result/shell/current_runtime_logs/test_105.log', 'CTP/result/shell/current_runtime_logs/test_106.log'.  
 
-### feedback_type=database
+*feedback_type=database*  
 If we set 'feedback_type=database', we need check the test results on qahome page.  
-For details, please refer to ['4.2 Verify dailyqa test results'](#4.2-Verify-dailyqa-test-results).  
+For details, please refer to ['4.2 Verify regression test results'](#4.2-Verify-regression-test-results).  
 This is also the way we used in daily regression test.
 
-## 2.4 Excluded list  
+## 2.3 Excluded list  
 The cases in the excluded list will not be run in the test.  
 If the case will block the test (eg. it hangs in regression test and the issue will not be fixed recently), we should add the case to the excluded list.  
 For shell test, we have two 'excluded_list' files:
@@ -122,7 +186,14 @@ For example, if we need add case 'shell/_06_issues/_18_1h/bug_bts_12583' in linu
 shell/_06_issues/_18_1h/bug_bts_12583
 ```
 
-# 3 Test Deployments
+## 2.4 Execute a single test case  
+To execute a single test case, we just need to login a test machine, go to the case path, and then execute shell command:  
+```bash
+ 'sh case_name.sh'
+ ```
+
+
+# 3 Regression Test Deployment
 ## 3.1 Test Machines
 |Role|User|IP|Hostname|
 |---|---|---|---|
@@ -385,14 +456,10 @@ export PATH
 ```
 
 # 4 Regression Test
-We execute shell test for each CI build, and execute code coverage test monthly. Both of these test are started automatically when the controller receive a test message. We just need to prepare the conf files, verify the test results, and report issues.
+We execute shell test for each CI build, and execute code coverage test monthly.  
+Both of the test are started automatically when the controller receive a test message. We just need to verify the test results, and report the issues.
 
-## 4.1	Set conf files for regression test
-Edit the file: ~/CTP/conf/shell_template.conf.  
-shell_template.conf will be copied to \~/CTP/conf/shell_runtime.conf when test is started.  
-For more details, please refer to ['install CTP'](#install_CTP)
-
-## 4.2 Verify dailyqa test results
+## 4.1 Verify regression test results
 ### Result overview
 Open qahome in browser, then select build number. 'Function Result' page will be displayed.
 Find shell and shell_debug in linux part, and find shell in windows part.  
@@ -431,7 +498,7 @@ Save: I am not sure of this verication result. I will decide it later.
 Sometimes, we cannot find the failure reason from the screen output directly. At this time, we need login the test machine, go to the case path, check the logs. If we still cannot find the failure reason from the logs, we should run the case step by step on this machine to find the failure reason.  
 We should verify the crash failures first.  
 
-## 4.3 Verify code coverage test result
+## 4.2 Verify code coverage test result
 Go to QA homepage and find the 'code coverage' node in the left area, click the link of the latest result.  
 ![code coverage 1](./image19.png)
 Click 'shell' link.  
@@ -439,18 +506,14 @@ Click 'shell' link.
 Check the value of 'Coverage' column. The coverage value should not lower than previous code coverage test result.  
 ![code coverage 3](./image11.png) 
 
-## 4.4 Report issues
+## 4.3 Report issues
 ### crash issue  
 If there is a crash, report it following the rules in this link: [‘How to Report Regression Crash Issues’](http://jira.cubrid.org/browse/CUBRIDQA-1?focusedCommentId=4739244&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4739244)  
 
 ### normal issue  
 If the the test result is as expected, first we should confirm whether it is revise required. If not, report it as an issue on jira.   
 
-# 5 Execute Test  
-# 5.1 Execute a single test case  
-To execute a single test case, we juse need to login a test machine, and go to the case path, and then execute shell command 'sh case_name.sh'.  
-
-# 5.2 Execute a shell test by sending message
+## 4.4 Execute a shell test by sending message
 We can use the regression tools to trigger a test.  
 1. Change the parameters in ~/CTP/conf/shell_template.conf on controller node.    
 2. Send a message to start the test  
@@ -468,7 +531,7 @@ sh start_test.sh
 4. Check test result  
 The results will be uploaded to qahome automatically. You can follow ['4.2 Verify dailyqa test results'](#4.2_Verify_dailyqa_test_results) to check the test results. 
 
-# 6 Code Coverage Test
+## 4.5 Execute a code coverage test
 For code coverage test, just need to send a message.  
 Login: message@192.168.1.91  
 Send test message as:  
@@ -480,8 +543,8 @@ The result will be uploaded to qahome automatically.
 To check the result, please refer to ['Verify code coverage test result'](#Verify-code-coverage-test-result) 
 
 
-# 7 shell case standards
-## 7.1 case path standard
+# 5 shell case standards
+## 5.1 case path standard
 ### new feature path:  
 We created folders for each cubrid version like this:  
 ```
@@ -502,7 +565,7 @@ _10_1h  _10_2h  _11_1h  _11_2h  _12_1h  _12_2h  _13_1h  _13_2h  _14_1h  _14_2h  
 The folder name means the date when we added this case.  
 For example, I verified an issue and I need add cases for it on 6/1/2019. I need add these cases in '\_19_1h'.  
 
-## 7.2 shell case template
+## 5.2 shell case template
 ```
 #!/bin/sh
 # Initialize the environment variables, and import all the functions. 
@@ -536,7 +599,7 @@ finish
 
 ``` 
 
-## 7.3 'cubrid' script
+## 5.3 'cubrid' script
 When execute 'init test' at the beginning of the case, '${init_path}/../../bin:${init_path}/../../common/script' is added to PATH:  
 ```
 PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
@@ -547,7 +610,7 @@ It will check whether there are core files and fatal error generated in the case
 *'cubrid checkdb':*  
 It will check whether checkdb is failed, and if it is, backup db volumns, logs, core files. Then execute $CUBRID/bin/cubrid checkdb.  
 
-## 7.4 functions in init.sh
+## 5.4 functions in init.sh
 I will introduce some important functions in init.sh. They are frequently used in shell test cases.  
 
 ### init
@@ -555,9 +618,9 @@ I will introduce some important functions in init.sh. They are frequently used i
 These lines will do many init operations, such as: export system variables, import all the functions.  
 
 ### finish
-Used at the end of each test case.
+Used at the end of each test case to:  
 1. cubrid service stop  
-2. release_broker_sharedmemory  
+2. release broker sharedmemory  
 3. revert all the conf files to original ones  
 
 ### WINDOWS_NOT_SUPPORTED/LINUX_NOT_SUPPORTED
