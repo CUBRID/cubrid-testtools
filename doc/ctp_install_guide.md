@@ -98,14 +98,14 @@
       mail_from_nickname=CUBRIDQA_BJ
       mail_from_address=dl_cubridqa_bj_internal@navercorp.com
 
-* ### Add CTP environment variables to `.bash_profile`
+* ### Add CTP environment variables to .bash_profile
 
   File .bash_prifle
 
       # CTP HOME
       export CTP_HOME=$HOME/CTP
 
-      # Whether to update CTP when execute `CTP/common/script/upgrade.sh`. 
+      # Whether to update CTP when execute CTP/common/script/upgrade.sh. 
       export CTP_SKIP_UPDATE=0
 
       # Branch used when upgrade CTP
