@@ -134,6 +134,11 @@ testcase_retry_num=0
 
 # Some times there is not enough disk space on the test machine, so we need to delete all the files under the test case path after the case is run.
 delete_testcase_after_each_execution_yn=false
+
+# Check disk space before test.
+# If there is not enough disk space, the test tool will send an email to the owner.
+# The owner should clean the disk when he receives this email.
+# The test will continue untill the free disk space reaches the expected amount.
 enable_check_disk_space_yn=true
 owner_email=cui.man@navercorp.com
 
@@ -169,7 +174,7 @@ The runtime output is sored in files named like 'CTP/result/shell/current_runtim
 
 *feedback_type=database*  
 If we set 'feedback_type=database', we need check the test results on qahome page.  
-For details, please refer to ['4.2 Verify regression test results'](#4.2-Verify-regression-test-results).  
+For details, please refer to ['4.1 Verify regression test results'](#4.1-Verify-regression-test-results).  
 This is also the way we used in daily regression test.
 
 ## 2.3 Excluded list  
@@ -189,7 +194,7 @@ shell/_06_issues/_18_1h/bug_bts_12583
 ## 2.4 Execute a single test case  
 To execute a single test case, we just need to login a test machine, go to the case path, and then execute shell command:  
 ```bash
- 'sh case_name.sh'
+sh case_name.sh
  ```
 
 
