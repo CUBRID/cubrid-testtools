@@ -340,7 +340,7 @@ File `jdbc.properties` configures JDBC connection parameters.
 
 ## 5.1 How to start test?
 
-  **Start test daemon process:**
+*  ### Start test daemon process:
 
   Log into test server, keep daemon process for start_test.sh:
 
@@ -348,7 +348,8 @@ File `jdbc.properties` configures JDBC connection parameters.
 
   After startup, it will keep listening for new test messages. Once come, it will fire the test immediately. Except CI test messages which were generated automatically, you may send test message by manual.
   
-  **Send test message same as daily configuration:**
+* ### Send test message same as daily configuration:
+
   Log into message server (message@192.168.1.91) first.
 
     [message@qa03 ~]$ sender.sh QUEUE_CUBRID_QA_JDBC_UNITTEST_LINUX_GIT http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh jdbc default
