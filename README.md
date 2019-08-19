@@ -22,7 +22,7 @@ See [CTP/README.md](CTP/README.md) for a quick start.
 * [Isolation](./doc/isolation_guide.md)
 * [RQG]() (TBD)
 * [Unit test]() (TBD)
-* [JDBC]() (TBD)
+* [JDBC](./doc/jdbc_guide.md)
 * [JDBC Compatibility]() (TBD)
 * [CCI Compatibility]() (TBD)
 * [MemoryLeak](./doc/memoryleak_guide.md)
