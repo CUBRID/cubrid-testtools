@@ -409,6 +409,35 @@ File `jdbc.properties` configures JDBC connection parameters.
     
     Revise required issues: It is link to a jira issue which lead to change in test case and answer
     
+## 5.3 How to verify a failure?
+  
+  We usually verify failures via eclipse. Please follow guide below to verify a failure.
+  
+  **Step 1:** In eclipse, import https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/JDBC/test_jdbc as java project.
+  
+  Open eclipse -> File Menu -> Import:   
+  
+  ![JDBC test Eclipse Import](./jdbc_image/image4.png)
+  
+  Then
+  
+  ![JDBC test Eclipse Import_Next](./jdbc_image/image5.png)
+  
+  **Step 2:** Configure jdbc parameters:
 
+  File jdbc.properties:
+
+    jdbc.driverClassName=cubrid.jdbc.driver.CUBRIDDriver
+    jdbc.url=jdbc:cubrid:192.168.1.98:33222:jdbcdb:::
+    jdbc.username=dba
+    jdbc.password=
+    jdbc.ip=192.168.1.98
+    jdbc.port=33222
+    jdbc.dbname=testdb  
+  
+  **Step 3:** Execute with jUnit:
+  
+  ![JDBC test Eclipse junit](./jdbc_image/image6.png)  
+    
   
     
