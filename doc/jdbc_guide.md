@@ -404,7 +404,9 @@ File `jdbc.properties` configures JDBC connection parameters.
     ![JDBC test Verify](./jdbc_image/image3.png)
     
     Note: 
+    
     New issues : It is link to a jira issue which reported by this case
+    
     Revise required issues: It is link to a jira issue which lead to change in test case and answer
     
 
