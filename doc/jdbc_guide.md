@@ -342,15 +342,15 @@ File `jdbc.properties` configures JDBC connection parameters.
 
 *  ### Start test daemon process:
 
-  Log into test server, keep daemon process for start_test.sh:
+    Log into test server, keep daemon process for start_test.sh:
 
-      nohup sh start_test.sh &
+        nohup sh start_test.sh &
 
-  After startup, it will keep listening for new test messages. Once come, it will fire the test immediately. Except CI test messages which were generated automatically, you may send test message by manual.
+    After startup, it will keep listening for new test messages. Once come, it will fire the test immediately. Except CI test messages which were generated automatically, you may send test message by manual.
   
 * ### Send test message same as daily configuration:
 
-  Log into message server (message@192.168.1.91) first.
+    Log into message server (message@192.168.1.91) first.
 
         [message@qa03 ~]$ sender.sh QUEUE_CUBRID_QA_JDBC_UNITTEST_LINUX_GIT http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh jdbc default
 
@@ -381,13 +381,32 @@ File `jdbc.properties` configures JDBC connection parameters.
 
         Do you accept above message [Y/N]: Y
 
-  After test, related test result will be shown in QA homepage.
+    After test, related test result will be shown in QA homepage.
   
 ## 5.2 Verify test Results  
 
 * ### Check if there is JDBC test result
 
     Open QA home (http://qahome.cubrid.org), navigate to find JDBC test result as below. If there is no any result, you need to find the reason out.
+    ![JDBC test result](./jdbc_image/image0.png)
     
+* ### Test Rate should be 100%
+
+    It means the `Testing` is equal to the sum of `Success` and `Fail(Total)`.
+    ![JDBC test Test Rate](./jdbc_image/image1.png)
+    
+* ### Verified Rate should be 100%    
+
+    The verified rate should be 100% as below.
+    ![JDBC test Verify Rate](./jdbc_image/image2.png)
+    
+    If there is a failed test case, you need to verify it following below:
+    ![JDBC test Verify](./jdbc_image/image3.png)
+    
+    Note: 
+    New issues : It is link to a jira issue which reported by this case
+    Revise required issues: It is link to a jira issue which lead to change in test case and answer
     
 
+  
+    
