@@ -434,8 +434,14 @@ File `jdbc.properties` configures JDBC connection parameters.
     jdbc.ip=192.168.1.98
     jdbc.port=33222
     jdbc.dbname=testdb  
+
+  **Step 3:** Update cubrid_jdbc.jar with tested build
   
-  **Step 3:** Execute with jUnit:
+  Replace test_jdbc/lib/cubrid_jdbc.jar with CUBRID/jdbc/cubrid_jdbc.jar.
+
+  **Step 4:** Execute with jUnit:
+  
+  Examine test case and identify failure reason.
   
   ![JDBC test Eclipse junit](./jdbc_image/image6.png)  
     
