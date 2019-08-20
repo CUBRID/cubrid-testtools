@@ -25,7 +25,7 @@ We use jdk-8u201-windows-x64
 Visual studio is used by make_local.bat  
 When install visual studio 2017, Choose 'Workloads' view(tab), in 'Windows (3)'section, Choose "Desktop development with C++", then click 'Install' or 'Modify' tostart the installation.  
 After installation, check system variable '%VS140COMNTOOLS%'   
-* If 'VS140COMNTOOLS' is not add to the system variables automatically, please add itmanually.  
+* If 'VS140COMNTOOLS' is not add to the system variables automatically, please add it manually.  
     Variable name: VS140COMNTOOLS  
     Variable value: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\   
 * If 'VS140COMNTOOLS' is add to the system variables automatically, please check itsvalue. Sometimes, the value is not correct for make_locale to use it. In thissituation, please change it to the correct one.  
@@ -66,12 +66,9 @@ Use the msi installation file to install cubrid for the first time.
         ```
     * Add new 'System variables':  
         ```
-        JAVA_HOME
-        C:\Program Files\Java\jdk1.8.0_201
-        CTP_BRANCH_NAME
-        develop
-        CTP_SKIP_UPDATE
-        0
+        JAVA_HOME:C:\Program Files\Java\jdk1.8.0_201
+        CTP_BRANCH_NAME:develop
+        CTP_SKIP_UPDATE:0
         ```
     * Edit 'path'  
     add '%JAVA_HOME%\bin C:\cygwin64\bin' in the 'path'.  
