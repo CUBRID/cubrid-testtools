@@ -59,10 +59,8 @@ Use the msi installation file to install cubrid for the first time.
 * set 'Environment Variables'   
     * After install cubrid by msi file, these system parameter will be added automatically:  
         ```
-        CUBRID
-        C:\CUBRID\
-        CUBRID_DATABASES
-        C:\CUBRID\databases
+        CUBRID:C:\CUBRID\
+        CUBRID_DATABASES:C:\CUBRID\databases
         ```
     * Add new 'System variables':  
         ```
