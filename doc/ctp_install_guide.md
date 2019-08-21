@@ -57,8 +57,45 @@
               ctp.sh medium medium    #execute medium twice
               ctp.sh webconsole start #start web console to view sql test results
 
+## 2. Install CTP in Windows platform
+* ### Install JDK  
+    Java 6 or higher version is required.    
+* ### Install visual studio 2017  
+    Visual studio is used by make_local.bat  
+    When install visual studio 2017, Choose 'Workloads' view(tab), in 'Windows (3)'section, Choose "Desktop development with C++", then click 'Install' or 'Modify' to start the installation.  
+    After installation, check system variable '%VS140COMNTOOLS%'   
+  * If 'VS140COMNTOOLS' is not add to the system variables automatically, please add it manually.  
+      Variable name: VS140COMNTOOLS  
+      Variable value: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\   
+  * If 'VS140COMNTOOLS' is add to the system variables automatically, please check it svalue. Sometimes, the value is not correct for make_locale to use it. In this situation, please change it to the correct one.  
+      e.g.  
+      Wrong: C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\  
+      Correct: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\ (required for last '\')  
+* ### Install cygwin  
+  * We need choose this packages manually since they will not be installed by default:wget, zip, unzip, dos2unix, bc, expect.  
+      gcc and mingw packages do not need to be installed.  
+  * Check the versions of these packages (or components): gawk, grep, sed  
+      The invalid versions for cygwin components:  
+      grep: 3.0-2  
+      gawk: 4.1.4-3  
+      sed: 4.4-1  
+      We must use the versions before the versions list above.  
+      In my test, I use:  
+      gawk: 4.1.3-1  
+      grep: 3.0-1  
+      sed: 4.2.2-3  
+      To install the old versions. please refer to this comment Install old packages of cygwin  
+  * Edit 'path'  
+    add 'C:\cygwin64\bin' in the 'path'. 
+* ### Install git  
+    https://git-for-windows.github.io/  
+    In the installation wizard, choose these options:  
+    'Adjusting your PATH environment', choose 'Use Git from the Windows Command Prompt'  
+    'Confifuring the line ending conversions', choose 'Checkout as-is, commit as-is'  
+* ### Install CTP   
+    [Install CTP](#1-install-ctp-in-linux-platform) using cygwin64 follows the same steps as Linux.  
 
-## 2. Install CTP as Regression Test in Linux platform
+## 3. Install CTP as Regression Test platform
 
   Follow last chapter to install CTP as general installation. Then let's continue to support regression test.
 
@@ -98,54 +135,14 @@
       mail_from_nickname=CUBRIDQA_BJ
       mail_from_address=dl_cubridqa_bj_internal@navercorp.com
 
-* ### Add CTP environment variables to .bash_profile
+* ### Add CTP environment variables  
+    ```
+    # CTP HOME
+    export CTP_HOME=$HOME/CTP
 
-  File .bash_prifle
+    # Whether to update CTP when execute CTP/common/script/upgrade.sh. 
+    export CTP_SKIP_UPDATE=0
 
-      # CTP HOME
-      export CTP_HOME=$HOME/CTP
-
-      # Whether to update CTP when execute CTP/common/script/upgrade.sh. 
-      export CTP_SKIP_UPDATE=0
-
-      # Branch used when upgrade CTP
-      export CTP_BRANCH_NAME=develop
-
-## 3. Install CTP in Windows platform
-* ### Install JDK  
-    Java 6 or higher version is required.  
-    We use jdk-8u201-windows-x64  
-* ### Install visual studio 2017  
-    Visual studio is used by make_local.bat  
-    When install visual studio 2017, Choose 'Workloads' view(tab), in 'Windows (3)'section, Choose "Desktop development with C++", then click 'Install' or 'Modify' to start the installation.  
-    After installation, check system variable '%VS140COMNTOOLS%'   
-  * If 'VS140COMNTOOLS' is not add to the system variables automatically, please add it manually.  
-      Variable name: VS140COMNTOOLS  
-      Variable value: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\   
-  * If 'VS140COMNTOOLS' is add to the system variables automatically, please check it svalue. Sometimes, the value is not correct for make_locale to use it. In this situation, please change it to the correct one.  
-      e.g.  
-      Wrong: C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\  
-      Correct: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\ (required for last '\')  
-* ### Install cygwin  
-  * We need choose this packages manually since they will not be installed by default:wget, zip, unzip, dos2unix, bc, expect.  
-      gcc and mingw packages do not need to be installed.  
-  * Check the versions of these packages (or components): gawk, grep, sed  
-      The invalid versions for cygwin components:  
-      grep: 3.0-2  
-      gawk: 4.1.4-3  
-      sed: 4.4-1  
-      We must use the versions before the versions list above.  
-      In my test, I use:  
-      gawk: 4.1.3-1  
-      grep: 3.0-1  
-      sed: 4.2.2-3  
-      To install the old versions. please refer to this comment Install old packages of cygwin  
-  * Edit 'path'  
-    add 'C:\cygwin64\bin' in the 'path'. 
-* ### Install git  
-    https://git-for-windows.github.io/  
-    In the installation wizard, choose these options:  
-    'Adjusting your PATH environment', choose 'Use Git from the Windows Command Prompt'  
-    'Confifuring the line ending conversions', choose 'Checkout as-is, commit as-is'  
-* ### Install CTP   
-    [Install CTP](#1-install-ctp-in-linux-platform) using cygwin64 follows the same steps as Linux.  
+    # Branch used when upgrade CTP
+    export CTP_BRANCH_NAME=develop
+    ```
