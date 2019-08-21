@@ -93,7 +93,13 @@ CUBRID SQL test, SQL detection for each build to detect the basic functions of t
 	Add cci configuration "sql_interface_type=cci" to sql_local.conf
     * Windows test  
     touch and configure ~/CTP/conf/sql_local.conf   
-	Modify configuration "jdbc_config_file=test_default.xml" to "jdbc_config_file = test_win.xml","ha_mode=no" to "ha_mode=yes" in sql_local.conf  
+	Modify configuration "jdbc_config_file=test_default.xml" to "jdbc_config_file = test_win.xml","ha_mode=no" to "ha_mode=yes" in sql_local.conf 
+* configure ~/.bash_profile
+    ```
+    export TZ='Asia/Seoul'
+	export LC_ALL=en_US
+    ```
+    source ~/.bash_profile
 * Install CUBRID  
 On Windows systems,use the msi installation file to install cubrid for the first time.  
 * Check out test cases  
