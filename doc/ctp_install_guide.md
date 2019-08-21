@@ -112,13 +112,13 @@
       export CTP_BRANCH_NAME=develop
 
 ## 3. Install CTP in Windows platform
-* Install JDK  
-Java 6 or higher version is required.  
-We use jdk-8u201-windows-x64  
-* Install visual studio 2017  
-Visual studio is used by make_local.bat  
-When install visual studio 2017, Choose 'Workloads' view(tab), in 'Windows (3)'section, Choose "Desktop development with C++", then click 'Install' or 'Modify' to start the installation.  
-After installation, check system variable '%VS140COMNTOOLS%'   
+* ### Install JDK  
+    Java 6 or higher version is required.  
+    We use jdk-8u201-windows-x64  
+* ### Install visual studio 2017  
+    Visual studio is used by make_local.bat  
+    When install visual studio 2017, Choose 'Workloads' view(tab), in 'Windows (3)'section, Choose "Desktop development with C++", then click 'Install' or 'Modify' to start the installation.  
+    After installation, check system variable '%VS140COMNTOOLS%'   
   * If 'VS140COMNTOOLS' is not add to the system variables automatically, please add it manually.  
       Variable name: VS140COMNTOOLS  
       Variable value: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\   
@@ -126,7 +126,7 @@ After installation, check system variable '%VS140COMNTOOLS%'
       e.g.  
       Wrong: C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\  
       Correct: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\ (required for last '\')  
-* Install cygwin  
+* ### Install cygwin  
   * We need choose this packages manually since they will not be installed by default:wget, zip, unzip, dos2unix, bc, expect.  
       gcc and mingw packages do not need to be installed.  
   * Check the versions of these packages (or components): gawk, grep, sed  
@@ -142,10 +142,10 @@ After installation, check system variable '%VS140COMNTOOLS%'
       To install the old versions. please refer to this comment Install old packages of cygwin  
   * Edit 'path'  
     add 'C:\cygwin64\bin' in the 'path'. 
-* Install git  
-https://git-for-windows.github.io/  
-In the installation wizard, choose these options:  
-'Adjusting your PATH environment', choose 'Use Git from the Windows Command Prompt'  
-'Confifuring the line ending conversions', choose 'Checkout as-is, commit as-is'  
-* Install CTP   
-Install CTP using cygwin64 follows the same steps as Linux.  
+* ### Install git  
+    https://git-for-windows.github.io/  
+    In the installation wizard, choose these options:  
+    'Adjusting your PATH environment', choose 'Use Git from the Windows Command Prompt'  
+    'Confifuring the line ending conversions', choose 'Checkout as-is, commit as-is'  
+* ### Install CTP   
+    [Install CTP](#1-install-ctp-in-linux-platform) using cygwin64 follows the same steps as Linux.  
