@@ -147,8 +147,5 @@ https://git-for-windows.github.io/
 In the installation wizard, choose these options:  
 'Adjusting your PATH environment', choose 'Use Git from the Windows Command Prompt'  
 'Confifuring the line ending conversions', choose 'Checkout as-is, commit as-is'  
-* Add new 'System variables':  
-     ```
-     CTP_BRANCH_NAME=develop
-     CTP_SKIP_UPDATE=0
-     ```
+* Install CTP   
+Install CTP using cygwin64 follows the same steps as Linux.  
