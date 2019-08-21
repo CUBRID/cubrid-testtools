@@ -2,90 +2,122 @@
 Structured Query Language (SQL), SQL is an ANSI (American National Standards Institute) standard computer language. Its functions include data query, data manipulation, data definition and data control. It is a general relational database language with strong functions. It is now the standard language for relational databases. (such as SELECT, UPDATE, DELETE, INSERT, WHERE and etc)   
 CUBRID SQL test, SQL detection for each build to detect the basic functions of the database and ensure the correct output of commands.
   
-# General SQL Test (Developer)
-## Linux  
-* Install CTP [CTP_install_guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md)  
+# General SQL Test  
+## Test deployment  
+* Install CTP: [CTP_install_guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md)  
+    * sql test  
+    touch ~/CTP/conf/sql_local.conf    
+	    ```
+		  #Copyright (c) 2016, Search Solution Corporation. All rights reserved.
+		  #--------------------------------------------------------------------
+		  #
+		  #Redistribution and use in source and binary forms, with or without 
+		  #modification, are permitted provided that the following conditions are met:
+		  #
+		  #  * Redistributions of source code must retain the above copyright notice, 
+		  #    this list of conditions and the following disclaimer.
+		  #
+		  #  * Redistributions in binary form must reproduce the above copyright 
+		  #    notice, this list of conditions and the following disclaimer in 
+		  #    the documentation and/or other materials provided with the distribution.
+		  #
+		  #  * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
+		  #    derived from this software without specific prior written permission.
+		  #
+		  #THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+		  #INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+		  #DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+		  #SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+		  #SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+		  #WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+		  #USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+		  # SQL section - a section for CTP tool configuration when executing sql/medium testing
+		  [sql]
+		  # The location of your testing scenario
+		  scenario=${HOME}/cubrid-testcases/sql
+		  # Configure an alias name for testing result
+		  test_category=sql
+		  # Config file for I18N client charset configuration and init session parameter via 'set system parameter xxx'
+		  jdbc_config_file=test_default.xml
+		  # Config database charset for db creation
+		  db_charset=en_US
+		  # If test need do make locale or not
+		  need_make_locale=yes
+
+		  # SQL cubrid.conf section - a section for cubrid.conf configuration
+		  [sql/cubrid.conf]
+		  # To decide if the Java store procedure will be used when testing
+		  java_stored_procedure=yes
+		  # Allow scenario to change database system parameter
+		  test_mode=yes
+		  # To increase the speed of execution
+		  max_plan_cache_entries=1000
+		  # To increase the speed of execution
+		  unicode_input_normalization=no
+		  # To change port of cubrid_port_id to avoid port conflict
+		  cubrid_port_id=1285
+		  # In order to simulate the scenario customer use
+		  ha_mode=yes
+		  # To reduce the lock wait time to fast testing execution
+		  lock_timeout=10sec
+
+		  # SQL cubrid_ha.conf section - a section for ha related configuration
+		  [sql/cubrid_ha.conf]
+		  # Once ha_mode=yes is configured in cubrid.conf, you will require to configure cubrid_ha.conf except ha_db_list 
+		  ha_mode=yes
+		  # To reduce memory use
+		  ha_apply_max_mem_size=300
+		  # To set what port will be used for ha_port_id
+		  ha_port_id=12859
+
+		  # SQL cubrid_broker.conf query editor section - a section to change parameters under query_editor
+		  [sql/cubrid_broker.conf/%query_editor]
+		  # To close one service to avoid port conflict and reduce configuration complexity
+		  SERVICE=OFF
+
+		  # SQL cubrid_broker.conf broker1 section - a section to change parameters under broker1
+		  [sql/cubrid_broker.conf/%BROKER1]
+		  # To change broker port to avoid port conflict, if you are sure the port will not conflict, just ignore.
+		  BROKER_PORT=33285
+		  # To change ID of shared memory used by CAS, if you are sure the port will not conflict, just ignore.
+		  APPL_SERVER_SHM_ID=33285
+
+		  # SQL cubrid_broker.conf broker section - a section to configure parameters under broker section
+		  [sql/cubrid_broker.conf/broker]
+		  # To change the identifier of shared memory to avoid conflict to cause server start fail
+		  MASTER_SHM_ID=32851
+		```
+	* sql_by_cci test  
+    touch and configure ~/CTP/conf/sql_by_cci_template.conf  
+	Add cci configuration "sql_interface_type=cci" to sql_local.conf
+    * Windows test  
+    touch and configure ~/CTP/conf/sql_local.conf   
+	Modify configuration "jdbc_config_file=test_default.xml" to "jdbc_config_file = test_win.xml","ha_mode=no" to "ha_mode=yes" in sql_local.conf  
 * Install CUBRID  
+On Windows systems,use the msi installation file to install cubrid for the first time.  
 * Check out test cases  
     ```
     cd ~  
     git clone https://github.com/CUBRID/cubrid-testcases.git 
     ```
-## Windows  
-* Prepare     
-We need create a new user for dailyqa test: qa  
-use 'Change Account Type' to change user 'qa' to 'Administrator'  
-passwd is the normal root passwd.   
-    
-* Login as user 'qa'  
-* install JDK  
-jdk version must greater than 1.6.0_07  
-We use jdk-8u201-windows-x64  
-* Install visual studio 2017  
-Visual studio is used by make_local.bat  
-When install visual studio 2017, Choose 'Workloads' view(tab), in 'Windows (3)'section, Choose "Desktop development with C++", then click 'Install' or 'Modify' tostart the installation.  
-After installation, check system variable '%VS140COMNTOOLS%'   
-* If 'VS140COMNTOOLS' is not add to the system variables automatically, please add it manually.  
-    Variable name: VS140COMNTOOLS  
-    Variable value: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\   
-* If 'VS140COMNTOOLS' is add to the system variables automatically, please check itsvalue. Sometimes, the value is not correct for make_locale to use it. In thissituation, please change it to the correct one.  
-    e.g.  
-    Wrong: C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\  
-    Correct: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\ (required for last '\')  
-* install cygwin  
-* We need choose this packages manually since they will not be installed by default:wget, zip, unzip, dos2unix, bc, expect.  
-    gcc and mingw packages do not need to be installed.  
-* check the versions of these packages (or components): gawk, grep, sed  
-    The invalid versions for cygwin components:  
-    grep: 3.0-2  
-    gawk: 4.1.4-3  
-    sed: 4.4-1  
-    We must use the versions before the versions list above.  
-    In my test, I use:  
-    gawk: 4.1.3-1  
-    grep: 3.0-1  
-    sed: 4.2.2-3  
-    To install the old versions. please refer to this comment Install old packages of cygwin  
 
-* install git  
-https://git-for-windows.github.io/  
-In the installation wizard, choose these options:  
-'Adjusting your PATH environment', choose 'Use Git from the Windows Command Prompt'  
-'Confifuring the line ending conversions', choose 'Checkout as-is, commit as-is'  
-* install a text editor tool which can used both in linux and windows format  
-I intall 'Notepad++ v7.5.1'  
-* install cubrid  
-Use the msi installation file to install cubrid for the first time.  
-* set 'Environment Variables'   
-    * After install cubrid by msi file, these system parameter will be added automatically:  
-        ```
-        CUBRID:C:\CUBRID\
-        CUBRID_DATABASES:C:\CUBRID\databases
-        ```
-    * Add new 'System variables':  
-        ```
-        JAVA_HOME:C:\Program Files\Java\jdk1.8.0_201
-        CTP_BRANCH_NAME:develop
-        CTP_SKIP_UPDATE:0
-        ```
-    * Edit 'path'  
-    add '%JAVA_HOME%\bin C:\cygwin64\bin' in the 'path'.  
-* Install CTP  
-    * Please follow the guide to install CTP. 
-    * touch ~/CTP/conf/sql_local.conf  
-    Here is the config file that we use for current daily QA test: sql_local.conf  
-* Check out test cases  
-    ```
-    cd ~
-    git clone https://github.com/CUBRID/cubrid-testcases.git 
-    ```
 ## Executed Test
 ### ctp  
-* run ctp.sh
-  ```
-  ctp.sh sql -c CTP/conf/sql_local.conf --interactive
-  ```
-  Modify the working directory and configuration parameters in the file CTP/conf/sql_local.conf\
+* run ctp.sh  
+  Modify the working directory and configuration parameters in the file CTP/conf/sql_local.conf:scenario=${HOME}/cubrid-testcases/sql
+  * sql
+    ```
+    ctp.sh sql -c CTP/conf/sql_local.conf --interactive
+    ```
+  * medium
+    ```
+    ctp.sh medium -c CTP/conf/sql_local.conf --interactive
+    ```
+  * sql_by_cci
+    ```
+    ctp.sh medium -c CTP/conf/sql_local.conf --interactive
+    ```
 * run test
   ```
   ======================================  Welcome to Interactive Mode ======================================  
@@ -106,6 +138,19 @@ Use the msi installation file to install cubrid for the first time.
   ```
 
   ![run_test](./sql_image/ctp_run_test.png)  
+
+  You can view the results on the web page:
+  ```
+    $ ctp.sh webconsole start
+    Config: /home/sql1/CTP/conf/webconsole.conf
+    Web Root: /home/sql1/CTP/sql/webconsole
+    Begin to start 
+
+    Done
+    URL:  http://192.168.1.76:7777
+  ```
+  
+  ![ctp_web_result](./sql_image/ctp_web_result.png)  
 
 ### csql  
 * sql test
@@ -131,7 +176,7 @@ Use the msi installation file to install cubrid for the first time.
     4|Test node|sqlbycci|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT|run_sql_by_cci
     5|Test node|sql|192.168.1.77|func02|QUEUE_CUBRID_QA_SQL_PERF_LINUX|run_sql
     6|Test node|qa|192.168.1.161|winfunc01|QUEUE_CUBRID_QA_SQL_WIN64|run_sql  
-* Install reference [General SQL Test (Developer)](#general-sql-test-developer) 
+* Install reference [CTP_install_guide](https://github.com/Zhaojia2019/cubrid-testtools/blob/guide/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) 
 * Linux Queue configure    
     touch start_test.sh  
     ```
@@ -237,3 +282,4 @@ Go to QA homepage and click the CI build, wait for the page loading, then click 
     /path/to/cases/case_file.sql  
     /path/to/cases/case_file.queryPlan  (make sure to output query plan info)  
     ![queryplan](./sql_image/queryplan.png)
+
