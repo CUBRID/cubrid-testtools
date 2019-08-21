@@ -112,24 +112,24 @@
       export CTP_BRANCH_NAME=develop
 
 ## 3. Install CTP in Windows platform
-* install JDK  
-jdk version must greater than 1.6.0_07  
+* Install JDK  
+Java 6 or higher version is required.  
 We use jdk-8u201-windows-x64  
 * Install visual studio 2017  
 Visual studio is used by make_local.bat  
-When install visual studio 2017, Choose 'Workloads' view(tab), in 'Windows (3)'section, Choose "Desktop development with C++", then click 'Install' or 'Modify' tostart the installation.  
+When install visual studio 2017, Choose 'Workloads' view(tab), in 'Windows (3)'section, Choose "Desktop development with C++", then click 'Install' or 'Modify' to start the installation.  
 After installation, check system variable '%VS140COMNTOOLS%'   
   * If 'VS140COMNTOOLS' is not add to the system variables automatically, please add it manually.  
       Variable name: VS140COMNTOOLS  
       Variable value: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\   
-  * If 'VS140COMNTOOLS' is add to the system variables automatically, please check itsvalue. Sometimes, the value is not correct for make_locale to use it. In thissituation, please change it to the correct one.  
+  * If 'VS140COMNTOOLS' is add to the system variables automatically, please check it svalue. Sometimes, the value is not correct for make_locale to use it. In this situation, please change it to the correct one.  
       e.g.  
       Wrong: C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\  
       Correct: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\ (required for last '\')  
-* install cygwin  
+* Install cygwin  
   * We need choose this packages manually since they will not be installed by default:wget, zip, unzip, dos2unix, bc, expect.  
       gcc and mingw packages do not need to be installed.  
-  * check the versions of these packages (or components): gawk, grep, sed  
+  * Check the versions of these packages (or components): gawk, grep, sed  
       The invalid versions for cygwin components:  
       grep: 3.0-2  
       gawk: 4.1.4-3  
@@ -142,7 +142,7 @@ After installation, check system variable '%VS140COMNTOOLS%'
       To install the old versions. please refer to this comment Install old packages of cygwin  
   * Edit 'path'  
     add 'C:\cygwin64\bin' in the 'path'. 
-* install git  
+* Install git  
 https://git-for-windows.github.io/  
 In the installation wizard, choose these options:  
 'Adjusting your PATH environment', choose 'Use Git from the Windows Command Prompt'  
