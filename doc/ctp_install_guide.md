@@ -57,20 +57,14 @@
               ctp.sh medium medium    #execute medium twice
               ctp.sh webconsole start #start web console to view sql test results
 
-## 2. Install CTP in Windows platform
-* ### Install JDK  
-    Java 6 or higher version is required.    
-* ### Install visual studio 2017  
-    Visual studio is used by make_local.bat  
-    When install visual studio 2017, Choose 'Workloads' view(tab), in 'Windows (3)'section, Choose "Desktop development with C++", then click 'Install' or 'Modify' to start the installation.  
+## 2. Install CTP in Windows platform  
+* ### Install Visual Studio 2017  
+    Visual studio is used by make_locale.bat  
+    When install visual studio 2017, choose 'Workloads' view(tab), in 'Windows (3)'section, choose "Desktop development with C++", then click 'Install' or 'Modify' to start the installation.  
     After installation, check system variable '%VS140COMNTOOLS%'   
   * If 'VS140COMNTOOLS' is not add to the system variables automatically, please add it manually.  
       Variable name: VS140COMNTOOLS  
-      Variable value: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\   
-  * If 'VS140COMNTOOLS' is add to the system variables automatically, please check it svalue. Sometimes, the value is not correct for make_locale to use it. In this situation, please change it to the correct one.  
-      e.g.  
-      Wrong: C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\  
-      Correct: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\ (required for last '\')  
+      Variable value: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\     
 * ### Install cygwin  
   * We need choose this packages manually since they will not be installed by default:wget, zip, unzip, dos2unix, bc, expect.  
       gcc and mingw packages do not need to be installed.  
@@ -85,10 +79,10 @@
       grep: 3.0-1  
       sed: 4.2.2-3  
       To install the old versions. please refer to this comment Install old packages of cygwin  
-  * Edit 'path'  
-    add 'C:\cygwin64\bin' in the 'path'. 
+  * Change environment variable 'PATH'  
+    Add 'C:\cygwin64\bin' in the 'PATH' 
 * ### Install git  
-    https://git-for-windows.github.io/  
+    Download git in https://git-for-windows.github.io/.  
     In the installation wizard, choose these options:  
     'Adjusting your PATH environment', choose 'Use Git from the Windows Command Prompt'  
     'Confifuring the line ending conversions', choose 'Checkout as-is, commit as-is'  
