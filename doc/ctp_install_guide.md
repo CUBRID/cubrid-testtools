@@ -70,15 +70,15 @@
   * Required packages:  `wget`, `zip`, `unzip`, `dos2unix`, `bc`, `expect`.  
     Do not choose: `gcc` and `MinGW`  
   * Package versions required  
-      Unsatisfied versions which will lead to many case failures:  
-      grep: 3.0-2  
-      gawk: 4.1.4-3  
-      sed: 4.4-1  
-      Satisfied versions:  
-      gawk: 4.1.3-1  
-      grep: 3.0-1  
-      sed: 4.2.2-3  
-      To install the old versions, please refer to this satisfied versions Install old packages of cygwin.  
+    Unsatisfied versions which will lead to many case failures:  
+    grep: 3.0-2  
+    gawk: 4.1.4-3  
+    sed: 4.4-1  
+    Satisfied versions:  
+    gawk: 4.1.3-1  
+    grep: 3.0-1  
+    sed: 4.2.2-3  
+    To install the old versions, please refer to this satisfied versions Installold packages of cygwin.  
   * Change environment variable 'PATH'  
     Add 'C:\cygwin64\bin' in the 'PATH' 
 * ### Install git  
