@@ -63,9 +63,9 @@
     When install Visual Studio 2017, choose `Workloads` tab, in `Windows (3)` section, choose `Desktop development with C++`, then click `Install` or `Modify` to start the installation.  
     After installation, check system variable `VS140COMNTOOLS`   
   * If `VS140COMNTOOLS` is not added to the system variables automatically, please add it manually.  
-      ```
-      VS140COMNTOOLS=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\    
-      ``` 
+    ```
+    VS140COMNTOOLS=C:\Program Files (x86)\Microsoft VisualStudio\2017\Community\Common7\Tools\    
+    ``` 
 * ### Install cygwin  
   * Required packages:  `wget`, `zip`, `unzip`, `dos2unix`, `bc`, `expect`.  
     Do not choose: `gcc` and `MinGW`  
@@ -78,7 +78,7 @@
     gawk: 4.1.3-1  
     grep: 3.0-1  
     sed: 4.2.2-3  
-    To install the old versions, please refer to this satisfied versions Installold packages of cygwin.  
+    To install the old versions, please refer to this satisfied versions Install old packages of cygwin.  
   * Change environment variable 'PATH'  
     Add 'C:\cygwin64\bin' in the 'PATH' 
 * ### Install git  
