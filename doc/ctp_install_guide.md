@@ -71,16 +71,20 @@
     Do not choose: `gcc` and `MinGW`  
   * Package versions required  
     Unsatisfied versions which will lead to many case failures:  
+    ```
     grep: 3.0-2  
     gawk: 4.1.4-3  
     sed: 4.4-1  
+    ```
     Satisfied versions:  
+    ```
     gawk: 4.1.3-1  
     grep: 3.0-1  
     sed: 4.2.2-3  
-    To install the old versions, please refer to this satisfied versions Install old packages of cygwin.  
-  * Change environment variable 'PATH'  
-    Add 'C:\cygwin64\bin' in the 'PATH' 
+    ```
+    To install the old versions, please refer to this satisfied versions Install old packages of cygwin.  [Satisfied versions comment reference.](http://jira.cubrid.org/browse/CUBRIDQA-422?focusedCommentId=4747548&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-4747548)
+  * Change environment variable `PATH`  
+    Add 'C:\cygwin64\bin' in the `PATH`  
 * ### Install git  
     Download git in https://git-for-windows.github.io/.  
     In the installation wizard, choose these options:  
