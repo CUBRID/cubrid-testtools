@@ -86,7 +86,7 @@
     * Install old packages of cygwin   
         * Why install the old versions?  
             Take 'grep' as an example:  
-            Sometimes, '\r' is appended in the texts on windows. But in [\[ANNOUNCEMENT\] Updated \[test\]: grep\-3.0\-2](http://cygwin.1069669.n5.nabble.com/ANNOUNCEMENT-TEST-Cygwin-3-1-0-0-2-td147352.html])  
+            Sometimes, '\r' is appended in the texts on windows. But in [\[ANNOUNCEMENT\] Updated \[test\]: grep\-3.0\-2](http://cygwin.1069669.n5.nabble.com/ANNOUNCEMENT-TEST-Cygwin-3-1-0-0-2-td147352.html)  
             ```
             This build modifies the behavior of grep to no longer force text mode on 
             binary-mounted file descriptors.  Since this includes pipelines by 
