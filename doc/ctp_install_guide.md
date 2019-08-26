@@ -82,32 +82,34 @@
     grep: 3.0-1  
     sed: 4.2.2-3  
     ```
-    To install the old versions, please refer to this satisfied versions [install old packages of cygwin](#install-the-old-versions).  
-    * Why install the old versions?  
-        Take 'grep' as an example:  
-        Sometimes, '\r' is appended in the texts on windows. But in [\[ANNOUNCEMENT\] Updated \[test\]: grep\-3.0\-2](http://cygwin.1069669.n5.nabble.com/ANNOUNCEMENT-TEST-Cygwin-3-1-0-0-2-td147352.html)  
-        ```
-        This build modifies the behavior of grep to no longer force text mode on 
-        binary-mounted file descriptors.  Since this includes pipelines by 
-        default, this means that if you pipe text data through a pipeline (such 
-        as the output of a windows program), you may need to insert a call to 
-        d2u to sanitize your input before passing it to grep.
-        ```
-        We do not intend to modify test cases, since the cases are used both by linux and windows platform.  
-        So we need to use grep before 3.0-2.  
+    Please refer to appendix [How to install packages with customized version in cygwin](#how-to-install-packages-with-customized-version-in-cygwin).  
+    * Note: why install the specific versions?  
+        Take `'grep'` as an example:  
+        We found, `'\r'` was appended in the texts on windows. By our investigation, we found information about it:
+        >
+        > This build modifies the behavior of grep to no longer force text mode on 
+        > binary-mounted file descriptors.  Since this includes pipelines by 
+        > default, this means that if you pipe text data through a pipeline (such 
+        > as the output of a windows program), you may need to insert a call to 
+        > d2u to sanitize your input before passing it to grep.  
+        > 
+        > Source: http://cygwin.1069669.n5.nabble.com/ANNOUNCEMENT-TEST-Cygwin-3-1-0-0-2-td147352.html
+
+        We do not intend to modify test cases, since the cases are used by both linux and windows platform.  
+        So we need to use `grep` before `'3.0-2'`.  
   * Change environment variable `PATH`  
-    Add 'C:\cygwin64\bin' in the `PATH`  
+    Add `'C:\cygwin64\bin'` in the `PATH`  
 * ### Install git  
     Download git in https://git-for-windows.github.io/.  
     In the installation wizard, choose these options:  
     `Adjusting your PATH environment`, choose `Use Git from the Windows Command Prompt`  
     `Confifuring the line ending conversions`, choose `Checkout as-is, commit as-is`  
-* ### Install CTP   
-    [Install CTP](#1-install-ctp-in-linux-platform) using cygwin64 follows the same steps as Linux.  
+* ### Install CTP  
+    Please follow the same steps as Linux platform to [install CTP](#1-install-ctp-in-linux-platform). 
 
 ## 3. Install CTP as Regression Test platform
 
-  Follow last chapter to install CTP as general installation. Then let's continue to support regression test.
+  Follow above chapters to install CTP as general installation. Then let's continue to support regression test.
 
 * ### Provide Common Configuration
 
@@ -157,43 +159,49 @@
     export CTP_BRANCH_NAME=develop
     ```
 # Appendix
-* ### Install the old versions 
-    Take 'grep' as an example.  
-    * Method 1, Install from Internet
-        1. start cygwin installation file 'setup-x86_64.exe'  
-        2. In step 'Choose A Download Source', select 'Install from Internet'  
-        3. In step 'Select Packages', in the field of 'View', choose 'Category' or 'Full', and in the field of 'Search', input 'grep'.  
-        Then, find the line of 'grep: search for regular expression matches in test files'.  
-        Click the column of "New" (the second column) on this line, until 3.0-1 appears.  
-        (1) If '3.0-1' can be shown automatically, choose 'Pending' in 'View' field, to check the pending list is correct:   
-        Ⅰ. this package is in the list  
-        Ⅱ. if there are other packages which you do not want to update this time, please click the second columns of these lines on by one to mark them as 'keep'.  
-        Check the pending list is important, since new versions of other packages are put in pending list and will be updated automatically.  
-        For example, last time, I reverted  'gawk' to old version, and this time, I try to install old version of 'grep' and forget to check the pending list, 'gawk' will be updated to the newer version at this time.  
-        So we'd better to install 'gawk', 'grep', 'sed' at once, instead of install them separately.   
-        (2) If '3.0-1' cannot be shown automatically, cancel this installation, and use the second installation method below.
-        4. use the default options in the following steps  
-    * Method 2, Install from Local Directory  
-        When the required old versions cannot be found in Method 1, we need to install it from local directory.  
-        1. Find your last dowload/installation path, like "http%3a%2f%2fcygwin.mirror.constant.com%2f"  
-        2.  Add the previous grep package in the installation path.  
-        (1) download the previous package of "grep"  
-        (2) put this package in the previous installation path  
-        e.g. C:\winshell_setup\http%3a%2f%2fcygwin.mirror.constant.com%2f\x86_64\release\grep  
-        (3) edit the setup.ini file  
-        e.g. C:\winshell_setup\http%3a%2f%2fcygwin.mirror.constant.com%2f\x86_64\setup.ini  
-        Add a "[prev]" section for this previous pack in "@ grep" part. If it already exists, just ignore this step.  
-            ```
+* ### How to install packages with customized version in cygwin?
+
+  There are two ways. Let's take `'grep'` as an example.
+    
+  * **The first way, install from internet**
+
+    1. Start cygwin installation file `'setup-x86_64.exe'`
+  
+    2. In step `'Choose A Download Source'`, select `'Install from Internet'`
+  
+    3. In step `'Select Packages'`, in the field of `'View'`, choose `'Category'` or `'Full'`, and in the field of `'Search'`, input `'grep'`.  Then, find the line of `'grep: search for regular expression matches in test files'`. Click the column of `'New'` (the second column) on this line, until `'3.0-1'` appears.    
+    
+       (1) If `'3.0-1'` can be shown automatically, choose `'Pending'` in `'View'` field, to check the pending list is correct:   
+          + This package is in the list  
+          + If there are other packages which you do not want to update this time, please click the second columns of these lines on by one to mark them as `'keep'`.  
+          + Note: check the pending list is important, since new versions of other packages are put in pending list and will be updated automatically. For example, last time, I reverted `'gawk'` to old version, and this time, I try to install old version of `'grep'` and forget to check the pending list, `'gawk'` will be updated to the newer version at this time.  So we'd better to install `'gawk'`, `'grep'`, `'sed'` at once, instead of install them separately.          
+          
+       (2) If `'3.0-1'` cannot be shown automatically, cancel this installation, and use the second installation method below.  
+      
+    4. Use the default options in the following steps  
+
+  * **The second way, install from Local Directory**  
+    When the required versions cannot be found in the first way, we need to install it from local directory.  
+    
+    1. Find your last dowload/installation path, like `'http%3a%2f%2fcygwin.mirror.constant.com%2f'`  
+    
+    2. Add the previous grep package in the installation path.  
+      (1) download the previous package of `'grep'`         
+      (2) put this package in the previous installation path
+          e.g. `'C:\winshell_setup\http%3a%2f%2fcygwin.mirror.constant.com%2f\x86_64\release\grep'`  
+      (3) edit the setup.ini file  
+          e.g. `'C:\winshell_setup\http%3a%2f%2fcygwin.mirror.constant.com%2f\x86_64\setup.ini'`  
+        Add a `'[prev]'` section for this previous pack in `'@ grep'` part. If it already exists, just ignore this step.  
+        
             [prev]
             version: 3.0-1
             install: x86_64/release/grep/grep-3.0-1.tar.xz 361740 a34cf6fc689a62005f7a33287c86419d7a24d262f694489af0dc864affd031f61f9f15970f2f211f335aa7a0234211facf98cc76d83639c7c631ffe5386b00ac
             source: x86_64/release/grep/grep-3.0-1-src.tar.xz 1379944 9d7b08c7e21d0d5058faff728dc575aab95d8c0ab8f70897ff0b2910f32b7f8dd1cdab530564a2786ffb24f676fa16bf7a51d8e0fb1488d2971dcc1d1c443d99
-            ```
-        3. start setup-x86_64.exe  
-        (1) In step "Choose A Download Source":  
-        Choose "Install from Local Directory"  
-        (2) In step "Select Local Package Directory":  
-        Specify the path as "C:\winshell_setup\http%3a%2f%2fcygwin.mirror.constant.com%2f"  
-        (3) use the default options in the following steps, until you met step "Select Packages"  
-        choose the correct version of "grep", in this case, I select "3.0-1"  
-        (4) use the default options in the following steps  
+              
+    3. Start setup-x86_64.exe  
+        (1) In step `'Choose A Download Source'`, choose `'Install from Local Directory'`  
+        (2) In step `'Select Local Package Directory'`, specify the path as `'C:\winshell_setup\http%3a%2f%2fcygwin.mirror.constant.com%2f'`  
+        (3) Use the default options in the following steps, until you met step `'Select Packages'`, choose the correct version of `grep`, in this case, I select `'3.0-1'`.  
+        (4) Use the default options in the following steps.
+        
+      
