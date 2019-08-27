@@ -1,12 +1,14 @@
 # Test Objective
-Structured Query Language (SQL), SQL is an ANSI (American National Standards Institute) standard computer language. Its functions include data query, data manipulation, data definition and data control. It is a general relational database language with strong functions. It is now the standard language for relational databases. (such as SELECT, UPDATE, DELETE, INSERT, WHERE and etc)   
-CUBRID SQL test, SQL detection for each build to detect the basic functions of the database and ensure the correct output of commands.
+SQL is basic but important feature of one RDBMS product. CUBRID as a comprehensive relational database management system supports not only standard SQL but also native extension.  
+In order to test SQL feature, we designed two suites SQL and MEDIUM which include all kinds of DDL, DML and so on.  
+Typically, SQL and MEDIUM perform tests via JDBC interface on both Linux and Windows platform as regression test. And we also introduce SQL_BY_CCI suite which execute SQL test cases via CCI interface. In this guide, I would introduce SQL, MEDIUM and SQL_BY_CCI tests.  
   
 # General SQL Test  
 ## Test deployment  
-* Install CTP: [CTP_install_guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md)  
-    * sql test  
-    touch ~/CTP/conf/sql_local.conf    
+* Install CTP  
+Please follow guides to [install CTP on Linux platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform) or [install CTP on Windows platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#2-install-ctp-in-windows-platform).
+    * SQL test  
+    Prepare test configuration file ~/CTP/conf/sql.conf    
 	    ```
 		  #Copyright (c) 2016, Search Solution Corporation. All rights reserved.
 		  #--------------------------------------------------------------------
@@ -88,12 +90,12 @@ CUBRID SQL test, SQL detection for each build to detect the basic functions of t
 		  # To change the identifier of shared memory to avoid conflict to cause server start fail
 		  MASTER_SHM_ID=32851
 		```
-	* sql_by_cci test  
+	* SQL_BY_CCI test  
     touch and configure ~/CTP/conf/sql_by_cci_template.conf  
-	Add cci configuration "sql_interface_type=cci" to sql_local.conf
+	Add cci configuration "sql_interface_type=cci" to sql.conf
     * Windows test  
-    touch and configure ~/CTP/conf/sql_local.conf   
-	Modify configuration "jdbc_config_file=test_default.xml" to "jdbc_config_file = test_win.xml","ha_mode=no" to "ha_mode=yes" in sql_local.conf 
+    touch and configure ~/CTP/conf/sql.conf   
+	Modify configuration "jdbc_config_file=test_default.xml" to "jdbc_config_file = test_win.xml","ha_mode=no" to "ha_mode=yes" in sql.conf 
 * configure ~/.bash_profile
     ```
     export TZ='Asia/Seoul'
@@ -101,6 +103,10 @@ CUBRID SQL test, SQL detection for each build to detect the basic functions of t
     ```
     source ~/.bash_profile
 * Install CUBRID  
+On Linux systems,use the sh installation file to install cubrid.  
+    ```
+    sh CUBRID-10.2.0.8414-294c026-Linux.x86_64-debug.sh
+    ```
 On Windows systems,use the msi installation file to install cubrid for the first time.  
 * Check out test cases  
     ```
@@ -109,22 +115,24 @@ On Windows systems,use the msi installation file to install cubrid for the first
     ```
 
 ## Executed Test
-### ctp  
-* run ctp.sh  
-  Modify the working directory and configuration parameters in the file CTP/conf/sql_local.conf:scenario=${HOME}/cubrid-testcases/sql
-  * sql
+### CTP  
+* Execute with interactive mode via CTP  
+run ctp.sh  
+  Modify the working directory and configuration parameters in the file CTP/conf/sql.conf:scenario=${HOME}/cubrid-testcases/sql
+  * SQL
     ```
-    ctp.sh sql -c CTP/conf/sql_local.conf --interactive
+    ctp.sh sql -c CTP/conf/sql.conf --interactive
     ```
-  * medium
+  * MEDIUM
     ```
-    ctp.sh medium -c CTP/conf/sql_local.conf --interactive
+    ctp.sh medium -c CTP/conf/sql.conf --interactive
     ```
-  * sql_by_cci
+  * SQL_BY_CCI
     ```
-    ctp.sh medium -c CTP/conf/sql_local.conf --interactive
+    ctp.sh sql -c CTP/conf/sql.conf --interactive
     ```
-* run test
+* Execute each test suite via CTP   
+run test
   ```
   ======================================  Welcome to Interactive Mode ======================================  
   Usage: 
@@ -159,16 +167,16 @@ On Windows systems,use the msi installation file to install cubrid for the first
   ![ctp_web_result](./sql_image/ctp_web_result.png)  
 
 ### csql  
-* sql test
+* SQL test
    * cubrid createdb testdb en_US  
    * cubrid server start testdb
    * csql -u dba testdb  
   ![run_test](./sql_image/csql_run_test.png)  
    
-* medium test
+* MEDIUM test
    * cubrid createdb testdb en_US  
    * cubrid loaddb -u dba -d mdb_objects -s mdb_schema -i mdb_indexes  testdb
-     It‘s difference between sql and medium,  there is a unload file cubrid-testcases/medium/files/mdb.tar.gz that is used to medium test.(The files mdb_indexes,mdb_schema and mdb_objects are in the mdb.tar.gz archive)
+     It‘s difference between SQL and MEDIUM,  there is a unload file cubrid-testcases/medium/files/mdb.tar.gz that is used to MEDIUM test.(The files mdb_indexes,mdb_schema and mdb_objects are in the mdb.tar.gz archive)
    * cubrid server start testdb
    * csql -u dba testdb  
 # Regression Test Deployment  
@@ -210,7 +218,7 @@ On Windows systems,use the msi installation file to install cubrid for the first
   [CI_BUILD]:Corresponds to the build installation package address
   [Category]:sql,sql_debug,sql_by_cci,medium,medium_debug  
   
-  eg: run sql_by_cci test
+  eg: run SQL test
   sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh sql_debug default  
    
 # Regression Test Sustaining  
@@ -224,9 +232,9 @@ Go to QA homepage and click the CI build, wait for the page loading, then click 
 	* VERIFY CODE COVERAGE TESTING RESULT  
 	Go to QA homepage and find the ‘code coverage’ node in the left area, click the link of latest result.  
 	![coverage](./sql_image/coverage.png)  
-	Click the Category(sql,medium,sql_by_cci) link.   
+	Click the Category(SQL,MEDIUM,SQL_BY_CCI) link.   
 	![category](./sql_image/category.png)  
-	There is a coverage rate of lines. Its sql and sql_by_cci coverage rate of lines is usually in 58%~60%, the medium coverage rate of lines is usually in 30%~31%.  
+	There is a coverage rate of lines. Its SQL and SQL_BY_CCI coverage rate of lines is usually in 58%~60%, the MEDIUM coverage rate of lines is usually in 30%~31%.  
 	![coverage_result](./sql_image/coverage_result.png)
 
 	* SEND CODE COVERAGE TESTING MESSAGE  
