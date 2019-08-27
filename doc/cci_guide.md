@@ -385,7 +385,7 @@ For current daily regression test, controller node and test node are the same on
     default_ssh_port=22
 
     grepo_service_url=rmi://192.168.1.91:11099
-    coverage_controller_pwd=uV9b3KMp5%%
+    coverage_controller_pwd=******
 
     qahome_db_driver=cubrid.jdbc.driver.CUBRIDDriver
     qahome_db_url=jdbc:cubrid:192.168.1.86:33080:qaresu:dba::
