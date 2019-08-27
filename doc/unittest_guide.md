@@ -4,6 +4,15 @@ Unittest cases are provided by developers for the purpose of unit test. In order
 
 # 2. Unittest Test Usage
 
+## 2.1 Quick Start
+
+Let's show an example that how to execute unittest test via CTP.
+
+### Step 1: Prepare test cases
+
+Test cases are written in C or C++ programming language. We need compile them to make executable test cases.
+
+
 # 3. Unittest Test Case Specification
 
 # 4. Regression Test Deployment
