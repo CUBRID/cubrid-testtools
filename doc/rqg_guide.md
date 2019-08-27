@@ -6,14 +6,14 @@ The RQG test is an extension of shell test. RQG test cases are executed via CTP.
 
 ## 2.2 random_query_generator 
 It is an external tool provided by MySQL.
-We mainly use its gendata.pl and gentest.pl scripts
-`gendata.pl`: generate tables and data
+We mainly use its gendata.pl and gentest.pl scripts   
+`gendata.pl`: generate tables and data   
 `gentest.pl`: execute random querys
 
 ### Generate tables and data based on configuration files
 #### Configuration files 
 They are named with XXX.zz     
-for example: example.zz
+example.zz
      
     $tables = {
             rows => [10000, 1000, 10000, 10000],
@@ -37,8 +37,8 @@ for example: example.zz
 
     
 #### Run
-Let's run with example.zz
-step1: create database test,server start and broker start
+Let's run with example.zz   
+step1: create database test,server start and broker start   
 ```bash
 $ cubrid createdb test en_us
 Creating database with 512.0M size using locale en_us. The total amount of disk space needed is 1.5G.
@@ -66,7 +66,7 @@ $ cubrid broker status -b
 * broker1               5546 33037     5    0                    0                    0        0        0        0        0        0     0/60.0     0/60.0             0             0         0         0 
 $ 
 ```
-step2: use .zz to generate tables and data
+step2: use .zz to generate tables and data    
 ```bash
 $ perl ./gendata.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037" --spec=/home/perl/random_query_generator/ok_conf/example.zz --rows=10
 # 17:18:31 Default schema: PUBLIC
@@ -79,7 +79,7 @@ $ perl ./gendata.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037" -
 # 17:19:05 # Creating Cubrid table table10000_int_autoinc .
 # 17:19:23 # Progress: loaded 10000 out of 10000 rows
 ```
-step3: check database tables and data
+step3: check database tables and data    
 ```bash
 $ csql -u dba  test
 
@@ -146,7 +146,7 @@ archar_100   col_enum_key
 1 command(s) successfully processed.
 csql> 
 ```
-step4: check columns of tables
+step4: check columns of tables     
 ```bash
 csql> ;sc table10000_int_autoinc
 
@@ -219,10 +219,10 @@ Committed.
 csql> 
 ```
 
-### Generate random queries based on configuration files
+### Generate random queries based on configuration files   
 #### Configuration files 
-They are named with XXX.yy
-for example: example.yy
+They are named with XXX.yy    
+example.yy
 ```bash
     query:
             update | insert | delete ;
@@ -244,9 +244,9 @@ for example: example.yy
 
 
 #### Run
-Let's run with example.yy
-step1: refer to above, generate tables and data by ` perl ./gendata.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037" --spec=/home/perl/random_query_generator/ok_conf/example.zz --rows=10`
-step2: execute random querys
+Let's run with example.yy   
+step1: refer to above, generate tables and data by ` perl ./gendata.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037" --spec=/home/perl/random_query_generator/ok_conf/example.zz --rows=10`     
+step2: execute random querys    
 ```bash
 $ perl ./gentest.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037"  --queries=10 --threads=10 --grammar=/home/perl/random_query_generator/ok_conf/example.yy   
 defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 168.
@@ -333,13 +333,13 @@ CUBRID DBMS Error : (-968) Your transaction (index 9, PUBLIC@fmdev063.nhncorp.cn
 # 17:36:15 Kill GenTest::ErrorFilter(6650)
 # 17:36:15 Test completed successfully.
 ```
-step3: check running querys
-**suppose we have 10 threads and execute 10,000 sql statements**
-Client 1:
+step3: check running querys    
+**suppose we have 10 threads and execute 10,000 sql statements**    
+Client 1:   
 ```bash
 $ perl ./gentest.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037"  --queries=10000 --threads=10 --grammar=/home/perl/random_query_generator/ok_conf/example.yy 
 ```
-Client 2:
+Client 2:   
 ```bash
 $ cubrid broker status
 @ cubrid broker status
@@ -403,7 +403,7 @@ SQL: prepare UPDATE "table10000_int_autoinc" SET col_int_key = 7 WHERE col_int =
 
  ```
 
-Increase the number of threads
+Increase the number of threads    
  ```bash
  $ cubrid broker status
 @ cubrid broker status
@@ -496,7 +496,7 @@ SQL: execute UPDATE "table10000_int_autoinc" SET col_int_key = 0 WHERE col_int =
  ```
 
 
-you can get the latest random_query_generator from https://github.com/CUBRID/cubrid-testtools-internal/tree/develop/random_query_generator
+you can get the latest random_query_generator from https://github.com/CUBRID/cubrid-testtools-internal/tree/develop/random_query_generator   
 
 
 
@@ -508,7 +508,7 @@ Please refer to [ctp install guide](https://github.com/CUBRID/cubrid-testtools/b
  run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8294-2d9a032/drop/CUBRID-10.2.0.8294-2d9a032-Linux.x86_64-debug.sh
 ```
 ## 3.3 Install random_query_generator
-step1: checkout random_query_generator
+step1: checkout random_query_generator    
 ```bash
 cd ~
 git clone https://github.com/CUBRID/cubrid-testtools-internal.git
@@ -516,8 +516,8 @@ cd ~/cubrid-testtools-internal
 git checkout develop
 cp random_query_generator ~/
 ```
-step2: configure random_query_generator 
-vim ~/random_query_generator/lib/GenTest/Properties.pm to solve such porblem "Can't use 'defined(@array)'"
+step2: configure random_query_generator      
+vim ~/random_query_generator/lib/GenTest/Properties.pm to solve such porblem "Can't use 'defined(@array)'"     
 ```python
    my $message;
     $message .= "The following properties are not legal: ".
@@ -533,13 +533,13 @@ vim ~/random_query_generator/lib/GenTest/Properties.pm to solve such porblem "Ca
  
 ```
 ## 3.4 Install perl
-Since system perl does not instll CPAN, we always install self perl version
-1. install dependency package    
+Since system perl does not instll CPAN, we always install self perl version   
+1. install dependency package      
 ```bash
  yum install ncurses-devel ncurses
  yum -y install gcc+ gcc-c++
 ```
-2. install perl-5.26.1   
+2. install perl-5.26.1     
 ```bash
  cd ~/opt
  tar zxvf perl-5.26.1.tar.gz
@@ -1134,17 +1134,17 @@ cp: cannot stat ‘/home/perl/CUBRID/conf/cubrid.conf.org’: No such file or di
 
 # 3. RQG Rgression Test Deployment 
 ## 3.1 Test Machines
-In the current daily regression test, we are using one controller node and five test nodes.
-|No.|Role|User Name|IP|Hostname|
-|:--|:--|:--|:--|:--|
-|1.|Controller node|rqgcontroller|192.168.1.99|func24|
-|2.|Test node|perl|192.168.1.99|func24|
-|3.|Test node|perl|192.168.1.100|func25|
-|4.|Test node|perl|192.168.1.101|func26|
-|5.|Test node|perl|192.168.1.102|func27|
-|6.|Test node|perl|192.168.1.103|func28|
-**Controller node** listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.  
-**Test nodes** execute test cases in parallel.
+In the current daily regression test, we are using one controller node and five test nodes.      
+|No.|Role|User Name|IP|Hostname|   
+|:--|:--|:--|:--|:--|   
+|1.|Controller node|rqgcontroller|192.168.1.99|func24|  
+|2.|Test node|perl|192.168.1.99|func24|   
+|3.|Test node|perl|192.168.1.100|func25|  
+|4.|Test node|perl|192.168.1.101|func26|   
+|5.|Test node|perl|192.168.1.102|func27|   
+|6.|Test node|perl|192.168.1.103|func28|   
+**Controller node** listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.    
+**Test nodes** execute test cases in parallel.   
 
 ## 3.2 Test Environment Deployment
 ### On Controller node
@@ -1305,43 +1305,43 @@ log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more in
 ```
 
 ### check test result
-open `qahome` -> select `build` ->select `Function`, find RQG item 
-please see below:
-![test in progress](./rqg_image/check_results.png)
+open `qahome` -> select `build` ->select `Function`, find RQG item    
+please see below:    
+![test in progress](./rqg_image/check_results.PNG)     
 
 **Test Rate** is 44.90%, indicating that the test is not completed. (Expected value is 100%)   
 **Fail Rate** is 2.27%, indicating that there are failures. (Expected value is 0)  
-**Fail**  include two values, one is "Total" ,the other is "New".
-**Total** is 98, the number of whole RQG test cases
-**Testing** is 98, it is the same with **Total** indicating that RQG test doesn't use execlude file
-**Success** is 43, indicating that the test is not completed or in progress. (Expected value of **Success** plus **Total of Fail** is 98) 
-**Total of Fail** is 1, indicating that one test case has been failed. It is linked to detail page of failed cases,such as http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22536&resultType=NOK
+**Fail**  include two values, one is "Total" ,the other is "New".   
+**Total** is 98, the number of whole RQG test cases   
+**Testing** is 98, it is the same with **Total** indicating that RQG test doesn't use execlude file 
+**Success** is 43, indicating that the test is not completed or in progress. (Expected value of **Success** plus **Total of Fail** is 98)    
+**Total of Fail** is 1, indicating that one test case has been failed. It is linked to detail page of failed cases,such as http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22536&resultType=NOK  
 
 
 
 # 5. Verify Test Result
-This section mainly introduces how to verify failures
-1. server crash failures
-step1: check core alert icon
-![verify_1](./rqg_image/verify_1.png)
-step2: report crash issue aumatically
- click [core alert icon](http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22684&srctb=shell_main&resultType=NOK)
-![verify_2](./rqg_image/verify_2.png)
-  **Jira User/Pwd** -> **Analyze Failure** ->  **Submit To Jira**
-![verify_3](./rqg_image/verify_3.png)
+This section mainly introduces how to verify failures    
+1. server crash failures    
+step1: check core alert icon    
+![verify_1](./rqg_image/verify_1.PNG)    
+step2: report crash issue aumatically   
+ click [core alert icon](http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22684&srctb=shell_main&resultType=NOK)    
+![verify_2](./rqg_image/verify_2.PNG)    
+  **Jira User/Pwd** -> **Analyze Failure** ->  **Submit To Jira**    
+![verify_3](./rqg_image/verify_3.PNG)   
 
-2. normal failures
-step1: check total failures
-![verify_4](./rqg_image/verify_4.png)
+2. normal failures    
+step1: check total failures   
+![verify_4](./rqg_image/verify_4.PNG)    
 step2: click [3](http://qahome.cubrid.org/qaresult/showFailResult.nhn?m=showFailVerifyItem&statid=22684&srctb=shell_main&failType=shell)
-fail list:
-![verify_5](./rqg_image/verify_5.png)
-fail detail of single case:
-![verify_6](./rqg_image/verify_6.png)
-Please check running log to find fail reason
-Sometimes you need to reproduce it again
-For above case:
-such log told us that fail is caused by checkdb
+fail list:   
+![verify_5](./rqg_image/verify_5.PNG)    
+fail detail of single case:   
+![verify_6](./rqg_image/verify_6.PNG)   
+Please check running log to find fail reason   
+Sometimes you need to reproduce it again   
+For above case:   
+such log told us that fail is caused by checkdb   
     ```
     + cubrid checkdb -S test
     /home/perl/CTP/shell/init_path/rqg_init.sh: line 564: 30715 Killed                  cubrid checkdb -S $checkdb_options > _checkdb.log 2>&1
@@ -1353,15 +1353,15 @@ such log told us that fail is caused by checkdb
     + echo 'dead_data_02_big_record-2 : NOK'
     + cat _checkdb.log
     ```
-3. reproduce issue
-    for [CBRD-23163](http://jira.cubrid.org/browse/CBRD-23163)
+3. reproduce issue   
+    for [CBRD-23163](http://jira.cubrid.org/browse/CBRD-23163)   
     ```
     cd ~/cubrid-testcases-private/random_query_generator/_03_mvcc/recovery/rollback_uncommit_commit/rollback_uncommit_commit_dml_reuseoid/cases
     nohup ~/CTP/shell/init_path/run_shell.sh --enable-report --report-cron='0 50 9,14,17 * * ?' --issue=http://jira.cubrid.org/browse/CBRD-23163 --mailto=lanlan.zhan@navercorp.com --mailcc=dl_cubridqa_bj_internal@navercorp.com --loop --update-build --prompt-continue=yes &
     ```
 
-    it will send test state email as your appointed times
-    ![verify_7](./rqg_image/verify_7.png)
+    it will send test state email as your appointed times   
+    ![verify_7](./rqg_image/verify_7.PNG)
 
 # 6. Test Case Specification
 ## 6.1 Test Case Basis
