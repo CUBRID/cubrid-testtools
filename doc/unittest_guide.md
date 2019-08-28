@@ -136,4 +136,63 @@ So, for a test case execution, if test output has no `'fail'` keyword, and has `
 
 # 4. Regression Test Deployment
 
+## 4.1 Deployment overview
+
+<table>
+<tr>
+<th>Description</th>
+<th>User Name</th>
+<th>IP</th>
+<th>Hostname</th>
+<th>Tools to deploy</th>
+</tr>
+<tr class="even">
+<td>Test node</td>
+<td>unittest</td>
+<td>192.168.1.98</td>
+<td>func23</td>
+<td> cubrid <br>
+ CTP <br>
+ <br>
+ </td>
+</tr>
+</table>
+
+## 4.2 Installation
+
+* ### Install CTP as regression test
+
+    Please follow guide below to install CTP to `$HOME/CTP`:
+    https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#2-install-ctp-as-regression-test-in-linux-platform
+
+* ### Configure unittest test
+
+    File $HOME/CTP/conf/unittest_template.conf
+    
+      test_category=unittest
+      test_platform=linux
+      build_id=<build_id>
+      build_bits=64bits
+
+      feedback_notice_qahome_url=http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>
+
+      feedback_type=database
+      feedback_db_host=192.168.1.86
+      feedback_db_port=33080
+      feedback_db_name=qaresu
+      feedback_db_user=dba
+      feedback_db_pwd=    
+    
+* ### Modify `.bash_profile`
+
+    Add below to `~/.bash_profile`:
+
+        export CUBRID=$HOME/cubrid
+        
+* ### Add quick start script file
+
+    File ~/start_test.sh
+    
+        start_consumer.sh -q QUEUE_CUBRID_QA_UNITTEST_LINUX -exec run_unittest
+        
 # 5. Regression Test Sustaining
