@@ -10,7 +10,7 @@ We mainly use its gendata.pl and gentest.pl scripts
 `gendata.pl`: generate tables and data   
 `gentest.pl`: execute random querys
 
-### Generate tables and data based on configuration files
+### Generate tables and data   
 #### Configuration files 
 They are named with XXX.zz     
 example.zz
@@ -219,7 +219,7 @@ Committed.
 csql> 
 ```
 
-### Generate random queries based on configuration files   
+### Generate random queries  
 #### Configuration files 
 They are named with XXX.yy    
 example.yy
@@ -518,7 +518,7 @@ cp random_query_generator ~/
 ```
 step2: configure random_query_generator      
 vim ~/random_query_generator/lib/GenTest/Properties.pm to solve such porblem "Can't use 'defined(@array)'"     
-```python
+```
    my $message;
     $message .= "The following properties are not legal: ".
         join(", ", map {"'--".$_."'"} sort @illegal). ". " if @illegal;
@@ -533,7 +533,7 @@ vim ~/random_query_generator/lib/GenTest/Properties.pm to solve such porblem "Ca
  
 ```
 ## 3.4 Install perl
-Since system perl does not instll CPAN, we always install self perl version   
+Since system perl does not include CPAN, we always install self perl version   
 1. install dependency package      
 ```bash
  yum install ncurses-devel ncurses
@@ -574,7 +574,7 @@ ulimit -c unlimited
 ulimit -c unlimited
 ```
 
-4. install DBI,DBD:CUBRID by CPAN
+4. install DBI,DBD:CUBRID through CPAN
 ```bash
  perl -MCPAN -e shell (test whether CPAN  install)
  cpan>yes
@@ -583,7 +583,7 @@ ulimit -c unlimited
 cpan> install DBD::cubrid
 ```
 5. Edit ~/opt/perl-526/lib/site_perl/5.26.1/x86_64-linux/DBI.pm  
-add the following sentence into function $dbd_prefix_registry  
+add the following sentence into $dbd_prefix_registry  
 ```
 cubrid_      => { class => 'DBD::cubrid',         },
 ```
@@ -1152,7 +1152,7 @@ No.  |Role  |User Name  |IP  |Hostname
 ### On Controller node
  * Install CTP
  Please follow [CTP installation guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md).
- * Set config file of CTP for RQG test     
+ * Set CTP config file for RQG test     
 Here is the config file that we use for current daily QA test:   
 ~/CTP/conf/shell_template_for_RQG.conf   
     ```bash
@@ -1224,8 +1224,9 @@ Here is the config file that we use for current daily QA test:
     feedback_db_user=dba
     feedback_db_pwd=
     ```
-    >Note: parameters desciption refer to [shell guide]()
- * touch start_test.sh
+    >Note: parameters desciption refer to [shell guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md)
+ * touch start_test.sh    
+   It is used to start the listener.       
     ```bash
     cat ~/start_test.sh
     # If only need to listen the rqg test messages
@@ -1236,16 +1237,16 @@ Here is the config file that we use for current daily QA test:
     ```
 
 ### On Test nodes
- * Install CTP
-  Please refer to [3.1 Install CTP](#31-install-ctp)
- * Install CUBRID.
-  please refer to [3.2 Install CUBRID](#32-install-cubrid)
- * Install random_query_generator
-  please refer to [3.2 Install random_query_generator](#33-install-random_query_generator)
- * Install self perl evn
-  please refer to [3.4 Install perl](#34-install-perl)
- * Check out test cases
-  please refer to [3.5 Checkout Test Case](#35-checkout-test-case)
+ * Install CTP    
+  Please refer to [3.1 Install CTP](#31-install-ctp)   
+ * Install CUBRID          
+  please refer to [3.2 Install CUBRID](#32-install-cubrid)     
+ * Install random_query_generator     
+  please refer to [3.2 Install random_query_generator](#33-install-random_query_generator)     
+ * Install self perl evn      
+  please refer to [3.4 Install perl](#34-install-perl)       
+ * Check out test cases     
+  please refer to [3.5 Checkout Test Case](#35-checkout-test-case)    
  
 
 # 4. RQG Regresion Test
@@ -1314,56 +1315,56 @@ please see below:
 **Test Rate** is 44.90%, indicating that the test is not completed. (Expected value is 100%)   
 **Fail Rate** is 2.27%, indicating that there are failures. (Expected value is 0)  
 **Fail**  include two values, one is "Total" ,the other is "New".   
-**Total** is 98, the number of whole RQG test cases   
-**Testing** is 98, it is the same with **Total** indicating that RQG test doesn't use execlude file 
-**Success** is 43, indicating that the test is not completed or in progress. (Expected value of **Success** plus **Total of Fail** is 98)    
-**Total of Fail** is 1, indicating that one test case has been failed. It is linked to detail page of failed cases,such as http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22536&resultType=NOK  
+**Total** is 98, it is the number of whole RQG test cases     
+**Testing** is 98, it is the same with **Total**, indicating that RQG test doesn't use execlude file    
+**Success** is 43, indicating that the test is not completed or in progress. (Expected value of **Success** plus **Total of Fail** is 98)      
+**Total of Fail** is 1, indicating that one test case has been failed. It is linked to detail page of failed cases,such as http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22536&resultType=NOK    
 
 
 
 # 5. Verify Test Result
 This section mainly introduces how to verify failures    
-1. server crash failures    
-step1: check core alert icon    
+## 1. server crash failures    
+### step1: check core alert icon    
 ![verify_1](./rqg_image/verify_1.PNG)    
-step2: report crash issue aumatically   
- click [core alert icon](http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22684&srctb=shell_main&resultType=NOK)    
+### step2: report crash issue aumatically   
+#### click [core alert icon](http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22684&srctb=shell_main&resultType=NOK)    
 ![verify_2](./rqg_image/verify_2.PNG)    
-  **Jira User/Pwd** -> **Analyze Failure** ->  **Submit To Jira**    
+#### fill in **Jira User/Pwd** ->click **Analyze Failure** -> click **Submit To Jira**   
 ![verify_3](./rqg_image/verify_3.PNG)   
 
-2. normal failures    
-step1: check total failures   
+## 2. normal failures    
+### step1: check total failures   
 ![verify_4](./rqg_image/verify_4.PNG)    
-step2: click [3](http://qahome.cubrid.org/qaresult/showFailResult.nhn?m=showFailVerifyItem&statid=22684&srctb=shell_main&failType=shell)
+### step2: click [3](http://qahome.cubrid.org/qaresult/showFailResult.nhn?m=showFailVerifyItem&statid=22684&srctb=shell_main&failType=shell)
 fail list:   
-![verify_5](./rqg_image/verify_5.PNG)    
+![verify_5](./rqg_image/verify_5.PNG)   
+
 fail detail of single case:   
 ![verify_6](./rqg_image/verify_6.PNG)   
-Please check running log to find fail reason   
-Sometimes you need to reproduce it again   
+
+Please check running log to find fail reason, sometimes you need to reproduce it again.     
 For above case:   
 such log told us that fail is caused by checkdb   
-    ```
-    + cubrid checkdb -S test
-    /home/perl/CTP/shell/init_path/rqg_init.sh: line 564: 30715 Killed                  cubrid checkdb -S $checkdb_options > _checkdb.log 2>&1
-    + '[' 137 -ne 0 ']'
-    + sed -i 'a\Fail to execute checkdb utility with the standalone mode!\n' _checkdb.log
-    + write_nok _checkdb.log
-    + '[' -z _checkdb.log ']'
-    + '[' -f _checkdb.log ']'
-    + echo 'dead_data_02_big_record-2 : NOK'
-    + cat _checkdb.log
-    ```
-3. reproduce issue   
-    for [CBRD-23163](http://jira.cubrid.org/browse/CBRD-23163)   
-    ```
-    cd ~/cubrid-testcases-private/random_query_generator/_03_mvcc/recovery/rollback_uncommit_commit/rollback_uncommit_commit_dml_reuseoid/cases
-    nohup ~/CTP/shell/init_path/run_shell.sh --enable-report --report-cron='0 50 9,14,17 * * ?' --issue=http://jira.cubrid.org/browse/CBRD-23163 --mailto=lanlan.zhan@navercorp.com --mailcc=dl_cubridqa_bj_internal@navercorp.com --loop --update-build --prompt-continue=yes &
-    ```
-
-    it will send test state email as your appointed times   
-    ![verify_7](./rqg_image/verify_7.PNG)
+```
++ cubrid checkdb -S test
+/home/perl/CTP/shell/init_path/rqg_init.sh: line 564: 30715 Killed                  cubrid checkdb -S $checkdb_options > _checkdb.log 2>&1
++ '[' 137 -ne 0 ']'
++ sed -i 'a\Fail to execute checkdb utility with the standalone mode!\n' _checkdb.log
++ write_nok _checkdb.log
++ '[' -z _checkdb.log ']'
++ '[' -f _checkdb.log ']'
++ echo 'dead_data_02_big_record-2 : NOK'
++ cat _checkdb.log
+```
+## 3. reproduce issue   
+for [CBRD-23163](http://jira.cubrid.org/browse/CBRD-23163)   
+```
+cd ~/cubrid-testcases-private/random_query_generator/_03_mvcc/recovery/rollback_uncommit_commit/rollback_uncommit_commit_dml_reuseoid/cases
+nohup ~/CTP/shell/init_path/run_shell.sh --enable-report --report-cron='0 50 9,14,17 * * ?' --issue=http://jira.cubrid.org/browse/CBRD-23163 --mailto=lanlan.zhan@navercorp.com --mailcc=dl_cubridqa_bj_internal@navercorp.com --loop --update-build --prompt-continue=yes &
+```
+It will send test state email as your appointed times, like below:   
+![verify_7](./rqg_image/verify_7.PNG)
 
 # 6. Test Case Specification
 ## 6.1 Test Case Basis
@@ -1376,7 +1377,7 @@ This section mainly introduces some difference between RQG test case and shell t
 export init_path=$CTP_HOME/shell/init_path 
 export RQG_HOME=$HOME/random_query_generator
 ```
-`TESTCASE_HOME` has been configured, we don't need to set it.
+`TESTCASE_HOME` has been configured, we don't need to set it.    
 $init_path/rqg_init.sh:
 ```
 cur_case_path=`pwd`
@@ -1426,7 +1427,7 @@ run_gentest ...
 
 
 
-# 
+# server recovery
 rqg_kill_all_cub_process
 rqg_cubrid_start_server $db_name
 
@@ -1641,7 +1642,7 @@ rqg_do_backup_db $db_name
 `rqg_do_backup_db $db_name` : run `cubrid backupdb $db_name`   
 
 ## 6.2 Test Case Specialization   
-Good RQG cases mainly related to .yy and .zz files, we need to design yy and zz files covering test points.
+Good RQG cases mainly related to .yy and .zz configurstion files, we need to design yy and zz files covering test points.
 ### Configure the Data Generator
 The Data Generator is driven by a configuration file which may look as follows:
 
@@ -1709,9 +1710,9 @@ The $tables section describes the sizes and the other attributes of the tables. 
     1 command(s) successfully processed.
     csql> 
     ```
-    > Note: Tables names are set according to the properties of the generated tables, and/or according to the names parameter if set. If the names parameter is not set, or if there are not enough names specified, the following approximate name structure is used:
-    > `table<rows>_[charset]_[collation]_[partition]_<pk>_<row-format>`
-    > Resulting in table names like:
+    > Note: Tables names are set according to the properties of the generated tables, and/or according to the names parameter if set. If the names parameter is not set, or if there are not enough names specified, the following approximate name structure is used:    
+    > `table<rows>_[charset]_[collation]_[partition]_<pk>_<row-format>`        
+    > Resulting in table names like:      
     >```
     >table0_int_autoinc
     >table1000_int_autoinc
