@@ -113,6 +113,12 @@ On Windows systems,use the msi installation file to install cubrid for the first
     cd ~  
     git clone https://github.com/CUBRID/cubrid-testcases.git 
     ```
+     It‘s difference between SQL and MEDIUM,  there is a unload file cubrid-testcases/medium/files/mdb.tar.gz that is used to MEDIUM test.(The files mdb_indexes,mdb_schema and mdb_objects are in the mdb.tar.gz archive)
+    * MEDIUM test
+        ```
+        cubrid createdb testdb en_US  
+        cubrid loaddb -u dba -d mdb_objects -s mdb_schema -i mdb_indexes  testdb
+        ```
 
 ## Executed Test
 ### CTP  
@@ -167,18 +173,11 @@ run test
   ![ctp_web_result](./sql_image/ctp_web_result.png)  
 
 ### csql  
-* SQL test
    * cubrid createdb testdb en_US  
    * cubrid server start testdb
    * csql -u dba testdb  
   ![run_test](./sql_image/csql_run_test.png)  
-   
-* MEDIUM test
-   * cubrid createdb testdb en_US  
-   * cubrid loaddb -u dba -d mdb_objects -s mdb_schema -i mdb_indexes  testdb
-     It‘s difference between SQL and MEDIUM,  there is a unload file cubrid-testcases/medium/files/mdb.tar.gz that is used to MEDIUM test.(The files mdb_indexes,mdb_schema and mdb_objects are in the mdb.tar.gz archive)
-   * cubrid server start testdb
-   * csql -u dba testdb  
+    
 # Regression Test Deployment  
 * Test Machines  
 
