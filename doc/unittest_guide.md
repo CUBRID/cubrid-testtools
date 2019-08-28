@@ -275,5 +275,6 @@ So, for a test case execution, if test output has no `'fail'` keyword, and has `
     
     Revise required issues: It is link to a jira issue which lead to change in test case and answer.
    
+    Regarding as how to report an issue when there is failure, please refer to http://jira.cubrid.org/browse/CBRD-22882 as an example.
   
   
