@@ -124,7 +124,15 @@ You may get detail information in file `feedback.log`.
 
 # 3. Unittest Test Case Specification
 
+Actually, there is no specific conventions to follow in order to judge which execution is OK or NOK. Currently, below logic is applied:
 
+    if [ `cat ${unittestlog} | grep -i 'fail\|Unit tests failed' | wc -l ` -eq 0 -a `cat ${unittestlog} | grep -i 'OK\|success' | wc -l ` -ne 0 ]; then
+        IS_SUCC=true
+    else
+        IS_SUCC=false
+    fi
+
+So, for a test case execution, if test output has no `'fail'` keyword, and has `'OK'` or `'success'` keyword, it can be regarded as pass.
 
 # 4. Regression Test Deployment
 
