@@ -97,7 +97,34 @@ Output:
 Test result will be saved in directory `CTP/result/unittest/current_runtime_logs`. 
 You may get detail information in file `feedback.log`.
 
+## 2.2 Completed parameters
+
+    # Configure 'unittest' for release build, 'unittest_debug' for debug build.
+    test_category = unittest
+    test_platform = linux
+    
+    # Specify test build used
+    build_id = 10.2.0.8415-85a422f
+    
+    # Specify build bits used
+    build_bits = 64bits
+    
+    # Configure 'file' or 'database'.
+    # 'file': test result will be saved to CTP/result/unittest/current_runtime_logs/feedback.log
+    # 'database': test result will be saved to QA homepage database.
+    feedback_type = database
+    feedback_db_host = 192.168.1.86
+    feedback_db_port = 33080
+    feedback_db_name = qaresu
+    feedback_db_user = dba
+    feedback_db_pwd = 
+    
+    # When configure 'feedback_type=database', once test is done, it would notice QA homepage to generate verification.
+    feedback_notice_qahome_url = http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>    
+
 # 3. Unittest Test Case Specification
+
+
 
 # 4. Regression Test Deployment
 
