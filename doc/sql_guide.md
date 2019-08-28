@@ -91,8 +91,8 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
 		  MASTER_SHM_ID=32851
 		```
 	* SQL_BY_CCI test  
-    touch and configure ~/CTP/conf/sql_by_cci_template.conf  
-	Add cci configuration "sql_interface_type=cci" to sql.conf
+    	touch and configure ~/CTP/conf/sql_by_cci_template.conf  
+	Add cci configuration "sql_interface_type=cci" to the [sql] section sql.conf
     * Windows test  
     touch and configure ~/CTP/conf/sql.conf   
 	Modify configuration "jdbc_config_file=test_default.xml" to "jdbc_config_file = test_win.xml","ha_mode=no" to "ha_mode=yes" in sql.conf 
