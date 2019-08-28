@@ -37,8 +37,65 @@ Add to `~/.bash_profile`:
     
     export CUBRID=$HOME/cubrid-10.2.0.8414-294c026
 
-### Step 2: Prepare test cases
+### Step 2: Install CTP
 
+Please refer to guide to [install CTP in Linux platform](ctp_install_guide.md#1-install-ctp-in-linux-platform).
+
+Then prepare test configuration as below:
+File CTP/conf/unittest.conf:
+
+    test_category = unittest
+    test_platform = linux
+    build_id = 10.2.0.8414-294c026
+    build_bits = 64bits
+    feedback_type = file
+    
+### Step 3: Start to test
+
+    ctp.sh unittest -c CTP/conf/unittest.conf
+    
+Output:
+
+    ====================================== UNITTEST ==========================================
+    [UNITTEST] TEST STARTED (Wed Aug 28 07:06:54 KST 2019)
+
+    [UNITTEST] CONFIG FILE: /home/unittest/CTP/conf/unittest.conf
+
+    feedback_type=file
+    test_category=unittest
+    build_bits=64bits
+    test_platform=linux
+    build_id=10.2.0.8414-294c026
+
+    ----------END OF FILE----------
+    => Init Step:
+
+
+    => List Step:
+    /home/unittest/cubrid/build_release/bin/unittests_area
+    /home/unittest/cubrid/build_release/bin/unittests_bit
+    /home/unittest/cubrid/build_release/bin/unittests_lf
+    /home/unittest/cubrid/build_release/bin/unittests_snapshot
+
+
+    => Execute Step:
+    [TESTCASE-1] /home/unittest/cubrid/build_release/bin/unittests_area [SUCC]
+    [TESTCASE-2] /home/unittest/cubrid/build_release/bin/unittests_bit [SUCC]
+    [TESTCASE-3] /home/unittest/cubrid/build_release/bin/unittests_lf [SUCC]
+    [TESTCASE-4] /home/unittest/cubrid/build_release/bin/unittests_snapshot [SUCC]
+    => Finish Step:
+
+
+    Success num: 4, Fail_num: 0, Skipped(macro): 0, Skipped(temp): 0, Total Scenario: 4
+    Test Rate: 100.0%
+    Success Rate: 100.0%
+    [UNITTEST] TEST END (Wed Aug 28 07:56:15 KST 2019)
+    [UNITTEST] ELAPSE TIME: 2961 seconds
+
+### Step 4: Examine test result
+
+Test result will be saved in directory `CTP/result/unittest/current_runtime_logs`. 
+You may get detail information in file `feedback.log`.
 
 # 3. Unittest Test Case Specification
 
