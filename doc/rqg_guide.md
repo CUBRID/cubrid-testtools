@@ -1772,12 +1772,12 @@ The $tables section describes the sizes and the other attributes of the tables. 
     1 command(s) successfully processed.
     csql> 
     ```
-* partitions - the partitioning clause to be used. To avoid partitioning altogether, remove this clause from the configuration file. To create some unpartitioned tables, use undef as an element in the array.
+* partitions - the partitioning clause to be used. To create some unpartitioned tables, use undef as an element in the array.
     ```
     partitions => [ undef , 'hash (pk) PARTITIONS 2' ],
     ```
    **it generate two kinds of tables partition table or non-partition table, such as:**
-   ```
+    ```
     csql> ;sc A
 
     === <Help: Schema of a Class> ===
@@ -1856,7 +1856,7 @@ The $tables section describes the sizes and the other attributes of the tables. 
 
     Committed.
     csql> 
-        ```
+    ```
 
 
 * pk - specify the primary keys to be used. Valid values are undef for no primary key, or any integer-based PK definition. If auto_increment is specified, the script will insert NULLs in that column. If not, then a sequence of increasing integers will be used. Generation of non-integer primary keys is not yet supported.
@@ -1962,9 +1962,9 @@ The order of the fields within each table is pseudo-random, which may help trigg
 #### Configure the Data
 The $data section from the configuration file describes what data will be inserted into each field type:
 
-* numbers/int/float/numberic this describes how to generate values for all integer and float field types. Valid values are:
+* numbers/int/float/numberic- this describes how to generate values for all integer and float field types. Valid values are:
   * null - a NULL value if the column can accept it;
-  * digit- a single random digit from 0 to 9;
+  * digit - a single random digit from 0 to 9;
     set:
     ```
     int => [ 'digit' ],
@@ -2007,7 +2007,7 @@ The $data section from the configuration file describes what data will be insert
 
     3 rows selected. (0.008899 sec) Committed.
     ```
-  * boolean- random 0 or 1 .
+  * boolean - random 0 or 1 .
     set:
     ```
     int => [ 'boolean' ],
@@ -2029,7 +2029,7 @@ The $data section from the configuration file describes what data will be insert
     1 command(s) successfully processed.
     csql> 
     ```
-  * tinyint, mediumint and smallint  - generate a random value that will fit in this particular type.
+  * tinyint, mediumint and smallint - generate a random value that will fit in this particular type.
     set float: 
     ```
     float => [ 'tinyint', 'smallint', 'mediumint'  ],
@@ -2104,12 +2104,12 @@ The $data section from the configuration file describes what data will be insert
 
     3 rows selected. (0.013850 sec) Committed.
     ```
-* strings describes how to generate values for all string columns (char, varchar, string and so on). Valid values are:
-  * null & empty - which generates 'NULL' and ' '
-  * letter- which generates a random letter from A to Z
-  * english- which picks a random word from a list of 100 most common words in English.
-    For example:
-    for `english`
+* strings - it describes how to generate values for all string columns (char, varchar, string and so on). Valid values are:
+  * null & empty - which generates 'NULL' and ' '   
+  * letter- which generates a random letter from A to Z   
+  * english- which picks a random word from a list of 100 most common words in English.     
+    For example:    
+    for `english`   
     ```
     strings => [ 'english' ],
     ```
@@ -2183,7 +2183,7 @@ The $data section from the configuration file describes what data will be insert
     ```
 
 #### Examples
-**1. use below file: b.zz**
+**1. use below file: b.zz**    
 ```
 $ cat b.zz 
 $tables = {
@@ -2204,7 +2204,7 @@ $data = {
         int => [ 'digit', 'smallint', 'smallint'  ]
 };
 ```
-**generate data logs:**
+**generate data logs:**     
 ```
 $ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=b.zz        
 # 19:57:24 Default schema: PUBLIC
@@ -2259,7 +2259,7 @@ csql> select * from E;
 csql> 
 ```
 
-**2. use below file: a.zz**
+**2. use below file: a.zz**    
 ```
 $tables = {
         names => ['C','D'],
@@ -2279,7 +2279,7 @@ $data = {
 };
 ```
 
-**generate data logs:**
+**generate data logs:**    
 ```
 # 19:27:37 Default schema: PUBLIC
 # 19:27:37 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
@@ -2306,7 +2306,7 @@ CUBRID DBMS Error : (-670) Operation would have caused one or more unique constr
 
 > Note: Above show us that inserting data into table10_int_autoinc and table100_int_autoinc failed for violating the unique constraint.
 
-**check tables:** 
+**check tables:**     
 fields int and char(5) can generate 4 fields: col_int, col_int_unique, col_char_5, col_char_5_unique
 ```
 csql> ;sc table10_int_autoinc 
@@ -2360,7 +2360,7 @@ csql> ;sc table100_int_autoinc
 
 Committed.
 ```
-**check data:**
+**check data:**    
 ```
 csql> select * from c;
 
@@ -2411,7 +2411,7 @@ There are no results.
 1 command(s) successfully processed.
 csql> 
 ```
-**3. use below files: c.zz**
+**3. use below files: c.zz**    
 ```
 $ cat c.zz 
 $tables = {
@@ -2431,7 +2431,7 @@ $data = {
 };
 ```
 
-**generate data logs:**
+**generate data logs:**    
 ```
 $ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=c.zz
 # 20:57:10 Default schema: PUBLIC
@@ -2443,7 +2443,7 @@ $ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=c.zz
 # 20:57:11 # Creating Cubrid table table100_int_autoinc .
 ```
 
-**check tables:**
+**check tables:**     
 ```
 csql> show tables;
 
@@ -2463,7 +2463,7 @@ csql> show tables;
 csql> 
 ```
 
-**check data:**
+**check data:**    
 ```
 csql> select * from c;
 
@@ -2587,7 +2587,7 @@ csql>
 ```
 
 ### Configure the Query Generator
-**prepare data:**
+#### Prepare data
 ```
 $ cat f.zz 
 $tables = {
@@ -2624,7 +2624,7 @@ $ csql -u dba test -c "select * from g"
 
 8 rows selected. (0.009968 sec) Committed.
 ```
-**configuration file:**
+#### Configuration
 ```
 $ cat g.yy
  query:
@@ -2636,7 +2636,9 @@ $ cat g.yy
  condition:
         _field > integer | _field < integer | _field = integer ;
 ```
-**running logs:**
+
+
+#### Run
 ```
 $ perl ~/random_query_generator/gentest.pl --dsn=${dsn} --grammar=g.yy --queries=20 --threads=2
 defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 168.
@@ -2686,7 +2688,7 @@ CUBRID DBMS Error : (-670) Operation would have caused one or more unique constr
 # 17:01:15 Kill GenTest::ErrorFilter(31159)
 # 17:01:15 Test completed successfully.
 ```
-**check data:**
+#### Check 
 ```
 $ csql -u dba test -c "select * from g"                                                        
 
@@ -2705,11 +2707,11 @@ $ csql -u dba test -c "select * from g"
 
 8 rows selected. (0.013101 sec) Committed.
 ```
-
-#### grammar elements
+#### Configuration Grammar 
 please refer to [grammer elements](https://github.com/RQG/RQG-Documentation/wiki/RandomQueryGeneratorGrammar#grammar-elements)
+
 * _int, _tinyint, _smallint, _mediumint, _bigint - returns an integer that will fit in the specified type. _unsigned may also be used, such as _int_unsigned
-* _char(N), _varchar(N), _binary , _text - returns a random character string of the desired size, containing lowercase letters a to z. If no N is specified, e.g. just _char, 1 character is generated
+* _char(N), _varchar(N) - returns a random character string of the desired size, containing lowercase letters a to z. If no N is specified, e.g. just _char, 1 character is generated
 * _digit - returns a random digit from 0 to 9.
 
 * _digit[invariant] , _field[invariant], _table[invariant], _letter[invariant], etc. returns for this variable the same value throughout the query. For example:
@@ -2817,3 +2819,5 @@ please refer to [grammer elements](https://github.com/RQG/RQG-Documentation/wiki
     ```
     SELECT * FROM _table ORDER BY _field_count - 1;
     ```
+
+
