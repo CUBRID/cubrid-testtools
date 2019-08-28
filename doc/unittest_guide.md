@@ -196,3 +196,84 @@ So, for a test case execution, if test output has no `'fail'` keyword, and has `
         start_consumer.sh -q QUEUE_CUBRID_QA_UNITTEST_LINUX -exec run_unittest
         
 # 5. Regression Test Sustaining
+
+## 5.1 How to start test?
+
+*  ### Start test daemon process:
+
+    Log into test server, keep daemon process for start_test.sh:
+
+        nohup sh start_test.sh &
+
+    After startup, it will keep listening to new test messages. Once there is new message, it will fire the test immediately. Except CI test messages which were generated automatically, you may send test message by manual.
+  
+* ### Send test message same as daily configuration:
+
+    Log into message server (message@192.168.1.91) first.
+    
+    **For `'unittest'` message:**
+
+      [message@qa03 ~]$ sender.sh QUEUE_CUBRID_QA_UNITTEST_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7765-265e708/drop/cubrid-10.1.3.7765-265e708.tar.gz unittest default
+
+      Message: 
+
+      Message Content: Test for build 10.1.3.7765-265e708 by CUBRID QA Team, China
+      MSG_ID = 190828-141045-222-000001
+      MSG_PRIORITY = 4
+      BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.1.3.7765-265e708/drop
+      BUILD_BIT=0
+      BUILD_CREATE_TIME=1566444939000
+      BUILD_GENERATE_MSG_WAY=MANUAL
+      BUILD_ID=10.1.3.7765-265e708
+      BUILD_IS_FROM_GIT=1
+      BUILD_PACKAGE_PATTERN=cubrid-{1}.tar.gz
+      BUILD_SCENARIOS=unittest
+      BUILD_SCENARIO_BRANCH_GIT=release/10.1
+      BUILD_SEND_DELAY=524106
+      BUILD_SEND_TIME=1566969045221
+      BUILD_STORE_ID=store_01
+      BUILD_SVN_BRANCH=RB-10.1.3
+      BUILD_SVN_BRANCH_NEW=RB-10.1.0
+      BUILD_TYPE=general
+      BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7765-265e708/drop/cubrid-10.1.3.7765-265e708.tar.gz
+      BUILD_URLS_CNT=1
+      BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7765-265e708/drop/cubrid-10.1.3.7765-265e708.tar.gz
+
+
+      Do you accept above message [Y/N]:   Y     
+
+    **For `'unittest_debug'` message:**
+    
+      [message@qa03 ~]$ sender.sh QUEUE_CUBRID_QA_UNITTEST_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7765-265e708/drop/cubrid-10.1.3.7765-265e708.tar.gz unittest_debug default
+
+    After test, related test result will be shown in QA homepage.
+  
+## 5.2 Verify test Results  
+
+* ### Check if there is unittest test result
+
+    Open QA home (http://qahome.cubrid.org), navigate to find unittest test result as below. If there is no any result, you need to find the reason out.
+    
+    ![Unittest test result](./unittest_image/image0.png)
+    
+* ### Test Rate should be 100%
+
+    It means the `Testing` is equal to the sum of `Success` and `Fail(Total)`.
+    ![Unittest test Test Rate](./unittest_image/image1.png)
+    
+* ### Verified Rate should be 100%    
+
+    The verified rate should be 100% as below.
+    ![Unittest test Verify Rate](./unittest_image/image2.png)
+    
+    If there is a failed test case, you need to verify it following below:
+    ![Unittest test Verify](./unittest_image/image3.png)
+    
+    Note: 
+    
+    New issues : It is link to a jira issue which reported by this case.
+    
+    Revise required issues: It is link to a jira issue which lead to change in test case and answer.
+   
+  
+  
