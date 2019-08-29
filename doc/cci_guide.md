@@ -1,69 +1,21 @@
 # 1. Test Objective
-The cci test is aimed to test CUBRID CCI driver. We write cci test cases to test all kinds of CCI Applications, such as `cci_connect()`, `cci_connect_with_url()`, `cci_cursor()`, `cci_fetch()`, `cci_get_data()`, `cci_get_result_info()` and so on. Actually cci test is a branch of shell test, the only difference is that cci shell scripts must execute C codes which include CUBRID CCI API.
+The cci test is aimed to test CUBRID CCI driver. We write cci test cases to test all kinds of CCI APIs, such as `cci_connect()`, `cci_connect_with_url()`, `cci_cursor()`, `cci_fetch()`, `cci_get_data()`, `cci_get_result_info()` and so on. Actually cci test is a branch of shell test, the only difference is that cci shell scripts must execute C codes which include CUBRID CCI API.
 
 
 # 2. Execute CCI Test
 To perform the cci test, we need to install CTP first.   
 ## 2.1 Install CTP
-You can get the latest version of CTP from https://github.com/CUBRID/cubrid-testtools/tree/develop/CTP. 
-1. Checkout from git repository      
-    ```bash    
-    cd ~    
-    git clone https://github.com/CUBRID/cubrid-testtools.git    
-    cd ~/cubrid-testtools     
-    git checkout develop    
-    cp -rf CTP ~/    
-    ```
-2. Configurations     
- * touch and configure `~/CTP/conf/common.conf`          
-    ```bash        
-    grepo_service_url=rmi://192.168.1.91:11099        
-    ```    
- * Add below settings to `~/.bash_profile` and source it.        
-    ```bash        
-    export CTP_HOME=~/CTP        
-    export init_path=$CTP_HOME/shell/init_path        
-    # CTP_SKIP_UPDATE 0:update 1:skip         
-    export CTP_SKIP_UPDATE=0        
-    export CTP_BRANCH_NAME=develop        
-    export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$PATH:$HOME/.local/bin:$HOME/bin        
-    . ~/.cubrid.sh        
-    ```
-3. Make sure that CTP is installed successfully.
-    ```bash
-    $ ctp.sh -h
-    Welcome to use CUBRID Test Program (CTP)
-    usage: ctp.sh <sql|medium|shell|ha_repl|isolation|jdbc|unittest> -c
-                <config_file>
-    -c,--config <arg>   provide a configuration file
-    -h,--help           show help
-        --interactive    interactive mode to run single test case or cases in
-                        a folder
-    -v,--version        show version
+Please refer to the guide to [install CTP in Linux platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform).
 
-    utility: ctp.sh webconsole <start|stop>
+Create cci test configuration file as below:    
+File CTP/conf/cci.conf   
+```    
+scenario=$HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch     
+```
+>Note: `scenario` should be a path to a folder but not a file
 
-    For example: 
-            ctp.sh sql -c conf/sql.conf
-            ctp.sh medium -c conf/medium.conf
-            ctp.sh shell -c conf/shell.conf
-            ctp.sh ha_repl -c conf/ha_repl.conf
-            ctp.sh isolation -c conf/isolation.conf
-            ctp.sh jdbc -c conf/jdbc.conf
-            ctp.sh sql              #use default configuration file: /home/cci/CTP/conf/sql.conf
-            ctp.sh medium           #use default configuration file: /home/cci/CTP/conf/medium.conf
-            ctp.sh shell            #use default configuration file: /home/cci/CTP/conf/shell.conf
-            ctp.sh ha_repl          #use default configuration file: /home/cci/CTP/conf/ha_repl.conf
-            ctp.sh isolation                #use default configuration file: /home/cci/CTP/conf/isolation.conf
-            ctp.sh jdbc             #use default configuration file: /home/cci/CTP/conf/jdbc.conf
-            ctp.sh unittest #use default configuration file: /home/cci/CTP/conf/unittest.conf
-            ctp.sh sql medium       #run both sql and medium with default configuration
-            ctp.sh medium medium    #execute medium twice
-            ctp.sh webconsole start #start web console to view sql test results
-    ```      
-    For more instructions to CTP, please see  https://github.com/CUBRID/cubrid-testtools/blob/develop/CTP/README.md.   
-## 2.2 Checkout CCI Test Cases
-You can checkout cci test cases from https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/CCI/shell.    
+## 2.2 Prepare test cases
+Generally, we check out test cases from git repository. CCI test cases are located in https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/CCI/shell. 
 ```bash
 $ git clone https://github.com/CUBRID/cubrid-testcases-private.git
 $ cd cubrid-testcases-private/interface/CCI/shell/_20_cci
@@ -71,285 +23,279 @@ $ ls
 _01_simple  _03_func  _05_set   _07_query     _10_bigint  _12_issue        _14_1h_issue  _15_Cursor        _28_features_844
 _02_adv     _04_db    _06_bind  _09_datetime  _11_other   _13_enhancement  _14_ENUM      _28_features_841  files    
 ```
+## 2.3 Install CUBRID      
+```bash    
+run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh    
+```
 
-## 2.3 Quick Start 
-1. Install CUBRID      
-    ```bash    
-    run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh    
+## 2.4 Execute test     
+```bash    
+ctp.sh shell -c ./cci.conf    
+```    
+Screen output:    
+Druing the test, CTP prints testing information like test configs, deploy status, test results, execution time and so on.      
+```
+$ ctp.sh shell -c ./cci.conf  
+
+====================================== SHELL ==========================================
+[SHELL] TEST STARTED (Tue Aug 13 18:32:30 KST 2019)
+
+[SHELL] CONFIG FILE: /home/ccitest/CTP/conf/cci.conf
+
+scenario=$HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch
+
+
+----------END OF FILE----------
+Available Env: [local]
+Continue Mode: false
+Build Number: 10.2.0.8396-1bc28b2
+java.runtime.name=Java(TM) SE Runtime Environment
+sun.boot.library.path=/usr/local/cubridqa/jdk1.8.0_201/jre/lib/amd64
+java.vm.version=25.201-b09
+java.vm.vendor=Oracle Corporation
+java.vendor.url=http://java.oracle.com/
+path.separator=:
+java.vm.name=Java HotSpot(TM) 64-Bit Server VM
+file.encoding.pkg=sun.io
+user.country=US
+sun.java.launcher=SUN_STANDARD
+sun.os.patch.level=unknown
+java.vm.specification.name=Java Virtual Machine Specification
+user.dir=/home/ccitest/CTP/conf
+java.runtime.version=1.8.0_201-b09
+java.awt.graphicsenv=sun.awt.X11GraphicsEnvironment
+java.endorsed.dirs=/usr/local/cubridqa/jdk1.8.0_201/jre/lib/endorsed
+os.arch=amd64
+java.io.tmpdir=/tmp
+line.separator=
+
+java.vm.specification.vendor=Oracle Corporation
+os.name=Linux
+sun.jnu.encoding=ISO-8859-1
+java.library.path=/home/ccitest/CUBRID/lib:/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
+scenario=$HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch 
+java.specification.name=Java Platform API Specification
+java.class.version=52.0
+sun.management.compiler=HotSpot 64-Bit Tiered Compilers
+os.version=3.10.0-957.21.3.el7.x86_64
+user.home=/home/ccitest
+user.timezone=Asia/Seoul
+java.awt.printerjob=sun.print.PSPrinterJob
+file.encoding=ISO-8859-1
+java.specification.version=1.8
+user.name=ccitest
+java.class.path=/home/ccitest/CTP/common/lib/cubridqa-common.jar
+java.vm.specification.version=1.8
+sun.arch.data.model=64
+java.home=/usr/local/cubridqa/jdk1.8.0_201/jre
+sun.java.command=com.navercorp.cubridqa.ctp.CTP shell -c ./cci_quick_start.conf
+java.specification.vendor=Oracle Corporation
+user.language=en
+awt.toolkit=sun.awt.X11.XToolkit
+java.vm.info=mixed mode
+java.version=1.8.0_201
+java.ext.dirs=/usr/local/cubridqa/jdk1.8.0_201/jre/lib/ext:/usr/java/packages/lib/ext
+sun.boot.class.path=/usr/local/cubridqa/jdk1.8.0_201/jre/lib/resources.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/rt.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/sunrsasign.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/jsse.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/jce.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/charsets.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/jfr.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/classes
+java.vendor=Oracle Corporation
+file.separator=/
+java.vendor.url.bug=http://bugreport.sun.com/bugreport/
+sun.cpu.endian=little
+sun.io.unicode.encoding=UnicodeLittle
+sun.rmi.transport.connectionTimeout=10000000
+sun.cpu.isalist=
+AUTO_TEST_VERSION=10.2.0.8396-1bc28b2
+AUTO_TEST_BITS=64bits
+BEGIN TO CHECK: 
+=================== Check local============================
+==> Check connection(ssh) ...... PASS
+==> Check variable 'HOME' ...... PASS
+==> Check variable 'USER' ...... PASS
+==> Check variable 'JAVA_HOME' ...... PASS
+==> Check variable 'CTP_HOME' ...... PASS
+==> Check variable 'init_path' ...... PASS
+==> Check variable 'CUBRID' ...... PASS
+==> Check command 'java' ...... PASS
+==> Check command 'javac' ...... PASS
+==> Check command 'diff' ...... PASS
+==> Check command 'wget' ...... PASS
+==> Check command 'find' ...... PASS
+==> Check command 'cat' ...... PASS
+==> Check command 'kill' ...... PASS
+==> Check command 'dos2unix' ...... PASS
+==> Check command 'tar' ...... PASS
+==> Check directory '${CTP_HOME}/bin' ...... PASS
+==> Check directory '${CTP_HOME}/common/script' ...... PASS
+==> Check directory 'cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch' ...... PASS
+
+CHECK RESULT: PASS
+============= UPDATE TEST CASES ==================
+CLEAN PROCESSES:
+++ cubrid service is not running.
+UID        PID  PPID  C STIME TTY          TIME CMD
+ccitest  23144 23143  0 18:31 pts/1    00:00:00 -bash
+ccitest  24547 23144  0 18:32 pts/1    00:00:00 /bin/sh /home/ccitest/CTP/bin/ctp.sh shell -c ./cci_quick_start.conf
+ccitest  24554 24547 50 18:32 pts/1    00:00:00 /usr/local/cubridqa/jdk1.8.0_201/bin/java -cp /home/ccitest/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c ./cci_quick_start.conf
+ccitest  24555 24547  0 18:32 pts/1    00:00:00 tee /home/ccitest/CTP/.output_2019081318321565688750.log
+ccitest  24873 24554  3 18:32 pts/1    00:00:00 sh /tmp/.localexec316459764768233302.sh 2>&1
+ccitest  25069 24873  0 18:32 pts/1    00:00:00 ps -u ccitest -f
+ccitest  24554 24547 50 18:32 pts/1    00:00:00 /usr/local/cubridqa/jdk1.8.0_201/bin/java -cp /home/ccitest/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c ./cci_quick_start.conf
+ccitest  25071 24873  0 18:32 pts/1    00:00:00 grep --color=auto cub
+
+------ Message Queues --------
+key        msqid      owner      perms      used-bytes   messages    
+
+------ Shared Memory Segments --------
+key        shmid      owner      perms      bytes      nattch     status      
+
+------ Semaphore Arrays --------
+key        semid      owner      perms      nsems
+EXPECT NOTHING FOR BELOW (local)
+Above EnvId is local
+SKIP TEST CASES UPDATE
+DONE
+============= FETCH TEST CASES ==================
+Test Category:shell
+The Number of Test Cases: 2 (macro skipped: 0, bug skipped: 0)
+The Number of Test Case : 2
+============= DEPLOY ==================
+CLEAN PROCESSES:
+++ cubrid service is not running.
+UID        PID  PPID  C STIME TTY          TIME CMD
+ccitest  23144 23143  0 18:31 pts/1    00:00:00 -bash
+ccitest  24547 23144  0 18:32 pts/1    00:00:00 /bin/sh /home/ccitest/CTP/bin/ctp.sh shell -c ./cci_quick_start.conf
+ccitest  24554 24547 27 18:32 pts/1    00:00:00 /usr/local/cubridqa/jdk1.8.0_201/bin/java -cp /home/ccitest/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c ./cci_quick_start.conf
+ccitest  24555 24547  0 18:32 pts/1    00:00:00 tee /home/ccitest/CTP/.output_2019081318321565688750.log
+ccitest  25162 24554  2 18:32 pts/1    00:00:00 sh /tmp/.localexec2970484221793586929.sh 2>&1
+ccitest  25358 25162  0 18:32 pts/1    00:00:00 ps -u ccitest -f
+ccitest  24554 24547 27 18:32 pts/1    00:00:00 /usr/local/cubridqa/jdk1.8.0_201/bin/java -cp /home/ccitest/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c ./cci_quick_start.conf
+ccitest  25360 25162  0 18:32 pts/1    00:00:00 grep --color=auto cub
+
+------ Message Queues --------
+key        msqid      owner      perms      used-bytes   messages    
+
+------ Shared Memory Segments --------
+key        shmid      owner      perms      bytes      nattch     status      
+
+------ Semaphore Arrays --------
+key        semid      owner      perms      nsems
+DONE
+============= TEST ==================
+[ENV START] local
+STARTED
+[TESTCASE] cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch/cci_execute_batch_01/cases/cci_execute_batch_01.sh EnvId=local [OK]
+[TESTCASE] cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch/cci_execute_batch_02/cases/cci_execute_batch_02.sh EnvId=local [OK]
+[ENV STOP] local
+============= PRINT SUMMARY ==================
+Test Category:shell
+Total Case:2
+Total Execution Case:2
+Total Success Case:2
+Total Fail Case:0
+Total Skip Case:0
+
+TEST COMPLETE
+[SHELL] TEST END (Tue Aug 13 18:33:10 KST 2019)
+[SHELL] ELAPSE TIME: 39 seconds
+```
+## 2.5 Examine test results
+### Check test logs  
+During the test, the test logs are generated to CTP/result/shell/current_runtime_logs, after test finish, current_runtime_logs will be backuped as a .tar.gz file.
+```
+$ cd ~/CTP/result/shell/
+$ ls
+current_runtime_logs  shell_result_10.2.0.8396-1bc28b2_64bits_0_2019.8.13_6.33.10.tar.gz
+$ ls current_runtime_logs/
+check_local.log  dispatch_tc_ALL.txt        feedback.log              monitor_local.log  test_local.log
+current_task_id  dispatch_tc_FIN_local.txt  main_snapshot.properties  runtime.log        test_status.data
+``` 
+### Check test results   
+The results of each test case are generated to the same path with test cases.
+```
+$ cd $HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch
+$ cd cci_execute_batch_01/cases
+$ ls -l
+total 24
+-rw-r--r-- 1 ccitest ccitest  754 Aug 13 18:32 cci_execute_batch_01.answer
+-rw-r--r-- 1 ccitest ccitest  754 Aug 13 18:32 cci_execute_batch_01.output
+-rw-rw-r-- 1 ccitest ccitest   28 Aug 13 18:32 cci_execute_batch_01.result
+-rw-r--r-- 1 ccitest ccitest  633 Aug 13 18:11 cci_execute_batch_01.sh
+-rw-r--r-- 1 ccitest ccitest    0 Aug 13 18:32 listdrv
+-rw-r--r-- 1 ccitest ccitest 6343 Aug 13 18:11 test.c
+``` 
+* The file which ended with .result record success or failure of the test cases.
+    ```bash
+    $ cat cci_execute_batch_01.result
+    cci_execute_batch_01-1 : OK
     ```
-2. Configure a config file  
-   Touch an empty file `cci_quick_start.conf`, 
-   set `scenario` path. `scenario` should be a path to a folder but not a file.       
-    ```    
-    scenario=$HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch     
+* The file which ended with .output is  actual result of the test cases.
+    ```bash
+    $ cat cci_execute_batch_01.output
+    cci_set_autocommit
+    negative of cci_set_autocommit
+
+    negative of cci_get_autocommit
+    test.c(82) - batch_01 ERROR : Invalid connection handle ( [0]) 
+
+    test.c(88) - batch_01 ERROR : Invalid connection handle ( [0]) 
+
+    autocommit: 0
+    num_query=0 of cci_execute_batch()
+    num_query<0 of cci_execute_batch()
+    conn_handle is null in cci_execute_batch()
+    test.c(122) - batch_01 ERROR : Invalid connection handle) 
+
+    conn_handle is digit in cci_execute_batch()
+    num_query< number_sql_stmts of cci_execute_batch()
+
+    positive cases
+
+    query_result: 0@0@1@1@1@1@
+
+    negative of cci_end_tran()
+    test.c(179) - batch_01 ERROR : Invalid transaction type argument) 
+
+    test.c(185) - batch_01 ERROR : Invalid connection handle) 
+
+    test.c(191) - batch_01 ERROR : Invalid connection handle) 
     ```
-3. Run       
-    ```bash    
-    ctp.sh shell -c ./cci_quick_start.conf    
-    ```    
-    Screen output:    
-    Druing the test, CTP prints testing information like test configs, deploy status, test results, execution time and so on.      
+* The file which ended with .answer is  expect result of the test cases.
+* Success or failure of the test case is obtained by comparing the .output file with the .answer file
+    ```bash
+    $ diff cci_execute_batch_01.output cci_execute_batch_01.answer -y
+    cci_set_autocommit                                              cci_set_autocommit
+    negative of cci_set_autocommit                                  negative of cci_set_autocommit
+
+    negative of cci_get_autocommit                                  negative of cci_get_autocommit
+    test.c(82) - batch_01 ERROR : Invalid connection handle ( [0]   test.c(82) - batch_01 ERROR : Invalid connection handle ( [0]
+
+    test.c(88) - batch_01 ERROR : Invalid connection handle ( [0]   test.c(88) - batch_01 ERROR : Invalid connection handle ( [0]
+
+    autocommit: 0                                                   autocommit: 0
+    num_query=0 of cci_execute_batch()                              num_query=0 of cci_execute_batch()
+    num_query<0 of cci_execute_batch()                              num_query<0 of cci_execute_batch()
+    conn_handle is null in cci_execute_batch()                      conn_handle is null in cci_execute_batch()
+    test.c(122) - batch_01 ERROR : Invalid connection handle)       test.c(122) - batch_01 ERROR : Invalid connection handle) 
+
+    conn_handle is digit in cci_execute_batch()                     conn_handle is digit in cci_execute_batch()
+    num_query< number_sql_stmts of cci_execute_batch()              num_query< number_sql_stmts of cci_execute_batch()
+
+    positive cases                                                  positive cases
+
+    query_result: 0@0@1@1@1@1@                                      query_result: 0@0@1@1@1@1@
+
+    negative of cci_end_tran()                                      negative of cci_end_tran()
+    test.c(179) - batch_01 ERROR : Invalid transaction type argum   test.c(179) - batch_01 ERROR : Invalid transaction type argum
+
+    test.c(185) - batch_01 ERROR : Invalid connection handle)       test.c(185) - batch_01 ERROR : Invalid connection handle) 
+
+    test.c(191) - batch_01 ERROR : Invalid connection handle)       test.c(191) - batch_01 ERROR : Invalid connection handle) 
+
+    $ echo $?
+    0
     ```
-    $ ctp.sh shell -c ./cci_quick_start.conf  
+   If the .output file is different from .answer file, the result turns out NOK.
 
-    ====================================== SHELL ==========================================
-    [SHELL] TEST STARTED (Tue Aug 13 18:32:30 KST 2019)
-
-    [SHELL] CONFIG FILE: /home/ccitest/CTP/conf/cci_quick_start.conf
-
-    scenario=$HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch
-
-
-    ----------END OF FILE----------
-    Available Env: [local]
-    Continue Mode: false
-    Build Number: 10.2.0.8396-1bc28b2
-    java.runtime.name=Java(TM) SE Runtime Environment
-    sun.boot.library.path=/usr/local/cubridqa/jdk1.8.0_201/jre/lib/amd64
-    java.vm.version=25.201-b09
-    java.vm.vendor=Oracle Corporation
-    java.vendor.url=http://java.oracle.com/
-    path.separator=:
-    java.vm.name=Java HotSpot(TM) 64-Bit Server VM
-    file.encoding.pkg=sun.io
-    user.country=US
-    sun.java.launcher=SUN_STANDARD
-    sun.os.patch.level=unknown
-    java.vm.specification.name=Java Virtual Machine Specification
-    user.dir=/home/ccitest/CTP/conf
-    java.runtime.version=1.8.0_201-b09
-    java.awt.graphicsenv=sun.awt.X11GraphicsEnvironment
-    java.endorsed.dirs=/usr/local/cubridqa/jdk1.8.0_201/jre/lib/endorsed
-    os.arch=amd64
-    java.io.tmpdir=/tmp
-    line.separator=
-
-    java.vm.specification.vendor=Oracle Corporation
-    os.name=Linux
-    sun.jnu.encoding=ISO-8859-1
-    java.library.path=/home/ccitest/CUBRID/lib:/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
-    scenario=$HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch 
-    java.specification.name=Java Platform API Specification
-    java.class.version=52.0
-    sun.management.compiler=HotSpot 64-Bit Tiered Compilers
-    os.version=3.10.0-957.21.3.el7.x86_64
-    user.home=/home/ccitest
-    user.timezone=Asia/Seoul
-    java.awt.printerjob=sun.print.PSPrinterJob
-    file.encoding=ISO-8859-1
-    java.specification.version=1.8
-    user.name=ccitest
-    java.class.path=/home/ccitest/CTP/common/lib/cubridqa-common.jar
-    java.vm.specification.version=1.8
-    sun.arch.data.model=64
-    java.home=/usr/local/cubridqa/jdk1.8.0_201/jre
-    sun.java.command=com.navercorp.cubridqa.ctp.CTP shell -c ./cci_quick_start.conf
-    java.specification.vendor=Oracle Corporation
-    user.language=en
-    awt.toolkit=sun.awt.X11.XToolkit
-    java.vm.info=mixed mode
-    java.version=1.8.0_201
-    java.ext.dirs=/usr/local/cubridqa/jdk1.8.0_201/jre/lib/ext:/usr/java/packages/lib/ext
-    sun.boot.class.path=/usr/local/cubridqa/jdk1.8.0_201/jre/lib/resources.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/rt.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/sunrsasign.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/jsse.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/jce.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/charsets.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/lib/jfr.jar:/usr/local/cubridqa/jdk1.8.0_201/jre/classes
-    java.vendor=Oracle Corporation
-    file.separator=/
-    java.vendor.url.bug=http://bugreport.sun.com/bugreport/
-    sun.cpu.endian=little
-    sun.io.unicode.encoding=UnicodeLittle
-    sun.rmi.transport.connectionTimeout=10000000
-    sun.cpu.isalist=
-    AUTO_TEST_VERSION=10.2.0.8396-1bc28b2
-    AUTO_TEST_BITS=64bits
-    BEGIN TO CHECK: 
-    =================== Check local============================
-    ==> Check connection(ssh) ...... PASS
-    ==> Check variable 'HOME' ...... PASS
-    ==> Check variable 'USER' ...... PASS
-    ==> Check variable 'JAVA_HOME' ...... PASS
-    ==> Check variable 'CTP_HOME' ...... PASS
-    ==> Check variable 'init_path' ...... PASS
-    ==> Check variable 'CUBRID' ...... PASS
-    ==> Check command 'java' ...... PASS
-    ==> Check command 'javac' ...... PASS
-    ==> Check command 'diff' ...... PASS
-    ==> Check command 'wget' ...... PASS
-    ==> Check command 'find' ...... PASS
-    ==> Check command 'cat' ...... PASS
-    ==> Check command 'kill' ...... PASS
-    ==> Check command 'dos2unix' ...... PASS
-    ==> Check command 'tar' ...... PASS
-    ==> Check directory '${CTP_HOME}/bin' ...... PASS
-    ==> Check directory '${CTP_HOME}/common/script' ...... PASS
-    ==> Check directory 'cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch' ...... PASS
-
-    CHECK RESULT: PASS
-    ============= UPDATE TEST CASES ==================
-    CLEAN PROCESSES:
-    ++ cubrid service is not running.
-    UID        PID  PPID  C STIME TTY          TIME CMD
-    ccitest  23144 23143  0 18:31 pts/1    00:00:00 -bash
-    ccitest  24547 23144  0 18:32 pts/1    00:00:00 /bin/sh /home/ccitest/CTP/bin/ctp.sh shell -c ./cci_quick_start.conf
-    ccitest  24554 24547 50 18:32 pts/1    00:00:00 /usr/local/cubridqa/jdk1.8.0_201/bin/java -cp /home/ccitest/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c ./cci_quick_start.conf
-    ccitest  24555 24547  0 18:32 pts/1    00:00:00 tee /home/ccitest/CTP/.output_2019081318321565688750.log
-    ccitest  24873 24554  3 18:32 pts/1    00:00:00 sh /tmp/.localexec316459764768233302.sh 2>&1
-    ccitest  25069 24873  0 18:32 pts/1    00:00:00 ps -u ccitest -f
-    ccitest  24554 24547 50 18:32 pts/1    00:00:00 /usr/local/cubridqa/jdk1.8.0_201/bin/java -cp /home/ccitest/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c ./cci_quick_start.conf
-    ccitest  25071 24873  0 18:32 pts/1    00:00:00 grep --color=auto cub
-
-    ------ Message Queues --------
-    key        msqid      owner      perms      used-bytes   messages    
-
-    ------ Shared Memory Segments --------
-    key        shmid      owner      perms      bytes      nattch     status      
-
-    ------ Semaphore Arrays --------
-    key        semid      owner      perms      nsems
-    EXPECT NOTHING FOR BELOW (local)
-    Above EnvId is local
-    SKIP TEST CASES UPDATE
-    DONE
-    ============= FETCH TEST CASES ==================
-    Test Category:shell
-    The Number of Test Cases: 2 (macro skipped: 0, bug skipped: 0)
-    The Number of Test Case : 2
-    ============= DEPLOY ==================
-    CLEAN PROCESSES:
-    ++ cubrid service is not running.
-    UID        PID  PPID  C STIME TTY          TIME CMD
-    ccitest  23144 23143  0 18:31 pts/1    00:00:00 -bash
-    ccitest  24547 23144  0 18:32 pts/1    00:00:00 /bin/sh /home/ccitest/CTP/bin/ctp.sh shell -c ./cci_quick_start.conf
-    ccitest  24554 24547 27 18:32 pts/1    00:00:00 /usr/local/cubridqa/jdk1.8.0_201/bin/java -cp /home/ccitest/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c ./cci_quick_start.conf
-    ccitest  24555 24547  0 18:32 pts/1    00:00:00 tee /home/ccitest/CTP/.output_2019081318321565688750.log
-    ccitest  25162 24554  2 18:32 pts/1    00:00:00 sh /tmp/.localexec2970484221793586929.sh 2>&1
-    ccitest  25358 25162  0 18:32 pts/1    00:00:00 ps -u ccitest -f
-    ccitest  24554 24547 27 18:32 pts/1    00:00:00 /usr/local/cubridqa/jdk1.8.0_201/bin/java -cp /home/ccitest/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c ./cci_quick_start.conf
-    ccitest  25360 25162  0 18:32 pts/1    00:00:00 grep --color=auto cub
-
-    ------ Message Queues --------
-    key        msqid      owner      perms      used-bytes   messages    
-
-    ------ Shared Memory Segments --------
-    key        shmid      owner      perms      bytes      nattch     status      
-
-    ------ Semaphore Arrays --------
-    key        semid      owner      perms      nsems
-    DONE
-    ============= TEST ==================
-    [ENV START] local
-    STARTED
-    [TESTCASE] cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch/cci_execute_batch_01/cases/cci_execute_batch_01.sh EnvId=local [OK]
-    [TESTCASE] cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch/cci_execute_batch_02/cases/cci_execute_batch_02.sh EnvId=local [OK]
-    [ENV STOP] local
-    ============= PRINT SUMMARY ==================
-    Test Category:shell
-    Total Case:2
-    Total Execution Case:2
-    Total Success Case:2
-    Total Fail Case:0
-    Total Skip Case:0
-
-    TEST COMPLETE
-    [SHELL] TEST END (Tue Aug 13 18:33:10 KST 2019)
-    [SHELL] ELAPSE TIME: 39 seconds
-    ```
- 4. Test logs  
-    During the test, the test logs are generated to CTP/result/shell/current_runtime_logs, after test finish, current_runtime_logs will be backuped as a .tar.gz file.
-    ```
-    $ cd ~/CTP/result/shell/
-    $ ls
-    current_runtime_logs  shell_result_10.2.0.8396-1bc28b2_64bits_0_2019.8.13_6.33.10.tar.gz
-    $ ls current_runtime_logs/
-    check_local.log  dispatch_tc_ALL.txt        feedback.log              monitor_local.log  test_local.log
-    current_task_id  dispatch_tc_FIN_local.txt  main_snapshot.properties  runtime.log        test_status.data
-    ``` 
-5. Test results   
-    The results of each test case are generated to the same path with test cases.
-    ```
-    $ cd $HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch
-    $ cd cci_execute_batch_01/cases
-    $ ls -l
-    total 24
-    -rw-r--r-- 1 ccitest ccitest  754 Aug 13 18:32 cci_execute_batch_01.answer
-    -rw-r--r-- 1 ccitest ccitest  754 Aug 13 18:32 cci_execute_batch_01.output
-    -rw-rw-r-- 1 ccitest ccitest   28 Aug 13 18:32 cci_execute_batch_01.result
-    -rw-r--r-- 1 ccitest ccitest  633 Aug 13 18:11 cci_execute_batch_01.sh
-    -rw-r--r-- 1 ccitest ccitest    0 Aug 13 18:32 listdrv
-    -rw-r--r-- 1 ccitest ccitest 6343 Aug 13 18:11 test.c
-    ``` 
-    * The file which ended with .result record success or failure of the test cases.
-        ```bash
-        $ cat cci_execute_batch_01.result
-        cci_execute_batch_01-1 : OK
-        ```
-    * The file which ended with .output is  actual result of the test cases.
-        ```bash
-        $ cat cci_execute_batch_01.output
-        cci_set_autocommit
-        negative of cci_set_autocommit
-
-        negative of cci_get_autocommit
-        test.c(82) - batch_01 ERROR : Invalid connection handle ( [0]) 
-
-        test.c(88) - batch_01 ERROR : Invalid connection handle ( [0]) 
-
-        autocommit: 0
-        num_query=0 of cci_execute_batch()
-        num_query<0 of cci_execute_batch()
-        conn_handle is null in cci_execute_batch()
-        test.c(122) - batch_01 ERROR : Invalid connection handle) 
-
-        conn_handle is digit in cci_execute_batch()
-        num_query< number_sql_stmts of cci_execute_batch()
-
-        positive cases
-
-        query_result: 0@0@1@1@1@1@
-
-        negative of cci_end_tran()
-        test.c(179) - batch_01 ERROR : Invalid transaction type argument) 
-
-        test.c(185) - batch_01 ERROR : Invalid connection handle) 
-
-        test.c(191) - batch_01 ERROR : Invalid connection handle) 
-        ```
-    * The file which ended with .answer is  expect result of the test cases.
-    * Success or failure of the test case is obtained by comparing the .output file with the .answer file
-        ```bash
-        $ diff cci_execute_batch_01.output cci_execute_batch_01.answer -y
-        cci_set_autocommit                                              cci_set_autocommit
-        negative of cci_set_autocommit                                  negative of cci_set_autocommit
-
-        negative of cci_get_autocommit                                  negative of cci_get_autocommit
-        test.c(82) - batch_01 ERROR : Invalid connection handle ( [0]   test.c(82) - batch_01 ERROR : Invalid connection handle ( [0]
-
-        test.c(88) - batch_01 ERROR : Invalid connection handle ( [0]   test.c(88) - batch_01 ERROR : Invalid connection handle ( [0]
-
-        autocommit: 0                                                   autocommit: 0
-        num_query=0 of cci_execute_batch()                              num_query=0 of cci_execute_batch()
-        num_query<0 of cci_execute_batch()                              num_query<0 of cci_execute_batch()
-        conn_handle is null in cci_execute_batch()                      conn_handle is null in cci_execute_batch()
-        test.c(122) - batch_01 ERROR : Invalid connection handle)       test.c(122) - batch_01 ERROR : Invalid connection handle) 
-
-        conn_handle is digit in cci_execute_batch()                     conn_handle is digit in cci_execute_batch()
-        num_query< number_sql_stmts of cci_execute_batch()              num_query< number_sql_stmts of cci_execute_batch()
-
-        positive cases                                                  positive cases
-
-        query_result: 0@0@1@1@1@1@                                      query_result: 0@0@1@1@1@1@
-
-        negative of cci_end_tran()                                      negative of cci_end_tran()
-        test.c(179) - batch_01 ERROR : Invalid transaction type argum   test.c(179) - batch_01 ERROR : Invalid transaction type argum
-
-        test.c(185) - batch_01 ERROR : Invalid connection handle)       test.c(185) - batch_01 ERROR : Invalid connection handle) 
-
-        test.c(191) - batch_01 ERROR : Invalid connection handle)       test.c(191) - batch_01 ERROR : Invalid connection handle) 
-
-        $ echo $?
-        0
-        ```
-       If the .output file is different from .answer file, the result turns out NOK.
-
-# 3. Deploy Regression Tests Environment
+# 3. Deploy Regression Test Environment
 ## 3.1 Test Machine
 **Controller node**: It listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.  
 **Test node**: It executes test cases.
@@ -371,39 +317,10 @@ For current daily regression test, controller node and test node are the same on
   </tr>
 </table>
 
-## 3.2 Deploy Tests Environment
+## 3.2 Deploy Test Environment
 ### On controller & test node
 * Install CTP
-  - Please follow [install CTP](#21-install-ctp).  
-    Configure CTP/conf/common.conf as below:
-    ```bash
-    $ cat common.conf 
-    git_user=cubridqa
-    git_pwd=******
-    git_email=dl_cubridqa_bj_internal@navercorp.com
-    default_ssh_pwd=*******
-    default_ssh_port=22
-
-    grepo_service_url=rmi://192.168.1.91:11099
-    coverage_controller_pwd=******
-
-    qahome_db_driver=cubrid.jdbc.driver.CUBRIDDriver
-    qahome_db_url=jdbc:cubrid:192.168.1.86:33080:qaresu:dba::
-    qahome_db_user=dba
-    qahome_db_pwd=
-
-    qahome_server_host=192.168.1.86
-    qahome_server_port=22
-    qahome_server_user=qahome
-    qahome_server_pwd=******
-
-    activemq_user=admin
-    activemq_pwd=admin
-    activemq_url=failover:tcp://192.168.1.91:61616?wireFormat.maxInactivityDurationInitalDelay=30000
-
-    mail_from_nickname=CUBRIDQA_BJ
-    mail_from_address=dl_cubridqa_bj_internal@navercorp.com
-    ```
+  - Please refer to the guide to [install CTP as Regression Test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
   - touch ~/CTP/conf/shell_template.conf     
     Here is the config file which we used for current daily cci regresion test: shell_template.conf 
     ```bash
@@ -465,7 +382,7 @@ For current daily regression test, controller node and test node are the same on
 # 4. Regression Tests
 We perform cci/cci_debug for daily (actually is for each build) and perform code coverage test of cci for monthly. cci_debug is executing cci test cases with a debug build.
 ## 4.1 Daily Regresion Test
-When a new build comes, cci daily regression test will start. We just need to make sure that test environment has no problem and listener has been started. If there are not test messages for this build, we need to send messages manually.
+When a new build comes, cci daily regression test will start. We just need to make sure that test environment has no problem and listener has been started. Sometimes, in order to investigate or correct a test, we need to send messages manually.   
 ### Start the listener
 ```bash
 $ cd ~
