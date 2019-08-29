@@ -4,7 +4,7 @@ In order to test SQL feature, we designed two suites SQL and MEDIUM which includ
 Typically, SQL and MEDIUM perform tests via JDBC interface on both Linux and Windows platform as regression test. And we also introduce SQL_BY_CCI suite which execute SQL test cases via CCI interface. In this guide, I would introduce SQL, MEDIUM and SQL_BY_CCI tests.  
   
 # 2. General SQL Test  
-* ## 2.1 SQL Test  
+## 2.1 SQL Test  
 * Step 1: Install CTP  
 Please follow guides to [install CTP on Linux platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform) or [install CTP on Windows platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#2-install-ctp-in-windows-platform).
 * Step 2: Install CUBRID  
@@ -131,28 +131,27 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
 	Testing End!
 	-----------------------
 	```
-  * Alternatively, you can use the webconsole of CTP to check results(the current webconsole feature only support SQL and MEDIUM)
-	```
-	$ bin/ctp.sh webconsole start
-	Config: /home/user/CTP/conf/webconsole.conf
-	Web Root: /home/user/CTP/sql/webconsole
-	Begin to start ...
-	     
-	Done
-	URL:  http://127.0.0.1:8888
-	```
-  * Please open the ``URL`` with your browser to see the details  
-  ![ctp_web_result](./sql_image/ctp_web_result.png)  
-* ## 2.2 MEDIUM Test 
+  * Alternatively, you can use the webconsole of CTP to check results(the current webconsole feature only support SQL and MEDIUM)  
+    ```
+    $ bin/ctp.sh webconsole start
+    Config: /home/user/CTP/conf/webconsole.conf
+    Web Root: /home/user/CTP/sql/webconsole
+    Begin to start ...
+        
+    Done
+    URL:  http://127.0.0.1:8888
+    ```  
+    Please open the ``URL`` with your browser to see the details  
+    ![ctp_web_result](./sql_image/ctp_web_result.png)  
+## 2.2 MEDIUM Test 
   MEDIUM test is same as [SQL test](#21-sql-test) except that MEDIUM database is loaded from a backuped files.  
   Let's prepare MEDIUM config file ~/CTP/conf/medium.conf which copy from SQL config file.   
-
-  cp ~/CTP/conf/sql.conf ~/CTP/conf/medium.conf  
-
-  Then change parameters as below:  
-
-  [sql]
   ```
+  cp ~/CTP/conf/sql.conf ~/CTP/conf/medium.conf  
+  ```
+  Then change parameters as below:  
+  ```
+  [sql] 
   scenario=https://github.com/CUBRID/cubrid-testcases/tree/develop/medium
   data_file=${HOME}/cubrid-testcases/medium/files/mdb.tar.gz
   ```
@@ -162,14 +161,14 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   ctp.sh sql -c ~/CTP/conf/medium.conf
   ```
   Other steps are same as SQL test.
-* ## 2.3 SQL_BY_CCI Test  
+## 2.3 SQL_BY_CCI Test  
   SQL_BY_CCI test is same as [SQL test](#21-sql-test). 
-
-  cp ~/CTP/conf/sql.conf ~/CTP/conf/sql_by_cci.conf  
-
-  Then change file sql_by_cci.conf:  
-  [sql]
   ```
+  cp ~/CTP/conf/sql.conf ~/CTP/conf/sql_by_cci.conf  
+  ```
+  Then change file sql_by_cci.conf:  
+  ```
+  [sql]
   sql_interface_type=cci
   ```
 
@@ -177,10 +176,18 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   ```
   ctp.sh sql -c ~/CTP/conf/sql_by_cci.conf
   ```
-* ## 2.4 Windows Test
+## 2.4 Windows Test
   Windows test is same as [SQL test](#21-sql-test).  
-	Modify configuration "jdbc_config_file=test_default.xml" to "jdbc_config_file = test_win.xml","ha_mode=no" to "ha_mode=yes" in sql.conf 
-* ## 2.5 Execute Test with interactive mode
+  Change parameters as below: 
+  ```
+  [sql]
+  jdbc_config_file = test_win.xml
+  [sql/cubrid.conf]
+  ha_mode=no  
+  [sql/cubrid_ha.conf]
+  ha_mode=no
+  ```
+## 2.5 Execute Test with interactive mode
   Option `--interactive` can be used to enable interactive mode execution in CTP.
   With this option, we may execute one sql file or a batch of sql files in a folder.
   ```
