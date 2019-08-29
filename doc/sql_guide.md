@@ -144,7 +144,7 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   * Please open the ``URL`` with your browser to see the details  
   ![ctp_web_result](./sql_image/ctp_web_result.png)  
 * ## 2.2 MEDIUM Test 
-  MEDIUM test is same as [SQL test](#2-1-sql-test) except that MEDIUM database is loaded from a backuped files.  
+  MEDIUM test is same as [SQL test](#21-sql-test) except that MEDIUM database is loaded from a backuped files.  
   Let's prepare MEDIUM config file ~/CTP/conf/medium.conf which copy from SQL config file.   
 
   cp ~/CTP/conf/sql.conf ~/CTP/conf/medium.conf  
@@ -163,7 +163,7 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   ```
   Other steps are same as SQL test.
 * ## 2.3 SQL_BY_CCI Test  
-  SQL_BY_CCI test is same as [SQL test](#2-1-sql-test) 
+  SQL_BY_CCI test is same as [SQL test](#21-sql-test). 
 
   cp ~/CTP/conf/sql.conf ~/CTP/conf/sql_by_cci.conf  
 
@@ -178,7 +178,7 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   ctp.sh sql -c ~/CTP/conf/sql_by_cci.conf
   ```
 * ## 2.4 Windows Test
-  Windows test is same as [SQL test](#2-1-sql-test)  
+  Windows test is same as [SQL test](#21-sql-test).  
 	Modify configuration "jdbc_config_file=test_default.xml" to "jdbc_config_file = test_win.xml","ha_mode=no" to "ha_mode=yes" in sql.conf 
 * ## 2.5 Execute Test with interactive mode
   Option `--interactive` can be used to enable interactive mode execution in CTP.
