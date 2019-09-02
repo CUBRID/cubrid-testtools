@@ -223,7 +223,7 @@ Touch an empty file shell_heavy_parallel.conf, then define test nodes.
     ```
 ## 2.5 Execute one test case
 If you only want to execute one test case, you can simply execute the test case script.   
-In this case, you need to export an init_path at first.   
+In this case, you need to export an `init_path` at first.   
 ```
 export init_path=$CTP_HOME/shell/init_path
 ```
