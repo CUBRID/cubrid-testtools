@@ -1,5 +1,5 @@
 # 1. Test Objective
-`shel_heavy` test is a kind of the shell test. The test cases that require big disk size or big memory or with heavy workload are categorized as shell_heavy.
+`shel_heavy` test is a kind of the shell test. The test cases that require large disk space or large memory or with heavy workload are categorized as shell_heavy.
 # 2. Execute shell_heavy Test
 To perform the `shell_heavy` test, we need to install CTP first.
 ## 2.1 Install CTP
