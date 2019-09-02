@@ -3,48 +3,7 @@
 # 2. Execute shell_heavy Test
 To perform the `shell_heavy` test, we need to install CTP first.
 ## 2.1 Install CTP
-1. Checkout CTP 
-    ```bash
-    cd ~
-    git clone https://github.com/CUBRID/cubrid-testtools.git
-    cd ~/cubrid-testtools 
-    git checkout develop
-    cp -rf CTP ~/
-    ```
-2. Create and config `CTP/conf/common.conf`   
-    ```
-    git_user=cubridqa
-    git_pwd=PASSWORD
-    git_email=<CUBRIDQA DL email address>
-    default_ssh_pwd=PASSWORD
-    default_ssh_port=22
-
-    grepo_service_url=rmi://192.168.1.91:11099
-
-    qahome_db_driver=cubrid.jdbc.driver.CUBRIDDriver
-    qahome_db_url=jdbc:cubrid:192.168.1.86:33080:qaresu:dba::
-    qahome_db_user=dba
-    qahome_db_pwd=PASSWORD
-
-    qahome_server_host=192.168.1.86
-    qahome_server_port=22
-    qahome_server_user=qahome
-    qahome_server_pwd=PASSWORD
-
-    activemq_user=admin
-    activemq_pwd=PASSWORD
-    activemq_url=failover:tcp://192.168.1.91:61616?wireFormat.maxInactivityDurationInitalDelay=30000
-
-    mail_from_nickname=CUBRIDQA_BJ
-    mail_from_address=<CUBRIDQA DL e-mail address>
-    ```
-3. Add path to `.bash_profile`
-    ```
-    export CTP_HOME=$HOME/CTP
-    export CTP_BRANCH_NAME=develop
-    export CTP_SKIP_UPDATE=0
-    export PATH=$JAVA_HOME/bin:$CTP_HOME/bin:$CTP_HOME/common/script:$PATH
-    ```
+Please refer to the guide to [install CTP in Linux platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform).
 
 ## 2.2 Checkout shell_heavy Test Cases   
 The shell_heavy test cases are in the https://github.com/CUBRID/cubrid-testcases-private-ex repository.  
@@ -65,6 +24,7 @@ _05_multitbl_query_02       bug_bts_10295     bug_bts_17460    bug_bts_5349   bu
 ```
 ## 2.3 Quick Start
 1. Install CUBRID   
+    You may install CUBRID as your way or install via a script file `run_cubrid_install` in CTP.
     ```
     run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
     ```
@@ -293,7 +253,7 @@ No. | role | user | ip | hostname | Tools to deploy
 
 ## 3.2 On Controller Node
 1. Install CTP   
-Follow the steps in [2.1 Install CTP](#21-install-ctp)   
+Please refer to the guide to [install CTP as Regression Test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform).     
 2. Configurations for shell_heavy test   
     Create a config file named `CTP/conf/shell_template_for_shell_heavy.conf` and configure as below.
     ```
@@ -378,11 +338,11 @@ Follow the steps in [2.1 Install CTP](#21-install-ctp)
     $ cd ~
     $ sh start_test.sh
     ```
-    Note: If you want to stop listening, execute `sh ~/cubrid_scheduler/stop_consumer.sh`.
+    Note: If you want to stop listening, execute `stop_consumer.sh`.
 
 ## 3.3 On Test Nodes
 1. Install CTP   
-Follow the steps in [2.1 Install CTP](#21-install-ctp), install the CTP to each test node.
+Please refer to the guide to [install CTP in Linux platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform) on each test node.
 2. Edit `.bash_profile`   
     Add following settings to `~/.bash_profile` then source it.
     ```
