@@ -434,7 +434,7 @@ Usually, it caused by insufficient disk space or test is waiting for shell_long 
 Please refer to [result overview](https://github.com/CUBRID/cubrid-testtools/blob/a066d8861858fa49885c77796515890b3f35b062/CTP/doc/shell/shell_guide.md#result-overview) and [verfy the failed cases](https://github.com/CUBRID/cubrid-testtools/blob/a066d8861858fa49885c77796515890b3f35b062/CTP/doc/shell/shell_guide.md#verfy-the-failed-cases) of shell guide. 
 
 ### Check Elapse Time  
-Usually a shell_heavy test takes 20000s ~ 30000s, if the test didn't finished in 30000s, you need to check why the test is so slow. It may because there is a server crash, server hangs up, or performance drop.
+Usually a shell_heavy test takes 20000s ~ 30000s, if the test didn't finish in 30000s, you need to check why the test is so slow. It may because there is a server crash, server hangs up, or performance drop.
 
 ## 4.3 Code Coverage Test
 Code coverage test starts on the last Sunday of each month.
