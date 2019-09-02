@@ -361,7 +361,7 @@ Follow the steps in [2.1 Install CTP](#21-install-ctp)
     feedback_db_pwd=PASSWORD
     ```
     When you need to test shell_heavy_debug, then need to copy `CTP/conf/shell_template_for_shell_heavy.conf` as `CTP/conf/shell_template_for_shell_heavy_debug.conf`.   
-    If there is no corresponding template config file, it will uses the `CTP/conf/shell_template.conf` file.   
+    If there is no corresponding template config file, it will use the `CTP/conf/shell_template.conf` file.   
     If none of these configuration files exist, the test will end with error like `[SHELL] ERROR: Not found configuration file`.
 3. Start Consumer   
     Create a script `$HOME/start_test.sh` like below.
