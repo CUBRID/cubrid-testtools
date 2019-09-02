@@ -369,7 +369,7 @@ Follow the steps in [2.1 Install CTP](#21-install-ctp)
     $ cat ~/start_test.sh
     nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_HEAVY_LINUX -exec run_shell &
     ```
-    In the current daily qa test, the `shell_heavy`, `shell_long`, and `RQG` tests are using the same test machines, so we use one controllar to listening to the three test messages. The `start_test.sh` is like below in the daily qa test environment. 
+    In the current daily qa test, the `shell_heavy`, `shell_long`, and `RQG` tests are using the same test machines, so we use one controllar to listen to the three test messages. The `start_test.sh` is like below in the daily qa test environment. 
     ```
     nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_HEAVY_LINUX,QUEUE_CUBRID_QA_RQG,QUEUE_CUBRID_QA_shell_heavy_LINUX -exec run_shell,run_shell,run_shell  &
     ```
