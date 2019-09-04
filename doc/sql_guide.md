@@ -244,11 +244,11 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
 * [Install CTP as Regression Test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) 
 * Configure tests
   * SQL  
-  You can refer to [2. General SQL Test:SQL Test](#2-general-sql-test) about CTP/conf/sql.conf.
+  You can refer to [SQL Test](#21-sql-test) about CTP/conf/sql.conf.
   * MEDIUM  
-  You can refer to [2. General SQL Test:MEDIUM Test](#2-general-sql-test) about CTP/conf/medium.conf.
+  You can refer to [MEDIUM Test](#22-medium-test) about CTP/conf/medium.conf.
   * SQL_BY_CCI  
-  You can refer to [2. General SQL Test:SQL_BY_CCI Test](#2-general-sql-test) about CTP/conf/sql_by_cci.conf.
+  You can refer to [SQL_BY_CCI Test](#23-sql_by_cci-test) about CTP/conf/sql_by_cci.conf.
 * Check out test cases
   ```
   cd ~/
