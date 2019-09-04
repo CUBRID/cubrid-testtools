@@ -241,7 +241,14 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   5|Test node|sql|192.168.1.77|func02|QUEUE_CUBRID_QA_SQL_PERF_LINUX|run_sql
   6|Test node|qa|192.168.1.161|winfunc01|QUEUE_CUBRID_QA_SQL_WIN64|run_sql 
 ## 3.2 Installation 
-* Install reference [CTP_install_guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) 
+* [Install CTP as Regression Test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) 
+* Configure tests
+  * SQL  
+  You can refer to [2. General SQL Test:SQL Test](#2-general-sql-test) about CTP/conf/sql.conf.
+  * MEDIUM  
+  You can refer to [2. General SQL Test:MEDIUM Test](#2-general-sql-test) about CTP/conf/medium.conf.
+  * SQL_BY_CCI  
+  You can refer to [2. General SQL Test:SQL_BY_CCI Test](#2-general-sql-test) about CTP/conf/sql_by_cci.conf.
 * Check out test cases
   ```
   cd ~/
@@ -259,31 +266,23 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   export LC_ALL=en_US
   ```
 * Add quick start script file    
-  * Linux Queue configure 
-    touch start_test.sh  
-    ```
-    stop_consumer.sh 
-    prefix=`date "+%Y%m%d%H%M%S"`
-    cp nohup.out nohup.out.$prefix
-    echo "" > nohup.out
-    nohup start_consumer.sh -q [QUEUE_NAME] -exec [run_name] &
-    ```       
-  * Windows Queue configure   
+  * Queue configure   
       touch start_test.sh
       ```
-      rm nohup.out
-      nohup start_consumer.sh -q [QUEUE_NAME] -exec [run_name] &
-      ```
+      stop_consumer.sh 
+      prefix=`date "+%Y%m%d%H%M%S"`
+      cp nohup.out nohup.out.$prefix
+      echo "" > nohup.out
+      nohup start_consumer.sh -q QUEUE_CUBRID_QA_SQL_LINUX_GIT -exec run_sql &
+      ``` 
   * sh start_test.sh  
 
 * send test message  
   login message@192.168.1.91 and send test message like:  
   ```
-  sender.sh  [QUEUE_NAME]  [CI_BUILD] [Category] default
+  sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT [CI_BUILD] sql_debug default
   ```
-  [QUEUE_NAME]:Message queue name  
-  [CI_BUILD]:Corresponds to the build installation package address
-  [Category]:sql,sql_debug,sql_by_cci,medium,medium_debug  
+  [CI_BUILD]:Corresponds to the build installation package address  
   
   eg: run SQL test
   sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh sql_debug default  
@@ -304,7 +303,7 @@ Go to QA homepage and click the CI build, wait for the page loading, then click 
 	There is a coverage rate of lines. Its SQL and SQL_BY_CCI coverage rate of lines is usually in 58%~60%, the MEDIUM coverage rate of lines is usually in 30%~31%.  
 	![coverage_result](./sql_image/coverage_result.png)
 
-	* SEND CODE COVERAGE TESTING MESSAGE  
+	* Send Code Coverage Testing Message  
 	sh  sender_code_coverage_testing_message.sh [QUEUE_NAME]  [COVERAGE_BUILD] [Category] default
 	eg:
       ```
@@ -326,7 +325,14 @@ Go to QA homepage and click the CI build, wait for the page loading, then click 
 
 	Close this issue.
 	```
-# 5. Test Case Specification  
+# 5. How to make a SQL test case  
+* A SQL test cases follows following basic structure:  
+	any_testcase_folder/cases/case_file.sql  
+	any_testcase_folder/answers/case_file.answer  
+	any_testcase_folder/answers/case_file.answer_WIN (If the answers are different in Windows)  
+	any_testcase_folder/answers/case_file.answer_cci (If the answers are different in CCI)    
+	A SQL file goes to 'cases' folder, an answer file goes to 'answers' folder, and they should be in the same folder.  
+  The test case and answer should have the same name.  
 * When add a test case for a bug fix, add a case to path  
 	cubrid-testcases/sql/_13_issues/_{yy}_{1|2}h/cases with naming rules:  
 	    cbrd_xxxxx.sql  
@@ -339,15 +345,33 @@ Go to QA homepage and click the CI build, wait for the page loading, then click 
 	cubrid-testcases/sql/_{no}_{release_code}/cbrd_xxxxx_{feature}/cases with naming rules:   
 	    {any_structured_name}.sql
 
-* How to make a SQL test case  
-	A SQL test cases follows following basic structure:  
-	any_testcase_folder/cases/case_file.sql  
-	any_testcase_folder/answers/case_file.answer  
-	any_testcase_folder/answers/case_file.answer_WIN (If the answers are different in Windows)  
-	any_testcase_folder/answers/case_file.answer_cci (If the answers are different in CCI)  
-  
-	A SQL file goes to 'cases' folder, an answer file goes to 'answers' folder, and they should be in the same folder.The test case and answer should have the same name.
+* To make an answer file, follow steps 1~9
+  * step 1/9: run ctp.sh sql with interactive mode  
+  ![step1](./sql_image/step1.png) 
+  * step 2/9: wait for testing ready  
+  ![step2](./sql_image/step2.png) 
+  * step 3/9: change directory to test cases folder, touch an empty answer file, then run the test
+case. The ctp.sh supports to run a single test case or a test case folder. Please read the
+'Usage' and examples in the screen  
+  ![step3](./sql_image/step3.png) 
+  * step 4/9: check the result is correct. then copy it as answer. Please notice that before copying as answer,
+please confirm query results one by one in sql file. Never submit incorrect answer.  
+  ![step4](./sql_image/step4.png) 
+  * step 5/9: run test case again and check the result is success.  
+  ![step5](./sql_image/step5.png) 
+  * step 6/9: run the test case using CCI by 'run_cci' command to check if there is a difference  
+  ![step6](./sql_image/step6.png) 
+  * step 7/9: If the result is failed and the different result is expected, then copy the result as a cci answer.  
+    ```
+    cp cbrd_22696.result ../answers/cbrd_22696.answer_cci
+    ```
+  * step 8/9: You also need to execute above steps in a Windows OS to check the test case is pass. If it has different result and it is expected, then add a windows answer as well.  
+    ```
+    cp cbrd_22696.result ../answers/cbrd_22696.answer_WIN 
+    ```
+  * step 9/9: commit the sql file and answer files to git repository.   
  
+# 6. Test Case Specification
 * Notes for writing case:  
   * CREATE TABLE should be preceded by DROP TABLE if exists.  
     drop table if exists t1;  
