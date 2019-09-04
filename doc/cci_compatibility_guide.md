@@ -30,22 +30,23 @@ Please refer to [2.5 Examine test results of cci guide](https://github.com/slamd
 ## 3.1 Test Machine
 For current daily regression test, controller node and test node are the same one.
 
-|No.|role|user|ip|hostname|
-|:--|:--|:--|:--|:--|
-|1.|Controller node and Test node|ccompat1|192.168.1.80|func05|
-|2.|Controller node and Test node|ccompat2|192.168.1.80|func05|
-|3.|Controller node and Test node|ccompat3|192.168.1.80|func05|
-|4.|Controllernode and Test node|ccompat4|192.168.1.80|func05|
-**Controller node**: It listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.
-**Test node**: It executes test cases.
+No.|role|user|ip|hostname
+--|--|--|--|--
+1.|Controller node and Test node|ccompat1|192.168.1.80|func05
+2.|Controller node and Test node|ccompat2|192.168.1.80|func05
+3.|Controller node and Test node|ccompat3|192.168.1.80|func05
+4.|Controller node and Test node|ccompat4|192.168.1.80|func05
+
+**Controller node**: It listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.    
+**Test node**: It executes test cases.     
 
 
 ## 3.2 Deploy Test Environment
 ### On controller & test node
-* Install CTP
-Please refer to [install CTP as Regression Test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
+* Install CTP     
+Please refer to [install CTP as Regression Test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)         
 
-    create cci compatibility configuration file 'shell_template.conf':
+    create cci compatibility configuration file '~/CTP/conf/shell_template.conf':     
     For node1:
     ```
     default.cubrid.cubrid_port_id=8217
@@ -66,7 +67,7 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     testcase_retry_num=0
 
     git_user=cubridqa
-    git_pwd=N6P0Sm5U7h
+    git_pwd=******
     git_email=dl_cubridqa_bj_internal@navercorp.com
 
     feedback_type=database
@@ -317,7 +318,7 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     ```
     >Note: now we use different users on the same one machine to test, so we need to set different port for CUBRID to avoid conflict.
   
-  * modify shell_config.xml
+  * modify shell_config.xml        
     for node1
     ```bash
     $ cat ./CQT/configuration/Function_Db/shell_config.xml
@@ -352,7 +353,7 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     </ShellConfig>
     ```
  
-* Touch start_test.sh
+* Touch start_test.sh       
     ```bash
     #!/bin/sh
     cd $HOME/CTP/common/script
@@ -362,14 +363,14 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     rm -f nohup.out
     nohup start_consumer.sh -q QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64,QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 -exec run_compat_cci,run_compat_cci -s china &
     ```
-* Checkout test cases
-We need to prepare test case of both high version and low version. 
-  * For high version's server(>=10.0)
+* Checkout test cases        
+We need to prepare test case of both high version and low version.      
+  * For high version's server(>=10.0)    
     ```bash
     cd ~
     git clone https://github.com/CUBRID/cubrid-testcases-private.git 
     ```
-  * For low version's server(<10.0) 
+  * For low version's server(<10.0)     
     ```bash
     cd ~
     mkdir dailyqa
@@ -380,7 +381,7 @@ We need to prepare test case of both high version and low version.
     svn co https://oss.navercorp.com/CUBRID/cubridqa/branches/RB-9.2.0
     svn co https://oss.navercorp.com/CUBRID/cubridqa/branches/RB-9.3.0
     ```
-* Configure .bash_profile
+* Configure .bash_profile    
     ```
     export QA_REPOSITORY=$HOME/CQT
     export PROPERTIES_PATH=$QA_REPOSITORY/qatool_bin/qamanager
@@ -409,13 +410,13 @@ We need to prepare test case of both high version and low version.
     . /home/ccompat3/.cubrid.sh
     ```
 
-* Install necessary shell commands
+* Install necessary shell commands     
   cci test cases use killall command, centos7 can not find this command
    ```bash
    yum install psmisc
    ```    
 # 4. Regression Tests
-We perform cci compatibility test for each build.
+We perform cci compatibility test for each build.     
 ## 4.1 Daily Regresion Test
 When a new build comes, the test will start. We just need to make sure that test environment has no problem and listener has been started. Sometimes, in order to investigate or correct a test, we need to send messages manually.
 ### Start the listener
@@ -454,15 +455,15 @@ cci_shell_9.3_S64.msg
 cci_shell_9.4_D64.msg
 cci_shell_9.4_S64.msg
 ```
-cci_shell_10.0_D64.msg - it means test current build's server with 10.0's driver
-cci_shell_10.0_S64.msg - it means test current build's driver with 10.0's server
-cci_shell_8.4.1_S64.msg - it means test current build's driver with 8.4.1's server
-cci_shell_8.4.1_D64.msg - it means test current build's server with 8.4.1's driver
+cci_shell_10.0_D64.msg - it means test current build's server with 10.0's driver   
+cci_shell_10.0_S64.msg - it means test current build's driver with 10.0's server   
+cci_shell_8.4.1_S64.msg - it means test current build's driver with 8.4.1's server   
+cci_shell_8.4.1_D64.msg - it means test current build's server with 8.4.1's driver    
  
 #### Current server test
-For current server test, we use queue " QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 ", and select driver configurations in "~/CTP/conf/compat "
-For example:
-Login message@192.168.1.91
+For current server test, we use queue " QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 ", and select driver configurations in "~/CTP/conf/compat "     
+For example:    
+Login message@192.168.1.91     
 ```bash
 cd ~/manual
 sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.1_D64.msg 
@@ -476,14 +477,14 @@ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/RE
 > 10.0 driver -> cci_shell_10.0_D64.msg
 > 10.1 driver -> cci_shell_10.1_D64.msg
 
-**There is a way to sender all messages for different driver, see below:** 
+**There is a way to sender all messages for different driver, see below:**     
 ```bash
 cd ~/manual
 sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8429-2e1a113/drop/CUBRID-10.2.0.8429-2e1a113-Linux.x86_64.sh compat_cci default -compatALL
 ```
 
-**message examples:**  
-**10.2 server and 8.4.1 driver**  
+**message examples:**     
+**10.2 server and 8.4.1 driver**     
 ```
 $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.1_D64.msg 
 
@@ -527,7 +528,7 @@ log4j:WARN Please initialize the log4j system properly.
 log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
 
 ```
-**10.2 server and 8.4.3 driver**  
+**10.2 server and 8.4.3 driver**     
 ```
 $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41rop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.3_D64.msg  
 
@@ -572,10 +573,10 @@ log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more in
 ```
 
   
-#### Current driver test
-For current driver test, we use queue " QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 ", and select server configurations in "~/CTP/conf/compat "
-For example:
-Login message@192.168.1.91
+#### Current driver test     
+For current driver test, we use queue " QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 ", and select server configurations in "~/CTP/conf/compat "     
+For example:    
+Login message@192.168.1.91   
 ```bash
 cd ~/manual
 sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.1_S64.msg
@@ -591,8 +592,8 @@ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/RE
 > 10.2 server -> cci_shell_10.2_S64.msg 
 
 
-**message examples:**  
-**10.2 driver and 9.2 server**    
+**message examples:**     
+**10.2 driver and 9.2 server**      
 ```
 cd ~/manual
 $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_9.2_S64.msg 
@@ -638,7 +639,7 @@ log4j:WARN Please initialize the log4j system properly.
 log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
 ```
 
-**10.2 driver and 9.3 server**   
+**10.2 driver and 9.3 server**     
 ```
 $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41rop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_9.3_S64.msg 
 
@@ -682,19 +683,19 @@ log4j:WARN No appenders could be found for logger (org.apache.activemq.thread.Ta
 log4j:WARN Please initialize the log4j system properly.
 log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
 ```
-### Check running status
-There are two ways. One is to check nohup.out log on the controller node. The other way is to check cci compatibility items on qahome monitor page.  
-Please refer to [Check running status of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#check-running-status)
+### Check running status 
+There are two ways. One is to check nohup.out log on the controller node. The other way is to check cci compatibility items on qahome monitor page.      
+Please refer to [Check running status of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#check-running-status)    
 
 ### Verify test result
 #### Check whether there are results 
-There are two tables, one is for driver and the other is for server. All these items of cci_shell should have results.  
-click [qahome](http://qahome.cubrid.org/qaresult)->click `build number`->find `Compatibility Result`.  
+There are two tables, one is for driver and the other is for server. All these items of cci_shell should have results.     
+click [qahome](http://qahome.cubrid.org/qaresult)->click `build number`->find `Compatibility Result`.     
 ![cci compat results](./cci_compatibility_image/result.PNG)
-Above test has failure, two test case executed failed(10.0 Server and 9.2 Driver column), we need to investigate them.
+Above test has failure, two test case executed failed(10.0 Server and 9.2 Driver column), we need to investigate them.    
 
 #### Check failure list
-Click the number of fail marked with red color,you can enter into the failure list
+Click the number of fail marked with red color,you can enter into the failure list        
 Please refer to [Check failure list, verify failed cases of cci guide](
 https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#check-failure-list-verify-failed-cases)
 
@@ -703,7 +704,7 @@ Open [page](http://qahome.cubrid.org/qaresult/showFailResult.nhn?m=showFailVerif
 
  ![fail reason](./cci_compatibility_image/fail_details.PNG)
  
- Above told us that, when program can not connect to server ,sometime it will appears -191 error, it is not a bug. So we need modify test cases.
+ Above told us that, when program can not connect to server ,sometime it will appears -191 error, it is not a bug. So we need modify test cases.    
 
  Refer to [Check failure detail of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#check-failure-detail)
     
@@ -711,16 +712,16 @@ Open [page](http://qahome.cubrid.org/qaresult/showFailResult.nhn?m=showFailVerif
 ## Test Case Version
 CCI compatibility test cases are the same with CCI test cases. But we need to decide the version of test case. it based on current server. For example:
 * low version's server
-If we test 10.2's driver with 8.4.1's server, we need use [8.4.1's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.1/interface/CCI/shell/_20_cci)
-If we test 10.2's driver with 8.4.3's server, we need use [8.4.3's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.3/interface/CCI/shell/_20_cci)
-If we test 10.2's driver with 8.4.4's server, we need use [8.4.4's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.4/interface/CCI/shell/_20_cci)
-If we test 10.2's driver with 9.2's server, we need use [9.2's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-9.2.0/interface/CCI/shell/_20_cci)
-If we test 10.2's driver with 9.3's server, we need use [9.3's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-9.3.0/interface/CCI/shell/_20_cci)
-If we test 10.2's driver with 10.0's server, we need use [10.0's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/release/10.0/interface/CCI/shell)
-If we test 10.2's driver with 10.1's server, we need use [10.1's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/release/10.1/interface/CCI/shell)
+If we test 10.2's driver with 8.4.1's server, we need use [8.4.1's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.1/interface/CCI/shell/_20_cci)    
+If we test 10.2's driver with 8.4.3's server, we need use [8.4.3's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.3/interface/CCI/shell/_20_cci)   
+If we test 10.2's driver with 8.4.4's server, we need use [8.4.4's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.4/interface/CCI/shell/_20_cci)   
+If we test 10.2's driver with 9.2's server, we need use [9.2's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-9.2.0/interface/CCI/shell/_20_cci)   
+If we test 10.2's driver with 9.3's server, we need use [9.3's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-9.3.0/interface/CCI/shell/_20_cci)    
+If we test 10.2's driver with 10.0's server, we need use [10.0's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/release/10.0/interface/CCI/shell)   
+If we test 10.2's driver with 10.1's server, we need use [10.1's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/release/10.1/interface/CCI/shell)     
 
 * low version's driver
-If we test 10.2's server with 8.4.1/8.4.3/8.4.4/9.2/9.3/10.0/10.1's driver, we need use [10.2's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/CCI/shell)
+If we test 10.2's server with 8.4.1/8.4.3/8.4.4/9.2/9.3/10.0/10.1's driver, we need use [10.2's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/CCI/shell)     
 
 ## Test Case Specification
 test cases specification, please refer to [cci test cases](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#6-cci-test-case)
