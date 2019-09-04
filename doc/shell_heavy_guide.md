@@ -342,7 +342,7 @@ Please refer to the guide to [install CTP as Regression Test platform](https://g
 
 ## 3.3 On Test Nodes
 1. Install CTP   
-Please refer to the guide to [install CTP in Linux platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform) on each test node.
+Please refer to the guide to [install CTP as regression test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) on each test node.
 2. Edit `.bash_profile`   
     Add following settings to `~/.bash_profile` then source it.
     ```
