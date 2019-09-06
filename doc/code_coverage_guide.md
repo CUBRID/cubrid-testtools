@@ -2,9 +2,11 @@
 
 Code coverage is a measurement of how many lines/blocks/arcs of CUBRID code are executed while the automated tests are running. We use valgrind tool to instrument the binaries and run a full set of automated tests. Near all of existing test cases (SQL, MEDIUM, SQL_BY_CCI, HA_REPL, CCI, ISOLATION, SHELL, HA_SHELL, SHELL_HEAVY, SHELL_LONG, YCSB, SYSBENCH, TPC-W, TPC-C, DOTS) are used for code coverage test and scheduled by manual.
 
-# 2. Regression Test Deployment
+# 2. Code Coverage Test Tools
 
-## 2.1 Deployment overview
+# 3. Regression Test Deployment
+
+## 3.1 Deployment overview
 
 <table>
 <tr>
@@ -27,7 +29,7 @@ CUBRID source <br>
 </table>
 
 
-## 2.2 Installation
+## 3.2 Installation
 
 * ### Install CTP
   Please follow this [guide to install CTP as regression test configuration](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform).
@@ -94,9 +96,9 @@ CUBRID source <br>
  
       nohup start_consumer.sh -q QUEUE_CUBRID_QA_CODE_COVERAGE -exec run_coverage -s china &
 
-# 3. Regression Test Sustaining
+# 4. Regression Test Sustaining
 
-## 3.1 How to start test?
+## 4.1 How to start test?
 
 * ### Start test daemon process:
 
@@ -112,3 +114,5 @@ CUBRID source <br>
   
       sender.sh QUEUE_CUBRID_QA_CODE_COVERAGE http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055.tar.gz gcov_package default
   
+## 4.2 Verify test Results
+
