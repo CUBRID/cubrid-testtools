@@ -315,12 +315,14 @@ Revise required issues: It is link to a jira issue which lead to change in test 
 ## 4.3 Code Coverage Test 
 * Send Code Coverage Testing Message  
   Login message@192.168.1.91 and send test message like:  
-  sh sender_code_coverage_testing_message.sh <queue_name> <build_url> <build_source_url> default  
-eg:
-    ```
-    cd manual
-    sh  sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT  http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz  sql
-    ```  
+  ```
+  sh sender_code_coverage_testing_message.sh <queue_name> <build_url> <build_source_url>  
+  ```
+  eg:
+  ```
+  cd manual
+  sh  sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT  http:/192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/dropCUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOTstore_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz  sql
+  ```  
 * Verify Code Coverage Testing Result  
 	Go to QA homepage and find the ‘code coverage’ node in the left area, click the link of latest result.  
 	![coverage](./sql_image/coverage.png)  
