@@ -4,6 +4,31 @@ Code coverage is a measurement of how many lines/blocks/arcs of CUBRID code are 
 
 # 2. Regression Test Deployment
 
+## 2.1 Deployment overview
+
+<table>
+<tr>
+<th>Description</th>
+<th>User Name</th>
+<th>IP</th>
+<th>Hostname</th>
+<th>Tools to deploy</th>
+</tr>
+<tr class="even">
+<td>Controller</td>
+<td>codecov</td>
+<td>192.168.1.98</td>
+<td>func23</td>
+<td> CTP<br>
+cc4c <br>
+CUBRID source <br>  
+ </td>
+</tr>
+</table>
+
+
+## 2.2 Installation
+
 # 3. Regression Test Sustaining
 
 
