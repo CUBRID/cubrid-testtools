@@ -300,7 +300,7 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
 * Check if there is test result  
 Open [QA home](http://qahome.cubrid.org), navigate to find test result as below. If there is no any result, you need to find the reason out.   
 ![qa_result](./sql_image/qa_result1.png)
-* Test Rate should be 100%
+* Test Rate should be 100%  
 It means the Testing is equal to the sum of Success and Fail(Total).   
 ![qa_result](./sql_image/qa_result2.png)
 * Verified Rate should be 100%  
