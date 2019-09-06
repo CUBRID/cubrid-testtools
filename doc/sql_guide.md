@@ -274,33 +274,31 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
       ``` 
   * sh start_test.sh  
 
-* send test message   
-  login message@192.168.1.91 and send test message like:  
-  * Linux Debug Test
-  ```
-  sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT [CI_BUILD] sql_debug default
-  sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT [CI_BUILD] medium_debug default
-  ```
-  * Linux Release Test
-  ```
-  sender.sh QUEUE_CUBRID_QA_SQL_PERF_LINUX [CI_BUILD] sql default
-  sender.sh QUEUE_CUBRID_QA_SQL_PERF_LINUX [CI_BUILD] medium default
-  sender.sh QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT [CI_BUILD] sql_by_cci default
-  ```
-  * Windows Test
-  ```
-  sender.sh QUEUE_CUBRID_QA_SQL_WIN64 [CI_BUILD] sql default
-  sender.sh QUEUE_CUBRID_QA_SQL_WIN64 [CI_BUILD] medium default
-  ```
-  [CI_BUILD]:Corresponds to the build installation package address  
-  
-  eg: run SQL test
-  sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh sql_debug default  
+* Send test message   
+  Login message@192.168.1.91 and send test message like:  
+  * Test with debug build on Linux
+    ```
+    sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT _build_url_ sql_debug default
+    sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT _build_url_ medium_debug default
+    ```
+  * Test message with release build on Linux
+    ```
+    sender.sh QUEUE_CUBRID_QA_SQL_PERF_LINUX _build_url_ sql default
+    sender.sh QUEUE_CUBRID_QA_SQL_PERF_LINUX _build_url_ medium default
+    sender.sh QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT _build_url_ sql_by_cci default
+    ```
+  * Test message on Windows
+    ```
+    sender.sh QUEUE_CUBRID_QA_SQL_WIN64 _build_url_ sql default
+    sender.sh QUEUE_CUBRID_QA_SQL_WIN64 _build_url_ medium default
+    ```
+   _build_url_: provide a build URL like `http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh`.  
+   
    
 # 4. Regression Test Sustaining  
 * Daily regression test  
 When the build server has a new build, a SQL test will be executed. If there is something wrong and need to run SQL test again, you can send a test message.   
-How to view qahome results:  
+How to get test results in QA homepage:  
 Go to QA homepage and click the CI build, wait for the page loading, then click the 'Function',look at the case of Fail  
 ![qa_result](./sql_image/qa_result.png)
 
