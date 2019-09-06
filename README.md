@@ -11,8 +11,7 @@ CTP is designed to execute all kinds of functional testings for CUBRID.
 See [CTP/README.md](CTP/README.md) for a quick start.
 
 ## Functional Testing Guide 
-* [SQL/MEDIUM]() (TBD) 
-* [SQL_BY_CCI]() (TBD)
+* [SQL/MEDIUM/SQL_BY_CCI](doc/sql_guide.md)  
 * [Shell]() (TBD)
 * [Shell_heavy]() (TBD)
 * [Shell_long]() (TBD)
