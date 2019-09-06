@@ -92,7 +92,7 @@ CUBRID source <br>
 
   File `~/start_test.sh`:
  
-     nohup start_consumer.sh -q QUEUE_CUBRID_QA_CODE_COVERAGE -exec run_coverage -s china &
+      nohup start_consumer.sh -q QUEUE_CUBRID_QA_CODE_COVERAGE -exec run_coverage -s china &
 
 # 3. Regression Test Sustaining
 
