@@ -299,9 +299,10 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
 ## 4.2 Verify Test Results
 * Check if there is test result  
 Open [QA home](http://qahome.cubrid.org), navigate to find test result as below. If there is no any result, you need to find the reason out.   
-![qa_result](./sql_image/qa_result1.png)
-* Test Rate should be 100%  
-It means the Testing is equal to the sum of Success and Fail(Total).   
+![qa_result](./sql_image/qa_result1.png)  
+![qa_result](./sql_image/qa_result1_1.png)  
+* Test Rate should be 100%
+It means the `Testing` is equal to the sum of `Success` and `Fail` (Total).     
 ![qa_result](./sql_image/qa_result2.png)
 * Verified Rate should be 100%  
 The verified rate should be 100% as below.   
@@ -313,18 +314,19 @@ New issues : It is link to a jira issue which reported by this case
 Revise required issues: It is link to a jira issue which lead to change in test case and answer  
 ## 4.3 Code Coverage Test 
 * Send Code Coverage Testing Message  
-  sh  sender_code_coverage_testing_message.sh [QUEUE_NAME]  [COVERAGE_BUILD] [Category] default
+  Login message@192.168.1.91 and send test message like:  
+  sh sender_code_coverage_testing_message.sh <queue_name> <build_url> <build_source_url> default  
 eg:
     ```
     cd manual
-    sh  sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT_test http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz  sql
+    sh  sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT  http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz  sql
     ```  
 * Verify Code Coverage Testing Result  
 	Go to QA homepage and find the ‘code coverage’ node in the left area, click the link of latest result.  
 	![coverage](./sql_image/coverage.png)  
-	Click the Category(SQL,MEDIUM,SQL_BY_CCI) link.   
+	Click related category (sql, medium or sql_by_cci) link.     
 	![category](./sql_image/category.png)  
-	There is a coverage rate of lines. Its SQL and SQL_BY_CCI coverage rate of lines is usually in 58%~60%, the MEDIUM coverage rate of lines is usually in 30%~31%.  
+	There is a coverage rate by line.  Acceptable code coverage rate of SQL is nearly greater than 59%. For MEDIUM, it is 31%.  
 	![coverage_result](./sql_image/coverage_result.png)
 # 5. How to make a SQL test case  
 * A SQL test cases follows following basic structure:  
