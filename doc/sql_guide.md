@@ -181,7 +181,7 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   ctp.sh sql -c ~/CTP/conf/sql_by_cci.conf
   ```
   How to examine sql_by_cci test result?  
-  After run_cci XXX/cases/XXX.sql will generate XXX/cases/XXX.result, you can locate the problem by comparing the answer and result.
+  After `run_cci /path/to/cases/xxx.sql`, path/to/cases/xxx.result will be generated. You can confirm test case result by comparing the answer file and result file.  
   ```
   diff XXX/cases/XXX.result  XXX/answers/XXX.answer
   ```
@@ -234,21 +234,19 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
 ## 3.1 Deployment overview    
   No|role|user|ip|hostname|QUEUE_NAME|run_name
   :---:|:--:|:---:|:---:|:---:|:---:|:---:
-  1|Test node|sql1|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_LINUX_GIT|run_sql
-  2|Test node|sql2|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_LINUX_GIT|run_sql
-  3|Test node|sql3|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_LINUX_GIT|run_sql
-  4|Test node|sqlbycci|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT|run_sql_by_cci
-  5|Test node|sql|192.168.1.77|func02|QUEUE_CUBRID_QA_SQL_PERF_LINUX|run_sql
-  6|Test node|qa|192.168.1.161|winfunc01|QUEUE_CUBRID_QA_SQL_WIN64|run_sql 
+  1|SQL/MEDIUM(Linux)|sql1|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_LINUX_GIT|run_sql
+  2|SQL/MEDIUM(Linux)|sql2|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_LINUX_GIT|run_sql
+  3|SQL/MEDIUM(Linux)|sql3|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_LINUX_GIT|run_sql
+  4|SQL_BY_CCI|sqlbycci|192.168.1.76|func01|QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT|run_sql_by_cci
+  5|SQL (Linux, Standalone)|sql|192.168.1.77|func02|QUEUE_CUBRID_QA_SQL_PERF_LINUX|run_sql
+  6|SQL/MEDIUM (Windows)|qa|192.168.1.161|winfunc01|QUEUE_CUBRID_QA_SQL_WIN64|run_sql 
 ## 3.2 Installation 
 * [Install CTP as Regression Test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) 
 * Configure tests
-  * SQL  
-  You can refer to [SQL Test](#21-sql-test) about CTP/conf/sql.conf.
-  * MEDIUM  
-  You can refer to [MEDIUM Test](#22-medium-test) about CTP/conf/medium.conf.
+  * SQL and MEDIUM configuration  
+  Create configuration file `CTP/conf/sql_local.conf`.  Then set same content as `CTP/conf/sql.conf` in [SQL Test](#21-sql-test).
   * SQL_BY_CCI  
-  You can refer to [SQL_BY_CCI Test](#23-sql_by_cci-test) about CTP/conf/sql_by_cci.conf.
+  Create configuration file `CTP/conf/sql_by_cci_template.conf`.  Then set same content as `CTP/conf/sql_by_cci.conf` in [SQL_BY_CCI Test](#23-sql_by_cci-test).
 * Check out test cases
   ```
   cd ~/
@@ -266,8 +264,7 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   export LC_ALL=en_US
   ```
 * Add quick start script file    
-  * Queue configure   
-      touch start_test.sh
+  * Create file `~/start_test.sh` with below content: 
       ```
       stop_consumer.sh 
       prefix=`date "+%Y%m%d%H%M%S"`
@@ -277,10 +274,23 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
       ``` 
   * sh start_test.sh  
 
-* send test message  
+* send test message   
   login message@192.168.1.91 and send test message like:  
+  * Linux Debug Test
   ```
   sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT [CI_BUILD] sql_debug default
+  sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT [CI_BUILD] medium_debug default
+  ```
+  * Linux Release Test
+  ```
+  sender.sh QUEUE_CUBRID_QA_SQL_PERF_LINUX [CI_BUILD] sql default
+  sender.sh QUEUE_CUBRID_QA_SQL_PERF_LINUX [CI_BUILD] medium default
+  sender.sh QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT [CI_BUILD] sql_by_cci default
+  ```
+  * Windows Test
+  ```
+  sender.sh QUEUE_CUBRID_QA_SQL_WIN64 [CI_BUILD] sql default
+  sender.sh QUEUE_CUBRID_QA_SQL_WIN64 [CI_BUILD] medium default
   ```
   [CI_BUILD]:Corresponds to the build installation package address  
   
