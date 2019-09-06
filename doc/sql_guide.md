@@ -273,66 +273,59 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
       nohup start_consumer.sh -q QUEUE_CUBRID_QA_SQL_LINUX_GIT -exec run_sql &
       ``` 
   * sh start_test.sh  
-
-* Send test message   
+ 
+# 4. Regression Test Sustaining  
+## 4.1 Execute Test Manually  
+* Send test message  
+  When the build server has a new build, a SQL test will be executed. If there is something wrong and need to run SQL test again, you can send a test message.  
   Login message@192.168.1.91 and send test message like:  
   * Test with debug build on Linux
     ```
-    sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT _build_url_ sql_debug default
-    sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT _build_url_ medium_debug default
+    sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT <build_url> sql_debug default
+    sender.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT <build_url> medium_debug default
     ```
   * Test message with release build on Linux
     ```
-    sender.sh QUEUE_CUBRID_QA_SQL_PERF_LINUX _build_url_ sql default
-    sender.sh QUEUE_CUBRID_QA_SQL_PERF_LINUX _build_url_ medium default
-    sender.sh QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT _build_url_ sql_by_cci default
+    sender.sh QUEUE_CUBRID_QA_SQL_PERF_LINUX <build_url> sql default
+    sender.sh QUEUE_CUBRID_QA_SQL_PERF_LINUX <build_url> medium default
+    sender.sh QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT <build_url> sql_by_cci default
     ```
   * Test message on Windows
     ```
-    sender.sh QUEUE_CUBRID_QA_SQL_WIN64 _build_url_ sql default
-    sender.sh QUEUE_CUBRID_QA_SQL_WIN64 _build_url_ medium default
+    sender.sh QUEUE_CUBRID_QA_SQL_WIN64 <build_url> sql default
+    sender.sh QUEUE_CUBRID_QA_SQL_WIN64 <build_url> medium default
     ```
    _build_url_: provide a build URL like `http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh`.  
-   
-   
-# 4. Regression Test Sustaining  
-* Daily regression test  
-When the build server has a new build, a SQL test will be executed. If there is something wrong and need to run SQL test again, you can send a test message.   
-How to get test results in QA homepage:  
-Go to QA homepage and click the CI build, wait for the page loading, then click the 'Function',look at the case of Fail  
-![qa_result](./sql_image/qa_result.png)
-
-* Code coverage test  
-	* VERIFY CODE COVERAGE TESTING RESULT  
+## 4.2 Verify Test Results
+* Check if there is test result  
+Open [QA home](http://qahome.cubrid.org), navigate to find test result as below. If there is no any result, you need to find the reason out.   
+![qa_result](./sql_image/qa_result1.png)
+* Test Rate should be 100%
+It means the Testing is equal to the sum of Success and Fail(Total).   
+![qa_result](./sql_image/qa_result2.png)
+* Verified Rate should be 100%  
+The verified rate should be 100% as below.   
+![qa_result](./sql_image/qa_result3.png)  
+If there is a failed test case, you need to verify it following below:  
+![qa_result](./sql_image/qa_result4.png)  
+Note:  
+New issues : It is link to a jira issue which reported by this case  
+Revise required issues: It is link to a jira issue which lead to change in test case and answer  
+## 4.3 Code Coverage Test 
+* Send Code Coverage Testing Message  
+  sh  sender_code_coverage_testing_message.sh [QUEUE_NAME]  [COVERAGE_BUILD] [Category] default
+eg:
+    ```
+    cd manual
+    sh  sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT_test http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz  sql
+    ```  
+* Verify Code Coverage Testing Result  
 	Go to QA homepage and find the ‘code coverage’ node in the left area, click the link of latest result.  
 	![coverage](./sql_image/coverage.png)  
 	Click the Category(SQL,MEDIUM,SQL_BY_CCI) link.   
 	![category](./sql_image/category.png)  
 	There is a coverage rate of lines. Its SQL and SQL_BY_CCI coverage rate of lines is usually in 58%~60%, the MEDIUM coverage rate of lines is usually in 30%~31%.  
 	![coverage_result](./sql_image/coverage_result.png)
-
-	* Send Code Coverage Testing Message  
-	sh  sender_code_coverage_testing_message.sh [QUEUE_NAME]  [COVERAGE_BUILD] [Category] default
-	eg:
-      ```
-      cd manual
-      sh  sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_SQL_LINUX_GIT_test http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz  sql
-      ```
-* Report issues  
-	* SQL ISSUE  
-	You can refer to http://jira.cubrid.org/browse/CBRD-22721   
-    ![issues1](./sql_image/issues1.png)  
-    ![issues2](./sql_image/issues2.png)  
-	It is also necessary to add this information in the comment to facilitate the developers to find the information they need. Note that choose Restricted to Developers since they have they contain sensitive information such as IP, port, password, etc..  
-* how to verify issue?  
-	```
-	Test Build: 10.2.0.8239-1f051a0 debug
-	Test OS: Linux 64bit
-	Test Result: Pass.
-	Add test case for this issue: 
-
-	Close this issue.
-	```
 # 5. How to make a SQL test case  
 * A SQL test cases follows following basic structure:  
 	any_testcase_folder/cases/case_file.sql  
@@ -379,8 +372,7 @@ please confirm query results one by one in sql file. Never submit incorrect answ
     ```
   * step 9/9: commit the sql file and answer files to git repository.   
  
-# 6. Test Case Specification
-* Notes for writing case:  
+# 6. Test Case Specification  
   * CREATE TABLE should be preceded by DROP TABLE if exists.  
     drop table if exists t1;  
   * All schema objects created should be dropped.  
