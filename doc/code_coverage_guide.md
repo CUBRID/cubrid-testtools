@@ -87,6 +87,12 @@ CUBRID source <br>
   Execute `crontab -e` and set content as below:
 
       0 * * * * sh /home/codecov/cc4c/coverage_monitor.sh >/home/codecov/cc4c/monitor.log 2>&1
+      
+* ### Create quick start script
+
+  File `~/start_test.sh`:
+ 
+     nohup start_consumer.sh -q QUEUE_CUBRID_QA_CODE_COVERAGE -exec run_coverage -s china &
 
 # 3. Regression Test Sustaining
 
