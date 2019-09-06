@@ -96,5 +96,19 @@ CUBRID source <br>
 
 # 3. Regression Test Sustaining
 
+## 3.1 How to start test?
 
+* ### Start test daemon process:
 
+  Log into test server, keep daemon process for `start_test.sh`:
+
+      nohup sh start_test.sh &
+
+  After startup, it will keep listening for new test messages. Once come, it will fire the test immediately. Except CI test messages which were generated automatically monthly, you may send test message by manual.
+  
+* ### Send manual test message same as regular configuration:
+
+  Log into message server (message@192.168.1.91) first.
+  
+      sender.sh QUEUE_CUBRID_QA_CODE_COVERAGE http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055.tar.gz gcov_package default
+  
