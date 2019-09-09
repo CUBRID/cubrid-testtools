@@ -18,7 +18,9 @@ Code coverage is a measurement of how many lines/blocks/arcs of CUBRID code are 
                                                                     
   e.g.
   
-      [fanzq@func52 ~]$ run_cubrid_install  --role-coverage http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8425-a951607/drop/CUBRID-10.2.0.8425-a951607-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8425-a951607/drop/cubrid-10.2.0.8425-a951607-gcov-src-Linux.x86_64.tar.gz
+      [fanzq@func52 ~]$ run_cubrid_install  --role-coverage \
+      http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8425-a951607/drop/CUBRID-10.2.0.8425-a951607-gcov-Linux.x86_64.tar.gz \
+      http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8425-a951607/drop/cubrid-10.2.0.8425-a951607-gcov-src-Linux.x86_64.tar.gz
                                                                     
   **CTP/common/script/run_coverage_collect_and_upload** (cubrid_common/run_coverage_collect_and_upload)
 
