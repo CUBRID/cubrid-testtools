@@ -40,9 +40,33 @@ Code coverage is a measurement of how many lines/blocks/arcs of CUBRID code are 
     coverage_controller_port=22
     coverage_controller_home=/home/codecov  
  
- But the password to ssh codecov@192.168.1.98 is provided by parameters `coverage_controller_pwd` in `CTP/conf/common.conf` or `cubrid_common/conf/common`. 
+ But the password to ssh codecov@192.168.1.98 is provided by parameters `coverage_controller_pwd` in `CTP/conf/common.conf` or `cubrid_common/conf/common.conf`. 
  
 ## 2.2 cc4c test tool
+
+  The `cc4c` is installed in controller node. After get pieces of code coverage test results, they will be merged in controller node and finally uploaded to QA homepage.
+  
+  The directory to store code coverage test results can be found in `$HOME/cc4c/result`.
+    
+        [codecov@func23 result]$ pwd
+        /home/codecov/cc4c/result
+        [codecov@func23 result]$ ls -l
+        total 0
+        drwxrwxr-x. 6 codecov codecov 78 Mar  7  2019 10.2.0.8270-c897055
+        drwxrwxr-x. 6 codecov codecov 78 Mar 30 10:27 10.2.0.8314-e22fe80
+        drwxrwxr-x. 6 codecov codecov 78 Apr 27 10:33 10.2.0.8349-bb21e2d
+        drwxrwxr-x. 6 codecov codecov 78 May 25 10:28 10.2.0.8362-fbf9d84
+        drwxrwxr-x  6 codecov codecov 78 Jul 27 10:26 10.2.0.8394-21028d5
+        drwxrwxr-x  6 codecov codecov 78 Aug 31 10:43 10.2.0.8425-a951607
+        
+        [codecov@func23 result]$ cd 10.2.0.8425-a951607
+        [codecov@func23 10.2.0.8425-a951607]$ ls -l
+        total 36
+        drwxrwxr-x 29 codecov codecov  4096 Aug 31 10:44 cubrid-10.2.0.8425-a951607
+        drwxrwxr-x  2 codecov codecov     6 Aug 31 10:43 manual
+        drwxrwxr-x  5 codecov codecov 12288 Sep  5 14:14 merge
+        drwxrwxr-x  2 codecov codecov 12288 Sep  5 14:00 new
+        [codecov@func23 10.2.0.8425-a951607]$           
 
 # 3. Regression Test Deployment
 
