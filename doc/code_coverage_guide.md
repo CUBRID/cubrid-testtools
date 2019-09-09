@@ -172,8 +172,10 @@ CUBRID source <br>
         job_coverage_test.test.15.queue=QUEUE_CUBRID_QA_SHELL_LONG_LINUX
         #################################################################################
         
+        
     Note: once configuration changed, we need restart message service. Firstly find existing producer process as below:
-```
+
+    ```
         [message@qa03 ~]$ ps -u $USER  f
           PID TTY      STAT   TIME COMMAND
         22606 ?        S      0:02 sshd: message@pts/2
@@ -186,12 +188,14 @@ CUBRID source <br>
         21383 ?        S      0:00 /bin/sh /home/message/CTP/common/script/start_producer.sh
         21389 ?        S      0:00  \_ /bin/sh /home/message/CTP/common/script/start_producer.sh
         21390 ?        Sl   207:42      \_ /usr/local/cubridqa/jdk1.8.0_201/bin/java -cp ./lib/cubridqa-scheduler.jar com.navercorp.cubridqa.scheduler.producer.Main
-```
+    ```
     
     and perform kill with `kill -9 21390`.  Then start producer as below:
-    
+
+    ```
         cd ~
         nohup start_producer.sh &
+    ```        
         
     
 
