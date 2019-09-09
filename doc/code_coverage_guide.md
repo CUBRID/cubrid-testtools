@@ -95,6 +95,105 @@ CUBRID source <br>
   File `~/start_test.sh`:
  
       nohup start_consumer.sh -q QUEUE_CUBRID_QA_CODE_COVERAGE -exec run_coverage -s china &
+      
+* ### Configure `job.conf` in message service
+
+  Log into message server (message@192.168.1.91). Add configuration as below:
+  
+  File `~/CTP/conf/job.conf`:
+
+        #################################################################################
+        job_codecoverage.service=ON
+        job_codecoverage.crontab=0 1 10 ? * 7L
+        job_codecoverage.listenfile=cubrid-{1}.tar.gz
+        job_codecoverage.acceptversions=10.2.*
+        job_codecoverage.package_bits=64
+        job_codecoverage.package_type=general
+
+        job_codecoverage.test.1.scenario=gcov_package
+        job_codecoverage.test.1.queue=QUEUE_CUBRID_QA_CODE_COVERAGE  
+        #################################################################################
+        job_coverage_test.service=ON
+        job_coverage_test.crontab=0/7 * * * * ?
+        job_coverage_test.listenfile=CUBRID-{1}-gcov-linux.x86_64.tar.gz
+        job_coverage_test.listenfile.1=cubrid-{1}-gcov-src-linux.x86_64.tar.gz
+        job_coverage_test.acceptversions=10.2.*
+        job_coverage_test.package_bits=64
+        job_coverage_test.package_type=coverage
+
+        job_coverage_test.test.1.scenario=sql
+        job_coverage_test.test.1.queue=QUEUE_CUBRID_QA_SQL_PERF_LINUX
+
+        job_coverage_test.test.2.scenario=medium
+        job_coverage_test.test.2.queue=QUEUE_CUBRID_QA_SQL_PERF_LINUX
+
+        job_coverage_test.test.3.scenario=ha_repl
+        job_coverage_test.test.3.queue=QUEUE_CUBRID_QA_HA_REPL_LINUX
+
+        job_coverage_test.test.4.scenario=sql_by_cci
+        job_coverage_test.test.4.queue=QUEUE_CUBRID_QA_SQL_CCI_LINUX_GIT
+
+        job_coverage_test.test.5.scenario=tpcc
+        job_coverage_test.test.5.queue=QUEUE_CUBRID_QA_TPCC_LINUX
+        job_coverage_test.test.5.MKEY_CONFIG=config_code_coverage_tpcc.properties
+        job_coverage_test.test.5.MKEY_TPCC_WARE_HOUSES=2
+
+        job_coverage_test.test.6.scenario=tpcw
+        job_coverage_test.test.6.queue=QUEUE_CUBRID_QA_TPCW_LINUX
+        job_coverage_test.test.6.MKEY_CONFIG=config_coverage_dailyqa.properties
+
+        job_coverage_test.test.7.scenario=ycsb
+        job_coverage_test.test.7.queue=QUEUE_CUBRID_QA_YCSB_NEW_LINUX
+
+        job_coverage_test.test.8.scenario=sysbench
+        job_coverage_test.test.8.queue=QUEUE_CUBRID_QA_SYSBENCH_LINUX
+        job_coverage_test.test.8.MKEY_CONFIG=config_code_coverage.properties
+
+        job_coverage_test.test.9.scenario=dots
+        job_coverage_test.test.9.queue=QUEUE_CUBRID_QA_DOTS_LINUX
+        job_coverage_test.test.9.MKEY_DOTS_DURATION=4:00
+
+        job_coverage_test.test.10.scenario=cci
+        job_coverage_test.test.10.queue=QUEUE_CUBRID_QA_CCI_LINUX
+
+        job_coverage_test.test.11.scenario=isolation
+        job_coverage_test.test.11.queue=QUEUE_CUBRID_QA_CC_BASIC
+
+        job_coverage_test.test.12.scenario=ha_shell
+        job_coverage_test.test.12.queue=QUEUE_CUBRID_QA_SHELL_HA_LINUX
+
+        job_coverage_test.test.13.scenario=shell
+        job_coverage_test.test.13.queue=QUEUE_CUBRID_QA_SHELL_LINUX
+
+        job_coverage_test.test.14.scenario=shell_heavy
+        job_coverage_test.test.14.queue=QUEUE_CUBRID_QA_SHELL_HEAVY_LINUX
+
+        job_coverage_test.test.15.scenario=shell_long
+        job_coverage_test.test.15.queue=QUEUE_CUBRID_QA_SHELL_LONG_LINUX
+        #################################################################################
+        
+    Note: once configuration changed, we need restart message service. Firstly find existing producer process as below:
+```
+        [message@qa03 ~]$ ps -u $USER  f
+          PID TTY      STAT   TIME COMMAND
+        22606 ?        S      0:02 sshd: message@pts/2
+        22613 pts/2    Ss+    0:00  \_ -bash
+        21050 ?        S      0:00 sshd: message@pts/0
+        21052 pts/0    Ss+    0:00  \_ -bash
+         8118 ?        S      0:00 sshd: message@pts/1
+         8124 pts/1    Ss     0:00  \_ -bash
+        17589 pts/1    R+     0:00      \_ ps -u message f
+        21383 ?        S      0:00 /bin/sh /home/message/CTP/common/script/start_producer.sh
+        21389 ?        S      0:00  \_ /bin/sh /home/message/CTP/common/script/start_producer.sh
+        21390 ?        Sl   207:42      \_ /usr/local/cubridqa/jdk1.8.0_201/bin/java -cp ./lib/cubridqa-scheduler.jar com.navercorp.cubridqa.scheduler.producer.Main
+```
+    
+    and perform kill with `kill -9 21390`.  Then start producer as below:
+    
+        cd ~
+        nohup start_producer.sh &
+        
+    
 
 # 4. Regression Test Sustaining
 
