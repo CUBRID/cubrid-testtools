@@ -104,6 +104,8 @@ CUBRID source <br>
 
         #################################################################################
         job_codecoverage.service=ON
+        
+        # The crontab value as below configures when code coverage test will be scheduled.
         job_codecoverage.crontab=0 1 10 ? * 7L
         job_codecoverage.listenfile=cubrid-{1}.tar.gz
         job_codecoverage.acceptversions=10.2.*
@@ -218,4 +220,17 @@ CUBRID source <br>
       sender.sh QUEUE_CUBRID_QA_CODE_COVERAGE http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055.tar.gz gcov_package default
   
 ## 4.2 Verify test Results
+
+  As configured in job.conf in previous chapter, code coverage test will be scheduled to execute on last Saturday in every month. After each execution, we need verify code coverage test result.
+
+### Check if there is code coverage result  
+  Open QA home (http://qahome.cubrid.org), navigate to find code coverage test result as below. If there is no any result, you need to find the reason out. 
+  ![Code Coverage test result](./code_coverage_image/image0.png)
+  
+  Then click link `'cubrid'` and get overall code coverage test result:
+  
+  ![Code Coverage test result Overall](./code_coverage_image/image1.png)
+
+### Each code coverage result should not be much lower ( <1 percent) than previous
+
 
