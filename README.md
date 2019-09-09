@@ -25,5 +25,5 @@ See [CTP/README.md](CTP/README.md) for a quick start.
 * [JDBC Compatibility]() (TBD)
 * [CCI Compatibility]() (TBD)
 * [MemoryLeak](./doc/memoryleak_guide.md)
-* [Code Coverage]() (TBD)
+* [Code Coverage](./doc/code_coverage_guide.md)
 
