@@ -213,11 +213,20 @@ CUBRID source <br>
 
   After startup, it will keep listening for new test messages. Once come, it will fire the test immediately. Except CI test messages which were generated automatically monthly, you may send test message by manual.
   
-* ### Send manual test message same as regular configuration:
+* ### Manually generate code coverage packages and start to fire full test
 
-  Log into message server (message@192.168.1.91) first.
+  Log into message server (message@192.168.1.91).
   
       sender.sh QUEUE_CUBRID_QA_CODE_COVERAGE http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055.tar.gz gcov_package default
+      
+  This message will notice controller node to generate two packages related to code coverage. After generate done, they will be uploaded to build server for download to test.
+  
+      cubrid-10.2.0.8425-a951607-gcov-src-Linux.x86_64.tar.gz      
+      CUBRID-10.2.0.8425-a951607-gcov-Linux.x86_64.tar.gz   
+  
+* ### Manually send test message to execute specific test
+
+
   
 ## 4.2 Verify test Results
 
