@@ -226,7 +226,39 @@ CUBRID source <br>
   
 * ### Manually send test message to execute specific test
 
+  There are totally 15 tests configured in `job.conf` for one build. Below illustrate how to start tpc-w code coverage test:
+  
+  Log into message server (message@192.168.1.91), then execute:
+  
+      [message@qa03 ~]$ sender.sh QUEUE_CUBRID_QA_TPCW_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz,http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz tpcw default
 
+      Message: 
+
+      Message Content: Test for build 10.2.0.8270-c897055 by CUBRID QA Team, China
+      MSG_ID = 190813-155622-200-000001
+      MSG_PRIORITY = 4
+      BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8270-c897055/drop
+      BUILD_BIT=0
+      BUILD_CREATE_TIME=1551930752000
+      BUILD_GENERATE_MSG_WAY=MANUAL
+      BUILD_ID=10.2.0.8270-c897055
+      BUILD_IS_FROM_GIT=1
+      BUILD_PACKAGE_PATTERN=CUBRID-{1}-gcov-Linux.x86_64.tar.gz
+      BUILD_SCENARIOS=tpcw
+      BUILD_SCENARIO_BRANCH_GIT=develop
+      BUILD_SEND_DELAY=13748630
+      BUILD_SEND_TIME=1565679382199
+      BUILD_STORE_ID=store_01
+      BUILD_SVN_BRANCH=RB-10.2.0
+      BUILD_SVN_BRANCH_NEW=RB-10.2.0
+      BUILD_TYPE=coverage
+      BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz
+      BUILD_URLS_1=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz
+      BUILD_URLS_CNT=2
+      BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz
+      BUILD_URLS_KR_1=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz  
+  
+  Please note that every guide gives the exact usage to start code coverage test. Please refer to each of them.
   
 ## 4.2 Verify test Results
 
