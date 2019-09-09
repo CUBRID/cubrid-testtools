@@ -223,7 +223,7 @@ CUBRID source <br>
 
   As configured in job.conf in previous chapter, code coverage test will be scheduled to execute on last Saturday in every month. After each execution, we need verify code coverage test result.
 
-### Check if there is code coverage result  
+* ### Check if there is code coverage result  
   Open QA home (http://qahome.cubrid.org), navigate to find code coverage test result as below. If there is no any result, you need to find the reason out. 
   ![Code Coverage test result](./code_coverage_image/image0.png)
   
@@ -235,7 +235,7 @@ CUBRID source <br>
   
   ![Code Coverage test result Detail](./code_coverage_image/image3.png)
 
-### Each code coverage result should not be much lower ( <1 percent) than previous
+* ### Each code coverage result should not be much lower ( <1 percent) than previous
 
   In order to check current test result, suggest to create a QA issue and perform comparison to a baseline in the issue. For example, create QA issue as http://jira.cubrid.org/browse/CUBRIDQA-851,
   ![QA issue for Code Coverage](./code_coverage_image/image2.png)
