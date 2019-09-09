@@ -230,7 +230,17 @@ CUBRID source <br>
   Then click link `'cubrid'` and get overall code coverage test result:
   
   ![Code Coverage test result Overall](./code_coverage_image/image1.png)
+  
+  In `'Category'` list, there should be 15 items as currently configured in `job.conf`. Each item can be clicked into for detail page.
+  
+  ![Code Coverage test result Detail](./code_coverage_image/image3.png)
 
 ### Each code coverage result should not be much lower ( <1 percent) than previous
+
+  In order to check current test result, suggest to create a QA issue and perform comparison to a baseline in the issue. For example, create QA issue as http://jira.cubrid.org/browse/CUBRIDQA-851,
+  ![QA issue for Code Coverage](./code_coverage_image/image2.png)
+  
+  If any code coverage value of some item is lower (<1 percent) than previous, please find reasons out and confirm.
+  
 
 
