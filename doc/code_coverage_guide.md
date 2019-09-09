@@ -4,6 +4,46 @@ Code coverage is a measurement of how many lines/blocks/arcs of CUBRID code are 
 
 # 2. Code Coverage Test Tools
 
+## 2.1 CTP test tool
+
+  CTP provides common scripts which are integrated by all kinds of tests to perform code coverage test conveniently. For performance tests, because performance tests still use legacy tools instead of CTP, you may find same scripts in `cubrid_common`.
+  
+  **CTP/common/script/run_cubrid_install** (cubrid_common/run_cubrid_install)
+  
+    Usage: run_cubrid_install [url] [-s|--role-compat-server url_1 url_2] 
+                                                                    [-d|--role-compat-driver url_1 url_2] 
+                                                                    [-c|--role-coverage url_1 url_2 ]
+                                                                    [-ur|--role-unittest-release url]
+                                                                    [-ud|--role-unittest-debug url]  
+                                                                    
+  e.g.
+  
+      [fanzq@func52 ~]$ run_cubrid_install  --role-coverage http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8425-a951607/drop/CUBRID-10.2.0.8425-a951607-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8425-a951607/drop/cubrid-10.2.0.8425-a951607-gcov-src-Linux.x86_64.tar.gz
+                                                                    
+  **CTP/common/script/run_coverage_collect_and_upload** (cubrid_common/run_coverage_collect_and_upload)
+
+    Usage: run_coverage_collect_and_upload -h=source directory;
+                                   -n=build number;
+                                   -c=test category;
+
+
+  After execute this command, code coverage result will be collected and uploaded to controller node. Controller node will be identified by a configuration file as `$HOME/build/cubrid-<build_id>/coverage.conf`:
+  
+    covarage_build_server_cn_host=192.168.1.91
+    coverage_build_server_cn_usr=ci_build
+    coverage_build_server_cn_port=22
+
+
+    coverage_controller_cc4c_home=/home/codecov/cc4c
+    coverage_controller_host=192.168.1.98
+    coverage_controller_user=codecov
+    coverage_controller_port=22
+    coverage_controller_home=/home/codecov  
+ 
+ But the password to ssh codecov@192.168.1.98 is provided by parameters `coverage_controller_pwd` in `CTP/conf/common.conf` or `cubrid_common/conf/common`. 
+ 
+## 2.2 cc4c test tool
+
 # 3. Regression Test Deployment
 
 ## 3.1 Deployment overview
