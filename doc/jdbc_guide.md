@@ -253,7 +253,7 @@ File `jdbc.properties` configures JDBC connection parameters.
 </tr>
 </table>
 
-## 4.1 Installation
+## 4.2 Installation
 
 * ### Install CTP as regression test
 
