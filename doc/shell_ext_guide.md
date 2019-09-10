@@ -293,5 +293,28 @@ Like SHELL test, SHELL_EXT test is executed by CTP test tool. But you have to no
   After running, check test result following the regular way of SHELL test.
   
 # 3. Regression Test Deployment
+
+## 3.1 Deployment overview
+
+Role	| User Name |	IP	| Hostname	| Tools to deploy
+-|-|-|-|-
+controller node|shell_ext_ctrl | 192.168.1.117 | func42 | CTP
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.117 | func42 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.118 | func43 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.119 | func44 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.120 | func45 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.121 | func46 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.122 | func47 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.123 | func48 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.124 | func49 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.125 | func50 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.126 | func51 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.127 | func52 | CTP, cubrid-testcases-private
+worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.128 | func53 | CTP, cubrid-testcases-private
+
+## 3.2 Installation
+
+
+
 # 4. Regression Test Sustaining
 # 5. SHELL_EXT Test Case Specification
