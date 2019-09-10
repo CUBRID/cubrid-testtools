@@ -238,29 +238,29 @@ Like SHELL test, SHELL_EXT test is executed by CTP test tool. But you have to no
 
 ## 2.3 Test case configuration: test.conf
 
-  **Parameter: machines**
+* ### Parameter: machines
   
       machines:  <selector_name>
       
-  **Parameter: exclusive**
+* ### Parameter: exclusive
       
       exclusive: true | false
       
   Define whether hold test servers exclusively.
       
-  **Parameter: cubrid_deps**
+* ### Parameter: cubrid_deps
   
       cubrid_deps: 10.1.1.7666-4324548,9.3.0.0206
       
   With this defination, before runing of case, two builds will be automatically installed in `~/CUBRID_10.1.1.7666-4324548` and `~/CUBRID_9.3.0.0206` which are ready to use in test case.
   
-  **Parameter: cubrid_pkg_deps**
+* ### Parameter: cubrid_pkg_deps
       
       cubrid_pkg_deps: CUBRID-{BUILD_ID}-Linux.x86_64.rpm
   
   With this defination, before runing of case, the specific package will be automatically downloaded and stored under `$HOME` directory which test case intends to use it. 
 
-  **Parameter: repo_deps**
+* ### Parameter: repo_deps
   
       repo_deps: cubrid-testcases
       
