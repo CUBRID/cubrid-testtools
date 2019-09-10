@@ -266,6 +266,32 @@ Like SHELL test, SHELL_EXT test is executed by CTP test tool. But you have to no
       
   With this defination, before runing of case, the specific repository will be automatically downloaded and stored under `$HOME` directory which test case depends on it.
   
+## 2.4 How to run single test case
+
+  It's better add environmental variable `init_path` into `~/.bash_profile`.
+
+    export init_path=$HOME/CTP/shell/init_path  
+  
+    cd /path/to/onetest/cases/onetest.sh
+    
+    #Below exports depend on actual selector.
+    export D_DEFAULT_PORT=22
+    export D_DEFAULT_PWD=<pwd>
+    export D_HOST1_IP=192.168.1.123
+    export D_HOST1_USER=shell_ext1
+    export D_HOST2_IP=192.168.1.124
+    export D_HOST2_USER=shell_ext1
+    ...
+    ...
+    
+    # initialize test case
+    $init_path/prepare.sh
+    
+    # run test case
+    sh onetest.sh
+    
+  After running, check test result following the regular way of SHELL test.
+  
 # 3. Regression Test Deployment
 # 4. Regression Test Sustaining
 # 5. SHELL_EXT Test Case Specification
