@@ -884,4 +884,50 @@ worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.128 | func53 | CTP, cubri
 		
 
 # 4. Regression Test Sustaining
+
+## 4.1 How to start test?
+
+* ### Start test daemon process:
+
+	Log into controller server, keep daemon process for start_test.sh:
+
+	 nohup sh start_test.sh &
+	 
+	Note: we didn't configure regular execution for SHELL_EXT test automatically. We need send test message to execute by manual.
+	
+* ### Send test message same as daily configuration
+
+		[message@qa03 ~]$ sender.sh QUEUE_CUBRID_QA_SHELL_EXT_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh shell_ext default 
+
+		Message: 
+
+		Message Content: Test for build 10.2.0.8396-1bc28b2 by CUBRID QA Team, China
+		MSG_ID = 190910-183309-552-000001
+		MSG_PRIORITY = 4
+		BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop
+		BUILD_BIT=0
+		BUILD_CREATE_TIME=1565376350000
+		BUILD_GENERATE_MSG_WAY=MANUAL
+		BUILD_ID=10.2.0.8396-1bc28b2
+		BUILD_IS_FROM_GIT=1
+		BUILD_PACKAGE_PATTERN=CUBRID-{1}-Linux.x86_64.sh
+		BUILD_SCENARIOS=shell_ext
+		BUILD_SCENARIO_BRANCH_GIT=develop
+		BUILD_SEND_DELAY=2731639
+		BUILD_SEND_TIME=1568107989551
+		BUILD_STORE_ID=store_01
+		BUILD_SVN_BRANCH=RB-10.2.0
+		BUILD_SVN_BRANCH_NEW=RB-10.2.0
+		BUILD_TYPE=general
+		BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh
+		BUILD_URLS_CNT=1
+		BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh
+
+
+		Do you accept above message [Y/N]: Y
+		
+	After test, related test result will be shown in QA homepage.
+
+## 4.2 Verify test Results
+
 # 5. SHELL_EXT Test Case Specification
