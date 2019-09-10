@@ -1,6 +1,6 @@
 # 1. Test Objective
 
-There are some more flexible test cases that they require more than one test server (e.g., HA test with 1:1:2 nodes), or depend on repositories like `cubrid-testcases` or `cubrid-testcases-private` or `cubrid-testcases-private-ex`, or hold test server(s) exclusively, or connect test server with `'root'` to change configurations in system level, etc. In order to make such case automation, we make SHELL_EXT suite to implement advanced test.
+There are some more flexible test cases that they require more than one test server (e.g., HA test with 1:1:2 nodes), or depend on repositories like `cubrid-testcases` or `cubrid-testcases-private` or `cubrid-testcases-private-ex`, or hold test server(s) exclusively, or connect test server with `'root'` to change configurations in system level, and so on. In order to make such case automate, we make SHELL_EXT suite to implement advanced test.
 
 # 2. SHELL_EXT Test via CTP
 
@@ -62,7 +62,131 @@ Like SHELL test, SHELL_EXT test is executed by CTP test tool. But you have to no
 
 * ### Check out test cases
 
+  Check out test cases on all users except `controller`.
 
+      cd ~
+      git clone https://github.com/CUBRID/cubrid-testcases-private.git
+      cd ~/cubrid-testcases-private
+      git checkout develop
+      
+* ### Configure controller
+
+  Create test configuration file in only controller.
+  
+  File `~/CTP/conf/shell_ext.conf`
+  
+      #HA(1:1:2)
+      selector.ha_m1s1r2_nodes.hosts=m123_shell_ext1,m124_shell_ext1,m125_shell_ext1,m126_shell_ext1;m123_shell_ext2,m124_shell_ext2,m125_shell_ext2,m126_shell_ext2;m123_shell_ext3,m124_shell_ext3,m125_shell_ext3,m126_shell_ext3;
+      selector.ha_m1s1r2_nodes.type=HA
+
+      #HA(1:1:1)
+      selector.ha_m1s1r1_nodes.hosts=m124_shell_ext1,m125_shell_ext1,m126_shell_ext1;m124_shell_ext2,m125_shell_ext2,m126_shell_ext2;m124_shell_ext3,m125_shell_ext3,m126_shell_ext3
+      selector.ha_m1s1r1_nodes.type=HA
+
+      #HA(1:2:0)
+      selector.ha_m1s2_nodes.hosts=m124_shell_ext1,m125_shell_ext1,m126_shell_ext1;m124_shell_ext2,m125_shell_ext2,m126_shell_ext2;m124_shell_ext3,m125_shell_ext3,m126_shell_ext3
+      selector.ha_m1s2_nodes.type=HA
+
+      default.ssh.port=22
+      default.ssh.pwd=********
+
+      env.m123_shell_ext1.ssh.host=192.168.1.123
+      env.m123_shell_ext1.ssh.user=shell_ext1
+      env.m123_shell_ext1.cubrid.cubrid_port_id=12024
+      env.m123_shell_ext1.broker1.BROKER_PORT=22024
+      env.m123_shell_ext1.broker2.BROKER_PORT=32024
+      env.m123_shell_ext1.ha.ha_port_id=42024
+
+      env.m123_shell_ext2.ssh.host=192.168.1.123
+      env.m123_shell_ext2.ssh.user=shell_ext2
+      env.m123_shell_ext2.cubrid.cubrid_port_id=12025
+      env.m123_shell_ext2.broker1.BROKER_PORT=22025
+      env.m123_shell_ext2.broker2.BROKER_PORT=32025
+      env.m123_shell_ext2.ha.ha_port_id=42025
+
+      env.m123_shell_ext3.ssh.host=192.168.1.123
+      env.m123_shell_ext3.ssh.user=shell_ext3
+      env.m123_shell_ext3.cubrid.cubrid_port_id=12026
+      env.m123_shell_ext3.broker1.BROKER_PORT=22026
+      env.m123_shell_ext3.broker2.BROKER_PORT=32026
+      env.m123_shell_ext3.ha.ha_port_id=42026
+
+      env.m124_shell_ext1.ssh.host=192.168.1.124
+      env.m124_shell_ext1.ssh.user=shell_ext1
+      env.m124_shell_ext1.cubrid.cubrid_port_id=12028
+      env.m124_shell_ext1.broker1.BROKER_PORT=22028
+      env.m124_shell_ext1.broker2.BROKER_PORT=32028
+      env.m124_shell_ext1.ha.ha_port_id=42028
+
+      env.m124_shell_ext2.ssh.host=192.168.1.124
+      env.m124_shell_ext2.ssh.user=shell_ext2
+      env.m124_shell_ext2.cubrid.cubrid_port_id=12029
+      env.m124_shell_ext2.broker1.BROKER_PORT=22029
+      env.m124_shell_ext2.broker2.BROKER_PORT=32029
+      env.m124_shell_ext2.ha.ha_port_id=42029
+
+      env.m124_shell_ext3.ssh.host=192.168.1.124
+      env.m124_shell_ext3.ssh.user=shell_ext3
+      env.m124_shell_ext3.cubrid.cubrid_port_id=12030
+      env.m124_shell_ext3.broker1.BROKER_PORT=22030
+      env.m124_shell_ext3.broker2.BROKER_PORT=32030
+      env.m124_shell_ext3.ha.ha_port_id=42030
+
+      env.m125_shell_ext1.ssh.host=192.168.1.125
+      env.m125_shell_ext1.ssh.user=shell_ext1
+      env.m125_shell_ext1.cubrid.cubrid_port_id=12032
+      env.m125_shell_ext1.broker1.BROKER_PORT=22032
+      env.m125_shell_ext1.broker2.BROKER_PORT=32032
+      env.m125_shell_ext1.ha.ha_port_id=42032
+
+      env.m125_shell_ext2.ssh.host=192.168.1.125
+      env.m125_shell_ext2.ssh.user=shell_ext2
+      env.m125_shell_ext2.cubrid.cubrid_port_id=12033
+      env.m125_shell_ext2.broker1.BROKER_PORT=22033
+      env.m125_shell_ext2.broker2.BROKER_PORT=32033
+      env.m125_shell_ext2.ha.ha_port_id=42033
+
+      env.m125_shell_ext3.ssh.host=192.168.1.125
+      env.m125_shell_ext3.ssh.user=shell_ext3
+      env.m125_shell_ext3.cubrid.cubrid_port_id=12034
+      env.m125_shell_ext3.broker1.BROKER_PORT=22034
+      env.m125_shell_ext3.broker2.BROKER_PORT=32034
+      env.m125_shell_ext3.ha.ha_port_id=42034
+
+      env.m126_shell_ext1.ssh.host=192.168.1.126
+      env.m126_shell_ext1.ssh.user=shell_ext1
+      env.m126_shell_ext1.cubrid.cubrid_port_id=12036
+      env.m126_shell_ext1.broker1.BROKER_PORT=22036
+      env.m126_shell_ext1.broker2.BROKER_PORT=32036
+      env.m126_shell_ext1.ha.ha_port_id=42036
+
+      env.m126_shell_ext2.ssh.host=192.168.1.126
+      env.m126_shell_ext2.ssh.user=shell_ext2
+      env.m126_shell_ext2.cubrid.cubrid_port_id=12037
+      env.m126_shell_ext2.broker1.BROKER_PORT=22037
+      env.m126_shell_ext2.broker2.BROKER_PORT=32037
+      env.m126_shell_ext2.ha.ha_port_id=42037
+
+      env.m126_shell_ext3.ssh.host=192.168.1.126
+      env.m126_shell_ext3.ssh.user=shell_ext3
+      env.m126_shell_ext3.cubrid.cubrid_port_id=12038
+      env.m126_shell_ext3.broker1.BROKER_PORT=22038
+      env.m126_shell_ext3.broker2.BROKER_PORT=32038
+      env.m126_shell_ext3.ha.ha_port_id=42038
+
+      cubrid_download_url=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8295-aeaf5c8/drop/CUBRID-10.2.0.8295-aeaf5c8-Linux.x86_64.sh
+      scenario=cubrid-testcases-private/shell_ext/HA/issue_10843
+      test_category=shell_ext
+
+      git_user=<git user>
+      git_email=<git e-mail>
+      git_pwd=<git password>
+
+      owner_email=Fan<fan.zaiqiang@navercorp.com>
+      feedback_type=file
+  
+  Please note that there are three selectors: `ha_m1s1r2_nodes`, `ha_m1s1r1_nodes` and `ha_m1s2_nodes`. They should match selector declaration in `test.conf` defined in test case.
+  
 
 # 3. Regression Test Deployment
 # 4. Regression Test Sustaining
