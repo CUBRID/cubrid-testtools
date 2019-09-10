@@ -862,7 +862,26 @@ worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.128 | func53 | CTP, cubri
 		feedback_db_name=qaresu
 		feedback_db_user=dba
 		feedback_db_pwd=*******
-  
+
+* ### Installation required by test cases
+
+	Please find all selectors and deploy test environments one by one so that test case environment can be met. This is a little time-consuming. 
+	
+	For example, there is the selector below:
+
+		#python>2.4
+		selector.python_node.hosts=m123_shell_ext1|m123_shell_ext2|m123_shell_ext3|m124_shell_ext1|m124_shell_ext2|m124_shell_ext3	
+		
+	Find one related test case in `cubrid-testcases-private/shell_ext`. In its `test.conf`, the `note` property records requirements of test case. Please deploy following it. In this example, please install python on `m123` and `m124` servers.
+
+* ### Add quick start script file
+
+	On controller node, add a quick start script file.
+	
+	File ~/start_test.sh
+	
+		start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_EXT_LINUX -exec run_shell
+		
 
 # 4. Regression Test Sustaining
 # 5. SHELL_EXT Test Case Specification
