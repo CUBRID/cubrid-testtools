@@ -197,6 +197,44 @@ Like SHELL test, SHELL_EXT test is executed by CTP test tool. But you have to no
 
   It's same as the way of general SHELL test. Please refer to [shell guide](doc/shell_guide.md).
 
+## 2.2 Selector usage
+
+  Selector definines a set of specific servers to execute a particular test case. It's defined in test configuration file in CTP in controller only. Test case is required to declare which selector used.
+  
+  The format to define selector shows as below:
+  
+      selector.<selector name>.hosts=<rules for choosing servers>
+  
+  For example, 
+  
+      #define selector 'any_two_nodes' to choose any two nodes.
+      selector.any_two_nodes.hosts=*,*
+
+      #define selector 'two_nodes_with_diff_ip' to choose any two nodes with different ip address.
+      selector.two_nodes_with_diff_ip.hosts=%,%
+
+      #define selector 'performance_node' to choose any one from two.
+      selector.performance_node.hosts=m123_shell_ext1|m124_shell_ext1
+      
+      #define selector 'performance_ha' to choose any one group from 3 groups.
+      selector.performance_ha.hosts=m123_shell_ext1,m124_shell_ext1;m123_shell_ext2,m124_shell_ext2;m123_shell_ext3,m124_shell_ext3
+      selector.performance_ha.type=HA
+      
+      #define selector 'ycsb_extend_node' to choose the one provided only.
+      selector.ycsb_extend_node.hosts=m123_shell_ext1
+      
+      #define selector 'disk_1T_node' to choose the 1T node.
+      selector.disk_1T_node.hosts=m124_shell_ext1|m124_shell_ext2|m124_shell_ext3
+      
+  *Declare `selector` in test case.*
+  Each particular test case should have a test case configuration file `test.conf`. In this file, selector will be declared.
+  
+      machines: <selector name>
+      
+  For example,
+  
+      machines: performance_ha
+      
 # 3. Regression Test Deployment
 # 4. Regression Test Sustaining
 # 5. SHELL_EXT Test Case Specification
