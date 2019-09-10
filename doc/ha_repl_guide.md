@@ -2,16 +2,16 @@
 The test is aimed to test CUBRID HA. We use existed sql test case to check 
 database synchronization among master node and slave node.
 # 2. Execute Ha_repl Test
-This section introduce how to execute ha_repl test with a simple environment.
-Sometimes we add new case for new feature and need test it with HA mode, we can refer to it.
-Sometimes we want to investigate some ha_repl issues, we also refer to it.
+This section introduce how to execute ha_repl test with a simple environment.    
+Sometimes we add new case for new feature and need test it with HA mode, we can refer to it.     
+Sometimes we want to investigate some ha_repl issues, we also refer to it.    
 
 ## 2.1 Prepare three nodes, install CTP
-Please refer to [this guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform) to install CTP on three nodes.
+Please refer to [this guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform) to install CTP on three nodes.     
 
-node1: controller node, install CTP and prepare test cases
-node2: master node, install CTP and CUBRID
-node3: slave node, install CTP and CUBRID
+node1: controller node, install CTP and prepare test cases    
+node2: master node, install CTP and CUBRID   
+node3: slave node, install CTP and CUBRID   
 
 ## 2.2 Install CUBRID
 Please install CUBRID on node2 and node3
@@ -19,7 +19,7 @@ Please install CUBRID on node2 and node3
 run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
 ```
 
-There is a way to avoid installing CUBRID on node2 and node3 manually: set `cubrid_download_url` in ha_repl test configuration file `ha_repl.conf`.   
+There is a way to avoid installing CUBRID on node2 and node3 manually: set `cubrid_download_url` in ha_repl test configuration file `ha_repl.conf`.      
 For example:
 ```
 cubrid_download_url=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
@@ -667,7 +667,7 @@ Please refer to [this guide](https://github.com/CUBRID/cubrid-testtools/blob/dev
 We perform ha_repl/ha_repl_debug for daily (actually is for each build) and perform code coverage test of ha_repl for monthly. `ha_repl_debug` is executing ha_repl test cases with a debug build.   
 ## 4.1 Daily Regression Test
 ### Start the listener on controller node
-When you sent a test message, the consumer will catch the test massage and starts the test. The execution log will be saved in nohup.out file.     
+When you sent a test message, the consumer will catchs the test massage and starts the test. The execution log will be saved in nohup.out file.     
 1. Start listener
     ```bash
     $ sh start_test.sh 
@@ -681,7 +681,7 @@ When you sent a test message, the consumer will catch the test massage and start
     ```
     It will check if there is a test message every five seconds.
 2. Stop listener  
-When you're investigating a problem, you may need to stop consumer to avoid it starts a new test. You can execute the `stop_consumer.sh` to stop it.  
+When you're investigating a problem, you may need to stop consumer to avoid it starting a new test. You can execute the `stop_consumer.sh` to stop it.  
     * Check the process  
         ```bash
         $ ps -u $USER f|tee
@@ -756,13 +756,13 @@ When you're investigating a problem, you may need to stop consumer to avoid it s
     log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
     ```
 3. See the testing progress
- * See it in QA Homepage.
+ * See it in QA Homepage.      
    Click the build number, find the ha/ha_repl_debug category, you can see the related information from the table.   
    **Please check test rate:**    
-    if it is 100%, test is finished, otherwise it is still in progress or intterupted.      
+    If it is 100%, test is finished, otherwise it is still in progress or intterupted.      
    Please refer to [ verify test result](#51-verify-ha_repl/ha_repl_debug-test-results )
 
- * See Monitor
+ * See Monitor      
    Click `Monitor`, find `QUEUE_CUBRID_QA_HA_REPL_LINUX` item.
    It will tell us whether the test is in progress or not.
     ![monitor](./ha_repl_image/Monitor.PNG)
@@ -821,13 +821,13 @@ To execute code coverage test of ha_repl, you also need to send a testing messag
 
     Do you accept above message [Y/N]:
     ```
-    For code coverage test, it doesn't show the progress in the QA homepage.  You can log in to the controller node to see the execution log and the detailed logs of each node in the `$CTP_HOME/result/ha_repl/current_runtime_logs`. After the test finished, you can find the result in the `code coverage` node. See [4.2 verify code coverage testing result](#42-verify-code-coverage-testing-result) for detail.   
+    For code coverage test, it doesn't show the result in the QA homepage `Function`.  You can log in to the controller node to see the execution log and the detailed logs in the `$CTP_HOME/result/ha_repl/current_runtime_logs`. After the test finished, you can find the result in the `code coverage` node. See [5.2 verify code coverage testing result](#52-verify-code-coverage-testing-result) for detail.   
 # 5. Verification    
 ## 5.1 Verify ha_repl/ha_repl_debug test results   
 Go to QA homepage and click the CI build, wait for the `Function` page loading, then check if there are `ha_repl` and `ha_repl_debug` results.  
 ![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)  
-    **Total column:** The number of test cases, it counts all the cases
-    **Testing column:** The number of test cases that should be executed. It excepts the test cases that defined in `~/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf`.  
+    **Total column:** The number of test cases, it counts all the cases.         
+    **Testing column:** The number of test cases that should be executed. It excepts the test cases that defined in `~/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf`.     
 ### Check if there is a result
 If there shows 'NO RESULT (OR RUNNING)'as bellow, you need to find the reason.  
 ![ha_repl_no_result](./ha_repl_image/ha_repl_no_result.PNG)  
@@ -919,8 +919,7 @@ tar: Removing leading `/' from member names
 $ cat home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.slave1.diff_1.temp 
 $ 
 ```
-vim `home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.dump`
-find `FAIL TO SYNC` error
+vim `home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.dump` and find `FAIL TO SYNC` error.    
 ```
 1. [NOK]: [5]select 'db_stored_procedure_args' TABLE_NAME, db_stored_procedure_args.* from db_stored_procedure_args order by 1,2,3,4,5,6,7;
 select 'db_stored_procedure' TABLE_NAME, db_stored_procedure.* from db_stored_procedure order by 1,2,3,4,5,6,7,8,9;
@@ -950,7 +949,7 @@ select 'db_root' TABLE_NAME, db_root.* from db_root order by 1,2,3,4,5;(FAIL TO 
 ```
 
 Analyze the failure, then click `verify` in `fail list page` and fill in fail reason in `verify page` to verify it.   
-![ha_repl_verify4](./ha_repl_image/ha_repl_verify4.png)    
+![ha_repl_verify4](./ha_repl_image/ha_repl_verify4.PNG)    
 
 
 ### Report issues
@@ -958,15 +957,15 @@ Here are the issues that you can refer to.
 * Data consistency issue: http://jira.cubrid.org/browse/CBRD-20235
 * Crash issue: http://jira.cubrid.org/browse/CBRD-20534
 ## 5.2 Verify code coverage testing result   
-1. Go to QA homepage and find the 'code coverage' node in the left area, click the link of latest result.   
-![codecov1](./ha_repl_image/entry.PNG)    
+1. Go to QA homepage and find the 'code coverage' node in the left area, click the link of latest result.       
+![codecov1](./ha_repl_image/entry.PNG)      
 
-2. Click the ha_repl catagory link
-![codecov2](./ha_repl_image/ha_repl_entry.png)   
+2. Click the ha_repl catagory link      
+![codecov2](./ha_repl_image/ha_repl_entry.PNG)     
 
 3. Check ha_repl `lines`
-There is a coverage rate of lines. Its coverage rate of lines is usually around 24%.  
-![codecov3](./ha_repl_image/ha_repl_code_coverage_result.png)     
+There is a coverage rate of lines. Its coverage rate of lines is usually around 24%.     
+![codecov3](./ha_repl_image/ha_repl_code_coverage_result.PNG)      
 If the coverage does not meet expectation, you need to determine the cause and re-execute the test.   
 # 6. Ha_repl Test Case   
 Since `HA REPLICATION` is using `SQL` scenarios to test on HA mode to verify the data replication between an active server and a standby server, so the cases are the same as `SQL`.    
@@ -996,8 +995,8 @@ The current ha_repl test case is located in the https://github.com/CUBRID/cubrid
 
 
 ## 6.3 Conversion Rules
-The converted test cases are named with `.test`. 
-For example: there is example1.sql, it will be converted to example1.test
+The converted test cases are named with `.test`.      
+For example: there is example1.sql file, it will be converted to example1.test file.       
 Original case:
 ```
 drop if exists t;
@@ -1046,7 +1045,7 @@ drop table t;
 @HC_CHECK_FOR_EACH_STATEMENT
 --test:
 ```
-CTP will add such statements `--test`, `--check`, `@HC_CHECK_FOR_EACH_STATEMENT` and `$HC_CHECK_FOR_DML` into example1.sql.
+CTP will add such statements `--test`, `--check`, `@HC_CHECK_FOR_EACH_STATEMENT` and `$HC_CHECK_FOR_DML` based on example1.sql into example1.test file.     
 * `--test` - It indicates that the sql statement below it will be  executed directly by CUBRID server.   
 * `--check` - It indicates that the statement below it will be replaced by its actual value. And the replaced statements will be executed by the CUBRID server. 
 * `@HC_CHECK_FOR_EACH_STATEMENT` - it followed `--check`, in order to
@@ -1145,8 +1144,8 @@ CTP will add such statements `--test`, `--check`, `@HC_CHECK_FOR_EACH_STATEMENT`
 ## 6.4 Exclude List and Difference File
 Sometimes the file xxx.master.dump is different from xxx.slave1.dump caused by CUBRID design or Unfixed bugs. Make sure the test is pass, we need exlude them from ha_repl test cases or add difference file `xxx.master.slave1.diff_1`. 
 ### Exclude List
-All test cases in exclude list will be tested no longer.
-The exclude List file is located in directory `cubrid-testcases/sql/config` and named with `daily_regression_test_exclude_list_ha_repl.conf`
+All test cases in exclude list will be tested no longer.     
+The exclude List file is located in directory `cubrid-testcases/sql/config` and named with `daily_regression_test_exclude_list_ha_repl.conf`       
  ```bash
  $ cd ~/cubrid-testcases/sql/config
  $ cat daily_regression_test_exclude_list_ha_repl.conf
@@ -1203,11 +1202,11 @@ sql/_13_issues/_15_1h/cases/bug_bts_15454.test
     ...
     ``` 
  #### Result comparison mechanism
- Please see the logic below:
- `$masterFile` - xxx.master.dump
- `$slaveFile` - xxx.slave1.dump
- `$master_slaveDiffFileTemp` - xxx.master.slave1.diff_1.temp
- `$master_slaveDiffFile` - xxx.master.slave1.diff_1
+ Please see the logic below:     
+ `$masterFile` - xxx.master.dump    
+ `$slaveFile` - xxx.slave1.dump    
+ `$master_slaveDiffFileTemp` - xxx.master.slave1.diff_1.temp    
+ `$master_slaveDiffFile` - xxx.master.slave1.diff_1      
  ```bash
 diff $masterFile $slaveFile > $master_slaveDiffFileTemp
 if [ $? -eq 0 ]
