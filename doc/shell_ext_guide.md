@@ -930,4 +930,7 @@ worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.128 | func53 | CTP, cubri
 
 ## 4.2 Verify test Results
 
+To verify SHELL_EXT test results is similar to general SHELL test except the category name is `'shell_ext'` in QA homepage. Please refer to general SHELL test guide.
+
+
 # 5. SHELL_EXT Test Case Specification
