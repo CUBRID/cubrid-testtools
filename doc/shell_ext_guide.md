@@ -314,7 +314,555 @@ worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.128 | func53 | CTP, cubri
 
 ## 3.2 Installation
 
+* ### Install CTP as regression test
 
+  Please follow [the guide to install CTP](doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) into directory `$HOME/CTP`. You should fully install it in all controller node and each worker node.
+  
+  Please note that you should use the CTP in `'develop_automation'` branch instead of `'develop'` branch.
+  
+  Change to use below in corresponding steps.
+  
+      git checkout develop_automation
+      
+  And change to use below when change `.bash_profile`:
+  
+      export CTP_BRANCH_NAME=develop_automation
+
+* ###  Check out test cases on all worker nodes
+
+  Execute on all worker nodes: 
+  
+      cd $HOME
+      git clone https://github.com/CUBRID/cubrid-testcases-private.git
+
+* ### Configure test on controller node
+
+  File `~/CTP/conf/shell_template.conf`
+  
+		#any two nodes
+		selector.any_two_nodes.hosts=*,*
+
+		#any two nodes (different ip)
+		selector.two_nodes_with_diff_ip.hosts=%,%
+
+		#any three nodes (different ip)
+		selector.three_nodes_with_diff_ip.hosts=%,%,%
+
+		#any four nodes (different ip)
+		selector.four_nodes_with_diff_ip.hosts=%,%,%,%
+
+		#D1 is root for current machine
+		selector.normal_node_with_root.hosts=m128_shell_ext1,m128_root
+
+		#Two nodes. The second has root id and rpmlint command.
+		selector.reboot_nodes.hosts=m127_shell_ext1,m128_root;m127_shell_ext2,m128_root;m127_shell_ext3,m128_root;m128_shell_ext1,m127_root;m128_shell_ext2,m127_root;m128_shell_ext3,m127_root
+
+		#24 cpu cores, bc, ulimit -n 4096
+		selector.performance_node.hosts=m117_shell_ext1|m117_shell_ext2|m117_shell_ext3|m118_shell_ext1|m118_shell_ext2|m118_shell_ext3|m119_shell_ext1|m119_shell_ext2|m119_shell_ext3|m120_shell_ext1|m120_shell_ext2|m120_shell_ext3|m121_shell_ext1|m121_shell_ext2|m121_shell_ext3|m122_shell_ext1|m122_shell_ext2|m122_shell_ext3
+
+		#for bug_bts_11962
+		selector.performance_node_for_11962.hosts=m117_shell_ext2|m118_shell_ext2|m119_shell_ext2|m120_shell_ext2|m121_shell_ext2|m122_shell_ext2
+
+		#extended ycsb
+		selector.ycsb_extend_node.hosts=m120_shell_ext1|m121_shell_ext1|m122_shell_ext1
+
+		#python>2.4
+		selector.python_node.hosts=m123_shell_ext1|m123_shell_ext2|m123_shell_ext3|m124_shell_ext1|m124_shell_ext2|m124_shell_ext3
+
+		#telnet
+		selector.telnet_node.hosts=m125_shell_ext1|m125_shell_ext2|m125_shell_ext3
+
+		#php
+		selector.php_node.hosts=m126_shell_ext1|m126_shell_ext2|m126_shell_ext3
+
+		#sudo(date -s)
+		selector.sudo_node.hosts=m125_shell_ext1|m125_shell_ext2|m125_shell_ext3|m126_shell_ext1|m126_shell_ext2|m126_shell_ext3
+
+		#cmake and build cubrid
+		selector.cubrid_build_node.hosts=m122_shell_ext_make
+
+		#cubrid-testcases
+		selector.pub_testcases_node.hosts=m123_shell_ext2|m124_shell_ext2|m125_shell_ext2|m126_shell_ext2|m127_shell_ext2|m128_shell_ext2
+
+		#valgrind
+		selector.valgrind_node.hosts=m120_shell_ext3|m121_shell_ext3
+
+		#valgrind(1), sysbench(2)
+		selector.valgrind_sysbench_nodes.hosts=m118_shell_ext1,m119_shell_ext1
+
+		#valgrind(both), ha(same user)
+		selector.valgrind_ha_nodes.hosts=m118_shell_ext2,m119_shell_ext2;m118_shell_ext3,m119_shell_ext3
+		selector.valgrind_ha_nodes.type=HA
+
+		#ha(same user)
+		selector.ha_m1s1_nodes.hosts=m121_shell_ext1,m122_shell_ext1;m121_shell_ext2,m122_shell_ext2;m121_shell_ext3,m122_shell_ext3;m123_shell_ext1,m124_shell_ext1;m123_shell_ext2,m124_shell_ext2;m123_shell_ext3,m124_shell_ext3;m126_shell_ext3,m127_shell_ext3
+		selector.ha_m1s1_nodes.type=HA
+
+		selector.ha_m1s1_200g_nodes.hosts=m119_shell_ext1,m120_shell_ext1;m119_shell_ext2,m120_shell_ext2;m119_shell_ext3,m120_shell_ext3;m121_shell_ext1,m122_shell_ext1;m121_shell_ext2,m122_shell_ext2;m121_shell_ext3,m122_shell_ext3;m123_shell_ext1,m124_shell_ext1;m123_shell_ext2,m124_shell_ext2;m123_shell_ext3,m124_shell_ext3;m126_shell_ext3,m127_shell_ext3
+		selector.ha_m1s1_200g_nodes.type=HA
+
+		#ha(one master and one slave. and the third is root  for slave server)
+		selector.ha_m1s1root_nodes.hosts=m127_shell_ext1,m128_shell_ext1,m127_root;m127_shell_ext2,m128_shell_ext2,m127_root;m127_shell_ext3,m128_shell_ext3,m127_root
+		selector.ha_m1s1root_nodes.type=HA
+
+		#ha (with RQG): TBD (Colin)
+		selector.ha_m1s1_RQG_nodes.hosts=m120_shell_ext2,m117_shell_ext2;m121_shell_ext2,m122_shell_ext2
+		selector.ha_m1s1_RQG_nodes.type=HA
+
+		#two nodes (fst has RQG)
+		selector.two_nodes_with_fst_rqg.hosts=m120_shell_ext2,*;m121_shell_ext3,*;m122_shell_ext3,*;m118_shell_ext1,*;m119_shell_ext3,*
+
+		#ha(4 nodes, same user), expect
+		selector.ha_m1s1r2_nodes.hosts=m123_shell_ext1,m124_shell_ext1,m125_shell_ext1,m126_shell_ext1;m123_shell_ext2,m124_shell_ext2,m125_shell_ext2,m126_shell_ext2;m123_shell_ext3,m124_shell_ext3,m125_shell_ext3,m126_shell_ext3;m119_shell_ext1,m120_shell_ext1,m121_shell_ext1,m122_shell_ext1;m119_shell_ext2,m120_shell_ext2,m121_shell_ext2,m122_shell_ext2;m119_shell_ext3,m120_shell_ext3,m121_shell_ext3,m122_shell_ext3
+		selector.ha_m1s1r2_nodes.type=HA
+
+		#ha(3 nodes, same user)
+		selector.ha_m1s1r1_nodes.hosts=m126_shell_ext1,m127_shell_ext1,m128_shell_ext1;m126_shell_ext2,m127_shell_ext2,m128_shell_ext2;m126_shell_ext3,m127_shell_ext3,m128_shell_ext3;m122_shell_ext1,m123_shell_ext1,m124_shell_ext1;m122_shell_ext2,m123_shell_ext2,m124_shell_ext2;m122_shell_ext3,m123_shell_ext3,m124_shell_ext3
+		selector.ha_m1s1r1_nodes.type=HA
+
+		#ha(3 nodes, m:s is 1:1. the last with root user for ping role)
+		selector.ha_m1s1_pingwithroot_nodes.hosts=m125_shell_ext1,m126_shell_ext1,m128_root;m125_shell_ext2,m126_shell_ext2,m128_root;m125_shell_ext3,m126_shell_ext3,m128_root
+
+		#ha(6 nodes)
+		selector.ha_m1s1r4_nodes.hosts=m128_shell_ext1,m127_shell_ext1,m126_shell_ext1,m125_shell_ext1,m124_shell_ext1,m123_shell_ext1;m128_shell_ext2,m127_shell_ext2,m126_shell_ext2,m125_shell_ext2,m124_shell_ext2,m123_shell_ext2;m128_shell_ext3,m127_shell_ext3,m126_shell_ext3,m125_shell_ext3,m124_shell_ext3,m123_shell_ext3
+
+		#ha(3 nodes: one master, two slaves)
+		selector.ha_m1s2_nodes.hosts=m117_shell_ext1,m118_shell_ext1,m119_shell_ext1;m117_shell_ext2,m118_shell_ext2,m119_shell_ext2;m117_shell_ext3,m118_shell_ext3,m119_shell_ext3;m120_shell_ext1,m121_shell_ext1,m122_shell_ext1;m120_shell_ext2,m121_shell_ext2,m122_shell_ext2;m120_shell_ext3,m121_shell_ext3,m122_shell_ext3
+		selector.ha_m1s2_nodes.type=HA
+
+		#ha(4 nodes: one master, two slaves, the last host should provide root on master machine)
+		selector.ha_m1s2_root4master_nodes.hosts=m128_shell_ext1,m127_shell_ext1,m126_shell_ext1,m128_root;m128_shell_ext2,m127_shell_ext2,m126_shell_ext2,m128_root;m128_shell_ext3,m127_shell_ext3,m126_shell_ext3,m128_root
+
+		#ha(3 nodes ha plus extra one(d_host3) which give root to d_host2 machine)
+		selector.ha_3nodes_and_lastroot.hosts=m124_shell_ext1,m125_shell_ext1,m128_shell_ext1,m128_root;m124_shell_ext2,m125_shell_ext2,m128_shell_ext2,m128_root;m124_shell_ext3,m125_shell_ext3,m128_shell_ext3,m128_root;m119_shell_ext1,m120_shell_ext1,m128_shell_ext1,m128_root;m119_shell_ext1,m120_shell_ext1,m128_shell_ext1,m128_root
+
+		#ha(3 nodes ha plus lasttworoot. Ex: main, D1, D2, D3, D4. D3 is root for D1, D4 is root for D2)
+		selector.ha_3nodes_and_lasttworoot.hosts=m117_shell_ext1,m126_shell_ext1,m128_shell_ext1,m126_root,m128_root;m117_shell_ext2,m126_shell_ext2,m128_shell_ext2,m126_root,m128_root;m117_shell_ext3,m126_shell_ext3,m128_shell_ext3,m126_root,m128_root
+
+		#oltpbench
+		selector.oltpbench_node.hosts=m120_shell_ext2,m121_shell_ext2
+
+		#disk space:700G
+		selector.disk_700g_node.hosts=m120_shell_ext1|m120_shell_ext2|m120_shell_ext3|m121_shell_ext1|m121_shell_ext2|m121_shell_ext3
+
+		#disk space:350G
+		selector.disk_350g_node.hosts=m120_shell_ext1|m120_shell_ext2|m120_shell_ext3|m121_shell_ext1|m121_shell_ext2|m121_shell_ext3
+
+		#two nodes, expect(1)
+		selector.expect_2_nodes.hosts=m125_shell_ext1,*;m125_shell_ext2,*;m125_shell_ext3,*
+
+		#/dev/shm
+		selector.devshm_node.hosts=m119_shell_ext1|m119_shell_ext2|m119_shell_ext3
+
+		#ha(same user, /dev/shm)
+		selector.ha_m1s1_devshm_nodes.hosts=m119_shell_ext1,m121_shell_ext1;m119_shell_ext2,m121_shell_ext2;m119_shell_ext3,m121_shell_ext3
+		selector.ha_m1s1_devshm_nodes.type=HA
+
+		#ha, tpcw
+		selector.tpcw_ha_nodes.hosts=m122_shell_ext1,m117_shell_ext1,m118_shell_ext1
+		selector.tpcw_ha_nodes.type=HA
+
+		#valgrind,RQG
+		selector.valgrind_RQG_node.hosts=m117_shell_ext3|m118_shell_ext3|m119_shell_ext3|m120_shell_ext3|m121_shell_ext3|m122_shell_ext3
+
+		#systemtap
+		selector.systemtap_node.hosts=m124_shell_ext1|m124_shell_ext2|m124_shell_ext3
+
+		default.ssh.port=22
+		default.ssh.pwd=**********
+
+		env.m117_shell_ext1.ssh.host=192.168.1.117
+		env.m117_shell_ext1.ssh.user=shell_ext1
+		env.m117_shell_ext1.cubrid.cubrid_port_id=12000
+		env.m117_shell_ext1.broker1.BROKER_PORT=22000
+		env.m117_shell_ext1.broker2.BROKER_PORT=32000
+		env.m117_shell_ext1.ha.ha_port_id=42000
+
+		env.m117_shell_ext2.ssh.host=192.168.1.117
+		env.m117_shell_ext2.ssh.user=shell_ext2
+		env.m117_shell_ext2.cubrid.cubrid_port_id=12001
+		env.m117_shell_ext2.broker1.BROKER_PORT=22001
+		env.m117_shell_ext2.broker2.BROKER_PORT=32001
+		env.m117_shell_ext2.ha.ha_port_id=42001
+
+		env.m117_shell_ext3.ssh.host=192.168.1.117
+		env.m117_shell_ext3.ssh.user=shell_ext3
+		env.m117_shell_ext3.cubrid.cubrid_port_id=12002
+		env.m117_shell_ext3.broker1.BROKER_PORT=22002
+		env.m117_shell_ext3.broker2.BROKER_PORT=32002
+		env.m117_shell_ext3.ha.ha_port_id=42002
+
+		env.m117_root.type=follow
+		env.m117_root.ssh.host=192.168.1.117
+		env.m117_root.ssh.user=root
+		env.m117_root.ssh.pwd=********
+		env.m117_root.cubrid.cubrid_port_id=12003
+		env.m117_root.broker1.BROKER_PORT=22003
+		env.m117_root.broker2.BROKER_PORT=32003
+		env.m117_root.ha.ha_port_id=42003
+
+		env.m118_shell_ext1.ssh.host=192.168.1.118
+		env.m118_shell_ext1.ssh.user=shell_ext1
+		env.m118_shell_ext1.cubrid.cubrid_port_id=12004
+		env.m118_shell_ext1.broker1.BROKER_PORT=22004
+		env.m118_shell_ext1.broker2.BROKER_PORT=32004
+		env.m118_shell_ext1.ha.ha_port_id=42004
+
+		env.m118_shell_ext2.ssh.host=192.168.1.118
+		env.m118_shell_ext2.ssh.user=shell_ext2
+		env.m118_shell_ext2.cubrid.cubrid_port_id=12005
+		env.m118_shell_ext2.broker1.BROKER_PORT=22005
+		env.m118_shell_ext2.broker2.BROKER_PORT=32005
+		env.m118_shell_ext2.ha.ha_port_id=42005
+
+		env.m118_shell_ext3.ssh.host=192.168.1.118
+		env.m118_shell_ext3.ssh.user=shell_ext3
+		env.m118_shell_ext3.cubrid.cubrid_port_id=12006
+		env.m118_shell_ext3.broker1.BROKER_PORT=22006
+		env.m118_shell_ext3.broker2.BROKER_PORT=32006
+		env.m118_shell_ext3.ha.ha_port_id=42006
+
+		env.m118_root.type=follow
+		env.m118_root.ssh.host=192.168.1.118
+		env.m118_root.ssh.user=root
+		env.m118_root.ssh.pwd=********
+		env.m118_root.cubrid.cubrid_port_id=12007
+		env.m118_root.broker1.BROKER_PORT=22007
+		env.m118_root.broker2.BROKER_PORT=32007
+		env.m118_root.ha.ha_port_id=42007
+
+		env.m119_shell_ext1.ssh.host=192.168.1.119
+		env.m119_shell_ext1.ssh.user=shell_ext1
+		env.m119_shell_ext1.cubrid.cubrid_port_id=12008
+		env.m119_shell_ext1.broker1.BROKER_PORT=22008
+		env.m119_shell_ext1.broker2.BROKER_PORT=32008
+		env.m119_shell_ext1.ha.ha_port_id=42008
+
+		env.m119_shell_ext2.ssh.host=192.168.1.119
+		env.m119_shell_ext2.ssh.user=shell_ext2
+		env.m119_shell_ext2.cubrid.cubrid_port_id=12009
+		env.m119_shell_ext2.broker1.BROKER_PORT=22009
+		env.m119_shell_ext2.broker2.BROKER_PORT=32009
+		env.m119_shell_ext2.ha.ha_port_id=42009
+
+		env.m119_shell_ext3.ssh.host=192.168.1.119
+		env.m119_shell_ext3.ssh.user=shell_ext3
+		env.m119_shell_ext3.cubrid.cubrid_port_id=12010
+		env.m119_shell_ext3.broker1.BROKER_PORT=22010
+		env.m119_shell_ext3.broker2.BROKER_PORT=32010
+		env.m119_shell_ext3.ha.ha_port_id=42010
+
+		env.m119_root.type=follow
+		env.m119_root.ssh.host=192.168.1.119
+		env.m119_root.ssh.user=root
+		env.m119_root.ssh.pwd=********
+		env.m119_root.cubrid.cubrid_port_id=12011
+		env.m119_root.broker1.BROKER_PORT=22011
+		env.m119_root.broker2.BROKER_PORT=32011
+		env.m119_root.ha.ha_port_id=42011
+
+		env.m120_shell_ext1.ssh.host=192.168.1.120
+		env.m120_shell_ext1.ssh.user=shell_ext1
+		env.m120_shell_ext1.cubrid.cubrid_port_id=12012
+		env.m120_shell_ext1.broker1.BROKER_PORT=22012
+		env.m120_shell_ext1.broker2.BROKER_PORT=32012
+		env.m120_shell_ext1.ha.ha_port_id=42012
+
+		env.m120_shell_ext2.ssh.host=192.168.1.120
+		env.m120_shell_ext2.ssh.user=shell_ext2
+		env.m120_shell_ext2.cubrid.cubrid_port_id=12013
+		env.m120_shell_ext2.broker1.BROKER_PORT=22013
+		env.m120_shell_ext2.broker2.BROKER_PORT=32013
+		env.m120_shell_ext2.ha.ha_port_id=42013
+
+		env.m120_shell_ext3.ssh.host=192.168.1.120
+		env.m120_shell_ext3.ssh.user=shell_ext3
+		env.m120_shell_ext3.cubrid.cubrid_port_id=12014
+		env.m120_shell_ext3.broker1.BROKER_PORT=22014
+		env.m120_shell_ext3.broker2.BROKER_PORT=32014
+		env.m120_shell_ext3.ha.ha_port_id=42014
+
+		env.m120_root.type=follow
+		env.m120_root.ssh.host=192.168.1.120
+		env.m120_root.ssh.user=root
+		env.m120_root.ssh.pwd=********
+		env.m120_root.cubrid.cubrid_port_id=12015
+		env.m120_root.broker1.BROKER_PORT=22015
+		env.m120_root.broker2.BROKER_PORT=32015
+		env.m120_root.ha.ha_port_id=42015
+
+		env.m121_shell_ext1.ssh.host=192.168.1.121
+		env.m121_shell_ext1.ssh.user=shell_ext1
+		env.m121_shell_ext1.cubrid.cubrid_port_id=12016
+		env.m121_shell_ext1.broker1.BROKER_PORT=22016
+		env.m121_shell_ext1.broker2.BROKER_PORT=32016
+		env.m121_shell_ext1.ha.ha_port_id=42016
+
+		env.m121_shell_ext2.ssh.host=192.168.1.121
+		env.m121_shell_ext2.ssh.user=shell_ext2
+		env.m121_shell_ext2.cubrid.cubrid_port_id=12017
+		env.m121_shell_ext2.broker1.BROKER_PORT=22017
+		env.m121_shell_ext2.broker2.BROKER_PORT=32017
+		env.m121_shell_ext2.ha.ha_port_id=42017
+
+		env.m121_shell_ext3.ssh.host=192.168.1.121
+		env.m121_shell_ext3.ssh.user=shell_ext3
+		env.m121_shell_ext3.cubrid.cubrid_port_id=12018
+		env.m121_shell_ext3.broker1.BROKER_PORT=22018
+		env.m121_shell_ext3.broker2.BROKER_PORT=32018
+		env.m121_shell_ext3.ha.ha_port_id=42018
+
+		env.m121_root.type=follow
+		env.m121_root.ssh.host=192.168.1.121
+		env.m121_root.ssh.user=root
+		env.m121_root.ssh.pwd=********
+		env.m121_root.cubrid.cubrid_port_id=12019
+		env.m121_root.broker1.BROKER_PORT=22019
+		env.m121_root.broker2.BROKER_PORT=32019
+		env.m121_root.ha.ha_port_id=42019
+
+		env.m122_shell_ext1.ssh.host=192.168.1.122
+		env.m122_shell_ext1.ssh.user=shell_ext1
+		env.m122_shell_ext1.cubrid.cubrid_port_id=12020
+		env.m122_shell_ext1.broker1.BROKER_PORT=22020
+		env.m122_shell_ext1.broker2.BROKER_PORT=32020
+		env.m122_shell_ext1.ha.ha_port_id=42020
+
+		env.m122_shell_ext2.ssh.host=192.168.1.122
+		env.m122_shell_ext2.ssh.user=shell_ext2
+		env.m122_shell_ext2.cubrid.cubrid_port_id=12021
+		env.m122_shell_ext2.broker1.BROKER_PORT=22021
+		env.m122_shell_ext2.broker2.BROKER_PORT=32021
+		env.m122_shell_ext2.ha.ha_port_id=42021
+
+		env.m122_shell_ext3.ssh.host=192.168.1.122
+		env.m122_shell_ext3.ssh.user=shell_ext3
+		env.m122_shell_ext3.cubrid.cubrid_port_id=12022
+		env.m122_shell_ext3.broker1.BROKER_PORT=22022
+		env.m122_shell_ext3.broker2.BROKER_PORT=32022
+		env.m122_shell_ext3.ha.ha_port_id=42022
+
+		env.m122_shell_ext_make.ssh.host=192.168.1.122
+		env.m122_shell_ext_make.ssh.user=shell_ext_make
+		env.m122_shell_ext_make.cubrid.cubrid_port_id=18722
+		env.m122_shell_ext_make.broker1.BROKER_PORT=28722
+		env.m122_shell_ext_make.broker2.BROKER_PORT=38722
+		env.m122_shell_ext_make.ha.ha_port_id=48722
+
+		env.m122_root.type=follow
+		env.m122_root.ssh.host=192.168.1.122
+		env.m122_root.ssh.user=root
+		env.m122_root.ssh.pwd=********
+		env.m122_root.cubrid.cubrid_port_id=12023
+		env.m122_root.broker1.BROKER_PORT=22023
+		env.m122_root.broker2.BROKER_PORT=32023
+		env.m122_root.ha.ha_port_id=42023
+
+		env.m123_shell_ext1.ssh.host=192.168.1.123
+		env.m123_shell_ext1.ssh.user=shell_ext1
+		env.m123_shell_ext1.cubrid.cubrid_port_id=12024
+		env.m123_shell_ext1.broker1.BROKER_PORT=22024
+		env.m123_shell_ext1.broker2.BROKER_PORT=32024
+		env.m123_shell_ext1.ha.ha_port_id=42024
+
+		env.m123_shell_ext2.ssh.host=192.168.1.123
+		env.m123_shell_ext2.ssh.user=shell_ext2
+		env.m123_shell_ext2.cubrid.cubrid_port_id=12025
+		env.m123_shell_ext2.broker1.BROKER_PORT=22025
+		env.m123_shell_ext2.broker2.BROKER_PORT=32025
+		env.m123_shell_ext2.ha.ha_port_id=42025
+
+		env.m123_shell_ext3.ssh.host=192.168.1.123
+		env.m123_shell_ext3.ssh.user=shell_ext3
+		env.m123_shell_ext3.cubrid.cubrid_port_id=12026
+		env.m123_shell_ext3.broker1.BROKER_PORT=22026
+		env.m123_shell_ext3.broker2.BROKER_PORT=32026
+		env.m123_shell_ext3.ha.ha_port_id=42026
+
+		env.m123_root.type=follow
+		env.m123_root.ssh.host=192.168.1.123
+		env.m123_root.ssh.user=root
+		env.m123_root.ssh.pwd=********
+		env.m123_root.cubrid.cubrid_port_id=12027
+		env.m123_root.broker1.BROKER_PORT=22027
+		env.m123_root.broker2.BROKER_PORT=32027
+		env.m123_root.ha.ha_port_id=42027
+
+		env.m124_shell_ext1.ssh.host=192.168.1.124
+		env.m124_shell_ext1.ssh.user=shell_ext1
+		env.m124_shell_ext1.cubrid.cubrid_port_id=12028
+		env.m124_shell_ext1.broker1.BROKER_PORT=22028
+		env.m124_shell_ext1.broker2.BROKER_PORT=32028
+		env.m124_shell_ext1.ha.ha_port_id=42028
+
+		env.m124_shell_ext2.ssh.host=192.168.1.124
+		env.m124_shell_ext2.ssh.user=shell_ext2
+		env.m124_shell_ext2.cubrid.cubrid_port_id=12029
+		env.m124_shell_ext2.broker1.BROKER_PORT=22029
+		env.m124_shell_ext2.broker2.BROKER_PORT=32029
+		env.m124_shell_ext2.ha.ha_port_id=42029
+
+		env.m124_shell_ext3.ssh.host=192.168.1.124
+		env.m124_shell_ext3.ssh.user=shell_ext3
+		env.m124_shell_ext3.cubrid.cubrid_port_id=12030
+		env.m124_shell_ext3.broker1.BROKER_PORT=22030
+		env.m124_shell_ext3.broker2.BROKER_PORT=32030
+		env.m124_shell_ext3.ha.ha_port_id=42030
+
+		env.m124_root.type=follow
+		env.m124_root.ssh.host=192.168.1.124
+		env.m124_root.ssh.user=root
+		env.m124_root.ssh.pwd=********
+		env.m124_root.cubrid.cubrid_port_id=12031
+		env.m124_root.broker1.BROKER_PORT=22031
+		env.m124_root.broker2.BROKER_PORT=32031
+		env.m124_root.ha.ha_port_id=42031
+
+		env.m125_shell_ext1.ssh.host=192.168.1.125
+		env.m125_shell_ext1.ssh.user=shell_ext1
+		env.m125_shell_ext1.cubrid.cubrid_port_id=12032
+		env.m125_shell_ext1.broker1.BROKER_PORT=22032
+		env.m125_shell_ext1.broker2.BROKER_PORT=32032
+		env.m125_shell_ext1.ha.ha_port_id=42032
+
+		env.m125_shell_ext2.ssh.host=192.168.1.125
+		env.m125_shell_ext2.ssh.user=shell_ext2
+		env.m125_shell_ext2.cubrid.cubrid_port_id=12033
+		env.m125_shell_ext2.broker1.BROKER_PORT=22033
+		env.m125_shell_ext2.broker2.BROKER_PORT=32033
+		env.m125_shell_ext2.ha.ha_port_id=42033
+
+		env.m125_shell_ext3.ssh.host=192.168.1.125
+		env.m125_shell_ext3.ssh.user=shell_ext3
+		env.m125_shell_ext3.cubrid.cubrid_port_id=12034
+		env.m125_shell_ext3.broker1.BROKER_PORT=22034
+		env.m125_shell_ext3.broker2.BROKER_PORT=32034
+		env.m125_shell_ext3.ha.ha_port_id=42034
+
+		env.m125_root.type=follow
+		env.m125_root.ssh.host=192.168.1.125
+		env.m125_root.ssh.user=root
+		env.m125_root.ssh.pwd=********
+		env.m125_root.cubrid.cubrid_port_id=12035
+		env.m125_root.broker1.BROKER_PORT=22035
+		env.m125_root.broker2.BROKER_PORT=32035
+		env.m125_root.ha.ha_port_id=42035
+
+		env.m126_shell_ext1.ssh.host=192.168.1.126
+		env.m126_shell_ext1.ssh.user=shell_ext1
+		env.m126_shell_ext1.cubrid.cubrid_port_id=12036
+		env.m126_shell_ext1.broker1.BROKER_PORT=22036
+		env.m126_shell_ext1.broker2.BROKER_PORT=32036
+		env.m126_shell_ext1.ha.ha_port_id=42036
+
+		env.m126_shell_ext2.ssh.host=192.168.1.126
+		env.m126_shell_ext2.ssh.user=shell_ext2
+		env.m126_shell_ext2.cubrid.cubrid_port_id=12037
+		env.m126_shell_ext2.broker1.BROKER_PORT=22037
+		env.m126_shell_ext2.broker2.BROKER_PORT=32037
+		env.m126_shell_ext2.ha.ha_port_id=42037
+
+		env.m126_shell_ext3.ssh.host=192.168.1.126
+		env.m126_shell_ext3.ssh.user=shell_ext3
+		env.m126_shell_ext3.cubrid.cubrid_port_id=12038
+		env.m126_shell_ext3.broker1.BROKER_PORT=22038
+		env.m126_shell_ext3.broker2.BROKER_PORT=32038
+		env.m126_shell_ext3.ha.ha_port_id=42038
+
+		env.m126_root.type=follow
+		env.m126_root.ssh.host=192.168.1.126
+		env.m126_root.ssh.user=root
+		env.m126_root.ssh.pwd=********
+		env.m126_root.cubrid.cubrid_port_id=12039
+		env.m126_root.broker1.BROKER_PORT=22039
+		env.m126_root.broker2.BROKER_PORT=32039
+		env.m126_root.ha.ha_port_id=42039
+
+		env.m127_shell_ext1.ssh.host=192.168.1.127
+		env.m127_shell_ext1.ssh.user=shell_ext1
+		env.m127_shell_ext1.cubrid.cubrid_port_id=12040
+		env.m127_shell_ext1.broker1.BROKER_PORT=22040
+		env.m127_shell_ext1.broker2.BROKER_PORT=32040
+		env.m127_shell_ext1.ha.ha_port_id=42040
+
+		env.m127_shell_ext2.ssh.host=192.168.1.127
+		env.m127_shell_ext2.ssh.user=shell_ext2
+		env.m127_shell_ext2.cubrid.cubrid_port_id=12041
+		env.m127_shell_ext2.broker1.BROKER_PORT=22041
+		env.m127_shell_ext2.broker2.BROKER_PORT=32041
+		env.m127_shell_ext2.ha.ha_port_id=42041
+
+		env.m127_shell_ext3.ssh.host=192.168.1.127
+		env.m127_shell_ext3.ssh.user=shell_ext3
+		env.m127_shell_ext3.cubrid.cubrid_port_id=12042
+		env.m127_shell_ext3.broker1.BROKER_PORT=22042
+		env.m127_shell_ext3.broker2.BROKER_PORT=32042
+		env.m127_shell_ext3.ha.ha_port_id=42042
+
+		env.m127_root.type=follow
+		env.m127_root.ssh.host=192.168.1.127
+		env.m127_root.ssh.user=root
+		env.m127_root.ssh.pwd=********
+		env.m127_root.cubrid.cubrid_port_id=12043
+		env.m127_root.broker1.BROKER_PORT=22043
+		env.m127_root.broker2.BROKER_PORT=32043
+		env.m127_root.ha.ha_port_id=42043
+
+		env.m128_shell_ext1.ssh.host=192.168.1.128
+		env.m128_shell_ext1.ssh.user=shell_ext1
+		env.m128_shell_ext1.cubrid.cubrid_port_id=12044
+		env.m128_shell_ext1.broker1.BROKER_PORT=22044
+		env.m128_shell_ext1.broker2.BROKER_PORT=32044
+		env.m128_shell_ext1.ha.ha_port_id=42044
+
+		env.m128_shell_ext2.ssh.host=192.168.1.128
+		env.m128_shell_ext2.ssh.user=shell_ext2
+		env.m128_shell_ext2.cubrid.cubrid_port_id=12045
+		env.m128_shell_ext2.broker1.BROKER_PORT=22045
+		env.m128_shell_ext2.broker2.BROKER_PORT=32045
+		env.m128_shell_ext2.ha.ha_port_id=42045
+
+		env.m128_shell_ext3.ssh.host=192.168.1.128
+		env.m128_shell_ext3.ssh.user=shell_ext3
+		env.m128_shell_ext3.cubrid.cubrid_port_id=12046
+		env.m128_shell_ext3.broker1.BROKER_PORT=22046
+		env.m128_shell_ext3.broker2.BROKER_PORT=32046
+		env.m128_shell_ext3.ha.ha_port_id=42046
+
+		env.m128_root.type=follow
+		env.m128_root.ssh.host=192.168.1.128
+		env.m128_root.ssh.user=root
+		env.m128_root.ssh.pwd=********
+		env.m128_root.cubrid.cubrid_port_id=12047
+		env.m128_root.broker1.BROKER_PORT=22047
+		env.m128_root.broker2.BROKER_PORT=32047
+		env.m128_root.ha.ha_port_id=42047
+
+		cubrid_download_url=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8295-aeaf5c8/drop/CUBRID-10.2.0.8295-aeaf5c8-Linux.x86_64.sh
+		scenario=cubrid-testcases-private/shell_ext
+		testcase_retry_num=0
+		#testcase_timeout_in_secs=14400
+		testcase_update_yn=y
+		testcase_git_branch=develop
+		test_category=shell_ext
+		#testcase_exclude_from_file=/home/shell_ext_ctrl/CTP/conf/shell_exclude.txt
+		test_continue_yn=n
+
+		feedback_type=database
+		feedback_notice_qahome_url=http://192.168.1.86:8080/qaresult/shellImportAction.nhn?main_id=<MAINID>
+
+		owner_email=Fan<fanzq@navercorp.com>
+
+		git_user=<git user>
+		git_email=<git e-mail>
+		git_pwd=********
+
+		feedback_db_host=192.168.1.86
+		feedback_db_port=33080
+		feedback_db_name=qaresu
+		feedback_db_user=dba
+		feedback_db_pwd=*******
+  
 
 # 4. Regression Test Sustaining
 # 5. SHELL_EXT Test Case Specification
