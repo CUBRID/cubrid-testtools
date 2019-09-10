@@ -41,10 +41,10 @@ Like SHELL test, SHELL_EXT test is executed by CTP test tool. But you have to no
   
   IP | Users 
   -|-
-  192.168.1.123 | controller <br> shell_ext1 <br> shell_ext2 <br> shell_ext3
-  192.168.1.124 | shell_ext1 <br> shell_ext2 <br> shell_ext3
-  192.168.1.125 | shell_ext1 <br> shell_ext2 <br> shell_ext3
-  192.168.1.126 | shell_ext1 <br> shell_ext2 <br> shell_ext3
+  192.168.1.123 | controller, shell_ext1, shell_ext2, shell_ext3
+  192.168.1.124 | shell_ext1, shell_ext2, shell_ext3
+  192.168.1.125 | shell_ext1, shell_ext2, shell_ext3
+  192.168.1.126 | shell_ext1, shell_ext2, shell_ext3
 
 * ### Install CTP.
 
