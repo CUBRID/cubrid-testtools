@@ -187,6 +187,15 @@ Like SHELL test, SHELL_EXT test is executed by CTP test tool. But you have to no
   
   Please note that there are three selectors: `ha_m1s1r2_nodes`, `ha_m1s1r1_nodes` and `ha_m1s2_nodes`. They should match selector declaration in `test.conf` defined in test case.
   
+* ### Execute test
+
+  Log into controller, and execute 
+    
+      ctp.sh shell -c ~/CTP/conf/shell_ext.conf
+      
+* ### Examine test results
+
+  It's same as the way of general SHELL test. Please refer to [shell guide](doc/shell_guide.md).
 
 # 3. Regression Test Deployment
 # 4. Regression Test Sustaining
