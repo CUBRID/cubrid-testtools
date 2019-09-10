@@ -226,7 +226,8 @@ Like SHELL test, SHELL_EXT test is executed by CTP test tool. But you have to no
       #define selector 'disk_1T_node' to choose the 1T node.
       selector.disk_1T_node.hosts=m124_shell_ext1|m124_shell_ext2|m124_shell_ext3
       
-  *Declare `selector` in test case.*
+  **Declare `selector` in test case**
+  
   Each particular test case should have a test case configuration file `test.conf`. In this file, selector will be declared.
   
       machines: <selector name>
