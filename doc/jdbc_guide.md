@@ -253,12 +253,12 @@ File `jdbc.properties` configures JDBC connection parameters.
 </tr>
 </table>
 
-## 4.1 Installation
+## 4.2 Installation
 
 * ### Install CTP as regression test
 
-    Please follow guide below to install CTP to `$HOME/CTP`:
-    https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#2-install-ctp-as-regression-test-in-linux-platform
+    Please follow [the guide to install CTP](doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) to `$HOME/CTP`:
+    
 
 * ### Configure jdbc test
 
