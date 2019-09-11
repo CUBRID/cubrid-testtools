@@ -985,4 +985,31 @@ To verify SHELL_EXT test results is similar to general SHELL test except the cat
 		export D_HOST(n)_IP=192.168.1.199
 		export D_HOST(n)_USER=<user>
 		
-* ## 
+* ## r_upload
+
+		r_upload D_HOST1 -from /path/to/local/filename -to /path/to/remote/folder
+	
+	Upload a file to remote server. Regarding as host defination, it's same as it in `rexec`.
+	
+* ## r_download
+
+		r_upload D_HOST1 -from /path/to/remote/filename -to /path/to/local/folder
+			
+	Download a file from remote server. Regarding as host defination, it's same as it in `rexec`.
+	
+* ## use_cubrid and use_cubrid_main
+
+	If test case depends on more than one CUBRID for some purpose of test, we have more CUBRID to use and we can switch CUBRID with `use_cubrid` and `use_cubrid_main`. 
+	
+		# switch to assigned CUBRID 
+		use_cubrid 10.1.3.7765-265e708
+		
+		# switch back to default CUBRID
+		use_cubrid_main
+	
+	Note: if want to define more CUBRIDs, please define it in `test.conf` as below
+	
+		# Except current CUBRID, define another two CUBRIDs.
+		cubrid_deps: 10.1.1.7666-4324548,9.3.0.0206
+
+	
