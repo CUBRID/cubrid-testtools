@@ -1070,6 +1070,16 @@ To verify SHELL_EXT test results is similar to general SHELL test except the cat
 	
 	It's usually used in systemtap. It replace undulate figures in test.log in order to exclude to check.
 	
+* ## check_with_loop
+
+		check_with_loop <number of loops> <commands> <expected text> <check timeout>
 		
+	Example usage:
+		
+		# Execute "cubrid broker status -f" till output contains `IDLE` keyword. Maximum number of execution is 120. If still can't return expected text, give nok result.
+		check_with_loop 120 "cubrid broker status -f" "IDLE" true
+	
+	
+	
 	
 	
