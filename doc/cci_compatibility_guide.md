@@ -1,33 +1,33 @@
 # 1. Test Objective
-The cci compatibility test is aimed to test CUBRID compatibility with different version's CCI driver and server. Actually the test cases is the same with cci test.
+The CCI compatibility test is aimed to test CUBRID compatibility with different version's CCI driver and server. Actually the test cases is the same with CCI test.
 
 # 2. Execute CCI Compatibility Test
 To perform the test, we need to install CTP first.   
 ## 2.1 Install CTP
-please refer to [2.1 Install CTP of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#21-install-ctp)
+Please refer to [2.1 Install CTP of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#21-install-ctp).    
 
 ## 2.2 Prepare Test Cases
-please refer to [2.2 Prepare Test Cases of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#22-prepare-test-cases)
+Please refer to [2.2 Prepare Test Cases of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#22-prepare-test-cases).    
 
 ## 2.3 Install CUBRID 
-For compatibility test, We need to install different driver and server version, for example:
-We test 10.2's server with 8.4.1's driver, install CUBRID as below:     
+For compatibility test, we need to install different driver and server version. For example:
+we test 10.2's server with 8.4.1's driver, install CUBRID as below:     
 ```bash    
 run_cubrid_install -s http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh http://192.168.1.91:8080/REPO_ROOT/store_03/8.4.1.35001/drop/CUBRID-8.4.1.35001-linux.x86_64.sh   
 ```
-We test 10.2's driver with 8.4.1's server, install CUBRID as below:     
+we test 10.2's driver with 8.4.1's server, install CUBRID as below:     
 ```bash    
 run_cubrid_install -d http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh http://192.168.1.91:8080/REPO_ROOT/store_03/8.4.1.35001/drop/CUBRID-8.4.1.35001-linux.x86_64.sh   
 ```
 
 ## 2.4 Execute test      
-Please refer to [2.4 Execute test of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#24-execute-test)
+Please refer to [2.4 Execute test of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#24-execute-test).     
 
 ## 2.5 Examine test results
-Please refer to [2.5 Examine test results of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#25-examine-test-results)
+Please refer to [2.5 Examine test results of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#25-examine-test-results).      
 
 # 3. Deploy Regression Test Environment
-## 3.1 Test Machine
+## 3.1 Test Machines
 For current daily regression test, controller node and test node are the same one.
 
 No.|role|user|ip|hostname
@@ -46,7 +46,7 @@ No.|role|user|ip|hostname
 * Install CTP     
 Please refer to [install CTP as Regression Test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)         
 
-    create cci compatibility configuration file '~/CTP/conf/shell_template.conf':     
+    Create CCI compatibility test configuration file `~/CTP/conf/shell_template.conf`:     
     For node1:
     ```
     default.cubrid.cubrid_port_id=8217
@@ -78,7 +78,7 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     feedback_db_user=dba
     feedback_db_pwd=
     ```
-   For node2,we just need to modify port
+   For node2, we just need to modify port
    ```
     default.cubrid.cubrid_port_id=8218
     default.broker1.BROKER_PORT=8418
@@ -87,7 +87,7 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     default.broker2.APPL_SERVER_SHM_ID=8518
     ...
    ```
-   For node3,we also just need to modify port
+   For node3, we also just need to modify port
     ```
     default.cubrid.cubrid_port_id=8219
     default.broker1.BROKER_PORT=8419
@@ -107,7 +107,7 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
    ```
 
 * Install CQT
-  * checkout CQT
+  * Check out CQT
     ```bash
     cd ~
     git clone https://github.com/CUBRID/cubrid-testtools-internal.git
@@ -115,7 +115,7 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     git checkout develop
     cp -rf QATool/CQT ~/
     ```
-  * setup CQT
+  * Setup CQT
     ```bash
     $ cd ~
     $ cd CQT
@@ -318,7 +318,7 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     ```
     >Note: now we use different users on the same one machine to test, so we need to set different port for CUBRID to avoid conflict.
   
-  * modify shell_config.xml        
+  * Modify shell_config.xml        
     for node1
     ```bash
     $ cat ./CQT/configuration/Function_Db/shell_config.xml
@@ -363,7 +363,7 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     rm -f nohup.out
     nohup start_consumer.sh -q QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64,QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 -exec run_compat_cci,run_compat_cci -s china &
     ```
-* Checkout test cases        
+* Check out test cases        
 We need to prepare test case of both high version and low version.      
   * For high version's server(>=10.0)    
     ```bash
@@ -711,7 +711,7 @@ Open [page](http://qahome.cubrid.org/qaresult/showFailResult.nhn?m=showFailVerif
 # 5. CCI Compatibility Test Case 
 ## Test Case Version
 CCI compatibility test cases are the same with CCI test cases. But we need to decide the version of test case. it based on current server. For example:
-* low version's server
+* Compat with low version server       
 If we test 10.2's driver with 8.4.1's server, we need use [8.4.1's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.1/interface/CCI/shell/_20_cci)    
 If we test 10.2's driver with 8.4.3's server, we need use [8.4.3's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.3/interface/CCI/shell/_20_cci)   
 If we test 10.2's driver with 8.4.4's server, we need use [8.4.4's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.4/interface/CCI/shell/_20_cci)   
@@ -720,11 +720,11 @@ If we test 10.2's driver with 9.3's server, we need use [9.3's test cases](https
 If we test 10.2's driver with 10.0's server, we need use [10.0's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/release/10.0/interface/CCI/shell)   
 If we test 10.2's driver with 10.1's server, we need use [10.1's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/release/10.1/interface/CCI/shell)     
 
-* low version's driver
+* Compat with low version driver          
 If we test 10.2's server with 8.4.1/8.4.3/8.4.4/9.2/9.3/10.0/10.1's driver, we need use [10.2's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/CCI/shell)     
 
 ## Test Case Specification
-test cases specification, please refer to [cci test cases](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#6-cci-test-case)
+Regarding as test case specification, please refer to [CCI test cases](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#6-cci-test-case)
 
 
 
