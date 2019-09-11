@@ -257,7 +257,7 @@ File `jdbc.properties` configures JDBC connection parameters.
 
 * ### Install CTP as regression test
 
-    Please follow [the guide to install CTP](doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) to `$HOME/CTP`:
+    Please follow [the guide to install CTP](ctp_install_guide.md#3-install-ctp-as-regression-test-platform) to `$HOME/CTP`:
     
 
 * ### Configure jdbc test

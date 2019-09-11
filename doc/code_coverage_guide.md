@@ -98,7 +98,7 @@ CUBRID source <br>
 ## 3.2 Installation
 
 * ### Install CTP
-  Please follow this [guide to install CTP as regression test configuration](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform).
+  Please follow this [guide to install CTP as regression test configuration](ctp_install_guide.md#3-install-ctp-as-regression-test-platform).
 
   Then, create configuration file used by code coverage controller.
 

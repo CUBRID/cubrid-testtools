@@ -162,8 +162,7 @@ So, for a test case execution, if test output has no `'fail'` keyword, and has `
 
 * ### Install CTP as regression test
 
-    Please follow guide below to install CTP to `$HOME/CTP`:
-    https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#2-install-ctp-as-regression-test-in-linux-platform
+    Please follow [the guide to install CTP](ctp_install_guide.md#2-install-ctp-as-regression-test-in-linux-platform) to `$HOME/CTP`:
 
 * ### Configure unittest test
 
