@@ -1012,4 +1012,21 @@ To verify SHELL_EXT test results is similar to general SHELL test except the cat
 		# Except current CUBRID, define another two CUBRIDs.
 		cubrid_deps: 10.1.1.7666-4324548,9.3.0.0206
 
-	
+* ## Backup/restore/synchronize files
+
+		# backup and restore one file on local
+		backup_file  <filename>
+		restore_file <filename>
+		
+		# backup and restore CUBRID configuration files on local
+		backup_cubrid_config
+		restore_cubrid_config
+
+		# execute backup/restore on remote
+		backup_cubrid_config_on_remote
+		restore_cubrid_config_on_remote
+		
+		# synchronize CUBRID configuration files to remote node(s).
+		sync_cubrid_config_to_remote D_HOST1(,D_HOST2,...)
+		
+		
