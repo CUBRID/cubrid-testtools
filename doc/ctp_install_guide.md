@@ -126,6 +126,8 @@
       # Update CTP itself from local repository
       grepo_service_url=rmi://192.168.1.91:11099
       coverage_controller_pwd=<ssh password for code coverage controller>
+      
+      cubrid_build_list_url=http://192.168.1.91:8080/REPO_ROOT/list.jsp
 
       # Define JDBC parameters to QA home database server
       qahome_db_driver=cubrid.jdbc.driver.CUBRIDDriver
