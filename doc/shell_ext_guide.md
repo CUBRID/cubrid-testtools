@@ -1029,4 +1029,25 @@ To verify SHELL_EXT test results is similar to general SHELL test except the cat
 		# synchronize CUBRID configuration files to remote node(s).
 		sync_cubrid_config_to_remote D_HOST1(,D_HOST2,...)
 		
+* ## HA functions
+
+		# create HA instance with 1:n:0 (master:slave:replica)
+		cubrid_ha_create -s D_HOST1,D_HOST2,...
 		
+		# create HA instance with 1:m:n
+		cubrid_ha_create -s D_HOST1,D_HOST2,... -r D_HOST1,D_HOST2,...
+		
+		# start HA server
+		cubrid_ha_start
+		
+		# stop HA server
+		cubrid_ha_stop
+		
+		# stop CUBRID service on all HA nodes
+		cubrid_service_stop	
+		
+		# destroy HA instance
+		cubrid_ha_destroy
+		
+		# wait till data replication is done
+		wait_replication_done
