@@ -1072,14 +1072,25 @@ To verify SHELL_EXT test results is similar to general SHELL test except the cat
 	
 * ## check_with_loop
 
+	Usage:
+
 		check_with_loop <number of loops> <commands> <expected text> <check timeout>
 		
-	Example usage:
+	Example:
 		
 		# Execute "cubrid broker status -f" till output contains `IDLE` keyword. Maximum number of execution is 120. If still can't return expected text, give nok result.
 		check_with_loop 120 "cubrid broker status -f" "IDLE" true
 	
+* ## compare_perf_time
+
+	Usage:
+		compare_perf_time <base_time> <check_time> <tolerance> <nok_desc>
 	
+	Example:
 	
-	
-	
+		#
+		base_time=100.0
+		check_time=95.5
+		tolerance=0.1
+		compare_perf_time $base_time $check_time $tolerance "Performance of INSERT operation dropped"
+
