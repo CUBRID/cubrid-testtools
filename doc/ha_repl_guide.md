@@ -405,8 +405,8 @@ total 1448
     2 rows selected.Committed.
     ```
    >Note: 
-    example1.master.dump - the result of master node
-    example1.slave1.dump - the result of slave node
+    example1.master.dump - the result of master node     
+    example1.slave1.dump - the result of slave node         
 
  * The file end with `.test` is test case which has been updated by CTP based on `.sql` file
     ```bash
@@ -643,8 +643,8 @@ Please refer to [this guide](https://github.com/CUBRID/cubrid-testtools/blob/dev
     feedback_notice_qahome_url = http://192.168.1.86:6060/qaresult/hareplImportAction.nhn?main_id=<MAINID>
     ha_sync_detect_timeout_in_secs=1200
     ```
-2. Create listener script
-A consumer is used to listening to a test message. It requires a queue name and a script name to run.
+2. Create listener script       
+A consumer is used to listening to test messages. It requires a queue name and a script name to run.
 Create a script file `~/start_test.sh` as below. 
     ```bash
     $ cat start_test.sh 
@@ -779,7 +779,7 @@ To execute code coverage test of ha_repl, you also need to send a testing messag
 	* the first url is a build for testing code coverage.
 	* the second url is the source code of the build.
 	
-    For example, to execute the isolation code coverage test on 10.2.0.8362-fbf9d84 build, you need to send a test message like below. 
+    For example, to execute the ha_repl code coverage test on 10.2.0.8362-fbf9d84 build, you need to send a test message like below. 
     ```bash
     $ cd ~/manual/
     $ sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_010.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz ha_repl
@@ -821,7 +821,7 @@ To execute code coverage test of ha_repl, you also need to send a testing messag
 
     Do you accept above message [Y/N]:
     ```
-    For code coverage test, it doesn't show the result in the QA homepage `Function`.  You can log in to the controller node to see the execution log and the detailed logs in the `$CTP_HOME/result/ha_repl/current_runtime_logs`. After the test finished, you can find the result in the `code coverage` node. See [5.2 verify code coverage testing result](#52-verify-code-coverage-testing-result) for detail.   
+    For code coverage test, it doesn't show the result in the QA homepage `Function` page.  You can log in to the controller node to see the execution log and the detailed logs in the `$CTP_HOME/result/ha_repl/current_runtime_logs`. After the test finished, you can find the result in the `code coverage` page. See [5.2 verify code coverage testing result](#52-verify-code-coverage-testing-result) for detail.   
 # 5. Verification    
 ## 5.1 Verify ha_repl/ha_repl_debug test results   
 Go to QA homepage and click the CI build, wait for the `Function` page loading, then check if there are `ha_repl` and `ha_repl_debug` results.  
@@ -843,7 +843,7 @@ Click the test case, it shows the details.
 ![ha_repl_verify3](./ha_repl_image/ha_repl_verify3.PNG)    
 
 **Ha_repl yet do not support comparison between master result and slave result. we need to enhance tool in future.**    
-you can check log to find fail reason:   
+You can check log to find fail reason:   
 ```
 $ cd CTP/result/ha_repl/
 $ tar zxvf ha_repl_result_10.2.0.8433-50fb781_64bits_3783_2019.9.6_5.13.28.tar.gz
@@ -1089,8 +1089,8 @@ CTP will add such statements `--test`, `--check`, `@HC_CHECK_FOR_EACH_STATEMENT`
     select 't' TABLE_NAME, count(*) from t;select 't' TABLE_NAME, t.* from t order by 1,2,3 limit 1000;select 't' TABLE_NAME, t.* from t order by
     1 desc,2 desc,3 desc limit 1000;
     ``` 
-    >Note: table t is changeable, it based on the tables of DML operation(insert/update/delete)
-    > After it modifed table data by DML,  check total record  count of tables, select 1000 rows of tables. 
+    >Note: table t is changeable, it based on the tables of DML operation(insert/update/delete)     
+    > After it modifed table data by DML,  check total record  count of tables, select 1000 rows of tables.     
 
     Actual sql results:
     ```bash
@@ -1136,8 +1136,8 @@ CTP will add such statements `--test`, `--check`, `@HC_CHECK_FOR_EACH_STATEMENT`
 
     ``` 
     >Note: `[OK]` indicates that the check between master and slave are pass.
-* Select or other similiar sql statements are ignored by CTP, they are not executed.
-  Below select statements have been removed from example1.test.  
+* Select or other similiar sql statements are ignored by CTP, they are not executed.      
+  Below select statements have been removed from example1.test.           
   ```
   select /*+ recompile*/ * from t where i=2;
   ```
@@ -1185,22 +1185,22 @@ sql/_13_issues/_15_1h/cases/bug_bts_15454.test
     ``` 
 #### Current existed diff_1 files
  In current ha_repl test cases, we can find much diff_1 files
-    ```bash
-    $ cd cubrid-testcases/
-    $ find ./ -name "*.diff_1"
-    ./sql/_01_object/_02_class/_003_auto_increment/cases/cubridsus-965.master.slave1.diff_1
-    ./sql/_01_object/_03_virtual_class/_003_auto_increment/cases/1014.master.slave1.diff_1
-    ./sql/_01_object/_04_trigger/_001_basic/cases/1010.master.slave1.diff_1
-    ./sql/_01_object/_07_alteration/_001_class_add/cases/1003.master.slave1.diff_1
-    ./sql/_01_object/_07_alteration/_001_class_add/cases/1005.master.slave1.diff_1
-    ./sql/_01_object/_07_alteration/_001_class_add/cases/1007.master.slave1.diff_1
-    ./sql/_01_object/_07_alteration/_003_class_change/cases/1008.master.slave1.diff_1
-    ./sql/_01_object/_08_primary_foreign_key/_005_authorization/cases/1005.master.slave1.diff_1
-    ./sql/_01_object/_10_system_table/_001_db_class/cases/1002.master.slave1.diff_1
-    ./sql/_01_object/_10_system_table/_004_db_attribute/cases/1003.master.slave1.diff_1
-    ./sql/_01_object/_10_system_table/_004_db_attribute/cases/1005.master.slave1.diff_1
-    ...
-    ``` 
+```bash
+$ cd cubrid-testcases/
+$ find ./ -name "*.diff_1"
+./sql/_01_object/_02_class/_003_auto_increment/cases/cubridsus-965.master.slave1.diff_1
+./sql/_01_object/_03_virtual_class/_003_auto_increment/cases/1014.master.slave1.diff_1
+./sql/_01_object/_04_trigger/_001_basic/cases/1010.master.slave1.diff_1
+./sql/_01_object/_07_alteration/_001_class_add/cases/1003.master.slave1.diff_1
+./sql/_01_object/_07_alteration/_001_class_add/cases/1005.master.slave1.diff_1
+./sql/_01_object/_07_alteration/_001_class_add/cases/1007.master.slave1.diff_1
+./sql/_01_object/_07_alteration/_003_class_change/cases/1008.master.slave1.diff_1
+./sql/_01_object/_08_primary_foreign_key/_005_authorization/cases/1005.master.slave1.diff_1
+./sql/_01_object/_10_system_table/_001_db_class/cases/1002.master.slave1.diff_1
+./sql/_01_object/_10_system_table/_004_db_attribute/cases/1003.master.slave1.diff_1
+./sql/_01_object/_10_system_table/_004_db_attribute/cases/1005.master.slave1.diff_1
+...
+``` 
  #### Result comparison mechanism
  Please see the logic below:     
  `$masterFile` - xxx.master.dump    
