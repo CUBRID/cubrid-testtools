@@ -1094,7 +1094,6 @@ To verify SHELL_EXT test results is similar to general SHELL test except the cat
 	
 	Example:
 	
-		#
 		base_time=100.0
 		check_time=95.5
 		tolerance=0.1
