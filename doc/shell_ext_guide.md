@@ -50,7 +50,7 @@ Like SHELL test, SHELL_EXT test is executed by CTP test tool. But you have to no
 
   We need install CTP among all users on all servers.
 
-  Please follow the guide to [install CTP](doc/ctp_install_guide.md).
+  Please follow the guide to [install CTP](ctp_install_guide.md).
   
   But you need pay attention to one point that you should check out CTP from branch `develop_automation` instead of provided `'develop'` version.
   
@@ -195,7 +195,7 @@ Like SHELL test, SHELL_EXT test is executed by CTP test tool. But you have to no
       
 * ### Examine test results
 
-  It's same as the way of general SHELL test. Please refer to [shell guide](doc/shell_guide.md).
+  It's same as the way of general SHELL test. Please refer to [shell guide](shell_guide.md).
 
 ## 2.2 Selector usage
 
@@ -316,7 +316,7 @@ worker |shell_ext1, shell_ext2, shell_ext3 | 192.168.1.128 | func53 | CTP, cubri
 
 * ### Install CTP as regression test
 
-  Please follow [the guide to install CTP](doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) into directory `$HOME/CTP`. You should fully install it in all controller node and each worker node.
+  Please follow [the guide to install CTP](ctp_install_guide.md#3-install-ctp-as-regression-test-platform) into directory `$HOME/CTP`. You should fully install it in all controller node and each worker node.
   
   Please note that you should use the CTP in `'develop_automation'` branch instead of `'develop'` branch.
   
