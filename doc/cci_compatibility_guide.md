@@ -105,254 +105,6 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     default.broker2.APPL_SERVER_SHM_ID=8520
     ...
    ```
-
-* Install CQT
-  * Check out CQT
-    ```bash
-    cd ~
-    git clone https://github.com/CUBRID/cubrid-testtools-internal.git
-    cd cubrid-testtools-internal/
-    git checkout develop
-    cp -rf QATool/CQT ~/
-    ```
-  * Setup CQT
-    ```bash
-    $ cd ~
-    $ cd CQT
-    $ sh setup.sh 
-    ```
-    for node1:
-    ```
-    $ sh setup.sh 
-    This Software is CUBRID QA Tool(CQT).
-    Please choose the method to download the scenario, A or M(Automatic or Manual)[Default: M]: 
-    You need to download the scenario from http://svn.bds.nhncorp.com/xdbms/cubridqa/branches/
-    And the dailyqa directory should be made in the same level with the CQT directory!
-    The expected  directory structure like below:
-
-        CQT_HOME
-            |---CQT
-            |    |---configuration
-            |    |---function
-            |    |---lib
-            |    `---...
-            |---dailyqa
-                |---RB-8.2.2
-                |---RB-8.3.1
-                |---RB-8.4.0
-                |---........
-                |---RB-9.0.0
-                |---trunk
-                    |---scenario
-                    |   |---sql
-                    |   |--medium
-                    |   |--site
-                    |   `--shell
-                    `---files
-                        |---unload
-                            |---mdb.tar.gz
-                            |---kcc.tar.gz
-                            |---neise05.tar.gz
-                            `---neise08.tar.gz
-            
-    Do you want to copy the execution results to remote host? (yes or no)[Default: no]:
-    Do you want to modify the CUBRID default ports in testing?(yes or no)[Default: no]:yes
-    Please input the CUBRID Manager port[Default 8001,Recommended 8003] :8003
-    Please input the CUBRID port[Default 1523,Recommended 1533] :8213
-    Please input the MASTER_SHM_ID[Default 30001,Recommended 30003] :8313
-    Please input the CUBRID query_broker port[Default 30000,Recommended 30030] :8413
-    Please input the CUBRID broker1 port[Default 33000,Recommended 33030] :8513
-    Please input the HA port[Default 11539,Recommended 45633] :59901
-
-    The CUBRID QA Command Tool has been successfully installed.
-    If you want to use this command tool, run the following command:
-
-    sh /home/ccompat1/CQT/qatool_bin/console/scripts/cqt.sh
-    ```
-
-    for node2:
-    ```bash
-    $ sh setup.sh 
-    This Software is CUBRID QA Tool(CQT).
-    Please choose the method to download the scenario, A or M(Automatic or Manual)[Default: M]: 
-    You need to download the scenario from http://svn.bds.nhncorp.com/xdbms/cubridqa/branches/
-    And the dailyqa directory should be made in the same level with the CQT directory!
-    The expected  directory structure like below:
-
-        CQT_HOME
-            |---CQT
-            |    |---configuration
-            |    |---function
-            |    |---lib
-            |    `---...
-            |---dailyqa
-                |---RB-8.2.2
-                |---RB-8.3.1
-                |---RB-8.4.0
-                |---........
-                |---RB-9.0.0
-                |---trunk
-                    |---scenario
-                    |   |---sql
-                    |   |--medium
-                    |   |--site
-                    |   `--shell
-                    `---files
-                        |---unload
-                            |---mdb.tar.gz
-                            |---kcc.tar.gz
-                            |---neise05.tar.gz
-                            `---neise08.tar.gz
-            
-    Do you want to copy the execution results to remote host? (yes or no)[Default: no]:
-    Do you want to modify the CUBRID default ports in testing?(yes or no)[Default: no]:yes
-    Please input the CUBRID Manager port[Default 8001,Recommended 8003] :8004
-    Please input the CUBRID port[Default 1523,Recommended 1533] :8214
-    Please input the MASTER_SHM_ID[Default 30001,Recommended 30003] :8314
-    Please input the CUBRID query_broker port[Default 30000,Recommended 30030] :8414
-    Please input the CUBRID broker1 port[Default 33000,Recommended 33030] :8514
-    Please input the HA port[Default 11539,Recommended 45633] :59902
-
-    The CUBRID QA Command Tool has been successfully installed.
-    If you want to use this command tool, run the following command:
-
-    sh /home/ccompat2/CQT/qatool_bin/console/scripts/cqt.sh
-    ```
-
-    for node3:
-    ```bash
-    $ sh setup.sh 
-    This Software is CUBRID QA Tool(CQT).
-    Please choose the method to download the scenario, A or M(Automatic or Manual)[Default: M]: 
-    You need to download the scenario from http://svn.bds.nhncorp.com/xdbms/cubridqa/branches/
-    And the dailyqa directory should be made in the same level with the CQT directory!
-    The expected  directory structure like below:
-
-        CQT_HOME
-            |---CQT
-            |    |---configuration
-            |    |---function
-            |    |---lib
-            |    `---...
-            |---dailyqa
-                |---RB-8.2.2
-                |---RB-8.3.1
-                |---RB-8.4.0
-                |---........
-                |---RB-9.0.0
-                |---trunk
-                    |---scenario
-                    |   |---sql
-                    |   |--medium
-                    |   |--site
-                    |   `--shell
-                    `---files
-                        |---unload
-                            |---mdb.tar.gz
-                            |---kcc.tar.gz
-                            |---neise05.tar.gz
-                            `---neise08.tar.gz
-            
-    Do you want to copy the execution results to remote host? (yes or no)[Default: no]:
-    Do you want to modify the CUBRID default ports in testing?(yes or no)[Default: no]:yes
-    Please input the CUBRID Manager port[Default 8001,Recommended 8003] :8005
-    Please input the CUBRID port[Default 1523,Recommended 1533] :8215
-    Please input the MASTER_SHM_ID[Default 30001,Recommended 30003] :8315
-    Please input the CUBRID query_broker port[Default 30000,Recommended 30030] :8415
-    Please input the CUBRID broker1 port[Default 33000,Recommended 33030] :8515
-    Please input the HA port[Default 11539,Recommended 45633] :59903
-
-    The CUBRID QA Command Tool has been successfully installed.
-    If you want to use this command tool, run the following command:
-
-    sh /home/ccompat3/CQT/qatool_bin/console/scripts/cqt.sh
-    ```
-
-    for node4:
-    ```bash
-    $ sh setup.sh 
-    This Software is CUBRID QA Tool(CQT).
-    Please choose the method to download the scenario, A or M(Automatic or Manual)[Default: M]: 
-    You need to download the scenario from http://svn.bds.nhncorp.com/xdbms/cubridqa/branches/
-    And the dailyqa directory should be made in the same level with the CQT directory!
-    The expected  directory structure like below:
-
-        CQT_HOME
-            |---CQT
-            |    |---configuration
-            |    |---function
-            |    |---lib
-            |    `---...
-            |---dailyqa
-                |---RB-8.2.2
-                |---RB-8.3.1
-                |---RB-8.4.0
-                |---........
-                |---RB-9.0.0
-                |---trunk
-                    |---scenario
-                    |   |---sql
-                    |   |--medium
-                    |   |--site
-                    |   `--shell
-                    `---files
-                        |---unload
-                            |---mdb.tar.gz
-                            |---kcc.tar.gz
-                            |---neise05.tar.gz
-                            `---neise08.tar.gz
-            
-    Do you want to copy the execution results to remote host? (yes or no)[Default: no]:
-    Do you want to modify the CUBRID default ports in testing?(yes or no)[Default: no]:yes
-    Please input the CUBRID Manager port[Default 8001,Recommended 8003] :8006
-    Please input the CUBRID port[Default 1523,Recommended 1533] :8216
-    Please input the MASTER_SHM_ID[Default 30001,Recommended 30003] :8316
-    Please input the CUBRID query_broker port[Default 30000,Recommended 30030] :8416
-    Please input the CUBRID broker1 port[Default 33000,Recommended 33030] :8516
-    Please input the HA port[Default 11539,Recommended 45633] :59904
-
-    The CUBRID QA Command Tool has been successfully installed.
-    If you want to use this command tool, run the following command:
-
-    sh /home/ccompat4/CQT/qatool_bin/console/scripts/cqt.sh
-    ```
-    >Note: now we use different users on the same one machine to test, so we need to set different port for CUBRID to avoid conflict.
-  
-  * Modify shell_config.xml        
-    for node1
-    ```bash
-    $ cat ./CQT/configuration/Function_Db/shell_config.xml
-    <ShellConfig>
-    <ip>localhost</ip>
-    <port>8513</port>
-    </ShellConfig>
-    ```
-    for node2
-    ```bash
-    $ cat ./CQT/configuration/Function_Db/shell_config.xml
-    <ShellConfig>
-    <ip>localhost</ip>
-    <port>8514</port>
-    </ShellConfig>
-    ```
-
-    for node3
-    ```bash
-    $ cat ./CQT/configuration/Function_Db/shell_config.xml
-    <ShellConfig>
-    <ip>localhost</ip>
-    <port>8515</port>
-    </ShellConfig>
-    ```
-    for node3
-    ```bash
-    $ cat ./CQT/configuration/Function_Db/shell_config.xml
-    <ShellConfig>
-    <ip>localhost</ip>
-    <port>8516</port>
-    </ShellConfig>
-    ```
- 
 * Touch start_test.sh       
     ```bash
     #!/bin/sh
@@ -363,51 +115,25 @@ Please refer to [install CTP as Regression Test platform](https://github.com/CUB
     rm -f nohup.out
     nohup start_consumer.sh -q QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64,QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 -exec run_compat_cci,run_compat_cci -s china &
     ```
-* Check out test cases        
-We need to prepare test case of both high version and low version.      
-  * For high version's server(>=10.0)    
+* Check out test cases         
     ```bash
     cd ~
     git clone https://github.com/CUBRID/cubrid-testcases-private.git 
     ```
-  * For low version's server(<10.0)     
-    ```bash
-    cd ~
-    mkdir dailyqa
-    cd dailyqa
-    svn co https://oss.navercorp.com/CUBRID/cubridqa/branches/RB-8.4.1
-    svn co https://oss.navercorp.com/CUBRID/cubridqa/branches/RB-8.4.3
-    svn co https://oss.navercorp.com/CUBRID/cubridqa/branches/RB-8.4.4
-    svn co https://oss.navercorp.com/CUBRID/cubridqa/branches/RB-9.2.0
-    svn co https://oss.navercorp.com/CUBRID/cubridqa/branches/RB-9.3.0
-    ```
+
 * Configure .bash_profile    
     ```
-    export QA_REPOSITORY=$HOME/CQT
-    export PROPERTIES_PATH=$QA_REPOSITORY/qatool_bin/qamanager
-    export init_path=$QA_REPOSITORY/lib/shell/common
-    export SHELL_CONFIG_PATH=$QA_REPOSITORY/lib/shell/common
-
-
     export DEFAULT_BRANCH_NAME=develop
     export CTP_HOME=$HOME/CTP
     export CTP_BRANCH_NAME=develop
     export CTP_SKIP_UPDATE=0
+    export init_path=$HOME/CTP/shell/init_path
 
     ulimit -c unlimited
     export LC_ALL=en_US
 
     . $HOME/.cubrid.sh
-    export CLASSPATH=.:$JAVA_HOME/lib/:$QA_REPOSITORY/qatool_bin/console/for_jdk6/cubridqa-console.jar:$CUBRID/jdbc/cubrid_jdbc.jar:$QA_REPOSITORY/lib/shell/common/commonforjdbc.jar
     export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$JAVA_HOME/bin:/usr/local/bin:/bin:/usr/bin:$PATH
-
-
-
-
-    #-------------------------------------------------------------------------------
-    # set CUBRID environment variables
-    #-------------------------------------------------------------------------------
-    . /home/ccompat3/.cubrid.sh
     ```
 
 * Install necessary shell commands     
