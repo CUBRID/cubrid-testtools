@@ -934,3 +934,55 @@ To verify SHELL_EXT test results is similar to general SHELL test except the cat
 
 
 # 5. SHELL_EXT Test Case Specification
+
+* ## Source $init_path/init_ext.sh
+	
+	SHELL_EXT test cases generally need source `$init_path/init_ext.sh` which imports many functions that they will be used in test codes.
+	
+		#!/bin/bash
+		. $init_path/init.sh
+
+		# source common functions used by SHELL_EXT
+		. $init_path/init_ext.sh
+
+		init test
+
+		# CASE BODY
+		...
+		...
+
+		if [ condition ]; then
+			write_ok
+		else
+			write_nok
+		fi
+
+		finish 
+
+* ## rexec
+
+		rexec D_HOST1  -c "cmd"
+		rexec D_HOST2  -c "cmd"
+		...
+		rexec D_HOST(n)  -c "cmd"
+	
+	Execute `cmd` on remote server D_HOST1, D_HOST2, ..., D_HOST(n).
+	
+	Before execution, please define host for each. These exports are only used for case execution by manual. The automatic regression test will set them automatically. For example,
+
+		export D_DEFAULT_PORT=22
+		export D_DEFAULT_PWD=<pwd>
+		
+		export D_HOST1_IP=192.168.1.123
+		export D_HOST1_USER=<user>
+		
+		export D_HOST2_IP=192.168.1.124
+		export D_HOST2_USER=<user>
+		
+		...
+		...
+		
+		export D_HOST(n)_IP=192.168.1.199
+		export D_HOST(n)_USER=<user>
+		
+* ## 
