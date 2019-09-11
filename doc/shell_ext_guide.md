@@ -938,6 +938,7 @@ To verify SHELL_EXT test results is similar to general SHELL test except the cat
 * ## Typical test case for studying
 
 	Examples for test cases:
+	
 	https://github.com/CUBRID/cubrid-testcases-private/blob/develop/shell_ext/general/bug_bts_10482/cases/bug_bts_10482.sh
 
 * ## Source $init_path/init_ext.sh
