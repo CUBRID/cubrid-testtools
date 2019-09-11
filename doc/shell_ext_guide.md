@@ -1051,3 +1051,25 @@ To verify SHELL_EXT test results is similar to general SHELL test except the cat
 		
 		# wait till data replication is done
 		wait_replication_done
+
+* ## get_matched_cubrid_pkg_deps
+
+	If `test.conf` defines dependent package like below
+	
+		cubrid_pkg_deps: CUBRID-{BUILD_ID}-Linux.x86_64.rpm
+	
+	and suppose that current CUBRID version is `10.1.3.7765-265e708`. 
+	
+		pkg=`get_matched_cubrid_pkg_deps`
+
+	The `pkg` will be `'CUBRID-10.1.3.7765-265e708-Linux.x86_64.rpm'`. It helps find related package convinently.
+	
+* ## replace_oid_with_class_name
+
+		replace_oid_with_class_name test.out dbname
+	
+	It's usually used in systemtap. It replace undulate figures in test.log in order to exclude to check.
+	
+		
+	
+	
