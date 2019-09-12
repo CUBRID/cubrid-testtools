@@ -536,47 +536,33 @@ $ tail -f nohup.out
         log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
         ```
 ### Check running status 
-There are two ways. One is to check nohup.out log on the controller node. The other way is to check cci compatibility items on qahome monitor page.      
-Please refer to [Check running status of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#check-running-status)    
+There are two ways. One is to check nohup.out log on the controller node. The other way is to check cci compatibility items on qahome monitor page. Please refer to [Check running status of cci guide](cci_guide.md#check-running-status)
 
 ### Verify test result
-#### Check whether there are results 
-There are two tables, one is for driver and the other is for server. All these items of cci_shell should have results.     
-click [qahome](http://qahome.cubrid.org/qaresult)->click `build number`->find `Compatibility Result`.     
-![cci compat results](./cci_compatibility_image/result.PNG)
-Above test has failure, two test case executed failed(10.0 Server and 9.2 Driver column), we need to investigate them.    
+* #### Check whether there are results
 
-#### Check failure list
-Click the number of fail marked with red color,you can enter into the failure list        
-Please refer to [Check failure list, verify failed cases of cci guide](
-https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#check-failure-list-verify-failed-cases)
+    Open [QA homepage](http://qahome.cubrid.org), then navigate as below to find CCI compatibility test results. 
 
-#### Check failure detail
-Open [page](http://qahome.cubrid.org/qaresult/showFailResult.nhn?m=showFailVerifyItem&statid=22849&srctb=shell_main&failType=shell), we need to analyze the reason of case execution fail.
+    ![CCI Compatibility Test Result](./cci_compatibility_image/image_main.png)
 
- ![fail reason](./cci_compatibility_image/fail_details.PNG)
- 
- Above told us that, when program can not connect to server ,sometime it will appears -191 error, it is not a bug. So we need modify test cases.    
-
- Refer to [Check failure detail of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#check-failure-detail)
+    If some test shows `'NO RESULT'`, we need investigate reasons and resolve it.
+    
+* #### Both Test Rate and Verified Rate should be 100%
+   
+   In above picture, the figures with red color mean number of failures. Click it to open verification page. Then follow the same way as CCI test's to verify all failures. Both Test Rate and Verified Rate should be 100%.
     
 # 5. CCI Compatibility Test Case 
-## Test Case Version
-CCI compatibility test cases are the same with CCI test cases. But we need to decide the version of test case. it based on current server. For example:
-* Compat with low version server       
-If we test 10.2's driver with 8.4.1's server, we need use [8.4.1's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.1/interface/CCI/shell/_20_cci)    
-If we test 10.2's driver with 8.4.3's server, we need use [8.4.3's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.3/interface/CCI/shell/_20_cci)   
-If we test 10.2's driver with 8.4.4's server, we need use [8.4.4's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-8.4.4/interface/CCI/shell/_20_cci)   
-If we test 10.2's driver with 9.2's server, we need use [9.2's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-9.2.0/interface/CCI/shell/_20_cci)   
-If we test 10.2's driver with 9.3's server, we need use [9.3's test cases](https://oss.navercorp.com/CUBRID/cubridqa/tree/RB-9.3.0/interface/CCI/shell/_20_cci)    
-If we test 10.2's driver with 10.0's server, we need use [10.0's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/release/10.0/interface/CCI/shell)   
-If we test 10.2's driver with 10.1's server, we need use [10.1's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/release/10.1/interface/CCI/shell)     
+## Choose matched test cases
 
-* Compat with low version driver          
-If we test 10.2's server with 8.4.1/8.4.3/8.4.4/9.2/9.3/10.0/10.1's driver, we need use [10.2's test cases](https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/CCI/shell)     
+CCI compatibility test seperates different CUBRID on Server and Driver. When perform a combination to test, we need choose matched test cases. That is to say, which branch does test cases come. This answer is just that test case branch should follow the CUBRID as Server role. Let's example it.
+
+CCI Driver | CUBRID Server | Expected Test Case Branch|
+-|-|-
+10.2 CCI Driver| 10.1 Server | [10.1 Test Cases](https://github.com/CUBRID/cubrid-testcases-private/tree/release/10.1/interface/CCI/shell)
+10.2 CCI Driver| 10.0 Server | [10.0 Test Cases](https://github.com/CUBRID/cubrid-testcases-private/tree/release/10.0/interface/CCI/shell)
+8.4.4 CCI Driver| 10.2 Server | [10.2 Test Cases](https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/CCI/shell)
+9.3 CCI Driver| 10.2 Server | [10.2 Test Cases](https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/CCI/shell)
+
 
 ## Test Case Specification
-Regarding as test case specification, please refer to [CCI test cases](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#6-cci-test-case)
-
-
-
+Please follow [CCI test case specification](cci_guide.md#6-cci-test-case). They are same.
