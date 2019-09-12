@@ -523,7 +523,7 @@ $ tail -f nohup.out
     testcase_timeout_in_secs=7200
     user.name=cci
     feedback_db_host=192.168.1.86
-    git_pwd=N6P0Sm5U7h
+    git_pwd=********
     testcase_update_yn=true
     user.language=en
     sun.rmi.transport.connectionTimeout=10000000
