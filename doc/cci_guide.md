@@ -208,7 +208,9 @@ $ ls current_runtime_logs/
 check_local.log  dispatch_tc_ALL.txt        feedback.log              monitor_local.log  test_local.log
 current_task_id  dispatch_tc_FIN_local.txt  main_snapshot.properties  runtime.log        test_status.data
 ``` 
-### Check test results   
+For more detail information, plesae refer to shell test guide.
+
+### Check detail result for each case  
 The results of each test case are generated to the same path with test cases.
 ```
 $ cd $HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch
@@ -222,12 +224,12 @@ total 24
 -rw-r--r-- 1 ccitest ccitest    0 Aug 13 18:32 listdrv
 -rw-r--r-- 1 ccitest ccitest 6343 Aug 13 18:11 test.c
 ``` 
-* The file which ended with .result record success or failure of the test cases.
+* The file which file name ended with `.result` record success or failure of the test case.
     ```bash
     $ cat cci_execute_batch_01.result
     cci_execute_batch_01-1 : OK
     ```
-* The file which ended with .output is  actual result of the test cases.
+* The file which file name ended with `.output` is actual result of the test case.
     ```bash
     $ cat cci_execute_batch_01.output
     cci_set_autocommit
@@ -258,7 +260,7 @@ total 24
 
     test.c(191) - batch_01 ERROR : Invalid connection handle) 
     ```
-* The file which ended with .answer is  expect result of the test cases.
+* The file which file name ended with `.answer` is expect result of the test case.
 * Success or failure of the test case is obtained by comparing the .output file with the .answer file
     ```bash
     $ diff cci_execute_batch_01.output cci_execute_batch_01.answer -y
@@ -296,7 +298,7 @@ total 24
    If the .output file is different from .answer file, the result turns out NOK.
 
 # 3. Deploy Regression Test Environment
-## 3.1 Test Machine
+## 3.1 Test Machines
 **Controller node**: It listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.  
 **Test node**: It executes test cases.
 For current daily regression test, controller node and test node are the same one.  
@@ -358,15 +360,15 @@ For current daily regression test, controller node and test node are the same on
     feedback_db_user=dba
     feedback_db_pwd=
     ``` 
-* Touch start_test.sh
+* Create quick startup script `start_test.sh`
     ```bash
     $ cat start_test.sh
     #!/bin/sh
+    cd $HOME
+    stop_consumer.sh 
     cd $HOME/CTP/common/script
     sh upgrade.sh
     cd $HOME
-    stop_consumer.sh 
-    rm -f nohup.out
     nohup ~/CTP/common/script/start_consumer.sh -q QUEUE_CUBRID_QA_CCI_LINUX -exec run_shell -s china &
     ```
 * Check out test cases
@@ -390,19 +392,17 @@ $ sh start_test.sh &
 $ tail -f nohup.out
 ```
 ### Send test message
-* To execute a cci test with release build
+* To execute a cci test with release build      
    Login message@192.168.1.91
     ```bash
-    cd ~/manual/
     sender.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh cci default
     ```
-* To execute a cci_debug test with debug build
+* To execute a cci_debug test with debug build     
     Login message@192.168.1.91
     ```bash
-    cd ~/manual/
     sender.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh cci_debug default
     ```
-* For example, run a cci test on 10.2.0.8369-5a75e41 build, you need to send a message like below.
+* For example, run a cci test on 10.2.0.8369-5a75e41 build, you need to send a message like below.   
     ```bash
     $ sender.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh cci default
 
@@ -699,42 +699,18 @@ $ tail -f nohup.out
 * Check queue on [qahome page](http://qahome.cubrid.org/qaresult)    
   Please find queue monitor by `QA homepage` -> `Left tree menu` -> `Monitor` -> `Check queue`. You may see cci item and find what test is running.   
 
-### Verify test result
-please see [Verify cci/cci_debug test result](#51-verify-ccicci_debug-test-result)
-
-## 4.2 Code Coverage Test
-### Send test message
-login message@192.168.1.91
-```bash
-cd ~/manual/
-sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz cci
-```
->Note: 
-`$ sh sender_code_coverage_testing_message.sh`    
-`Usage: sh  sender_code_coverage_testing_message queue url1 url2 category`    
-`Queue:$1`   
-`Build URL:$2`   
-`Source URL:$3`   
-`Category:$4 `  
-
-### Check running status
-Please see [Check running status](#check-running-status)
-### Check test result
-Please see [Verify code coverage test result](#52-verify-code-coverage-test-result)
-
-# 5. Verification
-## 5.1 Verify cci/cci_debug test result
-### Check test result
+### Verify cci/cci_debug test result
+* ### Check test results
 If cci/cci_debug are not tested completely, you need to send a message to test it again, you can check the value of `Test Rate` or check executed cases(success cases plus fail cases).   
 If there are failures, you need to verify them.   
-When there are crash, the fail will marked with red alert icon.   
+When there is crash, the fail will be marked with red alert icon.   
 
-open [qahome](http://qahome.cubrid.org/qaresult)->select `build number`->select `Functions` page ->find `cci/cci_debug` item
+Open [qahome](http://qahome.cubrid.org/qaresult)->select `build number`->select `Functions` page ->find `cci/cci_debug` item
 ![cci/cci_debug test results](./cci_image/test_results.png)
 Above cci_debug test has failure: one test case executed failed, and it has core, you need to investigate it.   
 
 
-below cci/cci_debug are tested completely(`Test Rate` is 100%, `Fail Rate` is 0%) and there are no failure(`Fail` is 0).  
+Below cci/cci_debug are tested completely(`Test Rate` is 100%, `Fail Rate` is 0%) and there are no failure(`Fail` is 0).  
 ![cci/cci_debug test results no failure](./cci_image/test_results_2.png)
 
  For cci/cci_debug in `Functions` page, we need to check all the column values. The most important check items are:
@@ -742,7 +718,7 @@ Whether the test is completed ('Test Rate' column)
 How many cases are failed('Fail' columns,include total and new columns)  
 The elapse time of the test ('Elapse Time' column). The elapse time of this test should not be longer than the previous build too much.
 
-### Check failure list, verify failed cases
+* ### Check failure list, verify failed cases
 Click the number of fail,you can enter into the failure list    
 1. All failed test cases in list are not be verified   
 ![failure list](./cci_image/failure_list.png)
@@ -751,7 +727,7 @@ Click the number of fail,you can enter into the failure list
 ![verified test cases](./cci_image/failure_list_verified.png)
 
 3. How to verify the failure     
-please find reason of this case executed failed, you can refer to [failure detail page](#check-failure-detail) or reproduce it again.    
+Please find reason of this case executed failed, you can refer to [failure detail page](#check-failure-detail) or reproduce it again.    
 click `verify`->select `revise required/test case/environment/bugs/unknown` type -> fill in `Reason content`, `New issues` or `Revise required issues`.    
 `New issues` : It is link to a jira issue which reported by this case   
 `Revise required issues`: It is link to a jira issue which lead to change in test case and answer   
@@ -761,8 +737,8 @@ Other failures  maybe caused by test case or environment(eg: execute time are di
 ![fill in reason](./cci_image/failure_reason.png)
 ![reported bug](./cci_image/failure_bug.png)
 
-### Check failure detail 
-each failed test case has own detail page,for example:   
+* ### Check failure detail 
+Each failed test case has own detail page, for example:   
 1. click [interface/CCI/shell/_20_cci/_14_ENUM/_02_bind/cases/_02_bind.sh](
 http://qahome.cubrid.org/qaresult/showfile.nhn?treeId=&level=&summaryName=&catPath=&name=&m=showCaseFile&statid=22260&itemid=2144516&tc=cci_debug&buildId=10.1.3.7751-d5aea626a&filePath=interface%2FCCI%2Fshell%2F_20_cci%2F_14_ENUM%2F_02_bind%2Fcases%2F_02_bind.sh&isNew=&isSuccessFul=false) in failure list
 
@@ -906,24 +882,36 @@ http://qahome.cubrid.org/qaresult/showfile.nhn?treeId=&level=&summaryName=&catPa
     ...
     ```   
     Above told us that result of this case is nok by comparing actual result `_02_bind.output` with expect result `_02_bind.answer`, command is `diff _02_bind.output _02_bind.answer`
- 
-  
-    
 
-## 5.2 Verify code coverage test result
+## 4.2 Code Coverage Test
+### Send test message
+login message@192.168.1.91
+```bash
+cd ~/manual/
+sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz cci
+```
+>Note: 
+`$ sh sender_code_coverage_testing_message.sh`    
+`Usage: sh  sender_code_coverage_testing_message queue url1 url2 category`    
+`Queue:$1`   
+`Build URL:$2`   
+`Source URL:$3`   
+`Category:$4 `  
+
+### Check running status
+Please see [Check running status](#check-running-status)
+### Verify code coverage test result
 1. Click `qahome`->`code coverage`->select `latest year,eg:2019` to get the summary
 ![code coverage summary](./cci_image/code_coverage_summary.png)
 2. Click `cubrid` to get the details for all kinds of test,eg: cci,shell
 ![code coverage details](./cci_image/code_coverage_defails.png)
 3. Click `cci` to get the cci code coverage
 ![cci code coverage](./cci_image/cci_code_coverage.png)
-
-We need check the value of `lines`, it is 33.9% on above graph, we need compare this result with before test
+We need check the value of `lines`, it is 33.9% on above graph, we need compare this result with before test.   
 Code coverage should not drop too much. For cci, it stays around 33%.  
 
-
-# 6. CCI Test Case
-## 6.1 Writing specification of test case
+# 5. CCI Test Case
+## 5.1 Writing specification of test case
 ## Test cases path
 1. new feature path    
 for example: cubrid-testcases-private/interface/CCI/shell/_20_cci/_28_features_841    
@@ -1188,12 +1176,12 @@ char sql[SQL_MAXNUM][56] = {"drop table if exists t1",
 * Closing the database connection handle (related function: cci_disconnect())     
 * Using database connection pool (related functions: cci_property_create(), cci_property_destroy(), cci_property_set(), cci_datasource_create(), cci_datasource_destroy(), cci_datasource_borrow(), cci_datasource_release(), cci_datasource_change_property())     
 
-## 6.2 CCI API reference
+## 5.2 CCI API reference
 Please refer to [CUBRID manual](https://www.cubrid.org/manual/en/10.1/api/cciapi.html)     
 for example:
 ![cci_execute](./cci_image/CCI_API.png)
 
-## 6.3 Execute cci case alone  
+## 5.3 Execute cci case alone  
 1. Actually we just execute shell scripts
 ```bash
 $ cd cubrid-testcases-private/interface/CCI/shell/_20_cci/_28_features_844/issue_12530/issue_12530_01/cases
