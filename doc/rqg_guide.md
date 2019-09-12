@@ -134,7 +134,7 @@ my $dbd_prefix_registry = {
 
 ## 2.4 Install random_query_generator
 `Random_query_generator` is an external tool. Test case can find it via `RQG_HOME` environmental variable.     
-We mainly use its gendata.pl and gentest.pl scripts   
+ We mainly use its gendata.pl and gentest.pl scripts   
 `gendata.pl`: generate tables and data   
 `gentest.pl`: execute random querys   
 ### Installation
@@ -221,6 +221,7 @@ vim ~/random_query_generator/lib/GenTest/Properties.pm to solve such porblem "Ca
      ```
      step2: use .zz to generate tables and data    
      ```bash
+     $ cd ~/random_query_generator/
      $ perl ./gendata.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037" --spec=/home/perl/random_query_generator/ok_conf/example.zz --rows=10
      # 17:18:31 Default schema: PUBLIC
      # 17:18:31 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
@@ -399,8 +400,10 @@ vim ~/random_query_generator/lib/GenTest/Properties.pm to solve such porblem "Ca
    * #### Run
      Let's run with example.yy   
      step1: refer to above, generate tables and data by ` perl ./gendata.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037" --spec=/home/perl/random_query_generator/ok_conf/example.zz --rows=10`     
+     
      step2: execute random querys    
      ```bash
+     $ cd ~/random_query_generator/
      $ perl ./gentest.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037"  --queries=10 --threads=10 --grammar=/home/perl/random_query_generator/ok_conf/example.yy   
      defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 168.
              (Maybe you should just omit the defined()?)
@@ -486,6 +489,7 @@ vim ~/random_query_generator/lib/GenTest/Properties.pm to solve such porblem "Ca
      # 17:36:15 Kill GenTest::ErrorFilter(6650)
      # 17:36:15 Test completed successfully.
      ```
+     
      step3: check running querys    
      **suppose we have 10 threads and execute 10,000 sql statements**    
      Client 1:   
@@ -1231,15 +1235,15 @@ Here is the config file that we use for current daily QA test:
 
 ### On Test nodes
  * Install CTP    
-  Please refer to [3.1 Install CTP](#31-install-ctp)   
+  Please refer to [2.1 Install CTP](#21-install-ctp)   
  * Install CUBRID          
-  please refer to [3.2 Install CUBRID](#32-install-cubrid)     
- * Install random_query_generator     
-  please refer to [3.2 Install random_query_generator](#33-install-random_query_generator)     
+  please refer to [2.2 Install CUBRID](#22-install-cubrid)    
  * Install self perl evn      
-  please refer to [3.4 Install perl](#34-install-perl)       
+  please refer to [2.3 Install perl](#23-install-perl)    
+ * Install random_query_generator     
+  please refer to [2.4 Install random_query_generator](#24-install-random_query_generator)         
  * Check out test cases     
-  please refer to [3.5 Checkout Test Case](#35-checkout-test-case)    
+  please refer to [2.5 Checkout Test Case](#25-checkout-test-case)    
  
 
 # 4. RQG Regresion Test
