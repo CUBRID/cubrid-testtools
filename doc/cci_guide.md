@@ -718,9 +718,7 @@ $ tail -f nohup.out
 
 ### Verify cci/cci_debug test result
 * ### Check test results
-If cci/cci_debug are not tested completely, you need to send a message to test it again, you can check the value of `Test Rate` or check executed cases(success cases plus fail cases).   
-If there are failures, you need to verify them.   
-When there is crash, the fail will be marked with red alert icon.   
+If cci/cci_debug are not tested completely, you need to send a message to test it again, you can check the value of `Test Rate` or check executed cases(success cases plus fail cases). If there are failures, you need to verify them. When there is crash, the fail will be marked with red alert icon.   
 
 Open [qahome](http://qahome.cubrid.org/qaresult)->select `build number`->select `Functions` page ->find `cci/cci_debug` item
 ![cci/cci_debug test results](./cci_image/test_results.png)
@@ -731,9 +729,12 @@ Below cci/cci_debug are tested completely(`Test Rate` is 100%, `Fail Rate` is 0%
 ![cci/cci_debug test results no failure](./cci_image/test_results_2.png)
 
  For cci/cci_debug in `Functions` page, we need to check all the column values. The most important check items are:
-Whether the test is completed ('Test Rate' column)  
-How many cases are failed('Fail' columns,include total and new columns)  
-The elapse time of the test ('Elapse Time' column). The elapse time of this test should not be longer than the previous build too much.
+ 
+a. Whether the test is completed ('Test Rate' column). 
+
+b. How many cases are failed('Fail' columns,include total and new columns). 
+
+c. The elapse time of the test ('Elapse Time' column). The elapse time of this test should not be longer than the previous build too much.
 
 * ### Check failure list, verify failed cases
 Click the number of fail,you can enter into the failure list    
@@ -745,9 +746,10 @@ Click the number of fail,you can enter into the failure list
 
 3. How to verify the failure     
 Please find reason of this case executed failed, you can refer to [failure detail page](#check-failure-detail) or reproduce it again.    
-click `verify`->select `revise required/test case/environment/bugs/unknown` type -> fill in `Reason content`, `New issues` or `Revise required issues`.    
+Click `[verify]` link to open verification page. In verification page, you may choose one kind of reasons among `revise required / test case / environment / bugs / unknown`. And give detail information in fields `Reason content`, `New issues` or `Revise required issues`.    
 `New issues` : It is link to a jira issue which reported by this case   
 `Revise required issues`: It is link to a jira issue which lead to change in test case and answer   
+
 When we judge the type of reason for failure is bug, we must fill in CUBRID jira issues.   
 When we judge the type of reason for failure is revise required, we need to fill in related jira issues.   
 Other failures  maybe caused by test case or environment(eg: execute time are different on machines, test case is unstable which need be enhanced)    
@@ -924,8 +926,7 @@ Please see [Check running status](#check-running-status)
 ![code coverage details](./cci_image/code_coverage_defails.png)
 3. Click `cci` to get the cci code coverage
 ![cci code coverage](./cci_image/cci_code_coverage.png)
-We need check the value of `lines`, it is 33.9% on above graph, we need compare this result with before test.   
-Code coverage should not drop too much. For cci, it stays around 33%.  
+We need check the value of `lines`, it is 33.9% on above graph, we need compare this result with last test. Code coverage should not drop too much. For cci, it stays around 33%.  
 
 # 5. CCI Test Case
 ## 5.1 Writing specification of test case
