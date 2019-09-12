@@ -2,126 +2,138 @@
 The CCI compatibility test is aimed to test CUBRID compatibility with different version's CCI driver and server. Actually the test cases is the same with CCI test.
 
 # 2. Execute CCI Compatibility Test
+
 To perform the test, we need to install CTP first.   
+
 ## 2.1 Install CTP
-Please refer to [2.1 Install CTP of cci guide](cci_guide.md#21-install-ctp).    
+Please refer to [CTP installation in CCI guide](cci_guide.md#21-install-ctp).    
 
 ## 2.2 Prepare Test Cases
-Please refer to [2.2 Prepare Test Cases of cci guide](cci_guide.md#22-prepare-test-cases).    
+Please refer to [Prepare Test Cases In CCI guide](cci_guide.md#22-prepare-test-cases).    
 
 ## 2.3 Install CUBRID 
-For compatibility test, we need to install different driver and server version. For example:
-we test 10.2's server with 8.4.1's driver, install CUBRID as below:     
+For compatibility test, we need to install different CCI driver and CUBRID Server version. For example:
+If want to test 10.2's server with 8.4.1's driver, install CUBRID as below:     
 ```bash    
 run_cubrid_install -s http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh http://192.168.1.91:8080/REPO_ROOT/store_03/8.4.1.35001/drop/CUBRID-8.4.1.35001-linux.x86_64.sh   
 ```
-we test 10.2's driver with 8.4.1's server, install CUBRID as below:     
+If want to test 10.2's driver with 8.4.1's server, install CUBRID as below:     
 ```bash    
 run_cubrid_install -d http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28b2/drop/CUBRID-10.2.0.8396-1bc28b2-Linux.x86_64.sh http://192.168.1.91:8080/REPO_ROOT/store_03/8.4.1.35001/drop/CUBRID-8.4.1.35001-linux.x86_64.sh   
 ```
 
 ## 2.4 Execute test      
-Please refer to [2.4 Execute test of cci guide](cci_guide.md#24-execute-test).     
+Please refer to [Execute test in CCI guide](cci_guide.md#24-execute-test).     
 
 ## 2.5 Examine test results
-Please refer to [2.5 Examine test results of cci guide](cci_guide.md#25-examine-test-results).      
+Please refer to [Examine test results in CCI guide](cci_guide.md#25-examine-test-results).      
 
 # 3. Deploy Regression Test Environment
 ## 3.1 Test Machines
-For current daily regression test, controller node and test node are the same one.
+For current daily regression test, there are 4 test instances in parallel. The whole test for a test instance is deployed under a system user environment.
 
 No.|role|user|ip|hostname
 --|--|--|--|--
-1.|Controller node and Test node|ccompat1|192.168.1.80|func05
-2.|Controller node and Test node|ccompat2|192.168.1.80|func05
-3.|Controller node and Test node|ccompat3|192.168.1.80|func05
-4.|Controller node and Test node|ccompat4|192.168.1.80|func05
-
-**Controller node**: It listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.    
-**Test node**: It executes test cases.     
-
+1.|Test instance 1|ccompat1|192.168.1.80|func05
+2.|Test instance 2|ccompat2|192.168.1.80|func05
+3.|Test instance 3|ccompat3|192.168.1.80|func05
+4.|Test instance 4|ccompat4|192.168.1.80|func05
 
 ## 3.2 Deploy Test Environment
-### On controller & test node
-* Install CTP     
-Please refer to [install CTP as Regression Test platform](ctp_install_guide.md#3-install-ctp-as-regression-test-platform)         
 
-    Create CCI compatibility test configuration file `~/CTP/conf/shell_template.conf`:     
-    For node1:
-    ```
-    default.cubrid.cubrid_port_id=8217
-    default.broker1.BROKER_PORT=8417
-    default.broker1.APPL_SERVER_SHM_ID=8417
-    default.broker2.BROKER_PORT=8517
-    default.broker2.APPL_SERVER_SHM_ID=8517
+* ### Install CTP     
 
-    scenario=$HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci
-    test_continue_yn=false
-    testcase_exclude_from_file=
-    testcase_update_yn=true
-    testcase_git_branch=develop
-    testcase_timeout_in_secs=7200
-    test_platform=linux
-    test_category=cci
-    testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
-    testcase_retry_num=0
+    Please refer to [install CTP as Regression Test platform](ctp_install_guide.md#3-install-ctp-as-regression-test-platform). Then create CCI compatibility test configuration.
 
-    git_user=cubridqa
-    git_pwd=******
-    git_email=dl_cubridqa_bj_internal@navercorp.com
+    File `~/CTP/conf/shell_template.conf`:     
 
-    feedback_type=database
-    feedback_notice_qahome_url=http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>
-    feedback_db_host=192.168.1.86
-    feedback_db_port=33080
-    feedback_db_name=qaresu
-    feedback_db_user=dba
-    feedback_db_pwd=
-    ```
-   For node2, we just need to modify port
-   ```
-    default.cubrid.cubrid_port_id=8218
-    default.broker1.BROKER_PORT=8418
-    default.broker1.APPL_SERVER_SHM_ID=8418
-    default.broker2.BROKER_PORT=8518
-    default.broker2.APPL_SERVER_SHM_ID=8518
-    ...
-   ```
-   For node3, we also just need to modify port
-    ```
-    default.cubrid.cubrid_port_id=8219
-    default.broker1.BROKER_PORT=8419
-    default.broker1.APPL_SERVER_SHM_ID=8419
-    default.broker2.BROKER_PORT=8519
-    default.broker2.APPL_SERVER_SHM_ID=8519
-    ...
-    ```
-   For node4, we just need to modify port
-   ```
-    default.cubrid.cubrid_port_id=8220
-    default.broker1.BROKER_PORT=8420
-    default.broker1.APPL_SERVER_SHM_ID=8420
-    default.broker2.BROKER_PORT=8520
-    default.broker2.APPL_SERVER_SHM_ID=8520
-    ...
-   ```
-* Touch start_test.sh       
-    ```bash
-    #!/bin/sh
-    cd $HOME/CTP/common/script
-    sh upgrade.sh
-    cd $HOME
-    stop_consumer.sh 
-    rm -f nohup.out
-    nohup start_consumer.sh -q QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64,QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 -exec run_compat_cci,run_compat_cci -s china &
-    ```
-* Check out test cases         
+    On instance 1:
+
+        ```
+        default.cubrid.cubrid_port_id=8217
+        default.broker1.BROKER_PORT=8417
+        default.broker1.APPL_SERVER_SHM_ID=8417
+        default.broker2.BROKER_PORT=8517
+        default.broker2.APPL_SERVER_SHM_ID=8517
+
+        scenario=$HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci
+        test_continue_yn=false
+        testcase_exclude_from_file=
+        testcase_update_yn=true
+        testcase_git_branch=develop
+        testcase_timeout_in_secs=7200
+        test_platform=linux
+        test_category=cci
+        testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
+        testcase_retry_num=0
+
+        git_user=cubridqa
+        git_pwd=******
+        git_email=dl_cubridqa_bj_internal@navercorp.com
+
+        feedback_type=database
+        feedback_notice_qahome_url=http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>
+        feedback_db_host=192.168.1.86
+        feedback_db_port=33080
+        feedback_db_name=qaresu
+        feedback_db_user=dba
+        feedback_db_pwd=
+        ```
+
+    On instance 2, change to use different ports:
+
+       ```
+        default.cubrid.cubrid_port_id=8218
+        default.broker1.BROKER_PORT=8418
+        default.broker1.APPL_SERVER_SHM_ID=8418
+        default.broker2.BROKER_PORT=8518
+        default.broker2.APPL_SERVER_SHM_ID=8518
+        ...
+       ```
+
+    On instance 3, be same as above:
+    
+        ```
+        default.cubrid.cubrid_port_id=8219
+        default.broker1.BROKER_PORT=8419
+        default.broker1.APPL_SERVER_SHM_ID=8419
+        default.broker2.BROKER_PORT=8519
+        default.broker2.APPL_SERVER_SHM_ID=8519
+        ...
+        ```
+    
+    On instance 4, be same as above:
+    
+       ```
+        default.cubrid.cubrid_port_id=8220
+        default.broker1.BROKER_PORT=8420
+        default.broker1.APPL_SERVER_SHM_ID=8420
+        default.broker2.BROKER_PORT=8520
+        default.broker2.APPL_SERVER_SHM_ID=8520
+        ...
+       ```
+   
+* ### Create quick start script 
+
+    File `~/start_test.sh`
+
+        ```bash
+        #!/bin/sh
+        cd $HOME/CTP/common/script
+        sh upgrade.sh
+        cd $HOME
+        rm -f nohup.out
+        nohup start_consumer.sh -q QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64,QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 -exec run_compat_cci,run_compat_cci -s china &
+        ```
+
+* ### Check out test cases         
+
     ```bash
     cd ~
     git clone https://github.com/CUBRID/cubrid-testcases-private.git 
     ```
 
-* Configure .bash_profile    
+* ### Configure .bash_profile    
     ```
     export DEFAULT_BRANCH_NAME=develop
     export CTP_HOME=$HOME/CTP
@@ -136,11 +148,14 @@ Please refer to [install CTP as Regression Test platform](ctp_install_guide.md#3
     export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$JAVA_HOME/bin:/usr/local/bin:/bin:/usr/bin:$PATH
     ```
 
-* Install necessary shell commands     
-  cci test cases use killall command, centos7 can not find this command
-   ```bash
-   yum install psmisc
-   ```    
+* ### Install depended packages
+
+    Test cases use `killall` command. If no such utility in your OS, please install it.
+    
+       ```bash
+       yum install psmisc
+       ```    
+       
 # 4. Regression Tests
 We perform cci compatibility test for each build.     
 ## 4.1 Daily Regresion Test
@@ -426,7 +441,7 @@ $ tail -f nohup.out
 
   
 * #### Send test messages for driver test     
-    For current driver test, we use queue " QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 ", and select server configurations in "~/CTP/conf/compat "     
+    For current driver test, we use queue `"QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64"`, and select server configurations in "~/CTP/conf/compat "     
     For example:    
     Login message@192.168.1.91   
     ```bash
