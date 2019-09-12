@@ -560,7 +560,7 @@ There are two ways. One is to check nohup.out log on the controller node. The ot
    In above picture, the figures with red color mean number of failures. Click it to open verification page. Then follow the same way as CCI test's to verify all failures. Both Test Rate and Verified Rate should be 100%.
     
 # 5. CCI Compatibility Test Case 
-## Choose matched test cases
+## 5.1 Choose matched test cases
 
 CCI compatibility test seperates different CUBRID on Server and Driver. When perform a combination to test, we need choose matched test cases. That is to say, which branch does test cases come. This answer is just that test case branch should follow the CUBRID as Server role. Let's example it.
 
@@ -572,5 +572,5 @@ CCI Driver | CUBRID Server | Expected Test Case Branch|
 9.3 CCI Driver| 10.2 Server | [10.2 Test Cases](https://github.com/CUBRID/cubrid-testcases-private/tree/develop/interface/CCI/shell)
 
 
-## Test Case Specification
+## 5.2 Test Case Specification
 Please follow [CCI test case specification](cci_guide.md#6-cci-test-case). They are same.
