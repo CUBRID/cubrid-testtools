@@ -299,6 +299,11 @@ total 24
 
 >Note: Other way of executing cci test case is as below:
 ```bash
+
+#It's better to add below to .bash_profile
+export init_path=$CTP_HOME/shell/init_path
+
+cd /path/to/test case folder
 sh issue_12530_cci.sh
 ```
 or
@@ -335,7 +340,7 @@ For current daily regression test, controller node and test node are the same on
 * Install CTP
   - Please refer to the guide to [install CTP as Regression Test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
   - touch ~/CTP/conf/shell_template.conf     
-    Here is the config file which we used for current daily cci regresion test: shell_template.conf 
+    Here is the config file which we used for current daily cci regresion test: `shell_template.conf` 
     ```bash
     $ cat shell_template.conf 
     default.cubrid.cubrid_port_id=1568
@@ -387,13 +392,15 @@ For current daily regression test, controller node and test node are the same on
     cd ~
     git clone https://github.com/CUBRID/cubrid-testcases-private.git 
     ```
-* Install necessary shell commands   
-  cci test cases use killall command, centos7 can not find this command   
+* Install dependent packages   
+  CCI test cases use `killall` command, if no such utility in your OS, please install it.
+  
    ```bash
    yum install psmisc
    ```    
 # 4. Regression Tests
-We perform cci/cci_debug for daily (actually is for each build) and perform code coverage test of cci for monthly. cci_debug is executing cci test cases with a debug build.
+We perform cci/cci_debug for daily (actually is for each build) and perform code coverage test of cci for monthly. cci_debug is executing CCI test cases with a debug build.
+
 ## 4.1 Daily Regresion Test
 When a new build comes, cci daily regression test will start. We just need to make sure that test environment has no problem and listener has been started. Sometimes, in order to investigate or correct a test, we need to send messages manually.   
 ### Start the listener
@@ -450,8 +457,7 @@ $ tail -f nohup.out
     ```
 ### Check running status
 * Check log on controller node   
-    login cci@192.168.1.78, check nohup.out log   
-    the whole information for one test message is like below:
+    Log into cci@192.168.1.78, check nohup.out log. The whole information for one test message is like below:
     ```bash
     $ cd ~
     $ tail -f nohup.out
@@ -482,7 +488,7 @@ $ tail -f nohup.out
     default.broker2.APPL_SERVER_SHM_ID=30091
     test_platform=linux
     feedback_db_port=33080
-    git_pwd=N6P0Sm5U7h
+    git_pwd=********
     feedback_type=database
     feedback_db_host=192.168.1.86
     testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
