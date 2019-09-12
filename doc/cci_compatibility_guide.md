@@ -306,16 +306,17 @@ No.|role|user|ip|hostname
 
 We perform CCI compatibility test for each build as regression policy.     
 
-## 4.1 Start test
+## 4.1 Start the listener
 
-When a new build comes, the test will start. We just need to make sure that test environment has no problem and listener has been started. Sometimes, in order to investigate or correct a test, we need to send messages manually.
+When a new build comes, the test will start. We just need to make sure that test environment has no problem and listener has been started
 
-* ### Start the listener
-```bash
-$ cd ~
-$ sh start_test.sh &
-$ tail -f nohup.out
-```
+    $ cd ~
+    $ sh start_test.sh &
+    $ tail -f nohup.out
+
+## 4.2 Send test messages
+
+Sometimes, in order to investigate or correct a test, we need to send messages manually.
  
 * ### Send test messages for server test by manual  
     
