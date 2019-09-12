@@ -441,11 +441,11 @@ Sometimes, in order to investigate or correct a test, we need to send messages m
         Do you accept above message [Y/N]: Y
 
         
-## 4.2 Check running status 
+## 4.3 Check running status 
 
 There are two ways. One is to check nohup.out log on the controller node. The other way is to check cci compatibility items on qahome monitor page. Please refer to [Check running status of cci guide](cci_guide.md#check-running-status)
 
-## 4.3 Verify test result
+## 4.4 Verify test result
 * #### Check whether there are results
 
     Open [QA homepage](http://qahome.cubrid.org), then navigate as below to find CCI compatibility test results. 
