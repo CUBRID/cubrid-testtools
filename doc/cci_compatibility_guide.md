@@ -4,10 +4,10 @@ The CCI compatibility test is aimed to test CUBRID compatibility with different 
 # 2. Execute CCI Compatibility Test
 To perform the test, we need to install CTP first.   
 ## 2.1 Install CTP
-Please refer to [2.1 Install CTP of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#21-install-ctp).    
+Please refer to [2.1 Install CTP of cci guide](cci_guide.md#21-install-ctp).    
 
 ## 2.2 Prepare Test Cases
-Please refer to [2.2 Prepare Test Cases of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#22-prepare-test-cases).    
+Please refer to [2.2 Prepare Test Cases of cci guide](cci_guide.md#22-prepare-test-cases).    
 
 ## 2.3 Install CUBRID 
 For compatibility test, we need to install different driver and server version. For example:
@@ -21,10 +21,10 @@ run_cubrid_install -d http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1b
 ```
 
 ## 2.4 Execute test      
-Please refer to [2.4 Execute test of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#24-execute-test).     
+Please refer to [2.4 Execute test of cci guide](cci_guide.md#24-execute-test).     
 
 ## 2.5 Examine test results
-Please refer to [2.5 Examine test results of cci guide](https://github.com/slamdunkorchid/cubrid-testtools/blob/0815/doc/cci_guide.md#25-examine-test-results).      
+Please refer to [2.5 Examine test results of cci guide](cci_guide.md#25-examine-test-results).      
 
 # 3. Deploy Regression Test Environment
 ## 3.1 Test Machines
@@ -44,7 +44,7 @@ No.|role|user|ip|hostname
 ## 3.2 Deploy Test Environment
 ### On controller & test node
 * Install CTP     
-Please refer to [install CTP as Regression Test platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)         
+Please refer to [install CTP as Regression Test platform](ctp_install_guide.md#3-install-ctp-as-regression-test-platform)         
 
     Create CCI compatibility test configuration file `~/CTP/conf/shell_template.conf`:     
     For node1:
@@ -335,7 +335,7 @@ $ tail -f nohup.out
     sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8429-2e1a113/drop/CUBRID-10.2.0.8429-2e1a113-Linux.x86_64.sh compat_cci default -compatALL
     ```
 
-    **message examples:**     
+    **Message examples:**     
     * #### 10.2 server and 8.4.1 driver     
         ```
         $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.1_D64.msg 
@@ -444,7 +444,7 @@ $ tail -f nohup.out
     > 10.2 server -> cci_shell_10.2_S64.msg     
 
 
-    **message examples:**     
+    **Message examples:**     
     * #### 10.2 driver and 9.2 server     
         ```
         cd ~/manual
