@@ -625,7 +625,7 @@ Please refer to [this guide](https://github.com/CUBRID/cubrid-testtools/blob/dev
     testcase_git_branch=develop
     testcase_exclude_from_file = ${HOME}/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf
     git_user=cubridqa
-    git_pwd=N6P0Sm5U7h
+    git_pwd=******
     git_email=dl_cubridqa_bj_internal@navercorp.com
     cc_email=dl_cubridqa_bj_internal@navercorp.com
     test_continue_yn=yes
