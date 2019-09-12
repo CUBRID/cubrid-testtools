@@ -134,6 +134,167 @@ No.|role|user|ip|hostname
 
         . $HOME/.cubrid.sh
         export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$JAVA_HOME/bin:/usr/local/bin:/bin:/usr/bin:$PATH
+        
+* ### Job configuration
+
+    Log into message@192.168.0.90, configure job configuration related to CCI compatibility test.
+    
+  * CTP/conf/job.conf 
+  
+        ...
+        job_compat.service=ON
+        job_compat.crontab=0/5 * * * * ?
+        job_compat.listenfile=CUBRID-{1}-linux.x86_64.sh
+        job_compat.acceptversions=10.0.*.0~8999,10.1.*,10.2.*
+        #job_compat.denyversions=
+        job_compat.package_bits=64
+        job_compat.package_type=general
+        ...
+        job_compat.test.3.scenario=compat_cci_D64
+        job_compat.test.3.queue=QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64
+        job_compat.test.3.ext_config=compat.conf
+        job_compat.test.3.ext_keys=cci_compatibility_for_{version}_D64
+
+        job_compat.test.4.scenario=compat_cci_S64
+        job_compat.test.4.queue=QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64
+        job_compat.test.4.ext_config=compat.conf
+        job_compat.test.4.ext_keys=cci_compatibility_for_{version}_S64
+        ...
+
+   * CTP/conf/compat.conf
+ 
+         EXT_KEY_FOR_FIX_MAX=COMPAT_BUILD_ID
+         EXT_KEY_FOR_FIX_MAX_FOLLOW=COMPAT_BUILD_URLS
+         EXT_KEY_FOR_FIX_MAX_FOLLOW_KR=COMPAT_BUILD_URLS_KR
+         EXT_KEY_FOR_TEST_CATAGORY=COMPAT_TEST_CATAGORY
+         ...
+         cci_compatibility_for_10.2.0_D64=cci_shell_10.1_S64.msg,cci_shell_10.0_S64.msg
+
+         cci_compatibility_for_10.1.0_D64=cci_shell_10.2_S64.msg,cci_shell_10.0_S64.msg
+
+         cci_compatibility_for_10.0.0_D64=cci_shell_10.2_S64.msg,cci_shell_10.1_S64.msg
+         cci_compatibility_for_10.2.0_S64=cci_shell_10.1_D64.msg,cci_shell_10.0_D64.msg,cci_shell_9.3_D64.msg,cci_shell_9.2_D64.msg,cci_shell_8.4.4_D64.msg,cci_shell_8.4.3_D64.msg,cci_shell_8.4.1_D64.msg,
+
+          cci_compatibility_for_10.1.0_S64=cci_shell_10.2_D64.msg,cci_shell_10.0_D64.msg,cci_shell_9.3_D64.msg,cci_shell_9.2_D64.msg,cci_shell_8.4.4_D64.msg,cci_shell_8.4.3_D64.msg,cci_shell_8.4.1_D64.msg,
+
+          cci_compatibility_for_10.0.0_S64=cci_shell_10.2_D64.msg,cci_shell_10.1_D64.msg,cci_shell_9.3_D64.msg,cci_shell_9.2_D64.msg,cci_shell_8.4.4_D64.msg,cci_shell_8.4.3_D64.msg,cci_shell_8.4.1_D64.msg,
+
+   *  Detail compat configuration
+      
+          ~/CTP/conf/compat/cci_shell_8.4.3_D64.msg
+          COMPAT_BUILD_ID=8.4.3.{max}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_10.0_S64.msg
+          COMPAT_BUILD_ID=10.0.{dmax}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SVN_BRANCH=unknown
+          COMPAT_BUILD_SCENARIOS=cci
+          COMPAT_BUILD_SCENARIO_BRANCH_GIT=release/10.0
+
+          ~/CTP/conf/compat/cci_shell_10.1_D64.msg
+          COMPAT_BUILD_ID=10.1.{dmax}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-Linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_10.2_D64.msg
+          COMPAT_BUILD_ID=10.2.{dmax}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-Linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_9.1_D64.msg
+          COMPAT_BUILD_ID=9.1.0.0212
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_9.2_D64.msg
+          COMPAT_BUILD_ID=9.2.{dmax}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_10.1_S64.msg
+          COMPAT_BUILD_ID=10.1.{dmax}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-Linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SVN_BRANCH=unknown
+          COMPAT_BUILD_SCENARIOS=cci
+          COMPAT_BUILD_SCENARIO_BRANCH_GIT=release/10.1
+
+          ~/CTP/conf/compat/cci_shell_10.2_S64.msg
+          COMPAT_BUILD_ID=10.2.{dmax}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-Linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SVN_BRANCH=unknown
+          COMPAT_BUILD_SCENARIOS=cci
+          COMPAT_BUILD_SCENARIO_BRANCH_GIT=develop
+
+          ~/CTP/conf/compat/cci_shell_10.0_D64.msg
+          COMPAT_BUILD_ID=10.0.{dmax}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_9.0_D64.msg
+          COMPAT_BUILD_ID=9.0.{dmax}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_8.4.5_D64.msg
+          COMPAT_BUILD_ID=8.4.5.{max}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_8.4.4_D64.msg
+          COMPAT_BUILD_ID=8.4.4.{max}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_9.3_D64.msg
+          COMPAT_BUILD_ID=9.3.{dmax}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_9.4_D64.msg
+          COMPAT_BUILD_ID=9.4.{dmax}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+          ~/CTP/conf/compat/cci_shell_8.4.1_D64.msg
+          COMPAT_BUILD_ID=8.4.1.{max}
+          COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
+          COMPAT_BUILD_BIT=64
+          COMPAT_BUILD_TYPE=general
+          COMPAT_BUILD_SCENARIOS=cci
+
+      >Note: cci_shell_10.0_D64.msg - it means test current build's server with 10.0's driver     
+      cci_shell_10.0_S64.msg - it means test current build's driver with 10.0's server     
+      cci_shell_8.4.1_D64.msg - it means test current build's server with 8.4.1's driver         
 
 * ### Install depended packages
 
@@ -155,176 +316,17 @@ $ cd ~
 $ sh start_test.sh &
 $ tail -f nohup.out
 ```
-* ### Job configuration 
-
-  There are configuration files for compatibility messages as regular job.
-  
-  * CTP/conf/job.conf 
-    ```
-    ...
-    job_compat.service=ON
-    job_compat.crontab=0/5 * * * * ?
-    job_compat.listenfile=CUBRID-{1}-linux.x86_64.sh
-    job_compat.acceptversions=10.0.*.0~8999,10.1.*,10.2.*
-    #job_compat.denyversions=
-    job_compat.package_bits=64
-    job_compat.package_type=general
-    ...
-    job_compat.test.3.scenario=compat_cci_D64
-    job_compat.test.3.queue=QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64
-    job_compat.test.3.ext_config=compat.conf
-    job_compat.test.3.ext_keys=cci_compatibility_for_{version}_D64
-
-    job_compat.test.4.scenario=compat_cci_S64
-    job_compat.test.4.queue=QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64
-    job_compat.test.4.ext_config=compat.conf
-    job_compat.test.4.ext_keys=cci_compatibility_for_{version}_S64
-    ...
-    ```
-   * CTP/conf/compat.conf
-     ```
-     EXT_KEY_FOR_FIX_MAX=COMPAT_BUILD_ID
-     EXT_KEY_FOR_FIX_MAX_FOLLOW=COMPAT_BUILD_URLS
-     EXT_KEY_FOR_FIX_MAX_FOLLOW_KR=COMPAT_BUILD_URLS_KR
-     EXT_KEY_FOR_TEST_CATAGORY=COMPAT_TEST_CATAGORY
-     ...
-     cci_compatibility_for_10.2.0_D64=cci_shell_10.1_S64.msg,cci_shell_10.0_S64.msg
-
-     cci_compatibility_for_10.1.0_D64=cci_shell_10.2_S64.msg,cci_shell_10.0_S64.msg
-
-     cci_compatibility_for_10.0.0_D64=cci_shell_10.2_S64.msg,cci_shell_10.1_S64.msg
-     cci_compatibility_for_10.2.0_S64=cci_shell_10.1_D64.msg,cci_shell_10.0_D64.msg,cci_shell_9.3_D64.msg,cci_shell_9.2_D64.msg,cci_shell_8.4.4_D64.msg,cci_shell_8.4.3_D64.msg,cci_shell_8.4.1_D64.msg,
-
-      cci_compatibility_for_10.1.0_S64=cci_shell_10.2_D64.msg,cci_shell_10.0_D64.msg,cci_shell_9.3_D64.msg,cci_shell_9.2_D64.msg,cci_shell_8.4.4_D64.msg,cci_shell_8.4.3_D64.msg,cci_shell_8.4.1_D64.msg,
-
-      cci_compatibility_for_10.0.0_S64=cci_shell_10.2_D64.msg,cci_shell_10.1_D64.msg,cci_shell_9.3_D64.msg,cci_shell_9.2_D64.msg,cci_shell_8.4.4_D64.msg,cci_shell_8.4.3_D64.msg,cci_shell_8.4.1_D64.msg,
-      ```
-
-   *  Detail compat configuration
-      ```
-      ~/CTP/conf/compat/cci_shell_8.4.3_D64.msg
-      COMPAT_BUILD_ID=8.4.3.{max}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_10.0_S64.msg
-      COMPAT_BUILD_ID=10.0.{dmax}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SVN_BRANCH=unknown
-      COMPAT_BUILD_SCENARIOS=cci
-      COMPAT_BUILD_SCENARIO_BRANCH_GIT=release/10.0
-
-      ~/CTP/conf/compat/cci_shell_10.1_D64.msg
-      COMPAT_BUILD_ID=10.1.{dmax}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-Linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_10.2_D64.msg
-      COMPAT_BUILD_ID=10.2.{dmax}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-Linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_9.1_D64.msg
-      COMPAT_BUILD_ID=9.1.0.0212
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_9.2_D64.msg
-      COMPAT_BUILD_ID=9.2.{dmax}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_10.1_S64.msg
-      COMPAT_BUILD_ID=10.1.{dmax}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-Linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SVN_BRANCH=unknown
-      COMPAT_BUILD_SCENARIOS=cci
-      COMPAT_BUILD_SCENARIO_BRANCH_GIT=release/10.1
-
-      ~/CTP/conf/compat/cci_shell_10.2_S64.msg
-      COMPAT_BUILD_ID=10.2.{dmax}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-Linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SVN_BRANCH=unknown
-      COMPAT_BUILD_SCENARIOS=cci
-      COMPAT_BUILD_SCENARIO_BRANCH_GIT=develop
-
-      ~/CTP/conf/compat/cci_shell_10.0_D64.msg
-      COMPAT_BUILD_ID=10.0.{dmax}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_9.0_D64.msg
-      COMPAT_BUILD_ID=9.0.{dmax}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_8.4.5_D64.msg
-      COMPAT_BUILD_ID=8.4.5.{max}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_8.4.4_D64.msg
-      COMPAT_BUILD_ID=8.4.4.{max}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_9.3_D64.msg
-      COMPAT_BUILD_ID=9.3.{dmax}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_9.4_D64.msg
-      COMPAT_BUILD_ID=9.4.{dmax}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-
-      ~/CTP/conf/compat/cci_shell_8.4.1_D64.msg
-      COMPAT_BUILD_ID=8.4.1.{max}
-      COMPAT_BUILD_URLS=CUBRID-{BUILD_ID}-linux.x86_64.sh
-      COMPAT_BUILD_BIT=64
-      COMPAT_BUILD_TYPE=general
-      COMPAT_BUILD_SCENARIOS=cci
-      ```
-      >Note: cci_shell_10.0_D64.msg - it means test current build's server with 10.0's driver     
-      cci_shell_10.0_S64.msg - it means test current build's driver with 10.0's server     
-      cci_shell_8.4.1_D64.msg - it means test current build's server with 8.4.1's driver     
  
 * ### Send test messages for server test by manual  
     
     For current server test, we use queue `"QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64"`, and select driver configurations in `"~/CTP/conf/compat"`. 
+    
     For example, login message@192.168.1.91     
     
     ```bash
     sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.1_D64.msg 
     ```
+    
     >Note: you just need to select the message configuration file corresponding to the driver version   
     > 8.4.1 driver -> cci_shell_8.4.1_D64.msg   
     > 8.4.3 driver -> cci_shell_8.4.1_D64.msg   
@@ -334,13 +336,11 @@ $ tail -f nohup.out
     > 10.0 driver -> cci_shell_10.0_D64.msg   
     > 10.1 driver -> cci_shell_10.1_D64.msg    
 
-    **There is a way to sender all messages for different driver, see below:**     
-    ```bash
-    sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8429-2e1a113/drop/CUBRID-10.2.0.8429-2e1a113-Linux.x86_64.sh compat_cci default -compatALL
-    ```
-
-    **Message examples:**     
-    **10.2 server and 8.4.1 driver**
+    **Example to send all messages for different driver:**     
+    
+        sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8429-2e1a113/drop/CUBRID-10.2.0.8429-2e1a113-Linux.x86_64.sh compat_cci default -compatALL
+    
+    **Example to send message for 10.2 server and 8.4.1 driver:**
         
         $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.1_D64.msg 
 
@@ -377,65 +377,16 @@ $ tail -f nohup.out
         MSG_FILEID=cci_shell_8.4.1_D64
 
 
-        Do you accept above message [Y/N]:
-        Y
-        log4j:WARN No appenders could be found for logger (org.apache.activemq.thread.TaskRunnerFactory).
-        log4j:WARN Please initialize the log4j system properly.
-        log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+        Do you accept above message [Y/N]:  Y
 
 
-    **10.2 server and 8.4.3 driver**
-    
-    
-        $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41rop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.3_D64.msg  
-
-        Message: 
-
-        Message Content: Test for build 10.2.0.8369-5a75e41 by CUBRID QA Team, China
-        MSG_ID = 190903-162909-505-000001
-        MSG_PRIORITY = 4
-        BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop
-        BUILD_BIT=0
-        BUILD_CREATE_TIME=1561143743000
-        BUILD_GENERATE_MSG_WAY=MANUAL
-        BUILD_ID=10.2.0.8369-5a75e41
-        BUILD_IS_FROM_GIT=1
-        BUILD_PACKAGE_PATTERN=CUBRID-{1}-Linux.x86_64.sh
-        BUILD_SCENARIOS=compat_cci
-        BUILD_SCENARIO_BRANCH_GIT=develop
-        BUILD_SEND_DELAY=6352006
-        BUILD_SEND_TIME=1567495749503
-        BUILD_STORE_ID=store_01
-        BUILD_SVN_BRANCH=RB-10.2.0
-        BUILD_SVN_BRANCH_NEW=RB-10.2.0
-        BUILD_TYPE=general
-        BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh
-        BUILD_URLS_CNT=1
-        BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh
-        COMPAT_BUILD_BIT=64
-        COMPAT_BUILD_ID=8.4.3.10001
-        COMPAT_BUILD_SCENARIOS=cci
-        COMPAT_BUILD_TYPE=general
-        COMPAT_BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_03/8.4.3.10001/drop/CUBRID-8.4.3.10001-linux.x86_64.sh
-        COMPAT_BUILD_URLS_KR=null/8.4.3.10001/drop/CUBRID-8.4.3.10001-linux.x86_64.sh
-        COMPAT_TEST_CATAGORY=cci_shell_8.4.3_D64
-        MSG_FILEID=cci_shell_8.4.3_D64
-
-
-        Do you accept above message [Y/N]:
-        Y
-        log4j:WARN No appenders could be found for logger (org.apache.activemq.thread.TaskRunnerFactory).
-        log4j:WARN Please initialize the log4j system properly.
-        log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
-    
-  
 * ### Send test messages for driver test by manual  
 
-    For current driver test, we use queue `"QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64"`, and select server configurations in `"~/CTP/conf/compat"`.     
+    For current driver test, we use queue `"QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64"`, and select server configurations in `"~/CTP/conf/compat"`.    
+    
     For example, login message@192.168.1.91.
     
     ```bash
-    cd ~/manual
     sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.1_S64.msg
     ```
     >Note: you just need to select the message configuration file corresponding to the server version    
@@ -449,11 +400,9 @@ $ tail -f nohup.out
     > 10.2 server -> cci_shell_10.2_S64.msg     
 
 
-    **Message examples:**     
-    **10.2 driver and 9.2 server**
-        ```
-        cd ~/manual
-        $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_9.2_S64.msg 
+    **Example to send message for 10.2 driver and 9.2 server:**
+    
+         $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_9.2_S64.msg 
 
         Message: 
 
@@ -488,59 +437,8 @@ $ tail -f nohup.out
         COMPAT_TEST_CATAGORY=cci_shell_9.2_S64
         MSG_FILEID=cci_shell_9.2_S64
 
+        Do you accept above message [Y/N]: Y
 
-        Do you accept above message [Y/N]:
-        Y
-        log4j:WARN No appenders could be found for logger (org.apache.activemq.thread.TaskRunnerFactory).
-        log4j:WARN Please initialize the log4j system properly.
-        log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
-        ```
-
-    **10.2 driver and 9.3 server**
-    
-        ```
-        $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41rop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_9.3_S64.msg 
-
-        Message: 
-
-        Message Content: Test for build 10.2.0.8369-5a75e41 by CUBRID QA Team, China
-        MSG_ID = 190903-164238-127-000001
-        MSG_PRIORITY = 4
-        BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop
-        BUILD_BIT=0
-        BUILD_CREATE_TIME=1561143743000
-        BUILD_GENERATE_MSG_WAY=MANUAL
-        BUILD_ID=10.2.0.8369-5a75e41
-        BUILD_IS_FROM_GIT=1
-        BUILD_PACKAGE_PATTERN=CUBRID-{1}-Linux.x86_64.sh
-        BUILD_SCENARIOS=compat_cci
-        BUILD_SCENARIO_BRANCH_GIT=develop
-        BUILD_SEND_DELAY=6352815
-        BUILD_SEND_TIME=1567496558125
-        BUILD_STORE_ID=store_01
-        BUILD_SVN_BRANCH=RB-10.2.0
-        BUILD_SVN_BRANCH_NEW=RB-10.2.0
-        BUILD_TYPE=general
-        BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh
-        BUILD_URLS_CNT=1
-        BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh
-        COMPAT_BUILD_BIT=64
-        COMPAT_BUILD_ID=9.3.10.0001
-        COMPAT_BUILD_SCENARIOS=cci
-        COMPAT_BUILD_SVN_BRANCH=RB-9.3.0
-        COMPAT_BUILD_TYPE=general
-        COMPAT_BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_03/9.3.10.0001/drop/CUBRID-9.3.10.0001-linux.x86_64.sh
-        COMPAT_BUILD_URLS_KR=null/9.3.10.0001/drop/CUBRID-9.3.10.0001-linux.x86_64.sh
-        COMPAT_TEST_CATAGORY=cci_shell_9.3_S64
-        MSG_FILEID=cci_shell_9.3_S64
-
-
-        Do you accept above message [Y/N]:
-        Y
-        log4j:WARN No appenders could be found for logger (org.apache.activemq.thread.TaskRunnerFactory).
-        log4j:WARN Please initialize the log4j system properly.
-        log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
-        ```
         
 ## 4.2 Check running status 
 
