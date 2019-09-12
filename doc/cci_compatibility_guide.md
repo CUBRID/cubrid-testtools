@@ -49,7 +49,6 @@ No.|role|user|ip|hostname
 
     On instance 1:
 
-        ```
         default.cubrid.cubrid_port_id=8217
         default.broker1.BROKER_PORT=8417
         default.broker1.APPL_SERVER_SHM_ID=8417
@@ -78,83 +77,69 @@ No.|role|user|ip|hostname
         feedback_db_name=qaresu
         feedback_db_user=dba
         feedback_db_pwd=
-        ```
 
     On instance 2, change to use different ports:
 
-       ```
         default.cubrid.cubrid_port_id=8218
         default.broker1.BROKER_PORT=8418
         default.broker1.APPL_SERVER_SHM_ID=8418
         default.broker2.BROKER_PORT=8518
         default.broker2.APPL_SERVER_SHM_ID=8518
         ...
-       ```
 
     On instance 3, be same as above:
     
-        ```
         default.cubrid.cubrid_port_id=8219
         default.broker1.BROKER_PORT=8419
         default.broker1.APPL_SERVER_SHM_ID=8419
         default.broker2.BROKER_PORT=8519
         default.broker2.APPL_SERVER_SHM_ID=8519
         ...
-        ```
     
     On instance 4, be same as above:
     
-       ```
         default.cubrid.cubrid_port_id=8220
         default.broker1.BROKER_PORT=8420
         default.broker1.APPL_SERVER_SHM_ID=8420
         default.broker2.BROKER_PORT=8520
         default.broker2.APPL_SERVER_SHM_ID=8520
         ...
-       ```
    
 * ### Create quick start script 
 
     File `~/start_test.sh`
 
-        ```bash
         #!/bin/sh
         cd $HOME/CTP/common/script
         sh upgrade.sh
         cd $HOME
         rm -f nohup.out
         nohup start_consumer.sh -q QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64,QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 -exec run_compat_cci,run_compat_cci -s china &
-        ```
 
 * ### Check out test cases         
 
-    ```bash
-    cd ~
-    git clone https://github.com/CUBRID/cubrid-testcases-private.git 
-    ```
+        cd ~
+        git clone https://github.com/CUBRID/cubrid-testcases-private.git 
 
 * ### Configure .bash_profile    
-    ```
-    export DEFAULT_BRANCH_NAME=develop
-    export CTP_HOME=$HOME/CTP
-    export CTP_BRANCH_NAME=develop
-    export CTP_SKIP_UPDATE=0
-    export init_path=$HOME/CTP/shell/init_path
+    
+        export DEFAULT_BRANCH_NAME=develop
+        export CTP_HOME=$HOME/CTP
+        export CTP_BRANCH_NAME=develop
+        export CTP_SKIP_UPDATE=0
+        export init_path=$HOME/CTP/shell/init_path
 
-    ulimit -c unlimited
-    export LC_ALL=en_US
+        ulimit -c unlimited
+        export LC_ALL=en_US
 
-    . $HOME/.cubrid.sh
-    export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$JAVA_HOME/bin:/usr/local/bin:/bin:/usr/bin:$PATH
-    ```
+        . $HOME/.cubrid.sh
+        export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$JAVA_HOME/bin:/usr/local/bin:/bin:/usr/bin:$PATH
 
 * ### Install depended packages
 
     Test cases use `killall` command. If no such utility in your OS, please install it.
     
-       ```bash
        yum install psmisc
-       ```    
        
 # 4. Regression Tests
 We perform cci compatibility test for each build.     
