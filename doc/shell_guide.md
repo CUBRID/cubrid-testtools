@@ -363,7 +363,7 @@ owner_email=Mandy<cui.man@navercorp.com>
 
 git_user=cubridqa
 git_email=dl_cubridqa_bj_internal@navercorp.com
-git_pwd=N6P0Sm5U7h
+git_pwd=**********
 
 feedback_type=database
 
