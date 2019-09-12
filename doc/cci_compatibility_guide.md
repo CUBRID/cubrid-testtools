@@ -141,19 +141,24 @@ No.|role|user|ip|hostname
     
        yum install psmisc
        
-# 4. Regression Tests
-We perform cci compatibility test for each build.     
-## 4.1 Daily Regresion Test
+# 4. Regression Test Sustaining
+
+We perform CCI compatibility test for each build as regression policy.     
+
+## 4.1 Start test
+
 When a new build comes, the test will start. We just need to make sure that test environment has no problem and listener has been started. Sometimes, in order to investigate or correct a test, we need to send messages manually.
-### Start the listener
+
+* ### Start the listener
 ```bash
 $ cd ~
 $ sh start_test.sh &
 $ tail -f nohup.out
 ```
-### Send test message
-* ### Configuration 
-  There are configuration files for compatibility messages
+* ### Job configuration 
+
+  There are configuration files for compatibility messages as regular job.
+  
   * CTP/conf/job.conf 
     ```
     ...
@@ -312,12 +317,12 @@ $ tail -f nohup.out
       cci_shell_10.0_S64.msg - it means test current build's driver with 10.0's server     
       cci_shell_8.4.1_D64.msg - it means test current build's server with 8.4.1's driver     
  
-* ### Send test messages for server test
-    For current server test, we use queue " QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 ", and select driver configurations in "~/CTP/conf/compat "     
-    For example:    
-    Login message@192.168.1.91     
+* ### Send test messages for server test by manual  
+    
+    For current server test, we use queue `"QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64"`, and select driver configurations in `"~/CTP/conf/compat"`. 
+    For example, login message@192.168.1.91     
+    
     ```bash
-    cd ~/manual
     sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.1_D64.msg 
     ```
     >Note: you just need to select the message configuration file corresponding to the driver version   
@@ -331,13 +336,12 @@ $ tail -f nohup.out
 
     **There is a way to sender all messages for different driver, see below:**     
     ```bash
-    cd ~/manual
     sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8429-2e1a113/drop/CUBRID-10.2.0.8429-2e1a113-Linux.x86_64.sh compat_cci default -compatALL
     ```
 
     **Message examples:**     
-    * #### 10.2 server and 8.4.1 driver     
-        ```
+    **10.2 server and 8.4.1 driver**
+        
         $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.1_D64.msg 
 
         Message: 
@@ -379,9 +383,10 @@ $ tail -f nohup.out
         log4j:WARN Please initialize the log4j system properly.
         log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
 
-        ```
-    * #### 10.2 server and 8.4.3 driver     
-        ```
+
+    **10.2 server and 8.4.3 driver**
+    
+    
         $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41rop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.3_D64.msg  
 
         Message: 
@@ -422,13 +427,13 @@ $ tail -f nohup.out
         log4j:WARN No appenders could be found for logger (org.apache.activemq.thread.TaskRunnerFactory).
         log4j:WARN Please initialize the log4j system properly.
         log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
-        ```
-
+    
   
-* #### Send test messages for driver test     
-    For current driver test, we use queue `"QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64"`, and select server configurations in "~/CTP/conf/compat "     
-    For example:    
-    Login message@192.168.1.91   
+* ### Send test messages for driver test by manual  
+
+    For current driver test, we use queue `"QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64"`, and select server configurations in `"~/CTP/conf/compat"`.     
+    For example, login message@192.168.1.91.
+    
     ```bash
     cd ~/manual
     sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_8.4.1_S64.msg
@@ -445,7 +450,7 @@ $ tail -f nohup.out
 
 
     **Message examples:**     
-    * #### 10.2 driver and 9.2 server     
+    **10.2 driver and 9.2 server**
         ```
         cd ~/manual
         $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_9.2_S64.msg 
@@ -491,7 +496,8 @@ $ tail -f nohup.out
         log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
         ```
 
-    * #### 10.2 driver and 9.3 server     
+    **10.2 driver and 9.3 server**
+    
         ```
         $ sender.sh QUEUE_CUBRID_QA_COMPAT_CCI_SHELL_DRIVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41rop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_cci default ~/CTP/conf/compat/cci_shell_9.3_S64.msg 
 
@@ -535,10 +541,12 @@ $ tail -f nohup.out
         log4j:WARN Please initialize the log4j system properly.
         log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
         ```
-### Check running status 
+        
+## 4.2 Check running status 
+
 There are two ways. One is to check nohup.out log on the controller node. The other way is to check cci compatibility items on qahome monitor page. Please refer to [Check running status of cci guide](cci_guide.md#check-running-status)
 
-### Verify test result
+## 4.3 Verify test result
 * #### Check whether there are results
 
     Open [QA homepage](http://qahome.cubrid.org), then navigate as below to find CCI compatibility test results. 
