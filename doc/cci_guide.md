@@ -295,7 +295,7 @@ total 24
     ```
    If the .output file is different from .answer file, the result turns out NOK.
 
-### 2.6 Run a single case
+## 2.6 Run a single case
 
 There are two ways. One way is to execute the case directly. Before execution, it's required to export `init_path` environmental variable first as below:
     
