@@ -274,7 +274,7 @@ Required software packages:
 
 ## 3.4 Deploy Controller Node
 1. Install CTP   
-Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
+Please refer to ["CTP Installation Guide"](ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
 
 2. Set shell configure file  
 `~/CTP/conf/shell_template.conf`:  
@@ -402,7 +402,7 @@ nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_LINUX -exec run_shell &
 
 ## 3.5 Deploy Worker Nodes  
 1. Install CTP
-Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
+Please refer to ["CTP Installation Guide"](ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
 
 2. Set `~/.bash_profile`  
 Set `~/.bash_profile` like this:  
@@ -557,10 +557,10 @@ Check the value of `'Coverage'` column. The coverage value should not lower than
 
 ## 4.3 Report Issues  
 * ### Crash Issue  
- If there is a crash, report it following the rules in this link: [‘How to Report Regression Crash Issues’](http://jira.cubrid.org/browse/CUBRIDQA-1?focusedCommentId=4739244&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4739244)  
+  If there is a crash, report it following the rules in this link: [‘How to Report Regression Crash Issues’](http://jira.cubrid.org/browse/CUBRIDQA-1?focusedCommentId=4739244&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4739244)  
 
 * ### Normal Issue  
- If the the test result is as expected, first we should confirm whether it is revise required. If not, report it as an issue on jira. 
+  If the the test result is as expected, first we should confirm whether it is revise required. If not, report it as an issue on jira. 
 
 ## 4.4 Execute A Shell Test by Sending Message
 We can use the regression tools to trigger a test.  
@@ -580,16 +580,14 @@ sh start_test.sh
 4. Check test result  
 The results will be uploaded to qahome automatically. You can follow ['4.1 Verify regression test results'](#4.1-Verify-regression-test-results) to check the test results.   
 
-## 4.5 Execute A Code Coverage Test
+## 4.5 Execute Code Coverage Test
 For code coverage test, just need to send a message.  
 Login: message@192.168.1.91  
 Send test message as:  
 ```
-sender.sh QUEUE_CUBRID_QA_SHELL_LINUX "http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz,http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz" shell default 'PROPS:MKEY_COVERAGE_UPLOAD_DIR=/home/codecov/cc4c/result;MKEY_COVERAGE_UPLOAD_IP=192.168.1.98;MKEY_COVERAGE_UPLOAD_PWD=PASSWORD;MKEY_COVERAGE_UPLOAD_USER
-=codecov;'
+sender.sh QUEUE_CUBRID_QA_SHELL_LINUX "http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz,http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz" shell default
 ```
-The result will be uploaded to qahome automatically.  
-To check the result, please refer to ['4.2 Verify code coverage test result'](#4.2-Verify-code-coverage-test-result) 
+The result will be uploaded to qahome automatically. To check the result, please refer to ['4.2 Verify code coverage test result'](#42-verify-code-coverage-test-result) 
 
 
 # 5 Shell Case Standards
