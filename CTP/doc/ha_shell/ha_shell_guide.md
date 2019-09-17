@@ -3,21 +3,107 @@
 HA Shell test suit is used to test CUBRID HA features.  
 To run a HA shell case, we usually need at least two machines. But sometimes, we need more than two machines.  
 So HA shell test is divided to two categories:    
-1. Test the HA shell cases which can be run on two machines. The cases are put in 'HA' case path. And these cases are executed for each CI build.  
-2. Test the other HA shell cases. The cases are put in 'shell_ext' path. And these cases are usually run before a release.  
+1. The HA shell cases which can be run on two machines. The cases are put in 'HA' case path. And these cases are executed for each CI build.  
+2. The other HA shell cases. The cases are put in 'shell_ext' path. And these cases are usually run before a release.  
 
-In this document, I will mainly introduce the first kind of test. This kind of test is almost the same as shell test.  
-For the second kind of test , I will introduce it an the end of this document.  
+In this document, I will only introduce the first kind of test. And this kind of test is almost the same as shell test.  
+For the second kind of test, it will be introduced in shell_ext test guide.  
 
 # 2 Tools Introduction
-CTP is the only test tool which is used in HA shell test.   
+CTP is the only test tool which is used to execute HA shell test cases.   
 Source URL: [https://github.com/CUBRID/cubrid-testtools](https://github.com/CUBRID/cubrid-testtools)
 
-# 3 Test Deployments
-## 3.1 create and set users  
-### controller node
-We need create a new user: controller.  
-Login root user and execute:  
+## 2.1 Quick Start
+1. Install CUBRID
+Please follow CUBRID installation guide to install CUBRID on both master node and slave node. Suppose that we install CUBRID at $HOME/CUBRID. Then add this line `'source .cubrid.sh'` in `~/.bash_profile`:
+```
+source .cubrid.sh
+```
+
+2. Check out HA shell cases
+```
+cd ~
+git clone https://github.com/CUBRID/cubrid-testcases-private.git
+cd ~/cubrid-testcases-private 
+git checkout develop
+```
+
+3. Install CTP
+Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform).     
+Then create configuration file as below:  
+*~/CTP/conf/shell.conf* 
+```
+# These parameters are used to set cubrid.conf, cubrid_broker.conf and cubrid_ha.conf
+# We can add the parameters as needed.
+# For example, if we need change set 'error_log_size = 800000000', just need add line 'default.cubrid.error_log_size = 800000000' here.
+default.cubrid.cubrid_port_id=1568
+default.broker1.BROKER_PORT=10090
+default.broker1.APPL_SERVER_SHM_ID=10090
+default.broker2.BROKER_PORT=13091
+default.broker2.APPL_SERVER_SHM_ID=13091
+default.ha.ha_port_id=19909
+
+#specify the master node and slave node
+env.83.ssh.host=192.168.1.83
+env.83.ssh.relatedhosts=192.168.1.93
+
+# Specify the case path and exclude list file
+# We can also specify a sub path under the test case path to run a sub set of the test cases.
+scenario=${HOME}/cubrid-testcases-private-ex/shell
+testcase_exclude_from_file=${HOME}/cubrid-testcases-private/HA/shell/config/daily_regression_test_excluded_list_linux.conf
+
+# When the test is interrupted and started again, we can choose whether to run it continuously or re-run it.
+test_continue_yn=false
+
+testcase_timeout_in_secs=604800
+
+# When the case is failed, we can re-run it. This paramter specify the max time we want to re-run the failed case.
+testcase_retry_num=0
+
+# Some times there is not enough disk space on the test machine, so we need to delete all the files under the test case path after the case is run.
+delete_testcase_after_each_execution_yn=false
+enable_check_disk_space_yn=true
+owner_email=cui.man@navercorp.com
+
+# set test result feed back type: file or database
+feedback_type=file
+```
+
+4. Start test
+```
+cd ~/CTP/bin
+nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
+```
+
+## 2.2 CTP Usage Introduction
+Please refer to shell_guide: [CTP Usage Introduction](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#22-ctp-usage-introduction)
+
+## 2.3 Execute A Single Test Case
+Please refer to shell_guide: [Execute A Single Test Case](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#23-execute-a-single-test-case)
+
+
+# 3 Regression Test Deployment
+## 3.1 Test Machines
+|Role|Master or Slave|User|IP|Hostname|
+|---|---|---|---|---|
+|controller node|NA|controller|192.168.1.83|func08|
+|worker node|master|ha|192.168.1.83|func08|
+|worker node|slave|ha|192.168.1.93|func18|
+|worker node|master|ha|192.168.1.84|func09|
+|worker node|slave|ha|192.168.1.94|func19|
+|worker node|master|ha|192.168.1.85|func10|
+|worker node|slave|ha|192.168.1.95|func20|
+|worker node|master|ha|192.168.1.87|func12|
+|worker node|slave|ha|192.168.1.97|func22|
+|worker node|master|ha|192.168.1.88|func13|
+|worker node|slave|ha|192.168.1.92|func17|
+|worker node|master|ha|192.168.1.89|func14|
+|worker node|slave|ha|192.168.1.96|func21|
+
+## 3.2 Create and Set Users  
+### Controller Node
+We need create a new user `'controller'`.  
+Then login root user and execute:  
 ```
 sudo useradd controller
 ```
@@ -29,89 +115,42 @@ sudo passwd controller
  ```
  sudo chage -E 2999-1-1 -m 0 -M 99999 controller
  ```
- 
- ### worker nodes
-We need create two new users: ha, dev.
+**Note**: HA shell test and isalotion test share the same controller node.  
+
+### Worker Nodes
+We need create a new user `'ha'`.  
 Login root user and execute:  
 ```
 sudo useradd ha
-sudo useradd dev
 ```
-Set password as our common password for user shell and user dev.  
+Set password as our common password for user ha.  
 ```
 sudo passwd ha
-sudo passwd dev
 ```
- Set these users' password to never expire.  
+ Set user's password to never expire.  
  ```
  sudo chage -E 2999-1-1 -m 0 -M 99999 ha
- sudo chage -E 2999-1-1 -m 0 -M 99999 dev
  ```
- ## 3.2 install software packages
-Required software packages: jdk, lcov, bc, lrzsz.   
+
+## 3.3 Install Software Packages
+Required software packages:    
 
 |software|version|usage|  
 |---|---|---|  
 |jdk|1.8.0 (need larger than 1.6)|run CTP, run shell test case|  
 |lcov|lcov-1.11|run code coverage test|  
 |bc|latest version|run shell test case|  
-|lrzsz|latest version|upload/download files|  
 
-These software packages are installed by root user and can be used by all the users.  
+## 3.4 Deploy controller node
+1. Install CTP   
+Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
 
-## 3.3 Deploy controller node
-### install CTP 
-**Step 1: download CTP**  
-*method 1: install from git*    
-```
-cd ~
-git colne https://github.com/CUBRID/cubrid-testtools.git
-cd cubrid-testtools
-git checkout develop
-cp -rf ~/cubrid-testtools/CTP ~
-```  
-*method 2: install from our server*     
-```
-cd ~
-wget http://192.168.1.91:8080/REPO_ROOT/CTP.tar.gz
-tar zxvf CTP.tar.gz
-```  
-Usually, we use method 2.
-
-**Step 2: set CTP configuration files**    
-*~/CTP/conf/common.conf*   
-```
-git_user=cubridqa
-git_pwd=GITPASSWORD
-git_email=dl_cubridqa_bj_internal@navercorp.com
-default_ssh_pwd=PASSWORD
-default_ssh_port=22
-
-grepo_service_url=rmi://192.168.1.91:11099
-coverage_controller_pwd=PASSWORD
-
-qahome_db_driver=cubrid.jdbc.driver.CUBRIDDriver
-qahome_db_url=jdbc:cubrid:192.168.1.86:33080:qaresu:dba::
-qahome_db_user=dba
-qahome_db_pwd=
-
-qahome_server_host=192.168.1.86
-qahome_server_port=22
-qahome_server_user=qahome
-qahome_server_pwd=PASSWORD
-
-activemq_user=admin
-activemq_pwd=admin
-activemq_url=failover:tcp://192.168.1.91:61616?wireFormat.maxInactivityDurationInitalDelay=30000
-
-mail_from_nickname=CUBRIDQA_BJ
-mail_from_address=dl_cubridqa_bj_internal@navercorp.com
-```
-*~/CTP/conf/shell_template.conf* 
+2. Set shell configure file  
+`~/CTP/conf/shell_template.conf`: 
 ```
 default.ssh.port=22
 default.ssh.user=ha
-default.ssh.pwd=PASSWORD
+default.ssh.pwd=uV9b3KMp5%%
 default.cubrid.cubrid_port_id = 1568
 default.broker1.BROKER_PORT = 30090
 default.broker2.BROKER_PORT = 33091
@@ -134,8 +173,8 @@ env.87.ssh.relatedhosts=192.168.1.97
 env.88.ssh.host=192.168.1.88
 env.88.ssh.relatedhosts=192.168.1.92
 
-#env.89.ssh.host=192.168.1.89
-#env.89.ssh.relatedhosts=192.168.1.97
+env.89.ssh.host=192.168.1.89
+env.89.ssh.relatedhosts=192.168.1.96
 
 test_continue_yn=false
 scenario=$HOME/cubrid-testcases-private/HA/shell
@@ -157,13 +196,12 @@ feedback_db_port=33080
 feedback_db_name=qaresu
 feedback_db_user=dba
 feedback_db_pwd=
-feedback_notice_qahome_url=http://192.168.1.86:8080/qaresult/shellImportAction.nhn?main_id=<MAINID>
+feedback_notice_qahome_url=http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>
 ```
-shell_template.conf will be copied to \~/CTP/conf/shell_runtime.conf when test is started.  
-For more details about the parameters, please refer to CTP guide. 
+shell_template.conf will be copied to ~/CTP/conf/shell_runtime.conf when test is started.  
 
-### set ~/.bash_profile 
-*~/.bash_profile*  
+3. Set `~/.bash_profile`  
+Set `~/.bash_profile` like this:  
 ```
 # .bash_profile
 
@@ -182,26 +220,19 @@ export CTP_BRANCH_NAME="develop"
 export CTP_SKIP_UPDATE=0
 ```
 
-### create a script to start consumer
+4. Create a script to start consumer
 ~/start_test.sh
-```
-nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_HA_LINUX -exec run_shell &
-```
-In our regression test, ha shell test and isolation test share the same controller and worker machines. So the script is like this:  
 ```
 nohup start_consumer.sh -q QUEUE_CUBRID_QA_CC_BASIC,QUEUE_CUBRID_QA_SHELL_HA_LINUX -exec run_isolation,run_shell &
 ```
-Execute the script to start listening the test message after deployment. This will start a shell test when the consumer receive the test message.
-```
-cd ~
-sh start_test.sh
-```
+**Note**: HA shell test and isalotion test share the same controller node.
 
-## 3.4 Deploy worker node  
-### install CTP
-This step is the same as 'install CTP' on controller node. Plese refer to [install CTP](#install_CTP).  
-### set ~/.bash_profile
-*~/.bash_profile*
+## 3.5 Deploy Worker Nodes  
+1. Install CTP
+Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
+
+2. Set `~/.bash_profile`  
+Set `~/.bash_profile` like this:  
 ```
 # .bash_profile
 
@@ -224,148 +255,123 @@ export CTP_BRANCH_NAME="develop"
 export CTP_SKIP_UPDATE=0
 
 . ~/.cubrid.sh
-export GCOV_PREFIX=/home/ha
+export GCOV_PREFIX=/home/shell
 export GCOV_PREFIX_STRIP=2
 ulimit -c unlimited
 ```
 
-### deploy test cases
+3. Deploy test cases
 ```
-git clone --no-checkout https://github.com/CUBRID/cubrid-testcases-private-ex.git
-cd ~/cubrid-testcases-private-ex
+git clone --no-checkout https://github.com/CUBRID/cubrid-testcases-private.git
+cd ~/cubrid-testcases-private
 git config core.sparseCheckout true
-echo 'HA/*' > ~/cubrid-testcases-private-ex/.git/info/sparse-checkout
+echo 'HA/*' > ~/cubrid-testcases-private/.git/info/sparse-checkout
 git checkout develop
 ```
 
-### make directories for test
+4. Make directories for test
 ```
 cd
 mkdir do_not_delete_core
 mkdir ERROR_BACKUP
 ```
 
-### create .cubrid.sh file 
-If cubrid has never been installed on the machine, we need create file '.cubrid.sh' at $HOME path manually.  
-*.cubrid.sh file:*   
+5. Add `.cubrid.sh` file   
+If cubrid has never been installed on the machine, we need add file `'.cubrid.sh'` at $HOME path manually.  
+
+## 3.6 Start Consumer
+On controller node, execute the script `start_test.sh` to start listening the test message after deployment.  
+This will start a HA shell test when the consumer receives the test message.
 ```
-CUBRID=/home/shell/CUBRID
-CUBRID_DATABASES=$CUBRID/databases
-if [ "x${LD_LIBRARY_PATH}x" = xx ]; then
-  LD_LIBRARY_PATH=$CUBRID/lib
-else
-  LD_LIBRARY_PATH=$CUBRID/lib:$LD_LIBRARY_PATH
-fi
-SHLIB_PATH=$LD_LIBRARY_PATH
-LIBPATH=$LD_LIBRARY_PATH
-PATH=$CUBRID/bin:$PATH
-export CUBRID
-export CUBRID_DATABASES
-export LD_LIBRARY_PATH
-export SHLIB_PATH
-export LIBPATH
-export PATH
+cd ~
+sh start_test.sh
 ```
 
-# 4 Regression Test
-We execute HA shell test for each CI build, and execute code coverage test monthly. Both of these test are started automatically when the controller receive a test message. We just need to prepare the conf files, verify the test results, and report issues.
+# 4 Regression Test Sustaining
+Please refer to shell guide: [Regression Test Sustaining](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#4-regression-test-sustaining)  
 
-## 4.1	Set conf files for regression test
-Edit the file: ~/CTP/conf/shell_template.conf.  
-shell_template.conf will be copied to \~/CTP/conf/shell_runtime.conf when test is started.  
-For more details, please refer to ['install CTP'](#install_CTP)
-
-## 4.2 Verify dailyqa test results
-### Result overview
-Open qahome in browser, then select build number. 'Function Result' page will be displayed.
-Find ha_shell in linux part.    
-![ha_shell1](./image1.png)  
-In the overview page, we should check the values in all the colomns. The most important check items are:  
-1. Whether the test is completed ('Test Rate' column)
-2. How many cases are failed('Failed' columns)
-3. The elapse time of the test ('Elapse Time' column). The elapse time of the test should not be longer than the elapse time of the previous build too much.  
-
-### verfy the failed cases
-Click the link in this image to open the online verification page.  
-![online_verify1](./image3.png)  
-For the online verification, please refer to shell test guide:
-(I will add the link here after shell guide is merged)
-
-## 4.3 Verify code coverage test result
-please refer to shell test guide.  
-
-## 4.4 Report issues
-please refer to shell test guide.  
-
-# 5 Execute Test  
-# 5.1 Execute a single test case  
-To execute a single test case, we juse need to login a test machine, and go to the case path, and then execute shell command 'sh case_name.sh'. 
-
-# 5.2 Execute a HA shell test  
-We can use the regression tools to trigger a test.  
-1. Change the parameters in ~/CTP/conf/shell_template.conf on controller node.    
-2. Send a message to start the test  
-Login: message@192.168.1.91  
-Send test message as:  
+## HA Shell Test Message
+ 
 ```
 sender.sh QUEUE_CUBRID_QA_SHELL_HA_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8330-d4d8464/drop/CUBRID-10.2.0.8330-d4d8464-Linux.x86_64.sh ha_shell default
 ```
-3. Start consumer on the controller node  
-If the consumer is not started, login the controller node to start it.  
+## Code Coverage Test Message
 ```
-cd ~
-sh start_test.sh 
-```
-4. Check test result  
-The results will be uploaded to qahome automatically. You can follow ['4.2 Verify dailyqa test results'](#4.2_Verify_dailyqa_test_results) to check the test results. 
-
-# 6 Code Coverage Test
-Please refer to shell test guide.  
-
-# 7 Run test manually
-1. Login controller node.
-2. Set the conf file ~/CTP/conf/shell_template.conf.
-3. run ctp
-```
-ctp.sh shell -c conf/shell_template.conf
+sender.sh QUEUE_CUBRID_QA_SHELL_HA_LINUX "http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz,http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz" ha_shell default
 ```
 
-# 8 HA shell case standards
+# 5 HA shell case standards
 HA shell case is a special kind of shell test case. It should fowllow all the shell test case standards.   
 For shell case standards, please refer to shell test guide.   
 In this section, I will only introduce the contents which are not included in shell test guide.  
 
-## 8.1 case path standard
-### new feature path:  
-We created folders for each cubrid version like this:  
+## 5.1 Case Path Standard
+A HA shell test case should follow the following structure:   
 ```
-PATH/TO/HA/shell/_27_features_920
-PATH/TO/HA/shell/_28_features_930
-PATH/TO/HA/shell/_29_banana_qa
-PATH/TO/HA/shell/_30_banana_pie
-PATH/TO/HA/shell/_31_cherry
+/path/to/test_name/cases/test_name.sh
+``` 
+### Test Cases Added for New Features 
+When we need add a test case for a feature test, add a case to path like this:  
+```
+cubrid-testcases-private/HA/shell/_{no}_{release_code}/cbrd_xxxxx_{feature}/
+```
+with naming rules:
+```
+structured_name_1/cases/structured_name_1.sh
+structured_name_2/cases/structured_name_2.sh
 ```
 
-### cases added for jira issues:
-We created a folder for test cases added for jira issues.  
+Example:
 ```
-PATH/TO/HA/shell/_12_bts_issue
+cubrid-testcases-private/HA/shell/_31_cherry/issue_21506_online_index
+cubrid-testcases-private/HA/shell/_31_cherry/issue_21506_online_index/cbrd_21506_01/cases/cbrd_21506_01.sh
 ```
 
-## 8.2 the beginning of the case
-```bash
-#!/bin/bash
-set -x
+### Test Cases Added for Jira Issues
+When add a test case for a bug fix, add a case to path:  
+```
+cubrid-testcases-private/HA/shell/_12_bts_issue/_{yy}_{1|2}h/
+```
+with naming rules:
+```
+cbrd_xxxxx/cases/cbrd_xxxxx.sh
+cbrd_xxxxx_1/cases/cbrd_xxxxx_1.sh
+cbrd_xxxxx_{issue_key}/cases/cbrd_xxxxx_{issue_keyword}.sh
+```
+Example:
+```
+cubrid-testcases-private/HA/shell/_12_bts_issue/_19_2h/cbrd_22207/cases/cbrd_22207.sh
+```
+
+## 5.2 HA Shell Case Template
+```
+#!/bin/sh
+# Initialize the environment variables, and import all the functions. 
 . $init_path/init.sh
 . $init_path/make_ha.sh
+
 init test
 setup_ha_environment
-```
 
-These lines will export system variables, import all the functions.  
-'init.sh' contains all the common functions for shell test cases.   
-*make_ha.sh*  
-'make_ha.sh' will source make_ha_upper.sh( >=8.4) or make_ha_lower.sh( <8.4) according to cubrid versions.
+# Test steps
+
+# Check the result
+if [condition]
+then
+       write_ok
+else
+       write_nok
+fi
+
+revert_ha_environment
+
+# Clean environment, such as delete the jave class files
+
+# 'finish' is a function in init.sh, which will revert all the conf files to the original status.
+finish
+```
+ 
+`'make_ha.sh'` will source make_ha_upper.sh( >=8.4) or make_ha_lower.sh( <8.4) according to cubrid versions.
 ```
 if [ $is_R40 -eq 1 ]; then
         . $init_path/make_ha_upper.sh
@@ -373,22 +379,71 @@ else
         . $init_path/make_ha_lower.sh
 fi
 ```
-make_ha_upper.sh and make_ha_lower.sh contain all the common functions for ha shell test cases.  
+`make_ha_upper.sh` and `make_ha_lower.sh` contain all the common functions for ha shell test cases.  
 
-*setup_ha_environment*  
-setup_ha_environment is used to setup a HA environment which contains one master node, and one slave node.  
+## 5.4 Functions/Alias in `'ha_common.sh'`
+ha_common.sh will be sourced in make_ha_upper.sh:  
+```
+source $init_path/ha_common.sh
+```
+### wait_for_active
+Wait server 'hatestdb' to be changed to active mode on current node.  
+If the server is changed to active to active mode whthin 120 seconds, the wait loop will break.   
+Otherwise, this function will print "NOK: db server is not active after long time".  
+This is usually used before we update data in hatestdb.
+
+### wait_for_slave_active
+Wait server 'hatestdb' to be changed to active mode on slave node.  
+If the server is changed to active to active mode whthin 120 seconds, the wait loop will break.   
+Otherwise, this function will print "NOK: db server is not active after long time".  
+This is usually used after a failover.  
+
+### run_on_slave
+```
+alias run_on_slave='${init_path}/../../common/script/run_remote_script -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
+```
+Examples:
+```
+run_on_slave -c "cubrid hb stop"
+run_on_slave -c "grep 'Process event: Encountered an unrecoverable error and will shut itself down' $CUBRID/log/${dbname}@${masterHostName}_copylogdb.err | wc -l"
+run_on_slave -c "cd $HOME; sh monitor_bug_11301.sh $dbname $masterHostName $port" > slave.log 2>&1
+```
+### run_download_on_slave
+```
+alias run_download_on_slave='${init_path}/../../common/script/run_download -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
+```
+Examples:
+```
+run_download_on_slave -from ~/slave.log -to ./
+run_download_on_slave -from $CUBRID/log/hatestdb@${masterHostName}_copylogdb.err -to .
+```
+
+### run_upload_on_slave
+```
+alias run_upload_on_slave='${init_path}/../../common/script/run_upload -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
+```
+Examples:
+```
+run_upload_on_slave -from $CUBRID/conf/cubrid.conf -to $CUBRID/conf/
+run_upload_on_slave -from ./monitor_bug_11301.sh -to $HOME/
+```
+
+## 5.5 Functions in make_ha_upper.sh or make_ha_lower.sh  
+
+### setup_ha_environment  
+`setup_ha_environment` is used to setup a HA environment which contains one master node, and one slave node.  
 The current machine is used as the master node, and slave node is set in ~/CTP/shell/init_path/HA.properties.  
-Example of HA.properties:  
+Example for HA.properties:  
 ```
 ##Configure HA enviorment.
 
 MASTER_SERVER_IP = 192.168.1.83
 MASTER_SERVER_USER = ha
-MASTER_SERVER_PW = *******
+MASTER_SERVER_PW = PASSWORD
 MASTER_SERVER_SSH_PORT = 22
 SLAVE_SERVER_IP = 192.168.1.93
 SLAVE_SERVER_USER = ha
-SLAVE_SERVER_PW = *******
+SLAVE_SERVER_PW = PASSWORD
 SLAVE_SERVER_SSH_PORT = 22
 #set port numbers according to different users
 CUBRID_PORT_ID = 1568
@@ -400,22 +455,22 @@ BROKER_PORT2 = 33091
 APPL_SERVER_SHM_ID2 = 33091
 CM_PORT = 8001
 ```
-If you need to run a HA shell, you need to edit HA.properties first.  
-In regression test,  file 'HA.properties' is configured by CTP.  
-CTP read info from file ~/CTP/conf/shell_template.conf on controller node, and set $init_path/HA.properties on each master node. 
+If we need to run a HA shell, we need configure `'HA.properties'` first.  
+In regression test,  file `'HA.properties'` is configured by CTP.  
+CTP read info from file `'~/CTP/conf/shell_runtime.conf'` on controller node, and set file `'$init_path/HA.properties'` on each master node. 
 
 For example:  
-$init_path/HA.properties on node ha@192.168.1.83:
+File `'$init_path/HA.properties'` on node ha@192.168.1.83:
 ```
 ##Configure HA enviorment.
 
 MASTER_SERVER_IP = 192.168.1.83
 MASTER_SERVER_USER = ha
-MASTER_SERVER_PW = uV9b3KMp5%%
+MASTER_SERVER_PW = PASSWORD
 MASTER_SERVER_SSH_PORT = 22
 SLAVE_SERVER_IP = 192.168.1.93
 SLAVE_SERVER_USER = ha
-SLAVE_SERVER_PW = uV9b3KMp5%%
+SLAVE_SERVER_PW = PASSWORD
 SLAVE_SERVER_SSH_PORT = 22
 #set port numbers according to different users
 CUBRID_PORT_ID = 1568
@@ -428,7 +483,7 @@ APPL_SERVER_SHM_ID2 = 33091
 CM_PORT = 8001
 
 ```
-This is depend on file ~/CTP/conf/shell_template.conf on controller node:  
+This is depended on file `~/CTP/conf/shell_template.conf` on controller node:  
 
 
 ```
@@ -449,26 +504,71 @@ env.83.ssh.relatedhosts=192.168.1.93
 ...
 ```
 
-## 8.3 the end of the case
-```bash
-cubrid service stop
-revert_ha_environment
-finish
-```
-'revert_ha_environment' function:  revert all the conf files to the original status on master node and slave node. 
-
-## 8.4 functions in make_ha_upper.sh
-### setup_ha_environment  
-Please refer to ['8.2 the beginning of the case'](#8.2_the_beginning_of_the_case)  
-
 ### revert_ha_environment  
-Please refer to ['8.3 the end of the case'](#8.3_the_end_of_the_case)  
-
-### format_hb_status
+* Revert all the conf files to the original status on master node and slave node.
+* Delete db on both nodes.
 
 ### wait_for_slave
+`wait_for_slave` is used to wait the data replication finished on slave node.
+If we need to check the data on slave node, we need to check the data after the data replication finished. So this function is required.
 
-### wait_for_slave_failover
+### wait_for_slave_failover  
+When a failover occurs, we need use function `wait_for_slave_failover` to wait the new slave node (previous master node) to finish the data replication before we check the data.
 
+### format_hb_status
+`format_hb_status` is used to format the hostname, process id, path for 'cubrid hb status' output.  
+Usage:
+```
+cubrid hb status > test.log
+format_hb_status test.log
+```
+Before format:
+```
+$ cat test.log 
+
+ HA-Node Info (current func09, state master)
+   Node func19 (priority 2, state slave)
+   Node func09 (priority 1, state master)
+
+
+ HA-Process Info (master 12167, state master)
+   Applylogdb hatestdb@localhost:/home/ha/CUBRID/databases/hatestdb_func19 (pid 12407, state registered)
+   Copylogdb hatestdb@func19:/home/ha/CUBRID/databases/hatestdb_func19 (pid 12405, state registered)
+   Server hatestdb (pid 12175, state registered_and_active)
+
+@ cubrid heartbeat status
+```
+After format:
+```
+$ cat test.log             
+
+ HA-Node Info (current host1, state master)
+   Node host2 (priority 2, state slave)
+   Node host1 (priority 1, state master)
+
+
+ HA-Process Info (master , state master)
+   Applylogdb hatestdb@localhost:CUBRID/databases/hatestdb_host2 (pid , state registered)
+   Copylogdb hatestdb@host2:CUBRID/databases/hatestdb_host2 (pid , state registered)
+   Server hatestdb (pid , state registered_and_active)
+
+@ cubrid heartbeat status
+```
 ### add_ha_db
+`add_ha_db` is used to add new database after `setup_ha_environment`.  
+* Create database on master node and slave node.  
+* Add the database name in ha_db_list in $CUBRID/conf/cubrid_ha.conf  
+* Restart the heartbeat on both nodes  
+Example:  
+Three databases will be created in this case: tdb01, tdb02 and tdb03. 
+```
+#!/bin/bash
 
+. $init_path/init.sh
+init test
+
+. $init_path/make_ha.sh
+dbname=tdb01
+setup_ha_environment
+add_ha_db tdb02 tdb03
+```
