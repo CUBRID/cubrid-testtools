@@ -578,7 +578,7 @@ cd ~
 sh start_test.sh 
 ```
 4. Check test result  
-The results will be uploaded to qahome automatically. You can follow ['4.1 Verify regression test results'](#4.1-Verify-regression-test-results) to check the test results.   
+The results will be uploaded to qahome automatically. You can follow ['4.1 Verify regression test results'](#41-verify-regression-test-results) to check the test results.   
 
 ## 4.5 Execute Code Coverage Test
 For code coverage test, just need to send a message.  
