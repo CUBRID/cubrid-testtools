@@ -32,9 +32,9 @@ cd ~/cubrid-testcases-private-ex
 git checkout develop
 ```
 **3. Install CTP**  
-1. Install CTP  
+**Install CTP**  
 Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform).   
-2. Set configuration file like this:  
+**Set configuration file like this:**  
 `~/CTP/conf/shell.conf`:
 ```
 # These parameters are used to set cubrid.conf, cubrid_broker.conf and cubrid_ha.conf
@@ -113,7 +113,7 @@ scenario=${HOME}/cubrid-testcases-private-ex/shell
 testcase_exclude_from_file=${HOME}/cubrid-testcases-private-ex/shell/config/daily_regression_test_excluded_list_linux.conf
 
 # Specify the build url
-cubrid_download_url=http://127.0.0.1/REPO_ROOT/store_02/10.1.0.6876-f9026f8/drop/CUBRID-10.1.0.6876-f9026f8-Linux.x86_64.sh
+cubrid_download_url=http://192.168.1.91:8080/REPO_ROOT/store_02/10.1.0.6876-f9026f8/drop/CUBRID-10.1.0.6876-f9026f8-Linux.x86_64.sh
 
 # When the test is interrupted and started again, we can choose whether to run it continuously or re-run it.
 test_continue_yn=false
@@ -160,7 +160,7 @@ feedback_db_pwd=
 ```
 ### Excluded List  
 The cases in the excluded list will not be run in the test.  
-If the case will block the test (eg. it hangs in regression test and the issue will not be fixed recently), we should add the case to the excluded list. For shell test, we have two excluded list files:
+If the case will block the test (e.g., it hangs in regression test and the issue will not be fixed recently), we should add the case to the excluded list. For shell test, we have two excluded list files:
 ```
 shell/config/daily_regression_test_excluded_list_linux.conf
 shell/config/daily_regression_test_excluded_list_windows.conf
@@ -180,9 +180,9 @@ nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
 
 ### Check Test Results
 Test results can be found in these ways:
-1. the screen output (or file nohup.out)
+1. the console output (or file nohup.out)
 2. feedback.log
-3. qa homepage
+3. [QA homepage](http://qahome.cubrid.org)
 
 #### feedback_type=file
 If we set `feedback_type=file`, we can use file `'feedback.log'` to check the test results.  
@@ -200,7 +200,7 @@ This is the way we used in regression test.
 |main_snapshot.properties|main_snapshot.properties|Records the snapshot of all the parameters used in this test.|
 |check_local.log<br>or<br>check_106.log|check_local.log<br>or<br>check_106.log|Records the log of checking the environment.|
 |current_task_id|current_task_id|Records the main_id of this test. This is used when feedback_type=database. If feedback_type=file, '0' is written in this file.|
-|dispatch_tc_ALL.txt|dispatch_tc_ALL.txt|Records all the cases that are needed to be test this time.|
+|dispatch_tc_ALL.txt|dispatch_tc_ALL.txt|Records all the cases that are needed to be tested this time.|
 |dispatch_tc_FIN_local.txt<br>or<br>dispatch_tc_FIN_106.txt|dispatch_tc_FIN_local.txt<br>or<br>dispatch_tc_FIN_106.txt|Records the cases that have been finished on this machine by now.|
 |monitor_local.log<br>or<br>monitor_106.log|monitor_local.log<br>or<br>monitor_106.log|Records the monitor logs, such as memory, disk space, processes, CUBRID logs, database, CUBRID conf files, netstat. This kind of file is only used when we set enable_status_trace_yn=true in configuration file.|
 |test_local.log<br>or<br>test_106.log|test_local.log<br>or<br>test_106.log|Records the screen output of CTP tool. It contains the sceen output of each test case.|
@@ -541,8 +541,10 @@ Click 'SHELL', to check the shell test cases.
 
 We can change the filters, such as `'OS'`, `'Bits'`, `'Category'`, `'Base build'`.  
 Usually, we use the last CI build as base build to compare with.    
-The elapse time of these cases should not changed too much compared to the base build.  
-And a red icon `'+'` will be displayed in `'Flag'` column if the result is abnormal. 
+The elapse time of these cases should not be changed too much compared to the base build.  
+Red icon `'+'` or `'-'` in `'Flag'` column:  
+`'+'`:  the elapse time on base build is less than the threshold, but the elapse time on current build is lager than the threshold.  
+`'-'`: the elapse time on base build is larger than the threshold, but the elapse time on current build is less than the threshold.  
 
 ## 4.2 Verify Code Coverage Test Result
 Go to QA homepage and find the `'code coverage'` node in the left area, click the link of the latest result.  
@@ -587,8 +589,8 @@ For code coverage test, just need to send a message.
 Login: message@192.168.1.91  
 Send test message as:  
 ```
-cd ~/manual
-sh sender_code_coverage_testing_message.sh Queue:QUEUE_CUBRID_QA_SHELL_LINUX Build URL:http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz Source URL:http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz Category:shell
+sender.sh QUEUE_CUBRID_QA_SHELL_LINUX "http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz,http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz" shell default 'PROPS:MKEY_COVERAGE_UPLOAD_DIR=/home/codecov/cc4c/result;MKEY_COVERAGE_UPLOAD_IP=192.168.1.98;MKEY_COVERAGE_UPLOAD_PWD=PASSWORD;MKEY_COVERAGE_UPLOAD_USER
+=codecov;'
 ```
 The result will be uploaded to qahome automatically.  
 To check the result, please refer to ['4.2 Verify code coverage test result'](#4.2-Verify-code-coverage-test-result) 
@@ -673,9 +675,9 @@ When execute `'init test'` at the beginning of the case, `'${init_path}/../../bi
 PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
 ```
 `'cubrid'` script in init_path will be used instead of $CUBRID/bin/cubrid in the case. For example:  
-`'cubrid deletedb':`  
+*'cubrid deletedb':*   
 It will check whether there are core files and fatal error generated in the case. If there are, backup db volumns, core files, logs. Then execute $CUBRID/bin/cubrid deletedb.  
-`'cubrid checkdb':`  
+*'cubrid checkdb':*   
 It will check whether checkdb is failed, and if it is, backup db volumns, logs, core files. Then execute $CUBRID/bin/cubrid checkdb.  
 
 ## 5.4 Functions in `'init.sh'`
