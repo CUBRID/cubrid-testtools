@@ -310,7 +310,7 @@ or
 ```
 ~/CTP/shell/init_path/run_shell.sh --enable-report --report-cron='0 0 9,13,18 * * ?' --issue="http://jira.cubrid.org/browse/CBRD-xxxx"  --mailto="Someone<email address>" --mailcc="<CUBRIDQA DL email address>" --loop --update-build
 ```
-You can refer to these sections of shell_heavy guide: [Execute one test case](https://github.com/CUBRID/cubrid-testtools/blob/95124dfa69ff905401096ec0b9cf783ee818da12/doc/shell_heavy_guide.md#25-execute-one-test-case) and [ Execute one test case repeatedly](https://github.com/CUBRID/cubrid-testtools/blob/95124dfa69ff905401096ec0b9cf783ee818da12/doc/shell_heavy_guide.md#26-execute-one-test-case-repeatedly).   
+You can refer to these sections of shell_heavy guide: [Execute one test case](shell_heavy_guide.md#25-execute-one-test-case) and [ Execute one test case repeatedly](shell_heavy_guide.md#26-execute-one-test-case-repeatedly).   
 
 
 # 3. Deploy Regression Test Environment
