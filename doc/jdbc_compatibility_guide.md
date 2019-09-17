@@ -24,26 +24,23 @@ Please refer to [this guide](https://github.com/CUBRID/cubrid-testtools/blob/dev
   
 # 3. Regression Test Deployment
 
-## 3.1 Test Machines
-For current daily regression test, controller node and test node are the same one.
+## 3.1 Test Machines  
+For current daily regression test, there are 4 test instances in parallel. The whole test for a test instance is deployed under a system user environment.
 
-
-No|Role	| User Name |	IP	| Hostname	| 
+No|Role	| User |	IP	| Hostname	| 
 -|-|-|-|-
-1 |Controller node & Test node |jcompat1| 192.168.1.79 | func04 | 
-2 |Controller node & Test node |jcompat2| 192.168.1.79 | func04 | 
-3 |Controller node & Test node |jcompat3| 192.168.1.79 | func04 | 
-4 |Controller node & Test node |jcompat4| 192.168.1.79 | func04 | 
-
-**Controller node**: It listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.    
-**Test node**: It executes test cases.
+1 |Test instance 1	 |jcompat1| 192.168.1.79 | func04 | 
+2 |Test instance 2	 |jcompat2| 192.168.1.79 | func04 | 
+3 |Test instance 3	 |jcompat3| 192.168.1.79 | func04 | 
+4 |Test instance 4	 |jcompat4| 192.168.1.79 | func04 | 
 
 ## 3.2 Deploy Test Environment
 * ### Install CTP 
 
-  Please follow [the guide](doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) to install CTP into directory `$HOME/CTP`.     
-  Create configuration file CTP/conf/sql_template.conf.  
-   On instance 1:
+  Please follow [the guide](ctp_install_guide.md#3-install-ctp-as-regression-test-platform) to install CTP into directory `$HOME/CTP`.     Create configuration file CTP/conf/sql_template.conf.  
+  
+  On instance 1:
+  
     ```
     [sql/cubrid.conf]
     ha_mode = yes
@@ -145,7 +142,7 @@ No|Role	| User Name |	IP	| Hostname	|
     ```
 * ### Job configuration
 
-    Log into message@192.168.0.90, configure job configuration related to JDBC compatibility test.
+    Log into message@192.168.0.91, configure job configuration related to JDBC compatibility test.
     
   * CTP/conf/job.conf 
   
@@ -269,8 +266,6 @@ No|Role	| User Name |	IP	| Hostname	|
 
         ```
 
-
-
       >Note: There are many  
       jdbc_sql_10.0_D.msg - it means test current build's server with 10.0's driver.       
       jdbc_sql_10.0_S64.msg - it means test current build's driver with 10.0's server.      
@@ -299,29 +294,11 @@ Sometimes, in order to investigate or correct a test, we need to send messages m
     
     For current server test, we use queue `"QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_SERVER_64"`, and select driver configurations in `"~/CTP/conf/compat"`. 
     
-    For example, login message@192.168.1.91     
+    For example, login message@192.168.1.91. Then send message for 10.2 server and 8.4.1 driver:   
     
     ```bash
-    sender.sh QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_jdbc default ~/CTP/conf/compat/jdbc_sql_8.4.1_D.msg 
-    ```
+    sender.sh QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_jdbc default ~/CTP/conf/compat/jdbc_sql_8.4.1_D.msg
     
-    >Note: you just need to select the message configuration file corresponding to the driver version   
-    > 8.4.1 driver -> jdbc_sql_8.4.1_D.msg   
-    > 8.4.3 driver -> jdbc_sql_8.4.1_D.msg    
-    > 8.4.4 driver -> jdbc_sql_8.4.1_D.msg   
-    > 9.2.x driver -> jdbc_sql_9.2_D.msg    
-    > 9.3.x driver -> jdbc_sql_9.3_D.msg   
-    > 10.0 driver -> jdbc_sql_10.0_D.msg   
-    > 10.1 driver -> jdbc_sql_10.1_D.msg   
-
-    **Example to send all messages for different driver:**    
-    ``` 
-    sender.sh QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8429-2e1a113/drop/CUBRID-10.2.0.8429-2e1a113-Linux.x86_64.sh compat_jdbc default -compatALL
-    ```
-    **Example to send message for 10.2 server and 8.4.1 driver:**
-    ```
-    $ sender.sh QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_jdbc default ~/CTP/conf/compat/jdbc_sql_8.4.1_D.msg 
-
     Message: 
 
     Message Content: Test for build 10.2.0.8369-5a75e41 by CUBRID QA Team, China
@@ -355,39 +332,38 @@ Sometimes, in order to investigate or correct a test, we need to send messages m
     MSG_FILEID=jdbc_sql_8.4.1_D
 
 
-    Do you accept above message [Y/N]:
+    Do you accept above message [Y/N]: Y
+    
+    ```
+    
+    >Note: you just need to select the message configuration file corresponding to the driver version   
+    > 8.4.1 driver -> jdbc_sql_8.4.1_D.msg   
+    > 8.4.3 driver -> jdbc_sql_8.4.1_D.msg    
+    > 8.4.4 driver -> jdbc_sql_8.4.1_D.msg   
+    > 9.2.x driver -> jdbc_sql_9.2_D.msg    
+    > 9.3.x driver -> jdbc_sql_9.3_D.msg   
+    > 10.0 driver -> jdbc_sql_10.0_D.msg   
+    > 10.1 driver -> jdbc_sql_10.1_D.msg   
+
+    **Example to send all messages for different driver:**    
     ``` 
-        
-        
+    sender.sh QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_SERVER_64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8429-2e1a113/drop/CUBRID-10.2.0.8429-2e1a113-Linux.x86_64.sh compat_jdbc default -compatALL
+    ```
+
 
 * ### Send test messages for driver test by manual  
 
     For current driver test, we use queue `"QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_DRIVER"`, and select server configurations in `"~/CTP/conf/compat"`.    
     
-    For example, login message@192.168.1.91.
+    For example, login message@192.168.1.91. Then send message for 10.2 driver and 9.2 server:
     
     ```bash
-    sender.sh QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_DRIVER http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_jdbc default ~/CTP/conf/compat/jdbc_sql_8.4.1_S64.msg
-    ```
-    >Note: you just need to select the message configuration file corresponding to the server version    
-    > 8.4.1 server -> jdbc_sql_8.4.1_S64.msg   
-    > 8.4.3 server -> jdbc_sql_8.4.3_S64.msg    
-    > 8.4.4 server -> jdbc_sql_8.4.4_S64.msg    
-    > 9.2.x server -> jdbc_sql_9.2_S64.msg    
-    > 9.3.x server -> jdbc_sql_9.3_S64.msg    
-    > 10.0 server -> jdbc_sql_10.0_S64.msg    
-    > 10.1 server -> jdbc_sql_10.1_S64.msg     
-    > 10.2 server -> jdbc_sql_10.2_S64.msg     
+    sender.sh QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_DRIVER http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_jdbc default ~/CTP/conf/compat/jdbc_sql_10.1_S64.msg
 
-
-    **Example to send message for 10.2 driver and 9.2 server:**
-    ```bash
-       
-    $ sender.sh QUEUE_CUBRID_QA_COMPAT_JDBC_SQL_DRIVER http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh compat_jdbc default ~/CTP/conf/compat/jdbc_sql_9.2_S64.msg 
     Message: 
 
     Message Content: Test for build 10.2.0.8369-5a75e41 by CUBRID QA Team, China
-    MSG_ID = 190912-171648-677-000001
+    MSG_ID = 190917-151008-172-000001
     MSG_PRIORITY = 4
     BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop
     BUILD_BIT=0
@@ -398,8 +374,8 @@ Sometimes, in order to investigate or correct a test, we need to send messages m
     BUILD_PACKAGE_PATTERN=CUBRID-{1}-Linux.x86_64.sh
     BUILD_SCENARIOS=compat_jdbc
     BUILD_SCENARIO_BRANCH_GIT=develop
-    BUILD_SEND_DELAY=7132465
-    BUILD_SEND_TIME=1568276208676
+    BUILD_SEND_DELAY=7556865
+    BUILD_SEND_TIME=1568700608170
     BUILD_STORE_ID=store_01
     BUILD_SVN_BRANCH=RB-10.2.0
     BUILD_SVN_BRANCH_NEW=RB-10.2.0
@@ -408,23 +384,29 @@ Sometimes, in order to investigate or correct a test, we need to send messages m
     BUILD_URLS_CNT=1
     BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh
     COMPAT_BUILD_BIT=64
-    COMPAT_BUILD_ID=9.2.30.0002
+    COMPAT_BUILD_ID=10.1.3.7765-265e708
     COMPAT_BUILD_SCENARIOS=sql
-    COMPAT_BUILD_SVN_BRANCH=RB-9.2.0
+    COMPAT_BUILD_SCENARIO_BRANCH_GIT=release/10.1
+    COMPAT_BUILD_SVN_BRANCH=unknown
     COMPAT_BUILD_TYPE=general
-    COMPAT_BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_03/9.2.30.0002/drop/CUBRID-9.2.30.0002-linux.x86_64.sh
-    COMPAT_BUILD_URLS_KR=null/9.2.30.0002/drop/CUBRID-9.2.30.0002-linux.x86_64.sh
-    COMPAT_TEST_CATAGORY=jdbc_sql_9.2_S64
-    MSG_FILEID=jdbc_sql_9.2_S64
+    COMPAT_BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7765-265e708/drop/CUBRID-10.1.3.7765-265e708-Linux.x86_64.sh
+    COMPAT_BUILD_URLS_KR=null/10.1.3.7765-265e708/drop/CUBRID-10.1.3.7765-265e708-Linux.x86_64.sh
+    COMPAT_TEST_CATAGORY=jdbc_sql_10.1_S64
+    MSG_FILEID=jdbc_sql_10.1_S64
 
 
-    Do you accept above message [Y/N]:
-    ```   
+    Do you accept above message [Y/N]:    
+    ```
+    
+    >Note: you just need to select the message configuration file corresponding to the server version    
+    > 10.0 server -> jdbc_sql_10.0_S64.msg    
+    > 10.1 server -> jdbc_sql_10.1_S64.msg     
+    > 10.2 server -> jdbc_sql_10.2_S64.msg     
 
         
 ## 4.2 Check running status 
 
-There are two ways. One is to check nohup.out log on the controller node. The other way is to check jdbc compatibility items on qahome monitor page.
+There are two ways. One is to check nohup.out log on the controller node. The other way is to check jdbc compatibility items on QA homepage monitor page.
 
 ## 4.3 Verify test Results
 
