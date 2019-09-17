@@ -3,11 +3,9 @@ The cci test is aimed to test CUBRID CCI driver. We write cci test cases to test
 
 
 # 2. Execute CCI Test
-To perform the cci test, we need to install CTP first.   
+To perform the CCI test, we need to install CTP first.   
 ## 2.1 Install CTP
-Please refer to the guide to [install CTP in Linux platform](ctp_install_guide.md#1-install-ctp-in-linux-platform).
-
-Create cci test configuration file as below:    
+Please refer to the guide to [install CTP in Linux platform](ctp_install_guide.md#1-install-ctp-in-linux-platform). Then create cci test configuration file as below:    
 File CTP/conf/cci.conf   
 ```    
 scenario=$HOME/cubrid-testcases-private/interface/CCI/shell/_20_cci/_13_enhancement/cci_execute_batch     
@@ -199,7 +197,7 @@ TEST COMPLETE
 ```
 ## 2.5 Examine test results
 ### Check test logs  
-During the test, the test logs are generated to CTP/result/shell/current_runtime_logs, after test finish, current_runtime_logs will be backuped as a .tar.gz file.
+During the test, the test logs are generated in directory `CTP/result/shell/current_runtime_logs`. Once test finish, `current_runtime_logs` will be backuped as a .tar.gz file.
 ```
 $ cd ~/CTP/result/shell/
 $ ls
@@ -208,7 +206,7 @@ $ ls current_runtime_logs/
 check_local.log  dispatch_tc_ALL.txt        feedback.log              monitor_local.log  test_local.log
 current_task_id  dispatch_tc_FIN_local.txt  main_snapshot.properties  runtime.log        test_status.data
 ``` 
-For more detail information, plesae refer to shell test guide.
+For more detail information, plesae refer to SHELL test guide.
 
 ### Check detail result for each case  
 The results of each test case are generated to the same path with test cases.
@@ -297,19 +295,29 @@ total 24
     ```
    If the .output file is different from .answer file, the result turns out NOK.
 
->Note: Other way of executing cci test case is as below:
-```bash
+### Run a single case
 
-#It's better to add below to .bash_profile
-export init_path=$CTP_HOME/shell/init_path
+There are two ways. One way is to execute the case directly. Before execution, it's required to export `init_path` environmental variable first as below:
+    
+    export init_path=$CTP_HOME/shell/init_path
 
-cd /path/to/test case folder
-sh issue_12530_cci.sh
-```
-or
-```
-~/CTP/shell/init_path/run_shell.sh --enable-report --report-cron='0 0 9,13,18 * * ?' --issue="http://jira.cubrid.org/browse/CBRD-xxxx"  --mailto="Someone<email address>" --mailcc="<CUBRIDQA DL email address>" --loop --update-build
-```
+You are suggested to add it in `~/.bash_profile`.
+
+Then start to run a case.
+
+        cd /path/to/test case
+        sh case_name.sh
+
+The second way is to run via `run_shell.sh`.
+
+    ~/CTP/shell/init_path/run_shell.sh --enable-report \
+        --report-cron='0 0 9,13,18 * * ?' \
+        --issue="http://jira.cubrid.org/browse/CBRD-xxxx"  \
+        --mailto="Someone<email address>" \
+        --mailcc="<CUBRIDQA DL email address>" \
+        --loop \
+        --update-build
+
 You can refer to these sections of shell_heavy guide: [Execute one test case](shell_heavy_guide.md#25-execute-one-test-case) and [ Execute one test case repeatedly](shell_heavy_guide.md#26-execute-one-test-case-repeatedly).   
 
 
