@@ -1,14 +1,12 @@
 # Shell Test Guide
 # 1 Test Objective
-Shell test suite is used to execute CUBRID functional test in a very flexible way. Shell test cases are written in Linux shell programing language. Shell test case can integrate others programing languages, like Java, C, Perl.   
-Shell test cases contain almost all the feature test and some performance test which cannot be tested by sql test or other test suites.   
-For examples:
+Shell test suite is used to execute CUBRID functional test in a very flexible way. Shell test cases are written in Linux shell programing language. It can easily integrate other programing languages, like Java, C, Perl. With shell test cases, almost all features  and performance which cannot be tested by SQL test or other test suites can be tested and automated. For examples:
 * check whether a cubrid utility works well  
 * check whether the error message of a sql statement is expected  
 * check a specific cubrid parameter works
 
-Shell test case path: [https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell](https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell)  
-Shell test is contained by daily regression test. The test cases are run on both linux platform and Windows platform. This guide will introduce linux shell test. And shell test is also an important part of code coverage test. 
+Shell test case path is located in [https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell](https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell).
+Shell test is contained by daily regression test. The test cases are run on both Linux platform and Windows platform. This guide will introduce linux shell test in detail. Additionally, shell test is also an important part of code coverage test. 
 
 
 # 2 Shell Test via CTP
@@ -16,9 +14,7 @@ CTP is the only test tool which is used to execute shell test cases.
 Source URL: [https://github.com/CUBRID/cubrid-testtools](https://github.com/CUBRID/cubrid-testtools)  
 ## 2.1 Quick Start
 **1. Install CUBRID**  
-Please follow CUBRID installation guide to install CUBRID.  
-Suppose that we install CUBRID at `$HOME/CUBRID`.  
-Then add this line `'source .cubrid.sh'` in `~/.bash_profile`:  
+Please follow CUBRID installation guide to install CUBRID. Suppose that we install CUBRID at `$HOME/CUBRID`. Then add this line `'source .cubrid.sh'` in `~/.bash_profile`:  
 ```
 source .cubrid.sh
 ```
@@ -32,9 +28,8 @@ cd ~/cubrid-testcases-private-ex
 git checkout develop
 ```
 **3. Install CTP**  
-**Install CTP**  
-Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform).   
-**Set configuration file like this:**  
+Please refer to ["CTP Installation Guide"](ctp_install_guide.md#1-install-ctp-in-linux-platform) to install CTP. Then create configuration file as below:
+
 `~/CTP/conf/shell.conf`:
 ```
 # These parameters are used to set cubrid.conf, cubrid_broker.conf and cubrid_ha.conf
@@ -79,131 +74,132 @@ nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
 ```
 
 ## 2.2 CTP Usage Introduction 
-### Parameters Introduction
-`~/CTP/conf/shell.conf`: 
-```
-# These parameters are used to set cubrid.conf, cubrid_broker.conf and cubrid_ha.conf
-# We can add the parameters as needed.
-# For example, if we need change set 'error_log_size = 800000000', just need add line 'default.cubrid.error_log_size = 800000000' here.
-default.cubrid.cubrid_port_id=1568
-default.broker1.BROKER_PORT=10090
-default.broker1.APPL_SERVER_SHM_ID=10090
-default.broker2.BROKER_PORT=13091
-default.broker2.APPL_SERVER_SHM_ID=13091
-default.ha.ha_port_id=19909
+* ### Parameters Introduction
 
-# Set the worker nodes
-# This is used when we run the shell test remotely.
-# We can add or delete the worker nodes randomly, even when the test is running.
-# In this example, two worker nodes are used. 
-# If no worker nodes are specified, the test will be run on current user of local machine (the controller node is used as worker node).
-env.104.ssh.host=192.168.1.104
-env.104.ssh.port=22
-env.104.ssh.user=shell
-env.104.ssh.pwd=PASSWORD
+  `~/CTP/conf/shell.conf`: 
+  ```
+  # These parameters are used to set cubrid.conf, cubrid_broker.conf and cubrid_ha.conf
+  # We can add the parameters as needed.
+  # For example, if we need change set 'error_log_size = 800000000', just need add line 'default.cubrid.error_log_size = 800000000' here.
+  default.cubrid.cubrid_port_id=1568
+  default.broker1.BROKER_PORT=10090
+  default.broker1.APPL_SERVER_SHM_ID=10090
+  default.broker2.BROKER_PORT=13091
+  default.broker2.APPL_SERVER_SHM_ID=13091
+  default.ha.ha_port_id=19909
 
-env.105.ssh.host=192.168.1.105
-env.105.ssh.port=22
-env.105.ssh.user=shell
-env.105.ssh.pwd=PASSWORD
+  # Set the worker nodes
+  # This is used when we run the shell test remotely.
+  # We can add or delete the worker nodes randomly, even when the test is running.
+  # In this example, two worker nodes are used. 
+  # If no worker nodes are specified, the test will be run on current user of local machine (the controller node is used as worker node).
+  env.104.ssh.host=192.168.1.104
+  env.104.ssh.port=22
+  env.104.ssh.user=shell
+  env.104.ssh.pwd=PASSWORD
 
-# Specify the case path and exclude list file
-# We can also specify a sub path under the test case path to run a sub set of the test cases.
-scenario=${HOME}/cubrid-testcases-private-ex/shell
-testcase_exclude_from_file=${HOME}/cubrid-testcases-private-ex/shell/config/daily_regression_test_excluded_list_linux.conf
+  env.105.ssh.host=192.168.1.105
+  env.105.ssh.port=22
+  env.105.ssh.user=shell
+  env.105.ssh.pwd=PASSWORD
 
-# Specify the build url
-cubrid_download_url=http://192.168.1.91:8080/REPO_ROOT/store_02/10.1.0.6876-f9026f8/drop/CUBRID-10.1.0.6876-f9026f8-Linux.x86_64.sh
+  # Specify the case path and exclude list file
+  # We can also specify a sub path under the test case path to run a sub set of the test cases.
+  scenario=${HOME}/cubrid-testcases-private-ex/shell
+  testcase_exclude_from_file=${HOME}/cubrid-testcases-private-ex/shell/config/daily_regression_test_excluded_list_linux.conf
 
-# When the test is interrupted and started again, we can choose whether to run it continuously or re-run it.
-test_continue_yn=false
+  # Specify the build url
+  cubrid_download_url=http://192.168.1.91:8080/REPO_ROOT/store_02/10.1.0.6876-f9026f8/drop/CUBRID-10.1.0.6876-f9026f8-Linux.x86_64.sh
 
-#Whether update test cases before test
-testcase_update_yn=true
-testcase_git_branch=develop
-testcase_timeout_in_secs=604800
+  # When the test is interrupted and started again, we can choose whether to run it continuously or re-run it.
+  test_continue_yn=false
 
-test_platform=linux
-test_category=shell
+  #Whether update test cases before test
+  testcase_update_yn=true
+  testcase_git_branch=develop
+  testcase_timeout_in_secs=604800
 
-# If the macro is included in the case, it will be excluded from the test.
-# For example, if 'LINUX_NOT_SUPPORTED' is included in the case, it will not be run in linux shell test.
-testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
+  test_platform=linux
+  test_category=shell
 
-# When the case is failed, we can re-run it. This paramter specify the max time we want to re-run the failed case.
-testcase_retry_num=0
+  # If the macro is included in the case, it will be excluded from the test.
+  # For example, if 'LINUX_NOT_SUPPORTED' is included in the case, it will not be run in linux shell test.
+  testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
 
-# Some times there is not enough disk space on the test machine, so we need to delete all the files under the test case path after the case is run.
-delete_testcase_after_each_execution_yn=false
+  # When the case is failed, we can re-run it. This paramter specify the max time we want to re-run the failed case.
+  testcase_retry_num=0
 
-# Check disk space before test.
-# If there is not enough disk space, the test tool will send an email to the owner.
-# The owner should clean the disk when he receives this email.
-# The test will continue untill the free disk space reaches the expected amount.
-enable_check_disk_space_yn=true
-owner_email=cui.man@navercorp.com
+  # Some times there is not enough disk space on the test machine, so we need to delete all the files under the test case path after the case is run.
+  delete_testcase_after_each_execution_yn=false
 
-# set test result feed back type: file or database
-feedback_type=file
-feedback_notice_qahome_url=http://192.168.1.86:8080/qaresult/shellImportAction.nhn?main_id=<MAINID>
+  # Check disk space before test.
+  # If there is not enough disk space, the test tool will send an email to the owner.
+  # The owner should clean the disk when he receives this email.
+  # The test will continue untill the free disk space reaches the expected amount.
+  enable_check_disk_space_yn=true
+  owner_email=cui.man@navercorp.com
 
-git_user=cubridqa
-git_email=dl_cubridqa_bj_internal@navercorp.com
-git_pwd=GITPASSWORD
+  # set test result feed back type: file or database
+  feedback_type=file
+  feedback_notice_qahome_url=http://192.168.1.86:8080/qaresult/shellImportAction.nhn?main_id=<MAINID>
 
-#these parameters are used when feedback_type=database
-feedback_db_host=192.168.1.86
-feedback_db_port=33080
-feedback_db_name=qaresu
-feedback_db_user=dba
-feedback_db_pwd=
-```
-### Excluded List  
-The cases in the excluded list will not be run in the test.  
-If the case will block the test (e.g., it hangs in regression test and the issue will not be fixed recently), we should add the case to the excluded list. For shell test, we have two excluded list files:
-```
-shell/config/daily_regression_test_excluded_list_linux.conf
-shell/config/daily_regression_test_excluded_list_windows.conf
-```
-For example, if we need add case `'shell/_06_issues/_18_1h/bug_bts_12583'` in linux excluded list, we should add these lines in file `'shell/config/daily_regression_test_excluded_list_linux.conf'`.  
-```
-#CBRD-21358 (add comment in this line to record the reason of adding this case in the exclude list)
-shell/_06_issues/_18_1h/bug_bts_12583
-```
+  git_user=cubridqa
+  git_email=dl_cubridqa_bj_internal@navercorp.com
+  git_pwd=GITPASSWORD
 
-### Execute Shell Test
-Login controller node and run CTP:
-```
-cd ~/CTP/bin
-nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
-```
+  #these parameters are used when feedback_type=database
+  feedback_db_host=192.168.1.86
+  feedback_db_port=33080
+  feedback_db_name=qaresu
+  feedback_db_user=dba
+  feedback_db_pwd=
+  ```
+* ### Excluded List  
+  The cases in the excluded list will not be run in the test.  
+  If the case will block the test (e.g., it hangs in regression test and the issue will not be fixed recently), we should add the case to the excluded list. For shell test, we have two excluded list files:
+  ```
+  shell/config/daily_regression_test_excluded_list_linux.conf
+  shell/config/daily_regression_test_excluded_list_windows.conf
+  ```
+  For example, if we need add case `'shell/_06_issues/_18_1h/bug_bts_12583'` in linux excluded list, we should add these lines in file `'shell/config/daily_regression_test_excluded_list_linux.conf'`.  
+  ```
+  #CBRD-21358 (add comment in this line to record the reason of adding this case in the exclude list)
+  shell/_06_issues/_18_1h/bug_bts_12583
+  ```
 
-### Check Test Results
-Test results can be found in these ways:
-1. the console output (or file nohup.out)
-2. feedback.log
-3. [QA homepage](http://qahome.cubrid.org)
+* ### Execute Shell Test
+  Login controller node and run CTP:
+  ```
+  cd ~/CTP/bin
+  nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
+  ```
 
-#### feedback_type=file
-If we set `feedback_type=file`, we can use file `'feedback.log'` to check the test results.  
+* ### Check Test Results
+  Test results can be found in these ways:
+  1. the console output (or file nohup.out)
+  2. feedback.log
+  3. [QA homepage](http://qahome.cubrid.org)
 
-#### feedback_type=database 
-If we set `feedback_type=database`, we need check the test results on qahome page.  
-For details, please refer to ['4.1 Verify regression test results'](#4.1-Verify-regression-test-results).  
-This is the way we used in regression test.
+  #### feedback_type=file
+  If we set `feedback_type=file`, we can use file `'feedback.log'` to check the test results.  
 
-#### Log File Introduction
-|feedback_type=file|feedback_type=database|description|
-|---|---|---|
-|feedback.log|NA|Records the test result for each case, and the result summary. This file dose not exist if feedback_type=database.|
-|test_status.data|NA|Records the current test status, such as total_case_count, total_fail_case_count. This file dose not exist if feedback_type=database.|
-|main_snapshot.properties|main_snapshot.properties|Records the snapshot of all the parameters used in this test.|
-|check_local.log<br>or<br>check_106.log|check_local.log<br>or<br>check_106.log|Records the log of checking the environment.|
-|current_task_id|current_task_id|Records the main_id of this test. This is used when feedback_type=database. If feedback_type=file, '0' is written in this file.|
-|dispatch_tc_ALL.txt|dispatch_tc_ALL.txt|Records all the cases that are needed to be tested this time.|
-|dispatch_tc_FIN_local.txt<br>or<br>dispatch_tc_FIN_106.txt|dispatch_tc_FIN_local.txt<br>or<br>dispatch_tc_FIN_106.txt|Records the cases that have been finished on this machine by now.|
-|monitor_local.log<br>or<br>monitor_106.log|monitor_local.log<br>or<br>monitor_106.log|Records the monitor logs, such as memory, disk space, processes, CUBRID logs, database, CUBRID conf files, netstat. This kind of file is only used when we set enable_status_trace_yn=true in configuration file.|
-|test_local.log<br>or<br>test_106.log|test_local.log<br>or<br>test_106.log|Records the screen output of CTP tool. It contains the sceen output of each test case.|
+  #### feedback_type=database 
+  If we set `feedback_type=database`, we need check the test results on qahome page.  
+  For details, please refer to ['4.1 Verify regression test results'](#4.1-Verify-regression-test-results).  
+  This is the way we used in regression test.
+
+  #### Log File Introduction
+  |feedback_type=file|feedback_type=database|description|
+  |---|---|---|
+  |feedback.log|NA|Records the test result for each case, and the result summary. This file dose not exist if feedback_type=database.|
+  |test_status.data|NA|Records the current test status, such as total_case_count, total_fail_case_count. This file dose not exist if feedback_type=database.|
+  |main_snapshot.properties|main_snapshot.properties|Records the snapshot of all the parameters used in this test.|
+  |check_local.log<br>or<br>check_106.log|check_local.log<br>or<br>check_106.log|Records the log of checking the environment.|
+  |current_task_id|current_task_id|Records the main_id of this test. This is used when feedback_type=database. If feedback_type=file, '0' is written in this file.|
+  |dispatch_tc_ALL.txt|dispatch_tc_ALL.txt|Records all the cases that are needed to be tested this time.|
+  |dispatch_tc_FIN_local.txt<br>or<br>dispatch_tc_FIN_106.txt|dispatch_tc_FIN_local.txt<br>or<br>dispatch_tc_FIN_106.txt|Records the cases that have been finished on this machine by now.|
+  |monitor_local.log<br>or<br>monitor_106.log|monitor_local.log<br>or<br>monitor_106.log|Records the monitor logs, such as memory, disk space, processes, CUBRID logs, database, CUBRID conf files, netstat. This kind of file is only used when we set enable_status_trace_yn=true in configuration file.|
+  |test_local.log<br>or<br>test_106.log|test_local.log<br>or<br>test_106.log|Records the screen output of CTP tool. It contains the sceen output of each test case.|
 
 
 
@@ -470,81 +466,81 @@ We execute shell test for each CI build, and execute code coverage test monthly.
 Both of the tests are started automatically when the controller receives a test message. We just need to verify the test results, and report the issues.
 
 ## 4.1 Verify Regression Test Results
-### Result Overview
-Open ['QA homepage'](http://qahome.cubrid.org) in browser, then select the build number. `'Function Result'` page will be displayed.  
-Find `shell` and `shell_debug` in linux part, and find `shell` in windows part.  
+* ### Result Overview
+  Open ['QA homepage'](http://qahome.cubrid.org) in browser, then select the build number. `'Function Result'` page will be displayed.  
+  Find `shell` and `shell_debug` in linux part, and find `shell` in windows part.  
 
-![shell_linux](./shell_image/image1.png)  
+  ![shell_linux](./shell_image/image1.png)  
 
-![shell_windows](./shell_image/image2.png)  
+  ![shell_windows](./shell_image/image2.png)  
 
-If there are crash failures, an alarm icon will appear in the `'Total'` column, like this:  
+  If there are crash failures, an alarm icon will appear in the `'Total'` column, like this:  
 
-![shell_crash](./shell_image/image12.png)     
+  ![shell_crash](./shell_image/image12.png)     
 
-In the overview page, we should check the values in all the colomns. The most important check items are:   
-|column|check point|
-|---|---|
-|Test Rate|Test rate should be 100%.|
-|Fail|How many cases are failed.|
-|Verified Rate|After the verification, verified rate should be 100%.|
-|Elapse Time|The elapse time of the test should not be longer than the elapse time of the previous build too much.|   
+  In the overview page, we should check the values in all the colomns. The most important check items are:   
+  |column|check point|
+  |---|---|
+  |Test Rate|Test rate should be 100%.|
+  |Fail|How many cases are failed.|
+  |Verified Rate|After the verification, verified rate should be 100%.|
+  |Elapse Time|The elapse time of the test should not be longer than the elapse time of the previous build too much.|   
 
-### Verfy the Failed Cases
-Click the link in this image to open the online verification page.  
+* ### Verfy the Failed Cases
+  Click the link in this image to open the online verification page.  
 
-![online_verify1](./shell_image/image3.png)   
+  ![online_verify1](./shell_image/image3.png)   
 
-On the verification page, click `'Log in'` to login.  
+  On the verification page, click `'Log in'` to login.  
 
-![online_verify2](./shell_image/image4.png)  
+  ![online_verify2](./shell_image/image4.png)  
 
-After logging in, we can start to verify the failed cases online.    
+  After logging in, we can start to verify the failed cases online.    
 
-![online_verify3](./shell_image/image5.png)    
+  ![online_verify3](./shell_image/image5.png)    
 
-**Click the link in 'Case File' column to check the case and the screen output.**  
+  **Click the link in 'Case File' column to check the case and the screen output.**  
 
-![online_verify6](./shell_image/image8.png)  
+  ![online_verify6](./shell_image/image8.png)  
 
-`'[history]':` check the test case history failure   
-*history page*    
+  `'[history]':` check the test case history failure   
+  *history page*    
 
-![online_verify4](./shell_image/image6.png)   
+  ![online_verify4](./shell_image/image6.png)   
 
-`'[verify]':` open the case's verification page to write the verification result   
-*case verification page*   
+  `'[verify]':` open the case's verification page to write the verification result   
+  *case verification page*   
 
-![online_verify5](./shell_image/image7.png)  
+  ![online_verify5](./shell_image/image7.png)  
 
-On this page:
-1. select a failure reason.  
-2. write some comments in `'Reason content'`  
-3. write the issue number in `'New issues'` or `'Revise required issues'`  
-4. click the button at the bottom to close this page.  
-`Fix`: I am sure of this verification result.  
-`Save`: I am not sure of this verification result. I will decide it later.  
+  On this page:
+  1. select a failure reason.  
+  2. write some comments in `'Reason content'`  
+  3. write the issue number in `'New issues'` or `'Revise required issues'`  
+  4. click the button at the bottom to close this page.  
+  `Fix`: I am sure of this verification result.  
+  `Save`: I am not sure of this verification result. I will decide it later.  
 
-Sometimes, we cannot find the failure reason from the screen output directly. At this time, we need login the test machine, go to the case path, check the logs. If we still cannot find the failure reason from the logs, we should run the case step by step on this machine to find the failure reason.  
-We should verify the crash failures first.  
+  Sometimes, we cannot find the failure reason from the screen output directly. At this time, we need login the test machine, go to the case path, check the logs. If we still cannot find the failure reason from the logs, we should run the case step by step on this machine to find the failure reason.  
+  We should verify the crash failures first.  
 
-### Verify the Low Performance Test Cases
-Open ['QA homepage'](http://qahome.cubrid.org) in browser, then select the build number. `'Function Result'` page will be displayed.   
-Find `'Low Performance Scenarios'` link.  
+* ### Verify the Low Performance Test Cases
+  Open ['QA homepage'](http://qahome.cubrid.org) in browser, then select the build number. `'Function Result'` page will be displayed.   
+  Find `'Low Performance Scenarios'` link.  
 
-![online_verify6](./shell_image/image13.png)   
+  ![online_verify6](./shell_image/image13.png)   
 
-Click this link, and go to the `'Low Performance Scenarios'` page.  
-Click 'SHELL', to check the shell test cases.   
+  Click this link, and go to the `'Low Performance Scenarios'` page.  
+  Click 'SHELL', to check the shell test cases.   
 
-![online_verify7](./shell_image/image14.png)   
+  ![online_verify7](./shell_image/image14.png)   
 
-We can change the filters, such as `'OS'`, `'Bits'`, `'Category'`, `'Base build'`.  
-Usually, we use the last CI build as base build to compare with.    
-The elapse time of these cases should not be changed too much compared to the base build.  
-Red icon `'+'` or `'-'` in `'Flag'` column:  
-`'+'`:  the elapse time on base build is less than the threshold, but the elapse time on current build is lager than the threshold.  
-`'-'`: the elapse time on base build is larger than the threshold, but the elapse time on current build is less than the threshold.  
+  We can change the filters, such as `'OS'`, `'Bits'`, `'Category'`, `'Base build'`.  
+  Usually, we use the last CI build as base build to compare with.    
+  The elapse time of these cases should not be changed too much compared to the base build.  
+  Red icon `'+'` or `'-'` in `'Flag'` column:  
+  `'+'`:  the elapse time on base build is less than the threshold, but the elapse time on current build is lager than the threshold.  
+  `'-'`: the elapse time on base build is larger than the threshold, but the elapse time on current build is less than the threshold.  
 
 ## 4.2 Verify Code Coverage Test Result
 Go to QA homepage and find the `'code coverage'` node in the left area, click the link of the latest result.  
@@ -560,11 +556,11 @@ Check the value of `'Coverage'` column. The coverage value should not lower than
 ![code coverage 3](./shell_image/image11.png) 
 
 ## 4.3 Report Issues  
-### Crash Issue  
-If there is a crash, report it following the rules in this link: [‘How to Report Regression Crash Issues’](http://jira.cubrid.org/browse/CUBRIDQA-1?focusedCommentId=4739244&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4739244)  
+* ### Crash Issue  
+ If there is a crash, report it following the rules in this link: [‘How to Report Regression Crash Issues’](http://jira.cubrid.org/browse/CUBRIDQA-1?focusedCommentId=4739244&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-4739244)  
 
-### Normal Issue  
-If the the test result is as expected, first we should confirm whether it is revise required. If not, report it as an issue on jira. 
+* ### Normal Issue  
+ If the the test result is as expected, first we should confirm whether it is revise required. If not, report it as an issue on jira. 
 
 ## 4.4 Execute A Shell Test by Sending Message
 We can use the regression tools to trigger a test.  
