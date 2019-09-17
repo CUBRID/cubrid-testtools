@@ -224,7 +224,8 @@ sender.sh QUEUE_CUBRID_QA_SHELL_LONG_LINUX http://192.168.1.91:8080/REPO_ROOT/st
 ```
 ### Verify test result 
 * ### Check whether there are results
-	Open [QA homepage](http://qahome.cubrid.org/qaresult/index.nhn), then navigate as below to find shell_long test result.   
+	Open [QA homepage](http://qahome.cubrid.org/qaresult/index.nhn), then navigate as below to find shell_long test result.
+        ![shell_long_result](./shell_long_image/image1.png)   
 	If some test shows 'NO RESULT', we need investigate reasons and resolve it.
 * ### Both Test Rate and Verified Rate should be 100%
 	In above picture, the figures with red color mean number of failures. Click it to open verification page. Then follow the same way as [SHELL Test's](shell_guide.md#41-verify-regression-test-results) to verify all failures. Both `Test Rate` and `Verified Rate` should be 100%.
@@ -316,20 +317,20 @@ job_coverage_test.test.15.queue=QUEUE_CUBRID_QA_SHELL_LONG_LINUX
 
 ### Verify code coverage testing result  
 1. Go to QA homepage and find the 'code coverage' node in the left area, click the link of latest result.  
-![code_cov](./media/image8.png)     
+![code_cov](./shell_long_image/image8.png)     
 
 2. Click the `shell_long` link.  
-![code_cov_whole](./media/image9.png)     
+![code_cov_whole](./shell_long_image/image9.png)     
 
 3. There is a coverage rate of lines. Its coverage rate of lines is usually in 40%~42%.   
-![code_cov_shell_long](./media/image10.png)      
+![code_cov_shell_long](./shell_long_image/image10.png)      
 
 ## 4.3 Report issues
 Please refer to [`report issues of shell test`](shell_guide.md#43-report-issues).     
 
 ### General issue  
 You can refer to http://jira.cubrid.org/browse/CBRD-21989.     
-![regrssion_issue](./media/image11.png)
+![regrssion_issue](./shell_long_image/image11.png)
 
 It is necessary to add such information: `Test Build`,`Test OS`,`Description`,`Repro Steps`,`Expected Result`,`Actual Result` and `Test Cases`.     
 Sometimes we need save database files and logs to analyze this issue.      
@@ -341,9 +342,9 @@ http://jira.cubrid.org/browse/CBRD-21772
  
 We can report crash issue though tools:        
 * #### Click `REPORT ISSUE FOR BELOW CRASH`
-	![report_issue](./media/image14.png)   
+	![report_issue](./shell_long_image/image14.png)   
 * #### Enter jira user and password,then click `Analyze Falure`,and click `Submit To Jira`  
-	![report_issue2](./media/image15.png)   
+	![report_issue2](./shell_long_image/image15.png)   
 
 ## 4.4 Maintenance
 ### Clean up `do_not_delete_core` Directory
