@@ -8,6 +8,7 @@ So HA shell test is divided to two categories:
 
 In this document, I will only introduce the first kind of test. And this kind of test is almost the same as shell test.  
 For the second kind of test, it will be introduced in shell_ext test guide.  
+Additionally, HA shell test is also a part of code coverage test.  
 
 # 2 Tools Introduction
 CTP is the only test tool which is used to execute HA shell test cases.   
@@ -380,6 +381,9 @@ else
 fi
 ```
 `make_ha_upper.sh` and `make_ha_lower.sh` contain all the common functions for ha shell test cases.  
+
+## 5.3 `'cubrid'` Script
+Please refer to shell guide: ['cubrid' Script](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#53-cubrid-script)  
 
 ## 5.4 Functions/Alias in `'ha_common.sh'`
 ha_common.sh will be sourced in make_ha_upper.sh:  
