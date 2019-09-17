@@ -12,7 +12,7 @@ See [CTP/README.md](CTP/README.md) for a quick start.
 
 ## Functional Testing Guide 
 * [SQL/MEDIUM/SQL_BY_CCI](doc/sql_guide.md)  
-* [Shell]() (TBD)
+* [Shell](doc/shell_guide.md)
 * [Shell_heavy]() (TBD)
 * [Shell_long]() (TBD)
 * [Shell_ext](./doc/shell_ext_guide.md)
@@ -24,7 +24,7 @@ See [CTP/README.md](CTP/README.md) for a quick start.
 * [Unit test](./doc/unittest_guide.md)
 * [JDBC](./doc/jdbc_guide.md)
 * [JDBC Compatibility](./doc/jdbc_compatibility_guide.md)
-* [CCI Compatibility]() (TBD)
+* [CCI Compatibility](./doc/cci_compatibility_guide.md)   
 * [MemoryLeak](./doc/memoryleak_guide.md)
 * [Code Coverage](./doc/code_coverage_guide.md)
 
