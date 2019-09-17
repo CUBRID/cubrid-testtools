@@ -5,7 +5,7 @@ The cci test is aimed to test CUBRID CCI driver. We write cci test cases to test
 # 2. Execute CCI Test
 To perform the cci test, we need to install CTP first.   
 ## 2.1 Install CTP
-Please refer to the guide to [install CTP in Linux platform](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform).
+Please refer to the guide to [install CTP in Linux platform](ctp_install_guide.md#1-install-ctp-in-linux-platform).
 
 Create cci test configuration file as below:    
 File CTP/conf/cci.conf   
@@ -32,7 +32,7 @@ run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8396-1bc28
 ```bash    
 ctp.sh shell -c ./cci.conf    
 ```    
-Screen output:    
+Console output:    
 Druing the test, CTP prints testing information like test configs, deploy status, test results, execution time and so on.      
 ```
 $ ctp.sh shell -c ./cci.conf  
@@ -399,7 +399,7 @@ For current daily regression test, controller node and test node are the same on
    yum install psmisc
    ```    
 # 4. Regression Tests
-We perform cci/cci_debug for daily (actually is for each build) and perform code coverage test of cci for monthly. cci_debug is executing CCI test cases with a debug build.
+We perform cci/cci_debug for daily (actually is for each build) and perform code coverage test of cci for monthly. The cci_debug is designed to test based on a debug build.
 
 ## 4.1 Daily Regresion Test
 When a new build comes, cci daily regression test will start. We just need to make sure that test environment has no problem and listener has been started. Sometimes, in order to investigate or correct a test, we need to send messages manually.   
@@ -713,14 +713,14 @@ $ tail -f nohup.out
     Clean msg id from queue file
     END_TIME:2019-08-13 23:26:19 KST
     ```
-* Check queue on [qahome page](http://qahome.cubrid.org/qaresult)    
+* Check queue on [QA homepage](http://qahome.cubrid.org/qaresult)    
   Please find queue monitor by `QA homepage` -> `Left tree menu` -> `Monitor` -> `Check queue`. You may see cci item and find what test is running.   
 
 ### Verify cci/cci_debug test result
 * ### Check test results
-If cci/cci_debug are not tested completely, you need to send a message to test it again, you can check the value of `Test Rate` or check executed cases(success cases plus fail cases). If there are failures, you need to verify them. When there is crash, the fail will be marked with red alert icon.   
+If cci/cci_debug are not tested completely, you need to send a message to test it again. You can check the value of `Test Rate` or check executed cases(success cases plus fail cases). If there are failures, you need to verify them. When there is crash, the fail will be marked with red alert icon.   
 
-Open [qahome](http://qahome.cubrid.org/qaresult)->select `build number`->select `Functions` page ->find `cci/cci_debug` item
+Open [QA  homepage](http://qahome.cubrid.org/qaresult)->select `build number`->select `Functions` page ->find `cci/cci_debug` item
 ![cci/cci_debug test results](./cci_image/test_results.png)
 Above cci_debug test has failure: one test case executed failed, and it has core, you need to investigate it.   
 
@@ -737,24 +737,25 @@ b. How many cases are failed('Fail' columns,include total and new columns).
 c. The elapse time of the test ('Elapse Time' column). The elapse time of this test should not be longer than the previous build too much.
 
 * ### Check failure list, verify failed cases
-Click the number of fail,you can enter into the failure list    
-1. All failed test cases in list are not be verified   
-![failure list](./cci_image/failure_list.png)
 
-2. All failed test cases in list have been verified   
-![verified test cases](./cci_image/failure_list_verified.png)
+    Click the number of fail,you can enter into the failure list.    
+    1. All failed test cases in list are not be verified   
+    ![failure list](./cci_image/failure_list.png)
 
-3. How to verify the failure     
-Please find reason of this case executed failed, you can refer to [failure detail page](#check-failure-detail) or reproduce it again.    
-Click `[verify]` link to open verification page. In verification page, you may choose one kind of reasons among `revise required / test case / environment / bugs / unknown`. And give detail information in fields `Reason content`, `New issues` or `Revise required issues`.    
-`New issues` : It is link to a jira issue which reported by this case   
-`Revise required issues`: It is link to a jira issue which lead to change in test case and answer   
+    2. All failed test cases in list have been verified   
+    ![verified test cases](./cci_image/failure_list_verified.png)
 
-When we judge the type of reason for failure is bug, we must fill in CUBRID jira issues.   
-When we judge the type of reason for failure is revise required, we need to fill in related jira issues.   
-Other failures  maybe caused by test case or environment(eg: execute time are different on machines, test case is unstable which need be enhanced)    
-![fill in reason](./cci_image/failure_reason.png)
-![reported bug](./cci_image/failure_bug.png)
+    3. How to verify the failure     
+    Please find reason of this case executed failed, you can refer to [failure detail page](#check-failure-detail) or reproduce it again.    
+    Click `[verify]` link to open verification page. In verification page, you may choose one kind of reasons among `revise required / test case / environment / bugs / unknown`. And give detail information in fields `Reason content`, `New issues` or `Revise required issues`.    
+    `New issues` : It is link to a jira issue which reported by this case   
+    `Revise required issues`: It is link to a jira issue which lead to change in test case and answer   
+
+    When we judge the type of reason for failure is bug, we must fill in CUBRID jira issues.   
+    When we judge the type of reason for failure is revise required, we need to fill in related jira issues.   
+    Other failures  maybe caused by test case or environment(eg: execute time are different on machines, test case is unstable which need be enhanced)    
+    ![fill in reason](./cci_image/failure_reason.png)
+    ![reported bug](./cci_image/failure_bug.png)
 
 * ### Check failure detail 
 Each failed test case has own detail page, for example:   
@@ -875,330 +876,266 @@ http://qahome.cubrid.org/qaresult/showfile.nhn?treeId=&level=&summaryName=&catPa
     > 1-row-1-column:1
     > 1-row-2-column:
     > 1-row-3-column:Yes
-    > 2-row-1-column:2
-    > 2-row-2-column:Tuesday
-    > 2-row-3-column:Yes
-    > test5.c(321) - main ERROR : (CUBRID DBMS Error)Cannot coerce value of domain "integer" to domain "enum". [-181] 
-    > 
-    > test5.c(321) - main ERROR : (CUBRID DBMS Error)Cannot coerce value of domain "integer" to domain "enum". [-181] 
-    > 
-    > 
-    > sql:select * from enum02
-    > 1-row-1-column:1
-    > 1-row-2-column:
-    > 1-row-3-column:Yes
-    > 2-row-1-column:2
-    > 2-row-2-column:Tuesday
-    > 2-row-3-column:Yes
-    > 3-row-1-column:3
-    > 3-row-2-column:Monday
-    > 3-row-3-column:Yes
-    + write_nok
-    + '[' -z '' ']'
-    + echo '----------------- 1 : NOK'
-    ----------------- 1 : NOK
-    + echo '_02_bind-1 : NOK'
-    ...
-    ```   
-    Above told us that result of this case is nok by comparing actual result `_02_bind.output` with expect result `_02_bind.answer`, command is `diff _02_bind.output _02_bind.answer`
+        > 2-row-1-column:2
+        > 2-row-2-column:Tuesday
+        > 2-row-3-column:Yes
+        > test5.c(321) - main ERROR : (CUBRID DBMS Error)Cannot coerce value of domain "integer" to domain "enum". [-181] 
+        > 
+        > test5.c(321) - main ERROR : (CUBRID DBMS Error)Cannot coerce value of domain "integer" to domain "enum". [-181] 
+        > 
+        > 
+        > sql:select * from enum02
+        > 1-row-1-column:1
+        > 1-row-2-column:
+        > 1-row-3-column:Yes
+        > 2-row-1-column:2
+        > 2-row-2-column:Tuesday
+        > 2-row-3-column:Yes
+        > 3-row-1-column:3
+        > 3-row-2-column:Monday
+        > 3-row-3-column:Yes
+        + write_nok
+        + '[' -z '' ']'
+        + echo '----------------- 1 : NOK'
+        ----------------- 1 : NOK
+        + echo '_02_bind-1 : NOK'
+        ...
+        ```   
+        Above told us that result of this case is nok by comparing actual result `_02_bind.output` with expect result `_02_bind.answer`, command is `diff _02_bind.output _02_bind.answer`
 
 ## 4.2 Code Coverage Test
-### Send test message
-login message@192.168.1.91
-```bash
-cd ~/manual/
-sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz cci
-```
->Note: 
-`$ sh sender_code_coverage_testing_message.sh`    
-`Usage: sh  sender_code_coverage_testing_message queue url1 url2 category`    
-`Queue:$1`   
-`Build URL:$2`   
-`Source URL:$3`   
-`Category:$4 `  
 
-### Check running status
-Please see [Check running status](#check-running-status)
-### Verify code coverage test result
-1. Click `qahome`->`code coverage`->select `latest year,eg:2019` to get the summary
-![code coverage summary](./cci_image/code_coverage_summary.png)
-2. Click `cubrid` to get the details for all kinds of test,eg: cci,shell
-![code coverage details](./cci_image/code_coverage_defails.png)
-3. Click `cci` to get the cci code coverage
-![cci code coverage](./cci_image/cci_code_coverage.png)
-We need check the value of `lines`, it is 33.9% on above graph, we need compare this result with last test. Code coverage should not drop too much. For cci, it stays around 33%.  
+* ### Send test message
+    Log into message@192.168.1.91, and send test message follow usage below:
 
-# 5. CCI Test Case
-## 5.1 Writing specification of test case
-## Test cases path
-1. new feature path    
-for example: cubrid-testcases-private/interface/CCI/shell/_20_cci/_28_features_841    
-     _28_features_841: it show us the features for 8.4.1    
+        cd ~/manual        
+        
+        Usage: sh  sender_code_coverage_testing_message queue url1 url2 category
+        Queue:$1
+        Build URL:$2   
+        Source URL:$3   
+        Category:$4 
+
+    Example to send a code coverage test message:
+    
+    ```bash
+    cd ~/manual/
+    sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz cci
     ```
-    $ ls _28_features_841
-    issue_12530_logintime
-    $ ls _28_features_841/issue_12530_logintime/
-    issue_12530_logintime_cg_pro_cor    issue_12530_logintime_cg_pro_incor_scen
-    issue_12530_logintime_cg_pro_incor  issue_12530_logintime_set_lg_cor
-    $ ls _28_features_841/issue_12530_logintime/issue_12530_logintime_cg_pro_cor/
-    cases
-    $ ls _28_features_841/issue_12530_logintime/issue_12530_logintime_cg_pro_cor/cases/
-    issue_12530_logintime_cg_pro_cor.answer  issue_12530_logintime_cg_pro_cor.sh  test.c
-    $ 
-    ``` 
-2. cases added for jira issues    
-We create a folder based on issue number   
-bug_bts_12616 maps to CUBRIDSUS-12616   
-cbrd_12616 maps to CBRD-12616    
+
+* ### Check running status
+
+    Please see [Check running status](#check-running-status)
+
+* ### Verify code coverage test result
+
+    1. Click `qahome`->`code coverage`->select `latest year,eg:2019` to get the summary
+    ![code coverage summary](./cci_image/code_coverage_summary.png)
+    2. Click `cubrid` to get the details for all kinds of test,eg: cci,shell
+    ![code coverage details](./cci_image/code_coverage_defails.png)
+    3. Click `cci` to get the cci code coverage
+    ![cci code coverage](./cci_image/cci_code_coverage.png)
+    We need check the value of `lines`, it is 33.9% on above graph, we need compare this result with last test. Code coverage should not drop too much. For cci, it stays around 33%.  
+
+# 5. CCI Test Case Specification
+
+* ## Test case paths for new feature
+    For example: cubrid-testcases-private/interface/CCI/shell/_20_cci/_28_features_841    
+         _28_features_841: it show us the features for 8.4.1    
+         
+        $ ls _28_features_841
+        issue_12530_logintime
+        $ ls _28_features_841/issue_12530_logintime/
+        issue_12530_logintime_cg_pro_cor    issue_12530_logintime_cg_pro_incor_scen
+        issue_12530_logintime_cg_pro_incor  issue_12530_logintime_set_lg_cor
+        $ ls _28_features_841/issue_12530_logintime/issue_12530_logintime_cg_pro_cor/
+        cases
+        $ ls _28_features_841/issue_12530_logintime/issue_12530_logintime_cg_pro_cor/cases/
+        issue_12530_logintime_cg_pro_cor.answer  issue_12530_logintime_cg_pro_cor.sh  test.c
+        
+* ## Test case paths for Jira issue automation 
+    We create a folder based on issue number. For example, the bug_bts_12616 maps to CUBRIDSUS-12616, the cbrd_12616 maps to CBRD-12616.    
+    
+        $ cd _12_issue/
+        $ ls
+        bug_bts_10310  bug_bts_12616  bug_bts_14333  bug_bts_5781  bug_bts_7159  bug_bts_7538  bug_bts_7910  bug_bts_8691  bug_bts_9043
+        bug_bts_10435  bug_bts_12817  bug_bts_14377  bug_bts_5810  bug_bts_7167  bug_bts_7575  bug_bts_7941  bug_bts_8693  bug_bts_9262
+        bug_bts_10485  bug_bts_13009  bug_bts_15089  bug_bts_5923  bug_bts_7174  bug_bts_7576  bug_bts_8102  bug_bts_8726  bug_bts_9269
+        bug_bts_10603  bug_bts_13011  bug_bts_15174  bug_bts_6781  bug_bts_7178  bug_bts_7581  bug_bts_8104  bug_bts_8764  bug_bts_9351
+        bug_bts_10817  bug_bts_13144  bug_bts_15223  bug_bts_6804  bug_bts_7191  bug_bts_7606  bug_bts_8106  bug_bts_8796  bug_bts_9397
+        bug_bts_10822  bug_bts_13298  bug_bts_15340  bug_bts_6897  bug_bts_7207  bug_bts_7667  bug_bts_8182  bug_bts_8800  bug_bts_9435
+        bug_bts_10840  bug_bts_13544  bug_bts_17300  bug_bts_6925  bug_bts_7226  bug_bts_7675  bug_bts_8318  bug_bts_8855  bug_bts_9586
+        bug_bts_11171  bug_bts_13576  bug_bts_4077   bug_bts_6958  bug_bts_7227  bug_bts_7683  bug_bts_8383  bug_bts_8856  bug_cubridsus2771
+        bug_bts_11542  bug_bts_13581  bug_bts_5253   bug_bts_6967  bug_bts_7306  bug_bts_7716  bug_bts_8508  bug_bts_8915
+        bug_bts_11547  bug_bts_14019  bug_bts_5534   bug_bts_6968  bug_bts_7455  bug_bts_7734  bug_bts_8617  bug_bts_8940
+        bug_bts_12584  bug_bts_14026  bug_bts_5633   bug_bts_7047  bug_bts_7516  bug_bts_7832  bug_bts_8675  bug_bts_9042
+
+
+* ## Test case template
+    The CCI test case is similar to SHELL test cases. Please see [SHELL guide](#72-shell-case-template).  Compared to SHELL, the code we need to add is like below: 
+    ```bash
+    xgcc -o test test.c
+    ./test $port
     ```
-    $ cd _12_issue/
-    $ ls
-    bug_bts_10310  bug_bts_12616  bug_bts_14333  bug_bts_5781  bug_bts_7159  bug_bts_7538  bug_bts_7910  bug_bts_8691  bug_bts_9043
-    bug_bts_10435  bug_bts_12817  bug_bts_14377  bug_bts_5810  bug_bts_7167  bug_bts_7575  bug_bts_7941  bug_bts_8693  bug_bts_9262
-    bug_bts_10485  bug_bts_13009  bug_bts_15089  bug_bts_5923  bug_bts_7174  bug_bts_7576  bug_bts_8102  bug_bts_8726  bug_bts_9269
-    bug_bts_10603  bug_bts_13011  bug_bts_15174  bug_bts_6781  bug_bts_7178  bug_bts_7581  bug_bts_8104  bug_bts_8764  bug_bts_9351
-    bug_bts_10817  bug_bts_13144  bug_bts_15223  bug_bts_6804  bug_bts_7191  bug_bts_7606  bug_bts_8106  bug_bts_8796  bug_bts_9397
-    bug_bts_10822  bug_bts_13298  bug_bts_15340  bug_bts_6897  bug_bts_7207  bug_bts_7667  bug_bts_8182  bug_bts_8800  bug_bts_9435
-    bug_bts_10840  bug_bts_13544  bug_bts_17300  bug_bts_6925  bug_bts_7226  bug_bts_7675  bug_bts_8318  bug_bts_8855  bug_bts_9586
-    bug_bts_11171  bug_bts_13576  bug_bts_4077   bug_bts_6958  bug_bts_7227  bug_bts_7683  bug_bts_8383  bug_bts_8856  bug_cubridsus2771
-    bug_bts_11542  bug_bts_13581  bug_bts_5253   bug_bts_6967  bug_bts_7306  bug_bts_7716  bug_bts_8508  bug_bts_8915
-    bug_bts_11547  bug_bts_14019  bug_bts_5534   bug_bts_6968  bug_bts_7455  bug_bts_7734  bug_bts_8617  bug_bts_8940
-    bug_bts_12584  bug_bts_14026  bug_bts_5633   bug_bts_7047  bug_bts_7516  bug_bts_7832  bug_bts_8675  bug_bts_9042
+
+* ## Functions in `init.sh`
+
+    Please refer to [SHELL guide](shell_guide.md#74-functions-in-initsh).
+    The most commonly used function is [xgcc](shell_guide.md#xgcc). For example:
     ```
-## Test case template
-The cci test case is similar with the shell test case    
-please see [shell guide](https://github.com/CUBRID/cubrid-testtools/blob/9682453b59344850b51385628bf8718bf27393e1/doc/shell/shell_guide.md#72-shell-case-template)     
-Compared to the shell, the code we need to add is like below: 
-```bash
-xgcc -o test test.c
-./test $port
-```
-
-## function in `init.sh`
-Please refer to [shell guide](https://github.com/CUBRID/cubrid-testtools/blob/9682453b59344850b51385628bf8718bf27393e1/doc/shell/shell_guide.md#74-functions-in-initsh)      
-The most commonly used function is [xgcc](https://github.com/CUBRID/cubrid-testtools/blob/9682453b59344850b51385628bf8718bf27393e1/doc/shell/shell_guide.md#xgcc).
-for example:
-```
-xgcc -g -o test test.c -I${CUBRID}/include -L${CUBRID}/lib -lcascci 
-xgcc -o test test.c -I${CUBRID}/include -L${CUBRID}/lib -lcascci ${MODE}
-xgcc -g -o test bts12425.c
-xgcc -o testbug9351 *.cpp -I${CUBRID}/include -L${CUBRID}/lib -lcascci ${MODE} -lstdc++
-```
-
-## Write .C file
-### Common steps
-1. include .h file  
-`cas_cci.h`, `stdio.h` and so on  
-2. define variables   
-`user`,`port`,`query`, `database_name` and so on   
-3. write main function or other functions   
+    xgcc -g -o test test.c -I${CUBRID}/include -L${CUBRID}/lib -lcascci 
+    xgcc -o test test.c -I${CUBRID}/include -L${CUBRID}/lib -lcascci ${MODE}
+    xgcc -g -o test bts12425.c
+    xgcc -o testbug9351 *.cpp -I${CUBRID}/include -L${CUBRID}/lib -lcascci ${MODE} -lstdc++
     ```
-    int main()
-    {
-        //main code, it should include the CCI API execution code
-    }
-    ```
-4. CCI API execution code   
-    ```
-    con=cci_connect(...)
-    if (con < 0)
-    {
-        //print erro information
-    }
-    req = cci_prepare (con, query, 0, &cci_error);
-    if (req < 0)
-    {
-        //print erro information
-    }
-    error = cci_execute (req, 0, 0, &cci_error);
-    if (error < 0)
-    {
-    //print erro information
-    } 
-    ```
-### C file example
-```C
-// Example to execute a simple query
-// In Linux: gcc -o simple simple.c -m64 -I${CUBRID}/include -lnsl ${CUBRID}/lib/libcascci.so -lpthread
 
-#include <stdio.h>
-#include "cas_cci.h"
-#define BUFSIZE  (1024)
+* ## Conventions for C source codes
 
-int
-main (void)
-{
-    int con = 0, req = 0, col_count = 0, i, ind;
-    int error;
-    char *data;
-    T_CCI_ERROR cci_error;
-    T_CCI_COL_INFO *col_info;
-    T_CCI_CUBRID_STMT stmt_type;
-    char *query = "select * from code";
+    ### Include `cas_cci.h` in header
+    
+            #include "cas_cci.h"  
 
-    //getting a connection handle for a connection with a server
-    con = cci_connect ("localhost", 33000, "demodb", "dba", "");
-    if (con < 0)
-    {
-        printf ("cannot connect to database\n");
-        return 1;
-    }
-
-    //preparing the SQL statement
-    req = cci_prepare (con, query, 0, &cci_error);
-    if (req < 0)
-    {
-        printf ("prepare error: %d, %s\n", cci_error.err_code,
-                cci_error.err_msg);
-        goto handle_error;
-    }
-
-    //getting column information when the prepared statement is the SELECT query
-    col_info = cci_get_result_info (req, &stmt_type, &col_count);
-    if (col_info == NULL)
-    {
-        printf ("get_result_info error: %d, %s\n", cci_error.err_code,
-                cci_error.err_msg);
-        goto handle_error;
-    }
-
-    //Executing the prepared SQL statement
-    error = cci_execute (req, 0, 0, &cci_error);
-    if (error < 0)
-    {
-        printf ("execute error: %d, %s\n", cci_error.err_code,
-                cci_error.err_msg);
-        goto handle_error;
-    }
-    while (1)
-    {
-
-        //Moving the cursor to access a specific tuple of results
-        error = cci_cursor (req, 1, CCI_CURSOR_CURRENT, &cci_error);
-        if (error == CCI_ER_NO_MORE_DATA)
+    ### Typical usage to connect and execute on a database 
+        ```
+        con=cci_connect(...)
+        if (con < 0)
         {
-            break;
+            //print erro information
         }
+        req = cci_prepare (con, query, 0, &cci_error);
+        if (req < 0)
+        {
+            //print erro information
+        }
+        error = cci_execute (req, 0, 0, &cci_error);
         if (error < 0)
         {
-            printf ("cursor error: %d, %s\n", cci_error.err_code,
+        //print erro information
+        } 
+        ```
+        
+    ### C file example
+    ```C
+    // Example to execute a simple query
+    // In Linux: gcc -o simple simple.c -m64 -I${CUBRID}/include -lnsl ${CUBRID}/lib/libcascci.so -lpthread
+
+    #include <stdio.h>
+    #include "cas_cci.h"
+    #define BUFSIZE  (1024)
+
+    int
+    main (void)
+    {
+        int con = 0, req = 0, col_count = 0, i, ind;
+        int error;
+        char *data;
+        T_CCI_ERROR cci_error;
+        T_CCI_COL_INFO *col_info;
+        T_CCI_CUBRID_STMT stmt_type;
+        char *query = "select * from code";
+
+        //getting a connection handle for a connection with a server
+        con = cci_connect ("localhost", 33000, "demodb", "dba", "");
+        if (con < 0)
+        {
+            printf ("cannot connect to database\n");
+            return 1;
+        }
+
+        //preparing the SQL statement
+        req = cci_prepare (con, query, 0, &cci_error);
+        if (req < 0)
+        {
+            printf ("prepare error: %d, %s\n", cci_error.err_code,
                     cci_error.err_msg);
             goto handle_error;
         }
 
-        //Fetching the query result into a client buffer
-        error = cci_fetch (req, &cci_error);
-        if (error < 0)
+        //getting column information when the prepared statement is the SELECT query
+        col_info = cci_get_result_info (req, &stmt_type, &col_count);
+        if (col_info == NULL)
         {
-            printf ("fetch error: %d, %s\n", cci_error.err_code,
+            printf ("get_result_info error: %d, %s\n", cci_error.err_code,
                     cci_error.err_msg);
             goto handle_error;
         }
-        for (i = 1; i <= col_count; i++)
+
+        //Executing the prepared SQL statement
+        error = cci_execute (req, 0, 0, &cci_error);
+        if (error < 0)
+        {
+            printf ("execute error: %d, %s\n", cci_error.err_code,
+                    cci_error.err_msg);
+            goto handle_error;
+        }
+        while (1)
         {
 
-            //Getting data from the fetched result
-            error = cci_get_data (req, i, CCI_A_TYPE_STR, &data, &ind);
+            //Moving the cursor to access a specific tuple of results
+            error = cci_cursor (req, 1, CCI_CURSOR_CURRENT, &cci_error);
+            if (error == CCI_ER_NO_MORE_DATA)
+            {
+                break;
+            }
             if (error < 0)
             {
-                printf ("get_data error: %d, %d\n", error, i);
+                printf ("cursor error: %d, %s\n", cci_error.err_code,
+                        cci_error.err_msg);
                 goto handle_error;
             }
-            printf ("%s\t|", data);
+
+            //Fetching the query result into a client buffer
+            error = cci_fetch (req, &cci_error);
+            if (error < 0)
+            {
+                printf ("fetch error: %d, %s\n", cci_error.err_code,
+                        cci_error.err_msg);
+                goto handle_error;
+            }
+            for (i = 1; i <= col_count; i++)
+            {
+
+                //Getting data from the fetched result
+                error = cci_get_data (req, i, CCI_A_TYPE_STR, &data, &ind);
+                if (error < 0)
+                {
+                    printf ("get_data error: %d, %d\n", error, i);
+                    goto handle_error;
+                }
+                printf ("%s\t|", data);
+            }
+            printf ("\n");
         }
-        printf ("\n");
+
+        //Closing the request handle
+        error = cci_close_req_handle (req);
+        if (error < 0)
+        {
+            printf ("close_req_handle error: %d, %s\n", cci_error.err_code,
+                    cci_error.err_msg);
+            goto handle_error;
+        }
+
+        //Disconnecting with the server
+        error = cci_disconnect (con, &cci_error);
+        if (error < 0)
+        {
+            printf ("error: %d, %s\n", cci_error.err_code, cci_error.err_msg);
+            goto handle_error;
+        }
+
+        return 0;
+
+    handle_error:
+        if (req > 0)
+            cci_close_req_handle (req);
+        if (con > 0)
+        cci_disconnect (con, &cci_error);
+
+        return 1;
     }
+    
+# 6. Appendix
 
-    //Closing the request handle
-    error = cci_close_req_handle (req);
-    if (error < 0)
-    {
-        printf ("close_req_handle error: %d, %s\n", cci_error.err_code,
-                cci_error.err_msg);
-        goto handle_error;
-    }
-
-    //Disconnecting with the server
-    error = cci_disconnect (con, &cci_error);
-    if (error < 0)
-    {
-        printf ("error: %d, %s\n", cci_error.err_code, cci_error.err_msg);
-        goto handle_error;
-    }
-
-    return 0;
-
-handle_error:
-    if (req > 0)
-        cci_close_req_handle (req);
-    if (con > 0)
-    cci_disconnect (con, &cci_error);
-
-    return 1;
-}
-
-```
-### Supplement
-#### include head file
-below is the base
-```C
-#include <stdio.h> //print and so on
-#include "cas_cci.h"  //CCI API
-```
-but you can also add others
-```C
-#include <string.h>
-#include <stdio.h>
-#include <sys/time.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include "cas_cci.h"
-```
->Note: you need to refer to C/C++ programing.
-
-#### variables definition
-##### within the main function:
-```C
-int con = 0, req = 0, col_count = 0, i, ind;
-int error;
-char *data;
-T_CCI_ERROR cci_error;    
-T_CCI_COL_INFO *col_info;
-T_CCI_CUBRID_STMT stmt_type; 
-char *query = "select * from code"; 
-```
-The T_CCI_ERROR object is most commonly defined. It is used in the CCI API.   
-We need to print cci_error.err_msg and cci_error.err_code, for example: 
-```C
-cci_execute(req,0,0,&cci_error)
-```
-##### outside the main function:
-```C
-char user[32]   = "dba";
-char passwd[32] = "";
-char *dbname    = NULL;
-char *url       = "cci:cubrid:xseed080.kdev:33888:bug_12530:dba::";
-T_CCI_DATASOURCE *dataSource = NULL;
-char sql[SQL_MAXNUM][56] = {"drop table if exists t1",
-        "create table t1 (a int)"};
-```
-`user`, `passwod` and url can be used in `cci_connect_with_url(url, user, passwd)`
-
-#### CCI API 
-* Opening a database connection handle (related functions: cci_connect(), cci_connect_with_url())   
-* Getting the request handle for the prepared statement (related function: cci_prepare())     
-* Binding data to the prepared statement (related function: cci_bind_param())    
-* Executing the prepared statement (related function: cci_execute())    
-* Processing the execution result (related functions: cci_cursor(), cci_fetch(), cci_get_data(), cci_get_result_info())     
-* Closing the request handle (related function: cci_close_req_handle())   
-* Closing the database connection handle (related function: cci_disconnect())     
-* Using database connection pool (related functions: cci_property_create(), cci_property_destroy(), cci_property_set(), cci_datasource_create(), cci_datasource_destroy(), cci_datasource_borrow(), cci_datasource_release(), cci_datasource_change_property())     
-
-## 5.2 CCI API reference
-Please refer to [CUBRID manual](https://www.cubrid.org/manual/en/10.1/api/cciapi.html)     
-for example:
-![cci_execute](./cci_image/CCI_API.png)
-
-  
-
-
+* ## CCI API reference
+    Please refer to [CCI API reference in CUBRID manual](https://www.cubrid.org/manual/en/10.1/api/cciapi.html).    
