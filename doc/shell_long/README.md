@@ -25,7 +25,7 @@ Please refer to [these sections of shell_heavy guide](shell_heavy_guide.md#2-exe
 	```
 
 # 3. Deploy Regression Test Environment
-In this section, we will introduce how to deploy the Shell_long Regression Test Environment.  
+In this section, we will introduce how to deploy the shell_long regression test environment.  
 ## 3.1 Test Machines
 For current daily regression test, there are one controller node and five test nodes.      
 **Controller node** : This node listens to test messages and starts a test when there is a test message.    
@@ -191,8 +191,7 @@ Test node|shell_long|192.168.1.103|func28|CTP,cubrid-testcases-private
 	ulimit -c unlimited
 	```
 # 4. Regression Test Sustaining
-We perform shell_long test twice a week (actually it is controlled through crontab) and perform code coverage test for monthly.  
-Crontab task for shell_long test is as below:
+We perform shell_long test twice a week (actually it is controlled through crontab) and perform code coverage test for monthly. Crontab task for shell_long test is as below:
 ```
 #######################################################################
 job_shell_long.service=ON
@@ -229,9 +228,9 @@ sender.sh QUEUE_CUBRID_QA_SHELL_LONG_LINUX http://192.168.1.91:8080/REPO_ROOT/st
 * ### Both Test Rate and Verified Rate should be 100%
 	In above picture, the figures with red color mean number of failures. Click it to open verification page. Then follow the same way as [shell test's](shell_guide.md#41-verify-regression-test-results) to verify all failures. Both Test Rate and Verified Rate should be 100%.
    
-## 4.2 Code coverage test  
-Code coverage test starts on the last Sunday of each month.      
-You can find the setting from http://qahome.cubrid.org/qaresult/job/job.conf     
+## 4.2 Code coverage test
+### CTP/conf/job.conf
+Code coverage test starts on the last Sunday of each month. You can find the setting from http://qahome.cubrid.org/qaresult/job/job.conf.   
 ```
 #######################################################################
 job_codecoverage.service=ON
@@ -255,61 +254,62 @@ job_coverage_test.package_type=coverage
 job_coverage_test.test.15.scenario=shell_long
 job_coverage_test.test.15.queue=QUEUE_CUBRID_QA_SHELL_LONG_LINUX
 ```
-### Send code coverage testing message    
-Login `message@192.168.1.91`, using the `sender_code_coverage_testing_message.sh` script to send a code coverate test message.   
->
-```bash
-$ cd ~/manual
-$ sh sender_code_coverage_testing_message.sh
-Usage: sh  sender_code_coverage_testing_message queue url1 url2 category
-``` 
-Example to send code coverage test message:  
-```bash
-$ cd ~/manual
-$ sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_SHELL_LONG_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz shell_long    
-Queue:QUEUE_CUBRID_QA_SHELL_LONG_LINUX
-Build URL:http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz
-Source URL:http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz
-Category:shell_long
+### Send code coverage testing message 
+* ### Send messages
+	Login `message@192.168.1.91`, using the `sender_code_coverage_testing_message.sh` script to send a code coverate test message.   
+	>
+	```bash
+	$ cd ~/manual
+	$ sh sender_code_coverage_testing_message.sh
+	Usage: sh  sender_code_coverage_testing_message queue url1 url2 category
+	``` 
+* ### Example to send code coverage test message:  
+	```bash
+	$ cd ~/manual
+	$ sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_SHELL_LONG_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz shell_long    
+	Queue:QUEUE_CUBRID_QA_SHELL_LONG_LINUX
+	Build URL:http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz
+	Source URL:http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz
+	Category:shell_long
 
-Message: 
+	Message: 
 
-Message Content: Test for build 10.2.0.8270-c897055 by CUBRID QA Team, China
-MSG_ID = 190705-165519-836-000001
-MSG_PRIORITY = 4
-BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8270-c897055/drop
-BUILD_BIT=0
-BUILD_CREATE_TIME=1551930752000
-BUILD_GENERATE_MSG_WAY=MANUAL
-BUILD_ID=10.2.0.8270-c897055
-BUILD_IS_FROM_GIT=1
-BUILD_PACKAGE_PATTERN=CUBRID-{1}-gcov-Linux.x86_64.tar.gz
-BUILD_SCENARIOS=shell_long
-BUILD_SCENARIO_BRANCH_GIT=develop
-BUILD_SEND_DELAY=10382567
-BUILD_SEND_TIME=1562313319834
-BUILD_STORE_ID=store_01
-BUILD_SVN_BRANCH=RB-10.2.0
-BUILD_SVN_BRANCH_NEW=RB-10.2.0
-BUILD_TYPE=coverage
-BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz
-BUILD_URLS_1=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz
-BUILD_URLS_CNT=2
-BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz
-BUILD_URLS_KR_1=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz
-MKEY_COVERAGE_UPLOAD_DIR=/home/codecov/cc4c/result
-MKEY_COVERAGE_UPLOAD_IP=192.168.1.98
-MKEY_COVERAGE_UPLOAD_PWD=******
-MKEY_COVERAGE_UPLOAD_USER=codecov
+	Message Content: Test for build 10.2.0.8270-c897055 by CUBRID QA Team, China
+	MSG_ID = 190705-165519-836-000001
+	MSG_PRIORITY = 4
+	BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8270-c897055/drop
+	BUILD_BIT=0
+	BUILD_CREATE_TIME=1551930752000
+	BUILD_GENERATE_MSG_WAY=MANUAL
+	BUILD_ID=10.2.0.8270-c897055
+	BUILD_IS_FROM_GIT=1
+	BUILD_PACKAGE_PATTERN=CUBRID-{1}-gcov-Linux.x86_64.tar.gz
+	BUILD_SCENARIOS=shell_long
+	BUILD_SCENARIO_BRANCH_GIT=develop
+	BUILD_SEND_DELAY=10382567
+	BUILD_SEND_TIME=1562313319834
+	BUILD_STORE_ID=store_01
+	BUILD_SVN_BRANCH=RB-10.2.0
+	BUILD_SVN_BRANCH_NEW=RB-10.2.0
+	BUILD_TYPE=coverage
+	BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz
+	BUILD_URLS_1=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz
+	BUILD_URLS_CNT=2
+	BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz
+	BUILD_URLS_KR_1=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz
+	MKEY_COVERAGE_UPLOAD_DIR=/home/codecov/cc4c/result
+	MKEY_COVERAGE_UPLOAD_IP=192.168.1.98
+	MKEY_COVERAGE_UPLOAD_PWD=******
+	MKEY_COVERAGE_UPLOAD_USER=codecov
 
 
-Do you accept above message [Y/N]:
-Y
-```
-queue: queue name    
-url1: gcov build package url    
-url2: gcov source package url    
-catecory: shell_long   
+	Do you accept above message [Y/N]:
+	Y
+	```
+	queue: queue name    
+	url1: gcov build package url    
+	url2: gcov source package url    
+	catecory: shell_long   
 ### Verify code coverage testing result  
 1. Go to QA homepage and find the 'code coverage' node in the left area, click the link of latest result.  
 ![code_cov](./media/image8.png)     
