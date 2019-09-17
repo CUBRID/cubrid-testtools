@@ -1,5 +1,5 @@
 # 1. Test Objective  
-This guide is to introduce how to execute `shell_long` test suite via test tool CTP.  The shell_long` test case specification is exactly same as general SHELL test case's. The only difference between them is that `shell_long` test cases ask a little long time to execute.     
+This guide is to introduce how to execute `shell_long` test suite via test tool CTP.  The `shell_long` test case specification is exactly same as general SHELL test case's. The only difference between them is that `shell_long` test cases ask a little long time to execute.     
 
 # 2. Execute Shell_long Test
 Please refer to [these sections of shell_heavy guide](shell_heavy_guide.md#2-execute-shell_heavy-test) to execute shell_long test. Below we just list some difference between them.   
