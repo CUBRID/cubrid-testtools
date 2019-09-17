@@ -12,7 +12,7 @@ See [CTP/README.md](CTP/README.md) for a quick start.
 
 ## Functional Testing Guide 
 * [SQL/MEDIUM/SQL_BY_CCI](doc/sql_guide.md)  
-* [Shell]() (TBD)
+* [Shell](doc/shell_guide.md)
 * [Shell_heavy]() (TBD)
 * [Shell_long]() (TBD)
 * [Shell_ext](./doc/shell_ext_guide.md)
