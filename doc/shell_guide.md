@@ -18,7 +18,7 @@ Source URL: [https://github.com/CUBRID/cubrid-testtools](https://github.com/CUBR
 **1. Install CUBRID**  
 Please follow CUBRID installation guide to install CUBRID.  
 Suppose that we install CUBRID at `$HOME/CUBRID`.  
-Then add `'source .cubrid.sh'` in `~/.bash_profile`:  
+Then add this line `'source .cubrid.sh'` in `~/.bash_profile`:  
 ```
 source .cubrid.sh
 ```
@@ -198,17 +198,17 @@ This is the way we used in regression test.
 |feedback.log|NA|Records the test result for each case, and the result summary. This file dose not exist if feedback_type=database.|
 |test_status.data|NA|Records the current test status, such as total_case_count, total_fail_case_count. This file dose not exist if feedback_type=database.|
 |main_snapshot.properties|main_snapshot.properties|Records the snapshot of all the parameters used in this test.|
-|check_local.log/check_106.log|check_local.log/check_106.log|Records the log of checking the environment.|
+|check_local.log<br>or<br>check_106.log|check_local.log<br>or<br>check_106.log|Records the log of checking the environment.|
 |current_task_id|current_task_id|Records the main_id of this test. This is used when feedback_type=database. If feedback_type=file, '0' is written in this file.|
 |dispatch_tc_ALL.txt|dispatch_tc_ALL.txt|Records all the cases that are needed to be test this time.|
-|dispatch_tc_FIN_local.txt/dispatch_tc_FIN_106.txt|dispatch_tc_FIN_local.txt/dispatch_tc_FIN_106.txt|Records the cases that have been finished on this machine by now.|
-|monitor_local.log/monitor_106.log|monitor_local.log/monitor_106.log|Records the monitor logs, such as memory, disk space, processes, CUBRID logs, database, CUBRID conf files, netstat. This kind of file is only used when we set enable_status_trace_yn=true in configuration file.|
-|test_local.log/test_106.log|test_local.log/test_106.log|Records the screen output of CTP tool. It contains the sceen output of each test case.|
+|dispatch_tc_FIN_local.txt<br>or<br>dispatch_tc_FIN_106.txt|dispatch_tc_FIN_local.txt<br>or<br>dispatch_tc_FIN_106.txt|Records the cases that have been finished on this machine by now.|
+|monitor_local.log<br>or<br>monitor_106.log|monitor_local.log<br>or<br>monitor_106.log|Records the monitor logs, such as memory, disk space, processes, CUBRID logs, database, CUBRID conf files, netstat. This kind of file is only used when we set enable_status_trace_yn=true in configuration file.|
+|test_local.log<br>or<br>test_106.log|test_local.log<br>or<br>test_106.log|Records the screen output of CTP tool. It contains the sceen output of each test case.|
 
 
 
 ## 2.3 Execute A Single Test Case  
-Before execute a single case, we need export $init_path variable. Usually, we add it in `~/.bash_profile` file:    
+Before execute a single case, we need export the environment variable `init_path`. Usually, we add it in `~/.bash_profile` file:    
 ```
 export init_path=$HOME/CTP/shell/init_path
 ```
@@ -238,7 +238,7 @@ sh case_name.sh
 
 ## 3.2 Create and Set Users  
 ### Controller Node
-We need create a new user: shell_ctrl.  
+We need create a new user `'shell_ctrl'`.  
 Then login root user and execute:  
 ```
 sudo useradd shell_ctrl
@@ -253,7 +253,7 @@ sudo passwd shell_ctrl
  ```
  
 ### Worker Nodes
-We need create a new user: shell.  
+We need create a new user `'shell'`.  
 Login root user and execute:  
 ```
 sudo useradd shell
@@ -267,7 +267,7 @@ sudo passwd shell
  sudo chage -E 2999-1-1 -m 0 -M 99999 shell
  ```
 ## 3.3 Install Software Packages
-Required software packages: jdk, lcov, bc.   
+Required software packages:    
 
 |software|version|usage|  
 |---|---|---|  
@@ -454,12 +454,12 @@ mkdir ERROR_BACKUP
 ```
 
 5. Add `.cubrid.sh` file   
-If cubrid has never been installed on the machine, we need add file '.cubrid.sh' at $HOME path manually.  
+If cubrid has never been installed on the machine, we need add file `'.cubrid.sh'` at $HOME path manually.  
 
 
 ## 3.6 Start Consumer
-On controller node, execute the script start_test.sh to start listening the test message after deployment.  
-This will start a shell test when the consumer receive the test message.
+On controller node, execute the script `start_test.sh` to start listening the test message after deployment.  
+This will start a shell test when the consumer receives the test message.
 ```
 cd ~
 sh start_test.sh
@@ -467,16 +467,21 @@ sh start_test.sh
 
 # 4 Regression Test Sustaining
 We execute shell test for each CI build, and execute code coverage test monthly.  
-Both of the test are started automatically when the controller receive a test message. We just need to verify the test results, and report the issues.
+Both of the tests are started automatically when the controller receives a test message. We just need to verify the test results, and report the issues.
 
 ## 4.1 Verify Regression Test Results
 ### Result Overview
-Open qahome in browser, then select build number. 'Function Result' page will be displayed.
+Open ['QA homepage'](http://qahome.cubrid.org) in browser, then select the build number. `'Function Result'` page will be displayed.  
 Find `shell` and `shell_debug` in linux part, and find `shell` in windows part.  
+
 ![shell_linux](./shell_image/image1.png)  
+
 ![shell_windows](./shell_image/image2.png)  
-If there are crash failures, an alarm icon will appear in the 'Total' column, like this:  
+
+If there are crash failures, an alarm icon will appear in the `'Total'` column, like this:  
+
 ![shell_crash](./shell_image/image12.png)     
+
 In the overview page, we should check the values in all the colomns. The most important check items are:   
 |column|check point|
 |---|---|
@@ -487,47 +492,69 @@ In the overview page, we should check the values in all the colomns. The most im
 
 ### Verfy the Failed Cases
 Click the link in this image to open the online verification page.  
+
 ![online_verify1](./shell_image/image3.png)   
-On the verification page, click 'Log in' to login.  
+
+On the verification page, click `'Log in'` to login.  
+
 ![online_verify2](./shell_image/image4.png)  
+
 After logging in, we can start to verify the failed cases online.    
+
 ![online_verify3](./shell_image/image5.png)    
+
 **Click the link in 'Case File' column to check the case and the screen output.**  
+
 ![online_verify6](./shell_image/image8.png)  
+
 `'[history]':` check the test case history failure   
 *history page*    
+
 ![online_verify4](./shell_image/image6.png)   
+
 `'[verify]':` open the case's verification page to write the verification result   
 *case verification page*   
+
 ![online_verify5](./shell_image/image7.png)  
+
 On this page:
 1. select a failure reason.  
-2. write some comments in 'Reason content'  
-3. write the issue number in 'New issues' or 'New issues'  
+2. write some comments in `'Reason content'`  
+3. write the issue number in `'New issues'` or `'Revise required issues'`  
 4. click the button at the bottom to close this page.  
-Fix: I am sure of this verification result.  
-Save: I am not sure of this verification result. I will decide it later.  
+`Fix`: I am sure of this verification result.  
+`Save`: I am not sure of this verification result. I will decide it later.  
 
 Sometimes, we cannot find the failure reason from the screen output directly. At this time, we need login the test machine, go to the case path, check the logs. If we still cannot find the failure reason from the logs, we should run the case step by step on this machine to find the failure reason.  
 We should verify the crash failures first.  
 
 ### Verify the Low Performance Test Cases
-Open qahome in browser, then select build number. `'Function Result'` page will be displayed. Find `'Low Performance Scenarios'` link.  
+Open ['QA homepage'](http://qahome.cubrid.org) in browser, then select the build number. `'Function Result'` page will be displayed.   
+Find `'Low Performance Scenarios'` link.  
+
 ![online_verify6](./shell_image/image13.png)   
+
 Click this link, and go to the `'Low Performance Scenarios'` page.  
 Click 'SHELL', to check the shell test cases.   
+
 ![online_verify7](./shell_image/image14.png)   
-We can change the filters, such as 'OS', 'Bits', 'Category', 'Base build'.  
+
+We can change the filters, such as `'OS'`, `'Bits'`, `'Category'`, `'Base build'`.  
 Usually, we use the last CI build as base build to compare with.    
 The elapse time of these cases should not changed too much compared to the base build.  
-And a red icon '+' will be displayed in 'Flag' column if the reuslt is abnormal. 
+And a red icon `'+'` will be displayed in `'Flag'` column if the result is abnormal. 
 
 ## 4.2 Verify Code Coverage Test Result
-Go to QA homepage and find the 'code coverage' node in the left area, click the link of the latest result.  
+Go to QA homepage and find the `'code coverage'` node in the left area, click the link of the latest result.  
+
 ![code coverage 1](./shell_image/image19.png)  
+
 Click `'shell'` link.  
+
 ![code coverage 2](./shell_image/image10.png)   
-Check the value of 'Coverage' column. The coverage value should not lower than previous code coverage test result.  
+
+Check the value of `'Coverage'` column. The coverage value should not lower than previous code coverage test result.  
+
 ![code coverage 3](./shell_image/image11.png) 
 
 ## 4.3 Report Issues  
@@ -640,7 +667,7 @@ finish
 
 ``` 
 
-## 5.3 'cubrid' Script
+## 5.3 `'cubrid'` Script
 When execute `'init test'` at the beginning of the case, `'${init_path}/../../bin:${init_path}/../../common/script'` is added to PATH:  
 ```
 PATH=${init_path}/../../bin:${init_path}/../../common/script:$PATH
