@@ -295,7 +295,7 @@ total 24
     ```
    If the .output file is different from .answer file, the result turns out NOK.
 
-### Run a single case
+### 2.6 Run a single case
 
 There are two ways. One way is to execute the case directly. Before execution, it's required to export `init_path` environmental variable first as below:
     
@@ -418,18 +418,10 @@ $ sh start_test.sh &
 $ tail -f nohup.out
 ```
 ### Send test message
-* To execute a cci test with release build      
-   Login message@192.168.1.91
+* Execute a cci test with release build      
+   Login message@192.168.1.91. Then execute to send test message:
     ```bash
-    sender.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh cci default
-    ```
-* To execute a cci_debug test with debug build     
-    Login message@192.168.1.91
-    ```bash
-    sender.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh cci_debug default
-    ```
-* For example, run a cci test on 10.2.0.8369-5a75e41 build, you need to send a message like below.   
-    ```bash
+    
     $ sender.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh cci default
 
     Message: 
@@ -459,10 +451,14 @@ $ tail -f nohup.out
 
     Do you accept above message [Y/N]:
     Y
-    log4j:WARN No appenders could be found for logger (org.apache.activemq.thread.TaskRunnerFactory).
-    log4j:WARN Please initialize the log4j system properly.
-    log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
     ```
+    
+* Execute a cci_debug test with debug build     
+    Login message@192.168.1.91. Then execute:
+    ```bash
+    sender.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh cci_debug default
+    ```
+    
 ### Check running status
 * Check log on controller node   
     Log into cci@192.168.1.78, check nohup.out log. The whole information for one test message is like below:
@@ -930,11 +926,6 @@ http://qahome.cubrid.org/qaresult/showfile.nhn?treeId=&level=&summaryName=&catPa
     cd ~/manual/
     sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_CCI_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz cci
     ```
-
-* ### Check running status
-
-    Please see [Check running status](#check-running-status)
-
 * ### Verify code coverage test result
 
     1. Click `qahome`->`code coverage`->select `latest year,eg:2019` to get the summary
