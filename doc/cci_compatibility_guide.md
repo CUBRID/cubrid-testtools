@@ -472,4 +472,4 @@ CCI Driver | CUBRID Server | Expected Test Case Branch|
 
 
 ## 5.2 Test Case Specification
-Please follow [CCI test case specification](cci_guide.md#6-cci-test-case). They are same.
+Please follow [CCI test case specification](cci_guide.md#5-cci-test-case-specification). They are same.
