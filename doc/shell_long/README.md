@@ -1,5 +1,5 @@
 # 1. Test Objective  
-This guide is to introduce how to execute shell_long test suite via test tool CTP.  The shell_long test case specification is exactly same as general SHELL test case's. The only difference between them is that shell_long test cases ask a little long time to execute.     
+This guide is to introduce how to execute `shell_long` test suite via test tool CTP.  The shell_long` test case specification is exactly same as general SHELL test case's. The only difference between them is that `shell_long` test cases ask a little long time to execute.     
 
 # 2. Execute Shell_long Test
 Please refer to [these sections of shell_heavy guide](shell_heavy_guide.md#2-execute-shell_heavy-test) to execute shell_long test. Below we just list some difference between them.   
@@ -12,8 +12,8 @@ Please refer to [these sections of shell_heavy guide](shell_heavy_guide.md#2-exe
 	```
 	>Note: scenario should be a path to a folder but not a file.
 
-* ## Shell_long test cases
-	Generally, we check out test cases from git repository. Shell long test cases are located in  https://github.com/CUBRID/cubrid-testcases-private/tree/develop/longcase.      
+* ## Check out shell_long test cases
+	Check out `shell_long` test cases from git repository in path https://github.com/CUBRID/cubrid-testcases-private/tree/develop/longcase.  
 	```
 	$ cd ~
 	$ git clone https://github.com/CUBRID/cubrid-testcases-private.git
@@ -25,7 +25,7 @@ Please refer to [these sections of shell_heavy guide](shell_heavy_guide.md#2-exe
 	```
 
 # 3. Deploy Regression Test Environment
-In this section, we will introduce how to deploy the shell_long regression test environment.  
+In this section, we will introduce how to deploy `shell_long` regression test environment.  
 ## 3.1 Test Machines
 For current daily regression test, there are one controller node and five test nodes.      
 **Controller node** : This node listens to test messages and starts a test when there is a test message.    
@@ -33,7 +33,7 @@ For current daily regression test, there are one controller node and five test n
 
 Information about each test machines.    
 
-Description|User Name|IP|Hostname|Tools to deploy
+Description|OS User|IP|Hostname|Tools to deploy
 --|--|--|--|--
 Controller node|rqgcontroller|192.168.1.99|func24|CTP
 Test node|shell_long|192.168.1.99|func24|CTP,cubrid-testcases-private
@@ -41,7 +41,7 @@ Test node|shell_long|192.168.1.100|func25|CTP,cubrid-testcases-private
 Test node|shell_long|192.168.1.101|func26|CTP,cubrid-testcases-private
 Test node|shell_long|192.168.1.102|func27|CTP,cubrid-testcases-private
 Test node|shell_long|192.168.1.103|func28|CTP,cubrid-testcases-private
-## 3.2	Deploy Test Environment
+## 3.2	Deployment
 ### On Controller node  
 * ### Install CTP        
 	Please follow [the guide to install CTP](ctp_install_guide.md#3-install-ctp-as-regression-test-platform). Then create shell_long test configuration.
@@ -99,25 +99,25 @@ Test node|shell_long|192.168.1.103|func28|CTP,cubrid-testcases-private
 	feedback_notice_qahome_url=http://192.168.1.86:8080/qaresult/shellImportAction.nhn?main_id=<MAINID>
 
 
-	owner_email=Orchid<lanlan.zhan@navercorp.com>
-	cc_email=CUBRIDQA<dl_cubridqa_bj_internal@navercorp.com>
+	owner_email=<owner e-mail>
+	cc_email=<cc e-mail to receive notice>
 
-	git_user=cubridqa
-	git_email=dl_cubridqa_bj_internal@navercorp.com
+	git_user=<git user>
+	git_email=<git e-mail>
 	git_pwd=******
 
 	feedback_db_host=192.168.1.86
 	feedback_db_port=33080
 	feedback_db_name=qaresu
 	feedback_db_user=dba
-	feedback_db_pwd=
+	feedback_db_pwd=********
 	```
 	>Note: when you need to test shell_long_debug, copy `~/CTP/conf/shell_template_for_shell_long.conf` as `~/CTP/conf/shell_template_for_shell_long_debug.conf` 
 
 * ### Create quick start script     
-	File `start_test.sh` 
+	File `~/start_test.sh` 
+	
 	```bash
-	 cat ~/start_test.sh
 
 	# If only need to listen the shell_long test message
 	# nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_LONG_LINUX -exec run_shell &
@@ -125,7 +125,8 @@ Test node|shell_long|192.168.1.103|func28|CTP,cubrid-testcases-private
 	# We use one controllar to listening shell_heavy, shell_long, and RQG test messages in dailyqa.
 	nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_HEAVY_LINUX,QUEUE_CUBRID_QA_RQG,QUEUE_CUBRID_QA_SHELL_LONG_LINUX -exec run_shell,run_shell,run_shell &   
 	```
-* ### Configure .bash_profile      
+	
+* ### Configure ~/.bash_profile      
 	 ```
 	export DEFAULT_BRANCH_NAME=develop
 	export CTP_HOME=$HOME/CTP
@@ -142,6 +143,7 @@ Test node|shell_long|192.168.1.103|func28|CTP,cubrid-testcases-private
 ### On Test nodes
 * ### Install CTP    
 	Please follow [the guide to install CTP](ctp_install_guide.md#3-install-ctp-as-regression-test-platform).
+	
 * ### Check out test cases   
 	```
 	cd ~
@@ -191,7 +193,7 @@ Test node|shell_long|192.168.1.103|func28|CTP,cubrid-testcases-private
 	ulimit -c unlimited
 	```
 # 4. Regression Test Sustaining
-We perform shell_long test twice a week (actually it is controlled through crontab) and perform code coverage test for monthly. Crontab task for shell_long test is as below:
+We perform `shell_long` test twice a week (controlled through like crontab) and perform code coverage test for monthly. Crontab task for shell_long test is as below:
 ```
 #######################################################################
 job_shell_long.service=ON
@@ -207,7 +209,7 @@ job_shell_long.test.1.queue=QUEUE_CUBRID_QA_SHELL_LONG_LINUX
 #######################################################################
 ```
 ## 4.1 Daily regression test
-When the build server has a new build and meet the conditions of the crontab task, the shell_long regression test will be started. If there is something wrong and need to run shell_long test again, you can send a test message. 
+When the build server has a new build and meet the conditions of the crontab task, `shell_long` regression test will be started. If there is something wrong and need to run shell_long test again, you need send a test message by manual. 
 ### Start the listener
 ```bash
 $ cd ~
@@ -223,10 +225,9 @@ sender.sh QUEUE_CUBRID_QA_SHELL_LONG_LINUX http://192.168.1.91:8080/REPO_ROOT/st
 ### Verify test result 
 * ### Check whether there are results
 	Open [QA homepage](http://qahome.cubrid.org/qaresult/index.nhn), then navigate as below to find shell_long test result.   
-	![verify_func_tab](./media/image1.png)    
 	If some test shows 'NO RESULT', we need investigate reasons and resolve it.
 * ### Both Test Rate and Verified Rate should be 100%
-	In above picture, the figures with red color mean number of failures. Click it to open verification page. Then follow the same way as [shell test's](shell_guide.md#41-verify-regression-test-results) to verify all failures. Both Test Rate and Verified Rate should be 100%.
+	In above picture, the figures with red color mean number of failures. Click it to open verification page. Then follow the same way as [SHELL Test's](shell_guide.md#41-verify-regression-test-results) to verify all failures. Both `Test Rate` and `Verified Rate` should be 100%.
    
 ## 4.2 Code coverage test
 ### CTP/conf/job.conf
@@ -263,6 +264,12 @@ job_coverage_test.test.15.queue=QUEUE_CUBRID_QA_SHELL_LONG_LINUX
 	$ sh sender_code_coverage_testing_message.sh
 	Usage: sh  sender_code_coverage_testing_message queue url1 url2 category
 	``` 
+	
+	`queue:` queue name    
+	`url1:` gcov build package url    
+	`url2:` gcov source package url    
+	`catecory:` shell_long   
+	
 * ### Example to send code coverage test message:  
 	```bash
 	$ cd ~/manual
@@ -306,10 +313,7 @@ job_coverage_test.test.15.queue=QUEUE_CUBRID_QA_SHELL_LONG_LINUX
 	Do you accept above message [Y/N]:
 	Y
 	```
-	queue: queue name    
-	url1: gcov build package url    
-	url2: gcov source package url    
-	catecory: shell_long   
+
 ### Verify code coverage testing result  
 1. Go to QA homepage and find the 'code coverage' node in the left area, click the link of latest result.  
 ![code_cov](./media/image8.png)     
@@ -322,6 +326,7 @@ job_coverage_test.test.15.queue=QUEUE_CUBRID_QA_SHELL_LONG_LINUX
 
 ## 4.3 Report issues
 Please refer to [`report issues of shell test`](shell_guide.md#43-report-issues).     
+
 ### General issue  
 You can refer to http://jira.cubrid.org/browse/CBRD-21989.     
 ![regrssion_issue](./media/image11.png)
@@ -341,14 +346,14 @@ We can report crash issue though tools:
 	![report_issue2](./media/image15.png)   
 
 ## 4.4 Maintenance
-### Delete `do_not_delete_core` Directory
+### Clean up `do_not_delete_core` Directory
 There are a lot of backup files when we report crash issues,once these issus have been closed,we need to delete them.
 ```bash
 $ cd ~/do_not_delete_core/
 $ ls 
 10.2.0.7925-616b134_20180521-143021.tar.gz  AUTO_10.2.0.7773-e468e09_20171225_063924.tar.gz  AUTO_10.2.0.8038-b6e1d4b_20181010_152229.tar.gz  readme.txt
 ```
-### Check `ERROR_BACKUP` Directory
+### Clean up `ERROR_BACKUP` Directory
 When we execute shell_long test,server appears crash or fatal error,the current db and other important information will be save in ~/ERROR_BACKUP,you need check it for each build and clear them in time.
 ```bash
 $ cd ~/ERROR_BACKUP/
@@ -361,10 +366,6 @@ AUTO_10.2.0.8254-c015eb2_20190213_025432.tar.gz  AUTO_SERVER-START_10.2.0.8254-c
 ```  
 # 5.Test Case Specification 
 The directory structure, naming rule, and convention rules of shell_long test case are definitely same as that of shell test cases. Please refer to [5. Shell Case Standards ](shell_guide.md#5-shell-case-standards) to write test cases.
-
-
-  
-    
 
 
 
