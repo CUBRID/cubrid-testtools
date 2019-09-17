@@ -1,6 +1,6 @@
 # Shell Test Guide
 # 1 Test Objective
-Shell test suite is used to execute CUBRID functional test in a very flexible way. Shell test cases are written in Linux shell programing language. It can easily integrate other programing languages, like Java, C, Perl. With shell test cases, almost all features  and performance which cannot be tested by SQL test or other test suites can be tested and automated. For examples:
+Shell test suite is used to execute CUBRID functional test in a very flexible way. Shell test cases are written in Linux shell programing language. It can easily integrate other programing languages, like Java, C, Perl. With shell test cases, almost all features and performance which cannot be tested by SQL test or other test suites can be tested and automated. For examples:
 * check whether a cubrid utility works well  
 * check whether the error message of a sql statement is expected  
 * check a specific cubrid parameter works
