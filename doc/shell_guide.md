@@ -184,8 +184,7 @@ nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
   If we set `feedback_type=file`, we can use file `'feedback.log'` to check the test results.  
 
   #### feedback_type=database 
-  If we set `feedback_type=database`, we need check the test results on qahome page.  
-  For details, please refer to ['4.1 Verify regression test results'](#4.1-Verify-regression-test-results).  
+  If we set `feedback_type=database`, we need check the test results on qahome page. For details, please refer to ['4.1 Verify regression test results'](#41-verify-regression-test-results).  
   This is the way we used in regression test.
 
   #### Log File Introduction
