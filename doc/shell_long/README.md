@@ -43,153 +43,153 @@ Test node|shell_long|192.168.1.102|func27|CTP,cubrid-testcases-private
 Test node|shell_long|192.168.1.103|func28|CTP,cubrid-testcases-private
 ## 3.2	Deploy Test Environment
 ### On Controller node  
-1. Install CTP        
-Please follow [the guide to install CTP](ctp_install_guide.md#3-install-ctp-as-regression-test-platform). Then create shell_long test configuration.
-File `~/CTP/conf/shell_template_for_shell_long.conf`:   
- ```
-$ cat shell_template_for_shell_long.conf 
-default.cubrid.cubrid_port_id=1568
-default.broker1.BROKER_PORT=30090
-default.broker1.APPL_SERVER_SHM_ID=30090
-default.broker2.BROKER_PORT=33091
-default.broker2.APPL_SERVER_SHM_ID=33091
-default.ha.ha_port_id=59909
+* ### Install CTP        
+	Please follow [the guide to install CTP](ctp_install_guide.md#3-install-ctp-as-regression-test-platform). Then create shell_long test configuration.
+	File `~/CTP/conf/shell_template_for_shell_long.conf`:   
+	 ```
+	$ cat shell_template_for_shell_long.conf 
+	default.cubrid.cubrid_port_id=1568
+	default.broker1.BROKER_PORT=30090
+	default.broker1.APPL_SERVER_SHM_ID=30090
+	default.broker2.BROKER_PORT=33091
+	default.broker2.APPL_SERVER_SHM_ID=33091
+	default.ha.ha_port_id=59909
 
-env.99.ssh.host=192.168.1.99
-env.99.ssh.port=22
-env.99.ssh.user=shell_long
-env.99.ssh.pwd=******
+	env.99.ssh.host=192.168.1.99
+	env.99.ssh.port=22
+	env.99.ssh.user=shell_long
+	env.99.ssh.pwd=******
 
-env.100.ssh.host=192.168.1.100
-env.100.ssh.port=22
-env.100.ssh.user=shell_long
-env.100.ssh.pwd=******
+	env.100.ssh.host=192.168.1.100
+	env.100.ssh.port=22
+	env.100.ssh.user=shell_long
+	env.100.ssh.pwd=******
 
-env.101.ssh.host=192.168.1.101
-env.101.ssh.port=22
-env.101.ssh.user=shell_long
-env.101.ssh.pwd=******
+	env.101.ssh.host=192.168.1.101
+	env.101.ssh.port=22
+	env.101.ssh.user=shell_long
+	env.101.ssh.pwd=******
 
-env.102.ssh.host=192.168.1.102
-env.102.ssh.port=22
-env.102.ssh.user=shell_long
-env.102.ssh.pwd=******
+	env.102.ssh.host=192.168.1.102
+	env.102.ssh.port=22
+	env.102.ssh.user=shell_long
+	env.102.ssh.pwd=******
 
-env.103.ssh.host=192.168.1.103
-env.103.ssh.port=22
-env.103.ssh.user=shell_long
-env.103.ssh.pwd=******
-
-
-scenario=${HOME}/cubrid-testcases-private/longcase/shell
-test_continue_yn=false
-cubrid_download_url=http://127.0.0.1/REPO_ROOT/store_02/10.1.0.6876-f9026f8/drop/CUBRID-10.1.0.6876-f9026f8-Linux.x86_64.sh
-testcase_exclude_from_file=${HOME}/cubrid-testcases-private/longcase/shell/config/daily_regression_test_excluded_list_linux.conf
-testcase_update_yn=true
-testcase_git_branch=develop
-#testcase_timeout_in_secs=604800
-test_platform=linux
-test_category=shell_long
-testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
-testcase_retry_num=0
-delete_testcase_after_each_execution_yn=false
-enable_check_disk_space_yn=true
-
-feedback_type=database
-feedback_notice_qahome_url=http://192.168.1.86:8080/qaresult/shellImportAction.nhn?main_id=<MAINID>
+	env.103.ssh.host=192.168.1.103
+	env.103.ssh.port=22
+	env.103.ssh.user=shell_long
+	env.103.ssh.pwd=******
 
 
-owner_email=Orchid<lanlan.zhan@navercorp.com>
-cc_email=CUBRIDQA<dl_cubridqa_bj_internal@navercorp.com>
+	scenario=${HOME}/cubrid-testcases-private/longcase/shell
+	test_continue_yn=false
+	cubrid_download_url=http://127.0.0.1/REPO_ROOT/store_02/10.1.0.6876-f9026f8/drop/CUBRID-10.1.0.6876-f9026f8-Linux.x86_64.sh
+	testcase_exclude_from_file=${HOME}/cubrid-testcases-private/longcase/shell/config/daily_regression_test_excluded_list_linux.conf
+	testcase_update_yn=true
+	testcase_git_branch=develop
+	#testcase_timeout_in_secs=604800
+	test_platform=linux
+	test_category=shell_long
+	testcase_exclude_by_macro=LINUX_NOT_SUPPORTED
+	testcase_retry_num=0
+	delete_testcase_after_each_execution_yn=false
+	enable_check_disk_space_yn=true
 
-git_user=cubridqa
-git_email=dl_cubridqa_bj_internal@navercorp.com
-git_pwd=******
+	feedback_type=database
+	feedback_notice_qahome_url=http://192.168.1.86:8080/qaresult/shellImportAction.nhn?main_id=<MAINID>
 
-feedback_db_host=192.168.1.86
-feedback_db_port=33080
-feedback_db_name=qaresu
-feedback_db_user=dba
-feedback_db_pwd=
-```
->Note: when you need to test shell_long_debug, copy `~/CTP/conf/shell_template_for_shell_long.conf` as `~/CTP/conf/shell_template_for_shell_long_debug.conf` 
 
-2. Create quick start script     
-File `start_test.sh` 
-```bash
- cat ~/start_test.sh
+	owner_email=Orchid<lanlan.zhan@navercorp.com>
+	cc_email=CUBRIDQA<dl_cubridqa_bj_internal@navercorp.com>
 
-# If only need to listen the shell_long test message
-# nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_LONG_LINUX -exec run_shell &
+	git_user=cubridqa
+	git_email=dl_cubridqa_bj_internal@navercorp.com
+	git_pwd=******
 
-# We use one controllar to listening shell_heavy, shell_long, and RQG test messages in dailyqa.
-nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_HEAVY_LINUX,QUEUE_CUBRID_QA_RQG,QUEUE_CUBRID_QA_SHELL_LONG_LINUX -exec run_shell,run_shell,run_shell &   
-```
- 3. Configure .bash_profile      
- ```
-export DEFAULT_BRANCH_NAME=develop
-export CTP_HOME=$HOME/CTP
-export CTP_BRANCH_NAME=develop
-export CTP_SKIP_UPDATE=0
-export init_path=$HOME/CTP/shell/init_path
+	feedback_db_host=192.168.1.86
+	feedback_db_port=33080
+	feedback_db_name=qaresu
+	feedback_db_user=dba
+	feedback_db_pwd=
+	```
+	>Note: when you need to test shell_long_debug, copy `~/CTP/conf/shell_template_for_shell_long.conf` as `~/CTP/conf/shell_template_for_shell_long_debug.conf` 
 
-ulimit -c unlimited
-export LC_ALL=en_US
+* ### Create quick start script     
+	File `start_test.sh` 
+	```bash
+	 cat ~/start_test.sh
 
-. $HOME/.cubrid.sh
-export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$JAVA_HOME/bin:/usr/local/bin:/bin:/usr/bin:$PATH
-```
+	# If only need to listen the shell_long test message
+	# nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_LONG_LINUX -exec run_shell &
+
+	# We use one controllar to listening shell_heavy, shell_long, and RQG test messages in dailyqa.
+	nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_HEAVY_LINUX,QUEUE_CUBRID_QA_RQG,QUEUE_CUBRID_QA_SHELL_LONG_LINUX -exec run_shell,run_shell,run_shell &   
+	```
+* ### Configure .bash_profile      
+	 ```
+	export DEFAULT_BRANCH_NAME=develop
+	export CTP_HOME=$HOME/CTP
+	export CTP_BRANCH_NAME=develop
+	export CTP_SKIP_UPDATE=0
+	export init_path=$HOME/CTP/shell/init_path
+
+	ulimit -c unlimited
+	export LC_ALL=en_US
+
+	. $HOME/.cubrid.sh
+	export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$JAVA_HOME/bin:/usr/local/bin:/bin:/usr/bin:$PATH
+	```
 ### On Test nodes
-1. Install CTP    
-Please follow [the guide to install CTP](ctp_install_guide.md#3-install-ctp-as-regression-test-platform).
-2. Check out test cases   
-```
-cd ~
-git clone https://github.com/CUBRID/cubrid-testcases-private.git 
-cd ~/cubrid-testcases-private/
-git checkout develop
-```
-3. Install CUBRID.    
+* ### Install CTP    
+	Please follow [the guide to install CTP](ctp_install_guide.md#3-install-ctp-as-regression-test-platform).
+* ### Check out test cases   
+	```
+	cd ~
+	git clone https://github.com/CUBRID/cubrid-testcases-private.git 
+	cd ~/cubrid-testcases-private/
+	git checkout develop
+	```
+* ### Install CUBRID.    
 
-4. Add following settings to ~/.bash_profile and source it.
-```bash
-$ cat .bash_profile
-# .bash_profile
+* ### Add following settings to ~/.bash_profile and source it.
+	```bash
+	$ cat .bash_profile
+	# .bash_profile
 
-# Get the aliases and functions
-if [ -f ~/.bashrc ]; then
-        . ~/.bashrc
-fi
+	# Get the aliases and functions
+	if [ -f ~/.bashrc ]; then
+			. ~/.bashrc
+	fi
 
-# User specific environment and startup programs
+	# User specific environment and startup programs
 
-PATH=$PATH:$HOME/.local/bin:$HOME/bin
+	PATH=$PATH:$HOME/.local/bin:$HOME/bin
 
-export PATH
+	export PATH
 
-export LC_ALL=en_US
+	export LC_ALL=en_US
 
-export CTP_HOME=$HOME/CTP
-export LCOV_HOME=/usr/local/cubridqa/lcov-1.11
+	export CTP_HOME=$HOME/CTP
+	export LCOV_HOME=/usr/local/cubridqa/lcov-1.11
 
-export init_path=$HOME/CTP/shell/init_path
+	export init_path=$HOME/CTP/shell/init_path
 
-export GCOV_PREFIX=$HOME
-export GCOV_PREFIX_STRIP=2
+	export GCOV_PREFIX=$HOME
+	export GCOV_PREFIX_STRIP=2
 
-export CTP_BRANCH_NAME="develop"
-export CTP_SKIP_UPDATE="0"
+	export CTP_BRANCH_NAME="develop"
+	export CTP_SKIP_UPDATE="0"
 
-export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$CUBRID/bin:$LCOV_HOME/bin:$JAVA_HOME/bin:$PATH:/usr/local/sbin:/usr/sbin
+	export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$CUBRID/bin:$LCOV_HOME/bin:$JAVA_HOME/bin:$PATH:/usr/local/sbin:/usr/sbin
 
-ulimit -c unlimited
+	ulimit -c unlimited
 
-#-------------------------------------------------------------------------------
-# set CUBRID environment variables
-#-------------------------------------------------------------------------------
-. ~/.cubrid.sh
-ulimit -c unlimited
-```
+	#-------------------------------------------------------------------------------
+	# set CUBRID environment variables
+	#-------------------------------------------------------------------------------
+	. ~/.cubrid.sh
+	ulimit -c unlimited
+	```
 # 4. Regression Test Sustaining
 We perform shell_long test twice a week (actually it is controlled through crontab) and perform code coverage test for monthly.  
 Crontab task for shell_long test is as below:
