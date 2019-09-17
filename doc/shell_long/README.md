@@ -1,145 +1,522 @@
 # 1. Test Objective  
 This guide is to introduce how to execute shell_long test suite via test tool CTP.  The shell_long test case specification is exactly same as general SHELL test case's. The only difference between them is that shell_long test cases ask a little long time to execute.     
 
-# 2. Test Introduction  
-## 2.1 CTP test tool
-Please refer to [ctp usage for shell](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell/shell_guide.md#2-ctp-introduction)   
-the CTP usage for shell_long regression test is as below   
-```bash
-ctp.sh shell -c ~/CTP/conf/shell_runtime.conf
+# 2. Execute Shell_long Test
+To perform the test, we need to install CTP first.
+## 2.1 Install CTP
+Please refer to the guide to [install CTP in Linux platform](ctp_install_guide.md#1-install-ctp-in-linux-platform).    
+Create shell_long test configuration file as below:   
+File `CTP/conf/shell_long.conf`
 ```
-for regression test, we will copy `shell_template_for_shell_long.conf` to `shell_runtime.conf`   
+# path to a test case folder
+scenario=${HOME}/cubrid-testcases-private/longcase/shell/1hour/bug_bts_9382
 ```
-BUILD_SCENARIOS="shell_long"
-shell_config_template=${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf
-shell_fm_test_conf="${CTP_HOME}/conf/shell_runtime.conf"
-cp -f ${shell_config_template} ${shell_fm_test_conf}
-ctp.sh shell -c $shell_fm_test_conf
-```
-## 2.2  Shell_long Test Cases
-The existed shell long test cases are located in `path/to/cubrid-testcases-private/longcase/shell`  
-```
-$ cd cubrid-testcases-private/longcase/
-$ find ./ -name "*.sh"                              
-./5hour/bug_bts_16594/cases/bug_bts_16594.sh
-./5hour/bug_bts_4707/cases/bug_bts_4707.sh
-./5hour/bug_bts_7288/cases/bug_bts_7288.sh
-./5hour/bug_bts_16581/cases/bug_bts_16581.sh
-./5hour/bug_bts_6753_2/cases/bug_bts_6753_2.sh
-./5hour/bug_bts_6785/cases/bug_bts_6785.sh
-./5hour/bug_bts_6396/cases/bug_bts_6396.sh
-./1hour/bug_bts_15629/cases/bug_bts_15629.sh
-./1hour/bug_bts_15419_1_asc/cases/bug_bts_15419_1_asc.sh
-./1hour/bug_bts_5222/cases/bug_bts_5222.sh
-./1hour/bug_bts_17881/cases/bug_bts_17881.sh
-./1hour/bug_bts_18031/cases/bug_bts_18031.sh
-./1hour/bug_bts_9382/cases/bug_bts_9382.sh
-./1hour/bug_bts_15419_1_desc/cases/bug_bts_15419_1_desc.sh
-./1hour/bug_bts_15419_2_asc/cases/bug_bts_15419_2_asc.sh
-./1hour/bug_bts_7350/cases/bug_bts_7350.sh
-./1hour/_02_cursor_stress/cases/_02_cursor_stress.sh
-...
-./2hour/_02_cursor_stress/cases/_02_cursor_stress.sh
-./2hour/bug_bts_10009/cases/bug_bts_10009.sh
-./2hour/bug_bts_9969/cases/bug_bts_9969.sh
-```
-How to write new shell_long test cases   
-please see [shell long cases specification](#5test-case-specification)
+>Note: scenario should be a path to a folder but not a file.
 
-# 3. Deploy Shell_long Regression Test
+## 2.2  Prepare Test Cases
+Generally, we check out test cases from git repository. Shell long test cases are located in  https://github.com/CUBRID/cubrid-testcases-private/tree/develop/longcase.      
+```
+$ cd ~
+$ git clone https://github.com/CUBRID/cubrid-testcases-private.git
+$ ls ~/cubrid-testcases-private/longcase
+shell
+$ cd shell/
+$ ls
+_04_misc  _06_issues  1hour  2hour  _30_banana_qa  _32_features_930  3hour  5hour  config  other
+```
+## 2.3 Install CUBRID
+You may install CUBRID as your way or install CUBRID via `run_cubrid_install` script in CTP.
+```
+run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
+```
+## 2.4 Execute test
+```
+ctp.sh shell -c ./cci.conf 
+```
+Screen output:    
+Druing the test, CTP prints testing information like test configs, deploy status, test results, execution time and so on.
+```
+$ ctp.sh shell -c shell_long.conf 
+
+====================================== SHELL ==========================================
+[SHELL] TEST STARTED (Tue Sep 17 15:36:26 KST 2019)
+
+[SHELL] CONFIG FILE: /home/zll/cubrid-testcases-private/longcase/shell/1hour/shell_long.conf
+
+scenario=${HOME}/cubrid-testcases-private/longcase/shell/1hour/bug_bts_9382
+
+
+----------END OF FILE----------
+Available Env: [local]
+Continue Mode: false
+Build Number: 10.2.0.8456-70f72ff
+java.runtime.name=Java(TM) SE Runtime Environment
+sun.boot.library.path=/home/zll/opt/jdk1.6.0_07/jre/lib/amd64
+java.vm.version=10.0-b23
+java.vm.vendor=Sun Microsystems Inc.
+java.vendor.url=http://java.sun.com/
+path.separator=:
+java.vm.name=Java HotSpot(TM) 64-Bit Server VM
+file.encoding.pkg=sun.io
+user.country=US
+sun.java.launcher=SUN_STANDARD
+sun.os.patch.level=unknown
+java.vm.specification.name=Java Virtual Machine Specification
+user.dir=/home/zll/cubrid-testcases-private/longcase/shell/1hour
+java.runtime.version=1.6.0_07-b06
+java.awt.graphicsenv=sun.awt.X11GraphicsEnvironment
+java.endorsed.dirs=/home/zll/opt/jdk1.6.0_07/jre/lib/endorsed
+os.arch=amd64
+java.io.tmpdir=/tmp
+line.separator=
+
+java.vm.specification.vendor=Sun Microsystems Inc.
+os.name=Linux
+sun.jnu.encoding=ISO-8859-1
+java.library.path=/home/zll/opt/jdk1.6.0_07/jre/lib/amd64/server:/home/zll/opt/jdk1.6.0_07/jre/lib/amd64:/home/zll/opt/jdk1.6.0_07/jre/../lib/amd64:/home/zll/CUBRID/lib:/home/zll/CUBRID/lib::/home/zll/opt/jdk1.6.0_07/jre/lib/amd64:/home/zll/opt/jdk1.6.0_07/jre/lib/amd64/server:/home/zll/CTP/shell/init_path/commonforc/lib/:/usr/java/packages/lib/amd64:/lib:/usr/lib
+scenario=${HOME}/cubrid-testcases-private/longcase/shell/1hour/bug_bts_9382
+java.specification.name=Java Platform API Specification
+java.class.version=50.0
+sun.management.compiler=HotSpot 64-Bit Server Compiler
+os.version=3.10.0-327.el7.x86_64
+user.home=/home/zll
+user.timezone=Asia/Seoul
+java.awt.printerjob=sun.print.PSPrinterJob
+file.encoding=ISO-8859-1
+java.specification.version=1.6
+user.name=zll
+java.class.path=/home/zll/CTP/common/lib/cubridqa-common.jar
+java.vm.specification.version=1.0
+sun.arch.data.model=64
+java.home=/home/zll/opt/jdk1.6.0_07/jre
+java.specification.vendor=Sun Microsystems Inc.
+user.language=en
+java.vm.info=mixed mode
+java.version=1.6.0_07
+java.ext.dirs=/home/zll/opt/jdk1.6.0_07/jre/lib/ext:/usr/java/packages/lib/ext
+sun.boot.class.path=/home/zll/opt/jdk1.6.0_07/jre/lib/resources.jar:/home/zll/opt/jdk1.6.0_07/jre/lib/rt.jar:/home/zll/opt/jdk1.6.0_07/jre/lib/sunrsasign.jar:/home/zll/opt/jdk1.6.0_07/jre/lib/jsse.jar:/home/zll/opt/jdk1.6.0_07/jre/lib/jce.jar:/home/zll/opt/jdk1.6.0_07/jre/lib/charsets.jar:/home/zll/opt/jdk1.6.0_07/jre/classes
+java.vendor=Sun Microsystems Inc.
+file.separator=/
+java.vendor.url.bug=http://java.sun.com/cgi-bin/bugreport.cgi
+sun.cpu.endian=little
+sun.io.unicode.encoding=UnicodeLittle
+sun.rmi.transport.connectionTimeout=10000000
+sun.cpu.isalist=
+AUTO_TEST_VERSION=10.2.0.8456-70f72ff
+AUTO_TEST_BITS=64bits
+BEGIN TO CHECK: 
+=================== Check local============================
+==> Check connection(ssh) ...... PASS
+==> Check variable 'HOME' ...... PASS
+==> Check variable 'USER' ...... PASS
+==> Check variable 'JAVA_HOME' ...... PASS
+==> Check variable 'CTP_HOME' ...... PASS
+==> Check variable 'init_path' ...... PASS
+==> Check variable 'CUBRID' ...... PASS
+==> Check command 'java' ...... PASS
+==> Check command 'javac' ...... PASS
+==> Check command 'diff' ...... PASS
+==> Check command 'wget' ...... PASS
+==> Check command 'find' ...... PASS
+==> Check command 'cat' ...... PASS
+==> Check command 'kill' ...... PASS
+==> Check command 'dos2unix' ...... PASS
+==> Check command 'tar' ...... PASS
+==> Check directory '${CTP_HOME}/bin' ...... PASS
+==> Check directory '${CTP_HOME}/common/script' ...... PASS
+==> Check directory 'cubrid-testcases-private/longcase/shell/1hour/bug_bts_9382' ...... PASS
+
+CHECK RESULT: PASS
+============= UPDATE TEST CASES ==================
+CLEAN PROCESSES:
+@ cubrid broker stop
+@ cubrid broker stop
+++ cubrid broker is not running.
+@ cubrid manager server stop
+++ cubrid manager server is not running.
+@ cubrid master stop
+++ cubrid master stop: success
+@ cubrid broker stop
+++ cubrid broker is not running.
+@ cubrid manager server stop
+++ cubrid manager server is not running.
+@ cubrid master stop
+++ cubrid master stop: success
+UID        PID  PPID  C STIME TTY          TIME CMD
+zll       5193  5191  0 Sep16 ?        00:00:04 sshd: zll@pts/0,pts/1,pts/2
+zll       5195  5193  0 Sep16 pts/0    00:00:00 -bash
+zll       6673  5193  0 Sep16 pts/1    00:00:00 -bash
+zll      22337  5193  0 Sep16 pts/2    00:00:00 -bash
+zll      22397     1  0 Sep16 pts/2    00:03:18 /home/zll/opt/jdk1.6.0_07/jre/bin/java -cp /home/zll/CTP/common/lib/cubridqa-common.jar:/home/zll/CTP/sql/webconsole/../lib/cubridqa-cqt.jar com.navercorp.cubridqa.cqt.webconsole.WebServer 8888 /home/zll/CTP/sql/webconsole /home/zll/CTP/sql/result /
+zll      31235  5195  0 15:36 pts/0    00:00:00 /bin/sh /home/zll/CTP/bin/ctp.sh shell -c shell_long.conf
+zll      31242 31235 15 15:36 pts/0    00:00:00 /home/zll/opt/jdk1.6.0_07/bin/java -cp /home/zll/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c shell_long.conf
+zll      31243 31235  0 15:36 pts/0    00:00:00 tee /home/zll/CTP/.output_2019091715361568702186.log
+zll      31584 31242  0 15:36 pts/0    00:00:00 sh /tmp/.localexec39935.sh 2>&1
+zll      31790 31584  0 15:36 pts/0    00:00:00 ps -u zll -f
+zll      22397     1  0 Sep16 pts/2    00:03:18 /home/zll/opt/jdk1.6.0_07/jre/bin/java -cp /home/zll/CTP/common/lib/cubridqa-common.jar:/home/zll/CTP/sql/webconsole/../lib/cubridqa-cqt.jar com.navercorp.cubridqa.cqt.webconsole.WebServer 8888 /home/zll/CTP/sql/webconsole /home/zll/CTP/sql/result /
+zll      31242 31235 15 15:36 pts/0    00:00:00 /home/zll/opt/jdk1.6.0_07/bin/java -cp /home/zll/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c shell_long.conf
+zll      31792 31584  0 15:36 pts/0    00:00:00 grep --color=auto cub
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       User       Inode      PID/Program name    
+tcp        0      0 0.0.0.0:14024           0.0.0.0:*               LISTEN      0          11166      -                   
+tcp        0      0 127.0.0.1:25            0.0.0.0:*               LISTEN      0          14922      -                   
+tcp        0      0 10.34.64.63:14024       10.34.63.43:59669       ESTABLISHED 0          404386     -                   
+tcp6       0      0 :::14024                :::*                    LISTEN      0          11168      -                   
+tcp6       0      0 :::3307                 :::*                    LISTEN      27         20664      -                   
+tcp6       0      0 :::8888                 :::*                    LISTEN      1000       419673     22397/java          
+tcp6       0      0 ::1:25                  :::*                    LISTEN      0          14923      -                   
+udp        0      0 10.34.64.63:123         0.0.0.0:*                           38         8623       -                   
+udp        0      0 127.0.0.1:123           0.0.0.0:*                           0          20643      -                   
+udp        0      0 0.0.0.0:123             0.0.0.0:*                           0          20637      -                   
+udp6       0      0 fe80::be30:5bff:fef:123 :::*                                38         8624       -                   
+udp6       0      0 ::1:123                 :::*                                0          20644      -                   
+udp6       0      0 :::123                  :::*                                0          20638      -                   
+Active UNIX domain sockets (servers and established)
+Proto RefCnt Flags       Type       State         I-Node   PID/Program name     Path
+unix  2      [ ACC ]     STREAM     LISTENING     14940    -                    private/rewrite
+unix  2      [ ACC ]     STREAM     LISTENING     14949    -                    private/trace
+unix  2      [ ACC ]     STREAM     LISTENING     14937    -                    private/tlsmgr
+unix  2      [ ACC ]     STREAM     LISTENING     14943    -                    private/bounce
+unix  2      [ ACC ]     STREAM     LISTENING     14946    -                    private/defer
+unix  2      [ ACC ]     STREAM     LISTENING     14952    -                    private/verify
+unix  2      [ ]         DGRAM                    7772     -                    /run/systemd/cgroups-agent
+unix  2      [ ACC ]     STREAM     LISTENING     7774     -                    /run/systemd/private
+unix  2      [ ACC ]     STREAM     LISTENING     14958    -                    private/proxymap
+unix  2      [ ACC ]     STREAM     LISTENING     14961    -                    private/proxywrite
+unix  2      [ ACC ]     STREAM     LISTENING     14964    -                    private/smtp
+unix  2      [ ACC ]     STREAM     LISTENING     14967    -                    private/relay
+unix  2      [ ACC ]     STREAM     LISTENING     14973    -                    private/error
+unix  2      [ ACC ]     STREAM     LISTENING     14976    -                    private/retry
+unix  2      [ ACC ]     STREAM     LISTENING     14979    -                    private/discard
+unix  2      [ ACC ]     STREAM     LISTENING     14982    -                    private/local
+unix  2      [ ACC ]     STREAM     LISTENING     14985    -                    private/virtual
+unix  2      [ ACC ]     STREAM     LISTENING     14988    -                    private/lmtp
+unix  2      [ ACC ]     STREAM     LISTENING     14991    -                    private/anvil
+unix  2      [ ACC ]     STREAM     LISTENING     14994    -                    private/scache
+unix  2      [ ACC ]     STREAM     LISTENING     14926    -                    public/pickup
+unix  2      [ ACC ]     STREAM     LISTENING     14933    -                    public/qmgr
+unix  2      [ ACC ]     STREAM     LISTENING     14955    -                    public/flush
+unix  2      [ ACC ]     STREAM     LISTENING     14970    -                    public/showq
+unix  2      [ ACC ]     STREAM     LISTENING     14930    -                    public/cleanup
+unix  2      [ ]         DGRAM                    10451    -                    /run/systemd/notify
+unix  2      [ ACC ]     STREAM     LISTENING     16905    -                    /var/mysql/mysql.sock
+unix  2      [ ACC ]     STREAM     LISTENING     10462    -                    /run/systemd/journal/stdout
+unix  5      [ ]         DGRAM                    10465    -                    /run/systemd/journal/socket
+unix  10     [ ]         DGRAM                    10467    -                    /dev/log
+unix  2      [ ACC ]     STREAM     LISTENING     15598    -                    /run/dbus/system_bus_socket
+unix  2      [ ]         DGRAM                    16630    -                    /run/systemd/shutdownd
+unix  2      [ ACC ]     SEQPACKET  LISTENING     16632    -                    /run/udev/control
+unix  2      [ ]         DGRAM                    10915    -                    
+unix  3      [ ]         STREAM     CONNECTED     14945    -                    
+unix  3      [ ]         STREAM     CONNECTED     14993    -                    
+unix  3      [ ]         STREAM     CONNECTED     14925    -                    
+unix  3      [ ]         STREAM     CONNECTED     14957    -                    
+unix  3      [ ]         DGRAM                    7863     -                    
+unix  3      [ ]         STREAM     CONNECTED     14989    -                    
+unix  3      [ ]         STREAM     CONNECTED     14972    -                    
+unix  3      [ ]         STREAM     CONNECTED     1655     -                    
+unix  2      [ ]         DGRAM                    21645    -                    
+unix  3      [ ]         STREAM     CONNECTED     14953    -                    
+unix  3      [ ]         STREAM     CONNECTED     14984    -                    
+unix  3      [ ]         STREAM     CONNECTED     14965    -                    
+unix  2      [ ]         DGRAM                    15618    -                    
+unix  2      [ ]         DGRAM                    15000    -                    
+unix  3      [ ]         STREAM     CONNECTED     19616    -                    
+unix  3      [ ]         STREAM     CONNECTED     14980    -                    
+unix  3      [ ]         STREAM     CONNECTED     14942    -                    
+unix  3      [ ]         STREAM     CONNECTED     14187    -                    
+unix  3      [ ]         STREAM     CONNECTED     14992    -                    
+unix  3      [ ]         STREAM     CONNECTED     10916    -                    
+unix  3      [ ]         STREAM     CONNECTED     14944    -                    
+unix  3      [ ]         STREAM     CONNECTED     14956    -                    
+unix  2      [ ]         DGRAM                    7854     -                    
+unix  3      [ ]         STREAM     CONNECTED     15613    -                    
+unix  3      [ ]         STREAM     CONNECTED     14969    -                    
+unix  3      [ ]         STREAM     CONNECTED     14947    -                    
+unix  3      [ ]         STREAM     CONNECTED     14852    -                    
+unix  3      [ ]         STREAM     CONNECTED     14968    -                    
+unix  3      [ ]         STREAM     CONNECTED     14934    -                    
+unix  2      [ ]         DGRAM                    14731    -                    
+unix  3      [ ]         STREAM     CONNECTED     19617    -                    
+unix  3      [ ]         STREAM     CONNECTED     14981    -                    
+unix  3      [ ]         STREAM     CONNECTED     16855    -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     10823    -                    
+unix  3      [ ]         STREAM     CONNECTED     14996    -                    
+unix  3      [ ]         STREAM     CONNECTED     14977    -                    
+unix  3      [ ]         STREAM     CONNECTED     14960    -                    
+unix  3      [ ]         STREAM     CONNECTED     14939    -                    
+unix  3      [ ]         STREAM     CONNECTED     8476     -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     8459     -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     16852    -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     19618    -                    /run/dbus/system_bus_socket
+unix  3      [ ]         STREAM     CONNECTED     14927    -                    
+unix  3      [ ]         STREAM     CONNECTED     14959    -                    
+unix  3      [ ]         STREAM     CONNECTED     10917    -                    
+unix  3      [ ]         STREAM     CONNECTED     14974    -                    
+unix  3      [ ]         STREAM     CONNECTED     14017    -                    
+unix  3      [ ]         STREAM     CONNECTED     8612     -                    /run/dbus/system_bus_socket
+unix  3      [ ]         STREAM     CONNECTED     14948    -                    
+unix  3      [ ]         STREAM     CONNECTED     14951    -                    
+unix  3      [ ]         STREAM     CONNECTED     14987    -                    
+unix  3      [ ]         STREAM     CONNECTED     19619    -                    /run/dbus/system_bus_socket
+unix  2      [ ]         STREAM     CONNECTED     425999   22397/java           
+unix  3      [ ]         STREAM     CONNECTED     1719     -                    
+unix  3      [ ]         STREAM     CONNECTED     14938    -                    
+unix  2      [ ]         DGRAM                    19621    -                    
+unix  3      [ ]         STREAM     CONNECTED     16677    -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     14963    -                    
+unix  3      [ ]         STREAM     CONNECTED     14931    -                    
+unix  3      [ ]         STREAM     CONNECTED     399020   -                    
+unix  3      [ ]         STREAM     CONNECTED     14995    -                    
+unix  3      [ ]         STREAM     CONNECTED     14978    -                    
+unix  3      [ ]         STREAM     CONNECTED     11053    -                    
+unix  3      [ ]         STREAM     CONNECTED     14928    -                    
+unix  2      [ ]         DGRAM                    399017   -                    
+unix  3      [ ]         STREAM     CONNECTED     14975    -                    
+unix  3      [ ]         STREAM     CONNECTED     9500     -                    
+unix  3      [ ]         STREAM     CONNECTED     14990    -                    
+unix  2      [ ]         DGRAM                    15607    -                    
+unix  3      [ ]         STREAM     CONNECTED     8454     -                    /run/systemd/journal/stdout
+unix  2      [ ]         DGRAM                    441703   -                    
+unix  3      [ ]         STREAM     CONNECTED     14971    -                    
+unix  3      [ ]         STREAM     CONNECTED     14954    -                    
+unix  3      [ ]         STREAM     CONNECTED     14950    -                    
+unix  3      [ ]         STREAM     CONNECTED     14924    -                    
+unix  3      [ ]         STREAM     CONNECTED     8457     -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     14986    -                    
+unix  3      [ ]         DGRAM                    7862     -                    
+unix  3      [ ]         STREAM     CONNECTED     14941    -                    
+unix  3      [ ]         STREAM     CONNECTED     14935    -                    
+unix  3      [ ]         STREAM     CONNECTED     399021   -                    
+unix  3      [ ]         STREAM     CONNECTED     14983    -                    
+unix  3      [ ]         STREAM     CONNECTED     14966    -                    
+unix  3      [ ]         STREAM     CONNECTED     14962    -                    
+unix  3      [ ]         STREAM     CONNECTED     14932    -                    
+unix  2      [ ]         DGRAM                    9392     -                    
+unix  3      [ ]         STREAM     CONNECTED     11153    -                    
+
+------ Message Queues --------
+key        msqid      owner      perms      used-bytes   messages    
+
+------ Shared Memory Segments --------
+key        shmid      owner      perms      bytes      nattch     status      
+
+------ Semaphore Arrays --------
+key        semid      owner      perms      nsems
+EXPECT NOTHING FOR BELOW (local)
+Above EnvId is local
+SKIP TEST CASES UPDATE
+DONE
+============= FETCH TEST CASES ==================
+Test Category:shell
+The Number of Test Cases: 1 (macro skipped: 0, bug skipped: 0)
+The Number of Test Case : 1
+============= DEPLOY ==================
+CLEAN PROCESSES:
+++ cubrid service is not running.
+UID        PID  PPID  C STIME TTY          TIME CMD
+zll       5193  5191  0 Sep16 ?        00:00:04 sshd: zll@pts/0,pts/1,pts/2
+zll       5195  5193  0 Sep16 pts/0    00:00:00 -bash
+zll       6673  5193  0 Sep16 pts/1    00:00:00 -bash
+zll      22337  5193  0 Sep16 pts/2    00:00:00 -bash
+zll      22397     1  0 Sep16 pts/2    00:03:18 /home/zll/opt/jdk1.6.0_07/jre/bin/java -cp /home/zll/CTP/common/lib/cubridqa-common.jar:/home/zll/CTP/sql/webconsole/../lib/cubridqa-cqt.jar com.navercorp.cubridqa.cqt.webconsole.WebServer 8888 /home/zll/CTP/sql/webconsole /home/zll/CTP/sql/result /
+zll      31235  5195  0 15:36 pts/0    00:00:00 /bin/sh /home/zll/CTP/bin/ctp.sh shell -c shell_long.conf
+zll      31242 31235 12 15:36 pts/0    00:00:00 /home/zll/opt/jdk1.6.0_07/bin/java -cp /home/zll/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c shell_long.conf
+zll      31243 31235  0 15:36 pts/0    00:00:00 tee /home/zll/CTP/.output_2019091715361568702186.log
+zll      31889 31242  2 15:36 pts/0    00:00:00 sh /tmp/.localexec39939.sh 2>&1
+zll      32089 31889  0 15:36 pts/0    00:00:00 ps -u zll -f
+zll      22397     1  0 Sep16 pts/2    00:03:18 /home/zll/opt/jdk1.6.0_07/jre/bin/java -cp /home/zll/CTP/common/lib/cubridqa-common.jar:/home/zll/CTP/sql/webconsole/../lib/cubridqa-cqt.jar com.navercorp.cubridqa.cqt.webconsole.WebServer 8888 /home/zll/CTP/sql/webconsole /home/zll/CTP/sql/result /
+zll      31242 31235 12 15:36 pts/0    00:00:00 /home/zll/opt/jdk1.6.0_07/bin/java -cp /home/zll/CTP/common/lib/cubridqa-common.jar com.navercorp.cubridqa.ctp.CTP shell -c shell_long.conf
+zll      32091 31889  0 15:36 pts/0    00:00:00 grep --color=auto cub
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       User       Inode      PID/Program name    
+tcp        0      0 0.0.0.0:14024           0.0.0.0:*               LISTEN      0          11166      -                   
+tcp        0      0 127.0.0.1:25            0.0.0.0:*               LISTEN      0          14922      -                   
+tcp        0      0 10.34.64.63:14024       10.34.63.43:59669       ESTABLISHED 0          404386     -                   
+tcp6       0      0 :::14024                :::*                    LISTEN      0          11168      -                   
+tcp6       0      0 :::3307                 :::*                    LISTEN      27         20664      -                   
+tcp6       0      0 :::8888                 :::*                    LISTEN      1000       419673     22397/java          
+tcp6       0      0 ::1:25                  :::*                    LISTEN      0          14923      -                   
+udp        0      0 10.34.64.63:123         0.0.0.0:*                           38         8623       -                   
+udp        0      0 127.0.0.1:123           0.0.0.0:*                           0          20643      -                   
+udp        0      0 0.0.0.0:123             0.0.0.0:*                           0          20637      -                   
+udp6       0      0 fe80::be30:5bff:fef:123 :::*                                38         8624       -                   
+udp6       0      0 ::1:123                 :::*                                0          20644      -                   
+udp6       0      0 :::123                  :::*                                0          20638      -                   
+Active UNIX domain sockets (servers and established)
+Proto RefCnt Flags       Type       State         I-Node   PID/Program name     Path
+unix  2      [ ACC ]     STREAM     LISTENING     14940    -                    private/rewrite
+unix  2      [ ACC ]     STREAM     LISTENING     14949    -                    private/trace
+unix  2      [ ACC ]     STREAM     LISTENING     14937    -                    private/tlsmgr
+unix  2      [ ACC ]     STREAM     LISTENING     14943    -                    private/bounce
+unix  2      [ ACC ]     STREAM     LISTENING     14946    -                    private/defer
+unix  2      [ ACC ]     STREAM     LISTENING     14952    -                    private/verify
+unix  2      [ ]         DGRAM                    7772     -                    /run/systemd/cgroups-agent
+unix  2      [ ACC ]     STREAM     LISTENING     7774     -                    /run/systemd/private
+unix  2      [ ACC ]     STREAM     LISTENING     14958    -                    private/proxymap
+unix  2      [ ACC ]     STREAM     LISTENING     14961    -                    private/proxywrite
+unix  2      [ ACC ]     STREAM     LISTENING     14964    -                    private/smtp
+unix  2      [ ACC ]     STREAM     LISTENING     14967    -                    private/relay
+unix  2      [ ACC ]     STREAM     LISTENING     14973    -                    private/error
+unix  2      [ ACC ]     STREAM     LISTENING     14976    -                    private/retry
+unix  2      [ ACC ]     STREAM     LISTENING     14979    -                    private/discard
+unix  2      [ ACC ]     STREAM     LISTENING     14982    -                    private/local
+unix  2      [ ACC ]     STREAM     LISTENING     14985    -                    private/virtual
+unix  2      [ ACC ]     STREAM     LISTENING     14988    -                    private/lmtp
+unix  2      [ ACC ]     STREAM     LISTENING     14991    -                    private/anvil
+unix  2      [ ACC ]     STREAM     LISTENING     14994    -                    private/scache
+unix  2      [ ACC ]     STREAM     LISTENING     14926    -                    public/pickup
+unix  2      [ ACC ]     STREAM     LISTENING     14933    -                    public/qmgr
+unix  2      [ ACC ]     STREAM     LISTENING     14955    -                    public/flush
+unix  2      [ ACC ]     STREAM     LISTENING     14970    -                    public/showq
+unix  2      [ ACC ]     STREAM     LISTENING     14930    -                    public/cleanup
+unix  2      [ ]         DGRAM                    10451    -                    /run/systemd/notify
+unix  2      [ ACC ]     STREAM     LISTENING     16905    -                    /var/mysql/mysql.sock
+unix  2      [ ACC ]     STREAM     LISTENING     10462    -                    /run/systemd/journal/stdout
+unix  5      [ ]         DGRAM                    10465    -                    /run/systemd/journal/socket
+unix  10     [ ]         DGRAM                    10467    -                    /dev/log
+unix  2      [ ACC ]     STREAM     LISTENING     15598    -                    /run/dbus/system_bus_socket
+unix  2      [ ]         DGRAM                    16630    -                    /run/systemd/shutdownd
+unix  2      [ ACC ]     SEQPACKET  LISTENING     16632    -                    /run/udev/control
+unix  2      [ ]         DGRAM                    10915    -                    
+unix  3      [ ]         STREAM     CONNECTED     14945    -                    
+unix  3      [ ]         STREAM     CONNECTED     14993    -                    
+unix  3      [ ]         STREAM     CONNECTED     14925    -                    
+unix  3      [ ]         STREAM     CONNECTED     14957    -                    
+unix  3      [ ]         DGRAM                    7863     -                    
+unix  3      [ ]         STREAM     CONNECTED     14989    -                    
+unix  3      [ ]         STREAM     CONNECTED     14972    -                    
+unix  3      [ ]         STREAM     CONNECTED     1655     -                    
+unix  2      [ ]         DGRAM                    21645    -                    
+unix  3      [ ]         STREAM     CONNECTED     14953    -                    
+unix  3      [ ]         STREAM     CONNECTED     14984    -                    
+unix  3      [ ]         STREAM     CONNECTED     14965    -                    
+unix  2      [ ]         DGRAM                    15618    -                    
+unix  2      [ ]         DGRAM                    15000    -                    
+unix  3      [ ]         STREAM     CONNECTED     19616    -                    
+unix  3      [ ]         STREAM     CONNECTED     14980    -                    
+unix  3      [ ]         STREAM     CONNECTED     14942    -                    
+unix  3      [ ]         STREAM     CONNECTED     14187    -                    
+unix  3      [ ]         STREAM     CONNECTED     14992    -                    
+unix  3      [ ]         STREAM     CONNECTED     10916    -                    
+unix  3      [ ]         STREAM     CONNECTED     14944    -                    
+unix  3      [ ]         STREAM     CONNECTED     14956    -                    
+unix  2      [ ]         DGRAM                    7854     -                    
+unix  3      [ ]         STREAM     CONNECTED     15613    -                    
+unix  3      [ ]         STREAM     CONNECTED     14969    -                    
+unix  3      [ ]         STREAM     CONNECTED     14947    -                    
+unix  3      [ ]         STREAM     CONNECTED     14852    -                    
+unix  3      [ ]         STREAM     CONNECTED     14968    -                    
+unix  3      [ ]         STREAM     CONNECTED     14934    -                    
+unix  2      [ ]         DGRAM                    14731    -                    
+unix  3      [ ]         STREAM     CONNECTED     19617    -                    
+unix  3      [ ]         STREAM     CONNECTED     14981    -                    
+unix  3      [ ]         STREAM     CONNECTED     16855    -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     10823    -                    
+unix  3      [ ]         STREAM     CONNECTED     14996    -                    
+unix  3      [ ]         STREAM     CONNECTED     14977    -                    
+unix  3      [ ]         STREAM     CONNECTED     14960    -                    
+unix  3      [ ]         STREAM     CONNECTED     14939    -                    
+unix  3      [ ]         STREAM     CONNECTED     8476     -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     8459     -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     16852    -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     19618    -                    /run/dbus/system_bus_socket
+unix  3      [ ]         STREAM     CONNECTED     14927    -                    
+unix  3      [ ]         STREAM     CONNECTED     14959    -                    
+unix  3      [ ]         STREAM     CONNECTED     10917    -                    
+unix  3      [ ]         STREAM     CONNECTED     14974    -                    
+unix  3      [ ]         STREAM     CONNECTED     14017    -                    
+unix  3      [ ]         STREAM     CONNECTED     8612     -                    /run/dbus/system_bus_socket
+unix  3      [ ]         STREAM     CONNECTED     14948    -                    
+unix  3      [ ]         STREAM     CONNECTED     14951    -                    
+unix  3      [ ]         STREAM     CONNECTED     14987    -                    
+unix  3      [ ]         STREAM     CONNECTED     19619    -                    /run/dbus/system_bus_socket
+unix  2      [ ]         STREAM     CONNECTED     425999   22397/java           
+unix  3      [ ]         STREAM     CONNECTED     1719     -                    
+unix  3      [ ]         STREAM     CONNECTED     14938    -                    
+unix  2      [ ]         DGRAM                    19621    -                    
+unix  3      [ ]         STREAM     CONNECTED     16677    -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     14963    -                    
+unix  3      [ ]         STREAM     CONNECTED     14931    -                    
+unix  3      [ ]         STREAM     CONNECTED     399020   -                    
+unix  3      [ ]         STREAM     CONNECTED     14995    -                    
+unix  3      [ ]         STREAM     CONNECTED     14978    -                    
+unix  3      [ ]         STREAM     CONNECTED     11053    -                    
+unix  3      [ ]         STREAM     CONNECTED     14928    -                    
+unix  2      [ ]         DGRAM                    399017   -                    
+unix  3      [ ]         STREAM     CONNECTED     14975    -                    
+unix  3      [ ]         STREAM     CONNECTED     9500     -                    
+unix  3      [ ]         STREAM     CONNECTED     14990    -                    
+unix  2      [ ]         DGRAM                    15607    -                    
+unix  3      [ ]         STREAM     CONNECTED     8454     -                    /run/systemd/journal/stdout
+unix  2      [ ]         DGRAM                    441703   -                    
+unix  3      [ ]         STREAM     CONNECTED     14971    -                    
+unix  3      [ ]         STREAM     CONNECTED     14954    -                    
+unix  3      [ ]         STREAM     CONNECTED     14950    -                    
+unix  3      [ ]         STREAM     CONNECTED     14924    -                    
+unix  3      [ ]         STREAM     CONNECTED     8457     -                    /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     14986    -                    
+unix  3      [ ]         DGRAM                    7862     -                    
+unix  3      [ ]         STREAM     CONNECTED     14941    -                    
+unix  3      [ ]         STREAM     CONNECTED     14935    -                    
+unix  3      [ ]         STREAM     CONNECTED     399021   -                    
+unix  3      [ ]         STREAM     CONNECTED     14983    -                    
+unix  3      [ ]         STREAM     CONNECTED     14966    -                    
+unix  3      [ ]         STREAM     CONNECTED     14962    -                    
+unix  3      [ ]         STREAM     CONNECTED     14932    -                    
+unix  2      [ ]         DGRAM                    9392     -                    
+unix  3      [ ]         STREAM     CONNECTED     11153    -                    
+
+------ Message Queues --------
+key        msqid      owner      perms      used-bytes   messages    
+
+------ Shared Memory Segments --------
+key        shmid      owner      perms      bytes      nattch     status      
+
+------ Semaphore Arrays --------
+key        semid      owner      perms      nsems
+DONE
+============= TEST ==================
+[ENV START] local
+STARTED
+[TESTCASE] cubrid-testcases-private/longcase/shell/1hour/bug_bts_9382/cases/bug_bts_9382.sh EnvId=local [NOK]
+[ENV STOP] local
+============= PRINT SUMMARY ==================
+Test Category:shell
+Total Case:1
+Total Execution Case:1
+Total Success Case:0
+Total Fail Case:1
+Total Skip Case:0
+
+TEST COMPLETE
+[SHELL] TEST END (Tue Sep 17 16:46:41 KST 2019)
+[SHELL] ELAPSE TIME: 4215 seconds
+```
+## 2.5 Examine test results
+
+# 3. Deploy Regression Test Environment
 In this section, we will introduce how to deploy the Shell_long Regression Test Environment.  
 ## 3.1 Test Machines
-For shell_long regression test, we usually have one controller node and multiple test nodes.In our regression configurations,we use five test nodes.  
-**Controller node** : This node listens to test messages and starts a test when there is a test message.  
-**Test node** : CUBRID server is deployed on this node,we execute test cases on it. 
+For current daily regression test, there are one controller node and five test nodes.      
+**Controller node** : This node listens to test messages and starts a test when there is a test message.    
+**Test node** : CUBRID server is deployed on this node, we execute test cases on it.     
 
-Information about each test machines.
-<table>
-<tr>
-<th>Description</th>
-<th>User Name</th>
-<th>IP</th>
-<th>Hostname</th>
-<th>Tools to deploy</th>
-</tr>
-<tr class="even">
-<td>controller node</td>
-<td>rqgcontroller</td>
-<td>192.168.1.99</td>
-<td>func24</td>
-<td><p>CTP</p>
-</td>
-</tr>
-<tr class="even">
-<td>test node</td>
-<td>shell_long</td>
-<td>192.168.1.99</td>
-<td>func24</td>
-<td><p>CTP</p>
-<p>cubrid-testcases-private</p>
-</td>
-</tr>
-<tr class="even">
-<td>test node</td>
-<td>shell_long</td>
-<td>192.168.1.100</td>
-<td>func25</td>
-<td><p>CTP</p>
-<p>cubrid-testcases-private</p>
-</td>
-</tr>
-<tr class="even">
-<td>test node</td>
-<td>shell_long</td>
-<td>192.168.1.101</td>
-<td>func26</td>
-<td><p>CTP</p>
-<p>cubrid-testcases-private</p>
-</td>
-</tr>
-<tr class="even">
-<td>test node</td>
-<td>shell_long</td>
-<td>192.168.1.102</td>
-<td>func27</td>
-<td><p>CTP</p>
-<p>cubrid-testcases-private</p>
-</td>
-</tr>
-<tr class="even">
-<td>test node</td>
-<td>shell_long</td>
-<td>192.168.1.103</td>
-<td>func28</td>
-<td><p>CTP</p>
-<p>cubrid-testcases-private</p>
-</td>
-</tr>
-</table>
+Information about each test machines.    
 
-## 3.2	Test Deployments
-### For all nodes
-1. Install JDK
-2. Add IP and hostname to /etc/hosts
-```
-192.168.1.99  func24  
-192.168.1.100  func25    
-192.168.1.101  func26  
-192.168.1.102  func27  
-192.168.1.103  func28   
-```
-3. checkout git repositories to $HOME/
-```
-git clone https://github.com/CUBRID/cubrid-testtools.git
-cd ~/cubrid-testtools/
-git checkout develop
-```
+Description|User Name|IP|Hostname|Tools to deploy
+--|--|--|--|--
+Controller node|rqgcontroller|192.168.1.99|func24|CTP
+Test node|shell_long|192.168.1.99|func24|CTP,cubrid-testcases-private
+Test node|shell_long|192.168.1.100|func25|CTP,cubrid-testcases-private
+Test node|shell_long|192.168.1.101|func26|CTP,cubrid-testcases-private
+Test node|shell_long|192.168.1.102|func27|CTP,cubrid-testcases-private
+Test node|shell_long|192.168.1.103|func28|CTP,cubrid-testcases-private
+## 3.2	Deploy Test Environment
 ### On Controller node  
-1. Install CTP      
-Please follow [the guide to install CTP](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md).
-
-2. touch ~/CTP/conf/shell_template_for_shell_long.conf    
-Here is the config file that we use for current daily QA test:
+1. Install CTP        
+Please follow [the guide to install CTP](ctp_install_guide.md#3-install-ctp-as-regression-test-platform). Then create shell_long test configuration.
+File `~/CTP/conf/shell_template_for_shell_long.conf`:   
  ```
 $ cat shell_template_for_shell_long.conf 
 default.cubrid.cubrid_port_id=1568
@@ -206,9 +583,10 @@ feedback_db_name=qaresu
 feedback_db_user=dba
 feedback_db_pwd=
 ```
-When you need to test shell_long_debug, then need to copy `~/CTP/conf/shell_template_for_shell_long.conf` as `~/CTP/conf/shell_template_for_shell_long_debug.conf` 
+>Note: when you need to test shell_long_debug, copy `~/CTP/conf/shell_template_for_shell_long.conf` as `~/CTP/conf/shell_template_for_shell_long_debug.conf` 
 
-3. touch start_test.sh  
+2. Create quick start script     
+File `start_test.sh` 
 ```bash
  cat ~/start_test.sh
 
@@ -218,49 +596,31 @@ When you need to test shell_long_debug, then need to copy `~/CTP/conf/shell_temp
 # We use one controllar to listening shell_heavy, shell_long, and RQG test messages in dailyqa.
 nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_HEAVY_LINUX,QUEUE_CUBRID_QA_RQG,QUEUE_CUBRID_QA_SHELL_LONG_LINUX -exec run_shell,run_shell,run_shell &   
 ```
- 4. Update ~/.bash_profile    
+ 3. Configure .bash_profile      
  ```
- $ cat .bash_profile 
-# .bash_profile
-
-# Get the aliases and functions
-if [ -f ~/.bashrc ]; then
-        . ~/.bashrc
-fi
-
-# User specific environment and startup programs
-
-PATH=$PATH:$HOME/.local/bin:$HOME/bin
-
-export PATH
-
 export DEFAULT_BRANCH_NAME=develop
 export CTP_HOME=$HOME/CTP
 export CTP_BRANCH_NAME=develop
 export CTP_SKIP_UPDATE=0
+export init_path=$HOME/CTP/shell/init_path
 
-export CTP_HOME=~/CTP
-export init_path=$CTP_HOME/shell/init_path
-export RQG_HOME=~/random_query_generator
-PATH=$JAVA_HOME/bin:$HOME/CTP/common/script:$PATH
-```
- 
-5. start consumer process  
-```bash
- sh start_test.sh
-```
+ulimit -c unlimited
+export LC_ALL=en_US
 
+. $HOME/.cubrid.sh
+export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$JAVA_HOME/bin:/usr/local/bin:/bin:/usr/bin:$PATH
+```
 ### On Test nodes
-1. Install CTP  
-Please follow [the guide to install CTP](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md).
-2. Check out test cases from git to $HOME/
+1. Install CTP    
+Please follow [the guide to install CTP](ctp_install_guide.md#3-install-ctp-as-regression-test-platform).
+2. Check out test cases   
 ```
 cd ~
 git clone https://github.com/CUBRID/cubrid-testcases-private.git 
 cd ~/cubrid-testcases-private/
 git checkout develop
 ```
-3. Install CUBRID.
+3. Install CUBRID.    
 
 4. Add following settings to ~/.bash_profile and source it.
 ```bash
@@ -301,9 +661,9 @@ ulimit -c unlimited
 . ~/.cubrid.sh
 ulimit -c unlimited
 ```
-# 4. Regression Tests
+# 4. Regression Test Sustaining
 We perform shell_long test twice a week (actually it is controlled through crontab) and perform code coverage test for monthly.  
-crontab task for shell_long test:
+Crontab task for shell_long test is as below:
 ```
 #######################################################################
 job_shell_long.service=ON
@@ -318,73 +678,31 @@ job_shell_long.test.1.queue=QUEUE_CUBRID_QA_SHELL_LONG_LINUX
 
 #######################################################################
 ```
-
-
 ## 4.1 Daily regression test
-When the build server has a new build and meet the conditions of the crontab task, a shell_long test will be executed. If there is something wrong and need to run shell_long test again, you can send a test message. 
+When the build server has a new build and meet the conditions of the crontab task, the shell_long regression test will be started. If there is something wrong and need to run shell_long test again, you can send a test message. 
+### Start the listener
+```bash
+$ cd ~
+$ sh start_test.sh &
+$ tail -f nohup.out
+```
 ### Send a test message
-1. go to controller node, check `~/CTP/conf/shell_template_for_shell_long.conf`. This config file is only for regression test. We usually don't modify it except we have new test nodes.
-2. login `message@192.168.1.91` and send test message.  
+Login `message@192.168.1.91` and send test message.  
 By default, it will find the `~/CTP/conf/shell_template_for_shell_long.conf` to execute. Otherwise it will find the `~/CTP/conf/shell_template.conf`   
 ```bash
 sender.sh QUEUE_CUBRID_QA_SHELL_LONG_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8268-6e0edf3/drop/CUBRID-10.2.0.8268-6e0edf3-Linux.x86_64.sh shell_long default
 ```
-
-## 4.2 Verify test Results  
-### Check if there is the test result  
-1. Go to QA homepage and click the CI build, wait for the page loading, see the 'Function' tab and find the shell_long result.    
-![verify_func_tab](./media/image1.png) 
-
-2. The category `shell_long` links to test cases that have been finished in the current test         
-![completed_test_cases](./media/image2.png)  
-
-3. The `Fail` column  includes `Total` and `New` column ,The value of `Total` links to the whole failed cases, and the value of `New` links to the new failed cases compared with previous build.    
-![fail_test_cases](./media/image3.png)    
-
-4. If it shows **'NO RESULT (OR RUNNING)'** as bellow, maybe you can check whether the crontab task time has not arrived or the test environments have problem.      
-![verify_no_result](./media/image4.png)      
-
-5. Here's what you might encounter:    
-* Test message is in the queue(test is not started)   
-  Sometimes there is another test executed such as RQG test,shell_heavy test or code coverage test. In this case, just wait for another test to complete.   
-* Insufficient disk space  
-  Some test case executed failed ,and on the value of `Total` column, we may see `Server crash graphic identifier`   
-![Server_crash_graphic_identifier](./media/image5.png)      
-* Test is not finished as expected  
-  If the CI build comes on time as usual, then you need to check why the test is so slow. It may because there is a server crash, server hangs up, or performance drop. In this case, you need to open a bug.   
-  
-### Check Failures   
-1. failures: http://10.113.153.154:10086/qaresult/showFailResult.nhn?m=showFailVerifyItem&statid=21980&srctb=shell_main&failType=shell#  
-![fail_list](./media/image6.png)   
-
-2. Click each case to see [`Case` and `Running log`](http://10.113.153.154:10086/qaresult/showfile.nhn?m=showCaseFile&statid=21980&itemid=2140696&tc=shell_long&buildId=10.2.0.8369-5a75e41&filePath=longcase/shell/1hour/bug_bts_5824/cases/bug_bts_5824.sh&isSuccessFul=false)   
-![details](./media/image7.png)  
-
-test code:  
-```
-if [ $cnt -lt 10 ]
-then
-
-   write_ok
-else
-   write_nok
-fi
-
-```
-fail reason:  
-```
-+ cnt=17
-+ '[' 17 -lt 10 ']'
-+ write_nok
-+ '[' -z '' ']'
-+ echo '----------------- 1 : NOK'
------------------ 1 : NOK
-+ echo 'bug_bts_5824-1 : NOK'
-++ wc -l
-```
-## 4.3 Code coverage test  
+### Verify test result 
+* ### Check whether there are results
+	Open [QA homepage](http://qahome.cubrid.org/qaresult/index.nhn), then navigate as below to find shell_long test result.   
+	![verify_func_tab](./media/image1.png)    
+	If some test shows 'NO RESULT', we need investigate reasons and resolve it.
+* ### Both Test Rate and Verified Rate should be 100%
+	In above picture, the figures with red color mean number of failures. Click it to open verification page. Then follow the same way as [shell test's](shell_guide.md#41-verify-regression-test-results) to verify all failures. Both Test Rate and Verified Rate should be 100%.
+   
+## 4.2 Code coverage test  
 Code coverage test starts on the last Sunday of each month.      
-You can find the setting from http://10.113.153.154:10086/qaresult/job/job.conf     
+You can find the setting from http://qahome.cubrid.org/qaresult/job/job.conf     
 ```
 #######################################################################
 job_codecoverage.service=ON
@@ -408,26 +726,15 @@ job_coverage_test.package_type=coverage
 job_coverage_test.test.15.scenario=shell_long
 job_coverage_test.test.15.queue=QUEUE_CUBRID_QA_SHELL_LONG_LINUX
 ```
-### Verify code coverage testing result  
-1. Go to QA homepage and find the 'code coverage' node in the left area, click the link of latest result.  
-![code_cov](./media/image8.png)     
-
-2. Click the `shell_long` link.  
-![code_cov_whole](./media/image9.png)     
-
-3. There is a coverage rate of lines. Its coverage rate of lines is usually in 40%~42%.   
-![code_cov_shell_long](./media/image10.png)     
-
 ### Send code coverage testing message    
-login `message@192.168.1.91`    
-Using the `sender_code_coverage_testing_message.sh` to send a code coverate test message.   
+Login `message@192.168.1.91`, using the `sender_code_coverage_testing_message.sh` script to send a code coverate test message.   
 >
 ```bash
 $ cd ~/manual
 $ sh sender_code_coverage_testing_message.sh
 Usage: sh  sender_code_coverage_testing_message queue url1 url2 category
 ``` 
-Send code coverage test message:  
+Example to send code coverage test message:  
 ```bash
 $ cd ~/manual
 $ sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_SHELL_LONG_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz shell_long    
@@ -474,9 +781,18 @@ queue: queue name
 url1: gcov build package url    
 url2: gcov source package url    
 catecory: shell_long   
- 
+### Verify code coverage testing result  
+1. Go to QA homepage and find the 'code coverage' node in the left area, click the link of latest result.  
+![code_cov](./media/image8.png)     
 
-## 4.4 Report issues
+2. Click the `shell_long` link.  
+![code_cov_whole](./media/image9.png)     
+
+3. There is a coverage rate of lines. Its coverage rate of lines is usually in 40%~42%.   
+![code_cov_shell_long](./media/image10.png)      
+
+## 4.3 Report issues
+Please refer to [`report issues of shell test`](shell_guide.md#43-report-issues).     
 ### General issue  
 You can refer to http://jira.cubrid.org/browse/CBRD-21989.     
 ![regrssion_issue](./media/image11.png)
@@ -484,27 +800,18 @@ You can refer to http://jira.cubrid.org/browse/CBRD-21989.
 It is necessary to add such information: `Test Build`,`Test OS`,`Description`,`Repro Steps`,`Expected Result`,`Actual Result` and `Test Cases`.     
 Sometimes we need save database files and logs to analyze this issue.      
 
-### Crash issue   
+### Crash issue
 Here are examples you can refer to.   
 http://jira.cubrid.org/browse/CBRD-22097  
 http://jira.cubrid.org/browse/CBRD-21772  
+ 
+We can report crash issue though tools:        
+* #### Click `REPORT ISSUE FOR BELOW CRASH`
+	![report_issue](./media/image14.png)   
+* #### Enter jira user and password,then click `Analyze Falure`,and click `Submit To Jira`  
+	![report_issue2](./media/image15.png)   
 
-The call stack of call file is required to paste in the description.  
-![crash_issue](./media/image12.png)   
-
-The location of the core file, DB files, and error logs are required.  
-![crash_issue_comment](./media/image13.png)   
-
-We can report shell_long issue though tools:    
-* Click `Server crash graphic identifier`,go to list of failed cases       
-* Click `REPORT ISSUE FOR BELOW CRASH`   
-![report_issue](./media/image14.png)   
-* Enter jira user and password,then click `Analyze Falure`,and click `Submit To Jira`  
-![report_issue2](./media/image15.png)   
-
-
-
-## 4.5 Maintenance
+## 4.4 Maintenance
 ### Delete `do_not_delete_core` Directory
 There are a lot of backup files when we report crash issues,once these issus have been closed,we need to delete them.
 ```bash
@@ -523,113 +830,12 @@ AUTO_10.2.0.8060-689ccdd_20181019_040434.tar.gz  AUTO_10.2.0.8349-bb21e2d_201904
 AUTO_10.2.0.8107-a05cfaa_20181028_053656.tar.gz  AUTO_10.2.0.8362-fbf9d84_20190526_060734.tar.gz
 AUTO_10.2.0.8254-c015eb2_20190213_025432.tar.gz  AUTO_SERVER-START_10.2.0.8254-c015eb2_20190213_020024.tar.gz
 ```  
-# 5.Test Case Specification
-## 5.1 Requirements
-export init_path=$HOME/CTP/shell/init_path
+# 5.Test Case Specification 
+The directory structure, naming rule, and convention rules of shell_long test case are definitely same as that of shell test cases. Please refer to [5. Shell Case Standards ](shell_guide.md#5-shell-case-standards) to write test cases.
 
-## 5.2 How To Write Test Case    
-It is the same with shell test cases  
-   * Test cases: The file extension is ``.sh``, and it is located in ``cases`` subdirectory, naming rule: ``/path/to/test_name/cases/test_name.sh``  
-   eg: cubrid-testcases-private/longcase/shell/5hour/bug_bts_4707/cases/bug_bts_4707.sh  
-   * Example for reference  
+
+  
     
-     ```
-     #!/bin/sh
-     # to initialize the environment variables which are required by case
-     . $init_path/init.sh
-     # to support RQG regression, the environment variables and functions in rqg_init.sh should be initialized, so just need uncomment the below statement($init_path/rqg_init.sh), 
-     # if you want to understand the functions which will be used in RQG case, please refer to $init_path/rqg_init.sh  
-     # . $init_path/rqg_init.sh
-     init test
-     dbname=tmpdb
 
-     cubrid_createdb $dbname
-	
-     dosomethings
-     ...
-	
-     if [condition]
-     then
-	        # Print testing result according to the condition, PASS means ok, otherwise nok
-	        write_ok
-     else
-	        write_nok
-     fi
-	
-     cubrid server stop $dbname
-     cubrid broker stop
-	
-     cubrid deletedb $dbname
-     # clean environment
-     finish
-	  ```
-## 5.3 Example Test Cases
-```
-$ cat bug_bts_14571.sh 
-#!/bin/sh
-. $init_path/init.sh
-init test
-set -x
-
-dbname=db14571
-cubrid server stop $dbname
-cubrid broker stop 
-cubrid deletedb $dbname
-rm *.log *.err
-
-cubrid_createdb $dbname --db-volume-size=20M --log-volume-size=20M
-cubrid start server $dbname
-cubrid broker start 
-
-csql -u dba $dbname -i schema.sql
-
-if [ "$OS" != "Linux" ]; then
-        xgcc -o prepare prepare.c -I${CUBRID}/include -L${CUBRID}/bin -L${CUBRID}/lib -lcascci ${MODE}
-else
-        xgcc -o prepare prepare.c -I${CUBRID}/include -L${CUBRID}/lib -lcascci ${MODE}
-fi
-
-port=`get_broker_port_from_shell_config`
-./prepare localhost $port $dbname
-
-csql -udba $dbname -c "create index idx_1 on t1 (a)" > result_1.log 2> error_1.log &
-sleep 3
-csql -udba $dbname -c "create index idx_2 on t1 (b)" > result_2.log 2> error_2.log &
-sleep 60
-csql -udba $dbname -c "select * from db_index where class_name = 't1'" > result_3.log
-
-if test -s error_1.log; then
-  write_nok
-else
-   write_ok
-fi
-
-if test -s error_2.log; then
-  write_nok
-else
-   write_ok
-fi
-
-sed -i 's/[^(]*[$)]//g' error_2.log
-format_csql_output result_3.log
-compare_result_between_files result_3.log bug_bts_14571.answer
-
-cubrid service stop $dbname
-if [ `cat bug_bts_14571.result | grep NOK | wc -l ` -ne 0 ] && [ $OS == Windows_NT ]
-then
-    curr_time=$(date '+%Y-%m-%d-%H-%M-%S')
-    mkdir -p $TEST_BIG_SPACE/../bug_bts_14571_$curr_time
-    cp -rf $CUBRID $TEST_BIG_SPACE/../bug_bts_14571_$curr_time
-    cp -rf ../../bug_bts_14571 $TEST_BIG_SPACE/../bug_bts_14571_$curr_time
-fi
-
-cubrid deletedb $dbname
-finish  
-```
-    
-## 5.4 Common Functions For Shell_long Cases  
-please refer to [shell guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#74-functions-in-initsh)
-
-**Notice: you can view $init_path/init.sh for more information**  
 
 
