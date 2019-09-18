@@ -753,7 +753,7 @@ No.  |Role  |OS User |IP  |Hostname
   Please refer to [2.5 Chec kout Test Cases](#25-check-out-test-cases)    
  
 
-# 4. RQG Regresion Test Sustaining
+# 4. RQG Regression Test Sustaining
 
 We perform RQG regression test for twice a week.  
 
@@ -779,51 +779,51 @@ sh start_test.sh &
 ```
 
 * ### Send test message by manual
-For example, 
-```bash
-$ sender.sh QUEUE_CUBRID_QA_RQG http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop/CUBRID-10.1.3.7762-b70a572-Linux.x86_64-debug.sh RQG default
-Message: 
+  For example, 
+  ```bash
+  $ sender.sh QUEUE_CUBRID_QA_RQG http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop/CUBRID-10.1.3.7762-b70a572-Linux.x86_64-debug.sh RQG default
+  Message: 
 
-Message Content: Test for build 10.1.3.7762-b70a572 by CUBRID QA Team, China
-MSG_ID = 190819-110540-387-000001
-MSG_PRIORITY = 4
-BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop
-BUILD_BIT=0
-BUILD_CREATE_TIME=1566039570000
-BUILD_GENERATE_MSG_WAY=MANUAL
-BUILD_ID=10.1.3.7762-b70a572
-BUILD_IS_FROM_GIT=1
-BUILD_PACKAGE_PATTERN=CUBRID-{1}-Linux.x86_64-debug.sh
-BUILD_SCENARIOS=RQG
-BUILD_SCENARIO_BRANCH_GIT=release/10.1
-BUILD_SEND_DELAY=140770
-BUILD_SEND_TIME=1566180340386
-BUILD_STORE_ID=store_01
-BUILD_SVN_BRANCH=RB-10.1.3
-BUILD_SVN_BRANCH_NEW=RB-10.1.0
-BUILD_TYPE=debug
-BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop/CUBRID-10.1.3.7762-b70a572-Linux.x86_64-debug.sh
-BUILD_URLS_CNT=1
-BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop/CUBRID-10.1.3.7762-b70a572-Linux.x86_64-debug.sh
+  Message Content: Test for build 10.1.3.7762-b70a572 by CUBRID QA Team, China
+  MSG_ID = 190819-110540-387-000001
+  MSG_PRIORITY = 4
+  BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop
+  BUILD_BIT=0
+  BUILD_CREATE_TIME=1566039570000
+  BUILD_GENERATE_MSG_WAY=MANUAL
+  BUILD_ID=10.1.3.7762-b70a572
+  BUILD_IS_FROM_GIT=1
+  BUILD_PACKAGE_PATTERN=CUBRID-{1}-Linux.x86_64-debug.sh
+  BUILD_SCENARIOS=RQG
+  BUILD_SCENARIO_BRANCH_GIT=release/10.1
+  BUILD_SEND_DELAY=140770
+  BUILD_SEND_TIME=1566180340386
+  BUILD_STORE_ID=store_01
+  BUILD_SVN_BRANCH=RB-10.1.3
+  BUILD_SVN_BRANCH_NEW=RB-10.1.0
+  BUILD_TYPE=debug
+  BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop/CUBRID-10.1.3.7762-b70a572-Linux.x86_64-debug.sh
+  BUILD_URLS_CNT=1
+  BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop/CUBRID-10.1.3.7762-b70a572-Linux.x86_64-debug.sh
 
 
-Do you accept above message [Y/N]: Y
-```
+  Do you accept above message [Y/N]: Y
+  ```
 
-# 4.3 Verify Test Result
-Open [QA homepage](http://qahome.cubrid.org) -> Select `build` ->select `Function`, find RQG item    
+## 4.3 Verify Test Result
+Open [QA homepage](http://qahome.cubrid.org) -> Select a `build` ->select `Function` tab, you will find RQG item.    
 ![test in progress](./rqg_image/check_results.PNG)     
 
 **Test Rate** is 44.90%, indicating that the test is not completed. (Expected value is 100%)   
 **Fail Rate** is 2.27%, indicating that there are failures. (Expected value is 0)  
 **Fail**  include two values, one is "Total" ,the other is "New".   
-**Total** is 98, it is the number of whole RQG test cases     
-**Testing** is 98, it is the same with **Total**, indicating that RQG test doesn't use execlude file    
+**Total** is 98, it is the number of whole RQG test cases.     
+**Testing** is 98, it is the same with **Total**, indicating that RQG test doesn't use execlude file.    
 **Success** is 43, indicating that the test is not completed or in progress. (Expected value of **Success** plus **Total of Fail** is 98)      
-**Total of Fail** is 1, indicating that one test case has been failed. It is linked to detail page of failed cases,such as http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22536&resultType=NOK    
+**Total of Fail** is 1, indicating that one test case has been failed. It is linked to detail page of failed cases,such as http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22536&resultType=NOK . 
 
 ## 1. server crash failures    
-### step1: check core alert icon    
+#### step1: check core alert icon    
 ![verify_1](./rqg_image/verify_1.PNG)    
 ### step2: report crash issue aumatically   
 #### click [core alert icon](http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22684&srctb=shell_main&resultType=NOK)    
@@ -855,13 +855,13 @@ such log told us that fail is caused by checkdb
 + echo 'dead_data_02_big_record-2 : NOK'
 + cat _checkdb.log
 ```
-## 3. reproduce issue   
-for [CBRD-23163](http://jira.cubrid.org/browse/CBRD-23163)   
+## 4.4 Reproduce issue   
+For [CBRD-23163](http://jira.cubrid.org/browse/CBRD-23163),  
 ```
 cd ~/cubrid-testcases-private/random_query_generator/_03_mvcc/recovery/rollback_uncommit_commit/rollback_uncommit_commit_dml_reuseoid/cases
 nohup ~/CTP/shell/init_path/run_shell.sh --enable-report --report-cron='0 50 9,14,17 * * ?' --issue=http://jira.cubrid.org/browse/CBRD-23163 --mailto=lanlan.zhan@navercorp.com --mailcc=dl_cubridqa_bj_internal@navercorp.com --loop --update-build --prompt-continue=yes &
 ```
-It will send test state email as your appointed times, like below:   
+It will send test status e-mail as your appointed time, like below:   
 ![verify_7](./rqg_image/verify_7.PNG)
 
 # 5. Test Case Specification  
@@ -1081,7 +1081,7 @@ It will send test state email as your appointed times, like below:
 
   `rqg_do_backup_db $db_name` : run `cubrid backupdb $db_name`   
 
-# 6 Appendix
+# 6. Appendix
 
 ## 6.1 Basic Usage for random_query_generator
 * ### How to generate tables and data   
@@ -2515,7 +2515,7 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
   8 rows selected. (0.013101 sec) Committed.
   ```
   #### Configuration Grammar 
-  please refer to [grammer elements](https://github.com/RQG/RQG-Documentation/wiki/RandomQueryGeneratorGrammar#grammar-elements)
+  Please refer to [grammer elements](https://github.com/RQG/RQG-Documentation/wiki/RandomQueryGeneratorGrammar#grammar-elements)
 
   * _int, _tinyint, _smallint, _mediumint, _bigint - returns an integer that will fit in the specified type. _unsigned may also be used, such as _int_unsigned
   * _char(N), _varchar(N) - returns a random character string of the desired size, containing lowercase letters a to z. If no N is specified, e.g. just _char, 1 character is generated
