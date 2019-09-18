@@ -739,52 +739,46 @@ We perform ha_repl/ha_repl_debug for daily (actually is for each build) and perf
 		10770 pts/0    S+     0:00      \_ tee
 
 ## 4.2 Send test message
+
 1. Login to the message server: `message@192.168.1.91`
-2. Send test message
-    * To execute an ha_repl test with release build
-    ```bash
-    sender.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh ha_repl default
-    ```
-    * To execute an ha_repl_debug test with debug build
-    ```bash 
-    sender.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh ha_repl_debug default
-    ```
-    For example, run an ha_repl test on 10.2.0.8369-5a75e41 build, you need to send a message like below.
-    ```bash
-    $ sender.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh ha_repl default
-    
-    Message: 
 
-    Message Content: Test for build 10.2.0.8369-5a75e41 by CUBRID QA Team, China
-    MSG_ID = 190909-190632-328-000001
-    MSG_PRIORITY = 4
-    BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop
-    BUILD_BIT=0
-    BUILD_CREATE_TIME=1561143743000
-    BUILD_GENERATE_MSG_WAY=MANUAL
-    BUILD_ID=10.2.0.8369-5a75e41
-    BUILD_IS_FROM_GIT=1
-    BUILD_PACKAGE_PATTERN=CUBRID-{1}-Linux.x86_64.sh
-    BUILD_SCENARIOS=ha_repl
-    BUILD_SCENARIO_BRANCH_GIT=develop
-    BUILD_SEND_DELAY=6879849
-    BUILD_SEND_TIME=1568023592327
-    BUILD_STORE_ID=store_01
-    BUILD_SVN_BRANCH=RB-10.2.0
-    BUILD_SVN_BRANCH_NEW=RB-10.2.0
-    BUILD_TYPE=general
-    BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh
-    BUILD_URLS_CNT=1
-    BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh
+2. Execute ha_repl test with release build
+
+		$ sender.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh ha_repl default
+
+		Message: 
+
+		Message Content: Test for build 10.2.0.8369-5a75e41 by CUBRID QA Team, China
+		MSG_ID = 190909-190632-328-000001
+		MSG_PRIORITY = 4
+		BUILD_ABSOLUTE_PATH=/home/ci_build/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop
+		BUILD_BIT=0
+		BUILD_CREATE_TIME=1561143743000
+		BUILD_GENERATE_MSG_WAY=MANUAL
+		BUILD_ID=10.2.0.8369-5a75e41
+		BUILD_IS_FROM_GIT=1
+		BUILD_PACKAGE_PATTERN=CUBRID-{1}-Linux.x86_64.sh
+		BUILD_SCENARIOS=ha_repl
+		BUILD_SCENARIO_BRANCH_GIT=develop
+		BUILD_SEND_DELAY=6879849
+		BUILD_SEND_TIME=1568023592327
+		BUILD_STORE_ID=store_01
+		BUILD_SVN_BRANCH=RB-10.2.0
+		BUILD_SVN_BRANCH_NEW=RB-10.2.0
+		BUILD_TYPE=general
+		BUILD_URLS=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh
+		BUILD_URLS_CNT=1
+		BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh
 
 
-    Do you accept above message [Y/N]:
-    Y
-    log4j:WARN No appenders could be found for logger (org.apache.activemq.thread.TaskRunnerFactory).
-    log4j:WARN Please initialize the log4j system properly.
-    log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
-    ```
-3. See the testing progress
+		Do you accept above message [Y/N]: Y
+
+3. Or execute ha_repl test with debug build    
+
+	    sender.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh ha_repl_debug default
+
+## 4.3 Check Test Status
+
  * See it in QA Homepage.      
    Click the build number, find the ha/ha_repl_debug category, you can see the related information from the table.   
    **Please check test rate:**    
@@ -795,9 +789,8 @@ We perform ha_repl/ha_repl_debug for daily (actually is for each build) and perf
    Click `Monitor`, find `QUEUE_CUBRID_QA_HA_REPL_LINUX` item.
    It will tell us whether the test is in progress or not.
     ![monitor](./ha_repl_image/Monitor.PNG)
-
  
-## 4.2 Ha_repl Code Coverage Test
+## 4.4 Ha_repl Code Coverage Test
 To execute code coverage test of ha_repl, you also need to send a testing message.   
 1. Login to the message server: `message@192.168.1.91`.   
 2. Send code coverage test message   
@@ -851,19 +844,19 @@ To execute code coverage test of ha_repl, you also need to send a testing messag
     Do you accept above message [Y/N]:
     ```
     For code coverage test, it doesn't show the result in the QA homepage `Function` page.  You can log in to the controller node to see the execution log and the detailed logs in the `$CTP_HOME/result/ha_repl/current_runtime_logs`. After the test finished, you can find the result in the `code coverage` page. See [5.2 verify code coverage testing result](#52-verify-code-coverage-testing-result) for detail.   
-# 5. Verification    
-## 5.1 Verify ha_repl/ha_repl_debug test results   
+## 4.5 Check Test Result
+* ### Verify ha_repl/ha_repl_debug test results   
 Go to QA homepage and click the CI build, wait for the `Function` page loading, then check if there are `ha_repl` and `ha_repl_debug` results.  
 ![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)  
     **Total column:** The number of test cases, it counts all the cases.         
     **Testing column:** The number of test cases that should be executed. It excepts the test cases that defined in `~/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf`.     
-### Check if there is a result
+* ### Check if there is a result
 If there shows 'NO RESULT (OR RUNNING)'as bellow, you need to find the reason.  
 ![ha_repl_no_result](./ha_repl_image/ha_repl_no_result.PNG)  
 Sometimes the CI build comes late, so that the test started late; or there is another test executed before the CI build. In this case, just wait for the test finish and then verify the results.  
-### Test Rate should be 100%
+* ### Test Rate should be 100%
 It means the `Testing` is equal to the sum of `Success` and `Fail(Total)`.
-### Verified Rate should be 100%
+* ### Verified Rate should be 100%
 If there is a failed test case, you need to verify it.  
 ![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)    
 Click the failed number `1`, it shows the list of failed test cases.   
@@ -996,10 +989,11 @@ Here are the issues that you can refer to.
 There is a coverage rate of lines. Its coverage rate of lines is usually around 24%.     
 ![codecov3](./ha_repl_image/ha_repl_code_coverage_result.PNG)      
 If the coverage does not meet expectation, you need to determine the cause and re-execute the test.   
-# 6. Ha_repl Test Case   
+
+# 5. Ha_repl Test Case   
 Since `HA REPLICATION` is using `SQL` scenarios to test on HA mode to verify the data replication between an active server and a standby server, so the cases are the same as `SQL`.    
 CTP will transform `case_name.sql` to be `case_name.test` which includes some checking statement flags around the SQL statements. And If the SQL does not contain primary key, CTP will add primary key on one column.  
-## 6.1 Conversion template 
+## 5.1 Conversion template 
 ```
 --test: # execute test flag for statement
 create table t1 (id int primary key, name varchar)
@@ -1018,12 +1012,12 @@ drop table t1;
 
 ```
 
-## 6.2 SQL cases
+## 5.2 SQL cases
 Ha_repl test cases are based on sql cases, you can refer to [this guide](https://github.com/Zhaojia2019/cubrid-testtools/blob/develop/doc/sql_guide.md#5-how-to-make-a-sql-test-case) to write sql case, then CTP will covert them to ha_repl test cases.  
 The current ha_repl test case is located in the https://github.com/CUBRID/cubrid-testcases repository.
 
 
-## 6.3 Conversion Rules
+## 5.3 Conversion Rules
 The converted test cases are named with `.test`.      
 For example: there is example1.sql file, it will be converted to example1.test file.       
 Original case:
@@ -1170,7 +1164,7 @@ CTP will add such statements `--test`, `--check`, `@HC_CHECK_FOR_EACH_STATEMENT`
   ```
   select /*+ recompile*/ * from t where i=2;
   ```
-## 6.4 Exclude List and Difference File
+## 5.4 Exclude List and Difference File
 Sometimes the file xxx.master.dump is different from xxx.slave1.dump caused by CUBRID design or Unfixed bugs. Make sure the test is pass, we need exlude them from ha_repl test cases or add difference file `xxx.master.slave1.diff_1`. 
 ### Exclude List
 All test cases in exclude list will be tested no longer.     
