@@ -1,136 +1,138 @@
 # 1. Test Objective
 This guide is to introduce RQG test. The RQG test is amed to test CUBRID stability especially in terms of server crash. It randomly generates various of querys (UPDATE/DELETE/INSERT/SELECT and others) automatically based on grammar files and executes these queries with many threads.     
 
-# 2. Execute RQG Test Case Alone
+# 2. RQG Test Usage
+The RQG test can be regarded as an extension of SHELL test. Like SHELL test, RQG test is also executed via CTP.
 ## 2.1 Install CTP
-The RQG test is an extension of shell test. RQG test cases are executed via CTP.    
-Please refer to [ctp install guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md)
+Please refer to [CTP installation guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md) to install CTP.
 ## 2.2 Install CUBRID 
 ```bash
  run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8294-2d9a032/drop/CUBRID-10.2.0.8294-2d9a032-Linux.x86_64-debug.sh
 ```
 ## 2.3 Install perl
-Since system perl does not include CPAN, we always install self perl version   
-1. install dependency package      
-```bash
- yum install ncurses-devel ncurses
- yum -y install gcc+ gcc-c++
-```
-2. install perl-5.26.1     
-```bash
- cd ~/opt
- tar zxvf perl-5.26.1.tar.gz
- cd perl-5.26.1
- ./Configure -Dprefix=~/opt/perl-526 -d
- make 
- make test
- make install
-```
-3. config .bash_profile   
-```bash
-PATH=$PATH:$HOME/.local/bin:$HOME/bin
+* ### Install dependent packages according to your actual situation.      
+ ```bash
+  yum install ncurses-devel ncurses
+  yum -y install gcc+ gcc-c++
+ ```
+* ### Install perl-5.26.1     
+We generally need install perl with our expected version for better compatibility. CPAN will be integrated as one of requirements.
+ ```bash
+  mkdir ~/opt
+  cd ~/opt
+  tar zxvf perl-5.26.1.tar.gz
+  cd perl-5.26.1
+  ./Configure -Dprefix=~/opt/perl-526 -d
+  make 
+  make test
+  make install
+ ```
 
-export PATH
-
-export DEFAULT_BRANCH_NAME=develop
-export CTP_HOME=$HOME/CTP
-export CTP_BRANCH_NAME=develop
-export CTP_SKIP_UPDATE=0
-
-unset USERNAME
-export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$HOME/opt/perl-526:$HOME/opt/perl-526/bin:$PATH
-export init_path=$CTP_HOME/shell/init_path
-export RQG_HOME=/home/perl/random_query_generator
-
-ulimit -c unlimited
-
-#-------------------------------------------------------------------------------
-# set CUBRID environment variables
-#-------------------------------------------------------------------------------
-. /home/perl/.cubrid.sh
-ulimit -c unlimited
-```
-
-4. install DBI,DBD:CUBRID through CPAN
-```bash
- perl -MCPAN -e shell (test whether CPAN  install)
- cpan>yes
- perl -MCPAN -e "install DBI"
- perl -MCPAN -e shell
-cpan> install DBD::cubrid
-```
-5. Edit ~/opt/perl-526/lib/site_perl/5.26.1/x86_64-linux/DBI.pm  
-add the following sentence into $dbd_prefix_registry  
-```
-cubrid_      => { class => 'DBD::cubrid',         },
-```
-
-```bash
-my $dbd_prefix_registry = {
-  ad_          => { class => 'DBD::AnyData',        },
-  ad2_         => { class => 'DBD::AnyData2',       },
-  ado_         => { class => 'DBD::ADO',            },
-  amzn_        => { class => 'DBD::Amazon',         },
-  best_        => { class => 'DBD::BestWins',       },
-  csv_         => { class => 'DBD::CSV',            },
+* ### Install DBI, DBD:CUBRID through CPAN
+ ```bash
+  perl -MCPAN -e shell (test whether CPAN  install)
+  cpan>yes
+  perl -MCPAN -e "install DBI"
+  perl -MCPAN -e shell
+ cpan> install DBD::cubrid
+ ```
+* ### Configure to support CUBRID driver
+  Open `~/opt/perl-526/lib/site_perl/5.26.1/x86_64-linux/DBI.pm`, add the following codes into $dbd_prefix_registry  
+  ```
   cubrid_      => { class => 'DBD::cubrid',         },
-  db2_         => { class => 'DBD::DB2',            },
-  dbi_         => { class => 'DBI',                 },
-  dbm_         => { class => 'DBD::DBM',            },
-  df_          => { class => 'DBD::DF',             },
-  examplep_    => { class => 'DBD::ExampleP',       },
-  f_           => { class => 'DBD::File',           },
-  file_        => { class => 'DBD::TextFile',       },
-  go_          => { class => 'DBD::Gofer',          },
-  ib_          => { class => 'DBD::InterBase',      },
-  ing_         => { class => 'DBD::Ingres',         },
-  ix_          => { class => 'DBD::Informix',       },
-  jdbc_        => { class => 'DBD::JDBC',           },
-  mariadb_     => { class => 'DBD::MariaDB',        },
-  mem_         => { class => 'DBD::Mem',            },
-  mo_          => { class => 'DBD::MO',             },
-  monetdb_     => { class => 'DBD::monetdb',        },
-   msql_        => { class => 'DBD::mSQL',           },
-  mvsftp_      => { class => 'DBD::MVS_FTPSQL',     },
-  mysql_       => { class => 'DBD::mysql',          },
-  multi_       => { class => 'DBD::Multi'           },
-  mx_          => { class => 'DBD::Multiplex',      },
-  neo_         => { class => 'DBD::Neo4p',          },
-  nullp_       => { class => 'DBD::NullP',          },
-  odbc_        => { class => 'DBD::ODBC',           },
-  ora_         => { class => 'DBD::Oracle',         },
-  pg_          => { class => 'DBD::Pg',             },
-  pgpp_        => { class => 'DBD::PgPP',           },
-  plb_         => { class => 'DBD::Plibdata',       },
-  po_          => { class => 'DBD::PO',             },
-  proxy_       => { class => 'DBD::Proxy',          },
-  ram_         => { class => 'DBD::RAM',            },
-  rdb_         => { class => 'DBD::RDB',            },
-  sapdb_       => { class => 'DBD::SAP_DB',         },
-  snmp_        => { class => 'DBD::SNMP',           },
-  solid_       => { class => 'DBD::Solid',          },
-  spatialite_  => { class => 'DBD::Spatialite',     },
-  sponge_      => { class => 'DBD::Sponge',         },
-  sql_         => { class => 'DBI::DBD::SqlEngine', },
-  sqlite_      => { class => 'DBD::SQLite',         },
-  syb_         => { class => 'DBD::Sybase',         },
-  sys_         => { class => 'DBD::Sys',            },
-  tdat_        => { class => 'DBD::Teradata',       },
-  tmpl_        => { class => 'DBD::Template',       },
-  tmplss_      => { class => 'DBD::TemplateSS',     },
-  tree_        => { class => 'DBD::TreeData',       },
-  tuber_       => { class => 'DBD::Tuber',          },
-  uni_         => { class => 'DBD::Unify',          },
-  vt_          => { class => 'DBD::Vt',             },
-  wmi_         => { class => 'DBD::WMI',            },
-  x_           => { }, # for private use
-  xbase_       => { class => 'DBD::XBase',          },
-  xmlsimple_   => { class => 'DBD::XMLSimple',      },
-  xl_          => { class => 'DBD::Excel',          },
-  yaswi_       => { class => 'DBD::Yaswi',          },
-  cubrid_      => { class => 'DBD::cubrid',         },
-};
-```
+  ```
+
+  ```bash
+  my $dbd_prefix_registry = {
+    ad_          => { class => 'DBD::AnyData',        },
+    ad2_         => { class => 'DBD::AnyData2',       },
+    ado_         => { class => 'DBD::ADO',            },
+    amzn_        => { class => 'DBD::Amazon',         },
+    best_        => { class => 'DBD::BestWins',       },
+    csv_         => { class => 'DBD::CSV',            },
+    cubrid_      => { class => 'DBD::cubrid',         },
+    db2_         => { class => 'DBD::DB2',            },
+    dbi_         => { class => 'DBI',                 },
+    dbm_         => { class => 'DBD::DBM',            },
+    df_          => { class => 'DBD::DF',             },
+    examplep_    => { class => 'DBD::ExampleP',       },
+    f_           => { class => 'DBD::File',           },
+    file_        => { class => 'DBD::TextFile',       },
+    go_          => { class => 'DBD::Gofer',          },
+    ib_          => { class => 'DBD::InterBase',      },
+    ing_         => { class => 'DBD::Ingres',         },
+    ix_          => { class => 'DBD::Informix',       },
+    jdbc_        => { class => 'DBD::JDBC',           },
+    mariadb_     => { class => 'DBD::MariaDB',        },
+    mem_         => { class => 'DBD::Mem',            },
+    mo_          => { class => 'DBD::MO',             },
+    monetdb_     => { class => 'DBD::monetdb',        },
+     msql_        => { class => 'DBD::mSQL',           },
+    mvsftp_      => { class => 'DBD::MVS_FTPSQL',     },
+    mysql_       => { class => 'DBD::mysql',          },
+    multi_       => { class => 'DBD::Multi'           },
+    mx_          => { class => 'DBD::Multiplex',      },
+    neo_         => { class => 'DBD::Neo4p',          },
+    nullp_       => { class => 'DBD::NullP',          },
+    odbc_        => { class => 'DBD::ODBC',           },
+    ora_         => { class => 'DBD::Oracle',         },
+    pg_          => { class => 'DBD::Pg',             },
+    pgpp_        => { class => 'DBD::PgPP',           },
+    plb_         => { class => 'DBD::Plibdata',       },
+    po_          => { class => 'DBD::PO',             },
+    proxy_       => { class => 'DBD::Proxy',          },
+    ram_         => { class => 'DBD::RAM',            },
+    rdb_         => { class => 'DBD::RDB',            },
+    sapdb_       => { class => 'DBD::SAP_DB',         },
+    snmp_        => { class => 'DBD::SNMP',           },
+    solid_       => { class => 'DBD::Solid',          },
+    spatialite_  => { class => 'DBD::Spatialite',     },
+    sponge_      => { class => 'DBD::Sponge',         },
+    sql_         => { class => 'DBI::DBD::SqlEngine', },
+    sqlite_      => { class => 'DBD::SQLite',         },
+    syb_         => { class => 'DBD::Sybase',         },
+    sys_         => { class => 'DBD::Sys',            },
+    tdat_        => { class => 'DBD::Teradata',       },
+    tmpl_        => { class => 'DBD::Template',       },
+    tmplss_      => { class => 'DBD::TemplateSS',     },
+    tree_        => { class => 'DBD::TreeData',       },
+    tuber_       => { class => 'DBD::Tuber',          },
+    uni_         => { class => 'DBD::Unify',          },
+    vt_          => { class => 'DBD::Vt',             },
+    wmi_         => { class => 'DBD::WMI',            },
+    x_           => { }, # for private use
+    xbase_       => { class => 'DBD::XBase',          },
+    xmlsimple_   => { class => 'DBD::XMLSimple',      },
+    xl_          => { class => 'DBD::Excel',          },
+    yaswi_       => { class => 'DBD::Yaswi',          },
+    cubrid_      => { class => 'DBD::cubrid',         },
+  };
+  ```
+
+* ### Configure `~/.bash_profile`   
+  ```bash
+  PATH=$PATH:$HOME/.local/bin:$HOME/bin
+
+  export PATH
+
+  export DEFAULT_BRANCH_NAME=develop
+  export CTP_HOME=$HOME/CTP
+  export CTP_BRANCH_NAME=develop
+  export CTP_SKIP_UPDATE=0
+
+  unset USERNAME
+  export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$HOME/opt/perl-526:$HOME/opt/perl-526/bin:$PATH
+  export init_path=$CTP_HOME/shell/init_path
+  export RQG_HOME=/home/perl/random_query_generator
+
+  ulimit -c unlimited
+
+  #-------------------------------------------------------------------------------
+  # set CUBRID environment variables
+  #-------------------------------------------------------------------------------
+  . /home/perl/.cubrid.sh
+  ulimit -c unlimited
+  ```
 
 ## 2.4 Install random_query_generator
 `Random_query_generator` is an external tool. Test case can find it via `RQG_HOME` environmental variable.     
@@ -651,7 +653,7 @@ vim ~/random_query_generator/lib/GenTest/Properties.pm to solve such porblem "Ca
              40  7337                  185          0   85724 BUSY         
      SQL: execute UPDATE "table10000_int_autoinc" SET col_int_key = 0 WHERE col_int = 3 LIMIT 7
       ```
-## 2.5 Checkout Test Case
+## 2.5 Check out Test Case
 The current test cases are located in  /Path/To/cubrid-testcases-private/random_query_generator/
 ```bash
 cd ~
