@@ -9,7 +9,7 @@ Please refer to [CTP installation guide](https://github.com/CUBRID/cubrid-testto
 ```bash
  run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8294-2d9a032/drop/CUBRID-10.2.0.8294-2d9a032-Linux.x86_64-debug.sh
 ```
-## 2.3 Deploy perl
+## 2.3 Install perl
 * ### Install dependent packages according to your actual situation     
  ```bash
   yum install ncurses-devel ncurses
@@ -658,9 +658,9 @@ No.  |Role  |OS User |IP  |Hostname
 ## 3.2 Deployment
 
 ### On Controller node
- * Install CTP
+ * Install CTP  
  Please follow [CTP installation guide](ctp_install_guide.md#3-install-ctp-as-regression-test-platform) to install CTP.
- Then create test configuration file `~/CTP/conf/shell_template_for_RQG.conf`   
+ Then create test configuration file `~/CTP/conf/shell_template_for_RQG.conf` as below.   
     ```bash
     default.cubrid.cubrid_port_id=1567
     default.broker1.BROKER_PORT=30070
@@ -726,13 +726,12 @@ No.  |Role  |OS User |IP  |Hostname
     feedback_db_user=dba
     feedback_db_pwd=*********
     ```
-    >Note: parameters desciption refer to [SHELL test guide](shell_guide.md)
+    >Note: parameters desciption refer to [SHELL test guide](shell_guide.md).
     
- * Create quick start script used to start listener
+ * Create quick start script used to start listener  
   File `~/start_test.sh`:   
   
     ```bash
-    cat ~/start_test.sh
     # If only need to listen the rqg test messages
     # nohup start_consumer.sh -q QUEUE_CUBRID_QA_RQG -exec run_shell &
 
@@ -740,7 +739,7 @@ No.  |Role  |OS User |IP  |Hostname
     nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_HEAVY_LINUX,QUEUE_CUBRID_QA_RQG,QUEUE_CUBRID_QA_SHELL_LONG_LINUX -exec run_shell,run_shell,run_shell  &
     ```
     
-### On every test node
+### On every Test node
 
 * Install CTP    
   Please refer to [2.1 Install CTP](#21-install-ctp)   
@@ -751,7 +750,7 @@ No.  |Role  |OS User |IP  |Hostname
  * Install random_query_generator     
   Please refer to [2.4 Install random_query_generator](#24-install-random_query_generator)         
  * Check out test cases     
-  Please refer to [2.5 Checkout Test Case](#25-checkout-test-case)    
+  Please refer to [2.5 Checkout Test Case](#25-check-out-test-case)    
  
 
 # 4. RQG Regresion Test
@@ -825,8 +824,6 @@ please see below:
 **Success** is 43, indicating that the test is not completed or in progress. (Expected value of **Success** plus **Total of Fail** is 98)      
 **Total of Fail** is 1, indicating that one test case has been failed. It is linked to detail page of failed cases,such as http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22536&resultType=NOK    
 
-
-
 # 5. Verify Test Result
 This section mainly introduces how to verify failures    
 ## 1. server crash failures    
@@ -871,8 +868,8 @@ nohup ~/CTP/shell/init_path/run_shell.sh --enable-report --report-cron='0 50 9,1
 It will send test state email as your appointed times, like below:   
 ![verify_7](./rqg_image/verify_7.PNG)
 
-# 6. Test Case Specification
-## 6.1 Test Case Basis
+# 5. Test Case Specification
+## 5.1 Test Case Basis
 RQG test cases are writed with shell, so the basis is same with shell test's.   
 Please see [shell test cases specification](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell/shell_guide.md#5-shell-case-standards)   
 
