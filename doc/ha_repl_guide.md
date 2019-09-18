@@ -467,220 +467,230 @@ This section introduces how to execute ha_repl test with one HA instance environ
 
  
 
-# 3. Deploy and Execute Regression Test
+# 3. Deploy Regression Test
 ## 3.1 Test Machines
-In the current daily regression test, we are using one controller node and 15 pairs of test nodes.
+In the current daily regression test, we are using one controller node to control 15 HA test instances which are executed in parallel.
 
-No.  |Role  |User Name  |IP  |Hostname
- --|--|--|--|--
-|01.|Controller node|controller|192.168.1.81|func06|
-|02.|Test nodes|ha1,ha2,ha3...ha15|192.168.1.81|func06|
-|03.|Test nodes|ha1,ha2,ha3...ha15|192.168.1.82|func07|
+No.  |Role  |User Name  |IP  |Hostname | Deployments
+ --|--|--|--|--|--
+|1|Controller node|controller|192.168.1.81|func06| CTP<br>cubrid-testcases
+|2|Test nodes|ha1, ha2, ha3, ..., ha15|192.168.1.81|func06| CTP|
+|3|Test nodes|ha1, ha2, ha3, ..., ha15|192.168.1.82|func07| CTP|
 
  **Controller node** listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.   
- **Test nodes** execute test cases in parallel.   
+ **Test nodes** execute test cases as worker.   
 
-## 3.2 Deploy Regression Test Environment
-### On Controller node
-1. Install CTP  
-Please refer to [this guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) to install CTP.  
+## 3.2 Deployment
 
-    Create a ha_repl regression test configuration file `$CTP_HOME/conf/ ha_repl_template.conf` 
-    ```bash
-    default.testdb = xdb
-    default.ssh.pwd=******
-    default.ssh.port=22
+* ### On Controller node
 
-    env.ha1.master.ssh.host = 192.168.1.82
-    env.ha1.master.ssh.user = ha1
-    env.ha1.slave1.ssh.host = 192.168.1.81
-    env.ha1.slave1.ssh.user = ha1
-    env.ha1.cubrid.cubrid_port_id = 1527
-    env.ha1.ha.ha_port_id = 59091
-    env.ha1.broker1.SERVICE = OFF
-    env.ha1.broker2.APPL_SERVER_SHM_ID = 33091
-    env.ha1.broker2.BROKER_PORT = 33091
-    env.ha2.master.ssh.host = 192.168.1.82
-    env.ha2.master.ssh.user = ha2
-    env.ha2.slave1.ssh.host = 192.168.1.81
-    env.ha2.slave1.ssh.user = ha2
-    env.ha2.cubrid.cubrid_port_id = 1528
-    env.ha2.ha.ha_port_id = 59092
-    env.ha2.broker1.SERVICE = OFF
-    env.ha2.broker2.APPL_SERVER_SHM_ID = 33092
-    env.ha2.broker2.BROKER_PORT = 33092
-    env.ha3.master.ssh.host=192.168.1.82
-    env.ha3.master.ssh.user=ha3
-    env.ha3.slave1.ssh.host=192.168.1.81
-    env.ha3.slave1.ssh.user=ha3
-    env.ha3.cubrid.cubrid_port_id=1529
-    env.ha3.ha.ha_port_id=59093
-    env.ha3.broker1.SERVICE = OFF
-    env.ha3.broker2.APPL_SERVER_SHM_ID = 33093
-    env.ha3.broker2.BROKER_PORT=33093
-    env.ha4.master.ssh.host = 192.168.1.82
-    env.ha4.master.ssh.user = ha4
-    env.ha4.slave1.ssh.host = 192.168.1.81
-    env.ha4.slave1.ssh.user = ha4
-    env.ha4.cubrid.cubrid_port_id = 1530
-    env.ha4.ha.ha_port_id = 59094
-    env.ha4.broker1.SERVICE = OFF
-    env.ha4.broker2.APPL_SERVER_SHM_ID = 33094
-    env.ha4.broker2.BROKER_PORT = 33094
-    env.ha5.master.ssh.host = 192.168.1.82
-    env.ha5.master.ssh.user = ha5
-    env.ha5.slave1.ssh.host = 192.168.1.81
-    env.ha5.slave1.ssh.user = ha5
-    env.ha5.cubrid.cubrid_port_id = 1531
-    env.ha5.ha.ha_port_id = 59095
-    env.ha5.broker1.SERVICE = OFF
-    env.ha5.broker2.APPL_SERVER_SHM_ID =33095
-    env.ha5.broker2.BROKER_PORT = 33095
-    env.ha6.master.ssh.host = 192.168.1.82
-    env.ha6.master.ssh.user = ha6
-    env.ha6.slave1.ssh.host = 192.168.1.81
-    env.ha6.slave1.ssh.user = ha6
-    env.ha6.cubrid.cubrid_port_id = 1532
-    env.ha6.ha.ha_port_id = 59096
-    env.ha6.broker1.SERVICE = OFF
-    env.ha6.broker2.APPL_SERVER_SHM_ID = 33096
-    env.ha6.broker2.BROKER_PORT = 33096
-    env.ha7.master.ssh.host = 192.168.1.82
-    env.ha7.master.ssh.user = ha7
-    env.ha7.slave1.ssh.host = 192.168.1.81
-    env.ha7.slave1.ssh.user = ha7
-    env.ha7.cubrid.cubrid_port_id = 1533
-    env.ha7.ha.ha_port_id = 59097
-    env.ha7.broker1.SERVICE = OFF
-    env.ha7.broker2.APPL_SERVER_SHM_ID = 33097
-    env.ha7.broker2.BROKER_PORT = 33097
-    env.ha8.master.ssh.host = 192.168.1.82
-    env.ha8.master.ssh.user = ha8
-    env.ha8.slave1.ssh.host = 192.168.1.81
-    env.ha8.slave1.ssh.user = ha8
-    env.ha8.cubrid.cubrid_port_id = 1534
-    env.ha8.ha.ha_port_id = 59098
-    env.ha8.broker1.SERVICE = OFF
-    env.ha8.broker2.APPL_SERVER_SHM_ID = 33098
-    env.ha8.broker2.BROKER_PORT = 33098
-    env.ha9.master.ssh.host = 192.168.1.82
-    env.ha9.master.ssh.user = ha9
-    env.ha9.slave1.ssh.host = 192.168.1.81
-    env.ha9.slave1.ssh.user = ha9
-    env.ha9.cubrid.cubrid_port_id = 1535
-    env.ha9.ha.ha_port_id = 59099
-    env.ha9.broker1.SERVICE = OFF
-    env.ha9.broker2.APPL_SERVER_SHM_ID = 33099
-    env.ha9.broker2.BROKER_PORT = 33099
-    env.ha10.master.ssh.host = 192.168.1.82
-    env.ha10.master.ssh.user = ha10
-    env.ha10.slave1.ssh.host = 192.168.1.81
-    env.ha10.slave1.ssh.user = ha10
-    env.ha10.cubrid.cubrid_port_id = 1536
-    env.ha10.ha.ha_port_id = 59100
-    env.ha10.broker1.SERVICE = OFF
-    env.ha10.broker2.APPL_SERVER_SHM_ID = 33100
-    env.ha10.broker2.BROKER_PORT = 33100
-    env.ha11.master.ssh.host = 192.168.1.82
-    env.ha11.master.ssh.user = ha11
-    env.ha11.slave1.ssh.host = 192.168.1.81
-    env.ha11.slave1.ssh.user = ha11
-    env.ha11.cubrid.cubrid_port_id = 1537
-    env.ha11.ha.ha_port_id = 59101
-    env.ha11.broker1.SERVICE = OFF
-    env.ha11.broker2.APPL_SERVER_SHM_ID = 33101
-    env.ha11.broker2.BROKER_PORT = 33101
-    env.ha12.master.ssh.host = 192.168.1.82
-    env.ha12.master.ssh.user = ha12
-    env.ha12.slave1.ssh.host = 192.168.1.81
-    env.ha12.slave1.ssh.user = ha12
-    env.ha12.cubrid.cubrid_port_id = 1538
-    env.ha12.ha.ha_port_id = 59102
-    env.ha12.broker1.SERVICE = OFF
-    env.ha12.broker2.APPL_SERVER_SHM_ID = 33102
-    env.ha12.broker2.BROKER_PORT = 33102
-    env.ha13.master.ssh.host = 192.168.1.82
-    env.ha13.master.ssh.user = ha13
-    env.ha13.slave1.ssh.host = 192.168.1.81
-    env.ha13.slave1.ssh.user = ha13
-    env.ha13.cubrid.cubrid_port_id = 1539
-    env.ha13.ha.ha_port_id = 59103
-    env.ha13.broker1.SERVICE = OFF
-    env.ha13.broker2.APPL_SERVER_SHM_ID = 33103
-    env.ha13.broker2.BROKER_PORT = 33103
-    env.ha14.master.ssh.host = 192.168.1.82
-    env.ha14.master.ssh.user = ha14
-    env.ha14.slave1.ssh.host = 192.168.1.81
-    env.ha14.slave1.ssh.user = ha14
-    env.ha14.cubrid.cubrid_port_id = 1540
-    env.ha14.ha.ha_port_id = 59104
-    env.ha14.broker1.SERVICE = OFF
-    env.ha14.broker2.APPL_SERVER_SHM_ID = 33104
-    env.ha14.broker2.BROKER_PORT = 33104
-    env.ha15.master.ssh.host = 192.168.1.82
-    env.ha15.master.ssh.user = ha15
-    env.ha15.slave1.ssh.host = 192.168.1.81
-    env.ha15.slave1.ssh.user = ha15
-    env.ha15.cubrid.cubrid_port_id = 1541
-    env.ha15.ha.ha_port_id = 59105
-    env.ha15.broker1.SERVICE = OFF
-    env.ha15.broker2.APPL_SERVER_SHM_ID = 33105
-    env.ha15.broker2.BROKER_PORT = 33105
+	#### Install CTP
 
-    # Define how to execute the test statement on master, 'jdbc' driver and 'csql' can be supported by the current CTP, 
-    # and the 'jdbc' mode is recommended.
-    test_interface_type=jdbc
+	Please refer to [CTP installation guide](#3-install-ctp-as-regression-test-platform) to install CTP.  
 
-    # Define the path of test cases used for testing, it should be checked out on controller node.
-    scenario=${HOME}/cubrid-testcases/sql
+	Create Ha_repl regression test configuration file `~/CTP/conf/ha_repl_template.conf`. 
 
-    # Define the url of CUBRID build. If the parameter is not configured or is commented out, users need to install CUBRID manually.   
-    cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+	    ```
+	    default.testdb = xdb
+	    default.ssh.pwd=******
+	    default.ssh.port=22
 
-    test_category=ha_repl
-    test_platform=linux
-    test_rebuild_env_yn=yes
-    testcase_update_yn=yes
-    testcase_git_branch=develop
-    testcase_exclude_from_file = ${HOME}/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf
-    git_user=cubridqa
-    git_pwd=******
-    git_email=dl_cubridqa_bj_internal@navercorp.com
-    cc_email=dl_cubridqa_bj_internal@navercorp.com
-    test_continue_yn=yes
-    testcase_additional_answer = diff_1
-    test_failure_backup_yn=yes
-    clean_processes_after_quit_yn = yes
-    enable_check_disk_space_yn=yes
-    owner_mail = Orchid<zhanlanlan@navercorp.com>
-    feedback_type = database
-    feedback_db_host = 192.168.1.86
-    feedback_db_port = 33080
-    feedback_db_name = qaresu
-    feedback_db_user = dba
-    feedback_db_pwd = 
-    feedback_notice_qahome_url = http://192.168.1.86:6060/qaresult/hareplImportAction.nhn?main_id=<MAINID>
-    ha_sync_detect_timeout_in_secs=1200
-    ```
-2. Create listener script       
-A consumer is used to listening to test messages. It requires a queue name and a script name to run.
-Create a script file `~/start_test.sh` as below. 
-    ```bash
-    $ cat start_test.sh 
-    echo> nohup.out
-    start_consumer.sh -q QUEUE_CUBRID_QA_HA_REPL_LINUX -exec run_ha_repl -s china
-    ```
-    **QUEUE_CUBRID_QA_HA_REPL_LINUX** is the queue name    
-    **run_ha_repl** is the script name, it will execute the script `run_ha_repl.sh` in `CTP/common/ext/`    
+	    env.ha1.master.ssh.host = 192.168.1.82
+	    env.ha1.master.ssh.user = ha1
+	    env.ha1.slave1.ssh.host = 192.168.1.81
+	    env.ha1.slave1.ssh.user = ha1
+	    env.ha1.cubrid.cubrid_port_id = 1527
+	    env.ha1.ha.ha_port_id = 59091
+	    env.ha1.broker1.SERVICE = OFF
+	    env.ha1.broker2.APPL_SERVER_SHM_ID = 33091
+	    env.ha1.broker2.BROKER_PORT = 33091
+	    env.ha2.master.ssh.host = 192.168.1.82
+	    env.ha2.master.ssh.user = ha2
+	    env.ha2.slave1.ssh.host = 192.168.1.81
+	    env.ha2.slave1.ssh.user = ha2
+	    env.ha2.cubrid.cubrid_port_id = 1528
+	    env.ha2.ha.ha_port_id = 59092
+	    env.ha2.broker1.SERVICE = OFF
+	    env.ha2.broker2.APPL_SERVER_SHM_ID = 33092
+	    env.ha2.broker2.BROKER_PORT = 33092
+	    env.ha3.master.ssh.host=192.168.1.82
+	    env.ha3.master.ssh.user=ha3
+	    env.ha3.slave1.ssh.host=192.168.1.81
+	    env.ha3.slave1.ssh.user=ha3
+	    env.ha3.cubrid.cubrid_port_id=1529
+	    env.ha3.ha.ha_port_id=59093
+	    env.ha3.broker1.SERVICE = OFF
+	    env.ha3.broker2.APPL_SERVER_SHM_ID = 33093
+	    env.ha3.broker2.BROKER_PORT=33093
+	    env.ha4.master.ssh.host = 192.168.1.82
+	    env.ha4.master.ssh.user = ha4
+	    env.ha4.slave1.ssh.host = 192.168.1.81
+	    env.ha4.slave1.ssh.user = ha4
+	    env.ha4.cubrid.cubrid_port_id = 1530
+	    env.ha4.ha.ha_port_id = 59094
+	    env.ha4.broker1.SERVICE = OFF
+	    env.ha4.broker2.APPL_SERVER_SHM_ID = 33094
+	    env.ha4.broker2.BROKER_PORT = 33094
+	    env.ha5.master.ssh.host = 192.168.1.82
+	    env.ha5.master.ssh.user = ha5
+	    env.ha5.slave1.ssh.host = 192.168.1.81
+	    env.ha5.slave1.ssh.user = ha5
+	    env.ha5.cubrid.cubrid_port_id = 1531
+	    env.ha5.ha.ha_port_id = 59095
+	    env.ha5.broker1.SERVICE = OFF
+	    env.ha5.broker2.APPL_SERVER_SHM_ID =33095
+	    env.ha5.broker2.BROKER_PORT = 33095
+	    env.ha6.master.ssh.host = 192.168.1.82
+	    env.ha6.master.ssh.user = ha6
+	    env.ha6.slave1.ssh.host = 192.168.1.81
+	    env.ha6.slave1.ssh.user = ha6
+	    env.ha6.cubrid.cubrid_port_id = 1532
+	    env.ha6.ha.ha_port_id = 59096
+	    env.ha6.broker1.SERVICE = OFF
+	    env.ha6.broker2.APPL_SERVER_SHM_ID = 33096
+	    env.ha6.broker2.BROKER_PORT = 33096
+	    env.ha7.master.ssh.host = 192.168.1.82
+	    env.ha7.master.ssh.user = ha7
+	    env.ha7.slave1.ssh.host = 192.168.1.81
+	    env.ha7.slave1.ssh.user = ha7
+	    env.ha7.cubrid.cubrid_port_id = 1533
+	    env.ha7.ha.ha_port_id = 59097
+	    env.ha7.broker1.SERVICE = OFF
+	    env.ha7.broker2.APPL_SERVER_SHM_ID = 33097
+	    env.ha7.broker2.BROKER_PORT = 33097
+	    env.ha8.master.ssh.host = 192.168.1.82
+	    env.ha8.master.ssh.user = ha8
+	    env.ha8.slave1.ssh.host = 192.168.1.81
+	    env.ha8.slave1.ssh.user = ha8
+	    env.ha8.cubrid.cubrid_port_id = 1534
+	    env.ha8.ha.ha_port_id = 59098
+	    env.ha8.broker1.SERVICE = OFF
+	    env.ha8.broker2.APPL_SERVER_SHM_ID = 33098
+	    env.ha8.broker2.BROKER_PORT = 33098
+	    env.ha9.master.ssh.host = 192.168.1.82
+	    env.ha9.master.ssh.user = ha9
+	    env.ha9.slave1.ssh.host = 192.168.1.81
+	    env.ha9.slave1.ssh.user = ha9
+	    env.ha9.cubrid.cubrid_port_id = 1535
+	    env.ha9.ha.ha_port_id = 59099
+	    env.ha9.broker1.SERVICE = OFF
+	    env.ha9.broker2.APPL_SERVER_SHM_ID = 33099
+	    env.ha9.broker2.BROKER_PORT = 33099
+	    env.ha10.master.ssh.host = 192.168.1.82
+	    env.ha10.master.ssh.user = ha10
+	    env.ha10.slave1.ssh.host = 192.168.1.81
+	    env.ha10.slave1.ssh.user = ha10
+	    env.ha10.cubrid.cubrid_port_id = 1536
+	    env.ha10.ha.ha_port_id = 59100
+	    env.ha10.broker1.SERVICE = OFF
+	    env.ha10.broker2.APPL_SERVER_SHM_ID = 33100
+	    env.ha10.broker2.BROKER_PORT = 33100
+	    env.ha11.master.ssh.host = 192.168.1.82
+	    env.ha11.master.ssh.user = ha11
+	    env.ha11.slave1.ssh.host = 192.168.1.81
+	    env.ha11.slave1.ssh.user = ha11
+	    env.ha11.cubrid.cubrid_port_id = 1537
+	    env.ha11.ha.ha_port_id = 59101
+	    env.ha11.broker1.SERVICE = OFF
+	    env.ha11.broker2.APPL_SERVER_SHM_ID = 33101
+	    env.ha11.broker2.BROKER_PORT = 33101
+	    env.ha12.master.ssh.host = 192.168.1.82
+	    env.ha12.master.ssh.user = ha12
+	    env.ha12.slave1.ssh.host = 192.168.1.81
+	    env.ha12.slave1.ssh.user = ha12
+	    env.ha12.cubrid.cubrid_port_id = 1538
+	    env.ha12.ha.ha_port_id = 59102
+	    env.ha12.broker1.SERVICE = OFF
+	    env.ha12.broker2.APPL_SERVER_SHM_ID = 33102
+	    env.ha12.broker2.BROKER_PORT = 33102
+	    env.ha13.master.ssh.host = 192.168.1.82
+	    env.ha13.master.ssh.user = ha13
+	    env.ha13.slave1.ssh.host = 192.168.1.81
+	    env.ha13.slave1.ssh.user = ha13
+	    env.ha13.cubrid.cubrid_port_id = 1539
+	    env.ha13.ha.ha_port_id = 59103
+	    env.ha13.broker1.SERVICE = OFF
+	    env.ha13.broker2.APPL_SERVER_SHM_ID = 33103
+	    env.ha13.broker2.BROKER_PORT = 33103
+	    env.ha14.master.ssh.host = 192.168.1.82
+	    env.ha14.master.ssh.user = ha14
+	    env.ha14.slave1.ssh.host = 192.168.1.81
+	    env.ha14.slave1.ssh.user = ha14
+	    env.ha14.cubrid.cubrid_port_id = 1540
+	    env.ha14.ha.ha_port_id = 59104
+	    env.ha14.broker1.SERVICE = OFF
+	    env.ha14.broker2.APPL_SERVER_SHM_ID = 33104
+	    env.ha14.broker2.BROKER_PORT = 33104
+	    env.ha15.master.ssh.host = 192.168.1.82
+	    env.ha15.master.ssh.user = ha15
+	    env.ha15.slave1.ssh.host = 192.168.1.81
+	    env.ha15.slave1.ssh.user = ha15
+	    env.ha15.cubrid.cubrid_port_id = 1541
+	    env.ha15.ha.ha_port_id = 59105
+	    env.ha15.broker1.SERVICE = OFF
+	    env.ha15.broker2.APPL_SERVER_SHM_ID = 33105
+	    env.ha15.broker2.BROKER_PORT = 33105
 
-### On Test nodes   
-1. Install CTP   
-Please refer to [this guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform) to install CTP.     
-3. Install CUBRID on each test node   
-    ```bash
-    run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
-    ```
- >Note: this step is not necessary for daily regression test. CTP will install CUBRID on each node.    
+	    # Define how to execute the test statement on master, 'jdbc' driver and 'csql' can be supported by the current CTP, 
+	    # and the 'jdbc' mode is recommended.
+	    test_interface_type=jdbc
+
+	    # Define the path of test cases used for testing, it should be checked out on controller node.
+	    scenario=${HOME}/cubrid-testcases/sql
+
+	    # Define the url of CUBRID build. If the parameter is not configured or is commented out, users need to install CUBRID manually.   
+	    cubrid_download_url=http://127.0.0.1/download/CUBRID-10.1.0.6929-b049ba5-Linux.x86_64.sh
+
+	    test_category=ha_repl
+	    test_platform=linux
+	    test_rebuild_env_yn=yes
+	    testcase_update_yn=yes
+	    testcase_git_branch=develop
+	    testcase_exclude_from_file = ${HOME}/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf
+	    git_user=<git user>
+	    git_pwd=********
+	    git_email=<git e-mail>
+
+	    test_continue_yn=yes
+	    testcase_additional_answer = diff_1
+	    test_failure_backup_yn=yes
+	    clean_processes_after_quit_yn = yes
+	    enable_check_disk_space_yn=yes
+	    owner_mail = <owner e-mail>
+	    cc_email= <cc e-mail>
+	    feedback_type = database
+	    feedback_db_host = 192.168.1.86
+	    feedback_db_port = 33080
+	    feedback_db_name = qaresu
+	    feedback_db_user = dba
+	    feedback_db_pwd = ********
+	    feedback_notice_qahome_url = http://192.168.1.86:6060/qaresult/hareplImportAction.nhn?main_id=<MAINID>
+	    ha_sync_detect_timeout_in_secs=1200
+	    ```
+
+	#### Create quick start script  
+
+	A consumer is used to listening to test messages. It requires a queue name and a script name to run.
+	Create a script file `~/start_test.sh` as below. 
+
+	    ```bash
+	    $ cat start_test.sh 
+	    echo> nohup.out
+	    start_consumer.sh -q QUEUE_CUBRID_QA_HA_REPL_LINUX -exec run_ha_repl -s china
+	    ```
+	    **QUEUE_CUBRID_QA_HA_REPL_LINUX** is the queue name    
+	    **run_ha_repl** is the script name, it will execute the script `run_ha_repl.sh` in `CTP/common/ext/`    
+
+* ### On Test nodes   
+
+	#### Install CTP   
+	Please refer to [CTP installation guide](#3-install-ctp-as-regression-test-platform) to install CTP.     
+
+	#### Install CUBRID on each test node   
+	    ```bash
+	    run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
+	    ```
+	 >Note: this step is not necessary for daily regression test. CTP will install CUBRID on each node.    
 
 # 4. Regression Tests
 We perform ha_repl/ha_repl_debug for daily (actually is for each build) and perform code coverage test of ha_repl for monthly. `ha_repl_debug` is executing ha_repl test cases with a debug build.   
