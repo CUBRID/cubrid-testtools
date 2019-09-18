@@ -992,7 +992,7 @@ sh start_test.sh &
   rqg_cubrid_start_broker
   ```
 
-* ## Function: run_gendata**     
+* ## Function: run_gendata     
   It equals to `perl $RQG_HOME/gendata.pl`, and is used to generate tables and data.    
   Usage:   
   ```
@@ -1011,7 +1011,7 @@ sh start_test.sh &
   ```
 
 * ## Function: run_gendata_without_check     
-  It is similiar with `run_gendata`, but it doesn't check returned value。    
+  It is similiar with `run_gendata`, but it doesn't check returned value.    
   Usage:   
   ```
   run_gendata_without_check --dsn=${dsn} --spec=${casedir}/partitions_ddl.zz --rows=100000
