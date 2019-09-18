@@ -950,13 +950,13 @@ It will send test state email as your appointed times, like below:
   dsn=`get_dsn_url_with_autocommit_off $db_name $port`
   ```
 
-* ##rqg_cubrid_createdb   
+* ## Function: rqg_cubrid_createdb   
   It is used to create database.   
   Usage:   
   ```
   rqg_cubrid_createdb $db_name
   ```
-* ##rqg_cubrid_start_server   
+* ## Function: rqg_cubrid_start_server   
   It is used to start cubrid server.   
   Usage:   
   ```
