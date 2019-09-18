@@ -2393,235 +2393,235 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
   ```
 
 ### Configure the Query Generator
-#### Prepare data
-```
-$ cat f.zz 
-$tables = {
-        names => ['g'],
-        rows  => [8]
-};
+  #### Prepare data
+  ```
+  $ cat f.zz 
+  $tables = {
+          names => ['g'],
+          rows  => [8]
+  };
 
-$fields = {
-       types => ['char(3)','int']
-};
+  $fields = {
+         types => ['char(3)','int']
+  };
 
-$data = {
-        int => [ 'tinyint' ],
-        strings => ['english','letter']
-};
-$ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=f.zz 
-# 16:29:28 Default schema: PUBLIC
-# 16:29:28 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-# 16:29:28 # Creating Cubrid table g .
-$ csql -u dba test -c "select * from g"
+  $data = {
+          int => [ 'tinyint' ],
+          strings => ['english','letter']
+  };
+  $ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=f.zz 
+  # 16:29:28 Default schema: PUBLIC
+  # 16:29:28 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+  # 16:29:28 # Creating Cubrid table g .
+  $ csql -u dba test -c "select * from g"
 
-=== <Result of SELECT Command in Line 1> ===
-
-  col_char_3                col_int  col_int_key           pk  col_char_3_key      
-===================================================================================
-  'w  '                         -70          -96            1  'his'               
-  'fro'                           9           37            2  'r  '               
-  'oka'                         -47          106            3  'who'               
-  'tha'                          94           44            4  'him'               
-  'k  '                          83           -9            5  'wer'               
-  'x  '                         -23           66            6  'v  '               
-  'a  '                          22          116            7  'who'               
-  'see'                         -97          -63            8  'com'               
-
-8 rows selected. (0.009968 sec) Committed.
-```
-#### Configuration
-```
-$ cat g.yy
- query:
-        select | update;
- select:
-        SELECT _field FROM _table WHERE condition ;
- update:
-        UPDATE _table SET _field = integer WHERE condition ;
- condition:
-        _field > integer | _field < integer | _field = integer ;
-```
-
-
-#### Run
-```
-$ perl ~/random_query_generator/gentest.pl --dsn=${dsn} --grammar=g.yy --queries=20 --threads=2
-defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 168.
-        (Maybe you should just omit the defined()?)
-defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 171.
-        (Maybe you should just omit the defined()?)
-# 17:01:12 Starting 
-# 17:01:12  /home/perl/random_query_generator/gentest.pl \ 
-# 17:01:12  --dsn=dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on \ 
-# 17:01:12  --grammar=g.yy \ 
-# 17:01:12  --queries=20 \ 
-# 17:01:12  --threads=2
-# 17:01:12 -------------------------------
-# 17:01:12 Configuration
-# 17:01:12   dsn => ['dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on']
-# 17:01:12   duration => 3600
-# 17:01:12   grammar => g.yy
-# 17:01:12   queries => 20
-# 17:01:12   reporters => ['']
-# 17:01:12   seed => 1
-# 17:01:12   threads => 2
-# 17:01:12   validators => ['']
-# 17:01:12 Reporters: (none)
-# 17:01:12 Validators: (none)
-# 17:01:12 Starting 2 processes, 20 queries each, duration 3600 seconds.
-# 17:01:12 GenTest::ErrorFilter(31159) started
-# 17:01:13 Default schema: PUBLIC
-# 17:01:13 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-# 17:01:13 Caching metadata for dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on
-# 17:01:13 Default schema: PUBLIC
-# 17:01:13 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-# 17:01:13 Caching metadata for dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on
-# 17:01:13 Started periodic reporting process...
-
-
-UPDATE "g" SET "pk" = 1403977728 WHERE "col_int" < 1504903168
-CUBRID DBMS Error : (-670) Operation would have caused one or more unique constraint violations. INDEX pk_g_pk(B+tree: 0|4160|4161) ON CLASS g(CLASS_OID: 0|204|55). key: 1403977728(OID: 0|3744|2641).[CAS INFO - 127.0.0.1:33037, 4, 7535].
-
-
-
-UPDATE "g" SET "pk" = 636420096 WHERE "pk" > -60620800
-CUBRID DBMS Error : (-670) Operation would have caused one or more unique constraint violations. INDEX pk_g_pk(B+tree: 0|4160|4161) ON CLASS g(CLASS_OID: 0|204|55). key: 636420096(OID: 0|3744|2641).[CAS INFO - 127.0.0.1:33037, 4, 7535].
-
-# 17:01:14 Child process completed successfully.
-# 17:01:14 Child process completed successfully.
-# 17:01:15 Killing periodic reporting process with pid 31160...
-# 17:01:15 Kill GenTest::ErrorFilter(31159)
-# 17:01:15 Test completed successfully.
-```
-#### Check 
-```
-$ csql -u dba test -c "select * from g"                                                        
-
-=== <Result of SELECT Command in Line 1> ===
-
-  col_char_3                col_int  col_int_key           pk  col_char_3_key      
-===================================================================================
-  'w  '                         -70  -1145831424            1  'his'               
-  'fro'                           9  -1145831424            2  'r  '               
-  'oka'                         -47  -1145831424            3  'who'               
-  'tha'                          94  -1145831424            4  'him'               
-  'k  '                          83  -1145831424            5  'wer'               
-  'x  '                         -23  -1145831424            6  'v  '               
-  'a  '                          22  -1145831424            7  'who'               
-  'see'                         -97  -1145831424            8  'com'               
-
-8 rows selected. (0.013101 sec) Committed.
-```
-#### Configuration Grammar 
-please refer to [grammer elements](https://github.com/RQG/RQG-Documentation/wiki/RandomQueryGeneratorGrammar#grammar-elements)
-
-* _int, _tinyint, _smallint, _mediumint, _bigint - returns an integer that will fit in the specified type. _unsigned may also be used, such as _int_unsigned
-* _char(N), _varchar(N) - returns a random character string of the desired size, containing lowercase letters a to z. If no N is specified, e.g. just _char, 1 character is generated
-* _digit - returns a random digit from 0 to 9.
-
-* _digit[invariant] , _field[invariant], _table[invariant], _letter[invariant], etc. returns for this variable the same value throughout the query. For example:
-    ```
-    select:
-        SELECT _field[invariant] FROM _table[invariant] WHERE _table[invariant]._field[invariant] BETWEEN _digit[invariant] AND _digit[invariant] + _digit;
-    
-    update:
-        UPDATE _table[invariant] SET _field = _digit;
-    ```
-    This will generate two queries, both operating on the same table. In the first SELECT, the field being selected will be the same field that is used in the WHERE. In the BETWEEN, the same digit will appear before and after the AND, so that the second argument to BETWEEN is always larger than the first one.
-
-* _bit(N) -a binary value of length N
-* _bool, _boolean - a value of 0 or 1;
-* _date - a valid date in the range from 2000 to 2010
-* _year - a year in the range 2000 to 2010
-* _timestamp - a date+time value in the MySQL format 20000101000000
-* _set - a comma-separated set of letters, suitable for insertion into SET columns.
-* _english a quoted English word from a list of 100 most common words. With certain queries, this is more useful than using _varchar(5), since there is a greater chance that two generated values will match. 
-* _letter - an unquoted capital letter from A to Z. This is useful for generating database object names:
-    ```
-    CREATE TABLE _letter SELECT * FROM _table ;
-    ```
-* _table - returns the quoted name of a random table from the current database (e.g. test) .
-  >Note : for performance reasons, the list of table names is cached at the start of the test, so any tables you create (or drop) during the test will not be selected;
-* _field - returns the quoted name of a random field. If _table was previously used, the field will be from that table. Otherwise, it will be taken from the first table of the current database
-* _field_indexed - returns a field that has an index on it.
-* _field_no_pk - returns a field that is not a Primary Key. This is useful for creating valid UPDATE statements that will not cause duplicate key errors:
-    ```
-    UPDATE _table SET _field_no_pk = _digit WHERE _field = _digit; 
-    ```
-    ```
-    $ cat h.yy
-    query:
-            select | update;
-    select:
-            SELECT _field FROM _table WHERE condition ;
-    update:
-            UPDATE _table SET _field_no_pk = +digit WHERE condition ;
-    condition:
-            _field[invariant] between  _digit and _digit+50  ;
-    ```
-    result:
-    ```
-    $ perl ~/random_query_generator/gentest.pl --dsn=${dsn} --grammar=h.yy --queries=8 --threads=2
-    defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 168.
-            (Maybe you should just omit the defined()?)
-    defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 171.
-            (Maybe you should just omit the defined()?)
-    # 17:41:58 Starting 
-    # 17:41:58  /home/perl/random_query_generator/gentest.pl \ 
-    # 17:41:58  --dsn=dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on \ 
-    # 17:41:58  --grammar=h.yy \ 
-    # 17:41:58  --queries=8 \ 
-    # 17:41:58  --threads=2
-    # 17:41:58 -------------------------------
-    # 17:41:58 Configuration
-    # 17:41:58   dsn => ['dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on']
-    # 17:41:58   duration => 3600
-    # 17:41:58   grammar => h.yy
-    # 17:41:58   queries => 8
-    # 17:41:58   reporters => ['']
-    # 17:41:58   seed => 1
-    # 17:41:58   threads => 2
-    # 17:41:58   validators => ['']
-    # 17:41:58 Reporters: (none)
-    # 17:41:58 Validators: (none)
-    # 17:41:58 Starting 2 processes, 8 queries each, duration 3600 seconds.
-    # 17:41:58 GenTest::ErrorFilter(898) started
-    # 17:41:58 Default schema: PUBLIC
-    # 17:41:58 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-    # 17:41:58 Caching metadata for dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on
-    # 17:41:58 Default schema: PUBLIC
-    # 17:41:58 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-    # 17:41:58 Caching metadata for dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on
-    # 17:41:58 Started periodic reporting process...
-    # 17:41:59 Child process completed successfully.
-    # 17:41:59 Child process completed successfully.
-    # 17:42:00 Killing periodic reporting process with pid 899...
-    # 17:42:00 Kill GenTest::ErrorFilter(898)
-    # 17:42:00 Test completed successfully.
-    $ csql -u dba test -c "select * from g;"
-
-    === <Result of SELECT Command in Line 1> ===
+  === <Result of SELECT Command in Line 1> ===
 
     col_char_3                col_int  col_int_key           pk  col_char_3_key      
-    ===================================================================================
+  ===================================================================================
     'w  '                         -70          -96            1  'his'               
-    'fro'                           1           37            2  'r  '               
+    'fro'                           9           37            2  'r  '               
     'oka'                         -47          106            3  'who'               
     'tha'                          94           44            4  'him'               
-    'k  '                          83           -9            5  '7  '               
-    'x  '                         -23           66            6  '7  '               
-    'a  '                           1          116            7  '7  '               
-    'see'                         -97          -63            8  '7  '               
+    'k  '                          83           -9            5  'wer'               
+    'x  '                         -23           66            6  'v  '               
+    'a  '                          22          116            7  'who'               
+    'see'                         -97          -63            8  'com'               
 
-    8 rows selected. (0.013345 sec) Committed.
-   ```
+  8 rows selected. (0.009968 sec) Committed.
+  ```
+  #### Configuration
+  ```
+  $ cat g.yy
+   query:
+          select | update;
+   select:
+          SELECT _field FROM _table WHERE condition ;
+   update:
+          UPDATE _table SET _field = integer WHERE condition ;
+   condition:
+          _field > integer | _field < integer | _field = integer ;
+  ```
 
-* _field_list - returns a comma-separated list of all fields. For example:
-    ```
-    INSERT INTO _table SELECT _field_list FROM _table;
-    ```
-* _field_count - returns the total count of fields. e.g.:
-    ```
-    SELECT * FROM _table ORDER BY _field_count - 1;
-    ```
+
+  #### Run
+  ```
+  $ perl ~/random_query_generator/gentest.pl --dsn=${dsn} --grammar=g.yy --queries=20 --threads=2
+  defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 168.
+          (Maybe you should just omit the defined()?)
+  defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 171.
+          (Maybe you should just omit the defined()?)
+  # 17:01:12 Starting 
+  # 17:01:12  /home/perl/random_query_generator/gentest.pl \ 
+  # 17:01:12  --dsn=dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on \ 
+  # 17:01:12  --grammar=g.yy \ 
+  # 17:01:12  --queries=20 \ 
+  # 17:01:12  --threads=2
+  # 17:01:12 -------------------------------
+  # 17:01:12 Configuration
+  # 17:01:12   dsn => ['dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on']
+  # 17:01:12   duration => 3600
+  # 17:01:12   grammar => g.yy
+  # 17:01:12   queries => 20
+  # 17:01:12   reporters => ['']
+  # 17:01:12   seed => 1
+  # 17:01:12   threads => 2
+  # 17:01:12   validators => ['']
+  # 17:01:12 Reporters: (none)
+  # 17:01:12 Validators: (none)
+  # 17:01:12 Starting 2 processes, 20 queries each, duration 3600 seconds.
+  # 17:01:12 GenTest::ErrorFilter(31159) started
+  # 17:01:13 Default schema: PUBLIC
+  # 17:01:13 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+  # 17:01:13 Caching metadata for dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on
+  # 17:01:13 Default schema: PUBLIC
+  # 17:01:13 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+  # 17:01:13 Caching metadata for dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on
+  # 17:01:13 Started periodic reporting process...
+
+
+  UPDATE "g" SET "pk" = 1403977728 WHERE "col_int" < 1504903168
+  CUBRID DBMS Error : (-670) Operation would have caused one or more unique constraint violations. INDEX pk_g_pk(B+tree: 0|4160|4161) ON CLASS g(CLASS_OID: 0|204|55). key: 1403977728(OID: 0|3744|2641).[CAS INFO - 127.0.0.1:33037, 4, 7535].
+
+
+
+  UPDATE "g" SET "pk" = 636420096 WHERE "pk" > -60620800
+  CUBRID DBMS Error : (-670) Operation would have caused one or more unique constraint violations. INDEX pk_g_pk(B+tree: 0|4160|4161) ON CLASS g(CLASS_OID: 0|204|55). key: 636420096(OID: 0|3744|2641).[CAS INFO - 127.0.0.1:33037, 4, 7535].
+
+  # 17:01:14 Child process completed successfully.
+  # 17:01:14 Child process completed successfully.
+  # 17:01:15 Killing periodic reporting process with pid 31160...
+  # 17:01:15 Kill GenTest::ErrorFilter(31159)
+  # 17:01:15 Test completed successfully.
+  ```
+  #### Check 
+  ```
+  $ csql -u dba test -c "select * from g"                                                        
+
+  === <Result of SELECT Command in Line 1> ===
+
+    col_char_3                col_int  col_int_key           pk  col_char_3_key      
+  ===================================================================================
+    'w  '                         -70  -1145831424            1  'his'               
+    'fro'                           9  -1145831424            2  'r  '               
+    'oka'                         -47  -1145831424            3  'who'               
+    'tha'                          94  -1145831424            4  'him'               
+    'k  '                          83  -1145831424            5  'wer'               
+    'x  '                         -23  -1145831424            6  'v  '               
+    'a  '                          22  -1145831424            7  'who'               
+    'see'                         -97  -1145831424            8  'com'               
+
+  8 rows selected. (0.013101 sec) Committed.
+  ```
+  #### Configuration Grammar 
+  please refer to [grammer elements](https://github.com/RQG/RQG-Documentation/wiki/RandomQueryGeneratorGrammar#grammar-elements)
+
+  * _int, _tinyint, _smallint, _mediumint, _bigint - returns an integer that will fit in the specified type. _unsigned may also be used, such as _int_unsigned
+  * _char(N), _varchar(N) - returns a random character string of the desired size, containing lowercase letters a to z. If no N is specified, e.g. just _char, 1 character is generated
+  * _digit - returns a random digit from 0 to 9.
+
+  * _digit[invariant] , _field[invariant], _table[invariant], _letter[invariant], etc. returns for this variable the same value throughout the query. For example:
+      ```
+      select:
+          SELECT _field[invariant] FROM _table[invariant] WHERE _table[invariant]._field[invariant] BETWEEN _digit[invariant] AND _digit[invariant] + _digit;
+
+      update:
+          UPDATE _table[invariant] SET _field = _digit;
+      ```
+      This will generate two queries, both operating on the same table. In the first SELECT, the field being selected will be the same field that is used in the WHERE. In the BETWEEN, the same digit will appear before and after the AND, so that the second argument to BETWEEN is always larger than the first one.
+
+  * _bit(N) -a binary value of length N
+  * _bool, _boolean - a value of 0 or 1;
+  * _date - a valid date in the range from 2000 to 2010
+  * _year - a year in the range 2000 to 2010
+  * _timestamp - a date+time value in the MySQL format 20000101000000
+  * _set - a comma-separated set of letters, suitable for insertion into SET columns.
+  * _english a quoted English word from a list of 100 most common words. With certain queries, this is more useful than using _varchar(5), since there is a greater chance that two generated values will match. 
+  * _letter - an unquoted capital letter from A to Z. This is useful for generating database object names:
+      ```
+      CREATE TABLE _letter SELECT * FROM _table ;
+      ```
+  * _table - returns the quoted name of a random table from the current database (e.g. test) .
+    >Note : for performance reasons, the list of table names is cached at the start of the test, so any tables you create (or drop) during the test will not be selected;
+  * _field - returns the quoted name of a random field. If _table was previously used, the field will be from that table. Otherwise, it will be taken from the first table of the current database
+  * _field_indexed - returns a field that has an index on it.
+  * _field_no_pk - returns a field that is not a Primary Key. This is useful for creating valid UPDATE statements that will not cause duplicate key errors:
+      ```
+      UPDATE _table SET _field_no_pk = _digit WHERE _field = _digit; 
+      ```
+      ```
+      $ cat h.yy
+      query:
+              select | update;
+      select:
+              SELECT _field FROM _table WHERE condition ;
+      update:
+              UPDATE _table SET _field_no_pk = +digit WHERE condition ;
+      condition:
+              _field[invariant] between  _digit and _digit+50  ;
+      ```
+      result:
+      ```
+      $ perl ~/random_query_generator/gentest.pl --dsn=${dsn} --grammar=h.yy --queries=8 --threads=2
+      defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 168.
+              (Maybe you should just omit the defined()?)
+      defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 171.
+              (Maybe you should just omit the defined()?)
+      # 17:41:58 Starting 
+      # 17:41:58  /home/perl/random_query_generator/gentest.pl \ 
+      # 17:41:58  --dsn=dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on \ 
+      # 17:41:58  --grammar=h.yy \ 
+      # 17:41:58  --queries=8 \ 
+      # 17:41:58  --threads=2
+      # 17:41:58 -------------------------------
+      # 17:41:58 Configuration
+      # 17:41:58   dsn => ['dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on']
+      # 17:41:58   duration => 3600
+      # 17:41:58   grammar => h.yy
+      # 17:41:58   queries => 8
+      # 17:41:58   reporters => ['']
+      # 17:41:58   seed => 1
+      # 17:41:58   threads => 2
+      # 17:41:58   validators => ['']
+      # 17:41:58 Reporters: (none)
+      # 17:41:58 Validators: (none)
+      # 17:41:58 Starting 2 processes, 8 queries each, duration 3600 seconds.
+      # 17:41:58 GenTest::ErrorFilter(898) started
+      # 17:41:58 Default schema: PUBLIC
+      # 17:41:58 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+      # 17:41:58 Caching metadata for dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on
+      # 17:41:58 Default schema: PUBLIC
+      # 17:41:58 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+      # 17:41:58 Caching metadata for dbi:cubrid:database=test;host=127.0.0.1;port=33037;autocommit=on
+      # 17:41:58 Started periodic reporting process...
+      # 17:41:59 Child process completed successfully.
+      # 17:41:59 Child process completed successfully.
+      # 17:42:00 Killing periodic reporting process with pid 899...
+      # 17:42:00 Kill GenTest::ErrorFilter(898)
+      # 17:42:00 Test completed successfully.
+      $ csql -u dba test -c "select * from g;"
+
+      === <Result of SELECT Command in Line 1> ===
+
+      col_char_3                col_int  col_int_key           pk  col_char_3_key      
+      ===================================================================================
+      'w  '                         -70          -96            1  'his'               
+      'fro'                           1           37            2  'r  '               
+      'oka'                         -47          106            3  'who'               
+      'tha'                          94           44            4  'him'               
+      'k  '                          83           -9            5  '7  '               
+      'x  '                         -23           66            6  '7  '               
+      'a  '                           1          116            7  '7  '               
+      'see'                         -97          -63            8  '7  '               
+
+      8 rows selected. (0.013345 sec) Committed.
+     ```
+
+  * _field_list - returns a comma-separated list of all fields. For example:
+      ```
+      INSERT INTO _table SELECT _field_list FROM _table;
+      ```
+  * _field_count - returns the total count of fields. e.g.:
+      ```
+      SELECT * FROM _table ORDER BY _field_count - 1;
+      ```
