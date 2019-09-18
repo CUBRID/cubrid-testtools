@@ -971,7 +971,7 @@ http://qahome.cubrid.org/qaresult/showfile.nhn?treeId=&level=&summaryName=&catPa
 
 
 * ## Test case template
-    The CCI test case is similar to SHELL test cases. Please see [SHELL guide](#72-shell-case-template).  Compared to SHELL, the code we need to add is like below: 
+    The CCI test case is similar to SHELL test cases. Please see [SHELL guide](shell_guide.md#52-shell-case-template).  Compared to SHELL, the code we need to add is like below: 
     ```bash
     xgcc -o test test.c
     ./test $port
@@ -979,7 +979,7 @@ http://qahome.cubrid.org/qaresult/showfile.nhn?treeId=&level=&summaryName=&catPa
 
 * ## Functions in `init.sh`
 
-    Please refer to [SHELL guide](shell_guide.md#74-functions-in-initsh).
+    Please refer to [SHELL guide](shell_guide.md#54-functions-in-initsh).
     The most commonly used function is [xgcc](shell_guide.md#xgcc). For example:
     ```
     xgcc -g -o test test.c -I${CUBRID}/include -L${CUBRID}/lib -lcascci 
@@ -991,27 +991,28 @@ http://qahome.cubrid.org/qaresult/showfile.nhn?treeId=&level=&summaryName=&catPa
 * ## Conventions for C source codes
 
     ### Include `cas_cci.h` in header
-    
-            #include "cas_cci.h"  
+    ```
+    #include "cas_cci.h" 
+    ```
 
     ### Typical usage to connect and execute on a database 
-        ```
-        con=cci_connect(...)
-        if (con < 0)
-        {
-            //print erro information
-        }
-        req = cci_prepare (con, query, 0, &cci_error);
-        if (req < 0)
-        {
-            //print erro information
-        }
-        error = cci_execute (req, 0, 0, &cci_error);
-        if (error < 0)
-        {
+    ```    
+    con=cci_connect(...)
+    if (con < 0)
+    {
         //print erro information
-        } 
-        ```
+    }
+    req = cci_prepare (con, query, 0, &cci_error);
+    if (req < 0)
+    {
+        //print erro information
+    }
+    error = cci_execute (req, 0, 0, &cci_error);
+    if (error < 0)
+    {
+    //print erro information
+    } 
+    ```    
         
     ### C file example
     ```C
@@ -1133,7 +1134,7 @@ http://qahome.cubrid.org/qaresult/showfile.nhn?treeId=&level=&summaryName=&catPa
 
         return 1;
     }
-    
+  ```  
 # 6. Appendix
 
 * ## CCI API reference
