@@ -868,7 +868,7 @@ sh start_test.sh &
 
   Note: Please verify crash or fatal error failures with priority.
 
-  #### Server crash failures**  
+  #### Server crash failures
   
   **Step 1: check core alert icon**  
   ![verify_1](./rqg_image/verify_1.PNG)    
