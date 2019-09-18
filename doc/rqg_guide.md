@@ -1475,10 +1475,10 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
   ```
 
   #### Configure the Tables
-  The $tables section describes the sizes and the other attributes of the tables. The example above will create 4 tables, one for each combination of partitions and table size. This section accepts the following parameters:   
+  The `$tables` section describes the sizes and the other attributes of the tables. The example above will create 4 tables, one for each combination of partitions and table size. This section accepts the following parameters:   
   * names - tables names that are used for the generated tables. If there are more tables (i.e. combinations of size, partitions, etc.) than there are names, default names will be used when the supply of user-defined names has run out. See below for details on the structure of default table names.
 
-      for example:
+      For example:
       ```
       names => ['A','B'],
       ```
@@ -1494,7 +1494,7 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
       # 18:39:21 # Creating Cubrid table table1000_int_autoinc .
       # 18:39:23 # Creating Cubrid table table1000_hash_pk_parts_2_int_autoinc .
       ```
-      **generated tables have partitions or not, have 10000 rows or 1000 rows:**
+      **generated tables with partitions or not, have 10000 rows or 1000 rows:**
       ```
       csql> show tables;
 
@@ -1530,7 +1530,7 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
       rows => [ '10000' , '1000' ],
       ```
 
-      **all tables just have 10000 or 1000 rows,such as:**
+      **all tables just with 10000 or 1000 rows,such as:**
       ```
       csql> select count(*) from a;
 
@@ -1582,7 +1582,7 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
       ```
       partitions => [ undef , 'hash (pk) PARTITIONS 2' ],
       ```
-     **it generate two kinds of tables partition table or non-partition table, such as:**
+     **It generate two kinds of tables, partition table or non-partition table, such as:**
       ```
       csql> ;sc A
 
@@ -1665,12 +1665,13 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
       ```
 
 
-  * pk - specify the primary keys to be used. Valid values are undef for no primary key, or any integer-based PK definition. If auto_increment is specified, the script will insert NULLs in that column. If not, then a sequence of increasing integers will be used. Generation of non-integer primary keys is not yet supported.
+  * pk - Specify the primary keys to be used. Valid values are undef for no primary key, or any integer-based PK definition. If auto_increment is specified, the script will insert NULLs in that column. If not, then a sequence of increasing integers will be used. Generation of non-integer primary keys is not yet supported.
       ```
       pk => [ 'int auto_increment' ]
       ```
+      
   #### Configure the Fields
-  The $fields section describes the fields and the indexes to be created in each table. One field will be created for each combination of values. For example, the resulting table will have a field int_unique and the corresponding key UNIQUE (int_unique).
+  The `$fields` section describes the fields and the indexes to be created in each table. One field will be created for each combination of values. For example, the resulting table will have a field int_unique and the corresponding key UNIQUE (int_unique).
 
   The order of the fields within each table is pseudo-random, which may help trigger bugs which are dependent on the physical placement of the fields. Each table also has a PRIMARY KEY named, appropriately, pk.
 
@@ -1766,7 +1767,7 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
   * collations - specify the collations to be used. Note that a table will be created for each combination of character set and collation, which may not always be valid.
 
   #### Configure the Data
-  The $data section from the configuration file describes what data will be inserted into each field type:
+  The `$data` section from the configuration file describes what data will be inserted into each field type:
 
   * numbers/int/float/numberic- this describes how to generate values for all integer and float field types. Valid values are:
     * null - a NULL value if the column can accept it;
@@ -1989,7 +1990,7 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
       ```
 
   #### Examples
-  **1. use below file: b.zz**    
+  **1. b.zz**    
   ```
   $ cat b.zz 
   $tables = {
@@ -2065,7 +2066,7 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
   csql> 
   ```
 
-  **2. use below file: a.zz**    
+  **2. a.zz**    
   ```
   $tables = {
           names => ['C','D'],
@@ -2217,7 +2218,7 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
   1 command(s) successfully processed.
   csql> 
   ```
-  **3. use below files: c.zz**    
+  **3. c.zz**    
   ```
   $ cat c.zz 
   $tables = {
