@@ -9,24 +9,24 @@ Please refer to [CTP installation guide](https://github.com/CUBRID/cubrid-testto
 ```bash
  run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8294-2d9a032/drop/CUBRID-10.2.0.8294-2d9a032-Linux.x86_64-debug.sh
 ```
-## 2.3 Install perl
-* ### Install dependent packages according to your actual situation.      
+## 2.3 Deploy perl
+* ### Install dependent packages according to your actual situation     
  ```bash
   yum install ncurses-devel ncurses
   yum -y install gcc+ gcc-c++
  ```
 * ### Install perl-5.26.1     
-We generally need install perl with our expected version for better compatibility. CPAN will be integrated as one of requirements.
- ```bash
-  mkdir ~/opt
-  cd ~/opt
-  tar zxvf perl-5.26.1.tar.gz
-  cd perl-5.26.1
-  ./Configure -Dprefix=~/opt/perl-526 -d
-  make 
-  make test
-  make install
- ```
+  We generally need install perl with our expected version for better compatibility. CPAN will be integrated as one of requirements.
+   ```bash
+    mkdir ~/opt
+    cd ~/opt
+    tar zxvf perl-5.26.1.tar.gz
+    cd perl-5.26.1
+    ./Configure -Dprefix=~/opt/perl-526 -d
+    make 
+    make test
+    make install
+   ```
 
 * ### Install DBI, DBD:CUBRID through CPAN
  ```bash
