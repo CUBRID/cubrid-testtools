@@ -753,9 +753,13 @@ No.  |Role  |OS User |IP  |Hostname
   Please refer to [2.5 Chec kout Test Cases](#25-check-out-test-cases)    
  
 
-# 4. RQG Regresion Test
+# 4. RQG Regresion Test Sustaining
+
 We perform RQG regression test for twice a week.  
-It is controlled by **message@192.168.1.91:~CTP/conf/job.conf**
+
+## 4.1 Job Configuration
+
+Log into `message@192.168.1.91`, open `~/CTP/conf/job.conf`, you will see RQG job configuration as below:
 ```
 job_rqg.service=ON
 job_rqg.crontab=* 0 2 ? * SAT,WED
@@ -766,17 +770,16 @@ job_rqg.package_type=general
 job_rqg.test.1.scenario=RQG
 job_rqg.test.1.queue=QUEUE_CUBRID_QA_RQG
 ```
-## 4.1 Daily Regresion Test
-### start the listener
+## 4.2 Test Startup
+
+* ### Start the listener and keep as daemon process
 ```bash
 cd ~
 sh start_test.sh &
-tail -f nohup.out
 ```
-### send test message
-```
-sender.sh QUEUE_CUBRID_QA_RQG http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop/CUBRID-10.1.3.7762-b70a572-Linux.x86_64-debug.sh RQG default
-```
+
+* ### Send test message by manual
+For example, 
 ```bash
 $ sender.sh QUEUE_CUBRID_QA_RQG http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop/CUBRID-10.1.3.7762-b70a572-Linux.x86_64-debug.sh RQG default
 Message: 
@@ -804,16 +807,11 @@ BUILD_URLS_CNT=1
 BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.1.3.7762-b70a572/drop/CUBRID-10.1.3.7762-b70a572-Linux.x86_64-debug.sh
 
 
-Do you accept above message [Y/N]:
-Y
-log4j:WARN No appenders could be found for logger (org.apache.activemq.thread.TaskRunnerFactory).
-log4j:WARN Please initialize the log4j system properly.
-log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+Do you accept above message [Y/N]: Y
 ```
 
-### check test result
-open `qahome` -> select `build` ->select `Function`, find RQG item    
-please see below:    
+# 4.3 Verify Test Result
+Open [QA homepage](http://qahome.cubrid.org) -> Select `build` ->select `Function`, find RQG item    
 ![test in progress](./rqg_image/check_results.PNG)     
 
 **Test Rate** is 44.90%, indicating that the test is not completed. (Expected value is 100%)   
@@ -824,8 +822,6 @@ please see below:
 **Success** is 43, indicating that the test is not completed or in progress. (Expected value of **Success** plus **Total of Fail** is 98)      
 **Total of Fail** is 1, indicating that one test case has been failed. It is linked to detail page of failed cases,such as http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22536&resultType=NOK    
 
-# 5. Verify Test Result
-This section mainly introduces how to verify failures    
 ## 1. server crash failures    
 ### step1: check core alert icon    
 ![verify_1](./rqg_image/verify_1.PNG)    
@@ -868,280 +864,222 @@ nohup ~/CTP/shell/init_path/run_shell.sh --enable-report --report-cron='0 50 9,1
 It will send test state email as your appointed times, like below:   
 ![verify_7](./rqg_image/verify_7.PNG)
 
-# 5. Test Case Specification
-## 5.1 Test Case Basis
-RQG test cases are writed with shell, so the basis is same with shell test's.   
-Please see [shell test cases specification](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell/shell_guide.md#5-shell-case-standards)   
+# 5. Test Case Specification  
+* ## Follow with SHELL codes convention  
+  Please refer to [SHELL case standard](shell_guide.md#5-shell-case-standards).
 
-This section mainly introduces some difference between RQG test case and shell test case.   
-### Requirements
-```
-export init_path=$CTP_HOME/shell/init_path 
-export RQG_HOME=$HOME/random_query_generator
-```
-`TESTCASE_HOME` has been configured, we don't need to set it.    
-$init_path/rqg_init.sh:
-```
-cur_case_path=`pwd`
-export TESTCASE_HOME=`search_in_upper_path $cur_case_path config`/..
-```
+* ## Source common functions and variables
 
-### RQG test cases template
-```bash
-##################################################################################
-# Test Case: big record
-# Priority: 1
-# Reference case:
-# Author: xxx
-#
-# Test Point:
-# execute dml of big_recored, then do a couple of checking 
-##################################################################################
+  Each test case should source like below to import more common functions and variables.
 
-#!/bin/sh
-. $init_path/init.sh
-. $init_path/rqg_init.sh
-set -x 
-init test
+      . $init_path/rqg_init.sh
 
-# get dsn
-db_name="test"
-port=`get_broker_port_from_shell_config`
-dsn=`get_dsn_url_with_autocommit_on $db_name $port`
+  **Variable:**
+    `TESTCASE_HOME`: the directory to test suite root.
 
-# change db or broker parametes
-# change_db_parameter "checkpoint_every_size=1T" 
-# change_broker_parameter "MAX_NUM_APPL_SERVER     =50"
-change_db_parameter ...
-change_broker_parameter ...
+* ## Example one RQG test case 
+  ```bash
+  ##################################################################################
+  # Test Case: big record
+  # Priority: 1
+  # Reference case:
+  # Author: xxx
+  #
+  # Test Point:
+  # execute dml of big_recored, then do a couple of checking 
+  ##################################################################################
 
-# create db, start server, and start broker
-rqg_cubrid_createdb $db_name
-rqg_cubrid_start_server $db_name
-rqg_cubrid_start_broker
+  #!/bin/sh
+  . $init_path/init.sh
+  . $init_path/rqg_init.sh
+  set -x 
+  init test
 
-# set the path of yy and zz files
-casedir=${TESTCASE_HOME}/_03_mvcc/common_yy_zz
+  # get dsn
+  db_name="test"
+  port=`get_broker_port_from_shell_config`
+  dsn=`get_dsn_url_with_autocommit_on $db_name $port`
 
-# generate data and execute querys
-run_gendata ...
-run_gentest ...
+  # change db or broker parametes
+  # change_db_parameter "checkpoint_every_size=1T" 
+  # change_broker_parameter "MAX_NUM_APPL_SERVER     =50"
+  change_db_parameter ...
+  change_broker_parameter ...
+
+  # create db, start server, and start broker
+  rqg_cubrid_createdb $db_name
+  rqg_cubrid_start_server $db_name
+  rqg_cubrid_start_broker
+
+  # set the path of yy and zz files
+  casedir=${TESTCASE_HOME}/_03_mvcc/common_yy_zz
+
+  # generate data and execute querys
+  run_gendata ...
+  run_gentest ...
 
 
 
-# server recovery
-rqg_kill_all_cub_process
-rqg_cubrid_start_server $db_name
+  # server recovery
+  rqg_kill_all_cub_process
+  rqg_cubrid_start_server $db_name
 
-# check whether there are core files
-# execute cubrid checkdb
-# execute cubrid vacuumdb
-do_check_more_errors $cur_path 
-rqg_cubrid_checkdb $db_name 
-rqg_cubrid_vacuumdb
+  # check whether there are core files
+  # execute cubrid checkdb
+  # execute cubrid vacuumdb
+  do_check_more_errors $cur_path 
+  rqg_cubrid_checkdb $db_name 
+  rqg_cubrid_vacuumdb
 
-# clear db
-rqg_cubrid_cleandb
-finish
-```
+  # clear db
+  rqg_cubrid_cleandb
+  finish
+  ```
 
+* ## Function: get_dsn_url_with_autocommit_on  
+  It is used to get dsn (the url connect to database and set autocommit on).    
+  Usage:   
+  ```
+  dsn=`get_dsn_url_with_autocommit_on $db_name $port`
+  ```
 
-### RQG common functions
-RQG common functions are located in $init_path/rqg_init.sh   
-**get_dsn_url_with_autocommit_on**       
-It is used to get dsn (the url connect to database and set autocommit on)    
-usage:   
-```
-dsn=`get_dsn_url_with_autocommit_on $db_name $port`
-```
+* ## Function: get_dsn_url_with_autocommit_off    
+  It is used to get dsn (the url connect to database and set autocommit off).    
+  Usage:   
+  ```
+  dsn=`get_dsn_url_with_autocommit_off $db_name $port`
+  ```
 
-**get_dsn_url_with_autocommit_off**    
-It is used to get dsn (the url connect to database and set autocommit off)    
-usage:   
-```
-dsn=`get_dsn_url_with_autocommit_off $db_name $port`
-```
+* ##rqg_cubrid_createdb   
+  It is used to create database.   
+  Usage:   
+  ```
+  rqg_cubrid_createdb $db_name
+  ```
+* ##rqg_cubrid_start_server   
+  It is used to start cubrid server.   
+  Usage:   
+  ```
+  rqg_cubrid_start_server $db_name
+  ```
+  or
+  ```
+  rqg_cubrid_start_server
+  ```
+  >Note: If we don't transfer db_name to rqg_cubrid_start_server,it will use default database name `test`
 
-**rqg_cubrid_createdb**   
-It is used to create database.   
-usage:   
-```
-rqg_cubrid_createdb $db_name
-```
-**rqg_cubrid_start_server**   
-It is used to start cubrid server.   
-usage:   
-```
-rqg_cubrid_start_server $db_name
-```
-or
-```
-rqg_cubrid_start_server
-```
->Note: If we don't transfer db_name to rqg_cubrid_start_server,it will use default database name `test`
+* ## Function: rqg_cubrid_start_broker   
+  It is used to start cubrid broker.   
+  Usage:   
+  ```
+  rqg_cubrid_start_broker
+  ```
 
+* ## Function: run_gendata**     
+  It equals to `perl $RQG_HOME/gendata.pl`, and is used to generate tables and data.    
+  Usage:   
+  ```
+  casedir=${TESTCASE_HOME}/_03_mvcc/common_yy_zz
+  run_gendata --dsn=${dsn} --spec=${casedir}/big_record.zz --rows=100000
+  run_gendata --dsn=${dsn} --spec=${casedir}/big_record.zz --rows=100000
+  run_gendata --dsn=${dsn} --spec=${casedir}/delete_range_where.zz --rows=100000
+  run_gendata --dsn=${dsn} --spec=${casedir}/delete_range_where.zz --rows=100000
+  run_gendata --dsn=${dsn} --spec=${casedir}/delete_range_where.zz --rows=100000
+  run_gendata --dsn=${dsn} --spec=${casedir}/dml.zz --rows=1000
+  run_gendata --dsn=${dsn} --spec=${casedir}/dml_ddl.zz --rows=100000
+  run_gendata --dsn=${dsn} --spec=${casedir}/dml.zz --rows=1000
+  run_gendata --dsn=${dsn} --spec=${casedir}/large_key.zz --rows=100000
+  run_gendata --dsn=${dsn} --spec=${casedir}/large_key.zz --rows=1000
+  run_gendata --dsn=${dsn} --spec=${casedir}/partitions_ddl.zz --rows=100000
+  ```
 
-**rqg_cubrid_start_broker**   
-It is used to start cubrid broker   
-usage:   
-```
-rqg_cubrid_start_broker
-```
+* ## Function: run_gendata_without_check     
+  It is similiar with `run_gendata`, but it doesn't check returned value。    
+  Usage:   
+  ```
+  run_gendata_without_check --dsn=${dsn} --spec=${casedir}/partitions_ddl.zz --rows=100000
+  ``` 
 
-**run_gendata**     
-It equals to `perl $RQG_HOME/gendata.pl`, and is used to generate tables and data    
-usage:   
-```
-casedir=${TESTCASE_HOME}/_03_mvcc/common_yy_zz
-run_gendata --dsn=${dsn} --spec=${casedir}/big_record.zz --rows=100000
-run_gendata --dsn=${dsn} --spec=${casedir}/big_record.zz --rows=100000
-run_gendata --dsn=${dsn} --spec=${casedir}/delete_range_where.zz --rows=100000
-run_gendata --dsn=${dsn} --spec=${casedir}/delete_range_where.zz --rows=100000
-run_gendata --dsn=${dsn} --spec=${casedir}/delete_range_where.zz --rows=100000
-run_gendata --dsn=${dsn} --spec=${casedir}/dml.zz --rows=1000
-run_gendata --dsn=${dsn} --spec=${casedir}/dml_ddl.zz --rows=100000
-run_gendata --dsn=${dsn} --spec=${casedir}/dml.zz --rows=1000
-run_gendata --dsn=${dsn} --spec=${casedir}/large_key.zz --rows=100000
-run_gendata --dsn=${dsn} --spec=${casedir}/large_key.zz --rows=1000
-run_gendata --dsn=${dsn} --spec=${casedir}/partitions_ddl.zz --rows=100000
-```
-**run_gendata_without_check**     
-It is similiar with run_gendata,but it doesn't check the execution's return value    
-usage:   
-```
-run_gendata_without_check --dsn=${dsn} --spec=${casedir}/partitions_ddl.zz --rows=100000
-``` 
+* ## Function: run_gentest    
+  It equals to `perl $RQG_HOME/gentest.pl`, and is used to execute queries in parallel.    
+  Usage:   
+  ```
+  run_gentest --dsn=${dsn} --grammar=${casedir}/big_record.yy  --queries=100000 --threads=50 1>${curdir}/result.log 2<&1
+  run_gentest --dsn=${dsn} --grammar=${casedir}/big_record.yy  --queries=100000 --threads=10 1>${curdir}/result.log 2<&1
+  run_gentest --dsn=${dsn} --grammar=${casedir}/dml.yy  --queries=100000 --threads=10 1>${curdir}/${log} 2<&1
+  run_gentest --dsn=${dsn} --grammar=${casedir}/dml_ddl.yy  --queries=100000 --threads=50 1>${curdir}/${log} 2<&1
+  run_gentest --dsn=${dsn} --grammar=${casedir}/dml.yy  --queries=100000 --threads=10 1>${curdir}/${log} 2<&1
+  run_gentest --dsn=${dsn} --grammar=${casedir}/large_key.yy  --queries=100000 --threads=50 1>>${curdir}/${log} 2<&1
+  run_gentest --dsn=${dsn} --grammar=${casedir}/partitions_ddl.yy  --queries=100000 --threads=50 1>${curdir}/${log} 2<&1 
+  ```
+  
+* ## Function:run_gentest_without_check    
+  It is similiar with `run_gentest`,but it doesn't check the returned value.    
+  Usage:   
+    ```
+    run_gentest_without_check --dsn=${dsn} --grammar=${casedir}/delete_in_where.yy  --queries=100000 --threads=50 1>${curdir}/${log} 2<&1
+    run_gentest_without_check --dsn=${dsn} --grammar=${casedir}/delete_in_where.yy  --queries=100000 --threads=50 1>${curdir}/${log} 2<&1
+    run_gentest_without_check --dsn=${dsn} --grammar=${casedir}/delete_range_where.yy  --queries=100000 --threads=10 1>${curdir}/${log} 2<&1
+    run_gentest_without_check --dsn=${dsn} --grammar=${casedir}/large_key.yy  --queries=100000 --threads=10 1>>${curdir}/${log} 2<&1
+    ``` 
 
-these two functions are as below:
-```bash
-function run_gendata()
-{
-   param_options=$*
-   perl $RQG_HOME/gendata.pl $param_options
-   if [ $? -ne 0 ];then
-        write_nok "generate data fail, please check your parameter $param_options"
-   fi
-}
+* ## Function: rqg_kill_all_cub_process    
+  It is used to kill all processes named with cub_broker, cub_server, cub_cas, and cub_master.    
+  Usage:   
+  ```
+  rqg_kill_all_cub_process
+  ```
+* ## do_check_more_errors    
+  It is used to check fatal error, server crash and cas crash. Actually it is the function porvided by shell in $init_path/init.sh   
+  Usage:    
+  ```
+  do_check_more_errors $cur_path 
+  ```
 
-function run_gendata_without_check()
-{
-   param_options=$*
-   perl $RQG_HOME/gendata.pl $param_options
-}
-```
+* ## Function: rqg_cubrid_checkdb:   
+  It is used to execute `cubrid checkdb` to check whether consistency or not.   
+  Usage:   
+  ```
+  rqg_cubrid_checkdb $db_name 
+  ```
+  or
+  ```
+  rqg_cubrid_checkdb
+  ```
+  >Note: If we don't provide db_name option to `rqg_cubrid_checkdb`, the default name `'test'` will be used.
 
-**run_gentest**    
-It equals to `perl $RQG_HOME/gentest.pl`, and is used to execute querys in parallel    
-usage:   
-```
-run_gentest --dsn=${dsn} --grammar=${casedir}/big_record.yy  --queries=100000 --threads=50 1>${curdir}/result.log 2<&1
-run_gentest --dsn=${dsn} --grammar=${casedir}/big_record.yy  --queries=100000 --threads=10 1>${curdir}/result.log 2<&1
-run_gentest --dsn=${dsn} --grammar=${casedir}/dml.yy  --queries=100000 --threads=10 1>${curdir}/${log} 2<&1
-run_gentest --dsn=${dsn} --grammar=${casedir}/dml_ddl.yy  --queries=100000 --threads=50 1>${curdir}/${log} 2<&1
-run_gentest --dsn=${dsn} --grammar=${casedir}/dml.yy  --queries=100000 --threads=10 1>${curdir}/${log} 2<&1
-run_gentest --dsn=${dsn} --grammar=${casedir}/large_key.yy  --queries=100000 --threads=50 1>>${curdir}/${log} 2<&1
-run_gentest --dsn=${dsn} --grammar=${casedir}/partitions_ddl.yy  --queries=100000 --threads=50 1>${curdir}/${log} 2<&1 
-```
-**run_gentest_without_check**    
-It is similiar with run_gentest,but it doesn't check the execution's return value    
-usage:   
-```
-run_gentest_without_check --dsn=${dsn} --grammar=${casedir}/delete_in_where.yy  --queries=100000 --threads=50 1>${curdir}/${log} 2<&1
-run_gentest_without_check --dsn=${dsn} --grammar=${casedir}/delete_in_where.yy  --queries=100000 --threads=50 1>${curdir}/${log} 2<&1
-run_gentest_without_check --dsn=${dsn} --grammar=${casedir}/delete_range_where.yy  --queries=100000 --threads=10 1>${curdir}/${log} 2<&1
-run_gentest_without_check --dsn=${dsn} --grammar=${casedir}/large_key.yy  --queries=100000 --threads=10 1>>${curdir}/${log} 2<&1
-``` 
+* ## Function: rqg_cubrid_vacuumdb:   
+  It is used to execute `cubrid vacuumdb`.   
+  Usage:   
+  ```
+  rqg_cubrid_vacuumdb $db_name
+  ```
+  or   
+  ```
+  rqg_cubrid_vacuumdb
+  ```
+  >Note: If we don't provide db_name option to `rqg_cubrid_checkdb`, the default name `'test'` will be used.
 
-these two functions are as below:
-```bash
-function run_gentest()
-{
-   param_options=$*
-   local res=0
-   perl $RQG_HOME/gentest.pl $param_options > gentest.log 2<&1
-   if [ $? -ne 0 ];then
-        write_nok "generate test fail, please check your parameter $param_options"
-        res=1
-   else
-        if [ `grep 'Test completed successfully' gentest.log|wc -l` -eq 1 ];then
-                rm gentest.log >/dev/null
-                write_ok
-                res=0
-        else
-                write_nok "generate test is not completed successfully, please confirm gentest.log"
-                res=1
-        fi
-   fi
+* ## Function: rqg_cubrid_cleandb
+  It is used to delete database.   
+  Usage:   
+  ```
+  rqg_cubrid_cleandb $db_name
+  ```
 
-   return $res
+* ## Function: rqg_do_backup_db  
+  It is always used to save current database's data.   
+  Usage:   
+  ```
+  rqg_do_backup_db $db_name $dest_db_name
+  ```
+  or 
+  ```
+  rqg_do_backup_db $db_name
+  ```
+  `rqg_do_backup_db $db_name $dest_db_name`: load data from current database(db_name) to another database (dest_db_name)   
 
-}
-
-function run_gentest_without_check()
-{
-   param_options=$*
-   perl $RQG_HOME/gentest.pl $param_options
-}
-
-```
-**rqg_kill_all_cub_process**    
-It is used to kill all process named with cub_broker, cub_server, cub_cas, and cub_master    
-usage:   
-```
-rqg_kill_all_cub_process
-```
-**do_check_more_errors**    
-It is used to check fatal error, server crash and cas crash.    
-Actually it is the function porvided by shell in $init_path/init.sh   
-usage:    
-```
-do_check_more_errors $cur_path 
-```
-
-**rqg_cubrid_checkdb**   
-It is used to execute `cubrid checkdb`   
-usage:   
-```
-rqg_cubrid_checkdb $db_name 
-```
-or
-```
-rqg_cubrid_checkdb
-```
->Note: If we don't transfer db_name to rqg_cubrid_checkdb, use default name "test"
-
-**rqg_cubrid_vacuumdb**   
-It is used to execute `cubrid vacuumdb`   
-usage:   
-```
-rqg_cubrid_vacuumdb $db_name
-```
-or   
-```
-rqg_cubrid_vacuumdb
-```
->Note: If we don't transfer db_name to rqg_cubrid_vacuumdb, use default name "test"
-
-**rqg_cubrid_cleandb**   
-It is used to delete database   
-usage:   
-```
-rqg_cubrid_cleandb $db_name
-```
-
-**rqg_do_backup_db**   
-It is always used to save current database's data   
-usage:   
-```
-rqg_do_backup_db $db_name $dest_db_name
-```
-or 
-```
-rqg_do_backup_db $db_name
-```
-`rqg_do_backup_db $db_name $dest_db_name`: load data from current database(db_name) to another database (dest_db_name)   
-
-`rqg_do_backup_db $db_name` : run `cubrid backupdb $db_name`   
+  `rqg_do_backup_db $db_name` : run `cubrid backupdb $db_name`   
 
 ## 6.2 Test Case Specialization   
 Good RQG cases mainly related to .yy and .zz configurstion files, we need to design yy and zz files covering test points.
