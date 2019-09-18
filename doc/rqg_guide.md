@@ -878,7 +878,7 @@ sh start_test.sh &
   Click [core alert icon](http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22684&srctb=shell_main&resultType=NOK)    
   ![verify_2](./rqg_image/verify_2.PNG)    
   
-  Input `Jira User` and `Pwd`` -> Click **Analyze Failure** -> Click **Submit To Jira**   
+  Input `'Jira User'` and `'Jira Pwd'` -> Click `'Analyze Failure'` -> Click `'Submit To Jira'`   
   ![verify_3](./rqg_image/verify_3.PNG)   
 
 # 5. Test Case Specification  
