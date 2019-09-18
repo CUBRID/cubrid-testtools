@@ -1081,9 +1081,375 @@ It will send test state email as your appointed times, like below:
 
   `rqg_do_backup_db $db_name` : run `cubrid backupdb $db_name`   
 
-## 6.2 Test Case Specialization   
-Good RQG cases mainly related to .yy and .zz configurstion files, we need to design yy and zz files covering test points.
-### Configure the Data Generator
+# 6 Appendix
+
+## 6.1 Basic Usage for random_query_generator
+* ### How to generate tables and data   
+  * #### Configuration
+     Suffix of configuration files is `.zz`. For example, there is `example.zz` as below:
+
+         $tables = {
+                 rows => [10000, 1000, 10000, 10000],
+                # partitions => [ undef , 'KEY (pk) PARTITIONS 2' ]
+         };
+         $fields = {
+                 types => [ 'int', 'char', 'enum', 'set(varchar(100))' ],
+                 indexes => [undef, 'key' ],
+                 null => [undef],
+                 default => [undef, 'default null'],
+                 #sign => [undef, 'unsigned'],
+         #        charsets => ['utf8', 'latin1']
+         };
+
+         $data = {
+                 numbers => [ 'digit', 'null', undef ],
+                 strings => [ 'letter', 'english' ],
+                 blobs => [ 'data' ],
+                 temporals => ['date', 'year', 'null', undef ]
+         }
+
+   * #### Prepare a database to be tested.
+        Let's create a database with CUBRID, then start CUBRID server and broker.  
+     ```bash
+     $ cubrid createdb test en_US
+     Creating database with 512.0M size using locale en_us. The total amount of disk space needed is 1.5G.
+
+     CUBRID 10.2 (10.2.0.8294) (64 debug build)
+
+     $ cubrid server start test
+     @ cubrid master start
+     ++ cubrid master start: success
+     @ cubrid server start: test
+
+     This may take a long time depending on the amount of recovery works to do.
+
+     CUBRID 10.2 (10.2.0.8294) (64 debug build)
+
+     ++ cubrid server start: success
+     $ cubrid broker start
+     @ cubrid broker start
+     ++ cubrid broker start: success
+     $ cubrid broker status -b
+     @ cubrid broker status
+       NAME                   PID  PORT    AS   JQ                  TPS                  QPS   SELECT   INSERT   UPDATE   DELETE   OTHERS     LONG-T     LONG-Q         ERR-Q  UNIQUE-ERR-Q  #CONNECT   #REJECT 
+     ===========================================================================================================================================================================================================
+     * query_editor         OFF
+     * broker1               5546 33037     5    0                    0                    0        0        0        0        0        0     0/60.0     0/60.0             0             0         0         0 
+     $ 
+     ```
+
+   * #### Start to run
+     Let's run with `example.zz` to generate tables and data.   
+
+     ```bash
+     $ cd ~/random_query_generator/
+     $ perl ./gendata.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037" --spec=/home/perl/random_query_generator/ok_conf/example.zz --rows=10
+     # 17:18:31 Default schema: PUBLIC
+     # 17:18:31 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:18:31 # Creating Cubrid table table10000_int_autoinc .
+     # 17:18:47 # Progress: loaded 10000 out of 10000 rows
+     # 17:18:47 # Creating Cubrid table table1000_int_autoinc .
+     # 17:18:49 # Creating Cubrid table table10000_int_autoinc .
+     # 17:19:05 # Progress: loaded 10000 out of 10000 rows
+     # 17:19:05 # Creating Cubrid table table10000_int_autoinc .
+     # 17:19:23 # Progress: loaded 10000 out of 10000 rows
+     ```
+
+   * #### Check results that tables and data populated
+
+     ```bash
+     $ csql -u dba  test
+
+             CUBRID SQL Interpreter
+
+
+     Type `;help' for help messages.
+
+     csql> show tables;
+
+     === <Result of SELECT Command in Line 1> ===
+
+       Tables_in_test      
+     ======================
+       'table10000_int_autoinc'
+       'table1000_int_autoinc'
+
+     2 rows selected. (0.037355 sec) Committed.
+
+     1 command(s) successfully processed.
+     csql> select * from table10000_int_autoinc limit 5;
+
+     === <Result of SELECT Command in Line 1> ===
+
+       col_char_key          col_enum_key          col_char              col_enum              col_set_varchar_100_key      col_int           pk  
+     col_set_varchar_100   col_int_key
+     =============================================================================================================================================
+     ==============================
+       'z'                   NULL                  'o'                   NULL                  {'{r,d,m,z,i,n,e,q,e}'}         NULL         9643  
+     {'{v,c,z,v,l,e,f}'}     698155008
+       'k'                   'w'                   'b'                   'i'                   {'{b,q,a,c,q,b}'}       888406016         9644  {'{
+     n,o,i,i}'}          -287768576
+       'm'                   'r'                   'o'                   'q'                   {'{q,h,i,h,i}'}       -1230503936         9645  {'{
+     i}'}                     -1245
+       'j'                   NULL                  'd'                   'm'                   {'{y,z,k,j,f}'}        -602603520         9646  {'{
+     n,y,o,v,z,s,a,j}'}    934477824
+       'p'                   NULL                  'h'                   'f'                   {NULL}                      -1489         9647  {'{
+     x,q,h,g,a,a}'}       739573760
+
+     5 rows selected. (0.010582 sec) Committed.
+
+     1 command(s) successfully processed.
+     csql> select * from table1000_int_autoinc limit 5; 
+
+     === <Result of SELECT Command in Line 1> ===
+
+       col_int_key  col_enum              col_char_key                   pk  col_set_varchar_100_key      col_int  col_char              col_set_v
+     archar_100   col_enum_key        
+     =============================================================================================================================================
+     ==============================
+         274268160  'w'                   'x'                             1  {'{v,c,p,x,m,y,r}'}    1383923712  'g'                   {'{f,y,n,w,d
+     }'}       NULL                
+       -1116012544  'b'                   'p'                             2  {'{r,r,w,d,c,y,f}'}         26039  'z'                   {'{j,c,s,a,b
+     ,v,h,v}'}  'c'                 
+       -1219231744  'y'                   'u'                             3  {'{t,d}'}              -588251136  'w'                   {'{i,j,g,o}'
+     }         'j'                 
+            -15885  'c'                   't'                             4  {'{w,r,v,b}'}         -1587806208  'l'                   {'{i,c,x,f,q
+     }'}       'l'                 
+          38404096  NULL                  's'                             5  {'{g,h,j,i,t,z}'}           26571  'o'                   {NULL}      
+               NULL                
+
+     5 rows selected. (0.009555 sec) Committed.
+
+     1 command(s) successfully processed.
+     csql> 
+     ```
+     
+     ```bash
+     csql> ;sc table10000_int_autoinc
+
+     === <Help: Schema of a Class> ===
+
+
+      <Class Name> 
+
+          table10000_int_autoinc
+
+      <Attributes> 
+
+          col_char_key         CHARACTER(1)
+          col_enum_key         ENUM('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 
+     'w', 'x', 'y', 'z')
+          col_char             CHARACTER(1)
+          col_enum             ENUM('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 
+     'w', 'x', 'y', 'z')
+          col_set_varchar_100_key SET OF CHARACTER VARYING(100)
+          col_int              INTEGER
+          pk                   INTEGER AUTO_INCREMENT  NOT NULL
+          col_set_varchar_100  SET OF CHARACTER VARYING(100)
+          col_int_key          INTEGER
+
+      <Constraints> 
+
+          PRIMARY KEY pk_table10000_int_autoinc_pk ON table10000_int_autoinc (pk)
+          INDEX idx_table10000_int_autoinc_col_char_key_asc ON table10000_int_autoinc (col_char_key)
+          INDEX idx_table10000_int_autoinc_col_enum_key_desc ON table10000_int_autoinc (col_enum_key DESC)
+          INDEX idx_table10000_int_autoinc_col_int_key_asc ON table10000_int_autoinc (col_int_key, col_enum_key)
+
+
+     Committed.
+     csql> 
+     ```
+
+     ```bash
+     csql> ;sc table1000_int_autoinc 
+
+     === <Help: Schema of a Class> ===
+
+
+      <Class Name> 
+
+          table1000_int_autoinc
+
+      <Attributes> 
+
+          col_int_key          INTEGER
+          col_enum             ENUM('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 
+     'w', 'x', 'y', 'z')
+          col_char_key         CHARACTER(1)
+          pk                   INTEGER AUTO_INCREMENT  NOT NULL
+          col_set_varchar_100_key SET OF CHARACTER VARYING(100)
+          col_int              INTEGER
+          col_char             CHARACTER(1)
+          col_set_varchar_100  SET OF CHARACTER VARYING(100)
+          col_enum_key         ENUM('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 
+     'w', 'x', 'y', 'z')
+
+      <Constraints> 
+
+          PRIMARY KEY pk_table1000_int_autoinc_pk ON table1000_int_autoinc (pk)
+          INDEX idx_table1000_int_autoinc_col_int_key_asc ON table1000_int_autoinc (col_int_key)
+          INDEX idx_table1000_int_autoinc_col_char_key_desc ON table1000_int_autoinc (col_char_key DESC)
+          INDEX idx_table1000_int_autoinc_col_enum_key_asc ON table1000_int_autoinc (col_enum_key, col_char_key)
+
+
+     Committed.
+     csql> 
+     ```
+
+* ### How to generate random queries  
+  * #### Configuration
+    Suffix of configuration files is `.yy`. For example, there is `example.yy` as below:
+    ```bash
+    query:
+            update | insert | delete ;
+
+    update:
+            UPDATE _table SET int_field = digit WHERE condition LIMIT _digit ;
+
+    delete:
+            DELETE FROM _table WHERE condition;
+
+    insert:
+            INSERT INTO _table ( int_field ) VALUES ( _digit ) ;
+
+    condition:
+            int_field < digit | int_field = _digit ;
+    int_field:
+            col_int|col_int_key;
+    ```
+
+   * #### Start to run
+     Let's run with `example.yy`. It should be executed after population of `example.zz` in above steps.  
+
+     ```bash
+     $ cd ~/random_query_generator/
+     $ perl ./gentest.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037"  --queries=10 --threads=10 --grammar=/home/perl/random_query_generator/ok_conf/example.yy        
+     defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 168.
+             (Maybe you should just omit the defined()?)
+     defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 171.
+             (Maybe you should just omit the defined()?)
+     # 17:36:05 Starting 
+     # 17:36:05  ./gentest.pl \ 
+     # 17:36:05  --dsn=dbi:cubrid:database=test;host=localhost;port=33037 \ 
+     # 17:36:05  --queries=10 \ 
+     # 17:36:05  --threads=10 \ 
+     # 17:36:05  --grammar=/home/perl/random_query_generator/ok_conf/example.yy
+     # 17:36:05 -------------------------------
+     # 17:36:05 Configuration
+     # 17:36:05   dsn => ['dbi:cubrid:database=test;host=localhost;port=33037']
+     # 17:36:05   duration => 3600
+     # 17:36:05   grammar => /home/perl/random_query_generator/ok_conf/example.yy
+     # 17:36:05   queries => 10
+     # 17:36:05   reporters => ['']
+     # 17:36:05   seed => 1
+     # 17:36:05   threads => 10
+     # 17:36:05   validators => ['']
+     # 17:36:05 Reporters: (none)
+     # 17:36:05 Validators: (none)
+     # 17:36:05 Starting 10 processes, 10 queries each, duration 3600 seconds.
+     # 17:36:05 GenTest::ErrorFilter(6650) started
+     # 17:36:05 Default schema: PUBLIC
+     # 17:36:05 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:36:05 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
+     # 17:36:05 Default schema: PUBLIC
+     # 17:36:05 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:36:05 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
+     # 17:36:05 Default schema: PUBLIC
+     # 17:36:05 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:36:05 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
+     # 17:36:05 Default schema: PUBLIC
+     # 17:36:05 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:36:05 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
+     # 17:36:05 Default schema: PUBLIC
+     # 17:36:05 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:36:05 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
+     # 17:36:06 Default schema: PUBLIC
+     # 17:36:06 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:36:06 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
+     # 17:36:06 Default schema: PUBLIC
+     # 17:36:06 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:36:06 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
+     # 17:36:06 Default schema: PUBLIC
+     # 17:36:06 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:36:06 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
+     # 17:36:06 Default schema: PUBLIC
+     # 17:36:06 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:36:06 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
+     # 17:36:06 Default schema: PUBLIC
+     # 17:36:06 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+     # 17:36:06 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
+     # 17:36:06 Started periodic reporting process...
+     # 17:36:07 Child process completed successfully.
+     # 17:36:07 Child process completed successfully.
+     # 17:36:07 Child process completed successfully.
+     # 17:36:07 Child process completed successfully.
+
+
+     DELETE FROM "table10000_int_autoinc" WHERE col_int_key < 3
+     CUBRID DBMS Error : (-968) Your transaction (index 2, PUBLIC@fmdev063.nhncorp.cn|5548) timed out waiting on    X_LOCK lock on instance 0|3394|260 of class table10000_int_autoinc because of deadlock. You are waiting for user(s) PUBLIC@fmdev063.nhncorp.cn|broker1_cub_cas_5(5551) to finish.[CAS INFO - 127.0.0.1:33037, 2, 5548].
+
+     # 17:36:08 Child process completed successfully.
+
+
+     DELETE FROM "table10000_int_autoinc" WHERE col_int_key < 4
+     CUBRID DBMS Error : (-968) Your transaction (index 6, PUBLIC@fmdev063.nhncorp.cn|6674) timed out waiting on    X_LOCK lock on instance 0|3395|317 of class table10000_int_autoinc because of deadlock. You are waiting for user(s) PUBLIC@fmdev063.nhncorp.cn|broker1_cub_cas_5(5551) to finish.[CAS INFO - 127.0.0.1:33037, 6, 6674].
+
+     # 17:36:08 Child process completed successfully.
+
+
+     UPDATE "table10000_int_autoinc" SET col_int = 1 WHERE col_int = 7 LIMIT 5
+     CUBRID DBMS Error : (-968) Your transaction (index 9, PUBLIC@fmdev063.nhncorp.cn|6689) timed out waiting on    X_LOCK lock on instance 0|3455|222 of class table10000_int_autoinc because of deadlock. You are waiting for user(s) PUBLIC@fmdev063.nhncorp.cn|broker1_cub_cas_7(6679), PUBLIC@fmdev063.nhncorp.cn|broker1_cub_cas_2(5548) to finish.[CAS INFO - 127.0.0.1:33037, 9, 6689].
+
+     # 17:36:09 Child process completed successfully.
+     # 17:36:12 Child process completed successfully.
+     # 17:36:13 Child process completed successfully.
+     # 17:36:14 Child process completed successfully.
+     # 17:36:15 Killing periodic reporting process with pid 6651...
+     # 17:36:15 Kill GenTest::ErrorFilter(6650)
+     # 17:36:15 Test completed successfully.
+     ```
+     
+   * #### Check running status
+
+        During test running, we may use `cubrid broker status` to get what qureies are executing.
+
+     ```bash
+     $ cubrid broker status
+     @ cubrid broker status
+     % query_editor OFF
+
+     % broker1
+     ----------------------------------------------------------------------
+             ID   PID                  QPS        LQS   PSIZE STATUS       
+     ----------------------------------------------------------------------
+              1  5547                 1852          0   92468 BUSY         
+     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int < 2
+              2  5548                 1260          0   85748 BUSY         
+     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int < 4
+              3  5549                 1250          0   85748 BUSY         
+     SQL: execute UPDATE "table10000_int_autoinc" SET col_int_key = 6 WHERE col_int < 3 LIMIT 0
+              4  5550                 1176          0   85748 BUSY         
+     SQL: execute UPDATE "table1000_int_autoinc" SET col_int_key = 8 WHERE col_int = 6 LIMIT 3
+              5  5551                 1292          0   85744 BUSY         
+     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int < 6
+              6  6674                 1142          0   85744 BUSY         
+     SQL: execute UPDATE "table10000_int_autoinc" SET col_int = 8 WHERE col_int_key < 8 LIMIT 7
+              7  6679                 1210          0   85740 BUSY         
+     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int = 9
+              8  6684                 1179          0   85744 BUSY         
+     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int = 2
+              9  6689                 1270          0   85740 BUSY         
+     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int < 4
+             10  6694                 1274          0   85740 BUSY         
+     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int < 2
+     ```
+
+
+## 6.2 Detail Usage for `random_query_generator`
+
+Good RQG cases mainly relate to .yy and .zz configuration files. We need to design `.yy` and `.zz` files to try to cover test points.
+
+* ### Configure the Data Generator
 The Data Generator is driven by a configuration file which may look as follows:
 
 ```
@@ -2259,368 +2625,3 @@ please refer to [grammer elements](https://github.com/RQG/RQG-Documentation/wiki
     ```
     SELECT * FROM _table ORDER BY _field_count - 1;
     ```
-
-# 6 Appendix
-
-## 6.1 Usage for random_query_generator
-* ### How to generate tables and data   
-  * #### Configuration
-     Suffix of configuration files is `.zz`. For example, there is `example.zz` as below:
-
-         $tables = {
-                 rows => [10000, 1000, 10000, 10000],
-                # partitions => [ undef , 'KEY (pk) PARTITIONS 2' ]
-         };
-         $fields = {
-                 types => [ 'int', 'char', 'enum', 'set(varchar(100))' ],
-                 indexes => [undef, 'key' ],
-                 null => [undef],
-                 default => [undef, 'default null'],
-                 #sign => [undef, 'unsigned'],
-         #        charsets => ['utf8', 'latin1']
-         };
-
-         $data = {
-                 numbers => [ 'digit', 'null', undef ],
-                 strings => [ 'letter', 'english' ],
-                 blobs => [ 'data' ],
-                 temporals => ['date', 'year', 'null', undef ]
-         }
-
-   * #### Prepare a database to be tested.
-        Let's create a database with CUBRID, then start CUBRID server and broker.  
-     ```bash
-     $ cubrid createdb test en_US
-     Creating database with 512.0M size using locale en_us. The total amount of disk space needed is 1.5G.
-
-     CUBRID 10.2 (10.2.0.8294) (64 debug build)
-
-     $ cubrid server start test
-     @ cubrid master start
-     ++ cubrid master start: success
-     @ cubrid server start: test
-
-     This may take a long time depending on the amount of recovery works to do.
-
-     CUBRID 10.2 (10.2.0.8294) (64 debug build)
-
-     ++ cubrid server start: success
-     $ cubrid broker start
-     @ cubrid broker start
-     ++ cubrid broker start: success
-     $ cubrid broker status -b
-     @ cubrid broker status
-       NAME                   PID  PORT    AS   JQ                  TPS                  QPS   SELECT   INSERT   UPDATE   DELETE   OTHERS     LONG-T     LONG-Q         ERR-Q  UNIQUE-ERR-Q  #CONNECT   #REJECT 
-     ===========================================================================================================================================================================================================
-     * query_editor         OFF
-     * broker1               5546 33037     5    0                    0                    0        0        0        0        0        0     0/60.0     0/60.0             0             0         0         0 
-     $ 
-     ```
-
-   * #### Start to run
-     Let's run with `example.zz` to generate tables and data.   
-
-     ```bash
-     $ cd ~/random_query_generator/
-     $ perl ./gendata.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037" --spec=/home/perl/random_query_generator/ok_conf/example.zz --rows=10
-     # 17:18:31 Default schema: PUBLIC
-     # 17:18:31 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:18:31 # Creating Cubrid table table10000_int_autoinc .
-     # 17:18:47 # Progress: loaded 10000 out of 10000 rows
-     # 17:18:47 # Creating Cubrid table table1000_int_autoinc .
-     # 17:18:49 # Creating Cubrid table table10000_int_autoinc .
-     # 17:19:05 # Progress: loaded 10000 out of 10000 rows
-     # 17:19:05 # Creating Cubrid table table10000_int_autoinc .
-     # 17:19:23 # Progress: loaded 10000 out of 10000 rows
-     ```
-
-   * #### Check results that tables and data populated
-
-     ```bash
-     $ csql -u dba  test
-
-             CUBRID SQL Interpreter
-
-
-     Type `;help' for help messages.
-
-     csql> show tables;
-
-     === <Result of SELECT Command in Line 1> ===
-
-       Tables_in_test      
-     ======================
-       'table10000_int_autoinc'
-       'table1000_int_autoinc'
-
-     2 rows selected. (0.037355 sec) Committed.
-
-     1 command(s) successfully processed.
-     csql> select * from table10000_int_autoinc limit 5;
-
-     === <Result of SELECT Command in Line 1> ===
-
-       col_char_key          col_enum_key          col_char              col_enum              col_set_varchar_100_key      col_int           pk  
-     col_set_varchar_100   col_int_key
-     =============================================================================================================================================
-     ==============================
-       'z'                   NULL                  'o'                   NULL                  {'{r,d,m,z,i,n,e,q,e}'}         NULL         9643  
-     {'{v,c,z,v,l,e,f}'}     698155008
-       'k'                   'w'                   'b'                   'i'                   {'{b,q,a,c,q,b}'}       888406016         9644  {'{
-     n,o,i,i}'}          -287768576
-       'm'                   'r'                   'o'                   'q'                   {'{q,h,i,h,i}'}       -1230503936         9645  {'{
-     i}'}                     -1245
-       'j'                   NULL                  'd'                   'm'                   {'{y,z,k,j,f}'}        -602603520         9646  {'{
-     n,y,o,v,z,s,a,j}'}    934477824
-       'p'                   NULL                  'h'                   'f'                   {NULL}                      -1489         9647  {'{
-     x,q,h,g,a,a}'}       739573760
-
-     5 rows selected. (0.010582 sec) Committed.
-
-     1 command(s) successfully processed.
-     csql> select * from table1000_int_autoinc limit 5; 
-
-     === <Result of SELECT Command in Line 1> ===
-
-       col_int_key  col_enum              col_char_key                   pk  col_set_varchar_100_key      col_int  col_char              col_set_v
-     archar_100   col_enum_key        
-     =============================================================================================================================================
-     ==============================
-         274268160  'w'                   'x'                             1  {'{v,c,p,x,m,y,r}'}    1383923712  'g'                   {'{f,y,n,w,d
-     }'}       NULL                
-       -1116012544  'b'                   'p'                             2  {'{r,r,w,d,c,y,f}'}         26039  'z'                   {'{j,c,s,a,b
-     ,v,h,v}'}  'c'                 
-       -1219231744  'y'                   'u'                             3  {'{t,d}'}              -588251136  'w'                   {'{i,j,g,o}'
-     }         'j'                 
-            -15885  'c'                   't'                             4  {'{w,r,v,b}'}         -1587806208  'l'                   {'{i,c,x,f,q
-     }'}       'l'                 
-          38404096  NULL                  's'                             5  {'{g,h,j,i,t,z}'}           26571  'o'                   {NULL}      
-               NULL                
-
-     5 rows selected. (0.009555 sec) Committed.
-
-     1 command(s) successfully processed.
-     csql> 
-     ```
-     
-     ```bash
-     csql> ;sc table10000_int_autoinc
-
-     === <Help: Schema of a Class> ===
-
-
-      <Class Name> 
-
-          table10000_int_autoinc
-
-      <Attributes> 
-
-          col_char_key         CHARACTER(1)
-          col_enum_key         ENUM('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 
-     'w', 'x', 'y', 'z')
-          col_char             CHARACTER(1)
-          col_enum             ENUM('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 
-     'w', 'x', 'y', 'z')
-          col_set_varchar_100_key SET OF CHARACTER VARYING(100)
-          col_int              INTEGER
-          pk                   INTEGER AUTO_INCREMENT  NOT NULL
-          col_set_varchar_100  SET OF CHARACTER VARYING(100)
-          col_int_key          INTEGER
-
-      <Constraints> 
-
-          PRIMARY KEY pk_table10000_int_autoinc_pk ON table10000_int_autoinc (pk)
-          INDEX idx_table10000_int_autoinc_col_char_key_asc ON table10000_int_autoinc (col_char_key)
-          INDEX idx_table10000_int_autoinc_col_enum_key_desc ON table10000_int_autoinc (col_enum_key DESC)
-          INDEX idx_table10000_int_autoinc_col_int_key_asc ON table10000_int_autoinc (col_int_key, col_enum_key)
-
-
-     Committed.
-     csql> 
-     ```
-
-     ```bash
-     csql> ;sc table1000_int_autoinc 
-
-     === <Help: Schema of a Class> ===
-
-
-      <Class Name> 
-
-          table1000_int_autoinc
-
-      <Attributes> 
-
-          col_int_key          INTEGER
-          col_enum             ENUM('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 
-     'w', 'x', 'y', 'z')
-          col_char_key         CHARACTER(1)
-          pk                   INTEGER AUTO_INCREMENT  NOT NULL
-          col_set_varchar_100_key SET OF CHARACTER VARYING(100)
-          col_int              INTEGER
-          col_char             CHARACTER(1)
-          col_set_varchar_100  SET OF CHARACTER VARYING(100)
-          col_enum_key         ENUM('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 
-     'w', 'x', 'y', 'z')
-
-      <Constraints> 
-
-          PRIMARY KEY pk_table1000_int_autoinc_pk ON table1000_int_autoinc (pk)
-          INDEX idx_table1000_int_autoinc_col_int_key_asc ON table1000_int_autoinc (col_int_key)
-          INDEX idx_table1000_int_autoinc_col_char_key_desc ON table1000_int_autoinc (col_char_key DESC)
-          INDEX idx_table1000_int_autoinc_col_enum_key_asc ON table1000_int_autoinc (col_enum_key, col_char_key)
-
-
-     Committed.
-     csql> 
-     ```
-
-* ### How to generate random queries  
-  * #### Configuration
-    Suffix of configuration files is `.yy`. For example, there is `example.yy` as below:
-    ```bash
-    query:
-            update | insert | delete ;
-
-    update:
-            UPDATE _table SET int_field = digit WHERE condition LIMIT _digit ;
-
-    delete:
-            DELETE FROM _table WHERE condition;
-
-    insert:
-            INSERT INTO _table ( int_field ) VALUES ( _digit ) ;
-
-    condition:
-            int_field < digit | int_field = _digit ;
-    int_field:
-            col_int|col_int_key;
-    ```
-
-   * #### Start to run
-     Let's run with `example.yy`. It should be executed after population of `example.zz` in above steps.  
-
-     ```bash
-     $ cd ~/random_query_generator/
-     $ perl ./gentest.pl "--dsn=dbi:cubrid:database=test;host=localhost;port=33037"  --queries=10 --threads=10 --grammar=/home/perl/random_query_generator/ok_conf/example.yy        
-     defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 168.
-             (Maybe you should just omit the defined()?)
-     defined(@array) is deprecated at /home/perl/random_query_generator/lib/GenTest/Properties.pm line 171.
-             (Maybe you should just omit the defined()?)
-     # 17:36:05 Starting 
-     # 17:36:05  ./gentest.pl \ 
-     # 17:36:05  --dsn=dbi:cubrid:database=test;host=localhost;port=33037 \ 
-     # 17:36:05  --queries=10 \ 
-     # 17:36:05  --threads=10 \ 
-     # 17:36:05  --grammar=/home/perl/random_query_generator/ok_conf/example.yy
-     # 17:36:05 -------------------------------
-     # 17:36:05 Configuration
-     # 17:36:05   dsn => ['dbi:cubrid:database=test;host=localhost;port=33037']
-     # 17:36:05   duration => 3600
-     # 17:36:05   grammar => /home/perl/random_query_generator/ok_conf/example.yy
-     # 17:36:05   queries => 10
-     # 17:36:05   reporters => ['']
-     # 17:36:05   seed => 1
-     # 17:36:05   threads => 10
-     # 17:36:05   validators => ['']
-     # 17:36:05 Reporters: (none)
-     # 17:36:05 Validators: (none)
-     # 17:36:05 Starting 10 processes, 10 queries each, duration 3600 seconds.
-     # 17:36:05 GenTest::ErrorFilter(6650) started
-     # 17:36:05 Default schema: PUBLIC
-     # 17:36:05 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:36:05 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
-     # 17:36:05 Default schema: PUBLIC
-     # 17:36:05 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:36:05 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
-     # 17:36:05 Default schema: PUBLIC
-     # 17:36:05 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:36:05 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
-     # 17:36:05 Default schema: PUBLIC
-     # 17:36:05 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:36:05 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
-     # 17:36:05 Default schema: PUBLIC
-     # 17:36:05 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:36:05 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
-     # 17:36:06 Default schema: PUBLIC
-     # 17:36:06 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:36:06 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
-     # 17:36:06 Default schema: PUBLIC
-     # 17:36:06 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:36:06 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
-     # 17:36:06 Default schema: PUBLIC
-     # 17:36:06 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:36:06 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
-     # 17:36:06 Default schema: PUBLIC
-     # 17:36:06 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:36:06 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
-     # 17:36:06 Default schema: PUBLIC
-     # 17:36:06 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-     # 17:36:06 Caching metadata for dbi:cubrid:database=test;host=localhost;port=33037
-     # 17:36:06 Started periodic reporting process...
-     # 17:36:07 Child process completed successfully.
-     # 17:36:07 Child process completed successfully.
-     # 17:36:07 Child process completed successfully.
-     # 17:36:07 Child process completed successfully.
-
-
-     DELETE FROM "table10000_int_autoinc" WHERE col_int_key < 3
-     CUBRID DBMS Error : (-968) Your transaction (index 2, PUBLIC@fmdev063.nhncorp.cn|5548) timed out waiting on    X_LOCK lock on instance 0|3394|260 of class table10000_int_autoinc because of deadlock. You are waiting for user(s) PUBLIC@fmdev063.nhncorp.cn|broker1_cub_cas_5(5551) to finish.[CAS INFO - 127.0.0.1:33037, 2, 5548].
-
-     # 17:36:08 Child process completed successfully.
-
-
-     DELETE FROM "table10000_int_autoinc" WHERE col_int_key < 4
-     CUBRID DBMS Error : (-968) Your transaction (index 6, PUBLIC@fmdev063.nhncorp.cn|6674) timed out waiting on    X_LOCK lock on instance 0|3395|317 of class table10000_int_autoinc because of deadlock. You are waiting for user(s) PUBLIC@fmdev063.nhncorp.cn|broker1_cub_cas_5(5551) to finish.[CAS INFO - 127.0.0.1:33037, 6, 6674].
-
-     # 17:36:08 Child process completed successfully.
-
-
-     UPDATE "table10000_int_autoinc" SET col_int = 1 WHERE col_int = 7 LIMIT 5
-     CUBRID DBMS Error : (-968) Your transaction (index 9, PUBLIC@fmdev063.nhncorp.cn|6689) timed out waiting on    X_LOCK lock on instance 0|3455|222 of class table10000_int_autoinc because of deadlock. You are waiting for user(s) PUBLIC@fmdev063.nhncorp.cn|broker1_cub_cas_7(6679), PUBLIC@fmdev063.nhncorp.cn|broker1_cub_cas_2(5548) to finish.[CAS INFO - 127.0.0.1:33037, 9, 6689].
-
-     # 17:36:09 Child process completed successfully.
-     # 17:36:12 Child process completed successfully.
-     # 17:36:13 Child process completed successfully.
-     # 17:36:14 Child process completed successfully.
-     # 17:36:15 Killing periodic reporting process with pid 6651...
-     # 17:36:15 Kill GenTest::ErrorFilter(6650)
-     # 17:36:15 Test completed successfully.
-     ```
-     
-   * #### Check running status
-
-        During test running, we may use `cubrid broker status` to get what qureies are executing.
-
-     ```bash
-     $ cubrid broker status
-     @ cubrid broker status
-     % query_editor OFF
-
-     % broker1
-     ----------------------------------------------------------------------
-             ID   PID                  QPS        LQS   PSIZE STATUS       
-     ----------------------------------------------------------------------
-              1  5547                 1852          0   92468 BUSY         
-     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int < 2
-              2  5548                 1260          0   85748 BUSY         
-     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int < 4
-              3  5549                 1250          0   85748 BUSY         
-     SQL: execute UPDATE "table10000_int_autoinc" SET col_int_key = 6 WHERE col_int < 3 LIMIT 0
-              4  5550                 1176          0   85748 BUSY         
-     SQL: execute UPDATE "table1000_int_autoinc" SET col_int_key = 8 WHERE col_int = 6 LIMIT 3
-              5  5551                 1292          0   85744 BUSY         
-     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int < 6
-              6  6674                 1142          0   85744 BUSY         
-     SQL: execute UPDATE "table10000_int_autoinc" SET col_int = 8 WHERE col_int_key < 8 LIMIT 7
-              7  6679                 1210          0   85740 BUSY         
-     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int = 9
-              8  6684                 1179          0   85744 BUSY         
-     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int = 2
-              9  6689                 1270          0   85740 BUSY         
-     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int < 4
-             10  6694                 1274          0   85740 BUSY         
-     SQL: execute DELETE FROM "table10000_int_autoinc" WHERE col_int < 2
-     ```
-
-
