@@ -692,53 +692,53 @@ No.  |Role  |User Name  |IP  |Hostname | Deployments
 	    ```
 	 >Note: this step is not necessary for daily regression test. CTP will install CUBRID on each node.    
 
-# 4. Regression Tests
-We perform ha_repl/ha_repl_debug for daily (actually is for each build) and perform code coverage test of ha_repl for monthly. `ha_repl_debug` is executing ha_repl test cases with a debug build.   
-## 4.1 Daily Regression Test
-### Start the listener on controller node
-When you sent a test message, the consumer will catchs the test massage and starts the test. The execution log will be saved in nohup.out file.     
-1. Start listener
-    ```bash
-    $ sh start_test.sh 
-    $ tail -f nohup.out
-    ...
-    No build
-    + let count=count+1
-    + '[' -f /home/controller/CTP/common/sched/status/STATUS.TXT ']'
-    + sleep 5
-    ...
-    ```
-    It will check if there is a test message every five seconds.
-2. Stop listener  
-When you're investigating a problem, you may need to stop consumer to avoid it starting a new test. You can execute the `stop_consumer.sh` to stop it.  
-    * Check the process  
-        ```bash
-        $ ps -u $USER f|tee
-        PID TTY      STAT   TIME COMMAND
-        5610 ?        S      0:00 sshd: ha_repl@pts/0
-        5611 pts/0    Ss     0:00  \_ -bash
-        9955 pts/0    R+     0:00      \_ ps -u ha_repl f
-        9956 pts/0    S+     0:00      \_ tee
-        3636 ?        S      0:00 sh start_test.sh
-        3638 ?        S      2:57  \_ /bin/bash /home/ha_repl/CTP/common/script/start_consumer.sh -q QUEUE_CUBRID_QA_HA_REPL_LINUX -exec run_ha_repl -s china
-        9927 ?        S      0:00      \_ /bin/bash /home/ha_repl/CTP/common/script/start_consumer.sh -q QUEUE_CUBRID_QA_HA_REPL_LINUX -exec run_ha_repl -s china
-        9928 ?        Sl     0:00          \_ /usr/local/jdk1.7.0_01/bin/java -cp ./lib/cubridqa-scheduler.jar com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent QUEUE_CUBRID_QA_HA_REPL_LINUX
-        ```
-    * Stop Consumer
-        ```bash
-        $ stop_consumer.sh 
-        /home/ha_repl/CTP/common/script/stop_consumer.sh: line 34: kill: (10719) - No such process
-        ````
-        There is no start_consumer.sh process anymore.
-        ```bash
-        $ ps -u $USER f|tee
-        PID TTY      STAT   TIME COMMAND
-        5610 ?        S      0:00 sshd: ha_repl@pts/0
-        5611 pts/0    Ss     0:00  \_ -bash
-        10769 pts/0    R+     0:00      \_ ps -u ha_repl f
-        10770 pts/0    S+     0:00      \_ tee
-        ```
-### Send test message
+# 4. Regression Test Sustaining
+
+We perform ha_repl/ha_repl_debug for daily (actually is for each build) and perform code coverage test for monthly. The `ha_repl_debug` is designed to execute based on a debug build.
+
+## 4.1 Start/Stop Test
+
+* ### Start listener
+	Log into controller node, then execute below to start the listener.
+
+		$ sh start_test.sh 
+	
+* ### Stop listener
+
+	To stop listener, you may execute `~/CTP/common/script/stop_consumer.sh`. It will try to kill all active processes.
+
+	Let's see an example. 
+
+	A running listener shows as below.
+
+		$ ps -u $USER f|tee
+		PID TTY      STAT   TIME COMMAND
+		5610 ?        S      0:00 sshd: ha_repl@pts/0
+		5611 pts/0    Ss     0:00  \_ -bash
+		9955 pts/0    R+     0:00      \_ ps -u ha_repl f
+		9956 pts/0    S+     0:00      \_ tee
+		3636 ?        S      0:00 sh start_test.sh
+		3638 ?        S      2:57  \_ /bin/bash /home/ha_repl/CTP/common/script/start_consumer.sh -q QUEUE_CUBRID_QA_HA_REPL_LINUX -exec run_ha_repl -s china
+		9927 ?        S      0:00      \_ /bin/bash /home/ha_repl/CTP/common/script/start_consumer.sh -q QUEUE_CUBRID_QA_HA_REPL_LINUX -exec run_ha_repl -s china
+		9928 ?        Sl     0:00          \_ /usr/local/jdk1.7.0_01/bin/java -cp ./lib/cubridqa-scheduler.jar com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent QUEUE_CUBRID_QA_HA_REPL_LINUX
+
+	Begin to execute stop:
+
+		$ cd ~/CTP/common/script
+		$ sh stop_consumer.sh 
+
+		/home/ha_repl/CTP/common/script/stop_consumer.sh: line 34: kill: (10719) - No such process
+
+	Check again for processes:
+
+		$ ps -u $USER f|tee
+		PID TTY      STAT   TIME COMMAND
+		5610 ?        S      0:00 sshd: ha_repl@pts/0
+		5611 pts/0    Ss     0:00  \_ -bash
+		10769 pts/0    R+     0:00      \_ ps -u ha_repl f
+		10770 pts/0    S+     0:00      \_ tee
+
+## 4.2 Send test message
 1. Login to the message server: `message@192.168.1.91`
 2. Send test message
     * To execute an ha_repl test with release build
