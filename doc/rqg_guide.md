@@ -638,6 +638,47 @@ cp: cannot stat ‘/home/perl/CUBRID/conf/cubrid.conf.org’: No such file or di
 [INFO] TEST STOP (Fri Aug 16 16:27:42 KST 2019)
 ```
 
+## 2.7 Run test case via `run_shell.sh` script
+
+In order to execute test cases with powerful approach, `$init_path/run_shell.sh` can be used to execute a test case:
+
+    [fanzq@xxxxxx ~]$ $init_path/run_shell.sh -h
+    usage: run_shell [OPTION]
+        --enable-report           Enable to send report for test status
+        --extend-script <arg>     Extended script file to define how to
+                                  execute test case and verify failure.
+     -h,--help                    List help
+        --issue <arg>             Url link to issue CBRD-xxxx. This info will
+                                  be described in mail text
+        --loop                    Execute with loop infinitely till there is
+                                  failure checked.
+        --mailcc <arg>            The CC who receive mail
+        --mailto <arg>            The TO who receive mail
+        --maxloop <arg>           Set max loop to execute test
+        --maxtime <arg>           Set max time in seconds to execute test
+        --next-build-url <arg>    Find next build in the url
+        --prompt-continue <arg>   true or false to load previous data
+        --report-cron <arg>       Define a time to send a mail
+        --update-build            Upgrade CUBRID build when new build comes.
+                                  The 4th figure in version number will be
+                                  used to compare.
+
+  Let's see an example,
+  
+    cd ~/cubrid-testcases-private/random_query_generator/_03_mvcc/recovery/rollback_uncommit_commit/rollback_uncommit_commit_dml_reuseoid/cases
+    nohup ~/CTP/shell/init_path/run_shell.sh \
+         --enable-report \
+         --report-cron='0 50 9,14,17 * * ?' \
+         --issue=http://jira.cubrid.org/browse/CBRD-23163 \
+         --mailto=lanlan.zhan@navercorp.com \
+         --mailcc=dl_cubridqa_bj_internal@navercorp.com \
+         --loop \
+         --update-build \
+         --prompt-continue=yes &
+
+  It will send test status e-mail as your appointed time, like below:   
+  ![verify_7](./rqg_image/verify_7.PNG)
+  
 
 # 3. RQG Rgression Test Deployment 
 ## 3.1 Test Machines
@@ -811,58 +852,34 @@ sh start_test.sh &
   ```
 
 ## 4.3 Verify Test Result
-Open [QA homepage](http://qahome.cubrid.org) -> Select a `build` ->select `Function` tab, you will find RQG item.    
-![test in progress](./rqg_image/check_results.PNG)     
 
-**Test Rate** is 44.90%, indicating that the test is not completed. (Expected value is 100%)   
-**Fail Rate** is 2.27%, indicating that there are failures. (Expected value is 0)  
-**Fail**  include two values, one is "Total" ,the other is "New".   
-**Total** is 98, it is the number of whole RQG test cases.     
-**Testing** is 98, it is the same with **Total**, indicating that RQG test doesn't use execlude file.    
-**Success** is 43, indicating that the test is not completed or in progress. (Expected value of **Success** plus **Total of Fail** is 98)      
-**Total of Fail** is 1, indicating that one test case has been failed. It is linked to detail page of failed cases,such as http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22536&resultType=NOK . 
+* ### Check if there is RQG result
+  Open [QA homepage](http://qahome.cubrid.org) -> Select a `build` ->select `Function` tab, you will find RQG item.    
+  ![test in progress](./rqg_image/check_results.PNG)     
 
-## 1. server crash failures    
-#### step1: check core alert icon    
-![verify_1](./rqg_image/verify_1.PNG)    
-### step2: report crash issue aumatically   
-#### click [core alert icon](http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22684&srctb=shell_main&resultType=NOK)    
-![verify_2](./rqg_image/verify_2.PNG)    
-#### fill in **Jira User/Pwd** ->click **Analyze Failure** -> click **Submit To Jira**   
-![verify_3](./rqg_image/verify_3.PNG)   
+  If it shows 'NO RESULT (OR RUNNING)', you need to find the reason. Sometimes the CI build comes late, so that the test started late; or there is another test like manual build, SHELL_LONG or SHELL_HEAVY tests executed before the CI build. In this case, just wait for the test finish and then verify the results. Please remember that the RQG test is scheduled twice a week.
 
-## 2. normal failures    
-### step1: check total failures   
-![verify_4](./rqg_image/verify_4.PNG)    
-### step2: click [3](http://qahome.cubrid.org/qaresult/showFailResult.nhn?m=showFailVerifyItem&statid=22684&srctb=shell_main&failType=shell)
-fail list:   
-![verify_5](./rqg_image/verify_5.PNG)   
+* ### Test Rate should be 100%
 
-fail detail of single case:   
-![verify_6](./rqg_image/verify_6.PNG)   
+  It requires that all test cases should be executed for each test.
 
-Please check running log to find fail reason, sometimes you need to reproduce it again.     
-For above case:   
-such log told us that fail is caused by checkdb   
-```
-+ cubrid checkdb -S test
-/home/perl/CTP/shell/init_path/rqg_init.sh: line 564: 30715 Killed                  cubrid checkdb -S $checkdb_options > _checkdb.log 2>&1
-+ '[' 137 -ne 0 ']'
-+ sed -i 'a\Fail to execute checkdb utility with the standalone mode!\n' _checkdb.log
-+ write_nok _checkdb.log
-+ '[' -z _checkdb.log ']'
-+ '[' -f _checkdb.log ']'
-+ echo 'dead_data_02_big_record-2 : NOK'
-+ cat _checkdb.log
-```
-## 4.4 Reproduce issue   
-For [CBRD-23163](http://jira.cubrid.org/browse/CBRD-23163),  
-```
-cd ~/cubrid-testcases-private/random_query_generator/_03_mvcc/recovery/rollback_uncommit_commit/rollback_uncommit_commit_dml_reuseoid/cases
-nohup ~/CTP/shell/init_path/run_shell.sh --enable-report --report-cron='0 50 9,14,17 * * ?' --issue=http://jira.cubrid.org/browse/CBRD-23163 --mailto=lanlan.zhan@navercorp.com --mailcc=dl_cubridqa_bj_internal@navercorp.com --loop --update-build --prompt-continue=yes &
-```
-It will send test status e-mail as your appointed time, like below:   
-![verify_7](./rqg_image/verify_7.PNG)
+* ### Verified Rate should be 100%
+  It requires that all failures should be examined.
+
+  Note: Please verify crash or fatal error failures with priority.
+
+  #### Server crash failures**  
+  
+  **Step 1: check core alert icon**  
+  ![verify_1](./rqg_image/verify_1.PNG)    
+  
+  **Step 2: report crash issue aumatically**   
+  
+  Click [core alert icon](http://qahome.cubrid.org/qaresult/viewShellTestResult.nhn?shellTestId=22684&srctb=shell_main&resultType=NOK)    
+  ![verify_2](./rqg_image/verify_2.PNG)    
+  
+  Input `Jira User` and `Pwd`` -> Click **Analyze Failure** -> Click **Submit To Jira**   
+  ![verify_3](./rqg_image/verify_3.PNG)   
 
 # 5. Test Case Specification  
 * ## Follow with SHELL codes convention  
