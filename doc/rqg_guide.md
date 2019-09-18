@@ -750,7 +750,7 @@ No.  |Role  |OS User |IP  |Hostname
  * Install random_query_generator     
   Please refer to [2.4 Install random_query_generator](#24-install-random_query_generator)         
  * Check out test cases     
-  Please refer to [2.5 Checkout Test Case](#25-check-out-test-case)    
+  Please refer to [2.5 Chec kout Test Cases](#25-check-out-test-cases)    
  
 
 # 4. RQG Regresion Test
