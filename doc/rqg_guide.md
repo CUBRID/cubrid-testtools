@@ -134,22 +134,22 @@ Please refer to [CTP installation guide](https://github.com/CUBRID/cubrid-testto
   ulimit -c unlimited
   ```
 
-## 2.4 Install random_query_generator
-`Random_query_generator` is an external tool. Test case can find it via `RQG_HOME` environmental variable.     
- We mainly use its gendata.pl and gentest.pl scripts   
+## 2.4 Install `random_query_generator`
+The `Random_query_generator` is an external software that we need deploy it in each test node. Test case can find it via `RQG_HOME` environmental variable. We mainly directly execute `gendata.pl` and `gentest.pl` scripts.   
+
 `gendata.pl`: generate tables and data   
-`gentest.pl`: execute random querys   
-### Installation
-step1: check out random_query_generator    
-```bash
-cd ~
-git clone https://github.com/CUBRID/cubrid-testtools-internal.git
-cd ~/cubrid-testtools-internal
-git checkout develop
-cp random_query_generator ~/
-```
-step2: configure random_query_generator      
-vim ~/random_query_generator/lib/GenTest/Properties.pm to solve such porblem "Can't use 'defined(@array)'"     
+`gentest.pl`: execute random queries   
+
+**Step 1: check out random_query_generator**   
+  ```bash
+  cd ~
+  git clone https://github.com/CUBRID/cubrid-testtools-internal.git
+  cd ~/cubrid-testtools-internal
+  git checkout develop
+  cp random_query_generator ~/
+  ```
+**Step 2: configuration**      
+Modify `~/random_query_generator/lib/GenTest/Properties.pm` as below to solve the porblem "Can't use 'defined(@array)'".     
 ```
    my $message;
     $message .= "The following properties are not legal: ".
