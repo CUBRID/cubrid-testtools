@@ -1,451 +1,469 @@
 # 1. Test Objective
-The test is aimed to test CUBRID HA. We use existed sql test case to check 
-database synchronization among master node and slave node.
-# 2. Execute Ha_repl Test
-This section introduce how to execute ha_repl test with a simple environment.    
-Sometimes we add new case for new feature and need test it with HA mode, we can refer to it.     
-Sometimes we want to investigate some ha_repl issues, we also refer to it.    
+HA_repl test is aimed to test CUBRID HA replication feature. We convert existing SQL test cases to HA_repl test cases automatically to check data replication between master node and slave node.
 
-## 2.1 Prepare three nodes, install CTP
-Please refer to [this guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform) to install CTP on three nodes.     
+# 2. Ha_repl Test Usage
+This section introduces how to execute ha_repl test with one HA instance environment.    
 
-node1: controller node, install CTP and prepare test cases    
-node2: master node, install CTP and CUBRID   
-node3: slave node, install CTP and CUBRID   
+## 2.1 Quick Start Ha_repl Test
 
-## 2.2 Install CUBRID
-Please install CUBRID on node2 and node3
-```bash
-run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
-```
+* ### Deployment overview
+	We need prepare at least 2 servers.
+	
+	| No. | Role | User | IP | Deployments |
+	|-|-|-|-|-|
+	|1 | Controller | ctl6 | 192.168.1.81 | CTP<br>Test Cases|
+	|2 | CUBRID master | zll | 192.168.1.81 | CTP<br>CUBRID|
+	|3 | CUBRID slave | zll | 192.168.1.82 | CTP<br>CUBRID|
 
-There is a way to avoid installing CUBRID on node2 and node3 manually: set `cubrid_download_url` in ha_repl test configuration file `ha_repl.conf`.      
-For example:
-```
-cubrid_download_url=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
-```
+* ### Install CTP among all role nodes
+	Please refer to [CTP installation guide](#1-install-ctp-in-linux-platform) to install CTP on all role nodes.
 
-## 2.3 Prepare Ha_repl Test Cases
-### We can use own test case
-create test case example1.sql on node1
-```
-cd ~
-mkdir with_online
-cd with_online
-$ cat example1.sql 
-drop if exists t;
-create table t(i int,j varchar);
-insert into t values(1,'a');
-insert into t values(2,null);
-create index idx1 on t(i) with online;
-select /*+ recompile*/ * from t where i=2;
-insert into t values(2,3);
-select /*+ recompile*/ * from t where i=2;
-drop table t;
-```
-### We can use sql files in cubrid-testcase 
-Please checkout cubrid-testcase on node1 
-```bash
-cd ~
-git clone https://github.com/CUBRID/cubrid-testcases.git
-cd cubrid-testcases/sql/
-$ ls
-_01_object              _08_javasp               _14_mysql_compatibility_2  _22_news_service_mysql_compatibility  _28_features_930
-_02_user_authorization  _09_64bit                _15_fbo                    _23_apricot_qa                        _29_CTE_recursive
-_03_object_oriented     _10_connect_by           _16_index_enhancement      _24_aprium_qa                         _29_recovery
-_04_operator_function   _11_codecoverage         _17_sql_extension2         _25_features_844                      _30_banana_pie_qa
-_06_manipulation        _12_mysql_compatibility  _18_index_enhancement_qa   _26_features_920                      _31_cherry
-_07_misc                _13_issues               _19_apricot                _27_banana_qa                         config
-```
+* ### Install CUBRID
+	Please install CUBRID on CUBRID master and slave
+	```bash
+	run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
+	```
 
-## 2.4 Ha_repl test configuration
-Create ha_repl test configuration file on node1.    
-File ha_repl.conf
-```bash
-default.testdb = xdb
-default.ssh.pwd=******
-default.ssh.port=22
+	There is a way to avoid installing CUBRID on master and slave manually. It's to set parameter `cubrid_download_url` in ha_repl test configuration file `ha_repl.conf`.      
+	For example:
+	```
+	cubrid_download_url=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
+	```
 
-# master and slave node
-env.ha1.master.ssh.host = 192.168.1.81
-env.ha1.master.ssh.user = zll
-env.ha1.slave1.ssh.host = 192.168.1.82
-env.ha1.slave1.ssh.user = zll
-env.ha1.cubrid.cubrid_port_id = 1727
-env.ha1.ha.ha_port_id = 58091
-env.ha1.broker1.SERVICE = OFF
-env.ha1.broker2.APPL_SERVER_SHM_ID = 31091
-env.ha1.broker2.BROKER_PORT = 31091
+* ### Prepare Ha_repl Test Cases
 
-#scenario=${HOME}/cubrid-testcases/sql/_13_issues/_19_2h
-scenario=${HOME}/with_online
-```
+	There are two approaches. The first is to create our own test cases.
+	Log into the controller node, then create a arbitrary folder as `~/with_online/`, and then put our test cases under the folder. See example below:
+	
+	File ~/with_online/example1.sql:
+	
+		drop if exists t;
+		create table t(i int,j varchar);
+		insert into t values(1,'a');
+		insert into t values(2,null);
+		create index idx1 on t(i) with online;
+		select /*+ recompile*/ * from t where i=2;
+		insert into t values(2,3);
+		select /*+ recompile*/ * from t where i=2;
+		drop table t;	
 
-## 2.4 Execute test
-Command:   
-```
-$ ctp.sh ha_repl -c ha_repl.conf 
-```
-Screen output:
-```
-$ ctp.sh ha_repl -c ha_repl.conf 
+	The second is to accept to use existing SQL test cases as Ha_repl test cases. Please check out the test cases on controller node as below.
+	
+	Log into the controller node,  then execute:
+	
+	```bash
+	cd ~
+	git clone https://github.com/CUBRID/cubrid-testcases.git
+	git checkout develop
+	cd cubrid-testcases/sql/	
+	$ ls
+	_01_object              _08_javasp               _14_mysql_compatibility_2  _22_news_service_mysql_compatibility  _28_features_930
+	_02_user_authorization  _09_64bit                _15_fbo                    _23_apricot_qa                        _29_CTE_recursive
+	_03_object_oriented     _10_connect_by           _16_index_enhancement      _24_aprium_qa                         _29_recovery
+	_04_operator_function   _11_codecoverage         _17_sql_extension2         _25_features_844                      _30_banana_pie_qa
+	_06_manipulation        _12_mysql_compatibility  _18_index_enhancement_qa   _26_features_920                      _31_cherry
+	_07_misc                _13_issues               _19_apricot                _27_banana_qa                         config
+	```
 
-====================================== HA_REPL ==========================================
-[HA_REPL] TEST STARTED (Thu Sep 05 19:54:57 KST 2019)
+* ### Make test configuration
 
-[HA_REPL] CONFIG FILE: /home/ctl6/ha_repl.conf
+	Log into controller node, and create Ha_repl test configuration.  
+	
+	File `~/CTP/conf/ha_repl.conf`
+	```bash
+	default.testdb = xdb
+	default.ssh.pwd=******
+	default.ssh.port=22
 
-scenario=${HOME}/with_online
-env.ha1.slave1.ssh.host=192.168.1.82
-env.ha1.slave1.ssh.user=zll
-env.ha1.master.ssh.user=zll
-default.ssh.pwd=******
-default.testdb=xdb
-default.ssh.port=22
-env.ha1.master.ssh.host=192.168.1.81
+	# master and slave node
+	env.ha1.master.ssh.host = 192.168.1.81
+	env.ha1.master.ssh.user = zll
+	env.ha1.slave1.ssh.host = 192.168.1.82
+	env.ha1.slave1.ssh.user = zll
+	env.ha1.cubrid.cubrid_port_id = 1727
+	env.ha1.ha.ha_port_id = 58091
+	env.ha1.broker1.SERVICE = OFF
+	env.ha1.broker2.APPL_SERVER_SHM_ID = 31091
+	env.ha1.broker2.BROKER_PORT = 31091
+
+	# Use our own test cases
+	scenario=${HOME}/with_online
+	
+	# Use existing SQL test cases
+	# scenario=${HOME}/cubrid-testcases/sql
+	```	
+
+* ### Execute test
+	```
+	$ ctp.sh ha_repl -c ~/CTP/conf/ha_repl.conf 
+	```
+	**Console output:**
+	```
+	$ ctp.sh ha_repl -c ~/CTP/conf/ha_repl.conf  
+
+	====================================== HA_REPL ==========================================
+	[HA_REPL] TEST STARTED (Thu Sep 05 19:54:57 KST 2019)
+
+	[HA_REPL] CONFIG FILE: /home/ctl6/ha_repl.conf
+
+	scenario=${HOME}/with_online
+	env.ha1.slave1.ssh.host=192.168.1.82
+	env.ha1.slave1.ssh.user=zll
+	env.ha1.master.ssh.user=zll
+	default.ssh.pwd=******
+	default.testdb=xdb
+	default.ssh.port=22
+	env.ha1.master.ssh.host=192.168.1.81
 
 
-----------END OF FILE----------
-Available Env: [ha1]
-connect zll@192.168.1.81:22  success
-connect zll@192.168.1.82:22  success
-BUILD ID: 10.2.0.8368-b85a234
-BUILD BITS: 64bits
-Continue Mode: false
-BEGIN TO CHECK: 
-connect zll@192.168.1.81:22  success
-connect zll@192.168.1.82:22  success
-=================== Check zll@192.168.1.81:22:master============================
-==> Check variable 'JAVA_HOME' ...... PASS
-==> Check variable 'CTP_HOME' ...... PASS
-==> Check variable 'CUBRID' ...... PASS
-==> Check command 'java' ...... PASS
-==> Check command 'diff' ...... PASS
-==> Check command 'wget' ...... PASS
-==> Check command 'find' ...... PASS
-==> Check command 'cat' ...... PASS
+	----------END OF FILE----------
+	Available Env: [ha1]
+	connect zll@192.168.1.81:22  success
+	connect zll@192.168.1.82:22  success
+	BUILD ID: 10.2.0.8368-b85a234
+	BUILD BITS: 64bits
+	Continue Mode: false
+	BEGIN TO CHECK: 
+	connect zll@192.168.1.81:22  success
+	connect zll@192.168.1.82:22  success
+	=================== Check zll@192.168.1.81:22:master============================
+	==> Check variable 'JAVA_HOME' ...... PASS
+	==> Check variable 'CTP_HOME' ...... PASS
+	==> Check variable 'CUBRID' ...... PASS
+	==> Check command 'java' ...... PASS
+	==> Check command 'diff' ...... PASS
+	==> Check command 'wget' ...... PASS
+	==> Check command 'find' ...... PASS
+	==> Check command 'cat' ...... PASS
 
-=================== Check zll@192.168.1.82:22:slave1============================
-==> Check variable 'JAVA_HOME' ...... PASS
-==> Check variable 'CTP_HOME' ...... PASS
-==> Check variable 'CUBRID' ...... PASS
-==> Check command 'java' ...... PASS
-==> Check command 'diff' ...... PASS
-==> Check command 'wget' ...... PASS
-==> Check command 'find' ...... PASS
-==> Check command 'cat' ...... PASS
+	=================== Check zll@192.168.1.82:22:slave1============================
+	==> Check variable 'JAVA_HOME' ...... PASS
+	==> Check variable 'CTP_HOME' ...... PASS
+	==> Check variable 'CUBRID' ...... PASS
+	==> Check command 'java' ...... PASS
+	==> Check command 'diff' ...... PASS
+	==> Check command 'wget' ...... PASS
+	==> Check command 'find' ...... PASS
+	==> Check command 'cat' ...... PASS
 
-CHECK RESULT: PASS
-java.runtime.name=Java(TM) SE Runtime Environment
-sun.boot.library.path=/usr/local/cubridqa/jdk1.6.0_22/jre/lib/amd64
-java.vm.version=17.1-b03
-env.ha1.slave1.ssh.host=192.168.1.82
-java.vm.vendor=Sun Microsystems Inc.
-java.vendor.url=http://java.sun.com/
-path.separator=:
-java.vm.name=Java HotSpot(TM) 64-Bit Server VM
-file.encoding.pkg=sun.io
-sun.java.launcher=SUN_STANDARD
-user.country=US
-sun.os.patch.level=unknown
-java.vm.specification.name=Java Virtual Machine Specification
-user.dir=/home/ctl6
-default.ssh.port=22
-java.runtime.version=1.6.0_22-b04
-java.awt.graphicsenv=sun.awt.X11GraphicsEnvironment
-java.endorsed.dirs=/usr/local/cubridqa/jdk1.6.0_22/jre/lib/endorsed
-os.arch=amd64
-java.io.tmpdir=/tmp
-line.separator=
+	CHECK RESULT: PASS
+	java.runtime.name=Java(TM) SE Runtime Environment
+	sun.boot.library.path=/usr/local/cubridqa/jdk1.6.0_22/jre/lib/amd64
+	java.vm.version=17.1-b03
+	env.ha1.slave1.ssh.host=192.168.1.82
+	java.vm.vendor=Sun Microsystems Inc.
+	java.vendor.url=http://java.sun.com/
+	path.separator=:
+	java.vm.name=Java HotSpot(TM) 64-Bit Server VM
+	file.encoding.pkg=sun.io
+	sun.java.launcher=SUN_STANDARD
+	user.country=US
+	sun.os.patch.level=unknown
+	java.vm.specification.name=Java Virtual Machine Specification
+	user.dir=/home/ctl6
+	default.ssh.port=22
+	java.runtime.version=1.6.0_22-b04
+	java.awt.graphicsenv=sun.awt.X11GraphicsEnvironment
+	java.endorsed.dirs=/usr/local/cubridqa/jdk1.6.0_22/jre/lib/endorsed
+	os.arch=amd64
+	java.io.tmpdir=/tmp
+	line.separator=
 
-java.vm.specification.vendor=Sun Microsystems Inc.
-os.name=Linux
-default.ssh.pwd=******
-sun.jnu.encoding=UTF-8
-java.library.path=/usr/local/cubridqa/jdk1.6.0_22/jre/lib/amd64/server:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/amd64:/usr/local/cubridqa/jdk1.6.0_22/jre/../lib/amd64:/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
-env.ha1.master.ssh.host=192.168.1.81
-scenario=${HOME}/with_online
-java.specification.name=Java Platform API Specification
-java.class.version=50.0
-sun.management.compiler=HotSpot 64-Bit Server Compiler
-os.version=3.10.0-957.21.3.el7.x86_64
-env.ha1.slave1.ssh.user=zll
-user.home=/home/ctl6
-user.timezone=Asia/Seoul
-java.awt.printerjob=sun.print.PSPrinterJob
-java.specification.version=1.6
-file.encoding=UTF-8
-user.name=ctl6
-java.class.path=/home/ctl6/CTP/common/lib/cubridqa-common.jar
-java.vm.specification.version=1.0
-sun.arch.data.model=64
-java.home=/usr/local/cubridqa/jdk1.6.0_22/jre
-java.specification.vendor=Sun Microsystems Inc.
-user.language=en
-java.vm.info=mixed mode
-java.version=1.6.0_22
-java.ext.dirs=/usr/local/cubridqa/jdk1.6.0_22/jre/lib/ext:/usr/java/packages/lib/ext
-sun.boot.class.path=/usr/local/cubridqa/jdk1.6.0_22/jre/lib/resources.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/rt.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/sunrsasign.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/jsse.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/jce.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/charsets.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/classes
-java.vendor=Sun Microsystems Inc.
-file.separator=/
-java.vendor.url.bug=http://java.sun.com/cgi-bin/bugreport.cgi
-default.testdb=xdb
-sun.cpu.endian=little
-sun.io.unicode.encoding=UnicodeLittle
-env.ha1.master.ssh.user=zll
-sun.cpu.isalist=
-AUTO_TEST_BUILD_ID=10.2.0.8368-b85a234
-AUTO_TEST_BUILD_BITS=64bits
-Convert Root:  /home/ctl6/with_online
-0
-Finished covert files: 1
-============= DEPLOY STEP ==================
-connect zll@192.168.1.81:22  success
-connect zll@192.168.1.82:22  success
-Start deployAll
-==> Begin to update CTP on zll@192.168.1.81:22:master:
-[INFO] START (Thu Sep 05 19:54:59 KST 2019)
-grepo_service_url: rmi://192.168.1.91:11099/repoService
-[INFO] begin to fetch ... 
-        REPO:           cubrid-testtools
-        BRANCH:         develop
-        PATH:           CTP
-        CLIENT SHA1:    d4dffcbe35546683f4133ee0a115a31df83cf2e9
-[INFO] fetch done: NO CHANGE
-[INFO] got package file: /home/zll/CTP/.dailyqa/cubrid-testtools_develop_CTP.zip
-[INFO] begin to expand files ... 
-[INFO] expand done
-[INFO] DONE Thu Sep 05 19:55:00 KST 2019
-DONE
-DONE.
-==> Begin to clean on zll@192.168.1.81:22:master: 
-++ cubrid service is not running.
-==============Clean_CUBRID Process==============
-++ cubrid service is not running.
-==============Release shared Memory==============
-==============Stop monitor=======================
-==============Clean Processes=======================
-DONE.
-envId is ha1. Master deployment finished.master
-==> Begin to update CTP on zll@192.168.1.82:22:slave1:
-[INFO] START (Thu Sep 05 19:55:01 KST 2019)
-grepo_service_url: rmi://192.168.1.91:11099/repoService
-[INFO] begin to fetch ... 
-        REPO:           cubrid-testtools
-        BRANCH:         develop
-        PATH:           CTP
-        CLIENT SHA1:    d4dffcbe35546683f4133ee0a115a31df83cf2e9
-[INFO] fetch done: NO CHANGE
-[INFO] got package file: /home/zll/CTP/.dailyqa/cubrid-testtools_develop_CTP.zip
-[INFO] begin to expand files ... 
-[INFO] expand done
-[INFO] DONE Thu Sep 05 19:55:02 KST 2019
-DONE
-DONE.
-==> Begin to clean on zll@192.168.1.82:22:slave1: 
-++ cubrid service is not running.
-==============Clean_CUBRID Process==============
-++ cubrid service is not running.
-==============Release shared Memory==============
-==============Stop monitor=======================
-==============Clean Processes=======================
-DONE.
-envId is ha1. Slave deployment finished.slave1
-DONE.
-============= DISPATCH STEP ==================
-Test category:ha_repl
-Total: 1, tbd: 1, skipped: 0
-Total: 1, tbd: 1, skipped: 0
-DONE.
-============= TEST STEP ==================
-connect zll@192.168.1.81:22  success
-connect zll@192.168.1.82:22  success
-Creating database with 64.0M size using locale en_US. The total amount of disk space needed is 164.0M.
+	java.vm.specification.vendor=Sun Microsystems Inc.
+	os.name=Linux
+	default.ssh.pwd=******
+	sun.jnu.encoding=UTF-8
+	java.library.path=/usr/local/cubridqa/jdk1.6.0_22/jre/lib/amd64/server:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/amd64:/usr/local/cubridqa/jdk1.6.0_22/jre/../lib/amd64:/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
+	env.ha1.master.ssh.host=192.168.1.81
+	scenario=${HOME}/with_online
+	java.specification.name=Java Platform API Specification
+	java.class.version=50.0
+	sun.management.compiler=HotSpot 64-Bit Server Compiler
+	os.version=3.10.0-957.21.3.el7.x86_64
+	env.ha1.slave1.ssh.user=zll
+	user.home=/home/ctl6
+	user.timezone=Asia/Seoul
+	java.awt.printerjob=sun.print.PSPrinterJob
+	java.specification.version=1.6
+	file.encoding=UTF-8
+	user.name=ctl6
+	java.class.path=/home/ctl6/CTP/common/lib/cubridqa-common.jar
+	java.vm.specification.version=1.0
+	sun.arch.data.model=64
+	java.home=/usr/local/cubridqa/jdk1.6.0_22/jre
+	java.specification.vendor=Sun Microsystems Inc.
+	user.language=en
+	java.vm.info=mixed mode
+	java.version=1.6.0_22
+	java.ext.dirs=/usr/local/cubridqa/jdk1.6.0_22/jre/lib/ext:/usr/java/packages/lib/ext
+	sun.boot.class.path=/usr/local/cubridqa/jdk1.6.0_22/jre/lib/resources.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/rt.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/sunrsasign.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/jsse.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/jce.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/lib/charsets.jar:/usr/local/cubridqa/jdk1.6.0_22/jre/classes
+	java.vendor=Sun Microsystems Inc.
+	file.separator=/
+	java.vendor.url.bug=http://java.sun.com/cgi-bin/bugreport.cgi
+	default.testdb=xdb
+	sun.cpu.endian=little
+	sun.io.unicode.encoding=UnicodeLittle
+	env.ha1.master.ssh.user=zll
+	sun.cpu.isalist=
+	AUTO_TEST_BUILD_ID=10.2.0.8368-b85a234
+	AUTO_TEST_BUILD_BITS=64bits
+	Convert Root:  /home/ctl6/with_online
+	0
+	Finished covert files: 1
+	============= DEPLOY STEP ==================
+	connect zll@192.168.1.81:22  success
+	connect zll@192.168.1.82:22  success
+	Start deployAll
+	==> Begin to update CTP on zll@192.168.1.81:22:master:
+	[INFO] START (Thu Sep 05 19:54:59 KST 2019)
+	grepo_service_url: rmi://192.168.1.91:11099/repoService
+	[INFO] begin to fetch ... 
+					REPO:           cubrid-testtools
+					BRANCH:         develop
+					PATH:           CTP
+					CLIENT SHA1:    d4dffcbe35546683f4133ee0a115a31df83cf2e9
+	[INFO] fetch done: NO CHANGE
+	[INFO] got package file: /home/zll/CTP/.dailyqa/cubrid-testtools_develop_CTP.zip
+	[INFO] begin to expand files ... 
+	[INFO] expand done
+	[INFO] DONE Thu Sep 05 19:55:00 KST 2019
+	DONE
+	DONE.
+	==> Begin to clean on zll@192.168.1.81:22:master: 
+	++ cubrid service is not running.
+	==============Clean_CUBRID Process==============
+	++ cubrid service is not running.
+	==============Release shared Memory==============
+	==============Stop monitor=======================
+	==============Clean Processes=======================
+	DONE.
+	envId is ha1. Master deployment finished.master
+	==> Begin to update CTP on zll@192.168.1.82:22:slave1:
+	[INFO] START (Thu Sep 05 19:55:01 KST 2019)
+	grepo_service_url: rmi://192.168.1.91:11099/repoService
+	[INFO] begin to fetch ... 
+					REPO:           cubrid-testtools
+					BRANCH:         develop
+					PATH:           CTP
+					CLIENT SHA1:    d4dffcbe35546683f4133ee0a115a31df83cf2e9
+	[INFO] fetch done: NO CHANGE
+	[INFO] got package file: /home/zll/CTP/.dailyqa/cubrid-testtools_develop_CTP.zip
+	[INFO] begin to expand files ... 
+	[INFO] expand done
+	[INFO] DONE Thu Sep 05 19:55:02 KST 2019
+	DONE
+	DONE.
+	==> Begin to clean on zll@192.168.1.82:22:slave1: 
+	++ cubrid service is not running.
+	==============Clean_CUBRID Process==============
+	++ cubrid service is not running.
+	==============Release shared Memory==============
+	==============Stop monitor=======================
+	==============Clean Processes=======================
+	DONE.
+	envId is ha1. Slave deployment finished.slave1
+	DONE.
+	============= DISPATCH STEP ==================
+	Test category:ha_repl
+	Total: 1, tbd: 1, skipped: 0
+	Total: 1, tbd: 1, skipped: 0
+	DONE.
+	============= TEST STEP ==================
+	connect zll@192.168.1.81:22  success
+	connect zll@192.168.1.82:22  success
+	Creating database with 64.0M size using locale en_US. The total amount of disk space needed is 164.0M.
 
-CUBRID 10.2 (10.2.0.8368) (64 debug build)
+	CUBRID 10.2 (10.2.0.8368) (64 debug build)
 
-@ cubrid heartbeat start
-@ cubrid master start
-++ cubrid master start: success
-@ HA processes start
-@ cubrid server start: xdb
-++ cubrid server start: success
-@ copylogdb start
-++ copylogdb start: success
-@ applylogdb start
-++ applylogdb start: success
-++ HA processes start: success
-++ cubrid heartbeat start: success
-@ cubrid broker start
-@ cubrid broker start
-@ cubrid broker start
-++ cubrid broker start: success
-Creating database with 64.0M size using locale en_US. The total amount of disk space needed is 164.0M.
+	@ cubrid heartbeat start
+	@ cubrid master start
+	++ cubrid master start: success
+	@ HA processes start
+	@ cubrid server start: xdb
+	++ cubrid server start: success
+	@ copylogdb start
+	++ copylogdb start: success
+	@ applylogdb start
+	++ applylogdb start: success
+	++ HA processes start: success
+	++ cubrid heartbeat start: success
+	@ cubrid broker start
+	@ cubrid broker start
+	@ cubrid broker start
+	++ cubrid broker start: success
+	Creating database with 64.0M size using locale en_US. The total amount of disk space needed is 164.0M.
 
-CUBRID 10.2 (10.2.0.8368) (64 debug build)
+	CUBRID 10.2 (10.2.0.8368) (64 debug build)
 
-@ cubrid heartbeat start
-@ cubrid master start
-++ cubrid master start: success
-@ HA processes start
-@ cubrid server start: xdb
-++ cubrid server start: success
-@ copylogdb start
-++ copylogdb start: success
-@ applylogdb start
-++ applylogdb start: success
-++ HA processes start: success
-++ cubrid heartbeat start: success
-@ cubrid broker start
-@ cubrid broker start
-@ cubrid broker start
-++ cubrid broker start: success
-[TESTCASE] /home/ctl6/with_online/example1.test 11706ms ha1  [OK]
-============= PRINT SUMMARY ==================
-Test Category:ha_repl
-Total Case:1
-Total Execution Case:1
-Total Success Case:1
-Total Fail Case:0
-Total Skip Case:0
+	@ cubrid heartbeat start
+	@ cubrid master start
+	++ cubrid master start: success
+	@ HA processes start
+	@ cubrid server start: xdb
+	++ cubrid server start: success
+	@ copylogdb start
+	++ copylogdb start: success
+	@ applylogdb start
+	++ applylogdb start: success
+	++ HA processes start: success
+	++ cubrid heartbeat start: success
+	@ cubrid broker start
+	@ cubrid broker start
+	@ cubrid broker start
+	++ cubrid broker start: success
+	[TESTCASE] /home/ctl6/with_online/example1.test 11706ms ha1  [OK]
+	============= PRINT SUMMARY ==================
+	Test Category:ha_repl
+	Total Case:1
+	Total Execution Case:1
+	Total Success Case:1
+	Total Fail Case:0
+	Total Skip Case:0
 
-DONE.
-============= BACKUP TEST RESULTS ==================
-./
-./feedback.log
-./deploy_ha1.log
-./dispatch_tc_ALL.txt
-./dispatch_tc_FIN_ha1.txt
-./test_status.data
-./test_ha1.log
-./monitor_ha1.log
-DONE.
-TEST COMPLETED.
-[HA_REPL] TEST END (Thu Sep 05 19:55:57 KST 2019)
-[HA_REPL] ELAPSE TIME: 60 seconds
-```
+	DONE.
+	============= BACKUP TEST RESULTS ==================
+	./
+	./feedback.log
+	./deploy_ha1.log
+	./dispatch_tc_ALL.txt
+	./dispatch_tc_FIN_ha1.txt
+	./test_status.data
+	./test_ha1.log
+	./monitor_ha1.log
+	DONE.
+	TEST COMPLETED.
+	[HA_REPL] TEST END (Thu Sep 05 19:55:57 KST 2019)
+	[HA_REPL] ELAPSE TIME: 60 seconds
+	```
 
-## 2.5 Examine test results
-### Test logs  
-During the test, the test logs are generated to `CTP/result/ha_repl/current_runtime_logs`, after test finish, current_runtime_logs will be backuped as a `.tar.gz` file.   
-```bash
-$ cd ~/CTP/result/ha_repl/
-$ ls -l
-total 8
-drwxr-xr-x 2 ctl6 ctl6  173 Sep  5 19:55 current_runtime_logs
--rw-rw-r-- 1 ctl6 ctl6 1944 Sep  5 19:35 ha_repl_result_10.2.0.8368-b85a234_64bits_0_2019.9.5_7.35.50.tar.gz
--rw-rw-r-- 1 ctl6 ctl6 1825 Sep  5 19:55 ha_repl_result_10.2.0.8368-b85a234_64bits_0_2019.9.5_7.55.57.tar.gz
-$ ls -l current_runtime_logs/
-total 28
--rw-rw-r-- 1 ctl6 ctl6 1684 Sep  5 19:55 deploy_ha1.log
--rw-rw-r-- 1 ctl6 ctl6   37 Sep  5 19:55 dispatch_tc_ALL.txt
--rw-rw-r-- 1 ctl6 ctl6   37 Sep  5 19:55 dispatch_tc_FIN_ha1.txt
--rw-rw-r-- 1 ctl6 ctl6  472 Sep  5 19:55 feedback.log
--rw-rw-r-- 1 ctl6 ctl6   18 Sep  5 19:55 monitor_ha1.log
--rw-rw-r-- 1 ctl6 ctl6 2917 Sep  5 19:55 test_ha1.log
--rw-rw-r-- 1 ctl6 ctl6  154 Sep  5 19:55 test_status.data
-$ tar zxvf ha_repl_result_10.2.0.8368-b85a234_64bits_0_2019.9.5_7.55.57.tar.gz
-./
-./feedback.log
-./deploy_ha1.log
-./dispatch_tc_ALL.txt
-./dispatch_tc_FIN_ha1.txt
-./test_status.data
-./test_ha1.log
-./monitor_ha1.log
- ```
+* ### Examine test results  
 
->Note: If there are failed cases, the cases and results will also be backuped into .tar.gz
-### Test Result  
-The result of test case are generated to the same path with test case.   
-```
-cd ~/with_online
-$ ls -l
-total 1448
--rw-rw-r-- 1 ctl6 ctl6 736060 Sep  5 19:55 example1.master.dump
--rw-rw-r-- 1 ctl6 ctl6 736060 Sep  5 19:55 example1.slave1.dump
--rw-rw-r-- 1 ctl6 ctl6    277 Sep  5 19:54 example1.sql
--rw-rw-r-- 1 ctl6 ctl6    503 Sep  5 19:54 example1.test
- ```
+	**Test results:**
+	
+	During running of test cases, test logs are generated in directory `CTP/result/ha_repl/current_runtime_logs`. After test finish, all files under `current_runtime_logs` will be backuped as a `.tar.gz` file.   
+	
+	```bash
+	$ cd ~/CTP/result/ha_repl/
+	$ ls -l
+	total 8
+	drwxr-xr-x 2 ctl6 ctl6  173 Sep  5 19:55 current_runtime_logs
+	-rw-rw-r-- 1 ctl6 ctl6 1944 Sep  5 19:35 ha_repl_result_10.2.0.8368-b85a234_64bits_0_2019.9.5_7.35.50.tar.gz
+	-rw-rw-r-- 1 ctl6 ctl6 1825 Sep  5 19:55 ha_repl_result_10.2.0.8368-b85a234_64bits_0_2019.9.5_7.55.57.tar.gz
+	$ ls -l current_runtime_logs/
+	total 28
+	-rw-rw-r-- 1 ctl6 ctl6 1684 Sep  5 19:55 deploy_ha1.log
+	-rw-rw-r-- 1 ctl6 ctl6   37 Sep  5 19:55 dispatch_tc_ALL.txt
+	-rw-rw-r-- 1 ctl6 ctl6   37 Sep  5 19:55 dispatch_tc_FIN_ha1.txt
+	-rw-rw-r-- 1 ctl6 ctl6  472 Sep  5 19:55 feedback.log
+	-rw-rw-r-- 1 ctl6 ctl6   18 Sep  5 19:55 monitor_ha1.log
+	-rw-rw-r-- 1 ctl6 ctl6 2917 Sep  5 19:55 test_ha1.log
+	-rw-rw-r-- 1 ctl6 ctl6  154 Sep  5 19:55 test_status.data
+	$ tar zxvf ha_repl_result_10.2.0.8368-b85a234_64bits_0_2019.9.5_7.55.57.tar.gz
+	./
+	./feedback.log
+	./deploy_ha1.log
+	./dispatch_tc_ALL.txt
+	./dispatch_tc_FIN_ha1.txt
+	./test_status.data
+	./test_ha1.log
+	./monitor_ha1.log
+	 ```
 
-* The files end with `.dump` record the success or failure of the test cases and also record each sql statement and their execution result.   
-    ```
-    [STMT-TEST][Line:2]drop if exists t;
-    0
-    1
-    ```
-    ```
-    [STMT-CHECK][Line:26]$HC_CHECK_FOR_DML
-    select 't' TABLE_NAME, count(*) from t;select 't' TABLE_NAME, t.* from t order by 1,2,3 limit 1000;select 't' TABLE_NAME, t.* from t order by
-    1 desc,2 desc,3 desc limit 1000;
-    === <Result of SELECT Command in Line 2> ===
+	>Note: If there are failed cases, the cases and results will also be backuped into .tar.gz.
 
-    TABLE_NAME               count(*)
-    ===================================
-    't'                             2
+	**Test case dumped data**
+	The result of test case is generated to the same path with test case.   
+	```
+	cd ~/with_online
+	$ ls -l
+	total 1448
+	-rw-rw-r-- 1 ctl6 ctl6 736060 Sep  5 19:55 example1.master.dump
+	-rw-rw-r-- 1 ctl6 ctl6 736060 Sep  5 19:55 example1.slave1.dump
+	-rw-rw-r-- 1 ctl6 ctl6    277 Sep  5 19:54 example1.sql
+	-rw-rw-r-- 1 ctl6 ctl6    503 Sep  5 19:54 example1.test
+	 ```
 
-    1 row selected.Committed.
+	* The files end with `.dump` record the success or failure of the test cases and also record each sql statement and their execution result.   
+	
+			```
+			[STMT-TEST][Line:2]drop if exists t;
+			0
+			1
+			```
 
-    === <Result of SELECT Command in Line 2> ===
+			```
+			[STMT-CHECK][Line:26]$HC_CHECK_FOR_DML
+			select 't' TABLE_NAME, count(*) from t;select 't' TABLE_NAME, t.* from t order by 1,2,3 limit 1000;select 't' TABLE_NAME, t.* from t order by
+			1 desc,2 desc,3 desc limit 1000;
+			=== <Result of SELECT Command in Line 2> ===
 
-    TABLE_NAME                      i  j
-    =========================================================
-    't'                             1  'a'
-    't'                             2  NULL
+			TABLE_NAME               count(*)
+			===================================
+			't'                             2
 
-    2 rows selected.Committed.
+			1 row selected.Committed.
 
-    === <Result of SELECT Command in Line 2> ===
+			=== <Result of SELECT Command in Line 2> ===
 
-    TABLE_NAME                      i  j
-    =========================================================
-    't'                             2  NULL
-    't'                             1  'a'
+			TABLE_NAME                      i  j
+			=========================================================
+			't'                             1  'a'
+			't'                             2  NULL
 
-    2 rows selected.Committed.
-    ```
-   >Note: 
-    example1.master.dump - the result of master node     
-    example1.slave1.dump - the result of slave node         
+			2 rows selected.Committed.
 
- * The file end with `.test` is test case which has been updated by CTP based on `.sql` file
-    ```bash
-    --test:
-    drop if exists t;
-    --check:
-    @HC_CHECK_FOR_EACH_STATEMENT
-    --test:
-    create table t(i int PRIMARY KEY,j varchar);
-    --check:
-    @HC_CHECK_FOR_EACH_STATEMENT
-    --test:
-    insert into t values(1,'a');
-    --check:
-    $HC_CHECK_FOR_DML
+			=== <Result of SELECT Command in Line 2> ===
 
-    --test:
-    insert into t values(2,null);
-    --check:
-    $HC_CHECK_FOR_DML
+			TABLE_NAME                      i  j
+			=========================================================
+			't'                             2  NULL
+			't'                             1  'a'
 
-    --test:
-    create index idx1 on t(i) with online;
-    --check:
-    @HC_CHECK_FOR_EACH_STATEMENT
-    --test:
-    insert into t values(2,3);
-    --check:
-    $HC_CHECK_FOR_DML
+			2 rows selected.Committed.
+			```
+		 >Note: 
+			example1.master.dump - the result of master node     
+			example1.slave1.dump - the result of slave node         
 
-    --test:
-    drop table t;
-    --check:
-    @HC_CHECK_FOR_EACH_STATEMENT
-    --test:
-    ```
-    How to generate .test file, please refer to [ha_repl test case](#6-ha_repl-test-case ) section
+	 * The file ends with `.test` is test case which has been converted by CTP based on `.sql` file.
+	 
+			```
+			--test:
+			drop if exists t;
+			--check:
+			@HC_CHECK_FOR_EACH_STATEMENT
+			--test:
+			create table t(i int PRIMARY KEY,j varchar);
+			--check:
+			@HC_CHECK_FOR_EACH_STATEMENT
+			--test:
+			insert into t values(1,'a');
+			--check:
+			$HC_CHECK_FOR_DML
 
-   
+			--test:
+			insert into t values(2,null);
+			--check:
+			$HC_CHECK_FOR_DML
+
+			--test:
+			create index idx1 on t(i) with online;
+			--check:
+			@HC_CHECK_FOR_EACH_STATEMENT
+			--test:
+			insert into t values(2,3);
+			--check:
+			$HC_CHECK_FOR_DML
+
+			--test:
+			drop table t;
+			--check:
+			@HC_CHECK_FOR_EACH_STATEMENT
+			--test:
+			```
+	
+	How to generate .test file, please refer to [ha_repl test case](#6-ha_repl-test-case ) section.
+
  
 
 # 3. Deploy and Execute Regression Test
