@@ -85,6 +85,9 @@ This section introduces how to execute ha_repl test with one HA instance environ
 	env.ha1.broker1.SERVICE = OFF
 	env.ha1.broker2.APPL_SERVER_SHM_ID = 31091
 	env.ha1.broker2.BROKER_PORT = 31091
+	
+	# Use this CUBRID build to test instead of manual installation
+	# cubrid_download_url=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
 
 	# Use our own test cases
 	scenario=${HOME}/with_online
@@ -385,13 +388,13 @@ This section introduces how to execute ha_repl test with one HA instance environ
 
 	* The files end with `.dump` record the success or failure of the test cases and also record each sql statement and their execution result.   
 	
-			```
+
 			[STMT-TEST][Line:2]drop if exists t;
 			0
 			1
-			```
 
-			```
+
+
 			[STMT-CHECK][Line:26]$HC_CHECK_FOR_DML
 			select 't' TABLE_NAME, count(*) from t;select 't' TABLE_NAME, t.* from t order by 1,2,3 limit 1000;select 't' TABLE_NAME, t.* from t order by
 			1 desc,2 desc,3 desc limit 1000;
@@ -420,14 +423,13 @@ This section introduces how to execute ha_repl test with one HA instance environ
 			't'                             1  'a'
 
 			2 rows selected.Committed.
-			```
+
 		 >Note: 
 			example1.master.dump - the result of master node     
 			example1.slave1.dump - the result of slave node         
 
 	 * The file ends with `.test` is test case which has been converted by CTP based on `.sql` file.
 	 
-			```
 			--test:
 			drop if exists t;
 			--check:
@@ -460,7 +462,6 @@ This section introduces how to execute ha_repl test with one HA instance environ
 			--check:
 			@HC_CHECK_FOR_EACH_STATEMENT
 			--test:
-			```
 	
 	How to generate .test file, please refer to [ha_repl test case](#6-ha_repl-test-case ) section.
 
