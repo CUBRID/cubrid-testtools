@@ -1450,947 +1450,947 @@ It will send test state email as your appointed times, like below:
 Good RQG cases mainly relate to .yy and .zz configuration files. We need to design `.yy` and `.zz` files to try to cover test points.
 
 * ### Configure the Data Generator
-The Data Generator is driven by a configuration file which may look as follows:
+  The Data Generator is driven by a configuration file which may look as follows:
 
-```
-$tables = {
-        names => ['A','B'],
-        rows => [ '10000' , '1000' ],
-        partitions => [ undef , 'hash (pk) PARTITIONS 2' ],
-        pk => [ 'int auto_increment' ]
-};
+  ```
+  $tables = {
+          names => ['A','B'],
+          rows => [ '10000' , '1000' ],
+          partitions => [ undef , 'hash (pk) PARTITIONS 2' ],
+          pk => [ 'int auto_increment' ]
+  };
 
-$fields = {
-        types => [ 'int', 'char(16000)', 'float', 'numeric' ],
-        indexes => [ undef, 'key' ],
-        default => [undef, 'default null' ],
-};
+  $fields = {
+          types => [ 'int', 'char(16000)', 'float', 'numeric' ],
+          indexes => [ undef, 'key' ],
+          default => [undef, 'default null' ],
+  };
 
-$data = {
-        strings => [ 'english' ],
-        float => [ 'digit', 'smallint', 'smallint'  ],
-        numeric => [ 'digit', 'smallint', 'smallint'  ],
-        int => [ 'digit', 'smallint', 'smallint'  ]
-};
-```
+  $data = {
+          strings => [ 'english' ],
+          float => [ 'digit', 'smallint', 'smallint'  ],
+          numeric => [ 'digit', 'smallint', 'smallint'  ],
+          int => [ 'digit', 'smallint', 'smallint'  ]
+  };
+  ```
 
-#### Configure the Tables
-The $tables section describes the sizes and the other attributes of the tables. The example above will create 4 tables, one for each combination of partitions and table size. This section accepts the following parameters:   
-* names - tables names that are used for the generated tables. If there are more tables (i.e. combinations of size, partitions, etc.) than there are names, default names will be used when the supply of user-defined names has run out. See below for details on the structure of default table names.
+  #### Configure the Tables
+  The $tables section describes the sizes and the other attributes of the tables. The example above will create 4 tables, one for each combination of partitions and table size. This section accepts the following parameters:   
+  * names - tables names that are used for the generated tables. If there are more tables (i.e. combinations of size, partitions, etc.) than there are names, default names will be used when the supply of user-defined names has run out. See below for details on the structure of default table names.
 
-    for example:
-    ```
-    names => ['A','B'],
-    ```
-    **generate tables like below:**   
-    ```bash
-    $ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=big_record.zz
-    # 18:38:13 Default schema: PUBLIC
-    # 18:38:13 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-    # 18:38:13 # Creating Cubrid table A .
-    # 18:38:43 # Progress: loaded 10000 out of 10000 rows
-    # 18:38:43 # Creating Cubrid table B .
-    # 18:39:21 # Progress: loaded 10000 out of 10000 rows
-    # 18:39:21 # Creating Cubrid table table1000_int_autoinc .
-    # 18:39:23 # Creating Cubrid table table1000_hash_pk_parts_2_int_autoinc .
-    ```
-    **generated tables have partitions or not, have 10000 rows or 1000 rows:**
-    ```
-    csql> show tables;
+      for example:
+      ```
+      names => ['A','B'],
+      ```
+      **generate tables like below:**   
+      ```bash
+      $ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=big_record.zz
+      # 18:38:13 Default schema: PUBLIC
+      # 18:38:13 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+      # 18:38:13 # Creating Cubrid table A .
+      # 18:38:43 # Progress: loaded 10000 out of 10000 rows
+      # 18:38:43 # Creating Cubrid table B .
+      # 18:39:21 # Progress: loaded 10000 out of 10000 rows
+      # 18:39:21 # Creating Cubrid table table1000_int_autoinc .
+      # 18:39:23 # Creating Cubrid table table1000_hash_pk_parts_2_int_autoinc .
+      ```
+      **generated tables have partitions or not, have 10000 rows or 1000 rows:**
+      ```
+      csql> show tables;
 
-    === <Result of SELECT Command in Line 1> ===
+      === <Result of SELECT Command in Line 1> ===
+
+      Tables_in_test      
+      ======================
+      'a'                 
+      'b'                 
+      'b__p__p0'          
+      'b__p__p1'          
+      'table1000_hash_pk_parts_2_int_autoinc'
+      'table1000_hash_pk_parts_2_int_autoinc__p__p0'
+      'table1000_hash_pk_parts_2_int_autoinc__p__p1'
+      'table1000_int_autoinc'
+
+      8 rows selected. (0.045157 sec) Committed.
+
+      1 command(s) successfully processed.
+      csql> 
+      ```
+      > Note: Tables names are set according to the properties of the generated tables, and/or according to the names parameter if set. If the names parameter is not set, or if there are not enough names specified, the following approximate name structure is used:    
+      > `table<rows>_[charset]_[collation]_[partition]_<pk>_<row-format>`        
+      > Resulting in table names like:      
+      >```
+      >table0_int_autoinc
+      >table1000_int_autoinc
+      >table100_hash_pk_parts_2_int_autoinc
+      >```
+
+  * rows - the sizes of the tables that will be created. The default is 0, 1, 2, 10, 100
+      ```
+      rows => [ '10000' , '1000' ],
+      ```
+
+      **all tables just have 10000 or 1000 rows,such as:**
+      ```
+      csql> select count(*) from a;
+
+      === <Result of SELECT Command in Line 1> ===
+
+          count(*)
+      =============
+              10000
+
+      1 row selected. (0.847494 sec) Committed.
+
+      1 command(s) successfully processed.
+      csql> select count(*) from b;
+
+      === <Result of SELECT Command in Line 1> ===
+
+          count(*)
+      =============
+              10000
+
+      1 row selected. (0.883741 sec) Committed.
+
+      1 command(s) successfully processed.
+      csql> select count(*) from table1000_int_autoinc;
+
+      === <Result of SELECT Command in Line 1> ===
+
+          count(*)
+      =============
+              1000
+
+      1 row selected. (0.109506 sec) Committed.
+
+      1 command(s) successfully processed.
+      csql> select count(*) from table1000_hash_pk_parts_2_int_autoinc; 
+
+      === <Result of SELECT Command in Line 1> ===
+
+          count(*)
+      =============
+              1000
+
+      1 row selected. (0.108839 sec) Committed.
+
+      1 command(s) successfully processed.
+      csql> 
+      ```
+  * partitions - the partitioning clause to be used. To create some unpartitioned tables, use undef as an element in the array.
+      ```
+      partitions => [ undef , 'hash (pk) PARTITIONS 2' ],
+      ```
+     **it generate two kinds of tables partition table or non-partition table, such as:**
+      ```
+      csql> ;sc A
+
+      === <Help: Schema of a Class> ===
+
+
+      <Class Name> 
+
+          a
+
+      <Attributes> 
+
+          col_int              INTEGER
+          col_numeric          NUMERIC(15,0)
+          col_int_key          INTEGER
+          col_char_16000       CHARACTER(16000)
+          pk                   INTEGER AUTO_INCREMENT  NOT NULL
+          col_char_16000_key   CHARACTER(16000)
+          col_float            FLOAT
+          col_float_key        FLOAT
+          col_numeric_key      NUMERIC(15,0)
+
+      <Constraints> 
+
+          PRIMARY KEY pk_a_pk ON a (pk)
+          INDEX idx_a_col_int_key_asc ON a (col_int_key)
+          INDEX idx_a_col_char_16000_key_desc ON a (col_char_16000_key DESC)
+          INDEX idx_a_col_float_key_asc ON a (col_float_key, col_char_16000_key)
+          INDEX idx_a_col_numeric_key_desc ON a (col_numeric_key, col_float_key DESC)
+
+
+      Committed.
+      csql> 
+      ```
+
+      ```
+      csql> ;sc B
+
+      === <Help: Schema of a Class> ===
+
+
+      <Class Name> 
+
+          b
+
+      <Sub Classes> 
+
+          b__p__p0
+          b__p__p1
+
+      <Attributes> 
+
+          col_numeric          NUMERIC(15,0)
+          pk                   INTEGER AUTO_INCREMENT  NOT NULL
+          col_numeric_key      NUMERIC(15,0)
+          col_char_16000       CHARACTER(16000)
+          col_float_key        FLOAT
+          col_int              INTEGER
+          col_char_16000_key   CHARACTER(16000)
+          col_float            FLOAT
+          col_int_key          INTEGER
+
+      <Constraints> 
+
+          PRIMARY KEY pk_b_pk ON b (pk)
+          INDEX idx_b_col_numeric_key_asc ON b (col_numeric_key)
+          INDEX idx_b_col_float_key_desc ON b (col_float_key DESC)
+          INDEX idx_b_col_char_16000_key_asc ON b (col_char_16000_key, col_float_key)
+          INDEX idx_b_col_int_key_desc ON b (col_int_key, col_char_16000_key DESC)
+
+      <Partitions>
+
+          PARTITION BY HASH ([pk]) PARTITIONS 2
+          PARTITION p0
+          PARTITION p1
+
+
+      Committed.
+      csql> 
+      ```
+
+
+  * pk - specify the primary keys to be used. Valid values are undef for no primary key, or any integer-based PK definition. If auto_increment is specified, the script will insert NULLs in that column. If not, then a sequence of increasing integers will be used. Generation of non-integer primary keys is not yet supported.
+      ```
+      pk => [ 'int auto_increment' ]
+      ```
+  #### Configure the Fields
+  The $fields section describes the fields and the indexes to be created in each table. One field will be created for each combination of values. For example, the resulting table will have a field int_unique and the corresponding key UNIQUE (int_unique).
+
+  The order of the fields within each table is pseudo-random, which may help trigger bugs which are dependent on the physical placement of the fields. Each table also has a PRIMARY KEY named, appropriately, pk.
+
+  * type - specifies a list of CUBRID types to be used. Any CUBRID type name or alias can be used here. Length modifiers, e.g. char (50) are also allowed. If no length is specified, char columns are created as char (1). set and enum fields will be created to accept every letter from A to Z, unless you specify otherwise. This is so that they can then be populated with random letters. The default for this option is int,varchar,date,time,datetime.
+      ```
+      $fields = {
+              indexes => [ undef, 'key' ],
+      };
+      ```
+
+      ```
+      csql> ;sc c
+
+      === <Help: Schema of a Class> ===
+
+
+      <Class Name> 
+
+          c
+
+      <Attributes> 
+
+          col_int              INTEGER
+          col_varchar          CHARACTER VARYING(1)
+          pk                   INTEGER AUTO_INCREMENT  NOT NULL
+          col_varchar_key      CHARACTER VARYING(1)
+          col_int_key          INTEGER
+          col_datetime         DATETIME
+          col_time             TIME
+          col_datetime_key     DATETIME
+          col_date             DATE
+          col_time_key         TIME
+          col_date_key         DATE
+
+      <Constraints> 
+
+          PRIMARY KEY pk_c_pk ON c (pk)
+          INDEX idx_c_col_varchar_key_asc ON c (col_varchar_key)
+          INDEX idx_c_col_int_key_desc ON c (col_int_key DESC)
+          INDEX idx_c_col_datetime_key_asc ON c (col_datetime_key, col_int_key)
+          INDEX idx_c_col_time_key_desc ON c (col_time_key, col_datetime_key DESC)
+          INDEX idx_c_col_date_key_asc ON c (col_date_key)
+
+
+      Committed.
+      ```
+
+  * indexes - for all field types, specifies whether the field will have an index over it. 'undef' means no index, 'key' means a standard index and unique  means unique index. The default is undef, key, meaning that each field will be created in both indexed and non-indexed variants. 
+      ```
+      $fields = {
+
+      };
+      ```
+
+      ```
+      csql> ;sc g
+
+      === <Help: Schema of a Class> ===
+
+
+      <Class Name> 
+
+          g
+
+      <Attributes> 
+
+          col_int              INTEGER
+          col_varchar          CHARACTER VARYING(1)
+          pk                   INTEGER AUTO_INCREMENT  NOT NULL
+          col_varchar_key      CHARACTER VARYING(1)
+          col_int_key          INTEGER
+          col_datetime         DATETIME
+          col_time             TIME
+          col_datetime_key     DATETIME
+          col_date             DATE
+          col_time_key         TIME
+          col_date_key         DATE
+
+      <Constraints> 
+
+          PRIMARY KEY pk_g_pk ON g (pk)
+          INDEX idx_g_col_varchar_key_asc ON g (col_varchar_key)
+          INDEX idx_g_col_int_key_desc ON g (col_int_key DESC)
+          INDEX idx_g_col_datetime_key_asc ON g (col_datetime_key, col_int_key)
+          INDEX idx_g_col_time_key_desc ON g (col_time_key, col_datetime_key DESC)
+          INDEX idx_g_col_date_key_asc ON g (col_date_key)
+
+
+      Committed.
+      ```
+
+  * charsets - specify the character sets
+  * collations - specify the collations to be used. Note that a table will be created for each combination of character set and collation, which may not always be valid.
+
+  #### Configure the Data
+  The $data section from the configuration file describes what data will be inserted into each field type:
+
+  * numbers/int/float/numberic- this describes how to generate values for all integer and float field types. Valid values are:
+    * null - a NULL value if the column can accept it;
+    * digit - a single random digit from 0 to 9;
+      set:
+      ```
+      int => [ 'digit' ],
+      ```
+      result:
+      ```
+      csql> select * from f;
+
+      === <Result of SELECT Command in Line 1> ===
+
+          col_int           pk  col_int_key
+      =======================================
+                  1            1            4
+                  9            2            3
+                  5            3            1
+                  7            4            7
+                  3            5            7
+
+      5 rows selected. (0.014756 sec) Committed.
+
+      1 command(s) successfully processed.
+      csql> 
+      ```
+    * undef
+      set:
+      ```
+      float => [ 'tinyint', undef  ],
+      ```
+      result:
+      ```
+      $ csql -u dba test -c "select * from g"                                      
+
+      === <Result of SELECT Command in Line 1> ===
+
+          col_float           pk  col_float_key
+      ===========================================
+      0.000000e+00            1   0.000000e+00
+      0.000000e+00            2   0.000000e+00
+      -2.800000e+01            3  -3.300000e+01
+
+      3 rows selected. (0.008899 sec) Committed.
+      ```
+    * boolean - random 0 or 1 .
+      set:
+      ```
+      int => [ 'boolean' ],
+      ```
+      result:
+      ```
+      csql> select * from f;
+
+      === <Result of SELECT Command in Line 1> ===
+
+          col_int           pk  col_int_key
+      =======================================
+                  1            1            0
+                  0            2            0
+                  0            3            0
+
+      3 rows selected. (0.014286 sec) Committed.
+
+      1 command(s) successfully processed.
+      csql> 
+      ```
+    * tinyint, mediumint and smallint - generate a random value that will fit in this particular type.
+      set float: 
+      ```
+      float => [ 'tinyint', 'smallint', 'mediumint'  ],
+      ```
+      result:
+      ```
+      $ csql -u dba test -c "select * from g"
+
+      === <Result of SELECT Command in Line 1> ===
+
+          col_float           pk  col_float_key
+      ===========================================
+      2.263000e+03            1  -8.400000e+01
+      -1.792900e+04            2  -2.459500e+04
+      -1.851648e+06            3  -3.300000e+01
+
+      3 rows selected. (0.009530 sec) Committed.
+      ```
+
+      set int:
+      ```
+      int => ['tinyint]
+      ```
+      result:
+      ```
+      $ csql -u dba test -c "select * from f"
+
+      === <Result of SELECT Command in Line 1> ===
+
+          col_int           pk  col_int_key
+      =======================================
+                  8            1          -84
+              -70            2          -96
+              -28            3          -33
+
+      3 rows selected. (0.011549 sec) Committed.
+      ```
+      set int:
+      ```
+      int => [ 'mediumint' ],
+      ```
+      result:
+      ```
+      $ csql -u dba test -c "select * from f"
+
+      === <Result of SELECT Command in Line 1> ===
+
+          col_int           pk  col_int_key
+      =======================================
+          579328            1     -5507584
+          -4589824            2     -6296320
+          -1851648            3     -2213632
+
+      3 rows selected. (0.012849 sec) Committed.
+      ```
+
+      set numeric:
+      ```
+      numeric => [ 'smallint' ],
+      ```
+      result:
+      ```
+      $ csql -u dba test -c "select * from f"
+
+      === <Result of SELECT Command in Line 1> ===
+
+      col_numeric                    pk  col_numeric_key     
+      =========================================================
+      2263                            1  -21514              
+      -17929                          2  -24595              
+      -7233                           3  -8647               
+
+      3 rows selected. (0.013850 sec) Committed.
+      ```
+  * strings - it describes how to generate values for all string columns (char, varchar, string and so on). Valid values are:
+    * null & empty - which generates 'NULL' and ' '   
+    * letter- which generates a random letter from A to Z   
+    * english- which picks a random word from a list of 100 most common words in English.     
+      For example:    
+      for `english`   
+      ```
+      strings => [ 'english' ],
+      ```
+      result: 
+      ```
+      $ csql -u dba test -c "select * from f"
+
+      === <Result of SELECT Command in Line 1> ===
+
+      col_string                     pk  col_string_key      
+      =========================================================
+      'her'                           1  'no'                
+      'if'                            2  'that'              
+      'his'                           3  'from'              
+
+      3 rows selected. (0.012999 sec) Committed.
+      ```
+      for `letter`:
+      ```
+      strings => [ 'letter' ],
+      ```
+      result:
+      ```
+      $ csql -u dba test -c "select * from f"
+
+      === <Result of SELECT Command in Line 1> ===
+
+      col_string                     pk  col_string_key      
+      =========================================================
+      'j'                             1  'w'                 
+      't'                             2  'j'                 
+      'd'                             3  't'                 
+
+      3 rows selected. (0.013491 sec) Committed.
+      ```
+      for `null`:
+      ```
+      strings => [ 'letter','null' ],
+      ```
+      result:
+      ```
+      $ csql -u dba test -c "select * from f"  
+
+      === <Result of SELECT Command in Line 1> ===
+
+      col_string                     pk  col_string_key      
+      =========================================================
+      NULL                            1  NULL                
+      NULL                            2  'b'                 
+      NULL                            3  NULL                
+
+      3 rows selected. (0.012823 sec) Committed.
+      ```
+      for `empty`:
+      ```
+      strings => [ 'empty' ],
+      ```
+      result:
+      ```
+      $ csql -u dba test -c "select * from f"
+
+      === <Result of SELECT Command in Line 1> ===
+
+      col_string                     pk  col_string_key      
+      =========================================================
+      ''                              1  ''                  
+      ''                              2  ''                  
+      ''                              3  ''                  
+
+      3 rows selected. (0.013325 sec) Committed.
+      ```
+
+  #### Examples
+  **1. use below file: b.zz**    
+  ```
+  $ cat b.zz 
+  $tables = {
+          names => ['E','F'],
+          rows  => [5],
+          pk => [ 'int auto_increment' ]
+  };
+
+  $fields = {
+          types => [ 'int','char(5)' ],
+          indexes => [ undef, 'index' ],
+  };
+
+  $data = {
+          strings => [ 'english' ],
+          float => [ 'digit', 'smallint', 'smallint'  ],
+          numeric => [ 'digit', 'smallint', 'smallint'  ],
+          int => [ 'digit', 'smallint', 'smallint'  ]
+  };
+  ```
+  **generate data logs:**     
+  ```
+  $ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=b.zz        
+  # 19:57:24 Default schema: PUBLIC
+  # 19:57:24 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+  # 19:57:24 # Creating Cubrid table E 
+  ```
+
+  **check tables:**
+  ```
+  csql> ;sc E
+
+  === <Help: Schema of a Class> ===
+
+
+   <Class Name> 
+
+       e
+
+   <Attributes> 
+
+       col_int              INTEGER
+       col_char_5           CHARACTER(5)
+       col_char_5_index     CHARACTER(5)
+       pk                   INTEGER AUTO_INCREMENT  NOT NULL
+       col_int_index        INTEGER
+
+   <Constraints> 
+
+       PRIMARY KEY pk_e_pk ON e (pk)
+
+
+  Committed.
+  ```
+
+  **check data:**
+  ```
+  csql> select * from E;
+
+  === <Result of SELECT Command in Line 1> ===
+
+        col_int  col_char_5            col_char_5_index               pk  col_int_index
+  =====================================================================================
+              4  'if   '               'that '                         1          -7233
+              1  'we   '               'she  '                         2          18365
+         -22811  'going'               'been '                         3              0
+          18704  'but  '               'at   '                         4           5366
+              6  'with '               'the  '                         5              6
+
+  5 rows selected. (0.009201 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> 
+  ```
+
+  **2. use below file: a.zz**    
+  ```
+  $tables = {
+          names => ['C','D'],
+          pk => [ 'int auto_increment' ]
+  };
+
+  $fields = {
+          types => [ 'int','char(5)' ],
+          indexes => [ undef, 'unique' ],
+  };
+
+  $data = {
+          strings => [ 'english' ],
+          float => [ 'digit', 'smallint', 'smallint'  ],
+          numeric => [ 'digit', 'smallint', 'smallint'  ],
+          int => [ 'digit', 'smallint', 'smallint'  ]
+  };
+  ```
+
+  **generate data logs:**    
+  ```
+  # 19:27:37 Default schema: PUBLIC
+  # 19:27:37 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+  # 19:27:37 # Creating Cubrid table C .
+  # 19:27:37 # Creating Cubrid table D .
+  # 19:27:37 # Creating Cubrid table table2_int_autoinc .
+  # 19:27:37 # Creating Cubrid table table10_int_autoinc .
+
+
+  INSERT INTO table10_int_autoinc VALUES  ('the', 6, 3, 'back', DEFAULT) ,  ('some', -30927, 16838, 'how', DEFAULT) ,  ('no', -28878, 27198, 'what', DEFAULT) ,  ('don''t', 4, -6155, 'to', DEFAULT) ,  ('he', 4, 12883, 'some', DEFAULT) ,  ('I', 2, 8, 'are', DEFAULT) ,  ('going', 15242, -17480, 'we', DEFAULT) ,  ('this', 20274, 3, 'his', DEFAULT) ,  ('her', -13462, -18420, 'you''re', DEFAULT) ,  ('some', 0, 1, 'you', DEFAULT) 
+  CUBRID DBMS Error : (-670) Operation would have caused one or more unique constraint violations. INDEX idx_table10_int_autoinc_col_int_unique_desc(B+tree: 0|4800|4801) ON CLASS table10_int_autoinc(CLASS_OID: 0|204|20). key: 4(OID: 0|3790|933).[CAS INFO - 127.0.0.1:33037, 1, 5742].
+
+  # 19:27:37 # Creating Cubrid table table100_int_autoinc .
+
+
+  INSERT INTO table100_int_autoinc VALUES  ('for', DEFAULT, 9, -2958, 'say') ,  ('about', DEFAULT, 29163, 31993, 'because') ,  ('my', DEFAULT, 1763, 2, 'yeah') ,  ('yeah', DEFAULT, 4, 9, 'can') ,  ('are', DEFAULT, -20454, -14234, 'yes') ,  ('going', DEFAULT, -3636, -792, 'now') ,  ('then', DEFAULT, 5, -7992, 'see') ,  ('what', DEFAULT, -1597, 7551, 'now') ,  ('okay', DEFAULT, 1, 6210, 'going') ,  ('now', DEFAULT, -25776, 1, 'one') ,  ('about', DEFAULT, 6, -7854, 'mean') ,  ('I', DEFAULT, 9, 15263, 'now') ,  ('here', DEFAULT, 11185, 18935, 'go') ,  ('she', DEFAULT, 9445, -13019, 'what') ,  ('look', DEFAULT, 9, -9298, 'time') ,  ('tell', DEFAULT, -30583, 1, 'how') ,  ('think', DEFAULT, 15037, 31605, 'or') ,  ('there', DEFAULT, 15612, 15699, 'go') ,  ('are', DEFAULT, -25195, 9, 'could') ,  ('was', DEFAULT, -20788, -11017, 'want') ,  ('well', DEFAULT, -29217, 4, 'was') ,  ('go', DEFAULT, 5, -23178, 'if') ,  ('ok', DEFAULT, 27500, 8, 'ok') ,  ('say', DEFAULT, 2, -26610, 'could') ,  ('could', DEFAULT, 9607, -4724, 'do') ,  ('she', DEFAULT, 4, 6, 'not') ,  ('are', DEFAULT, 6913, 262, 'in') ,  ('have', DEFAULT, 6, 25090, 'were') ,  ('my', DEFAULT, -1499, 517, 'got') ,  ('for', DEFAULT, 3, -31398, 'all') ,  ('her', DEFAULT, 7, -10746, 'you') ,  ('out', DEFAULT, 8781, 7, 'oh') ,  ('her', DEFAULT, 5, -16890, 'as') ,  ('something', DEFAULT, -18644, -8965, 'think') ,  ('at', DEFAULT, -5852, 6, 'at') ,  ('do', DEFAULT, -9257, 7, 'could') ,  ('just', DEFAULT, 1, -10367, 'be') ,  ('and', DEFAULT, 9, -5038, 'her') ,  ('of', DEFAULT, 5, 13430, 'his') ,  ('one', DEFAULT, 5, -8085, 'your') ,  ('here', DEFAULT, 8738, -17308, 'for') ,  ('didn''t', DEFAULT, 9, 3, 'want') ,  ('not', DEFAULT, 5, 0, 'with') ,  ('so', DEFAULT, 2, 21811, 'good') ,  ('come', DEFAULT, -264, 9, 'ok') ,  ('right', DEFAULT, 10387, 5, 'good') ,  ('one', DEFAULT, 9, -6037, 'her') ,  ('want', DEFAULT, -7249, -20345, 'tell') ,  ('is', DEFAULT, 31475, 2, 'in') ,  ('there', DEFAULT, 4, 1, 'time') 
+  CUBRID DBMS Error : (-670) Operation would have caused one or more unique constraint violations. INDEX idx_table100_int_autoinc_col_char_5_unique_desc(B+tree: 0|5056|5057) ON CLASS table100_int_autoinc(CLASS_OID: 0|204|21). key: 'now  '(OID: 0|4364|1828).[CAS INFO - 127.0.0.1:33037, 1, 5742].
+
+
+
+  INSERT INTO table100_int_autoinc VALUES  ('can', DEFAULT, 4, 23118, 'well') ,  ('good', DEFAULT, 22401, 9, 'you''re') ,  ('there', DEFAULT, 24196, 17124, 'here') ,  ('well', DEFAULT, 6354, 5, 'because') ,  ('yeah', DEFAULT, -8808, -7837, 'want') ,  ('yeah', DEFAULT, -31748, -3433, 'like') ,  ('yeah', DEFAULT, 27163, 202, 'there') ,  ('get', DEFAULT, 2, 22122, 'they') ,  ('are', DEFAULT, 8, 10136, 'have') ,  ('here', DEFAULT, 17297, 4402, 'well') ,  ('but', DEFAULT, 4, 4, 'just') ,  ('okay', DEFAULT, -25448, -14675, 'I') ,  ('no', DEFAULT, 12750, -28962, 'who') ,  ('yeah', DEFAULT, 26799, 2, 'yeah') ,  ('he''s', DEFAULT, -11493, 26067, 'go') ,  ('oh', DEFAULT, 7, -21963, 'was') ,  ('why', DEFAULT, 3805, 12581, 'if') ,  ('yeah', DEFAULT, -16952, -18114, 'just') ,  ('see', DEFAULT, -30365, 4, 'why') ,  ('you''re', DEFAULT, 18277, 17651, 'good') ,  ('yes', DEFAULT, 5, -8099, 'look') ,  ('so', DEFAULT, 1355, -13680, 'we') ,  ('I''m', DEFAULT, 2, 14015, 'something') ,  ('up', DEFAULT, 7, -27947, 'can''t') ,  ('for', DEFAULT, 6, 9846, 'see') ,  ('hey', DEFAULT, 3, -28161, 'oh') ,  ('you''re', DEFAULT, 7094, 11650, 'you''re') ,  ('got', DEFAULT, 8, 18380, 'this') ,  ('think', DEFAULT, 0, 17760, 'would') ,  ('oh', DEFAULT, 7, -24710, 'don''t') ,  ('one', DEFAULT, 8353, -15602, 'then') ,  ('tell', DEFAULT, 22639, -12344, 'a') ,  ('yeah', DEFAULT, 8455, 14090, 'we') ,  ('for', DEFAULT, -21843, 15090, 'but') ,  ('look', DEFAULT, -20319, 19795, 'could') ,  ('right', DEFAULT, -8170, 0, 'see') ,  ('good', DEFAULT, 4, -21146, 'what') ,  ('it''s', DEFAULT, 8, 25687, 'yes') ,  ('not', DEFAULT, 19495, -9663, 'for') ,  ('oh', DEFAULT, -7649, 4, 'the') ,  ('one', DEFAULT, -31185, 4706, 'now') ,  ('tell', DEFAULT, 3, -11367, 'now') ,  ('and', DEFAULT, 27555, 0, 'how') ,  ('you', DEFAULT, 29946, 22840, 'time') ,  ('got', DEFAULT, -13744, -30737, 'he''s') ,  ('have', DEFAULT, 11657, 8, 'no') ,  ('what', DEFAULT, 2, -13353, 'is') ,  ('because', DEFAULT, 7, 6, 'your') ,  ('did', DEFAULT, 0, -6147, 'the') ,  ('yeah', DEFAULT, -17871, -1164, 'but') 
+  CUBRID DBMS Error : (-670) Operation would have caused one or more unique constraint violations. INDEX idx_table100_int_autoinc_col_char_5_unique_desc(B+tree: 0|5056|5057) ON CLASS table100_int_autoinc(CLASS_OID: 0|204|21). key: 'well '(OID: 0|4364|1830).[CAS INFO - 127.0.0.1:33037, 1, 5742].
+  ```
+
+  > Note: Above show us that inserting data into table10_int_autoinc and table100_int_autoinc failed for violating the unique constraint.
+
+  **check tables:**     
+  fields int and char(5) can generate 4 fields: col_int, col_int_unique, col_char_5, col_char_5_unique
+  ```
+  csql> ;sc table10_int_autoinc 
+
+  === <Help: Schema of a Class> ===
+
+
+   <Class Name> 
+
+       table10_int_autoinc
+
+   <Attributes> 
+
+       col_char_5_unique    CHARACTER(5)
+       col_int_unique       INTEGER
+       col_int              INTEGER
+       col_char_5           CHARACTER(5)
+       pk                   INTEGER AUTO_INCREMENT  NOT NULL
+
+   <Constraints> 
+
+       PRIMARY KEY pk_table10_int_autoinc_pk ON table10_int_autoinc (pk)
+       UNIQUE idx_table10_int_autoinc_col_char_5_unique_asc ON table10_int_autoinc (col_char_5_unique)
+       UNIQUE idx_table10_int_autoinc_col_int_unique_desc ON table10_int_autoinc (col_int_unique DESC)
+
+
+  Committed.
+  csql> ;sc table100_int_autoinc  
+
+  === <Help: Schema of a Class> ===
+
+
+   <Class Name> 
+
+       table100_int_autoinc
+
+   <Attributes> 
+
+       col_char_5           CHARACTER(5)
+       pk                   INTEGER AUTO_INCREMENT  NOT NULL
+       col_int_unique       INTEGER
+       col_int              INTEGER
+       col_char_5_unique    CHARACTER(5)
+
+   <Constraints> 
+
+       PRIMARY KEY pk_table100_int_autoinc_pk ON table100_int_autoinc (pk)
+       UNIQUE idx_table100_int_autoinc_col_int_unique_asc ON table100_int_autoinc (col_int_unique)
+       UNIQUE idx_table100_int_autoinc_col_char_5_unique_desc ON table100_int_autoinc (col_char_5_unique DESC)
+
+
+  Committed.
+  ```
+  **check data:**    
+  ```
+  csql> select * from c;
+
+  === <Result of SELECT Command in Line 1> ===
+
+  There are no results.
+  0 row selected. (0.015496 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> select * from d;
+
+  === <Result of SELECT Command in Line 1> ===
+
+        col_int           pk  col_int_unique  col_char_5            col_char_5_unique   
+  ======================================================================================
+         -24595            1           -7233  'from '               'we   '             
+
+  1 row selected. (0.009092 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> select * from table2_int_autoinc;
+
+  === <Result of SELECT Command in Line 1> ===
+
+        col_int  col_char_5            col_int_unique  col_char_5_unique              pk
+  ======================================================================================
+         -22811  'going'                            9  'who  '                         1
+          18704  'but  '                        11437  'him  '                         2
+
+  2 rows selected. (0.009287 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> select * from table10_int_autoinc; 
+
+  === <Result of SELECT Command in Line 1> ===
+
+  There are no results.
+  0 row selected. (0.009403 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> select * from table100_int_autoinc;
+
+  === <Result of SELECT Command in Line 1> ===
+
+  There are no results.
+  0 row selected. (0.008498 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> 
+  ```
+  **3. use below files: c.zz**    
+  ```
+  $ cat c.zz 
+  $tables = {
+          names => ['C','D'],
+          pk => [ 'int auto_increment' ]
+  };
+
+  $fields = {
+          indexes => [ undef, 'key' ],
+  };
+
+  $data = {
+          strings => [ 'english' ],
+          float => [ 'digit', 'smallint', 'smallint'  ],
+          numeric => [ 'digit', 'smallint', 'smallint'  ],
+          int => [ 'digit', 'smallint', 'smallint'  ]
+  };
+  ```
+
+  **generate data logs:**    
+  ```
+  $ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=c.zz
+  # 20:57:10 Default schema: PUBLIC
+  # 20:57:10 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
+  # 20:57:10 # Creating Cubrid table C .
+  # 20:57:10 # Creating Cubrid table D .
+  # 20:57:10 # Creating Cubrid table table2_int_autoinc .
+  # 20:57:11 # Creating Cubrid table table10_int_autoinc .
+  # 20:57:11 # Creating Cubrid table table100_int_autoinc .
+  ```
+
+  **check tables:**     
+  ```
+  csql> show tables;
+
+  === <Result of SELECT Command in Line 1> ===
 
     Tables_in_test      
-    ======================
-    'a'                 
-    'b'                 
-    'b__p__p0'          
-    'b__p__p1'          
-    'table1000_hash_pk_parts_2_int_autoinc'
-    'table1000_hash_pk_parts_2_int_autoinc__p__p0'
-    'table1000_hash_pk_parts_2_int_autoinc__p__p1'
-    'table1000_int_autoinc'
-
-    8 rows selected. (0.045157 sec) Committed.
-
-    1 command(s) successfully processed.
-    csql> 
-    ```
-    > Note: Tables names are set according to the properties of the generated tables, and/or according to the names parameter if set. If the names parameter is not set, or if there are not enough names specified, the following approximate name structure is used:    
-    > `table<rows>_[charset]_[collation]_[partition]_<pk>_<row-format>`        
-    > Resulting in table names like:      
-    >```
-    >table0_int_autoinc
-    >table1000_int_autoinc
-    >table100_hash_pk_parts_2_int_autoinc
-    >```
- 
-* rows - the sizes of the tables that will be created. The default is 0, 1, 2, 10, 100
-    ```
-    rows => [ '10000' , '1000' ],
-    ```
-
-    **all tables just have 10000 or 1000 rows,such as:**
-    ```
-    csql> select count(*) from a;
-
-    === <Result of SELECT Command in Line 1> ===
-
-        count(*)
-    =============
-            10000
-
-    1 row selected. (0.847494 sec) Committed.
-
-    1 command(s) successfully processed.
-    csql> select count(*) from b;
-
-    === <Result of SELECT Command in Line 1> ===
-
-        count(*)
-    =============
-            10000
-
-    1 row selected. (0.883741 sec) Committed.
-
-    1 command(s) successfully processed.
-    csql> select count(*) from table1000_int_autoinc;
-
-    === <Result of SELECT Command in Line 1> ===
-
-        count(*)
-    =============
-            1000
-
-    1 row selected. (0.109506 sec) Committed.
-
-    1 command(s) successfully processed.
-    csql> select count(*) from table1000_hash_pk_parts_2_int_autoinc; 
-
-    === <Result of SELECT Command in Line 1> ===
-
-        count(*)
-    =============
-            1000
-
-    1 row selected. (0.108839 sec) Committed.
-
-    1 command(s) successfully processed.
-    csql> 
-    ```
-* partitions - the partitioning clause to be used. To create some unpartitioned tables, use undef as an element in the array.
-    ```
-    partitions => [ undef , 'hash (pk) PARTITIONS 2' ],
-    ```
-   **it generate two kinds of tables partition table or non-partition table, such as:**
-    ```
-    csql> ;sc A
-
-    === <Help: Schema of a Class> ===
-
-
-    <Class Name> 
-
-        a
-
-    <Attributes> 
-
-        col_int              INTEGER
-        col_numeric          NUMERIC(15,0)
-        col_int_key          INTEGER
-        col_char_16000       CHARACTER(16000)
-        pk                   INTEGER AUTO_INCREMENT  NOT NULL
-        col_char_16000_key   CHARACTER(16000)
-        col_float            FLOAT
-        col_float_key        FLOAT
-        col_numeric_key      NUMERIC(15,0)
-
-    <Constraints> 
-
-        PRIMARY KEY pk_a_pk ON a (pk)
-        INDEX idx_a_col_int_key_asc ON a (col_int_key)
-        INDEX idx_a_col_char_16000_key_desc ON a (col_char_16000_key DESC)
-        INDEX idx_a_col_float_key_asc ON a (col_float_key, col_char_16000_key)
-        INDEX idx_a_col_numeric_key_desc ON a (col_numeric_key, col_float_key DESC)
-
-
-    Committed.
-    csql> 
-    ```
-
-    ```
-    csql> ;sc B
-
-    === <Help: Schema of a Class> ===
-
-
-    <Class Name> 
-
-        b
-
-    <Sub Classes> 
-
-        b__p__p0
-        b__p__p1
-
-    <Attributes> 
-
-        col_numeric          NUMERIC(15,0)
-        pk                   INTEGER AUTO_INCREMENT  NOT NULL
-        col_numeric_key      NUMERIC(15,0)
-        col_char_16000       CHARACTER(16000)
-        col_float_key        FLOAT
-        col_int              INTEGER
-        col_char_16000_key   CHARACTER(16000)
-        col_float            FLOAT
-        col_int_key          INTEGER
-
-    <Constraints> 
-
-        PRIMARY KEY pk_b_pk ON b (pk)
-        INDEX idx_b_col_numeric_key_asc ON b (col_numeric_key)
-        INDEX idx_b_col_float_key_desc ON b (col_float_key DESC)
-        INDEX idx_b_col_char_16000_key_asc ON b (col_char_16000_key, col_float_key)
-        INDEX idx_b_col_int_key_desc ON b (col_int_key, col_char_16000_key DESC)
-
-    <Partitions>
-
-        PARTITION BY HASH ([pk]) PARTITIONS 2
-        PARTITION p0
-        PARTITION p1
-
-
-    Committed.
-    csql> 
-    ```
-
-
-* pk - specify the primary keys to be used. Valid values are undef for no primary key, or any integer-based PK definition. If auto_increment is specified, the script will insert NULLs in that column. If not, then a sequence of increasing integers will be used. Generation of non-integer primary keys is not yet supported.
-    ```
-    pk => [ 'int auto_increment' ]
-    ```
-#### Configure the Fields
-The $fields section describes the fields and the indexes to be created in each table. One field will be created for each combination of values. For example, the resulting table will have a field int_unique and the corresponding key UNIQUE (int_unique).
-
-The order of the fields within each table is pseudo-random, which may help trigger bugs which are dependent on the physical placement of the fields. Each table also has a PRIMARY KEY named, appropriately, pk.
-
-* type - specifies a list of CUBRID types to be used. Any CUBRID type name or alias can be used here. Length modifiers, e.g. char (50) are also allowed. If no length is specified, char columns are created as char (1). set and enum fields will be created to accept every letter from A to Z, unless you specify otherwise. This is so that they can then be populated with random letters. The default for this option is int,varchar,date,time,datetime.
-    ```
-    $fields = {
-            indexes => [ undef, 'key' ],
-    };
-    ```
-
-    ```
-    csql> ;sc c
-
-    === <Help: Schema of a Class> ===
-
-
-    <Class Name> 
-
-        c
-
-    <Attributes> 
-
-        col_int              INTEGER
-        col_varchar          CHARACTER VARYING(1)
-        pk                   INTEGER AUTO_INCREMENT  NOT NULL
-        col_varchar_key      CHARACTER VARYING(1)
-        col_int_key          INTEGER
-        col_datetime         DATETIME
-        col_time             TIME
-        col_datetime_key     DATETIME
-        col_date             DATE
-        col_time_key         TIME
-        col_date_key         DATE
-
-    <Constraints> 
-
-        PRIMARY KEY pk_c_pk ON c (pk)
-        INDEX idx_c_col_varchar_key_asc ON c (col_varchar_key)
-        INDEX idx_c_col_int_key_desc ON c (col_int_key DESC)
-        INDEX idx_c_col_datetime_key_asc ON c (col_datetime_key, col_int_key)
-        INDEX idx_c_col_time_key_desc ON c (col_time_key, col_datetime_key DESC)
-        INDEX idx_c_col_date_key_asc ON c (col_date_key)
-
-
-    Committed.
-    ```
-
-* indexes - for all field types, specifies whether the field will have an index over it. 'undef' means no index, 'key' means a standard index and unique  means unique index. The default is undef, key, meaning that each field will be created in both indexed and non-indexed variants. 
-    ```
-    $fields = {
-
-    };
-    ```
-
-    ```
-    csql> ;sc g
-
-    === <Help: Schema of a Class> ===
-
-
-    <Class Name> 
-
-        g
-
-    <Attributes> 
-
-        col_int              INTEGER
-        col_varchar          CHARACTER VARYING(1)
-        pk                   INTEGER AUTO_INCREMENT  NOT NULL
-        col_varchar_key      CHARACTER VARYING(1)
-        col_int_key          INTEGER
-        col_datetime         DATETIME
-        col_time             TIME
-        col_datetime_key     DATETIME
-        col_date             DATE
-        col_time_key         TIME
-        col_date_key         DATE
-
-    <Constraints> 
-
-        PRIMARY KEY pk_g_pk ON g (pk)
-        INDEX idx_g_col_varchar_key_asc ON g (col_varchar_key)
-        INDEX idx_g_col_int_key_desc ON g (col_int_key DESC)
-        INDEX idx_g_col_datetime_key_asc ON g (col_datetime_key, col_int_key)
-        INDEX idx_g_col_time_key_desc ON g (col_time_key, col_datetime_key DESC)
-        INDEX idx_g_col_date_key_asc ON g (col_date_key)
-
-
-    Committed.
-    ```
-
-* charsets - specify the character sets
-* collations - specify the collations to be used. Note that a table will be created for each combination of character set and collation, which may not always be valid.
-
-#### Configure the Data
-The $data section from the configuration file describes what data will be inserted into each field type:
-
-* numbers/int/float/numberic- this describes how to generate values for all integer and float field types. Valid values are:
-  * null - a NULL value if the column can accept it;
-  * digit - a single random digit from 0 to 9;
-    set:
-    ```
-    int => [ 'digit' ],
-    ```
-    result:
-    ```
-    csql> select * from f;
-
-    === <Result of SELECT Command in Line 1> ===
-
-        col_int           pk  col_int_key
-    =======================================
-                1            1            4
-                9            2            3
-                5            3            1
-                7            4            7
-                3            5            7
-
-    5 rows selected. (0.014756 sec) Committed.
-
-    1 command(s) successfully processed.
-    csql> 
-    ```
-  * undef
-    set:
-    ```
-    float => [ 'tinyint', undef  ],
-    ```
-    result:
-    ```
-    $ csql -u dba test -c "select * from g"                                      
-
-    === <Result of SELECT Command in Line 1> ===
-
-        col_float           pk  col_float_key
-    ===========================================
-    0.000000e+00            1   0.000000e+00
-    0.000000e+00            2   0.000000e+00
-    -2.800000e+01            3  -3.300000e+01
-
-    3 rows selected. (0.008899 sec) Committed.
-    ```
-  * boolean - random 0 or 1 .
-    set:
-    ```
-    int => [ 'boolean' ],
-    ```
-    result:
-    ```
-    csql> select * from f;
-
-    === <Result of SELECT Command in Line 1> ===
-
-        col_int           pk  col_int_key
-    =======================================
-                1            1            0
-                0            2            0
-                0            3            0
-
-    3 rows selected. (0.014286 sec) Committed.
-
-    1 command(s) successfully processed.
-    csql> 
-    ```
-  * tinyint, mediumint and smallint - generate a random value that will fit in this particular type.
-    set float: 
-    ```
-    float => [ 'tinyint', 'smallint', 'mediumint'  ],
-    ```
-    result:
-    ```
-    $ csql -u dba test -c "select * from g"
-
-    === <Result of SELECT Command in Line 1> ===
-
-        col_float           pk  col_float_key
-    ===========================================
-    2.263000e+03            1  -8.400000e+01
-    -1.792900e+04            2  -2.459500e+04
-    -1.851648e+06            3  -3.300000e+01
-
-    3 rows selected. (0.009530 sec) Committed.
-    ```
-
-    set int:
-    ```
-    int => ['tinyint]
-    ```
-    result:
-    ```
-    $ csql -u dba test -c "select * from f"
-
-    === <Result of SELECT Command in Line 1> ===
-
-        col_int           pk  col_int_key
-    =======================================
-                8            1          -84
-            -70            2          -96
-            -28            3          -33
-
-    3 rows selected. (0.011549 sec) Committed.
-    ```
-    set int:
-    ```
-    int => [ 'mediumint' ],
-    ```
-    result:
-    ```
-    $ csql -u dba test -c "select * from f"
-
-    === <Result of SELECT Command in Line 1> ===
-
-        col_int           pk  col_int_key
-    =======================================
-        579328            1     -5507584
-        -4589824            2     -6296320
-        -1851648            3     -2213632
-
-    3 rows selected. (0.012849 sec) Committed.
-    ```
-
-    set numeric:
-    ```
-    numeric => [ 'smallint' ],
-    ```
-    result:
-    ```
-    $ csql -u dba test -c "select * from f"
-
-    === <Result of SELECT Command in Line 1> ===
-
-    col_numeric                    pk  col_numeric_key     
-    =========================================================
-    2263                            1  -21514              
-    -17929                          2  -24595              
-    -7233                           3  -8647               
-
-    3 rows selected. (0.013850 sec) Committed.
-    ```
-* strings - it describes how to generate values for all string columns (char, varchar, string and so on). Valid values are:
-  * null & empty - which generates 'NULL' and ' '   
-  * letter- which generates a random letter from A to Z   
-  * english- which picks a random word from a list of 100 most common words in English.     
-    For example:    
-    for `english`   
-    ```
-    strings => [ 'english' ],
-    ```
-    result: 
-    ```
-    $ csql -u dba test -c "select * from f"
-
-    === <Result of SELECT Command in Line 1> ===
-
-    col_string                     pk  col_string_key      
-    =========================================================
-    'her'                           1  'no'                
-    'if'                            2  'that'              
-    'his'                           3  'from'              
-
-    3 rows selected. (0.012999 sec) Committed.
-    ```
-    for `letter`:
-    ```
-    strings => [ 'letter' ],
-    ```
-    result:
-    ```
-    $ csql -u dba test -c "select * from f"
-
-    === <Result of SELECT Command in Line 1> ===
-
-    col_string                     pk  col_string_key      
-    =========================================================
-    'j'                             1  'w'                 
-    't'                             2  'j'                 
-    'd'                             3  't'                 
-
-    3 rows selected. (0.013491 sec) Committed.
-    ```
-    for `null`:
-    ```
-    strings => [ 'letter','null' ],
-    ```
-    result:
-    ```
-    $ csql -u dba test -c "select * from f"  
-
-    === <Result of SELECT Command in Line 1> ===
-
-    col_string                     pk  col_string_key      
-    =========================================================
-    NULL                            1  NULL                
-    NULL                            2  'b'                 
-    NULL                            3  NULL                
-
-    3 rows selected. (0.012823 sec) Committed.
-    ```
-    for `empty`:
-    ```
-    strings => [ 'empty' ],
-    ```
-    result:
-    ```
-    $ csql -u dba test -c "select * from f"
-
-    === <Result of SELECT Command in Line 1> ===
-
-    col_string                     pk  col_string_key      
-    =========================================================
-    ''                              1  ''                  
-    ''                              2  ''                  
-    ''                              3  ''                  
-
-    3 rows selected. (0.013325 sec) Committed.
-    ```
-
-#### Examples
-**1. use below file: b.zz**    
-```
-$ cat b.zz 
-$tables = {
-        names => ['E','F'],
-        rows  => [5],
-        pk => [ 'int auto_increment' ]
-};
-
-$fields = {
-        types => [ 'int','char(5)' ],
-        indexes => [ undef, 'index' ],
-};
-
-$data = {
-        strings => [ 'english' ],
-        float => [ 'digit', 'smallint', 'smallint'  ],
-        numeric => [ 'digit', 'smallint', 'smallint'  ],
-        int => [ 'digit', 'smallint', 'smallint'  ]
-};
-```
-**generate data logs:**     
-```
-$ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=b.zz        
-# 19:57:24 Default schema: PUBLIC
-# 19:57:24 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-# 19:57:24 # Creating Cubrid table E 
-```
-
-**check tables:**
-```
-csql> ;sc E
-
-=== <Help: Schema of a Class> ===
-
-
- <Class Name> 
-
-     e
-
- <Attributes> 
-
-     col_int              INTEGER
-     col_char_5           CHARACTER(5)
-     col_char_5_index     CHARACTER(5)
-     pk                   INTEGER AUTO_INCREMENT  NOT NULL
-     col_int_index        INTEGER
-
- <Constraints> 
-
-     PRIMARY KEY pk_e_pk ON e (pk)
-
-
-Committed.
-```
-
-**check data:**
-```
-csql> select * from E;
-
-=== <Result of SELECT Command in Line 1> ===
-
-      col_int  col_char_5            col_char_5_index               pk  col_int_index
-=====================================================================================
-            4  'if   '               'that '                         1          -7233
-            1  'we   '               'she  '                         2          18365
-       -22811  'going'               'been '                         3              0
-        18704  'but  '               'at   '                         4           5366
-            6  'with '               'the  '                         5              6
-
-5 rows selected. (0.009201 sec) Committed.
-
-1 command(s) successfully processed.
-csql> 
-```
-
-**2. use below file: a.zz**    
-```
-$tables = {
-        names => ['C','D'],
-        pk => [ 'int auto_increment' ]
-};
-
-$fields = {
-        types => [ 'int','char(5)' ],
-        indexes => [ undef, 'unique' ],
-};
-
-$data = {
-        strings => [ 'english' ],
-        float => [ 'digit', 'smallint', 'smallint'  ],
-        numeric => [ 'digit', 'smallint', 'smallint'  ],
-        int => [ 'digit', 'smallint', 'smallint'  ]
-};
-```
-
-**generate data logs:**    
-```
-# 19:27:37 Default schema: PUBLIC
-# 19:27:37 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-# 19:27:37 # Creating Cubrid table C .
-# 19:27:37 # Creating Cubrid table D .
-# 19:27:37 # Creating Cubrid table table2_int_autoinc .
-# 19:27:37 # Creating Cubrid table table10_int_autoinc .
-
-
-INSERT INTO table10_int_autoinc VALUES  ('the', 6, 3, 'back', DEFAULT) ,  ('some', -30927, 16838, 'how', DEFAULT) ,  ('no', -28878, 27198, 'what', DEFAULT) ,  ('don''t', 4, -6155, 'to', DEFAULT) ,  ('he', 4, 12883, 'some', DEFAULT) ,  ('I', 2, 8, 'are', DEFAULT) ,  ('going', 15242, -17480, 'we', DEFAULT) ,  ('this', 20274, 3, 'his', DEFAULT) ,  ('her', -13462, -18420, 'you''re', DEFAULT) ,  ('some', 0, 1, 'you', DEFAULT) 
-CUBRID DBMS Error : (-670) Operation would have caused one or more unique constraint violations. INDEX idx_table10_int_autoinc_col_int_unique_desc(B+tree: 0|4800|4801) ON CLASS table10_int_autoinc(CLASS_OID: 0|204|20). key: 4(OID: 0|3790|933).[CAS INFO - 127.0.0.1:33037, 1, 5742].
-
-# 19:27:37 # Creating Cubrid table table100_int_autoinc .
-
-
-INSERT INTO table100_int_autoinc VALUES  ('for', DEFAULT, 9, -2958, 'say') ,  ('about', DEFAULT, 29163, 31993, 'because') ,  ('my', DEFAULT, 1763, 2, 'yeah') ,  ('yeah', DEFAULT, 4, 9, 'can') ,  ('are', DEFAULT, -20454, -14234, 'yes') ,  ('going', DEFAULT, -3636, -792, 'now') ,  ('then', DEFAULT, 5, -7992, 'see') ,  ('what', DEFAULT, -1597, 7551, 'now') ,  ('okay', DEFAULT, 1, 6210, 'going') ,  ('now', DEFAULT, -25776, 1, 'one') ,  ('about', DEFAULT, 6, -7854, 'mean') ,  ('I', DEFAULT, 9, 15263, 'now') ,  ('here', DEFAULT, 11185, 18935, 'go') ,  ('she', DEFAULT, 9445, -13019, 'what') ,  ('look', DEFAULT, 9, -9298, 'time') ,  ('tell', DEFAULT, -30583, 1, 'how') ,  ('think', DEFAULT, 15037, 31605, 'or') ,  ('there', DEFAULT, 15612, 15699, 'go') ,  ('are', DEFAULT, -25195, 9, 'could') ,  ('was', DEFAULT, -20788, -11017, 'want') ,  ('well', DEFAULT, -29217, 4, 'was') ,  ('go', DEFAULT, 5, -23178, 'if') ,  ('ok', DEFAULT, 27500, 8, 'ok') ,  ('say', DEFAULT, 2, -26610, 'could') ,  ('could', DEFAULT, 9607, -4724, 'do') ,  ('she', DEFAULT, 4, 6, 'not') ,  ('are', DEFAULT, 6913, 262, 'in') ,  ('have', DEFAULT, 6, 25090, 'were') ,  ('my', DEFAULT, -1499, 517, 'got') ,  ('for', DEFAULT, 3, -31398, 'all') ,  ('her', DEFAULT, 7, -10746, 'you') ,  ('out', DEFAULT, 8781, 7, 'oh') ,  ('her', DEFAULT, 5, -16890, 'as') ,  ('something', DEFAULT, -18644, -8965, 'think') ,  ('at', DEFAULT, -5852, 6, 'at') ,  ('do', DEFAULT, -9257, 7, 'could') ,  ('just', DEFAULT, 1, -10367, 'be') ,  ('and', DEFAULT, 9, -5038, 'her') ,  ('of', DEFAULT, 5, 13430, 'his') ,  ('one', DEFAULT, 5, -8085, 'your') ,  ('here', DEFAULT, 8738, -17308, 'for') ,  ('didn''t', DEFAULT, 9, 3, 'want') ,  ('not', DEFAULT, 5, 0, 'with') ,  ('so', DEFAULT, 2, 21811, 'good') ,  ('come', DEFAULT, -264, 9, 'ok') ,  ('right', DEFAULT, 10387, 5, 'good') ,  ('one', DEFAULT, 9, -6037, 'her') ,  ('want', DEFAULT, -7249, -20345, 'tell') ,  ('is', DEFAULT, 31475, 2, 'in') ,  ('there', DEFAULT, 4, 1, 'time') 
-CUBRID DBMS Error : (-670) Operation would have caused one or more unique constraint violations. INDEX idx_table100_int_autoinc_col_char_5_unique_desc(B+tree: 0|5056|5057) ON CLASS table100_int_autoinc(CLASS_OID: 0|204|21). key: 'now  '(OID: 0|4364|1828).[CAS INFO - 127.0.0.1:33037, 1, 5742].
-
-
-
-INSERT INTO table100_int_autoinc VALUES  ('can', DEFAULT, 4, 23118, 'well') ,  ('good', DEFAULT, 22401, 9, 'you''re') ,  ('there', DEFAULT, 24196, 17124, 'here') ,  ('well', DEFAULT, 6354, 5, 'because') ,  ('yeah', DEFAULT, -8808, -7837, 'want') ,  ('yeah', DEFAULT, -31748, -3433, 'like') ,  ('yeah', DEFAULT, 27163, 202, 'there') ,  ('get', DEFAULT, 2, 22122, 'they') ,  ('are', DEFAULT, 8, 10136, 'have') ,  ('here', DEFAULT, 17297, 4402, 'well') ,  ('but', DEFAULT, 4, 4, 'just') ,  ('okay', DEFAULT, -25448, -14675, 'I') ,  ('no', DEFAULT, 12750, -28962, 'who') ,  ('yeah', DEFAULT, 26799, 2, 'yeah') ,  ('he''s', DEFAULT, -11493, 26067, 'go') ,  ('oh', DEFAULT, 7, -21963, 'was') ,  ('why', DEFAULT, 3805, 12581, 'if') ,  ('yeah', DEFAULT, -16952, -18114, 'just') ,  ('see', DEFAULT, -30365, 4, 'why') ,  ('you''re', DEFAULT, 18277, 17651, 'good') ,  ('yes', DEFAULT, 5, -8099, 'look') ,  ('so', DEFAULT, 1355, -13680, 'we') ,  ('I''m', DEFAULT, 2, 14015, 'something') ,  ('up', DEFAULT, 7, -27947, 'can''t') ,  ('for', DEFAULT, 6, 9846, 'see') ,  ('hey', DEFAULT, 3, -28161, 'oh') ,  ('you''re', DEFAULT, 7094, 11650, 'you''re') ,  ('got', DEFAULT, 8, 18380, 'this') ,  ('think', DEFAULT, 0, 17760, 'would') ,  ('oh', DEFAULT, 7, -24710, 'don''t') ,  ('one', DEFAULT, 8353, -15602, 'then') ,  ('tell', DEFAULT, 22639, -12344, 'a') ,  ('yeah', DEFAULT, 8455, 14090, 'we') ,  ('for', DEFAULT, -21843, 15090, 'but') ,  ('look', DEFAULT, -20319, 19795, 'could') ,  ('right', DEFAULT, -8170, 0, 'see') ,  ('good', DEFAULT, 4, -21146, 'what') ,  ('it''s', DEFAULT, 8, 25687, 'yes') ,  ('not', DEFAULT, 19495, -9663, 'for') ,  ('oh', DEFAULT, -7649, 4, 'the') ,  ('one', DEFAULT, -31185, 4706, 'now') ,  ('tell', DEFAULT, 3, -11367, 'now') ,  ('and', DEFAULT, 27555, 0, 'how') ,  ('you', DEFAULT, 29946, 22840, 'time') ,  ('got', DEFAULT, -13744, -30737, 'he''s') ,  ('have', DEFAULT, 11657, 8, 'no') ,  ('what', DEFAULT, 2, -13353, 'is') ,  ('because', DEFAULT, 7, 6, 'your') ,  ('did', DEFAULT, 0, -6147, 'the') ,  ('yeah', DEFAULT, -17871, -1164, 'but') 
-CUBRID DBMS Error : (-670) Operation would have caused one or more unique constraint violations. INDEX idx_table100_int_autoinc_col_char_5_unique_desc(B+tree: 0|5056|5057) ON CLASS table100_int_autoinc(CLASS_OID: 0|204|21). key: 'well '(OID: 0|4364|1830).[CAS INFO - 127.0.0.1:33037, 1, 5742].
-```
-
-> Note: Above show us that inserting data into table10_int_autoinc and table100_int_autoinc failed for violating the unique constraint.
-
-**check tables:**     
-fields int and char(5) can generate 4 fields: col_int, col_int_unique, col_char_5, col_char_5_unique
-```
-csql> ;sc table10_int_autoinc 
-
-=== <Help: Schema of a Class> ===
-
-
- <Class Name> 
-
-     table10_int_autoinc
-
- <Attributes> 
-
-     col_char_5_unique    CHARACTER(5)
-     col_int_unique       INTEGER
-     col_int              INTEGER
-     col_char_5           CHARACTER(5)
-     pk                   INTEGER AUTO_INCREMENT  NOT NULL
-
- <Constraints> 
-
-     PRIMARY KEY pk_table10_int_autoinc_pk ON table10_int_autoinc (pk)
-     UNIQUE idx_table10_int_autoinc_col_char_5_unique_asc ON table10_int_autoinc (col_char_5_unique)
-     UNIQUE idx_table10_int_autoinc_col_int_unique_desc ON table10_int_autoinc (col_int_unique DESC)
-
-
-Committed.
-csql> ;sc table100_int_autoinc  
-
-=== <Help: Schema of a Class> ===
-
-
- <Class Name> 
-
-     table100_int_autoinc
-
- <Attributes> 
-
-     col_char_5           CHARACTER(5)
-     pk                   INTEGER AUTO_INCREMENT  NOT NULL
-     col_int_unique       INTEGER
-     col_int              INTEGER
-     col_char_5_unique    CHARACTER(5)
-
- <Constraints> 
-
-     PRIMARY KEY pk_table100_int_autoinc_pk ON table100_int_autoinc (pk)
-     UNIQUE idx_table100_int_autoinc_col_int_unique_asc ON table100_int_autoinc (col_int_unique)
-     UNIQUE idx_table100_int_autoinc_col_char_5_unique_desc ON table100_int_autoinc (col_char_5_unique DESC)
-
-
-Committed.
-```
-**check data:**    
-```
-csql> select * from c;
-
-=== <Result of SELECT Command in Line 1> ===
-
-There are no results.
-0 row selected. (0.015496 sec) Committed.
-
-1 command(s) successfully processed.
-csql> select * from d;
-
-=== <Result of SELECT Command in Line 1> ===
-
-      col_int           pk  col_int_unique  col_char_5            col_char_5_unique   
-======================================================================================
-       -24595            1           -7233  'from '               'we   '             
-
-1 row selected. (0.009092 sec) Committed.
-
-1 command(s) successfully processed.
-csql> select * from table2_int_autoinc;
-
-=== <Result of SELECT Command in Line 1> ===
-
-      col_int  col_char_5            col_int_unique  col_char_5_unique              pk
-======================================================================================
-       -22811  'going'                            9  'who  '                         1
-        18704  'but  '                        11437  'him  '                         2
-
-2 rows selected. (0.009287 sec) Committed.
-
-1 command(s) successfully processed.
-csql> select * from table10_int_autoinc; 
-
-=== <Result of SELECT Command in Line 1> ===
-
-There are no results.
-0 row selected. (0.009403 sec) Committed.
-
-1 command(s) successfully processed.
-csql> select * from table100_int_autoinc;
-
-=== <Result of SELECT Command in Line 1> ===
-
-There are no results.
-0 row selected. (0.008498 sec) Committed.
-
-1 command(s) successfully processed.
-csql> 
-```
-**3. use below files: c.zz**    
-```
-$ cat c.zz 
-$tables = {
-        names => ['C','D'],
-        pk => [ 'int auto_increment' ]
-};
-
-$fields = {
-        indexes => [ undef, 'key' ],
-};
-
-$data = {
-        strings => [ 'english' ],
-        float => [ 'digit', 'smallint', 'smallint'  ],
-        numeric => [ 'digit', 'smallint', 'smallint'  ],
-        int => [ 'digit', 'smallint', 'smallint'  ]
-};
-```
-
-**generate data logs:**    
-```
-$ perl ~/random_query_generator/gendata.pl --dsn=${dsn} --spec=c.zz
-# 20:57:10 Default schema: PUBLIC
-# 20:57:10 Executor initialized, id GenTest::Executor::Cubrid 10.2.0.8294 ()
-# 20:57:10 # Creating Cubrid table C .
-# 20:57:10 # Creating Cubrid table D .
-# 20:57:10 # Creating Cubrid table table2_int_autoinc .
-# 20:57:11 # Creating Cubrid table table10_int_autoinc .
-# 20:57:11 # Creating Cubrid table table100_int_autoinc .
-```
-
-**check tables:**     
-```
-csql> show tables;
-
-=== <Result of SELECT Command in Line 1> ===
-
-  Tables_in_test      
-======================
-  'c'                 
-  'd'                 
-  'table100_int_autoinc'
-  'table10_int_autoinc'
-  'table2_int_autoinc'
-
-5 rows selected. (0.042812 sec) Committed.
-
-1 command(s) successfully processed.
-csql> 
-```
-
-**check data:**    
-```
-csql> select * from c;
-
-=== <Result of SELECT Command in Line 1> ===
-
-There are no results.
-0 row selected. (0.017124 sec) Committed.
-
-1 command(s) successfully processed.
-csql> select * from d;
-
-=== <Result of SELECT Command in Line 1> ===
-
-      col_int  col_varchar           col_datetime                   col_varchar_key       col_date             pk  col_time_key  col_int_key 
- col_time     col_date_key  col_datetime_key             
-=============================================================================================================================================
-=========================================================
-       -22811  'g'                   NULL                           'o'                   05/09/2011            1  04:45:22 AM         -7259 
- 06:13:16 PM  07/20/2000    08:46:24.000 AM 08/22/2009   
-
-1 row selected. (0.011752 sec) Committed.
-
-1 command(s) successfully processed.
-csql> select * from table2_int_autoinc;
-
-=== <Result of SELECT Command in Line 1> ===
-
-           pk  col_varchar_key           col_int  col_time     col_int_key  col_time_key  col_datetime                   col_varchar         
-  col_datetime_key               col_date_key  col_date  
-=============================================================================================================================================
-=========================================================
-            1  'y'                         -1510  01:09:24 AM        12883  03:12:21 AM   11:41:10.000 AM 04/02/2015     'w'                 
-  05:02:24.000 PM 05/28/2007     08/25/2006    03/26/2008
-            2  'y'                             0  NULL               -4444  03:59:13 PM   04:25:11.000 PM 06/02/2000     'o'                 
-  10:31:09.000 AM 03/04/2013     12/16/2002    11/18/2015
-
-2 rows selected. (0.012511 sec) Committed.
-
-1 command(s) successfully processed.
-csql> select * from table10_int_autoinc; 
-
-=== <Result of SELECT Command in Line 1> ===
-
-  col_time     col_date    col_datetime_key               col_date_key  col_int_key      col_int           pk  col_varchar           col_time
-_key  col_varchar_key       col_datetime                 
-=============================================================================================================================================
-=========================================================
-  12:13:27 PM  NULL        10:46:04.000 PM 05/25/2006     08/04/2013          24389            1            1  't'                   07:23:13
- AM   'w'                   02:00:54.000 PM 10/16/2004   
-  11:14:24 AM  NULL        08:31:15.000 PM 10/02/2004     07/21/2015          25558        19699            2  'c'                   03:48:42
- AM   'w'                   03:19:25.000 PM 01/02/2008   
-  01:11:16 PM  11/10/2008  08:53:47.000 PM 08/24/2011     08/20/2006         -30124         6488            3  'b'                   11:31:59
- AM   't'                   12:29:24.000 PM 12/03/2006   
-  NULL         10/08/2006  06:58:28.000 AM 04/14/2008     05/03/2007           9897            2            4  'o'                   04:15:01
- AM   'y'                   NULL                         
-  06:06:38 AM  08/23/2004  09:06:44.000 AM 12/21/2013     07/23/2015            517        -9543            5  'f'                   05:16:50
- AM   'a'                   11:02:36.000 AM 01/16/2001   
-  NULL         NULL        03:57:16.000 AM 06/01/2001     04/06/2013          23268            6            6  's'                   09:07:36
- PM   'g'                   NULL                         
-  11:39:10 PM  02/15/2015  07:08:21.000 PM 06/06/2006     03/15/2000          17970       -16707            7  'y'                   11:58:23
- PM   'h'                   NULL                         
-  10:58:11 PM  11/18/2016  04:24:19.000 PM 01/20/2006     NULL                 4509            3            8  't'                   06:00:19
- AM   'h'                   03:02:04.000 AM 01/12/2003   
-  09:29:06 PM  01/09/2014  12:29:01.000 AM 08/28/2004     12/27/2003           6200        -1968            9  'w'                   12:01:58
- AM   'h'                   11:06:14.000 PM 09/25/2009   
-  10:33:12 PM  NULL        NULL                           10/09/2019          24191         9937           10  'w'                   12:08:32
- PM   'h'                   06:35:49.000 AM 02/07/2007   
-
-10 rows selected. (0.014405 sec) Committed.
-
-1 command(s) successfully processed.
-csql> select * from table100_int_autoinc;
-
-=== <Result of SELECT Command in Line 1> ===
-
-  col_date_key  col_time_key  col_varchar_key           col_int  col_datetime_key               col_date    col_time     col_varchar         
-  col_datetime                   col_int_key           pk
-=============================================================================================================================================
-=========================================================
-  10/26/2013    05:06:27 AM   'r'                             1  03:22:55.000 AM 11/14/2004     05/09/2011  NULL         'g'                 
-  06:18:35.000 PM 05/17/2002          -10238           92
-  12/16/2008    07:41:40 AM   'l'                        -10471  02:29:48.000 AM 06/28/2006     09/06/2003  06:40:10 AM  'n'                 
-  09:58:38.000 PM 06/19/2015           22075           93
-  02/06/2000    NULL          'a'                        -18488  01:56:29.000 PM 08/15/2014     04/11/2019  12:23:26 AM  'y'                 
-  NULL                                -18835           94
-  09/15/2006    NULL          'w'                         15951  05:42:22.000 AM 02/04/2000     05/22/2001  11:34:38 AM  'o'                 
-  05:25:07.000 PM 02/18/2002               9           95
-  07/21/2012    09:45:53 PM   't'                         27032  11:18:53.000 AM 07/04/2004     05/05/2017  NULL         'l'                 
-  09:28:42.000 AM 05/14/2008          -24446           96
-  12/02/2013    NULL          'n'                             3  09:19:04.000 PM 08/14/2001     10/09/2006  02:36:07 PM  'b'                 
-  04:37:59.000 PM 07/02/2003               2           97
-  07/16/2009    NULL          'r'                             1  08:08:33.000 AM 06/09/2003     02/04/2007  06:08:06 PM  'n'                 
-  NULL                                 11490           98
-  09/17/2000    04:03:06 PM   'u'                        -25797  07:14:58.000 PM 12/10/2019     11/01/2020  01:21:38 PM  'h'                 
-  07:12:32.000 PM 04/06/2004               4           99
-  03/02/2018    05:36:54 PM   'w'                         11031  08:08:02.000 PM 09/03/2008     07/07/2002  05:14:59 AM  'I'                 
-  NULL                                -24015          100
-  01/07/2014    05:47:06 PM   'h'                             2  10:21:52.000 AM 08/24/2002     NULL        11:56:07 PM  'h'                 
-  04:53:10.000 PM 05/23/2013           17297            1
-  07/18/2000    NULL          'h'                         24377  01:33:04.000 PM 08/13/2007     NULL        NULL         's'                 
-  06:51:55.000 PM 03/28/2005           26799            2
-  NULL          05:23:35 PM   'h'                         15858  04:05:20.000 PM 07/06/2006     NULL        02:49:12 PM  'w'                 
-  02:30:25.000 PM 01/01/2001               6            3
-  07/01/2003    07:39:04 PM   'y'                             5  02:10:47.000 AM 12/05/2015     09/06/2016  06:38:43 PM  's'                 
-  01:21:30.000 AM 01/24/2019            7368            4
-  03/06/2006    NULL          's'                             2  NULL                           12/05/2011  11:17:10 AM  'w'                 
-  07:20:18.000 AM 05/26/2005               0            5
-  10/23/2002    06:05:19 AM   'f'                        -15602  08:27:56.000 AM 12/20/2017     NULL        NULL         'I'                 
-  10:11:27.000 AM 04/22/2007          -20848            6
-  11/07/2005    03:59:35 AM   'r'                         -8170  01:24:42.000 AM 12/03/2000     NULL        06:57:08 AM  'i'                 
-  NULL                                     0            7
-  09/02/2013    05:54:20 PM   'o'                         -7649  08:19:41.000 PM 09/14/2004     11/18/2017  07:55:41 PM  'n'                 
-  09:00:33.000 PM 09/12/2002           23391            8
-  NULL          11:40:17 AM   'h'                         24734  04:59:25.000 PM 02/25/2003     09/15/2008  05:33:48 PM  'b'                 
-  04:37:21.000 PM 12/19/2006           10418            9
-...
-100 rows selected. (1.744066 sec) Committed.
-
-1 command(s) successfully processed.
-csql> 
-```
+  ======================
+    'c'                 
+    'd'                 
+    'table100_int_autoinc'
+    'table10_int_autoinc'
+    'table2_int_autoinc'
+
+  5 rows selected. (0.042812 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> 
+  ```
+
+  **check data:**    
+  ```
+  csql> select * from c;
+
+  === <Result of SELECT Command in Line 1> ===
+
+  There are no results.
+  0 row selected. (0.017124 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> select * from d;
+
+  === <Result of SELECT Command in Line 1> ===
+
+        col_int  col_varchar           col_datetime                   col_varchar_key       col_date             pk  col_time_key  col_int_key 
+   col_time     col_date_key  col_datetime_key             
+  =============================================================================================================================================
+  =========================================================
+         -22811  'g'                   NULL                           'o'                   05/09/2011            1  04:45:22 AM         -7259 
+   06:13:16 PM  07/20/2000    08:46:24.000 AM 08/22/2009   
+
+  1 row selected. (0.011752 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> select * from table2_int_autoinc;
+
+  === <Result of SELECT Command in Line 1> ===
+
+             pk  col_varchar_key           col_int  col_time     col_int_key  col_time_key  col_datetime                   col_varchar         
+    col_datetime_key               col_date_key  col_date  
+  =============================================================================================================================================
+  =========================================================
+              1  'y'                         -1510  01:09:24 AM        12883  03:12:21 AM   11:41:10.000 AM 04/02/2015     'w'                 
+    05:02:24.000 PM 05/28/2007     08/25/2006    03/26/2008
+              2  'y'                             0  NULL               -4444  03:59:13 PM   04:25:11.000 PM 06/02/2000     'o'                 
+    10:31:09.000 AM 03/04/2013     12/16/2002    11/18/2015
+
+  2 rows selected. (0.012511 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> select * from table10_int_autoinc; 
+
+  === <Result of SELECT Command in Line 1> ===
+
+    col_time     col_date    col_datetime_key               col_date_key  col_int_key      col_int           pk  col_varchar           col_time
+  _key  col_varchar_key       col_datetime                 
+  =============================================================================================================================================
+  =========================================================
+    12:13:27 PM  NULL        10:46:04.000 PM 05/25/2006     08/04/2013          24389            1            1  't'                   07:23:13
+   AM   'w'                   02:00:54.000 PM 10/16/2004   
+    11:14:24 AM  NULL        08:31:15.000 PM 10/02/2004     07/21/2015          25558        19699            2  'c'                   03:48:42
+   AM   'w'                   03:19:25.000 PM 01/02/2008   
+    01:11:16 PM  11/10/2008  08:53:47.000 PM 08/24/2011     08/20/2006         -30124         6488            3  'b'                   11:31:59
+   AM   't'                   12:29:24.000 PM 12/03/2006   
+    NULL         10/08/2006  06:58:28.000 AM 04/14/2008     05/03/2007           9897            2            4  'o'                   04:15:01
+   AM   'y'                   NULL                         
+    06:06:38 AM  08/23/2004  09:06:44.000 AM 12/21/2013     07/23/2015            517        -9543            5  'f'                   05:16:50
+   AM   'a'                   11:02:36.000 AM 01/16/2001   
+    NULL         NULL        03:57:16.000 AM 06/01/2001     04/06/2013          23268            6            6  's'                   09:07:36
+   PM   'g'                   NULL                         
+    11:39:10 PM  02/15/2015  07:08:21.000 PM 06/06/2006     03/15/2000          17970       -16707            7  'y'                   11:58:23
+   PM   'h'                   NULL                         
+    10:58:11 PM  11/18/2016  04:24:19.000 PM 01/20/2006     NULL                 4509            3            8  't'                   06:00:19
+   AM   'h'                   03:02:04.000 AM 01/12/2003   
+    09:29:06 PM  01/09/2014  12:29:01.000 AM 08/28/2004     12/27/2003           6200        -1968            9  'w'                   12:01:58
+   AM   'h'                   11:06:14.000 PM 09/25/2009   
+    10:33:12 PM  NULL        NULL                           10/09/2019          24191         9937           10  'w'                   12:08:32
+   PM   'h'                   06:35:49.000 AM 02/07/2007   
+
+  10 rows selected. (0.014405 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> select * from table100_int_autoinc;
+
+  === <Result of SELECT Command in Line 1> ===
+
+    col_date_key  col_time_key  col_varchar_key           col_int  col_datetime_key               col_date    col_time     col_varchar         
+    col_datetime                   col_int_key           pk
+  =============================================================================================================================================
+  =========================================================
+    10/26/2013    05:06:27 AM   'r'                             1  03:22:55.000 AM 11/14/2004     05/09/2011  NULL         'g'                 
+    06:18:35.000 PM 05/17/2002          -10238           92
+    12/16/2008    07:41:40 AM   'l'                        -10471  02:29:48.000 AM 06/28/2006     09/06/2003  06:40:10 AM  'n'                 
+    09:58:38.000 PM 06/19/2015           22075           93
+    02/06/2000    NULL          'a'                        -18488  01:56:29.000 PM 08/15/2014     04/11/2019  12:23:26 AM  'y'                 
+    NULL                                -18835           94
+    09/15/2006    NULL          'w'                         15951  05:42:22.000 AM 02/04/2000     05/22/2001  11:34:38 AM  'o'                 
+    05:25:07.000 PM 02/18/2002               9           95
+    07/21/2012    09:45:53 PM   't'                         27032  11:18:53.000 AM 07/04/2004     05/05/2017  NULL         'l'                 
+    09:28:42.000 AM 05/14/2008          -24446           96
+    12/02/2013    NULL          'n'                             3  09:19:04.000 PM 08/14/2001     10/09/2006  02:36:07 PM  'b'                 
+    04:37:59.000 PM 07/02/2003               2           97
+    07/16/2009    NULL          'r'                             1  08:08:33.000 AM 06/09/2003     02/04/2007  06:08:06 PM  'n'                 
+    NULL                                 11490           98
+    09/17/2000    04:03:06 PM   'u'                        -25797  07:14:58.000 PM 12/10/2019     11/01/2020  01:21:38 PM  'h'                 
+    07:12:32.000 PM 04/06/2004               4           99
+    03/02/2018    05:36:54 PM   'w'                         11031  08:08:02.000 PM 09/03/2008     07/07/2002  05:14:59 AM  'I'                 
+    NULL                                -24015          100
+    01/07/2014    05:47:06 PM   'h'                             2  10:21:52.000 AM 08/24/2002     NULL        11:56:07 PM  'h'                 
+    04:53:10.000 PM 05/23/2013           17297            1
+    07/18/2000    NULL          'h'                         24377  01:33:04.000 PM 08/13/2007     NULL        NULL         's'                 
+    06:51:55.000 PM 03/28/2005           26799            2
+    NULL          05:23:35 PM   'h'                         15858  04:05:20.000 PM 07/06/2006     NULL        02:49:12 PM  'w'                 
+    02:30:25.000 PM 01/01/2001               6            3
+    07/01/2003    07:39:04 PM   'y'                             5  02:10:47.000 AM 12/05/2015     09/06/2016  06:38:43 PM  's'                 
+    01:21:30.000 AM 01/24/2019            7368            4
+    03/06/2006    NULL          's'                             2  NULL                           12/05/2011  11:17:10 AM  'w'                 
+    07:20:18.000 AM 05/26/2005               0            5
+    10/23/2002    06:05:19 AM   'f'                        -15602  08:27:56.000 AM 12/20/2017     NULL        NULL         'I'                 
+    10:11:27.000 AM 04/22/2007          -20848            6
+    11/07/2005    03:59:35 AM   'r'                         -8170  01:24:42.000 AM 12/03/2000     NULL        06:57:08 AM  'i'                 
+    NULL                                     0            7
+    09/02/2013    05:54:20 PM   'o'                         -7649  08:19:41.000 PM 09/14/2004     11/18/2017  07:55:41 PM  'n'                 
+    09:00:33.000 PM 09/12/2002           23391            8
+    NULL          11:40:17 AM   'h'                         24734  04:59:25.000 PM 02/25/2003     09/15/2008  05:33:48 PM  'b'                 
+    04:37:21.000 PM 12/19/2006           10418            9
+  ...
+  100 rows selected. (1.744066 sec) Committed.
+
+  1 command(s) successfully processed.
+  csql> 
+  ```
 
 ### Configure the Query Generator
 #### Prepare data
