@@ -2392,7 +2392,7 @@ Good RQG cases mainly relate to .yy and .zz configuration files. We need to desi
   csql> 
   ```
 
-### Configure the Query Generator
+* ### Configure the Query Generator
   #### Prepare data
   ```
   $ cat f.zz 
