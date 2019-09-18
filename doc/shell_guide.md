@@ -477,13 +477,13 @@ Both of the tests are started automatically when the controller receives a test 
 
   ![shell_crash](./shell_image/image12.png)     
 
-  In the overview page, we should check the values in all the colomns. The most important check items are:   
-  |column|check point|
-  |---|---|
-  |Test Rate|Test rate should be 100%.|
-  |Fail|How many cases are failed.|
-  |Verified Rate|After the verification, verified rate should be 100%.|
-  |Elapse Time|The elapse time of the test should not be longer than the elapse time of the previous build too much.|   
+  In the overview page, we should check the values in all the colomns. The most important check items are:    
+  |column|check point|  
+  |---|---|  
+  |Test Rate|Test rate should be 100%.|  
+  |Fail|How many cases are failed.|  
+  |Verified Rate|After the verification, verified rate should be 100%.|  
+  |Elapse Time|The elapse time of the test should not be longer than the elapse time of the previous build too much.|    
 
 * ### Verfy the Failed Cases
   Click the link in this image to open the online verification page.  
