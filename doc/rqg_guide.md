@@ -643,7 +643,7 @@ cp: cannot stat ‘/home/perl/CUBRID/conf/cubrid.conf.org’: No such file or di
 ## 3.1 Test Machines
 In the current daily regression test, we are using one controller node and five test nodes.   
 
-No.  |Role  |User Name  |IP  |Hostname
+No.  |Role  |OS User |IP  |Hostname
  --|--|--|--|--
 0  |Controller node|  controller|  192.168.1.99  |func24
 1  |Test node  |perl  |192.168.1.99  |func24
@@ -655,22 +655,19 @@ No.  |Role  |User Name  |IP  |Hostname
 **Controller node** listens to test messages and starts a test when there is a test message. It will distribute test cases to each test node for execution.    
 **Test nodes** execute test cases in parallel.      
 
-## 3.2 Test Environment Deployment
+## 3.2 Deployment
+
 ### On Controller node
  * Install CTP
- Please follow [CTP installation guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md).
- * Set CTP config file for RQG test     
-Here is the config file that we use for current daily QA test:   
-~/CTP/conf/shell_template_for_RQG.conf   
+ Please follow [CTP installation guide](ctp_install_guide.md#3-install-ctp-as-regression-test-platform) to install CTP.
+ Then create test configuration file `~/CTP/conf/shell_template_for_RQG.conf`   
     ```bash
-    $ cat shell_template_for_RQG.conf 
     default.cubrid.cubrid_port_id=1567
     default.broker1.BROKER_PORT=30070
     default.broker1.APPL_SERVER_SHM_ID=30070
     default.broker2.BROKER_PORT=33071
     default.broker2.APPL_SERVER_SHM_ID=33071
     default.ha.ha_port_id=57707
-
 
     env.99.ssh.host=192.168.1.99
     env.99.ssh.port=22
@@ -697,7 +694,6 @@ Here is the config file that we use for current daily QA test:
     env.103.ssh.user=perl
     env.103.ssh.pwd=******
 
-
     main.mode.continue=false
     scenario=$HOME/cubrid-testcases-private/random_query_generator/_03_mvcc
     test_continue_yn=false
@@ -717,23 +713,24 @@ Here is the config file that we use for current daily QA test:
     feedback_type=database
     feedback_notice_qahome_url=http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>
 
+    owner_email=<owner e-mail>
+    cc_email=<cc e-mail>
 
-    owner_email=<owner_email>
-    cc_email=<cc_email>
-
-    git_user=cubridqa
-    git_email=<git_email>
-    git_pwd=******
+    git_user=<git user>
+    git_email=<git e-mail>
+    git_pwd=********
 
     feedback_db_host=192.168.1.86
     feedback_db_port=33080
     feedback_db_name=qaresu
     feedback_db_user=dba
-    feedback_db_pwd=
+    feedback_db_pwd=*********
     ```
-    >Note: parameters desciption refer to [shell guide](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md)
- * touch start_test.sh    
-   It is used to start the listener.       
+    >Note: parameters desciption refer to [SHELL test guide](shell_guide.md)
+    
+ * Create quick start script used to start listener
+  File `~/start_test.sh`:   
+  
     ```bash
     cat ~/start_test.sh
     # If only need to listen the rqg test messages
@@ -742,18 +739,19 @@ Here is the config file that we use for current daily QA test:
     # We use one controllar to listen shell_heavy,shell_long and rqg test messages in daily QA.
     nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_HEAVY_LINUX,QUEUE_CUBRID_QA_RQG,QUEUE_CUBRID_QA_SHELL_LONG_LINUX -exec run_shell,run_shell,run_shell  &
     ```
+    
+### On every test node
 
-### On Test nodes
- * Install CTP    
+* Install CTP    
   Please refer to [2.1 Install CTP](#21-install-ctp)   
  * Install CUBRID          
-  please refer to [2.2 Install CUBRID](#22-install-cubrid)    
+  Please refer to [2.2 Install CUBRID](#22-install-cubrid)    
  * Install self perl evn      
-  please refer to [2.3 Install perl](#23-install-perl)    
+  Please refer to [2.3 Install perl](#23-install-perl)    
  * Install random_query_generator     
-  please refer to [2.4 Install random_query_generator](#24-install-random_query_generator)         
+  Please refer to [2.4 Install random_query_generator](#24-install-random_query_generator)         
  * Check out test cases     
-  please refer to [2.5 Checkout Test Case](#25-checkout-test-case)    
+  Please refer to [2.5 Checkout Test Case](#25-checkout-test-case)    
  
 
 # 4. RQG Regresion Test
