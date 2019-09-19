@@ -902,146 +902,146 @@ Additionally, during code coverage execution, you can log into the controller no
 
 * ### Check if there is a result
 
-Generally, you may find `ha_repl` and `ha_repl_debug` test results in QA homepage as below.
+	Generally, you may find `ha_repl` and `ha_repl_debug` test results in QA homepage as below.
 
-![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)  
+	![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)  
 
- **Total column:** The number of test cases, it counts all the cases.         
- **Testing column:** The number of test cases that should be executed. It excludes the test cases that defined in `~/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf`.     
+	 **Total column:** The number of test cases, it counts all the cases.         
+	 **Testing column:** The number of test cases that should be executed. It excludes the test cases that defined in `~/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf`.     
 
-If it shows `'NO RESULT (OR RUNNING)'` as bellow, you need to find the reason that why not execute.
-![ha_repl_no_result](./ha_repl_image/ha_repl_no_result.PNG)  
+	If it shows `'NO RESULT (OR RUNNING)'` as bellow, you need to find the reason that why not execute.
+	![ha_repl_no_result](./ha_repl_image/ha_repl_no_result.PNG)  
 
-Sometimes, the CI build comes late, so that the test starts late; or there is another test executed before the CI build. In this case, just wait for the test completion and then verify the results.  
+	Sometimes, the CI build comes late, so that the test starts late; or there is another test executed before the CI build. In this case, just wait for the test completion and then verify the results.  
 
 * ### Test Rate should be 100%
-It means that all test cases except cases in excluded list should be executed.
+	It means that all test cases except cases in excluded list should be executed.
 
 * ### Verified Rate should be 100%
 
-It means that all failures should be verified. Please verify failures in online verification page.
+	It means that all failures should be verified. Please verify failures in online verification page.
 
-![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)    
+	![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)    
 
-Click the failed number `1`, it shows the list of failed test cases.   
-![ha_repl_verify2](./ha_repl_image/ha_repl_verify2.PNG)    
+	Click the failed number `1`, it shows the list of failed test cases.   
+	![ha_repl_verify2](./ha_repl_image/ha_repl_verify2.PNG)    
 
-Click the test case, it shows the details.   
-![ha_repl_verify3](./ha_repl_image/ha_repl_verify3.PNG)    
+	Click the test case, it shows the details.   
+	![ha_repl_verify3](./ha_repl_image/ha_repl_verify3.PNG)    
 
-Note: **Ha_repl does not yet support comparison between master result and slave result in QA homepage. We need improve the feature in  the future.**  Currently, you can check test logs to examine failure reason:   
-```
-$ cd CTP/result/ha_repl/
-$ tar zxvf ha_repl_result_10.2.0.8433-50fb781_64bits_3783_2019.9.6_5.13.28.tar.gz
-./
-./current_task_id
-./deploy_ha3.log
-./deploy_ha12.log
-./deploy_ha7.log
-./deploy_ha4.log
-./deploy_ha8.log
-./deploy_ha13.log
-./deploy_ha1.log
-./deploy_ha5.log
-./deploy_ha6.log
-./deploy_ha9.log
-./deploy_ha2.log
-./deploy_ha10.log
-./deploy_ha11.log
-./deploy_ha15.log
-./deploy_ha14.log
-./dispatch_tc_ALL.txt
-./dispatch_tc_FIN_ha3.txt
-./dispatch_tc_FIN_ha7.txt
-./dispatch_tc_FIN_ha12.txt
-./dispatch_tc_FIN_ha4.txt
-./dispatch_tc_FIN_ha8.txt
-./dispatch_tc_FIN_ha13.txt
-./dispatch_tc_FIN_ha1.txt
-./dispatch_tc_FIN_ha5.txt
-./dispatch_tc_FIN_ha9.txt
-./dispatch_tc_FIN_ha10.txt
-./dispatch_tc_FIN_ha14.txt
-./dispatch_tc_FIN_ha2.txt
-./dispatch_tc_FIN_ha6.txt
-./dispatch_tc_FIN_ha11.txt
-./dispatch_tc_FIN_ha15.txt
-./test_ha3.log
-./monitor_ha3.log
-./test_ha7.log
-./monitor_ha7.log
-./test_ha12.log
-./monitor_ha12.log
-./test_ha4.log
-./monitor_ha4.log
-./test_ha8.log
-./monitor_ha8.log
-./test_ha13.log
-./monitor_ha13.log
-./test_ha1.log
-./monitor_ha1.log
-./test_ha5.log
-./monitor_ha5.log
-./test_ha9.log
-./monitor_ha9.log
-./test_ha10.log
-./monitor_ha10.log
-./test_ha14.log
-./monitor_ha14.log
-./test_ha2.log
-./monitor_ha2.log
-./test_ha6.log
-./monitor_ha6.log
-./test_ha11.log
-./monitor_ha11.log
-./test_ha15.log
-./monitor_ha15.log
-tar: Removing leading `/' from member names
-/home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.dump
-/home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.slave1.diff_1.temp
-/home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.slave1.dump
-/home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.sql
-/home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.test
-$ cat home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.slave1.diff_1.temp 
-$ 
-```
-vim `home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.dump` and find `FAIL TO SYNC` error.    
-```
-1. [NOK]: [5]select 'db_stored_procedure_args' TABLE_NAME, db_stored_procedure_args.* from db_stored_procedure_args order by 1,2,3,4,5,6,7;
-select 'db_stored_procedure' TABLE_NAME, db_stored_procedure.* from db_stored_procedure order by 1,2,3,4,5,6,7,8,9;
-select 'db_partition' TABLE_NAME, db_partition.* from db_partition order by 1,2,3,4,5,6,7,8;
-select 'db_trig' TABLE_NAME, db_trig.* from db_trig order by 1,2,3,4,5,6,7,8;
-select 'db_index_key' TABLE_NAME, db_index_key.* from db_index_key order by 1,2,3,4,5,6,7,8;
-select 'db_index' TABLE_NAME, db_index.* from db_index order by 1,2,3,4,5,6,7,8,9,10,11;
-select 'db_meth_file' TABLE_NAME, db_meth_file.* from db_meth_file order by 1,2,3,4;
-select 'db_meth_arg_setdomain_elm' TABLE_NAME, db_meth_arg_setdomain_elm.* from db_meth_arg_setdomain_elm order by 1,2,3,4,5,6,7,8,9;
-select 'db_method' TABLE_NAME, db_method.* from db_method order by 1,2,3,4,5,6,7;
-select 'db_attr_setdomain_elm' TABLE_NAME, db_attr_setdomain_elm.* from db_attr_setdomain_elm order by 1,2,3,4,5,6,7,8;
-select 'db_attribute' TABLE_NAME, db_attribute.* from db_attribute order by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16;
-select 'db_vclass' TABLE_NAME, db_vclass.* from db_vclass order by 1,2,3,4;
-select 'db_direct_super_class' TABLE_NAME, db_direct_super_class.* from db_direct_super_class order by 1,2;
-select 'db_class' TABLE_NAME, db_class.* from db_class order by 1,2,3,4,5,6,7,8,9;
-select 'db_serial' TABLE_NAME, if(owner is null, USER, (select name from db_user where db_user=owner)) owner, db_serial.name, db_serial.curre
-nt_val, db_serial.increment_val, db_serial.max_val, db_serial.min_val, db_serial.cyclic, db_serial.started, db_serial.class_name, db_serial.a
-tt_name, db_serial.cached_num, db_serial.comment from db_serial;
-select '_db_collation' TABLE_NAME, _db_collation.* from _db_collation order by 1,2,3,4,5,6,7,8,9;
-select '_db_data_type' TABLE_NAME, _db_data_type.* from _db_data_type order by 1,2,3;
-select '_db_query_spec' TABLE_NAME, _db_query_spec.* from _db_query_spec order by 3,1,2;
-select '_db_meth_arg' TABLE_NAME, _db_meth_arg.* from _db_meth_arg order by 1,2,3,4,5;
-select '_db_meth_sig' TABLE_NAME, _db_meth_sig.* from _db_meth_sig order by 1,2,3,4,5;
-select 'db_trigger' TABLE_NAME, db_trigger.* from db_trigger order by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15;
-select 'db_password' TABLE_NAME, db_password.* from db_password order by 1,2;
-select 'db_root' TABLE_NAME, db_root.* from db_root order by 1,2,3,4,5;(FAIL TO SYNC. BREAK!!!)
-```
+	Note: **Ha_repl does not yet support comparison between master result and slave result in QA homepage. We need improve the feature in  the future.**  Currently, you can check test logs to examine failure reason:   
+	```
+	$ cd CTP/result/ha_repl/
+	$ tar zxvf ha_repl_result_10.2.0.8433-50fb781_64bits_3783_2019.9.6_5.13.28.tar.gz
+	./
+	./current_task_id
+	./deploy_ha3.log
+	./deploy_ha12.log
+	./deploy_ha7.log
+	./deploy_ha4.log
+	./deploy_ha8.log
+	./deploy_ha13.log
+	./deploy_ha1.log
+	./deploy_ha5.log
+	./deploy_ha6.log
+	./deploy_ha9.log
+	./deploy_ha2.log
+	./deploy_ha10.log
+	./deploy_ha11.log
+	./deploy_ha15.log
+	./deploy_ha14.log
+	./dispatch_tc_ALL.txt
+	./dispatch_tc_FIN_ha3.txt
+	./dispatch_tc_FIN_ha7.txt
+	./dispatch_tc_FIN_ha12.txt
+	./dispatch_tc_FIN_ha4.txt
+	./dispatch_tc_FIN_ha8.txt
+	./dispatch_tc_FIN_ha13.txt
+	./dispatch_tc_FIN_ha1.txt
+	./dispatch_tc_FIN_ha5.txt
+	./dispatch_tc_FIN_ha9.txt
+	./dispatch_tc_FIN_ha10.txt
+	./dispatch_tc_FIN_ha14.txt
+	./dispatch_tc_FIN_ha2.txt
+	./dispatch_tc_FIN_ha6.txt
+	./dispatch_tc_FIN_ha11.txt
+	./dispatch_tc_FIN_ha15.txt
+	./test_ha3.log
+	./monitor_ha3.log
+	./test_ha7.log
+	./monitor_ha7.log
+	./test_ha12.log
+	./monitor_ha12.log
+	./test_ha4.log
+	./monitor_ha4.log
+	./test_ha8.log
+	./monitor_ha8.log
+	./test_ha13.log
+	./monitor_ha13.log
+	./test_ha1.log
+	./monitor_ha1.log
+	./test_ha5.log
+	./monitor_ha5.log
+	./test_ha9.log
+	./monitor_ha9.log
+	./test_ha10.log
+	./monitor_ha10.log
+	./test_ha14.log
+	./monitor_ha14.log
+	./test_ha2.log
+	./monitor_ha2.log
+	./test_ha6.log
+	./monitor_ha6.log
+	./test_ha11.log
+	./monitor_ha11.log
+	./test_ha15.log
+	./monitor_ha15.log
+	tar: Removing leading `/' from member names
+	/home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.dump
+	/home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.slave1.diff_1.temp
+	/home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.slave1.dump
+	/home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.sql
+	/home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.test
+	$ cat home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.slave1.diff_1.temp 
+	$ 
+	```
+	vim `home/controller/cubrid-testcases/sql/_08_javasp/cases/415-4.master.dump` and find `FAIL TO SYNC` error.    
+	```
+	1. [NOK]: [5]select 'db_stored_procedure_args' TABLE_NAME, db_stored_procedure_args.* from db_stored_procedure_args order by 1,2,3,4,5,6,7;
+	select 'db_stored_procedure' TABLE_NAME, db_stored_procedure.* from db_stored_procedure order by 1,2,3,4,5,6,7,8,9;
+	select 'db_partition' TABLE_NAME, db_partition.* from db_partition order by 1,2,3,4,5,6,7,8;
+	select 'db_trig' TABLE_NAME, db_trig.* from db_trig order by 1,2,3,4,5,6,7,8;
+	select 'db_index_key' TABLE_NAME, db_index_key.* from db_index_key order by 1,2,3,4,5,6,7,8;
+	select 'db_index' TABLE_NAME, db_index.* from db_index order by 1,2,3,4,5,6,7,8,9,10,11;
+	select 'db_meth_file' TABLE_NAME, db_meth_file.* from db_meth_file order by 1,2,3,4;
+	select 'db_meth_arg_setdomain_elm' TABLE_NAME, db_meth_arg_setdomain_elm.* from db_meth_arg_setdomain_elm order by 1,2,3,4,5,6,7,8,9;
+	select 'db_method' TABLE_NAME, db_method.* from db_method order by 1,2,3,4,5,6,7;
+	select 'db_attr_setdomain_elm' TABLE_NAME, db_attr_setdomain_elm.* from db_attr_setdomain_elm order by 1,2,3,4,5,6,7,8;
+	select 'db_attribute' TABLE_NAME, db_attribute.* from db_attribute order by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16;
+	select 'db_vclass' TABLE_NAME, db_vclass.* from db_vclass order by 1,2,3,4;
+	select 'db_direct_super_class' TABLE_NAME, db_direct_super_class.* from db_direct_super_class order by 1,2;
+	select 'db_class' TABLE_NAME, db_class.* from db_class order by 1,2,3,4,5,6,7,8,9;
+	select 'db_serial' TABLE_NAME, if(owner is null, USER, (select name from db_user where db_user=owner)) owner, db_serial.name, db_serial.curre
+	nt_val, db_serial.increment_val, db_serial.max_val, db_serial.min_val, db_serial.cyclic, db_serial.started, db_serial.class_name, db_serial.a
+	tt_name, db_serial.cached_num, db_serial.comment from db_serial;
+	select '_db_collation' TABLE_NAME, _db_collation.* from _db_collation order by 1,2,3,4,5,6,7,8,9;
+	select '_db_data_type' TABLE_NAME, _db_data_type.* from _db_data_type order by 1,2,3;
+	select '_db_query_spec' TABLE_NAME, _db_query_spec.* from _db_query_spec order by 3,1,2;
+	select '_db_meth_arg' TABLE_NAME, _db_meth_arg.* from _db_meth_arg order by 1,2,3,4,5;
+	select '_db_meth_sig' TABLE_NAME, _db_meth_sig.* from _db_meth_sig order by 1,2,3,4,5;
+	select 'db_trigger' TABLE_NAME, db_trigger.* from db_trigger order by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15;
+	select 'db_password' TABLE_NAME, db_password.* from db_password order by 1,2;
+	select 'db_root' TABLE_NAME, db_root.* from db_root order by 1,2,3,4,5;(FAIL TO SYNC. BREAK!!!)
+	```
 
-Try to find the failure reason, then input the reason into online verification page.
-![ha_repl_verify4](./ha_repl_image/ha_repl_verify4.PNG)    
+	Try to find the failure reason, then input the reason into online verification page.
+	![ha_repl_verify4](./ha_repl_image/ha_repl_verify4.PNG)    
 
-**Report issues**
+	**Report issues**
 
-Here are some example issues for your reference.   
-* Data consistency issue: http://jira.cubrid.org/browse/CBRD-20235
-* Crash issue: http://jira.cubrid.org/browse/CBRD-20534
+	Here are some example issues for your reference.   
+	* Data consistency issue: http://jira.cubrid.org/browse/CBRD-20235
+	* Crash issue: http://jira.cubrid.org/browse/CBRD-20534
 
 # 5. Ha_repl Test Case Specification   
 
