@@ -17,7 +17,7 @@ See [CTP/README.md](CTP/README.md) for a quick start.
 * [Shell_heavy](./doc/shell_heavy_guide.md) 
 * [Shell_long](./doc/shell_long_guide.md)
 * [Shell_ext](./doc/shell_ext_guide.md)
-* [Shell_HA]() (TBD)
+* [Shell_HA](./doc/ha_shell_guide.md)
 * [CCI](./doc/cci_guide.md)  
 * [HA_repl]() (TBD)
 * [Isolation](./doc/isolation_guide.md)
