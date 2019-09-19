@@ -1,4 +1,4 @@
-# Shell Test Guide
+# Windows Shell Test Guide
 # 1 Test Objective
 Shell test suite is used to execute CUBRID functional test in a very flexible way. Shell test cases are written in Linux shell programing language. It can easily integrate other programing languages, like Java, C, Perl. With shell test cases, almost all features and performance which cannot be tested by SQL test or other test suites can be tested and automated. For examples:
 * check whether a cubrid utility works well  
@@ -9,8 +9,95 @@ Shell test case path is located in [https://github.com/CUBRID/cubrid-testcases-p
 Shell test is contained by daily regression test. The test cases are run on both Linux platform and Windows platform. This guide will introduce the different parts between windows shell test and linux shell test.
 
 
-# 2 Shell Test via CTP
-Please refer to shell_guide: [Shell Test via CTP](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#2-shell-test-via-ctp)
+# 2 Windows Shell Test via CTP
+Please refer to shell_guide: [Shell Test via CTP](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#2-shell-test-via-ctp)  
+`shell_template.conf` file for windows shell test:  
+```
+default.cubrid.cubrid_port_id=1568
+default.broker1.BROKER_PORT=30090
+default.broker2.BROKER_PORT=33091
+default.ha.ha_port_id=59909
+
+env.win162.ssh.host=192.168.1.162
+env.win162.ssh.port=10095
+env.win162.ssh.user=qa
+env.win162.ssh.pwd=PASSWORD
+
+env.win163.ssh.host=192.168.1.163
+env.win163.ssh.port=10095
+env.win163.ssh.user=qa
+env.win163.ssh.pwd=PASSWORD
+
+env.win164.ssh.host=192.168.1.164
+env.win164.ssh.port=10095
+env.win164.ssh.user=qa
+env.win164.ssh.pwd=PASSWORD
+
+env.win165.ssh.host=192.168.1.165
+env.win165.ssh.port=10095
+env.win165.ssh.user=qa
+env.win165.ssh.pwd=PASSWORD
+
+env.win166.ssh.host=192.168.1.166
+env.win166.ssh.port=10095
+env.win166.ssh.user=qa
+env.win166.ssh.pwd=PASSWORD
+
+env.win167.ssh.host=192.168.1.167
+env.win167.ssh.port=10095
+env.win167.ssh.user=qa
+env.win167.ssh.pwd=PASSWORD
+
+env.win168.ssh.host=192.168.1.168
+env.win168.ssh.port=10095
+env.win168.ssh.user=qa
+env.win168.ssh.pwd=PASSWORD
+
+
+env.win169.ssh.host=192.168.1.169
+env.win169.ssh.port=10095
+env.win169.ssh.user=qa
+env.win169.ssh.pwd=PASSWORD
+
+env.win170.ssh.host=192.168.1.170
+env.win170.ssh.port=10095
+env.win170.ssh.user=qa
+env.win170.ssh.pwd=PASSWORD
+
+scenario=/c/cubrid-testcases-private-ex/shell
+testcase_exclude_from_file=/c/cubrid-testcases-private-ex/shell/config/daily_regression_test_excluded_list_windows.conf
+#testcase_workspace_dir=/c/workspace/scenario/shell
+test_continue_yn=false
+cubrid_download_url=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8462-fad7030/drop/CUBRID-Windows-x64-10.2.0.8462-fad7030.zip
+testcase_update_yn=true
+testcase_git_branch=develop
+testcase_timeout_in_secs=604800
+test_platform=windows
+test_category=shell
+testcase_exclude_by_macro=WINDOWS_NOT_SUPPORTED
+testcase_retry_num=0
+delete_testcase_after_each_execution_yn=false
+#delete_testcase_after_each_execution_yn=true
+enable_check_disk_space_yn=true
+
+owner_email=Mandy<cui.man@navercorp.com>
+
+git_user=cubridqa
+git_email=dl_cubridqa_bj_internal@navercorp.com
+git_pwd=N6P0Sm5U7h
+
+agent_protocol=rmi
+enable_status_trace_yn=fasle
+large_space_dir=/c/big_space_stage
+
+feedback_type=database
+feedback_notice_qahome_url=http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>
+feedback_db_host=192.168.1.86
+feedback_db_port=33080
+feedback_db_name=qaresu
+feedback_db_user=dba
+feedback_db_pwd=
+```
 
 # 3 Regression Test Deployment
 ## 3.1 Test Machines
@@ -182,6 +269,12 @@ open a cmd session:
 
 # 4 Regression Test Sustaining
 Please refer to shell guide: ['Regression Test Sustaining'](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#4-regression-test-sustaining)
+
+## Windows Shell Message
+We use `.zip` installation file in test.
+```
+sender.sh QUEUE_CUBRID_QA_SHELL_WIN64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8462-fad7030/drop/CUBRID-Windows-x64-10.2.0.8462-fad7030.zip shell default
+```
 
 # 5 Shell Case Standards
 Please refer to shell guide: ['Shell Case Standards'](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#5-shell-case-standards)
