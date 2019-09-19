@@ -99,6 +99,15 @@
         So we need to use `grep` before `'3.0-2'`.  
   * Change environment variable `PATH`  
     Add `'C:\cygwin64\bin'` in the `PATH`  
+  
+  * Configure fs under cygwin
+  
+    File `/etc/fstab`:
+
+        none / cygdrive binary,noacl,posix=0,user 0 0  
+    
+    Note: required by SHELL test on Windows platform.
+    
 * ### Install git  
     Download git in https://git-for-windows.github.io/.  
     In the installation wizard, choose these options:  
