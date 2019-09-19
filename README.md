@@ -12,7 +12,8 @@ See [CTP/README.md](CTP/README.md) for a quick start.
 
 ## Functional Testing Guide 
 * [SQL/MEDIUM/SQL_BY_CCI](doc/sql_guide.md)  
-* [Shell](doc/shell_guide.md)
+* [Shell for Linux](doc/shell_guide.md)
+* [Shell for Windows](doc/shell_win_guide.md)
 * [Shell_heavy](./doc/shell_heavy_guide.md) 
 * [Shell_long](./doc/shell_long_guide.md)
 * [Shell_ext](./doc/shell_ext_guide.md)
