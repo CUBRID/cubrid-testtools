@@ -296,6 +296,10 @@ This will start a HA shell test when the consumer receives the test message.
 
       sender.sh QUEUE_CUBRID_QA_SHELL_HA_LINUX "http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz,http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz" ha_shell default
 
+## 4.3 Verify Test Results
+
+To verify HA Shell test results is similar to general SHELL test except the category name is `'ha_shell'` in QA homepage. Please refer to general SHELL test guide.
+
 # 5. HA shell case standards
 
 HA shell case is a special kind of shell test case. It should follow all the SHELL test case standards. For SHELL test case standards, please refer to SHELL test guide. In this section, I will only introduce the contents which are not included in SHELL test guide.  
@@ -409,7 +413,7 @@ HA shell case is a special kind of shell test case. It should follow all the SHE
 
       alias run_upload_on_slave='${init_path}/../../common/script/run_upload -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
 
-Examples:
+  Examples:
 
       run_upload_on_slave -from $CUBRID/conf/cubrid.conf -to $CUBRID/conf/
       run_upload_on_slave -from ./monitor_bug_11301.sh -to $HOME/
