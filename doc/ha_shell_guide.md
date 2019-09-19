@@ -277,25 +277,24 @@ This chapter introduces how to deploy HA regression test environment.
     If CUBRID has never been installed on the machine, we need add file `'.cubrid.sh'` at $HOME path manually.  
 
 # 4. Regression Test Sustaining
-Please refer to shell guide: [Regression Test Sustaining](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#4-regression-test-sustaining)  
 
-## 3.6 Start Consumer
+## 4.1 Start Listener
+
 On controller node, execute the script `start_test.sh` to start listening the test message after deployment.  
 This will start a HA shell test when the consumer receives the test message.
-```
-cd ~
-sh start_test.sh
-```
 
-## HA Shell Test Message
- 
-```
-sender.sh QUEUE_CUBRID_QA_SHELL_HA_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8330-d4d8464/drop/CUBRID-10.2.0.8330-d4d8464-Linux.x86_64.sh ha_shell default
-```
-## Code Coverage Test Message
-```
-sender.sh QUEUE_CUBRID_QA_SHELL_HA_LINUX "http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz,http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz" ha_shell default
-```
+    cd ~
+    sh start_test.sh
+
+## 4.2 Sent Test Messages
+
+* General test messages
+
+      sender.sh QUEUE_CUBRID_QA_SHELL_HA_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8330-d4d8464/drop/CUBRID-10.2.0.8330-d4d8464-Linux.x86_64.sh ha_shell default
+
+* Code coverage test messages
+
+      sender.sh QUEUE_CUBRID_QA_SHELL_HA_LINUX "http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz,http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz" ha_shell default
 
 # 5 HA shell case standards
 HA shell case is a special kind of shell test case. It should fowllow all the shell test case standards.   
