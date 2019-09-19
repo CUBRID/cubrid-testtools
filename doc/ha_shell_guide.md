@@ -1,78 +1,84 @@
 # HA Shell Test Guide
 # 1. Test Objective
 HA Shell test suite is used to test CUBRID HA feature. To run a HA shell case, we usually need at least two servers. But sometimes, we need more than two servers. So HA test cases are divided to two categories:
-* `HA Shell`: Located in `https://github.com/CUBRID/cubrid-testcases-private/tree/develop/HA/shell` and scheduled by daily. Each test case can only run on two servers.
+* `HA Shell`: Located in `https://github.com/CUBRID/cubrid-testcases-private/tree/develop/HA/shell` and scheduled by daily regression. Each test case can only run on two servers.
 * `Shell_ext`: Located in `https://github.com/CUBRID/cubrid-testcases-private/tree/develop/shell_ext` and not executed regularly for regression. We usually execute it in a full test. In `Shell_ext`, only a partial test cases are related to HA. These HA cases require variable number of test servers instead of only two.
 
 In this document, I will only introduce the first one `HA shell` which is also an extension of SHELL test cases. For the second one `Shell_ext`, it will be introduced in seperated guide. 
 
 Additionally, HA shell test is also a part of code coverage test.  
 
-# 2 Tools Introduction
+# 2 HA Shell Test Usage
+
 CTP is the only test tool which is used to execute HA shell test cases.   
-Source URL: [https://github.com/CUBRID/cubrid-testtools](https://github.com/CUBRID/cubrid-testtools)
 
 ## 2.1 Quick Start
-1. Install CUBRID
-Please follow CUBRID installation guide to install CUBRID on both master node and slave node. Suppose that we install CUBRID at $HOME/CUBRID. Then add this line `'source .cubrid.sh'` in `~/.bash_profile`:
-```
-source .cubrid.sh
-```
 
-2. Check out HA shell cases
-```
-cd ~
-git clone https://github.com/CUBRID/cubrid-testcases-private.git
-cd ~/cubrid-testcases-private 
-git checkout develop
-```
+* ### Install CUBRID
 
-3. Install CTP
-Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#1-install-ctp-in-linux-platform).     
-Then create configuration file as below:  
-*~/CTP/conf/shell.conf* 
-```
-# These parameters are used to set cubrid.conf, cubrid_broker.conf and cubrid_ha.conf
-# We can add the parameters as needed.
-# For example, if we need change set 'error_log_size = 800000000', just need add line 'default.cubrid.error_log_size = 800000000' here.
-default.cubrid.cubrid_port_id=1568
-default.broker1.BROKER_PORT=10090
-default.broker1.APPL_SERVER_SHM_ID=10090
-default.broker2.BROKER_PORT=13091
-default.broker2.APPL_SERVER_SHM_ID=13091
-default.ha.ha_port_id=19909
+  Please follow CUBRID installation guide to install CUBRID on both master node and slave node. Suppose that we install CUBRID at $HOME/CUBRID. Then add this line `'source .cubrid.sh'` in `~/.bash_profile`:
+  ```
+  source .cubrid.sh
+  ```
 
-#specify the master node and slave node
-env.83.ssh.host=192.168.1.83
-env.83.ssh.relatedhosts=192.168.1.93
+* ### Check out HA shell cases
+  ```
+  cd ~
+  git clone https://github.com/CUBRID/cubrid-testcases-private.git
+  cd ~/cubrid-testcases-private 
+  git checkout develop
+  ```
 
-# Specify the case path and exclude list file
-# We can also specify a sub path under the test case path to run a sub set of the test cases.
-scenario=${HOME}/cubrid-testcases-private-ex/shell
-testcase_exclude_from_file=${HOME}/cubrid-testcases-private/HA/shell/config/daily_regression_test_excluded_list_linux.conf
+* ### Install CTP
+  Please refer to ["CTP Installation Guide"](ctp_install_guide.md#1-install-ctp-in-linux-platform), then create configuration file as below.  
 
-# When the test is interrupted and started again, we can choose whether to run it continuously or re-run it.
-test_continue_yn=false
+  File ~/CTP/conf/shell.conf: 
+  ```
+  # These parameters are used to set cubrid.conf, cubrid_broker.conf and cubrid_ha.conf
+  # We can add the parameters as needed.
+  # For example, if we need change set 'error_log_size = 800000000', just need add line 'default.cubrid.error_log_size = 800000000' here.
+  default.cubrid.cubrid_port_id=1568
+  default.broker1.BROKER_PORT=10090
+  default.broker1.APPL_SERVER_SHM_ID=10090
+  default.broker2.BROKER_PORT=13091
+  default.broker2.APPL_SERVER_SHM_ID=13091
+  default.ha.ha_port_id=19909
 
-testcase_timeout_in_secs=604800
+  #specify the master node and slave node
+  env.83.ssh.host=192.168.1.83
+  env.83.ssh.relatedhosts=192.168.1.93
 
-# When the case is failed, we can re-run it. This paramter specify the max time we want to re-run the failed case.
-testcase_retry_num=0
+  # Specify the case path and exclude list file
+  # We can also specify a sub path under the test case path to run a sub set of the test cases.
+  scenario=${HOME}/cubrid-testcases-private/HA/shell
+  testcase_exclude_from_file=${HOME}/cubrid-testcases-private/HA/shell/config/daily_regression_test_excluded_list_linux.conf
 
-# Some times there is not enough disk space on the test machine, so we need to delete all the files under the test case path after the case is run.
-delete_testcase_after_each_execution_yn=false
-enable_check_disk_space_yn=true
-owner_email=cui.man@navercorp.com
+  # When the test is interrupted and started again, we can choose whether to run it continuously or re-run it.
+  test_continue_yn=false
 
-# set test result feed back type: file or database
-feedback_type=file
-```
+  testcase_timeout_in_secs=604800
 
-4. Start test
-```
-cd ~/CTP/bin
-nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
-```
+  # When the case is failed, we can re-run it. This paramter specify the max time we want to re-run the failed case.
+  testcase_retry_num=0
+
+  # Some times there is not enough disk space on the test machine, so we need to delete all the files under the test case path after the case is run.
+  delete_testcase_after_each_execution_yn=false
+  enable_check_disk_space_yn=true
+  owner_email=cui.man@navercorp.com
+
+  # set test result feed back type: file or database
+  feedback_type=file
+  ```
+
+* ### Start test
+
+  ```
+  cd ~/CTP/bin
+  nohup ./ctp.sh shell -c ~/CTP/conf/shell.conf &
+  ```
+* ### Examine test results
+
+  Please follow to general SHELL guide for it.
 
 ## 2.2 CTP Usage Introduction
 Please refer to shell_guide: [CTP Usage Introduction](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#22-ctp-usage-introduction)
