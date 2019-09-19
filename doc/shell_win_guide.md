@@ -62,6 +62,7 @@ Use CUBRID MSI package to install CUBRID for the first time.
 ## 3.4 Deploy CTP
 
 * Controller
+
   Please follow [this guide](ctp_install_guide.md#3-install-ctp-as-regression-test-platform) to install CTP as controller role on Linux platform.
   
   Create test configuration file.
@@ -154,6 +155,7 @@ Use CUBRID MSI package to install CUBRID for the first time.
       feedback_db_pwd=********
 
 * Workers
+
   Please follow [this guide](ctp_install_guide.md#2-install-ctp-in-windows-platform) to install CTP as worker role on Windows platform.
 
   And common configuration file is also required.
@@ -214,6 +216,7 @@ Final variables:
     CUBRID = C:/CUBRID  # Do not use like 'C:\\CUBRID'
     CUBRID_DATABASES = C:\\CUBRID\\databases
     JAVA_HOME = C:\Program Files\Java\jdk1.6.0_45
+    CTP_HOME = $HOME/CTP
     CTP_BRANCH_NAME = develop
     CTP_SKIP_UPDATE = 0
     PATH = C:\CUBRID\bin\;%MINGW_PATH%\bin;%MINGW_PATH%\x86_64-w64-mingw32\bin;%MINGW_PATH%\libexec\gcc\x86_64-w64-mingw32\7.2.0;%JAVA_HOME%\bin;C:\cygwin64\bin%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SYSTEMROOT%\System32\WindowsPowerShell\v1.0\;C:\Program Files\Git\cmd
@@ -227,83 +230,21 @@ File `~/start_test.sh`:
     nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_WIN64 -exec run_shell &
 
 # 4 Regression Test Sustaining
-Please refer to shell guide: ['Regression Test Sustaining'](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#4-regression-test-sustaining)
 
-## 3.9 Start Rmi Service
-open a cmd session:
-```
->cd c:\CTP\shell
->start_service.bat
-```
+Please refer to general SHELL guide for ['Regression Test Sustaining'](shell_guide.md#4-regression-test-sustaining).
 
+## 4.1 Keep Agent as Daemon process on all workers
+Open a cmd console:
 
+    >cd c:\CTP\shell
+    >start_service.bat
 
-## Windows Shell Message
+## 4.2 Send Test Messages
+
 We use `.zip` installation file in test.
-```
-sender.sh QUEUE_CUBRID_QA_SHELL_WIN64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8462-fad7030/drop/CUBRID-Windows-x64-10.2.0.8462-fad7030.zip shell default
-```
 
-# 5 Shell Case Standards
-Please refer to shell guide: ['Shell Case Standards'](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#5-shell-case-standards)
+    sender.sh QUEUE_CUBRID_QA_SHELL_WIN64 http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8462-fad7030/drop/CUBRID-Windows-x64-10.2.0.8462-fad7030.zip shell default
 
-# Appendix A: Install Old Package Version of Cygwin
-## Why to Install the Old Versions
-Take 'grep' as an example. Sometimes, '\r' is appended in the texts on windows. But in ANNOUNCEMENT ['Updated \[test\]: grep\-3.0\-2'](http://cygwin.1069669.n5.nabble.com/ANNOUNCEMENT\-Updated\-test\-grep\-3\-0\-2\-td132384.html), it is said:   
-```
-This build modifies the behavior of grep to no longer force text mode on 
-binary-mounted file descriptors.  Since this includes pipelines by 
-default, this means that if you pipe text data through a pipeline (such 
-as the output of a windows program), you may need to insert a call to 
-d2u to sanitize your input before passing it to grep.
-```
-We do not intend to modify test cases, since the cases are used both by linux and windows platform.
+# 5. Shell Case Standards
 
-So we need to use grep before 3.0-2.  
-
-## How to Install the Old Versions
-Take 'grep' as an example.  
-*Method 1, Install from Internet*
-1. start cygwin installation file 'setup-x86_64.exe'
-2. In step 'Choose A Download Source', select 'Install from Internet'
-3. In step 'Select Packages', in the field of 'View', choose 'Category' or 'Full', and in the field of 'Search', input 'grep'.
-Then, find the line of 'grep: search for regular expression matches in test files'.
-Click the column of "New" (the second column) on this line, until 3.0-1 appears.
-* If '3.0-1' can be shown automatically, choose 'Pending' in 'View' field, to check the pending list is correct:   
-a. this package is in the list  
-b. if there are other packages which you do not want to update this time, please click the second columns of these lines on by one to mark them as 'keep'.  
-**Note**: Check the pending list is important, since new versions of other packages are put in pending list and will be updated automatically.
-For example, last time, I reverted  'gawk' to old version, and this time, I try to install old version of 'grep' and forget to check the pending list, 'gawk' will be updated to the newer version at this time.  
-So we'd better to install 'gawk', 'grep', 'sed' at once, instead of install them separately. 
-
-* If '3.0-1' cannot be shown automatically, cancel this installation, and use the second installation method below.
-
-4. use the default options in the following steps
-
-*Method 2, Install from Local Directory*  
-When the required old versions cannot be found in Method 1, we need to install it from local directory.
-1. Find your previous dowload/installation path, like `'http%3a%2f%2fcygwin.mirror.constant.com%2f'`
-2.  Add the previous grep package in the installation path.  
-* First, download the previous package of "grep" from ['http://mirrors.opencas.org/cygwin/x86_64/release/grep/'](http://mirrors.opencas.org/cygwin/x86_64/release/grep/)  
-Example: http://mirrors.opencas.org/cygwin/x86_64/release/grep/grep-3.0-1.tar.xz  
-* put this package in the previous installation path  
-Example: `C:\winshell_setup\http%3a%2f%2fcygwin.mirror.constant.com%2f\x86_64\release\grep`  
-* edit the setup.ini file  
-Example:   `C:\winshell_setup\http%3a%2f%2fcygwin.mirror.constant.com%2f\x86_64\setup.ini`  
-Add a `'[prev]'` section for this previous pack in "@ grep" part. If it already exists, just ignore this step.
-```
-[prev]
-version: 3.0-1
-install: x86_64/release/grep/grep-3.0-1.tar.xz 361740 a34cf6fc689a62005f7a33287c86419d7a24d262f694489af0dc864affd031f61f9f15970f2f211f335aa7a0234211facf98cc76d83639c7c631ffe5386b00ac
-source: x86_64/release/grep/grep-3.0-1-src.tar.xz 1379944 9d7b08c7e21d0d5058faff728dc575aab95d8c0ab8f70897ff0b2910f32b7f8dd1cdab530564a2786ffb24f676fa16bf7a51d8e0fb1488d2971dcc1d1c443d99
-```
-
-3. start setup-x86_64.exe  
-* In step "Choose A Download Source":
-Choose "Install from Local Directory"
-* In step "Select Local Package Directory":
-Specify the path as `C:\winshell_setup\http%3a%2f%2fcygwin.mirror.constant.com%2f`  
-* use the default options in the following steps, until you met step `'Select Packages'`.  
-Choose the correct version of "grep", in this case, I select `'3.0-1'`.
-* use the default options in the following steps
-
+Be same as it in [SHELL guide for Linux platform](shell_guide.md#5-shell-case-standards).
