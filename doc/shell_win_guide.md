@@ -233,11 +233,19 @@ File `~/start_test.sh`:
 
 Please refer to general SHELL guide for ['Regression Test Sustaining'](shell_guide.md#4-regression-test-sustaining).
 
-## 4.1 Keep Agent as daemon process on all workers
-Open a cmd console:
+## 4.1 Start Listener
 
-    >cd c:\CTP\shell
-    >start_service.bat
+* Controller 
+
+      cd ~
+      nohup sh start_test.sh&
+
+* Workers
+
+  Keep Agent as daemon process on all workers. Open a cmd console:
+
+      >cd c:\CTP\shell
+      >start_service.bat
 
 ## 4.2 Send Test Messages
 
