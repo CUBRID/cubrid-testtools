@@ -464,7 +464,21 @@ This section introduces how to execute ha_repl test with one HA instance environ
 			@HC_CHECK_FOR_EACH_STATEMENT
 			--test:
 
-## 2.2 Exclude Test cases
+## 2.2 Test Parameters
+
+In like ~/CTP/conf/ha_repl.conf, more parameters can be used.
+
+* Configure to update statistics data
+
+      update_statistics_on_catalog_classes_yn=y
+    
+* Detect timeout of sync
+
+    We will abandon to check slave data after a threshold.
+
+      ha_sync_detect_timeout_in_secs=1200 
+      
+* Exclude test cases
 
 Some test cases may not be meanningful. We need have a mechanism to exclude them to execute. We introduce a parameter to implement it. All test cases in configured excluded file will be ignored.
 
@@ -499,7 +513,8 @@ File cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf
 	#[PERMANENT] do not support call under HA Replication.CUBRIDSUS-8386.  do not support session parameters.CUBRIDSUS-11430.
 	sql/_13_issues/_15_1h/cases/bug_bts_15454.test
 	...
- 
+    
+
 ## 2.3 Difference File
 
 Sometimes, the file xxx.master.dump is different from xxx.slave1.dump caused by CUBRID design or NOT-FIXED bugs. In order to avoid such failures, we need provide a patch file like `xxx.master.slave1.diff_1` and apply the patch before check so that supress such failures. 
@@ -1139,4 +1154,10 @@ File CTP/ha_repl/lib/common.inc:
     The above statements will be executed on both Master and Slave. The returned results should be same. Otherwise, the test case will be regarded as failure.    
 
     >Note: table name `t` depends on actual table name.     
-		
+
+* `$HOLDCAS_ON` - Whether to hold cas.
+
+In dumped logs, we may see related information.
+
+	[Line:2] $HOLDCAS_ON
+	1 connection(s) affected.
