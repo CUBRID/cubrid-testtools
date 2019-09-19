@@ -1,13 +1,11 @@
 # HA Shell Test Guide
-# 1 Test Introduction
-HA Shell test suit is used to test CUBRID HA features.  
-To run a HA shell case, we usually need at least two machines. But sometimes, we need more than two machines.  
-So HA shell test is divided to two categories:    
-1. The HA shell cases which can be run on two machines. The cases are put in 'HA' case path. And these cases are executed for each CI build.  
-2. The other HA shell cases. The cases are put in 'shell_ext' path. And these cases are usually run before a release.  
+# 1. Test Objective
+HA Shell test suite is used to test CUBRID HA feature. To run a HA shell case, we usually need at least two servers. But sometimes, we need more than two servers. So HA test cases are divided to two categories:
+* `HA Shell`: Located in `https://github.com/CUBRID/cubrid-testcases-private/tree/develop/HA/shell` and scheduled by daily. Each test case can only run on two servers.
+* `Shell_ext`: Located in `https://github.com/CUBRID/cubrid-testcases-private/tree/develop/shell_ext` and not executed regularly for regression. We usually execute it in a full test. In `Shell_ext`, only a partial test cases are related to HA. These HA cases require variable number of test servers instead of only two.
 
-In this document, I will only introduce the first kind of test. And this kind of test is almost the same as shell test.  
-For the second kind of test, it will be introduced in shell_ext test guide.  
+In this document, I will only introduce the first one `HA shell` which is also an extension of SHELL test cases. For the second one `Shell_ext`, it will be introduced in seperated guide. 
+
 Additionally, HA shell test is also a part of code coverage test.  
 
 # 2 Tools Introduction
