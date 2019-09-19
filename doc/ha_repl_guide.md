@@ -33,7 +33,7 @@ This section introduces how to execute ha_repl test with one HA instance environ
 * ### Prepare Ha_repl Test Cases
 
 	There are two approaches. The first is to create our own test cases.
-	Log into the controller node, then create a arbitrary folder as `~/with_online/`, and then put our test cases under the folder. See example below:
+	Log into the controller node, then create an arbitrary folder exampled as `~/with_online/`, and then put our test cases under the folder. See example below:
 	
 	File ~/with_online/example1.sql:
 	
@@ -375,7 +375,8 @@ This section introduces how to execute ha_repl test with one HA instance environ
 	>Note: If there are failed cases, the cases and results will also be backuped into .tar.gz.
 
 	**Test case dumped data**
-	The result of test case is generated to the same path with test case.   
+
+	The dumped data of every test case is generated to the same path with test case.   
 	```
 	cd ~/with_online
 	$ ls -l
@@ -386,7 +387,7 @@ This section introduces how to execute ha_repl test with one HA instance environ
 	-rw-rw-r-- 1 ctl6 ctl6    503 Sep  5 19:54 example1.test
 	 ```
 
-	* The files end with `.dump` record the success or failure of the test cases and also record each sql statement and their execution result.   
+	* The files ended with `.dump` record the success or failure of the test cases and also record each sql statement and their execution result.   
 	
 
 			[STMT-TEST][Line:2]drop if exists t;
@@ -428,7 +429,7 @@ This section introduces how to execute ha_repl test with one HA instance environ
 			example1.master.dump - the result of master node     
 			example1.slave1.dump - the result of slave node         
 
-	 * The file ends with `.test` is test case which has been converted by CTP based on `.sql` file.
+	 * The file ended with `.test` is test case which is converted by CTP based on `.sql` file.
 	 
 			--test:
 			drop if exists t;
@@ -486,11 +487,10 @@ No.  |Role  |User Name  |IP  |Hostname | Deployments
 
 	#### Install CTP
 
-	Please refer to [CTP installation guide](#3-install-ctp-as-regression-test-platform) to install CTP.  
+	Please refer to [CTP installation guide](#3-install-ctp-as-regression-test-platform) to install CTP. Then create Ha_repl regression test configuration file.
+	
+	File `~/CTP/conf/ha_repl_template.conf`:
 
-	Create Ha_repl regression test configuration file `~/CTP/conf/ha_repl_template.conf`. 
-
-	    ```
 	    default.testdb = xdb
 	    default.ssh.pwd=******
 	    default.ssh.port=22
@@ -666,20 +666,19 @@ No.  |Role  |User Name  |IP  |Hostname | Deployments
 	    feedback_db_pwd = ********
 	    feedback_notice_qahome_url = http://192.168.1.86:6060/qaresult/hareplImportAction.nhn?main_id=<MAINID>
 	    ha_sync_detect_timeout_in_secs=1200
-	    ```
+
 
 	#### Create quick start script  
 
 	A consumer is used to listening to test messages. It requires a queue name and a script name to run.
 	Create a script file `~/start_test.sh` as below. 
 
-	    ```bash
 	    $ cat start_test.sh 
 	    echo> nohup.out
 	    start_consumer.sh -q QUEUE_CUBRID_QA_HA_REPL_LINUX -exec run_ha_repl -s china
-	    ```
-	    **QUEUE_CUBRID_QA_HA_REPL_LINUX** is the queue name    
-	    **run_ha_repl** is the script name, it will execute the script `run_ha_repl.sh` in `CTP/common/ext/`    
+
+    **QUEUE_CUBRID_QA_HA_REPL_LINUX** is the queue name    
+    **run_ha_repl** is the script name, it will execute the script `CTP/common/ext/run_ha_repl.sh` 
 
 * ### On Test nodes   
 
@@ -687,9 +686,9 @@ No.  |Role  |User Name  |IP  |Hostname | Deployments
 	Please refer to [CTP installation guide](#3-install-ctp-as-regression-test-platform) to install CTP.     
 
 	#### Install CUBRID on each test node   
-	    ```bash
+
 	    run_cubrid_install http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8368-b85a234/drop/CUBRID-10.2.0.8368-b85a234-Linux.x86_64-debug.sh
-	    ```
+
 	 >Note: this step is not necessary for daily regression test. CTP will install CUBRID on each node.    
 
 # 4. Regression Test Sustaining
@@ -701,17 +700,16 @@ We perform ha_repl/ha_repl_debug for daily (actually is for each build) and perf
 * ### Start listener
 	Log into controller node, then execute below to start the listener.
 
+		$ cd ~
 		$ sh start_test.sh 
 	
 * ### Stop listener
 
-	To stop listener, you may execute `~/CTP/common/script/stop_consumer.sh`. It will try to kill all active processes.
-
-	Let's see an example. 
+	To stop listener, you may execute `~/CTP/common/script/stop_consumer.sh`. It will try to kill all active processes.	Let's see an example. 
 
 	A running listener shows as below.
 
-		$ ps -u $USER f|tee
+		$ ps -u $USER f
 		PID TTY      STAT   TIME COMMAND
 		5610 ?        S      0:00 sshd: ha_repl@pts/0
 		5611 pts/0    Ss     0:00  \_ -bash
@@ -722,16 +720,18 @@ We perform ha_repl/ha_repl_debug for daily (actually is for each build) and perf
 		9927 ?        S      0:00      \_ /bin/bash /home/ha_repl/CTP/common/script/start_consumer.sh -q QUEUE_CUBRID_QA_HA_REPL_LINUX -exec run_ha_repl -s china
 		9928 ?        Sl     0:00          \_ /usr/local/jdk1.7.0_01/bin/java -cp ./lib/cubridqa-scheduler.jar com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent QUEUE_CUBRID_QA_HA_REPL_LINUX
 
-	Begin to execute stop:
+	Begin to stop listener:
 
 		$ cd ~/CTP/common/script
 		$ sh stop_consumer.sh 
 
 		/home/ha_repl/CTP/common/script/stop_consumer.sh: line 34: kill: (10719) - No such process
+		
+	Note: such error can be ignored.
 
-	Check again for processes:
+	Check again for processes. You may find that the listener process has been stopped.
 
-		$ ps -u $USER f|tee
+		$ ps -u $USER f
 		PID TTY      STAT   TIME COMMAND
 		5610 ?        S      0:00 sshd: ha_repl@pts/0
 		5611 pts/0    Ss     0:00  \_ -bash
@@ -740,9 +740,9 @@ We perform ha_repl/ha_repl_debug for daily (actually is for each build) and perf
 
 ## 4.2 Send test message
 
-1. Login to the message server: `message@192.168.1.91`
+Log into the message server `message@192.168.1.91`.
 
-2. Execute ha_repl test with release build
+* Sent ha_repl test message with release build
 
 		$ sender.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64.sh ha_repl default
 
@@ -773,21 +773,18 @@ We perform ha_repl/ha_repl_debug for daily (actually is for each build) and perf
 
 		Do you accept above message [Y/N]: Y
 
-3. Or execute ha_repl test with debug build    
+* Sent ha_repl test message with debug build
 
 	    sender.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8369-5a75e41/drop/CUBRID-10.2.0.8369-5a75e41-Linux.x86_64-debug.sh ha_repl_debug default
 
 ## 4.3 Check Test Status
 
- * See it in QA Homepage.      
-   Click the build number, find the ha/ha_repl_debug category, you can see the related information from the table.   
-   **Please check test rate:**    
-    If it is 100%, test is finished, otherwise it is still in progress or intterupted.      
-   Please refer to [ verify test result](#51-verify-ha_repl/ha_repl_debug-test-results )
+ * Check test progress in QA Homepage      
+   Open [QA homepage](http://qahome.cubrid.org), click a build number from left build tree, find `ha_repl` and `ha_repl_debug` categories in right `Function` tab. The test progress can be shown via `Test Rate` column.  `100%` means that the test is completed.
 
- * See Monitor      
-   Click `Monitor`, find `QUEUE_CUBRID_QA_HA_REPL_LINUX` item.
-   It will tell us whether the test is in progress or not.
+ * Check queue status
+	
+	If want to know what test is in progress or what messages are in queue, you may find information via queue status page. Go into page http://qahome.cubrid.org/qaresult/monitor/checkQueue.nhn (or open through `QA homepage -> Left tree -> Monitor -> Check queue`). You may find ha_repl queue status under `QUEUE_CUBRID_QA_HA_REPL_LINUX`.
     ![monitor](./ha_repl_image/Monitor.PNG)
  
 ## 4.4 Ha_repl Code Coverage Test
