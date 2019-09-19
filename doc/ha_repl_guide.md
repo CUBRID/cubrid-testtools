@@ -1097,7 +1097,7 @@ After conversion, **example1.test** will be generated.
 ## 5.3 Annotations
 
 * `--test` - It indicates that following one statement as a test statement will be executed by CUBRID Master.   
-* `--check` - It indicates that following one statement as a check statement will be executed on both CUBRID master and slave. Both of returned results shoule be same. Otherwise, the case is regarded as failure.
+* `--check` - It indicates that following one statement as a check statement will be executed on both CUBRID master and slave. Both of returned results should be same. Otherwise, the case is regarded as failure.
 
 * `@HC_CHECK_FOR_EACH_STATEMENT` - it can be regarded as a macro and contains many statements (`configured in CTP/ha_repl/lib/common.inc`). It normally follows `--check` used to check CUBRID system catalog and table schema consistency between master and slave.
 
@@ -1130,12 +1130,13 @@ File CTP/ha_repl/lib/common.inc:
     select 'db_password' TABLE_NAME, db_password.* from db_password order by 1,2;
     select 'db_root' TABLE_NAME, db_root.* from db_root order by 1,2,3,4,5;
 
-* `$HC_CHECK_FOR_DML` - it normally follows `--check`, in order to check data consistency between master and slave.
+* `$HC_CHECK_FOR_DML` - it normally follows `--check` used to check data consistency between master and slave.
 
-    Actual statments for it are look like:
+    Actual statments for it look like:
     
     	select 't' TABLE_NAME, count(*) from t;select 't' TABLE_NAME, t.* from t order by 1,2,3 limit 1000;select 't' TABLE_NAME, t.* from t order by 1 desc,2 desc,3 desc limit 1000;
     
+    The above statements will be executed on both Master and Slave. The returned results should be same. Otherwise, the test case will be regarded as failure.    
+
     >Note: table name `t` depends on actual table name.     
 		
-		The above statements will be executed on both Master and Slave. The returned results should be same. Otherwise, the test case will be regarded as failure.    
