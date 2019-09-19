@@ -463,11 +463,57 @@ This section introduces how to execute ha_repl test with one HA instance environ
 			--check:
 			@HC_CHECK_FOR_EACH_STATEMENT
 			--test:
-	
-	How to generate .test file, please refer to [ha_repl test case](#6-ha_repl-test-case ) section.
 
+## 2.2 Exclude Test cases
+
+Some test cases may not be meanningful. We need have a mechanism to exclude them to execute. We introduce a parameter to implement it. All test cases in configured excluded file will be ignored.
+
+	testcase_exclude_from_file = ${HOME}/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf
+
+File cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf:
+       
+	#[PERMANENT] CUBRIDSUS-9241:do not support OO class under HA Replication.
+	sql/_04_operator_function/_08_click_counter/_001_incr/cases/1005.test
+	sql/_04_operator_function/_08_click_counter/_002_decr/cases/1019.test
+	sql/_13_issues/_15_1h/cases/bug_bts_16189.test
+	sql/_13_issues/_11_1h/cases/bug_bts_4098.test 
+	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1007.test
+	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1002.test 
+	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1003.test
+	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1005.test
+	sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1004.test
+	sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1014.test 
+	sql/_06_manipulation/_01_select/_002_outer_join/cases/1026.test 
+	sql/_03_object_oriented/_03_inheritance/_004_manipulation/cases/1003.test 
+	sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1006.test 
+	sql/_04_operator_function/_01_all_types/_002_arithmetic_op/cases/1020.test 
+
+
+	#[PERMANENT] do not support call under HA Replication.CUBRIDSUS-8386.
+	sql/_06_manipulation/_01_select/_001_inner_join/cases/1049.test
+	sql/_02_user_authorization/_02_authorization/_001_grant/cases/1001.test
+	sql/_23_apricot_qa/_03_i18n/tr_TR/_09_identifiers/cases/_009_identifiers_user_002.test
+	sql/_02_user_authorization/_02_authorization/_002_revoke/cases/1058.test
+	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1006.test
+	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1004.test
+	#[PERMANENT] do not support call under HA Replication.CUBRIDSUS-8386.  do not support session parameters.CUBRIDSUS-11430.
+	sql/_13_issues/_15_1h/cases/bug_bts_15454.test
+	...
  
+## 2.3 Difference File
 
+Sometimes, the file xxx.master.dump is different from xxx.slave1.dump caused by CUBRID design or NOT-FIXED bugs. In order to avoid such failures, we need provide a patch file like `xxx.master.slave1.diff_1` and apply the patch before check so that supress such failures. 
+
+* Generate diff_1 file
+
+    	diff xxx.master.dump  xxx.slave1.dump > xxx.master.slave1.diff_1
+
+* The rule to determine success or failure
+
+Suppose that after a test of some test case, there are dumped files on master and on slave. If both dumped files are same, the test case will be regarded as pass. If there is any difference, then try to find difference file, and apply it and compare again. If there is no difference file, the case should be regarded as failure.
+
+In addition, if there is any crash or fatal errors in CUBRID logs, the test case will be also failed.
+ 
 # 3. Deploy Regression Test
 ## 3.1 Test Machines
 In the current daily regression test, we are using one controller node to control 15 HA test instances which are executed in parallel.
@@ -984,91 +1030,79 @@ Here are some example issues for your reference.
 * Crash issue: http://jira.cubrid.org/browse/CBRD-20534
 
 # 5. Ha_repl Test Case Specification   
-Since `HA REPLICATION` is using `SQL` scenarios to test on HA mode to verify the data replication between an active server and a standby server, so the cases are the same as `SQL`.    
-CTP will transform `case_name.sql` to be `case_name.test` which includes some checking statement flags around the SQL statements. And If the SQL does not contain primary key, CTP will add primary key on one column.  
-## 5.1 Conversion template 
-```
---test: # execute test flag for statement
-create table t1 (id int primary key, name varchar)
---check: # check data between master and slave
-@HC_CHECK_FOR_EACH_STATEMENT # check if schema is consistent between master and slave 
 
---test:
-insert into t1 values (1, 'qa'), (2, 'cubrid');
---check:
-$HC_CHECK_FOR_DML
+## 5.1 Naming rule
 
---test:
-drop table t1;
---check:
-@HC_CHECK_FOR_EACH_STATEMENT
+Ha_repl test cases should end with suffix `.test`. For example, a test case names  `example.test`.
 
-```
+## 5.2 Conversion
+As you known, Ha_repl test cases are converted from existing SQL test cases (https://github.com/CUBRID/cubrid-testcases). About the conversion, there are some changes.
 
-## 5.2 SQL cases
-Ha_repl test cases are based on sql cases, you can refer to [this guide](https://github.com/Zhaojia2019/cubrid-testtools/blob/develop/doc/sql_guide.md#5-how-to-make-a-sql-test-case) to write sql case, then CTP will covert them to ha_repl test cases.  
-The current ha_repl test case is located in the https://github.com/CUBRID/cubrid-testcases repository.
+* CTP converts all test cases from `case_name.sql` to `case_name.test`.
+For example, 
 
+**example1.sql**
 
-## 5.3 Conversion Rules
-The converted test cases are named with `.test`.      
-For example: there is example1.sql file, it will be converted to example1.test file.       
-Original case:
-```
-drop if exists t;
-create table t(i int,j varchar);
-insert into t values(1,'a');
-insert into t values(2,null);
-create index idx1 on t(i) with online;
-select /*+ recompile*/ * from t where i=2;
-insert into t values(2,3);
-select /*+ recompile*/ * from t where i=2;
-drop table t; 
-```
+		drop if exists t;
+		create table t(i int,j varchar);
+		insert into t values(1,'a');
+		insert into t values(2,null);
+		create index idx1 on t(i) with online;
+		select /*+ recompile*/ * from t where i=2;
+		insert into t values(2,3);
+		select /*+ recompile*/ * from t where i=2;
+		drop table t; 
 
-Converted case:
-```
---test:
-drop if exists t;
---check:
-@HC_CHECK_FOR_EACH_STATEMENT
---test:
-create table t(i int PRIMARY KEY,j varchar);
---check:
-@HC_CHECK_FOR_EACH_STATEMENT
---test:
-insert into t values(1,'a');
---check:
-$HC_CHECK_FOR_DML
+After conversion, **example1.test** will be generated.
 
---test:
-insert into t values(2,null);
---check:
-$HC_CHECK_FOR_DML
+		--test:
+		drop if exists t;
+		--check:
+		@HC_CHECK_FOR_EACH_STATEMENT
+		--test:
+		create table t(i int PRIMARY KEY,j varchar);
+		--check:
+		@HC_CHECK_FOR_EACH_STATEMENT
+		--test:
+		insert into t values(1,'a');
+		--check:
+		$HC_CHECK_FOR_DML
 
---test:
-create index idx1 on t(i) with online;
---check:
-@HC_CHECK_FOR_EACH_STATEMENT
---test:
-insert into t values(2,3);
---check:
-$HC_CHECK_FOR_DML
+		--test:
+		insert into t values(2,null);
+		--check:
+		$HC_CHECK_FOR_DML
 
---test:
-drop table t;
---check:
-@HC_CHECK_FOR_EACH_STATEMENT
---test:
-```
-CTP will add such statements `--test`, `--check`, `@HC_CHECK_FOR_EACH_STATEMENT` and `$HC_CHECK_FOR_DML` based on example1.sql into example1.test file.     
-* `--test` - It indicates that the sql statement below it will be  executed directly by CUBRID server.   
-* `--check` - It indicates that the statement below it will be replaced by its actual value. And the replaced statements will be executed by the CUBRID server. 
-* `@HC_CHECK_FOR_EACH_STATEMENT` - it followed `--check`, in order to
- check system catalog and tables schema consistency between master and slave.
+		--test:
+		create index idx1 on t(i) with online;
+		--check:
+		@HC_CHECK_FOR_EACH_STATEMENT
+		--test:
+		insert into t values(2,3);
+		--check:
+		$HC_CHECK_FOR_DML
 
-    It equals to:
-    ```
+		--test:
+		drop table t;
+		--check:
+		@HC_CHECK_FOR_EACH_STATEMENT
+		--test:
+
+* CTP will add `PRIMARY KEY` on first column automatically if table doesn't have a primary key.
+
+* Read-only statements (e.g., `SELECT`) will be ignored during conversion. They are not executed.
+
+		select /*+ recompile*/ * from t where i=2;
+
+## 5.3 Annotations
+
+* `--test` - It indicates that following one statement as a test statement will be executed by CUBRID Master.   
+* `--check` - It indicates that following one statement as a check statement will be executed on both CUBRID master and slave. Both of returned results shoule be same. Otherwise, the case is regarded as failure.
+
+* `@HC_CHECK_FOR_EACH_STATEMENT` - it can be regarded as a macro and contains many statements (`configured in CTP/ha_repl/lib/common.inc`). It normally follows `--check` used to check CUBRID system catalog and table schema consistency between master and slave.
+
+File CTP/ha_repl/lib/common.inc:
+
     select 'db_stored_procedure_args' TABLE_NAME, db_stored_procedure_args.* from db_stored_procedure_args order by 1,2,3,4,5
     ,6,7;
     select 'db_stored_procedure' TABLE_NAME, db_stored_procedure.* from db_stored_procedure order by 1,2,3,4,5,6,7,8,9;
@@ -1095,155 +1129,13 @@ CTP will add such statements `--test`, `--check`, `@HC_CHECK_FOR_EACH_STATEMENT`
     select 'db_trigger' TABLE_NAME, db_trigger.* from db_trigger order by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15;
     select 'db_password' TABLE_NAME, db_password.* from db_password order by 1,2;
     select 'db_root' TABLE_NAME, db_root.* from db_root order by 1,2,3,4,5;
-    ```
 
-* `$HC_CHECK_FOR_DML` - it followed `--check`, in order to check data consistency between master and slave.
+* `$HC_CHECK_FOR_DML` - it normally follows `--check`, in order to check data consistency between master and slave.
 
-
-    It equals to :
-    ```
-    select 't' TABLE_NAME, count(*) from t;select 't' TABLE_NAME, t.* from t order by 1,2,3 limit 1000;select 't' TABLE_NAME, t.* from t order by
-    1 desc,2 desc,3 desc limit 1000;
-    ``` 
-    >Note: table t is changeable, it based on the tables of DML operation(insert/update/delete)     
-    > After it modifed table data by DML,  check total record  count of tables, select 1000 rows of tables.     
-
-    Actual sql results:
-    ```bash
-    [STMT-TEST][Line:10]insert into t values(1,'a');
-    1
-    1
-
-    [RESULT]
-    1
-    1
-    ```  
-
-   Actual check statements:
-    ```
-    [STMT-CHECK][Line:12]$HC_CHECK_FOR_DML
-    select 't' TABLE_NAME, count(*) from t;select 't' TABLE_NAME, t.* from t order by 1,2,3 limit 1000;select 't' TABLE_NAME, t.* from t order by
-    1 desc,2 desc,3 desc limit 1000;
-    === <Result of SELECT Command in Line 2> ===
-
-    TABLE_NAME               count(*)
-    ===================================
-    't'                             1
-
-    1 row selected.Committed.
-
-    === <Result of SELECT Command in Line 2> ===
-
-    TABLE_NAME                      i  j
-    =========================================================
-    't'                             1  'a'
-
-    1 row selected.Committed.
-
-    === <Result of SELECT Command in Line 2> ===
-
-    TABLE_NAME                      i  j
-    =========================================================
-    't'                             1  'a'
-
-    1 row selected.Committed.
-    [OK]: [12]select 't' TABLE_NAME, count(*) from t;select 't' TABLE_NAME, t.* from t order by 1,2,3 limit 1000;select 't' TABLE_NAME, t.* from
-    t order by 1 desc,2 desc,3 desc limit 1000;
-
-    ``` 
-    >Note: `[OK]` indicates that the check between master and slave are pass.
-* Select or other similiar sql statements are ignored by CTP, they are not executed.      
-  Below select statements have been removed from example1.test.           
-  ```
-  select /*+ recompile*/ * from t where i=2;
-  ```
-## 5.4 Exclude List and Difference File
-Sometimes the file xxx.master.dump is different from xxx.slave1.dump caused by CUBRID design or Unfixed bugs. Make sure the test is pass, we need exlude them from ha_repl test cases or add difference file `xxx.master.slave1.diff_1`. 
-### Exclude List
-All test cases in exclude list will be tested no longer.     
-The exclude List file is located in directory `cubrid-testcases/sql/config` and named with `daily_regression_test_exclude_list_ha_repl.conf`       
- ```bash
- $ cd ~/cubrid-testcases/sql/config
- $ cat daily_regression_test_exclude_list_ha_repl.conf
-#[PERMANENT] CUBRIDSUS-9241:do not support OO class under HA Replication.
-sql/_04_operator_function/_08_click_counter/_001_incr/cases/1005.test
-sql/_04_operator_function/_08_click_counter/_002_decr/cases/1019.test
-sql/_13_issues/_15_1h/cases/bug_bts_16189.test
-sql/_13_issues/_11_1h/cases/bug_bts_4098.test 
-sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1007.test
-sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1002.test 
-sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1003.test
-sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1005.test
-sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1004.test
-sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1014.test 
-sql/_06_manipulation/_01_select/_002_outer_join/cases/1026.test 
-sql/_03_object_oriented/_03_inheritance/_004_manipulation/cases/1003.test 
-sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1006.test 
-sql/_04_operator_function/_01_all_types/_002_arithmetic_op/cases/1020.test 
-
-
-#[PERMANENT] do not support call under HA Replication.CUBRIDSUS-8386.
-sql/_06_manipulation/_01_select/_001_inner_join/cases/1049.test
-sql/_02_user_authorization/_02_authorization/_001_grant/cases/1001.test
-sql/_23_apricot_qa/_03_i18n/tr_TR/_09_identifiers/cases/_009_identifiers_user_002.test
-sql/_02_user_authorization/_02_authorization/_002_revoke/cases/1058.test
-sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1006.test
-sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1004.test
-#[PERMANENT] do not support call under HA Replication.CUBRIDSUS-8386.  do not support session parameters.CUBRIDSUS-11430.
-sql/_13_issues/_15_1h/cases/bug_bts_15454.test
-...
- ```
-
-### Difference file
-#### Generate diff_1 file
-    ```bash
-    diff xxx.master.dump xxx.slave1.dump >xxx.master.slave1.diff_1
-    ``` 
-#### Current existed diff_1 files
- In current ha_repl test cases, we can find much diff_1 files
-```bash
-$ cd cubrid-testcases/
-$ find ./ -name "*.diff_1"
-./sql/_01_object/_02_class/_003_auto_increment/cases/cubridsus-965.master.slave1.diff_1
-./sql/_01_object/_03_virtual_class/_003_auto_increment/cases/1014.master.slave1.diff_1
-./sql/_01_object/_04_trigger/_001_basic/cases/1010.master.slave1.diff_1
-./sql/_01_object/_07_alteration/_001_class_add/cases/1003.master.slave1.diff_1
-./sql/_01_object/_07_alteration/_001_class_add/cases/1005.master.slave1.diff_1
-./sql/_01_object/_07_alteration/_001_class_add/cases/1007.master.slave1.diff_1
-./sql/_01_object/_07_alteration/_003_class_change/cases/1008.master.slave1.diff_1
-./sql/_01_object/_08_primary_foreign_key/_005_authorization/cases/1005.master.slave1.diff_1
-./sql/_01_object/_10_system_table/_001_db_class/cases/1002.master.slave1.diff_1
-./sql/_01_object/_10_system_table/_004_db_attribute/cases/1003.master.slave1.diff_1
-./sql/_01_object/_10_system_table/_004_db_attribute/cases/1005.master.slave1.diff_1
-...
-``` 
- #### Result comparison mechanism
- Please see the logic below:     
- `$masterFile` - xxx.master.dump    
- `$slaveFile` - xxx.slave1.dump    
- `$master_slaveDiffFileTemp` - xxx.master.slave1.diff_1.temp    
- `$master_slaveDiffFile` - xxx.master.slave1.diff_1      
- ```bash
-diff $masterFile $slaveFile > $master_slaveDiffFileTemp
-if [ $? -eq 0 ]
-then
-    echo "PASS"
-else
-    if [ -f $master_slaveDiffFile ]
-    then
-        diff  $master_slaveDiffFileTemp  $master_slaveDiffFile
-        if [ $? -eq 0 ]
-        then
-        echo "PASS"
-        else
-        echo "FAIL"
-        fi
-    else
-        echo "FAIL"
-    fi
-fi
- ```                
-
-
-
-
+    Actual statments for it are look like:
+    
+    	select 't' TABLE_NAME, count(*) from t;select 't' TABLE_NAME, t.* from t order by 1,2,3 limit 1000;select 't' TABLE_NAME, t.* from t order by 1 desc,2 desc,3 desc limit 1000;
+    
+    >Note: table name `t` depends on actual table name.     
+		
+		The above statements will be executed on both Master and Slave. The returned results should be same. Otherwise, the test case will be regarded as failure.    
