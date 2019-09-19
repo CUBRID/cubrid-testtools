@@ -789,7 +789,7 @@ Log into the message server `message@192.168.1.91`.
  
 ## 4.4 Ha_repl Code Coverage Test
 
-As scheduled in regression test, code coverage test for Ha_repl is executed on the last Saturday in every month. But sometimes, due to failure reason, we also need sent test message by manual. To execute code coverage test of ha_repl, Please login to the message server `message@192.168.1.91`, then execute like:
+As scheduled in regression test, code coverage test for Ha_repl is executed on the last Saturday in every month. But sometimes, due to failure reason, we also need sent test message by manual. To execute code coverage test of ha_repl, please log into the message server `message@192.168.1.91`, then execute like:
     
     $ cd ~/manual/
     $ sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_010.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz ha_repl
@@ -839,27 +839,35 @@ Find code coverage rate by `lines`. Normally, ha_repl code coverage rate by line
 Additionally, during code coverage execution, you can log into the controller node to see test logs in the `$CTP_HOME/result/ha_repl/current_runtime_logs`.
 
 ## 4.5 Check Test Result
-* ### Verify ha_repl/ha_repl_debug test results   
-Go to QA homepage and click the CI build, wait for the `Function` page loading, then check if there are `ha_repl` and `ha_repl_debug` results.  
-![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)  
-    **Total column:** The number of test cases, it counts all the cases.         
-    **Testing column:** The number of test cases that should be executed. It excepts the test cases that defined in `~/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf`.     
+
 * ### Check if there is a result
-If there shows 'NO RESULT (OR RUNNING)'as bellow, you need to find the reason.  
+
+Generally, you may find `ha_repl` and `ha_repl_debug` test results in QA homepage as below.
+
+![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)  
+
+ **Total column:** The number of test cases, it counts all the cases.         
+ **Testing column:** The number of test cases that should be executed. It excludes the test cases that defined in `~/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf`.     
+
+If it shows `'NO RESULT (OR RUNNING)'` as bellow, you need to find the reason that why not execute.
 ![ha_repl_no_result](./ha_repl_image/ha_repl_no_result.PNG)  
-Sometimes the CI build comes late, so that the test started late; or there is another test executed before the CI build. In this case, just wait for the test finish and then verify the results.  
+
+Sometimes, the CI build comes late, so that the test starts late; or there is another test executed before the CI build. In this case, just wait for the test completion and then verify the results.  
+
 * ### Test Rate should be 100%
-It means the `Testing` is equal to the sum of `Success` and `Fail(Total)`.
+It means that all test cases except cases in excluded list should be executed.
+
 * ### Verified Rate should be 100%
-If there is a failed test case, you need to verify it.  
+
+It means that all failures should be verified. Please verify failures in online verification page.
+
 ![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)    
 Click the failed number `1`, it shows the list of failed test cases.   
 ![ha_repl_verify2](./ha_repl_image/ha_repl_verify2.PNG)    
 Click the test case, it shows the details.   
 ![ha_repl_verify3](./ha_repl_image/ha_repl_verify3.PNG)    
 
-**Ha_repl yet do not support comparison between master result and slave result. we need to enhance tool in future.**    
-You can check log to find fail reason:   
+Note: **Ha_repl does not yet support comparison between master result and slave result in QA homepage. We need improve the feature in  the future.**  Currently, you can check test logs to examine failure reason:   
 ```
 $ cd CTP/result/ha_repl/
 $ tar zxvf ha_repl_result_10.2.0.8433-50fb781_64bits_3783_2019.9.6_5.13.28.tar.gz
@@ -964,9 +972,8 @@ select 'db_password' TABLE_NAME, db_password.* from db_password order by 1,2;
 select 'db_root' TABLE_NAME, db_root.* from db_root order by 1,2,3,4,5;(FAIL TO SYNC. BREAK!!!)
 ```
 
-Analyze the failure, then click `verify` in `fail list page` and fill in fail reason in `verify page` to verify it.   
+Try to find the failure reason, then input the reason into online verification page.
 ![ha_repl_verify4](./ha_repl_image/ha_repl_verify4.PNG)    
-
 
 ### Report issues
 Here are the issues that you can refer to.   
