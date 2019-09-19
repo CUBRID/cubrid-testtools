@@ -280,7 +280,7 @@ sender.sh QUEUE_CUBRID_QA_SHELL_WIN64 http://192.168.1.91:8080/REPO_ROOT/store_0
 Please refer to shell guide: ['Shell Case Standards'](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#5-shell-case-standards)
 
 # Appendix A: Install Old Package Version of Cygwin
-## Why to install the Old versions
+## Why to Install the Old Versions
 Take 'grep' as an example. Sometimes, '\r' is appended in the texts on windows. But in ANNOUNCEMENT ['Updated \[test\]: grep\-3.0\-2'](http://cygwin.1069669.n5.nabble.com/ANNOUNCEMENT\-Updated\-test\-grep\-3\-0\-2\-td132384.html), it is said:   
 ```
 This build modifies the behavior of grep to no longer force text mode on 
