@@ -4,7 +4,7 @@ HA_repl test is aimed to test CUBRID HA replication feature. We convert existing
 # 2. Ha_repl Test Usage
 This section introduces how to execute ha_repl test with one HA instance environment.    
 
-## 2.1 Quick Start Ha_repl Test
+## 2.1 Quick Start
 
 * ### Deployment overview
 	We need prepare at least 2 servers.
@@ -480,39 +480,38 @@ In like ~/CTP/conf/ha_repl.conf, more parameters can be used.
       
 * Exclude test cases
 
-Some test cases may not be meanningful. We need have a mechanism to exclude them to execute. We introduce a parameter to implement it. All test cases in configured excluded file will be ignored.
+    Some test cases may not be meanningful. We need have a mechanism to exclude them to execute. We introduce a parameter to implement it. All test cases in configured excluded file will be ignored.
 
 	testcase_exclude_from_file = ${HOME}/cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf
 
-File cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf:
+    File cubrid-testcases/sql/config/daily_regression_test_exclude_list_ha_repl.conf:
        
-	#[PERMANENT] CUBRIDSUS-9241:do not support OO class under HA Replication.
-	sql/_04_operator_function/_08_click_counter/_001_incr/cases/1005.test
-	sql/_04_operator_function/_08_click_counter/_002_decr/cases/1019.test
-	sql/_13_issues/_15_1h/cases/bug_bts_16189.test
-	sql/_13_issues/_11_1h/cases/bug_bts_4098.test 
-	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1007.test
-	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1002.test 
-	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1003.test
-	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1005.test
-	sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1004.test
-	sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1014.test 
-	sql/_06_manipulation/_01_select/_002_outer_join/cases/1026.test 
-	sql/_03_object_oriented/_03_inheritance/_004_manipulation/cases/1003.test 
-	sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1006.test 
-	sql/_04_operator_function/_01_all_types/_002_arithmetic_op/cases/1020.test 
+			#[PERMANENT] CUBRIDSUS-9241:do not support OO class under HA Replication.
+			sql/_04_operator_function/_08_click_counter/_001_incr/cases/1005.test
+			sql/_04_operator_function/_08_click_counter/_002_decr/cases/1019.test
+			sql/_13_issues/_15_1h/cases/bug_bts_16189.test
+			sql/_13_issues/_11_1h/cases/bug_bts_4098.test 
+			sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1007.test
+			sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1002.test 
+			sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1003.test
+			sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1005.test
+			sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1004.test
+			sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1014.test 
+			sql/_06_manipulation/_01_select/_002_outer_join/cases/1026.test 
+			sql/_03_object_oriented/_03_inheritance/_004_manipulation/cases/1003.test 
+			sql/_01_object/_10_system_table/_002_db_direct_super_class/cases/1006.test 
+			sql/_04_operator_function/_01_all_types/_002_arithmetic_op/cases/1020.test 
 
-
-	#[PERMANENT] do not support call under HA Replication.CUBRIDSUS-8386.
-	sql/_06_manipulation/_01_select/_001_inner_join/cases/1049.test
-	sql/_02_user_authorization/_02_authorization/_001_grant/cases/1001.test
-	sql/_23_apricot_qa/_03_i18n/tr_TR/_09_identifiers/cases/_009_identifiers_user_002.test
-	sql/_02_user_authorization/_02_authorization/_002_revoke/cases/1058.test
-	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1006.test
-	sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1004.test
-	#[PERMANENT] do not support call under HA Replication.CUBRIDSUS-8386.  do not support session parameters.CUBRIDSUS-11430.
-	sql/_13_issues/_15_1h/cases/bug_bts_15454.test
-	...
+			#[PERMANENT] do not support call under HA Replication.CUBRIDSUS-8386.
+			sql/_06_manipulation/_01_select/_001_inner_join/cases/1049.test
+			sql/_02_user_authorization/_02_authorization/_001_grant/cases/1001.test
+			sql/_23_apricot_qa/_03_i18n/tr_TR/_09_identifiers/cases/_009_identifiers_user_002.test
+			sql/_02_user_authorization/_02_authorization/_002_revoke/cases/1058.test
+			sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1006.test
+			sql/_03_object_oriented/_01_user_defined_type/_004_authorization/cases/1004.test
+			#[PERMANENT] do not support call under HA Replication.CUBRIDSUS-8386.  do not support session parameters.CUBRIDSUS-11430.
+			sql/_13_issues/_15_1h/cases/bug_bts_15454.test
+			...
     
 
 ## 2.3 Difference File
