@@ -8,7 +8,7 @@ In this document, I will only introduce the first one `HA shell` which is also a
 
 Additionally, HA shell test is also a part of code coverage test.  
 
-# 2 HA Shell Test Usage
+# 2. HA Shell Test Usage
 
 CTP is the only test tool which is used to execute HA shell test cases.   
 
@@ -79,15 +79,18 @@ CTP is the only test tool which is used to execute HA shell test cases.
 * ### Examine test results
 
   Please follow to general SHELL guide for it.
+  
+## 2.2 Test Configuration
 
-## 2.2 CTP Usage Introduction
-Please refer to shell_guide: [CTP Usage Introduction](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#22-ctp-usage-introduction)
+* HA instance configuration
 
-## 2.3 Execute A Single Test Case
-Please refer to shell_guide: [Execute A Single Test Case](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#23-execute-a-single-test-case)
+  As example below, these two servers create a HA instance `ha1`. The master is `192.168.1.83`, and the slave is `192.168.1.93`.
 
+      env.ha1.ssh.host=192.168.1.83
+      env.ha1.ssh.relatedhosts=192.168.1.93
 
 # 3 Regression Test Deployment
+
 ## 3.1 Test Machines
 |Role|Master or Slave|User|IP|Hostname|
 |---|---|---|---|---|
