@@ -296,278 +296,218 @@ This will start a HA shell test when the consumer receives the test message.
 
       sender.sh QUEUE_CUBRID_QA_SHELL_HA_LINUX "http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/CUBRID-10.2.0.8270-c897055-gcov-Linux.x86_64.tar.gz,http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8270-c897055/drop/cubrid-10.2.0.8270-c897055-gcov-src-Linux.x86_64.tar.gz" ha_shell default
 
-# 5 HA shell case standards
-HA shell case is a special kind of shell test case. It should fowllow all the shell test case standards.   
-For shell case standards, please refer to shell test guide.   
-In this section, I will only introduce the contents which are not included in shell test guide.  
+# 5. HA shell case standards
 
-## 5.1 Case Path Standard
-A HA shell test case should follow the following structure:   
-```
-/path/to/test_name/cases/test_name.sh
-``` 
-### Test Cases Added for New Features 
-When we need add a test case for a feature test, add a case to path like this:  
-```
-cubrid-testcases-private/HA/shell/_{no}_{release_code}/cbrd_xxxxx_{feature}/
-```
-with naming rules:
-```
-structured_name_1/cases/structured_name_1.sh
-structured_name_2/cases/structured_name_2.sh
-```
+HA shell case is a special kind of shell test case. It should follow all the SHELL test case standards. For SHELL test case standards, please refer to SHELL test guide. In this section, I will only introduce the contents which are not included in SHELL test guide.  
 
-Example:
-```
-cubrid-testcases-private/HA/shell/_31_cherry/issue_21506_online_index
-cubrid-testcases-private/HA/shell/_31_cherry/issue_21506_online_index/cbrd_21506_01/cases/cbrd_21506_01.sh
-```
+## 5.1 Test Case Path
 
-### Test Cases Added for Jira Issues
-When add a test case for a bug fix, add a case to path:  
-```
-cubrid-testcases-private/HA/shell/_12_bts_issue/_{yy}_{1|2}h/
-```
-with naming rules:
-```
-cbrd_xxxxx/cases/cbrd_xxxxx.sh
-cbrd_xxxxx_1/cases/cbrd_xxxxx_1.sh
-cbrd_xxxxx_{issue_key}/cases/cbrd_xxxxx_{issue_keyword}.sh
-```
-Example:
-```
-cubrid-testcases-private/HA/shell/_12_bts_issue/_19_2h/cbrd_22207/cases/cbrd_22207.sh
-```
+* Basis of case naming
 
-## 5.2 HA Shell Case Template
-```
-#!/bin/sh
-# Initialize the environment variables, and import all the functions. 
-. $init_path/init.sh
-. $init_path/make_ha.sh
+      /path/to/test_name/cases/test_name.sh     
+      
+    So, it's same as general SHELL test case's.      
 
-init test
-setup_ha_environment
+* Test cases added for new features 
 
-# Test steps
+    When we need add a test case for a feature test, add a case to path like this:  
+    ```
+    cubrid-testcases-private/HA/shell/_{no}_{release_code}/cbrd_xxxxx_{feature}/
+    ```
+    with naming rules:
+    ```
+    structured_name_1/cases/structured_name_1.sh
+    structured_name_2/cases/structured_name_2.sh
+    ```
 
-# Check the result
-if [condition]
-then
-       write_ok
-else
-       write_nok
-fi
+    Example:
+    ```
+    cubrid-testcases-private/HA/shell/_31_cherry/issue_21506_online_index
+    cubrid-testcases-private/HA/shell/_31_cherry/issue_21506_online_index/cbrd_21506_01/cases/cbrd_21506_01.sh
+    ```
 
-revert_ha_environment
+* Test cases added for Jira issues
 
-# Clean environment, such as delete the jave class files
+    When add a test case for a bug fix, add a case to path:  
+    ```
+    cubrid-testcases-private/HA/shell/_12_bts_issue/_{yy}_{1|2}h/
+    ```
+    with naming rules:
+    ```
+    cbrd_xxxxx/cases/cbrd_xxxxx.sh
+    cbrd_xxxxx_1/cases/cbrd_xxxxx_1.sh
+    cbrd_xxxxx_{issue_key}/cases/cbrd_xxxxx_{issue_keyword}.sh
+    ```
+    Example:
+    ```
+    cubrid-testcases-private/HA/shell/_12_bts_issue/_19_2h/cbrd_22207/cases/cbrd_22207.sh
+    ```
 
-# 'finish' is a function in init.sh, which will revert all the conf files to the original status.
-finish
-```
+## 5.2 Case Template
+
+    #!/bin/sh
+    # Initialize the environment variables, and import all the functions. 
+    . $init_path/init.sh
+    . $init_path/make_ha.sh
+
+    init test
+    setup_ha_environment
+
+    # Test steps
+
+    # Check the result
+    if [condition]
+    then
+           write_ok
+    else
+           write_nok
+    fi
+
+    revert_ha_environment
+
+    # Clean environment, such as delete the jave class files
+
+    # 'finish' is a function in init.sh, which will revert all the conf files to the original status.
+    finish
  
-`'make_ha.sh'` will source make_ha_upper.sh( >=8.4) or make_ha_lower.sh( <8.4) according to cubrid versions.
-```
-if [ $is_R40 -eq 1 ]; then
-        . $init_path/make_ha_upper.sh
-else
-        . $init_path/make_ha_lower.sh
-fi
-```
-`make_ha_upper.sh` and `make_ha_lower.sh` contain all the common functions for ha shell test cases.  
+## 5.3 Common Functions
 
-## 5.3 `'cubrid'` Script
-Please refer to shell guide: ['cubrid' Script](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#53-cubrid-script)  
+* ### wait_for_active
 
-## 5.4 Functions/Alias in `'ha_common.sh'`
-ha_common.sh will be sourced in make_ha_upper.sh:  
-```
-source $init_path/ha_common.sh
-```
-### wait_for_active
-Wait server 'hatestdb' to be changed to active mode on current node.  
-If the server is changed to active to active mode whthin 120 seconds, the wait loop will break.   
-Otherwise, this function will print "NOK: db server is not active after long time".  
-This is usually used before we update data in hatestdb.
+    Wait server 'hatestdb' to be changed to active mode on current node.  
+    If the server is changed to active to active mode whthin 120 seconds, the wait loop will break.   
+    Otherwise, this function will print "NOK: db server is not active after long time".  
+    This is usually used before we update data in hatestdb.
 
-### wait_for_slave_active
-Wait server 'hatestdb' to be changed to active mode on slave node.  
-If the server is changed to active to active mode whthin 120 seconds, the wait loop will break.   
-Otherwise, this function will print "NOK: db server is not active after long time".  
-This is usually used after a failover.  
+* ### wait_for_slave_active
 
-### run_on_slave
-```
-alias run_on_slave='${init_path}/../../common/script/run_remote_script -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
-```
+    Wait server 'hatestdb' to be changed to active mode on slave node.  
+    If the server is changed to active to active mode whthin 120 seconds, the wait loop will break.   
+    Otherwise, this function will print "NOK: db server is not active after long time".  
+    This is usually used after a failover.  
+
+* ### run_on_slave
+
+      alias run_on_slave='${init_path}/../../common/script/run_remote_script -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
+
+  Examples:
+
+      run_on_slave -c "cubrid hb stop"
+      run_on_slave -c "grep 'Process event: Encountered an unrecoverable error and will shut itself down' $CUBRID/log/${dbname}@${masterHostName}_copylogdb.err | wc -l"
+      run_on_slave -c "cd $HOME; sh monitor_bug_11301.sh $dbname $masterHostName $port" > slave.log 2>&1
+
+* ### run_download_on_slave
+
+      alias run_download_on_slave='${init_path}/../../common/script/run_download -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
+
+  Examples:
+
+      run_download_on_slave -from ~/slave.log -to ./
+      run_download_on_slave -from $CUBRID/log/hatestdb@${masterHostName}_copylogdb.err -to .
+
+* ### run_upload_on_slave
+
+      alias run_upload_on_slave='${init_path}/../../common/script/run_upload -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
+
 Examples:
-```
-run_on_slave -c "cubrid hb stop"
-run_on_slave -c "grep 'Process event: Encountered an unrecoverable error and will shut itself down' $CUBRID/log/${dbname}@${masterHostName}_copylogdb.err | wc -l"
-run_on_slave -c "cd $HOME; sh monitor_bug_11301.sh $dbname $masterHostName $port" > slave.log 2>&1
-```
-### run_download_on_slave
-```
-alias run_download_on_slave='${init_path}/../../common/script/run_download -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
-```
-Examples:
-```
-run_download_on_slave -from ~/slave.log -to ./
-run_download_on_slave -from $CUBRID/log/hatestdb@${masterHostName}_copylogdb.err -to .
-```
 
-### run_upload_on_slave
-```
-alias run_upload_on_slave='${init_path}/../../common/script/run_upload -host $SLAVE_SERVER_IP -port $SLAVE_SERVER_SSH_PORT -user $SLAVE_SERVER_USER -password "$SLAVE_SERVER_PW"'
-```
-Examples:
-```
-run_upload_on_slave -from $CUBRID/conf/cubrid.conf -to $CUBRID/conf/
-run_upload_on_slave -from ./monitor_bug_11301.sh -to $HOME/
-```
+      run_upload_on_slave -from $CUBRID/conf/cubrid.conf -to $CUBRID/conf/
+      run_upload_on_slave -from ./monitor_bug_11301.sh -to $HOME/
 
-## 5.5 Functions in make_ha_upper.sh or make_ha_lower.sh  
+* ### setup_ha_environment  
 
-### setup_ha_environment  
-`setup_ha_environment` is used to setup a HA environment which contains one master node, and one slave node.  
-The current machine is used as the master node, and slave node is set in ~/CTP/shell/init_path/HA.properties.  
+    Used to setup a HA environment which contains one master node, and one slave node. The current machine is used as the master node, and slave node is set in ~/CTP/shell/init_path/HA.properties.  
 Example for HA.properties:  
-```
-##Configure HA enviorment.
 
-MASTER_SERVER_IP = 192.168.1.83
-MASTER_SERVER_USER = ha
-MASTER_SERVER_PW = PASSWORD
-MASTER_SERVER_SSH_PORT = 22
-SLAVE_SERVER_IP = 192.168.1.93
-SLAVE_SERVER_USER = ha
-SLAVE_SERVER_PW = PASSWORD
-SLAVE_SERVER_SSH_PORT = 22
-#set port numbers according to different users
-CUBRID_PORT_ID = 1568
-HA_PORT_ID = 59907
-MASTER_SHM_ID = 1568
-BROKER_PORT1 = 30090
-APPL_SERVER_SHM_ID1 = 30090
-BROKER_PORT2 = 33091
-APPL_SERVER_SHM_ID2 = 33091
-CM_PORT = 8001
-```
-If we need to run a HA shell, we need configure `'HA.properties'` first.  
-In regression test,  file `'HA.properties'` is configured by CTP.  
-CTP read info from file `'~/CTP/conf/shell_runtime.conf'` on controller node, and set file `'$init_path/HA.properties'` on each master node. 
+      ##Configure HA enviorment.
+      MASTER_SERVER_IP = 192.168.1.83
+      MASTER_SERVER_USER = ha
+      MASTER_SERVER_PW = PASSWORD
+      MASTER_SERVER_SSH_PORT = 22
+      SLAVE_SERVER_IP = 192.168.1.93
+      SLAVE_SERVER_USER = ha
+      SLAVE_SERVER_PW = PASSWORD
+      SLAVE_SERVER_SSH_PORT = 22
+      #set port numbers according to different users
+      CUBRID_PORT_ID = 1568
+      HA_PORT_ID = 59907
+      MASTER_SHM_ID = 1568
+      BROKER_PORT1 = 30090
+      APPL_SERVER_SHM_ID1 = 30090
+      BROKER_PORT2 = 33091
+      APPL_SERVER_SHM_ID2 = 33091
+      CM_PORT = 8001
 
-For example:  
-File `'$init_path/HA.properties'` on node ha@192.168.1.83:
-```
-##Configure HA enviorment.
+  If we need to run a HA shell manually, we need configure `'HA.properties'` first. In regression test,  file `'HA.properties'` is configured by CTP. CTP reads information from file `'~/CTP/conf/shell_runtime.conf'` on controller node, and synchronizes file `'$init_path/HA.properties'` on each master node. 
 
-MASTER_SERVER_IP = 192.168.1.83
-MASTER_SERVER_USER = ha
-MASTER_SERVER_PW = PASSWORD
-MASTER_SERVER_SSH_PORT = 22
-SLAVE_SERVER_IP = 192.168.1.93
-SLAVE_SERVER_USER = ha
-SLAVE_SERVER_PW = PASSWORD
-SLAVE_SERVER_SSH_PORT = 22
-#set port numbers according to different users
-CUBRID_PORT_ID = 1568
-HA_PORT_ID = 59907
-MASTER_SHM_ID = 1568
-BROKER_PORT1 = 30090
-APPL_SERVER_SHM_ID1 = 30090
-BROKER_PORT2 = 33091
-APPL_SERVER_SHM_ID2 = 33091
-CM_PORT = 8001
+* ### revert_ha_environment  
 
-```
-This is depended on file `~/CTP/conf/shell_template.conf` on controller node:  
+    Revert all config files to the original status on master node and slave node, and delete database on both nodes.
 
+* ### wait_for_slave
 
-```
-default.ssh.port=22
-default.ssh.user=ha
-default.ssh.pwd=uV9b3KMp5%%
-default.cubrid.cubrid_port_id = 1568
-default.broker1.BROKER_PORT = 30090
-default.broker2.BROKER_PORT = 33091
-default.broker1.APPL_SERVER_SHM_ID=30090
-default.broker2.APPL_SERVER_SHM_ID=33091
-default.ha.ha_port_id = 59907
+    Used to wait the data replication finished on slave node. If we need to check the data on slave node, we need to check the data after the data replication finished. So this function is required.
 
-#master node
-env.83.ssh.host=192.168.1.83
-#slave node
-env.83.ssh.relatedhosts=192.168.1.93
-...
-```
+* ### wait_for_slave_failover  
 
-### revert_ha_environment  
-* Revert all the conf files to the original status on master node and slave node.
-* Delete db on both nodes.
+    When a failover occurs, we need use function `wait_for_slave_failover` to wait the new slave node (previous master node) to finish the data replication before we check the data.
 
-### wait_for_slave
-`wait_for_slave` is used to wait the data replication finished on slave node.
-If we need to check the data on slave node, we need to check the data after the data replication finished. So this function is required.
+* ### format_hb_status
+  
+  Used to format the hostname, process id, path for 'cubrid hb status' output.  
 
-### wait_for_slave_failover  
-When a failover occurs, we need use function `wait_for_slave_failover` to wait the new slave node (previous master node) to finish the data replication before we check the data.
+  Usage:
 
-### format_hb_status
-`format_hb_status` is used to format the hostname, process id, path for 'cubrid hb status' output.  
-Usage:
-```
-cubrid hb status > test.log
-format_hb_status test.log
-```
-Before format:
-```
-$ cat test.log 
+      cubrid hb status > test.log
+      format_hb_status test.log
 
- HA-Node Info (current func09, state master)
-   Node func19 (priority 2, state slave)
-   Node func09 (priority 1, state master)
+  Before format:
+
+      $ cat test.log 
+
+       HA-Node Info (current func09, state master)
+         Node func19 (priority 2, state slave)
+         Node func09 (priority 1, state master)
 
 
- HA-Process Info (master 12167, state master)
-   Applylogdb hatestdb@localhost:/home/ha/CUBRID/databases/hatestdb_func19 (pid 12407, state registered)
-   Copylogdb hatestdb@func19:/home/ha/CUBRID/databases/hatestdb_func19 (pid 12405, state registered)
-   Server hatestdb (pid 12175, state registered_and_active)
+       HA-Process Info (master 12167, state master)
+         Applylogdb hatestdb@localhost:/home/ha/CUBRID/databases/hatestdb_func19 (pid 12407, state registered)
+         Copylogdb hatestdb@func19:/home/ha/CUBRID/databases/hatestdb_func19 (pid 12405, state registered)
+         Server hatestdb (pid 12175, state registered_and_active)
 
-@ cubrid heartbeat status
-```
-After format:
-```
-$ cat test.log             
-
- HA-Node Info (current host1, state master)
-   Node host2 (priority 2, state slave)
-   Node host1 (priority 1, state master)
+      @ cubrid heartbeat status
 
 
- HA-Process Info (master , state master)
-   Applylogdb hatestdb@localhost:CUBRID/databases/hatestdb_host2 (pid , state registered)
-   Copylogdb hatestdb@host2:CUBRID/databases/hatestdb_host2 (pid , state registered)
-   Server hatestdb (pid , state registered_and_active)
+  After format:
 
-@ cubrid heartbeat status
-```
-### add_ha_db
-`add_ha_db` is used to add new database after `setup_ha_environment`.  
-* Create database on master node and slave node.  
-* Add the database name in ha_db_list in $CUBRID/conf/cubrid_ha.conf  
-* Restart the heartbeat on both nodes  
-Example:  
-Three databases will be created in this case: tdb01, tdb02 and tdb03. 
-```
-#!/bin/bash
+      $ cat test.log             
 
-. $init_path/init.sh
-init test
+       HA-Node Info (current host1, state master)
+         Node host2 (priority 2, state slave)
+         Node host1 (priority 1, state master)
 
-. $init_path/make_ha.sh
-dbname=tdb01
-setup_ha_environment
-add_ha_db tdb02 tdb03
-```
+
+       HA-Process Info (master , state master)
+         Applylogdb hatestdb@localhost:CUBRID/databases/hatestdb_host2 (pid , state registered)
+         Copylogdb hatestdb@host2:CUBRID/databases/hatestdb_host2 (pid , state registered)
+         Server hatestdb (pid , state registered_and_active)
+
+      @ cubrid heartbeat status
+
+* ### add_ha_db
+  
+  Used to add new database after `setup_ha_environment`. It will create database on master node and slave node, add the database name in ha_db_list in $CUBRID/conf/cubrid_ha.conf, and restart the heartbeat on both nodes.  
+
+  Example:  
+    
+      #!/bin/bash
+
+      . $init_path/init.sh
+      init test
+
+      . $init_path/make_ha.sh
+      dbname=tdb01
+      setup_ha_environment
+      add_ha_db tdb02 tdb03
+
+  Three databases will be created in this case: tdb01, tdb02 and tdb03. 
