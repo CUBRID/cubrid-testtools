@@ -89,203 +89,195 @@ CTP is the only test tool which is used to execute HA shell test cases.
       env.ha1.ssh.host=192.168.1.83
       env.ha1.ssh.relatedhosts=192.168.1.93
 
-# 3 Regression Test Deployment
+# 3. Regression Test Deployment
 
-## 3.1 Test Machines
-|Role|Master or Slave|User|IP|Hostname|
-|---|---|---|---|---|
-|controller node|NA|controller|192.168.1.83|func08|
-|worker node|master|ha|192.168.1.83|func08|
-|worker node|slave|ha|192.168.1.93|func18|
-|worker node|master|ha|192.168.1.84|func09|
-|worker node|slave|ha|192.168.1.94|func19|
-|worker node|master|ha|192.168.1.85|func10|
-|worker node|slave|ha|192.168.1.95|func20|
-|worker node|master|ha|192.168.1.87|func12|
-|worker node|slave|ha|192.168.1.97|func22|
-|worker node|master|ha|192.168.1.88|func13|
-|worker node|slave|ha|192.168.1.92|func17|
-|worker node|master|ha|192.168.1.89|func14|
-|worker node|slave|ha|192.168.1.96|func21|
+This chapter introduces how to deploy HA regression test environment.
 
-## 3.2 Create and Set Users  
-### Controller Node
-We need create a new user `'controller'`.  
-Then login root user and execute:  
-```
-sudo useradd controller
-```
-Set password as our common password for user controller.  
-```
-sudo passwd controller
-```
- Set the user's password to never expire.  
- ```
- sudo chage -E 2999-1-1 -m 0 -M 99999 controller
- ```
-**Note**: HA shell test and isalotion test share the same controller node.  
+## 3.1 Deployment Overview
 
-### Worker Nodes
-We need create a new user `'ha'`.  
-Login root user and execute:  
-```
-sudo useradd ha
-```
-Set password as our common password for user ha.  
-```
-sudo passwd ha
-```
- Set user's password to never expire.  
- ```
- sudo chage -E 2999-1-1 -m 0 -M 99999 ha
- ```
+|Role|Master or Slave|User|IP|Hostname| Deployments |
+|---|---|---|---|---|---|
+|controller node|NA|controller|192.168.1.83|func08|CTP |
+|worker node|master|ha|192.168.1.83|func08|CTP<br>cubrid-testcases-private|
+|worker node|slave|ha|192.168.1.93|func18|CTP<br>cubrid-testcases-private|
+|worker node|master|ha|192.168.1.84|func09|CTP<br>cubrid-testcases-private|
+|worker node|slave|ha|192.168.1.94|func19|CTP<br>cubrid-testcases-private|
+|worker node|master|ha|192.168.1.85|func10|CTP<br>cubrid-testcases-private|
+|worker node|slave|ha|192.168.1.95|func20|CTP<br>cubrid-testcases-private|
+|worker node|master|ha|192.168.1.87|func12|CTP<br>cubrid-testcases-private|
+|worker node|slave|ha|192.168.1.97|func22|CTP<br>cubrid-testcases-private|
+|worker node|master|ha|192.168.1.88|func13|CTP<br>cubrid-testcases-private|
+|worker node|slave|ha|192.168.1.92|func17|CTP<br>cubrid-testcases-private|
+|worker node|master|ha|192.168.1.89|func14|CTP<br>cubrid-testcases-private|
+|worker node|slave|ha|192.168.1.96|func21|CTP<br>cubrid-testcases-private|
 
-## 3.3 Install Software Packages
-Required software packages:    
+*Note: HA shell test and isolation test share the same controller and workers.*
 
-|software|version|usage|  
-|---|---|---|  
-|jdk|1.8.0 (need larger than 1.6)|run CTP, run shell test case|  
-|lcov|lcov-1.11|run code coverage test|  
-|bc|latest version|run shell test case|  
+## 3.2 Before Deployment
 
-## 3.4 Deploy controller node
-1. Install CTP   
-Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
+* ### Create users  
 
-2. Set shell configure file  
-`~/CTP/conf/shell_template.conf`: 
-```
-default.ssh.port=22
-default.ssh.user=ha
-default.ssh.pwd=uV9b3KMp5%%
-default.cubrid.cubrid_port_id = 1568
-default.broker1.BROKER_PORT = 30090
-default.broker2.BROKER_PORT = 33091
-default.broker1.APPL_SERVER_SHM_ID=30090
-default.broker2.APPL_SERVER_SHM_ID=33091
-default.ha.ha_port_id = 59907
+    According to above table, create all OS users.
 
-env.83.ssh.host=192.168.1.83
-env.83.ssh.relatedhosts=192.168.1.93
+        useradd <user>
+        passwd <user>
 
-env.84.ssh.host=192.168.1.84
-env.84.ssh.relatedhosts=192.168.1.94
+        # set the user's password to never expire
+        chage -E 2999-1-1 -m 0 -M 99999 <user>
 
-env.85.ssh.host=192.168.1.85
-env.85.ssh.relatedhosts=192.168.1.95
+* ### Install dependent packages
 
-env.87.ssh.host=192.168.1.87
-env.87.ssh.relatedhosts=192.168.1.97
+    |software|version|usage|  
+    |---|---|---|  
+    |jdk|1.8.0 (need larger than 1.6)|run CTP, run shell test case|  
+    |lcov|lcov-1.11|run code coverage test|  
+    |bc|latest version|run shell test case|  
 
-env.88.ssh.host=192.168.1.88
-env.88.ssh.relatedhosts=192.168.1.92
+## 3.3 Deploy Controller Node
 
-env.89.ssh.host=192.168.1.89
-env.89.ssh.relatedhosts=192.168.1.96
+* ### Install CTP   
 
-test_continue_yn=false
-scenario=$HOME/cubrid-testcases-private/HA/shell
-testcase_exclude_from_file=$HOME/cubrid-testcases-private/HA/shell/config/daily_regression_test_excluded_list_linux.conf
-testcase_git_branch=develop
+    Please refer to ["CTP Installation Guide"](ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
 
-testcase_timeout_in_secs=604800
-testcase_update_yn=true
-test_platform=linux
-test_category=ha_shell
-testcase_retry_num=0
-ignore_core_by_keywords=
-owner_email=cui.man@navercorp.com
-enable_check_disk_space_yn=true
+* ### Set shell configure file  
 
-feedback_type=database
-feedback_db_host=192.168.1.86
-feedback_db_port=33080
-feedback_db_name=qaresu
-feedback_db_user=dba
-feedback_db_pwd=
-feedback_notice_qahome_url=http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>
-```
-shell_template.conf will be copied to ~/CTP/conf/shell_runtime.conf when test is started.  
+    File ~/CTP/conf/shell_template.conf:
+    
+      default.ssh.port=22
+      default.ssh.user=ha
+      default.ssh.pwd=*********
+      default.cubrid.cubrid_port_id = 1568
+      default.broker1.BROKER_PORT = 30090
+      default.broker2.BROKER_PORT = 33091
+      default.broker1.APPL_SERVER_SHM_ID=30090
+      default.broker2.APPL_SERVER_SHM_ID=33091
+      default.ha.ha_port_id = 59907
 
-3. Set `~/.bash_profile`  
-Set `~/.bash_profile` like this:  
-```
-# .bash_profile
+      env.83.ssh.host=192.168.1.83
+      env.83.ssh.relatedhosts=192.168.1.93
 
-# Get the aliases and functions
-if [ -f ~/.bashrc ]; then
-        . ~/.bashrc
-fi
+      env.84.ssh.host=192.168.1.84
+      env.84.ssh.relatedhosts=192.168.1.94
 
-# User specific environment and startup programs
+      env.85.ssh.host=192.168.1.85
+      env.85.ssh.relatedhosts=192.168.1.95
 
-PATH=$JAVA_HOME/bin:$HOME/CTP/common/script:$PATH:$HOME/.local/bin:$HOME/bin
+      env.87.ssh.host=192.168.1.87
+      env.87.ssh.relatedhosts=192.168.1.97
 
-export PATH
+      env.88.ssh.host=192.168.1.88
+      env.88.ssh.relatedhosts=192.168.1.92
 
-export CTP_BRANCH_NAME="develop"
-export CTP_SKIP_UPDATE=0
-```
+      env.89.ssh.host=192.168.1.89
+      env.89.ssh.relatedhosts=192.168.1.96
 
-4. Create a script to start consumer
-~/start_test.sh
-```
-nohup start_consumer.sh -q QUEUE_CUBRID_QA_CC_BASIC,QUEUE_CUBRID_QA_SHELL_HA_LINUX -exec run_isolation,run_shell &
-```
-**Note**: HA shell test and isalotion test share the same controller node.
+      test_continue_yn=false
+      scenario=$HOME/cubrid-testcases-private/HA/shell
+      testcase_exclude_from_file=$HOME/cubrid-testcases-private/HA/shell/config/daily_regression_test_excluded_list_linux.conf
+      testcase_git_branch=develop
+
+      testcase_timeout_in_secs=604800
+      testcase_update_yn=true
+      test_platform=linux
+      test_category=ha_shell
+      testcase_retry_num=0
+      ignore_core_by_keywords=
+      owner_email=cui.man@navercorp.com
+      enable_check_disk_space_yn=true
+
+      feedback_type=database
+      feedback_db_host=192.168.1.86
+      feedback_db_port=33080
+      feedback_db_name=qaresu
+      feedback_db_user=dba
+      feedback_db_pwd=**********
+      feedback_notice_qahome_url=http://192.168.1.86:6060/qaresult/shellImportAction.nhn?main_id=<MAINID>
+
+    During runtime, `shell_template.conf` will be copied to `~/CTP/conf/shell_runtime.conf`.  
+
+* ### Set `~/.bash_profile`  
+
+    Set `~/.bash_profile` like this:  
+
+      # .bash_profile
+
+      # Get the aliases and functions
+      if [ -f ~/.bashrc ]; then
+              . ~/.bashrc
+      fi
+
+      # User specific environment and startup programs
+
+      PATH=$JAVA_HOME/bin:$HOME/CTP/common/script:$PATH:$HOME/.local/bin:$HOME/bin
+
+      export PATH
+
+      export CTP_BRANCH_NAME="develop"
+      export CTP_SKIP_UPDATE=0
+
+* ### Create a quick start script
+
+    File ~/start_test.sh
+    
+      nohup start_consumer.sh -q QUEUE_CUBRID_QA_CC_BASIC,QUEUE_CUBRID_QA_SHELL_HA_LINUX -exec run_isolation,run_shell &
+    
+    *Note: HA shell test and isolation test share the same controller node.*
 
 ## 3.5 Deploy Worker Nodes  
-1. Install CTP
-Please refer to ["CTP Installation Guide"](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/ctp_install_guide.md#3-install-ctp-as-regression-test-platform)
 
-2. Set `~/.bash_profile`  
-Set `~/.bash_profile` like this:  
-```
-# .bash_profile
+* ### Install CTP
 
-# Get the aliases and functions
-if [ -f ~/.bashrc ]; then
-        . ~/.bashrc
-fi
+    Please refer to ["CTP Installation Guide"](ctp_install_guide.md#3-install-ctp-as-regression-test-platform).
 
-# User specific environment and startup programs
+* ### Set `~/.bash_profile`  
 
-PATH=$PATH:$HOME/.local/bin:$HOME/bin
+    File `~/.bash_profile`:  
+    
+      # .bash_profile
 
-export CTP_HOME=$HOME/CTP
-## init_path is used when we run shell case manually on this machine.
-export init_path=$CTP_HOME/shell/init_path
+      # Get the aliases and functions
+      if [ -f ~/.bashrc ]; then
+              . ~/.bashrc
+      fi
 
-export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$PATH
+      # User specific environment and startup programs
 
-export CTP_BRANCH_NAME="develop"
-export CTP_SKIP_UPDATE=0
+      PATH=$PATH:$HOME/.local/bin:$HOME/bin
 
-. ~/.cubrid.sh
-export GCOV_PREFIX=/home/shell
-export GCOV_PREFIX_STRIP=2
-ulimit -c unlimited
-```
+      export CTP_HOME=$HOME/CTP
+      ## init_path is used when we run shell case manually on this machine.
+      export init_path=$CTP_HOME/shell/init_path
 
-3. Deploy test cases
-```
-git clone --no-checkout https://github.com/CUBRID/cubrid-testcases-private.git
-cd ~/cubrid-testcases-private
-git config core.sparseCheckout true
-echo 'HA/*' > ~/cubrid-testcases-private/.git/info/sparse-checkout
-git checkout develop
-```
+      export PATH=$CTP_HOME/bin:$CTP_HOME/common/script:$PATH
 
-4. Make directories for test
-```
-cd
-mkdir do_not_delete_core
-mkdir ERROR_BACKUP
-```
+      export CTP_BRANCH_NAME="develop"
+      export CTP_SKIP_UPDATE=0
 
-5. Add `.cubrid.sh` file   
-If cubrid has never been installed on the machine, we need add file `'.cubrid.sh'` at $HOME path manually.  
+      . ~/.cubrid.sh
+      export GCOV_PREFIX=/home/shell
+      export GCOV_PREFIX_STRIP=2
+      ulimit -c unlimited
+
+* ### Deploy test cases
+
+      git clone --no-checkout https://github.com/CUBRID/cubrid-testcases-private.git
+      cd ~/cubrid-testcases-private
+      git config core.sparseCheckout true
+      echo 'HA/*' > ~/cubrid-testcases-private/.git/info/sparse-checkout
+      git checkout develop
+
+* ### Make directories to store test logs
+
+      cd
+      mkdir do_not_delete_core
+      mkdir ERROR_BACKUP
+
+* ### Add `.cubrid.sh` file
+    
+    If CUBRID has never been installed on the machine, we need add file `'.cubrid.sh'` at $HOME path manually.  
+
+# 4. Regression Test Sustaining
+Please refer to shell guide: [Regression Test Sustaining](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#4-regression-test-sustaining)  
 
 ## 3.6 Start Consumer
 On controller node, execute the script `start_test.sh` to start listening the test message after deployment.  
@@ -294,9 +286,6 @@ This will start a HA shell test when the consumer receives the test message.
 cd ~
 sh start_test.sh
 ```
-
-# 4 Regression Test Sustaining
-Please refer to shell guide: [Regression Test Sustaining](https://github.com/CUBRID/cubrid-testtools/blob/develop/doc/shell_guide.md#4-regression-test-sustaining)  
 
 ## HA Shell Test Message
  
