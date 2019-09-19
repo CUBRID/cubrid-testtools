@@ -293,7 +293,7 @@ We do not intend to modify test cases, since the cases are used both by linux an
 
 So we need to use grep before 3.0-2.  
 
-## How to Install the Pld Versions
+## How to Install the Old Versions
 Take 'grep' as an example.  
 *Method 1, Install from Internet*
 1. start cygwin installation file 'setup-x86_64.exe'
