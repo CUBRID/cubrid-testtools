@@ -43,7 +43,7 @@ Note: Current controller is deployed on Linux platform. All workers are deployed
 
   We need create a new user `'qa'`. Grant `'qa'` as `'Administrator'` permission. Set password as our common password for user `'qa'`.
 
-* ### Turn Off `'Windows Firewall'` on workers
+* ### Turn off `'Windows Firewall'` on workers
 
 * ### Recommend to install a text editor tool
  
@@ -229,11 +229,11 @@ File `~/start_test.sh`:
 
     nohup start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_WIN64 -exec run_shell &
 
-# 4 Regression Test Sustaining
+# 4. Regression Test Sustaining
 
 Please refer to general SHELL guide for ['Regression Test Sustaining'](shell_guide.md#4-regression-test-sustaining).
 
-## 4.1 Keep Agent as Daemon process on all workers
+## 4.1 Keep Agent as daemon process on all workers
 Open a cmd console:
 
     >cd c:\CTP\shell
