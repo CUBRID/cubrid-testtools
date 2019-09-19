@@ -788,18 +788,9 @@ Log into the message server `message@192.168.1.91`.
     ![monitor](./ha_repl_image/Monitor.PNG)
  
 ## 4.4 Ha_repl Code Coverage Test
-To execute code coverage test of ha_repl, you also need to send a testing message.   
-1. Login to the message server: `message@192.168.1.91`.   
-2. Send code coverage test message   
-    ```bash
-    cd manual/
-    sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz ha_repl
-    ```
-	* the first url is a build for testing code coverage.
-	* the second url is the source code of the build.
-	
-    For example, to execute the ha_repl code coverage test on 10.2.0.8362-fbf9d84 build, you need to send a test message like below. 
-    ```bash
+
+As scheduled in regression test, code coverage test for Ha_repl is executed on the last Saturday in every month. But sometimes, due to failure reason, we also need sent test message by manual. To execute code coverage test of ha_repl, Please login to the message server `message@192.168.1.91`, then execute like:
+    
     $ cd ~/manual/
     $ sh sender_code_coverage_testing_message.sh QUEUE_CUBRID_QA_HA_REPL_LINUX http://192.168.1.91:8080/REPO_ROOT/store_010.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz ha_repl
     Queue:QUEUE_CUBRID_QA_HA_REPL_LINUX
@@ -832,15 +823,21 @@ To execute code coverage test of ha_repl, you also need to send a testing messag
     BUILD_URLS_CNT=2
     BUILD_URLS_KR=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/CUBRID-10.2.0.8362-fbf9d84-gcov-Linux.x86_64.tar.gz
     BUILD_URLS_KR_1=http://192.168.1.91:8080/REPO_ROOT/store_01/10.2.0.8362-fbf9d84/drop/cubrid-10.2.0.8362-fbf9d84-gcov-src-Linux.x86_64.tar.gz
-    MKEY_COVERAGE_UPLOAD_DIR=/home/codecov/cc4c/result
-    MKEY_COVERAGE_UPLOAD_IP=192.168.1.98
-    MKEY_COVERAGE_UPLOAD_PWD=******
-    MKEY_COVERAGE_UPLOAD_USER=codecov
 
+    Do you accept above message [Y/N]: Y
 
-    Do you accept above message [Y/N]:
-    ```
-    For code coverage test, it doesn't show the result in the QA homepage `Function` page.  You can log in to the controller node to see the execution log and the detailed logs in the `$CTP_HOME/result/ha_repl/current_runtime_logs`. After the test finished, you can find the result in the `code coverage` page. See [5.2 verify code coverage testing result](#52-verify-code-coverage-testing-result) for detail.   
+For code coverage test, it doesn't show funcation result in the QA homepage `Function` page. After the test finished, you can find the result in the `code coverage` page (open through `QA homepage -> Left tree -> code coverage -> like 2019`).
+
+![codecov1](./ha_repl_image/entry.PNG)      
+
+Click `ha_repl` link.       
+![codecov2](./ha_repl_image/ha_repl_entry.PNG)     
+
+Find code coverage rate by `lines`. Normally, ha_repl code coverage rate by lines is around 24%. If it does not meet expectation, you need examine and re-test to confirm.    
+![codecov3](./ha_repl_image/ha_repl_code_coverage_result.PNG)      
+
+Additionally, during code coverage execution, you can log into the controller node to see test logs in the `$CTP_HOME/result/ha_repl/current_runtime_logs`.
+
 ## 4.5 Check Test Result
 * ### Verify ha_repl/ha_repl_debug test results   
 Go to QA homepage and click the CI build, wait for the `Function` page loading, then check if there are `ha_repl` and `ha_repl_debug` results.  
@@ -975,17 +972,6 @@ Analyze the failure, then click `verify` in `fail list page` and fill in fail re
 Here are the issues that you can refer to.   
 * Data consistency issue: http://jira.cubrid.org/browse/CBRD-20235
 * Crash issue: http://jira.cubrid.org/browse/CBRD-20534
-## 5.2 Verify code coverage testing result   
-1. Go to QA homepage and find the 'code coverage' node in the left area, click the link of latest result.       
-![codecov1](./ha_repl_image/entry.PNG)      
-
-2. Click the ha_repl catagory link      
-![codecov2](./ha_repl_image/ha_repl_entry.PNG)     
-
-3. Check ha_repl `lines`
-There is a coverage rate of lines. Its coverage rate of lines is usually around 24%.     
-![codecov3](./ha_repl_image/ha_repl_code_coverage_result.PNG)      
-If the coverage does not meet expectation, you need to determine the cause and re-execute the test.   
 
 # 5. Ha_repl Test Case   
 Since `HA REPLICATION` is using `SQL` scenarios to test on HA mode to verify the data replication between an active server and a standby server, so the cases are the same as `SQL`.    
