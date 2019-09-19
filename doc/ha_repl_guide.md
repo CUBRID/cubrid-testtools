@@ -524,9 +524,9 @@ Sometimes, the file xxx.master.dump is different from xxx.slave1.dump caused by 
 
 * The rule to determine success or failure
 
-Suppose that after a test of some test case, there are dumped files on master and on slave. If both dumped files are same, the test case will be regarded as pass. If there is any difference, then try to find difference file, and apply it and compare again. If there is no difference file, the case should be regarded as failure.
+    Suppose that after a test of some test case, there are dumped files on master and on slave. If both dumped files are same, the test case will be regarded as pass. If there is any difference, then try to find difference file, and apply it and compare again. If there is no difference file, the case should be regarded as failure.
 
-In addition, if there is any crash or fatal errors in CUBRID logs, the test case will be also failed.
+    In addition, if there is any crash or fatal errors in CUBRID logs, the test case will be also failed.
  
 # 3. Deploy Regression Test
 ## 3.1 Test Machines
