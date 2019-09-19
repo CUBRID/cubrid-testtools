@@ -242,7 +242,7 @@ Please refer to general SHELL guide for ['Regression Test Sustaining'](shell_gui
 
 * Workers
 
-  Keep Agent as daemon process on all workers. Open a cmd console:
+  Keep agent as daemon process on all workers. Open a cmd console:
 
       >cd c:\CTP\shell
       >start_service.bat
