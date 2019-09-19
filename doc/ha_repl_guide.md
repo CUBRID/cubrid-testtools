@@ -862,8 +862,10 @@ It means that all test cases except cases in excluded list should be executed.
 It means that all failures should be verified. Please verify failures in online verification page.
 
 ![ha_repl_verify1](./ha_repl_image/ha_repl_verify1.PNG)    
+
 Click the failed number `1`, it shows the list of failed test cases.   
 ![ha_repl_verify2](./ha_repl_image/ha_repl_verify2.PNG)    
+
 Click the test case, it shows the details.   
 ![ha_repl_verify3](./ha_repl_image/ha_repl_verify3.PNG)    
 
@@ -975,12 +977,13 @@ select 'db_root' TABLE_NAME, db_root.* from db_root order by 1,2,3,4,5;(FAIL TO 
 Try to find the failure reason, then input the reason into online verification page.
 ![ha_repl_verify4](./ha_repl_image/ha_repl_verify4.PNG)    
 
-### Report issues
-Here are the issues that you can refer to.   
+**Report issues**
+
+Here are some example issues for your reference.   
 * Data consistency issue: http://jira.cubrid.org/browse/CBRD-20235
 * Crash issue: http://jira.cubrid.org/browse/CBRD-20534
 
-# 5. Ha_repl Test Case   
+# 5. Ha_repl Test Case Specification   
 Since `HA REPLICATION` is using `SQL` scenarios to test on HA mode to verify the data replication between an active server and a standby server, so the cases are the same as `SQL`.    
 CTP will transform `case_name.sql` to be `case_name.test` which includes some checking statement flags around the SQL statements. And If the SQL does not contain primary key, CTP will add primary key on one column.  
 ## 5.1 Conversion template 
