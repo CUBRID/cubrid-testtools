@@ -1,3 +1,5 @@
+# Memory Leak Test Guide
+
 # 1. Test Objective
 `MemoryLeak` test is aimed to detect memory error in CUBRID. It runs the [sql](https://github.com/CUBRID/cubrid-testcases/tree/develop/sql) and [medium](https://github.com/CUBRID/cubrid-testcases/tree/develop/medium) test cases with [Memcheck](http://valgrind.org/docs/manual/mc-manual.html) tool of [Valgrind](http://valgrind.org/).
 

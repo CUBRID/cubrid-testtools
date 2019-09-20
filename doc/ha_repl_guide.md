@@ -1,3 +1,5 @@
+# Ha_repl Test Guide
+
 # 1. Test Objective
 HA_repl test is aimed to test CUBRID HA replication feature. We convert existing SQL test cases to HA_repl test cases automatically to check data replication between master node and slave node.
 

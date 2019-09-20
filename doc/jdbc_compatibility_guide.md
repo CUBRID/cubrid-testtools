@@ -1,5 +1,7 @@
+# JDBC Compatibility Test Guide
+
 # 1. Test Objective
-The JDBC compatibility test is aimed to test CUBRID compatibility with different version's JDBC driver and server. Actually the test cases are the same with SQL/MEDIUM test.
+JDBC compatibility test is aimed to test CUBRID compatibility with different version's JDBC driver and server. Actually the test cases are the same with SQL/MEDIUM test.
 
 # 2. JDBC Compatibility Test via CTP    
 The JDBC compatibility test only supports the Linux platform. It includes sql cases and medium cases. There is a difference in CUBRID installation with the SQL/MEDIUM test.    
