@@ -1,3 +1,5 @@
+# Shell_ext Test Guide
+
 # 1. Test Objective
 
 There are some more flexible test cases that they require more than one test server (e.g., HA test with 1:1:2 nodes), or depend on repositories like `cubrid-testcases` or `cubrid-testcases-private` or `cubrid-testcases-private-ex`, or hold test server(s) exclusively, or connect test server with `'root'` to change configurations in system level, and so on. In order to make such case automate, we make SHELL_EXT suite to implement advanced test.

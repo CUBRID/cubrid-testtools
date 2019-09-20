@@ -1,3 +1,5 @@
+# SQL Test Guide
+
 # 1. Test Objective
 SQL is basic but important feature of one RDBMS product. CUBRID as a comprehensive relational database management system supports not only standard SQL but also native extension.  
 In order to test SQL feature, we designed two suites SQL and MEDIUM which include all kinds of DDL, DML and so on.  

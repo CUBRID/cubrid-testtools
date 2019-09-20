@@ -1,4 +1,5 @@
 # HA Shell Test Guide
+
 # 1. Test Objective
 HA Shell test suite is used to test CUBRID HA feature. To run a HA shell case, we usually need at least two servers. But sometimes, we need more than two servers. So HA test cases are divided to two categories:
 * `HA Shell`: Located in `https://github.com/CUBRID/cubrid-testcases-private/tree/develop/HA/shell` and scheduled by daily regression. Each test case can only run on two servers.

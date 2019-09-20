@@ -1,3 +1,5 @@
+# CCI Test Guide
+
 # 1. Test Objective
 The cci test is aimed to test CUBRID CCI driver. We write cci test cases to test all kinds of CCI APIs, such as `cci_connect()`, `cci_connect_with_url()`, `cci_cursor()`, `cci_fetch()`, `cci_get_data()`, `cci_get_result_info()` and so on. Actually cci test is a branch of shell test, the only difference is that cci shell scripts must execute C codes which include CUBRID CCI API.
 
