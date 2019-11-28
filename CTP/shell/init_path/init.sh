@@ -300,6 +300,24 @@ function get_best_compat_file
 
 }
 
+function diff_ignore_lineno
+{
+   local f1=$1
+   local f2=$2
+   local op=$3
+   local tmp1=".temp_diff_${f1}"
+   local tmp2=".temp_diff_${f2}"
+   cp -rf ${f1} ${tmp1}
+   cp -rf ${f2} ${tmp2}
+   local reg="s/In[\t ]*line[\t 0-9]*,[\t ]*column[\t 0-9]*/In      line    ?,      column  ?/g"
+   sed -i "$reg" ${tmp1}
+   sed -i "$reg" ${tmp2}
+
+   reg="s/In the command from line[ 0-9]*/In the command from line ?/g"
+   sed -i "$reg" ${tmp1}
+   sed -i "$reg" ${tmp2}
+   diff ${tmp1} ${tmp2} ${op}
+}
 
 # After comparing two files, This function write the result int result files.
 # Usage:
@@ -344,25 +362,25 @@ function compare_result_between_files
   echo "start to compare files: diff $left $right"  
   if [ "$3" = "error" ]
   then
-        if diff $left $right -b
+        if diff_ignore_lineno $left $right -b
         then
                 write_nok
                 echo "diff $left $right failed" >> $result_file
                 #diff $left $right -y >> $result_file
-		diff $left $right -y |tee -a $result_file
+		diff_ignore_lineno $left $right -y |tee -a $result_file
         else
                 write_ok
         fi
         let "answer_no = answer_no + 1"
   else
-        if diff $left $right -b
+        if diff_ignore_lineno $left $right -b
         then
                 write_ok
         else
                 write_nok
                 echo "diff $left $right failed" >> $result_file
                 #diff $left $right -y >> $result_file
-		diff $left $right -y |tee -a $result_file
+		diff_ignore_lineno $left $right -y |tee -a $result_file
         fi
         let "answer_no = answer_no + 1"
   fi
@@ -737,6 +755,7 @@ function init
        touch $result_file
     fi
   fi
+  
   export OS
 }
 
@@ -1529,4 +1548,36 @@ function AIX_NOT_SUPPORTED {
     return
 }
 
+#Usage: compare_perf_time <base_time> <check_time> <tolerance> <nok_desc>
+function compare_perf_time {
+    local base_time=$1
+    local check_time=$2
+    local tolerance=$3
+    local nok_desc=$4
+
+    local expect_maxtime=`awk "BEGIN{print (${base_time}*(1+${tolerance}))}"`
+    local pass=`awk "BEGIN{if (${check_time} <= ${expect_maxtime}) print 1; else print 0}"`
+
+    if [ ${pass} -eq 1 ]; then
+        write_ok
+        return 0
+    else
+        local is_debug=`$CUBRID/bin/cubrid_rel | grep "debug" | wc -l`
+        if [ $is_debug -gt 0 ]; then
+            write_ok "ignore to check performance on debug build"
+            return 0
+        else
+            local short_time=`awk "BEGIN{if (${check_time} < 1 && ${base_time} < 1) print 1; else print 0}"`
+            if [ ${short_time} -eq 1 ]; then
+                write_ok "skip to check performance for short time (<1s)"
+                return 0
+            else
+                write_nok "$nok_desc"
+                return 1
+            fi
+        fi
+    fi
+}
+
 source $init_path/shell_utils.sh
+
