@@ -309,6 +309,7 @@ function diff_ignore_lineno
    local tmp2=".temp_diff_${f2}"
    cp -rf ${f1} ${tmp1}
    cp -rf ${f2} ${tmp2}
+
    local reg="s/In[\t ]*line[\t 0-9]*,[\t ]*column[\t 0-9]*/In      line    ?,      column  ?/g"
    sed -i "$reg" ${tmp1}
    sed -i "$reg" ${tmp2}
@@ -316,6 +317,19 @@ function diff_ignore_lineno
    reg="s/In the command from line[ 0-9]*/In the command from line ?/g"
    sed -i "$reg" ${tmp1}
    sed -i "$reg" ${tmp2}
+
+   reg="s/Commit transaction at line[ 0-9]*/Commit transaction at line ?/g"
+   sed -i "$reg" ${tmp1}
+   sed -i "$reg" ${tmp2}
+
+   reg="s/In schema[0-9]* line [0-9]*/In schema? line ?/g"
+   sed -i "$reg" ${tmp1}
+   sed -i "$reg" ${tmp2}
+
+   reg="s/In indexes[0-9]* line [0-9]*/In indexes? line ?/g"
+   sed -i "$reg" ${tmp1}
+   sed -i "$reg" ${tmp2}
+
    diff ${tmp1} ${tmp2} ${op}
 }
 
