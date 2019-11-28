@@ -1548,36 +1548,4 @@ function AIX_NOT_SUPPORTED {
     return
 }
 
-#Usage: compare_perf_time <base_time> <check_time> <tolerance> <nok_desc>
-function compare_perf_time {
-    local base_time=$1
-    local check_time=$2
-    local tolerance=$3
-    local nok_desc=$4
-
-    local expect_maxtime=`awk "BEGIN{print (${base_time}*(1+${tolerance}))}"`
-    local pass=`awk "BEGIN{if (${check_time} <= ${expect_maxtime}) print 1; else print 0}"`
-
-    if [ ${pass} -eq 1 ]; then
-        write_ok
-        return 0
-    else
-        local is_debug=`$CUBRID/bin/cubrid_rel | grep "debug" | wc -l`
-        if [ $is_debug -gt 0 ]; then
-            write_ok "ignore to check performance on debug build"
-            return 0
-        else
-            local short_time=`awk "BEGIN{if (${check_time} < 1 && ${base_time} < 1) print 1; else print 0}"`
-            if [ ${short_time} -eq 1 ]; then
-                write_ok "skip to check performance for short time (<1s)"
-                return 0
-            else
-                write_nok "$nok_desc"
-                return 1
-            fi
-        fi
-    fi
-}
-
 source $init_path/shell_utils.sh
-
