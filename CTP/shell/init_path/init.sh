@@ -300,6 +300,38 @@ function get_best_compat_file
 
 }
 
+function diff_ignore_lineno
+{
+   local f1=$1
+   local f2=$2
+   local op=$3
+   local tmp1=".temp_diff_${f1}"
+   local tmp2=".temp_diff_${f2}"
+   cp -rf ${f1} ${tmp1}
+   cp -rf ${f2} ${tmp2}
+
+   local reg="s/In[\t ]*line[\t 0-9]*,[\t ]*column[\t 0-9]*/In      line    ?,      column  ?/g"
+   sed -i "$reg" ${tmp1}
+   sed -i "$reg" ${tmp2}
+
+   reg="s/In the command from line[ 0-9]*/In the command from line ?/g"
+   sed -i "$reg" ${tmp1}
+   sed -i "$reg" ${tmp2}
+
+   reg="s/Commit transaction at line[ 0-9]*/Commit transaction at line ?/g"
+   sed -i "$reg" ${tmp1}
+   sed -i "$reg" ${tmp2}
+
+   reg="s/In schema[0-9]* line [0-9]*/In schema? line ?/g"
+   sed -i "$reg" ${tmp1}
+   sed -i "$reg" ${tmp2}
+
+   reg="s/In indexes[0-9]* line [0-9]*/In indexes? line ?/g"
+   sed -i "$reg" ${tmp1}
+   sed -i "$reg" ${tmp2}
+
+   diff ${tmp1} ${tmp2} ${op}
+}
 
 # After comparing two files, This function write the result int result files.
 # Usage:
@@ -344,25 +376,25 @@ function compare_result_between_files
   echo "start to compare files: diff $left $right"  
   if [ "$3" = "error" ]
   then
-        if diff $left $right -b
+        if diff_ignore_lineno $left $right -b
         then
                 write_nok
                 echo "diff $left $right failed" >> $result_file
                 #diff $left $right -y >> $result_file
-		diff $left $right -y |tee -a $result_file
+		diff_ignore_lineno $left $right -y |tee -a $result_file
         else
                 write_ok
         fi
         let "answer_no = answer_no + 1"
   else
-        if diff $left $right -b
+        if diff_ignore_lineno $left $right -b
         then
                 write_ok
         else
                 write_nok
                 echo "diff $left $right failed" >> $result_file
                 #diff $left $right -y >> $result_file
-		diff $left $right -y |tee -a $result_file
+		diff_ignore_lineno $left $right -y |tee -a $result_file
         fi
         let "answer_no = answer_no + 1"
   fi
@@ -737,6 +769,7 @@ function init
        touch $result_file
     fi
   fi
+  
   export OS
 }
 
