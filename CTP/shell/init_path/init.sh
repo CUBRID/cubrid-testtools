@@ -305,8 +305,8 @@ function diff_ignore_lineno
    local f1=$1
    local f2=$2
    local op=$3
-   local tmp1=".temp_diff_${f1}"
-   local tmp2=".temp_diff_${f2}"
+   local tmp1="${f1}_temp_diff"
+   local tmp2="${f2}_temp_diff"
    cp -rf ${f1} ${tmp1}
    cp -rf ${f2} ${tmp2}
 
