@@ -27,6 +27,7 @@
 core_file_name=
 error_msg_keyword=
 pkg_file=
+login_info=""
 fix_backup_dir_name="do_not_delete_core"
 json_create_suffix="_CREATE.json"
 json_comment_suffix="_COMMENT.json"
@@ -34,19 +35,22 @@ export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
 JAVA_CPS=${CTP_HOME}/common/lib/cubridqa-common.jar
 source $CTP_HOME/common/script/process_safe.sh
 
+CORE_STACK_LIMIT=30000
+
 function usage
 {
     cat <<CCTTPP
-Usage: sh analyze_failure.sh {-c core_file_name|-e error_msg_keywords} [-p] package-file-path-for-failures
+Usage: sh analyze_failure.sh {-c core_file_name|-e error_msg_keywords} -p package-file-path-for-failures [-l gateway_ip:port]
        Valid options :
         [-c]         : core file name
-	[-e]         : error message keywords 
+        [-e]         : error message keywords 
         [-p]	     : package file path for failures
+        [-l]         : optional. 'gateway:port' to ensure to login destination host from gateway
 CCTTPP
         exit 1
 }
 
-while getopts "c:e:p:h" opt; do
+while getopts "c:e:p:h:l:" opt; do
   	case $opt in
                 c)
                     core_file_name="$OPTARG"
@@ -56,6 +60,9 @@ while getopts "c:e:p:h" opt; do
                     ;;
                 p)
                     pkg_file="$OPTARG"
+                    ;;
+                l)
+                    login_info="$OPTARG"
                     ;;
 		\?)
 		    usage
@@ -175,7 +182,8 @@ function gen_data_template()
 	core_file_path=$1
 	core_full_stack_text_file_path=$2
 	need_analyze_core=$3
-        if [ ! "$core_file_path" ] || [ ! -f "$core_file_path" ];then
+    
+    if [ ! "$core_file_path" ] || [ ! -f "$core_file_path" ];then
 		echo ""
 		echo "[Skip]: core file $core_file_path does not exist!"
  		return
@@ -183,9 +191,9 @@ function gen_data_template()
 
 	if [ "$need_analyze_core" == "true" ];then
 		export_CUBRID_environment
-		analyzer.sh -f $core_file_path > core_full_stack.txt
+		analyzer.sh -f $core_file_path | head -c ${CORE_STACK_LIMIT} > core_full_stack.txt
 	else
-		cat $core_full_stack_text_file_path > core_full_stack.txt	
+		cat $core_full_stack_text_file_path | head -c ${CORE_STACK_LIMIT} > core_full_stack.txt	
 	fi
 
 	build_version=`cat readme.txt |grep "CUBRID VERSION"|grep -v grep|awk -F ':' 'BEGIN{OFS=":"} {$1="";print $0}'|sed 's/^://g'|sed 's/^[ \t]*//g'`
@@ -219,7 +227,13 @@ JSON_TPL_CALL_STACK_INFO=json_file:issue_create_desc.out
 ISSUEFILDDATA
 
 	#generate comment data file content
-	user_info=`cat readme.txt |grep TEST_INFO_ENV|grep -v export|awk -F '=' '{print $NF}'`
+	user_info=`cat readme.txt |grep TEST_INFO_ENV|grep -v export|awk -F '=' '{print $NF}'|sed "s/'//g"`
+	if [ ! "${login_info}" == "" ]; then
+		gateway_ip=`echo ${login_info} | awk -F ":" '{print $1}'`
+		mapping_port=`echo ${login_info} | awk -F ":" '{print $2}'`
+		user_info="ssh -p ${mapping_port} ${USER}@${gateway_ip} or ${user_info}"
+	fi
+
 	related_case=`cat readme.txt |grep "TEST CASE:"|grep -v grep|grep -v freadme|sed 's/^.*TEST CASE://g'|tr -d '[[:space:]]'`
 	is_only_demodb=`find ./ -name "*_vinf"|grep -v "demodb_vinf"|wc -l`
 	if [ $is_only_demodb -eq 0 ];then
@@ -237,8 +251,7 @@ ISSUEFILDDATA
 user@IP: $user_info
 pwd: <please use general password>
 
-*All Info*
-${user_info%:*}:${curDir}
+*All Info*: ${curDir}
 *Core Location:* ${curDir}/${core_file_path}
 *DB-Volume Location:* ${db_volume_info}
 *Error Log Location:* ${curDir}/CUBRID/log

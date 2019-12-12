@@ -77,7 +77,14 @@ public class LocalInvoker {
 			}
 		}
 
-		return execPlainShell(tmpFile.getAbsolutePath(), isWindows);
+		String result = execPlainShell(tmpFile.getAbsolutePath(), isWindows);
+		
+		try {
+			tmpFile.delete();
+		} catch (Exception e) {
+			System.err.println("Fail to delete " + tmpFile + " but NO HARM");
+		}
+		return result;
 	}
 
 	private static String execPlainShell(String scriptFilename, boolean isWindows) {

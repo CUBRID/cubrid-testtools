@@ -177,6 +177,10 @@ public class Context {
 		return this.isWindows;
 	}
 
+	public boolean isBackupCoreFile() {
+		return CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.BACKUP_CORE_FILE_YES_OR_NO, "yes"));
+	}
+	
 	public String getTestCaseTimeoutInSec() {
 		return getProperty(ConfigParameterConstants.TESTCASE_TIMEOUT_IN_SECS, String.valueOf(Integer.MAX_VALUE));
 	}

@@ -34,6 +34,7 @@ import com.navercorp.cubridqa.isolation.dispatch.Dispatch;
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.common.Log;
+import com.navercorp.cubridqa.common.coreanalyzer.CommonUtil;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 
 public class Test {
@@ -181,39 +182,75 @@ public class Test {
 		if (tc.startsWith("/") == false) {
 			tc = "$HOME/" + tc;
 		}
-		script.addCommand("sh runone.sh -r " + (context.getRetryTimes() + 1) + " " + tc + " " + context.getTestCaseTimeoutInSec() + " " + context.getTestingDatabase() + " 2>&1");
+		
+		String backupCoreOption="";
+		if (!context.isBackupCoreFile()) {
+			backupCoreOption=" -n ";
+		}
+
+		script.addCommand("sh runone.sh "+ backupCoreOption +" -r " + (context.getRetryTimes() + 1) + " " + tc + " " + context.getTestCaseTimeoutInSec() + " " + context.getTestingDatabase() + " 2>&1");
 		result = ssh.execute(script);
 		workerLog.println(result);
 
-		processCoreFile();
+		boolean passFlag = true;
+		int p1 = result.lastIndexOf("flag: NOK");
+		int p2 = result.lastIndexOf("flag: OK");
+		if (p1 > p2) {
+			passFlag = false;
+		}
 
-		String[] itemArrary = result.split("\n");
-		if (itemArrary == null) {
-			return false;
-		} else {
-			Properties props = new Properties();
-			String[] pair;
-			for (String item : itemArrary) {
-				pair = item.split(":");
-				if (pair.length == 2) {
-					props.put(pair[0].trim().toLowerCase(), pair[1].trim().toUpperCase());
-				}
-			}
-			String core = props.getProperty("core", "").trim();
-			if (core.equals("") == false) {
-				this.hasCore = true;
-				this.addResultItem("NOK", "FOUND CORE(S): " + core);
-			}
-
-			String flag = props.getProperty("flag", "").trim();
-			if (flag.equals("TIMEOUT")) {
-				this.addResultItem("NOK", "TIMEOUT");
-				isTimeOut = true;
-				return false;
-			} else {
-				return (!hasCore) && flag.equals("OK");
+		ArrayList<String> errors = extractItems(result, "found core file");
+		errors.addAll(extractItems(result, "found fatal error"));
+		if (errors.size() > 0) {
+			passFlag = false;
+			this.hasCore = true;
+			for (String e : errors) {
+				this.addResultItem("NOK", e);
 			}
 		}
+
+		if (passFlag == true) {
+			passFlag = p2 != -1;
+			if (passFlag == false) {
+				this.addResultItem("NOK", "Not found OK word.");
+			}
+		}
+		return passFlag;
+
+		// processCoreFile();
+	}
+	
+	private static ArrayList<String> extractItems(String source, String find) {
+		ArrayList<String> resultList = new ArrayList<String>();
+		if (source == null) {
+			return resultList;
+		}
+		int startPos = 0, endPos;
+		String item;
+		while (true) {
+			startPos = source.indexOf(find, startPos);
+			if (startPos == -1) {
+				break;
+			}
+			endPos = source.indexOf("\n", startPos);
+			if (endPos == -1) {
+				item = source.substring(startPos);
+			} else {
+				item = source.substring(startPos, endPos);
+				startPos = endPos;
+			}
+			item = item.trim();
+			item = CommonUtil.replace(item, "\'", "").trim();
+			
+			if (resultList.contains(item) == false) {
+				resultList.add(item);
+			}
+
+			if (endPos == -1) {
+				break;
+			}
+		}
+		return resultList;
 	}
 
 	private void processCoreFile() throws Exception {

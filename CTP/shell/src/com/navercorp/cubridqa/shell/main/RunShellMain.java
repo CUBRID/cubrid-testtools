@@ -28,6 +28,7 @@ package com.navercorp.cubridqa.shell.main;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -203,7 +204,10 @@ public class RunShellMain {
 		if (enableReport) {
 			startReportThread();
 		}
-
+		
+		CheckThread checkThread = new CheckThread(this);
+		checkThread.start();
+		
 		System.out.println("====> start to test ");
 		String extendedFunctions = extendVerify ? "verify" : "";
 		System.out.println("Test parameters: ");
@@ -286,7 +290,8 @@ public class RunShellMain {
 			sendMailReport(resultType, errorInfo);
 		}
 		
-		System.out.println(report.getSummary());
+		//System.out.println(report.getSummary());
+		System.exit(0);
 	}
 
 	private void close() {
@@ -445,8 +450,12 @@ public class RunShellMain {
 		}
 		String title = "[QA] re-test " + testCaseDir + "/" + testCaseName + ".sh [" + this.cubridBuildId + ", " + report.getTotalTimes() + ", " + userInfo + "] - " + resultType;
 		System.out.println("[INFO] begin to send mail report " + new Date().toString() + "\n" + title);
+		String mailContent = report.getMailContent(errorInfo);
+		System.out.println("--------------  MAIL TEXT -----------------");
+		System.out.println(html2Text(mailContent));
+		System.out.println("-------------- END ----------------");
 		try {
-			sender.sendBatch(mailFrom, mailTo, mailCc, title, report.getMailContent(errorInfo));
+			sender.sendBatch(mailFrom, mailTo, mailCc, title, mailContent);
 		} catch (Exception e) {
 			throw new ShellTestException(3, e);
 		}
@@ -747,6 +756,17 @@ public class RunShellMain {
 			return mail.substring(0, mail.indexOf("<")).trim();
 		}
 	}
+	
+	public static String html2Text(String content) {
+		if (content == null)
+			return null;
+		content = CommonUtils.replace(content, "<br>", "\n");
+		content = CommonUtils.replace(content, "<b>", "*");
+		content = CommonUtils.replace(content, "</b>", "*");
+		content = CommonUtils.replace(content, "<pre>", "");
+		content = CommonUtils.replace(content, "</pre>", "");
+		return content;
+	}
 
 	private static void showHelp(String error, Options options) {
 		if (error != null) {
@@ -995,13 +1015,38 @@ class ResultSummary {
 				result.append("( total ").append(cat.succCount + cat.failCount).append(")").append(separator).append(separator);
 			}
 		}
+		
+		File[] moreFiles = new File(test.testCaseDir).listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File f, String n) {
+				return n.startsWith("MORE");
+			}
+		});
+		if (moreFiles != null) {
+			String moreContent = null;
+			for (File f : moreFiles) {
+				try {
+					moreContent = CommonUtils.getFileContent(f.getAbsolutePath());
+				} catch (Exception e) {
+					e.printStackTrace();
+					continue;
+				}
+				if (CommonUtils.isEmpty(moreContent)) {
+					continue;
+				}
+				moreContent = CommonUtils.replace(moreContent, "\n", separator);
+				result.append("<b>").append(f.getName()).append(":</b>").append(separator);
+				result.append(moreContent).append(separator);
+			}
+		}
+		
 		result.append(CommonUtils.replace(test.getRuntimeStatus(), "\n", separator)).append(separator);
 
 		result.append(separator).append("Best Regards,").append(separator).append("CUBRID QA").append(separator);
 		result.append("</pre>");
 		return result.toString();
 	}
-
+	
 	public String getSummary() {
 
 		if (list.size() == 0) {
@@ -1038,4 +1083,42 @@ class ResultCategory {
 	String cubridRelType;
 	int succCount = 0, failCount = 0;
 	long totalElapse = 0;
+}
+
+class CheckThread extends Thread {
+
+	private RunShellMain test;
+
+	public CheckThread(RunShellMain test) {
+		this.test = test;
+	}
+
+	@Override
+	public void run() {
+		File statusFile = getStatusFile();
+		if (statusFile.exists()) {
+			statusFile.delete();
+		}
+
+		while (true) {
+			CommonUtils.sleep(2);
+			try {
+				execute();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void execute() {
+		File statusFile = getStatusFile();
+		if (statusFile.exists()) {
+			statusFile.delete();
+			test.sendMailReport("STATUS", null);
+		}
+	}
+
+	private File getStatusFile() {
+		return new File(test.testCaseDir + File.separator + "STATUS");
+	}
 }

@@ -29,6 +29,10 @@ import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.LocalInvoker;
 
 public class CheckDiff {
+	
+	private boolean isSame;
+	private boolean hasPatch;
+	
 	public int check(String filePath, String masterName, String slaveOrReplicaName, String fileSuffix) {
 		String masterFile = filePath + "." + masterName + ".dump";
 		String slaveFile = filePath + "." + slaveOrReplicaName + ".dump";
@@ -38,21 +42,31 @@ public class CheckDiff {
 		StringBuilder scripts = new StringBuilder();
 		scripts.append("diff '" + masterFile + "' '" + slaveFile + "' > '" + master_slaveOrReplicaDiffFileTemp + "' 2>&1\n");
 		scripts.append("if [ $? -eq 0 ]; then\n");
-		scripts.append("    echo PASS \n");
+		scripts.append("    echo PASS BASE\n");
 		scripts.append("else\n");
 		scripts.append("    if [ -f '"+ master_slaveOrReplicaDiffFile +"' ]; then");
 		scripts.append("        diff '" + master_slaveOrReplicaDiffFile + "' '" + master_slaveOrReplicaDiffFileTemp + "'\n");
 		scripts.append("        if [ $? -eq 0 ]; then\n");
-		scripts.append("            echo PASS\n");
+		scripts.append("            echo PASS PATCH\n");
 		scripts.append("        else\n");
-		scripts.append("            echo FAIL\n");
+		scripts.append("            echo FAIL PATCH\n");
 		scripts.append("        fi\n");
 		scripts.append("    else\n");
-		scripts.append("        echo FAIL\n");
+		scripts.append("        echo FAIL BASE\n");
 		scripts.append("    fi\n");
 		scripts.append("fi\n");
 		int shellType = CommonUtils.getShellType(false);
 		String result = LocalInvoker.exec(scripts.toString(), shellType, false);
-		return result.indexOf("PASS") != -1 ? 0: 1;
+		this.isSame = result.indexOf("PASS") != -1;
+		this.hasPatch = result.indexOf("PATCH") != -1;
+		return isSame ? 0: 1;
+	}
+	
+	public boolean isSame() {
+		return this.isSame;
+	}
+	
+	public boolean hasPatch() {
+		return this.hasPatch;
 	}
 }

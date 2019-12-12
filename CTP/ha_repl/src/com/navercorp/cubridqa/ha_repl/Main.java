@@ -255,7 +255,7 @@ public class Main {
 		backupFileName = "ha_repl_result_" + context.getBuildId() + "_" + context.getBuildBits() + "_" + context.getFeedback().getTaskId() + "_" + curTimestamp + ".tar.gz";
 		LocalInvoker.exec(
 				"mkdir -p " + context.getCurrentLogDir() + " >/dev/null 2>&1 ; cd " + context.getCurrentLogDir() + "; tar zvcPf ../" + backupFileName + " . " + " `cat " + context.getCurrentLogDir()
-						+ "/test*.log | grep \"\\[FAIL\\]\" | awk '{print $2}' |sed 's/test$/*/'` ", false, true);
+						+ "/test*.log | grep -E '^\\[NOK\\]' | awk '{print $2}' |sed 's/test$/*/'` ", false, true);
 	}
 
 	private static void checkRequirement(Context context) throws Exception {

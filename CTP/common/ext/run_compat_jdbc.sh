@@ -102,12 +102,9 @@ function run_sql() {
     fi
 
     #init and clean log
-    tmpdir=${CTP_HOME}/temp
-    if [ -d "${tmpdir}" ];then
-        rm ${tmpdir}/*
-    else
-        mkdir -p ${tmpdir}
-    fi
+    temp=`date +'%Y%m%d%s'` 
+    tmpdir=${CTP_HOME}/patch_files_${temp}
+    mkdir -p ${tmpdir}
    
     #get branch and path of test cases and exclude file
     if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
@@ -126,6 +123,12 @@ function run_sql() {
         exclude_file_dir=$HOME/${git_repo_name}/${ctp_scenario}/config/daily_regression_test_exclude_list_compatibility
     fi
     get_best_version_for_exclude_patch_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
+
+    #exclude cases and do patch for some case
+    cd ${CTP_HOME}/../${git_repo_name}
+    run_git_update -f . -b $branch
+    git status .
+   
     fileName=${exclude_file##*/}
     fileName2=${patch_file##*/}
     cp -f $exclude_file $tmpdir/$fileName
@@ -136,12 +139,19 @@ function run_sql() {
          sed -i 's/scenario\///g' $exclude_file
     fi
 
-    #exclude cases and do patch for some case
-    cd ${CTP_HOME}/../${git_repo_name}
-    run_git_update -f . -b $branch
-    cat $exclude_file|grep "^${ctp_scenario}"|xargs -i rm -rf {}
-    cd ${ctp_scenario}
-    patch -p0 -f < $patch_file
+    cd ${ctp_scenario} 
+    if [ -s $patch_file ] 
+    then
+        patch -p0 -f < $patch_file
+        patch_re=`echo $?`
+    else
+        patch_re=0 
+    fi
+    cd ..
+    if [ -s $exclude_file ] ;then
+       cat $exclude_file|grep "^${ctp_scenario}"|xargs -i rm -rf {}
+    fi
+    git status .
     cd ${CTP_HOME}/..
 
     ini.sh -s sql ${TEST_RUNTIME_CONF} scenario '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario
@@ -173,6 +183,11 @@ function run_sql() {
         name=$testResultName
     fi
     upload_to_dailysrv "$name" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$name"
+    if [ $patch_re -eq 0 -a -d $tmpdir ]
+    then
+       cd ${CTP_HOME}
+       rm -rf $tmpdir
+    fi
     cd $curdir
 }
 

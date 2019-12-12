@@ -134,7 +134,8 @@ public class CUBJob implements Job {
 		File exactFile = new File(filename);
 		
 		if (jctx.getMainConfigure().isWaitFileReady()) {
-			FileReady fready = new FileReady(exactFile, true);
+			String logFilename = CommonUtils.concatFile(Constants.CTP_HOME, "conf") + File.separator + "producer" + File.separator + "ready" + File.separator + buildId.trim() + ".r";
+			FileReady fready = new FileReady(exactFile, logFilename, true);
 			try {
 				fready.waitFile();
 			} catch (Exception e) {

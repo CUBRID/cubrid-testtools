@@ -58,6 +58,9 @@ public class Context {
 	private boolean reInstallTestBuildYn = false;
 	String mailNoticeTo;
 	String scenario;
+	private int haSyncDetectTimeoutInMs;
+	private int haSyncFailureResolveMode;
+	private boolean updateStatsOnCatalogClasses = false;
 
 	public Context(String filename) throws IOException {
 		this.filename = filename;
@@ -82,6 +85,31 @@ public class Context {
 		this.enableCheckDiskSpace = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_CHECK_DISK_SPACE_YES_OR_NO, "FALSE").trim());
 		this.mailNoticeTo = getProperty(ConfigParameterConstants.TEST_OWNER_EMAIL, "").trim();
 		this.reserveDiskSpaceSize = getProperty(ConfigParameterConstants.RESERVE_DISK_SPACE_SIZE, ConfigParameterConstants.RESERVE_DISK_SPACE_SIZE_DEFAULT_VALUE).trim();
+		
+		try {
+			haSyncDetectTimeoutInMs = Integer.parseInt(getProperty(ConfigParameterConstants.HA_SYNC_DETECT_TIMEOUT_IN_SECS)) * 1000;
+			if (haSyncDetectTimeoutInMs < 0) {
+				haSyncDetectTimeoutInMs = com.navercorp.cubridqa.ha_repl.common.Constants.HA_SYNC_DETECT_TIMEOUT_IN_MS_DEFAULT;
+			}
+		} catch (Exception e) {
+			haSyncDetectTimeoutInMs = com.navercorp.cubridqa.ha_repl.common.Constants.HA_SYNC_DETECT_TIMEOUT_IN_MS_DEFAULT;
+		}		
+		
+		String haSyncFailureResolveModeValue = getProperty(ConfigParameterConstants.HA_SYNC_FAILURE_RESOLVE_MODE);
+		if (CommonUtils.isEmpty(haSyncFailureResolveModeValue)) {
+			haSyncFailureResolveMode = com.navercorp.cubridqa.ha_repl.common.Constants.HA_SYNC_FAILURE_RESOLVE_MODE_CONTINUE;
+		} else {
+			haSyncFailureResolveModeValue = haSyncFailureResolveModeValue.trim().toUpperCase();
+			if (haSyncFailureResolveModeValue.equals("STOP")) {
+				haSyncFailureResolveMode = com.navercorp.cubridqa.ha_repl.common.Constants.HA_SYNC_FAILURE_RESOLVE_MODE_STOP;
+			} else if (haSyncFailureResolveModeValue.equals("WAIT")) {
+				haSyncFailureResolveMode = com.navercorp.cubridqa.ha_repl.common.Constants.HA_SYNC_FAILURE_RESOLVE_MODE_WAIT;
+			} else {
+				haSyncFailureResolveMode = com.navercorp.cubridqa.ha_repl.common.Constants.HA_SYNC_FAILURE_RESOLVE_MODE_CONTINUE;
+			}
+		}
+		
+		this.updateStatsOnCatalogClasses = CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.HA_UPDATE_STATISTICS_ON_CATALOG_CLASSES_YN, "FALSE").trim());
 	}
 
 	public ArrayList<String> getTestEnvList() {
@@ -246,5 +274,17 @@ public class Context {
 	
 	public String getReserveDiskSpaceSize() {
 		return this.reserveDiskSpaceSize;
+	}
+	
+	public int getHaSyncDetectTimeoutInMs() {
+		return this.haSyncDetectTimeoutInMs;
+	}
+	
+	public int getHaSyncFailureResolveMode() {
+		return this.haSyncFailureResolveMode;
+	}
+	
+	public boolean isUpdateStatsOnCatalogClasses() {
+		return this.updateStatsOnCatalogClasses;
 	}
 }

@@ -64,7 +64,7 @@ function format_ctl_result()
 	sed -i 's/key: [0-9]*(OID:/key: ?(OID:/g' $1
 	sed -i 's/\: [0-9]*|[0-9]*|[0-9]*/\: ?/g' $1
 	for i in `cat -n $1 | grep "ERROR RETURNED" | grep "You are waiting for user" | awk '{print $1}'`; do 
-	    sed -i "${i}s/`hostname`/localhost/g" $1
+	    sed -i "${i}s/`hostname -f`/localhost/g" $1
 	    sed -E -i "${i}s/([0-9])+/?/g" $1
 	done
     else
@@ -84,9 +84,10 @@ function format_ctl_result_oracle()
 function usage
 {
     cat <<CCQQTT
-Usage: sh runone.sh [-t] [-r times] parameter1 parameter2 [parameter3]
+Usage: sh runone.sh [-t] [-n] [-r times] parameter1 parameter2 [parameter3]
        Valid options :
         [-t]          : enable TAP output mode
+        [-n]          : do not backup core files
         [-r times]    : retry times. default value: 1
         parameter1    : case path
         parameter2    : timeout time
@@ -96,10 +97,13 @@ CCQQTT
 }
 
 retry=1
-while getopts ":thr:" opt; do
+while getopts ":tnhr:" opt; do
   case $opt in
                 t)
                     tap_output="true"
+                    ;;
+                n)
+                    do_not_backup_core="true"
                     ;;
 		r)  
 		    retry=$OPTARG
@@ -378,7 +382,9 @@ function run_test_case
 	fi
         
         # 4. check core
-        checkCoreAndFatalError
+	if [ "$do_not_backup_core" != "true" ]; then
+		checkCoreAndFatalError
+	fi
 
 	# 5. cleanup
 	pkill -u $(whoami) -9 sleep >/dev/null 2>&1

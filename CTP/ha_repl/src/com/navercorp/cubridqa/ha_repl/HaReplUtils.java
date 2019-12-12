@@ -40,18 +40,20 @@ public class HaReplUtils {
 
 	public static void rebuildFinalDatabase(Context context, InstanceManager hostManager, Log log, String... params) {
 		int maxTry = 5;
+		int loop = 1;
 		while (maxTry-- > 0) {
 			try {
+				log.println("DATABASE IS DIRTY. REBUILD ... try " + loop);
 				__rebuildDatabase(context, hostManager, log, params);
 				break;
 			} catch (Exception e) {
 				log.println("Rebuild DB Error: " + e.getMessage());
 			}
+			loop ++;
 		}
 	}
 
 	private static void __rebuildDatabase(Context context, InstanceManager hostManager, Log log, String... params) throws Exception {
-		log.println("DATABASE IS DIRTY. REBUILD...");
 
 		ArrayList<SSHConnect> allHosts = hostManager.getAllNodeList();
 
@@ -109,9 +111,9 @@ public class HaReplUtils {
 		if (result.indexOf("fail") != -1) {
 			throw new Exception("fail to create on master.");
 		}
-		boolean succ = waitDatabaseReady(master, hostManager.getTestDb(), "to-be-active", log, MAX_TRY_WAIT_STATUS);
+		boolean succ = waitDatabaseReady(master, hostManager.getTestDb(), "(to-be-active|is active)", log, MAX_TRY_WAIT_STATUS);
 		if (!succ)
-			throw new Exception("timeout when wait to-be-active in master");
+			throw new Exception("timeout when wait 'to-be-active' or 'is active' in master");
 
 		ArrayList<SSHConnect> slaveAndReplicaList = hostManager.getAllSlaveAndReplicaList();
 		for (SSHConnect ssh : slaveAndReplicaList) {
@@ -136,12 +138,14 @@ public class HaReplUtils {
 	}
 
 	private static boolean waitDatabaseReady(SSHConnect ssh, String dbName, String expectedStatus, Log log, int maxTry) throws Exception {
-		GeneralScriptInput script = new GeneralScriptInput("cubrid changemode " + dbName);
+		GeneralScriptInput script = new GeneralScriptInput("cd $CUBRID");
+		script.addCommand("cubrid changemode " + dbName);
 		String result;
+		String side = "[\\s\\S]*";
 		while (maxTry-- > 0) {
 			result = ssh.execute(script);
 			log.println(result);
-			if (result.indexOf(expectedStatus) != -1) {
+			if (Pattern.matches(side + expectedStatus + side, result)) {
 				return true;
 			}
 			CommonUtils.sleep(1);

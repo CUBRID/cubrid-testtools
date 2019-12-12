@@ -72,6 +72,37 @@
 
 ##----------------------------------------------------------------------##
 
+##################### ADD ###################
+## CBRD-22235, CBRD-22023 not a bug
+{
+   filter_out_update_crc32
+   Memcheck:Value8
+   fun:update_crc32
+   fun:crc32_write
+   fun:md_write
+   fun:_gcry_md_hash_buffer
+   fun:gcry_md_hash_buffer
+   fun:_Z*
+   ...
+   fun:_Z*
+   fun:execute_native_thread_routine
+   fun:start_thread
+   fun:clone
+}
+
+## CBRD-21967
+{
+   filter_out_logpb_flush
+   Memcheck:Cond
+   fun:__memcmp_sse4_1
+   fun:_*logpb_flush_all_append_pages*
+   fun:_*logpb_end_append*
+   fun:_*logpb_append_next_record*
+   fun:_*logpb_append_prior_lsa_list*
+   fun:_*logpb_prior_lsa_append_all_list*
+   ...
+}
+
 #Add by Nathan
 ####BEGIN
 {

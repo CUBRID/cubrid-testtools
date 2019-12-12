@@ -118,6 +118,10 @@ function wait_for_slave_failover
 
 function format_hb_status()
 {
+    master_cname=`hostname -f`
+    slave_cname=`run_on_slave -c "hostname -f"`
+    sed -i "s/$master_cname/host1/g" $1
+    sed -i "s/$slave_cname/host2/g" $1
     sed -i "s/$masterHostName/host1/g" $1
     sed -i "s/$slaveHostName/host2/g" $1
     sed -i "s/pid [0-9].*,/pid ,/g" $1

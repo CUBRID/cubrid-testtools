@@ -43,13 +43,9 @@ public class FileReady {
 	long lastTimestampForAll = -1;
 	String logFilename;
 
-	public FileReady(File file) {
-		this(file, false);
-	}
-
-	public FileReady(File file, boolean saveLog) {
+	public FileReady(File file, String logFilename, boolean saveLog) {
 		this.file = file;
-		logFilename = CommonUtils.concatFile(file.getParentFile().getAbsolutePath(), ".job.log");
+		this.logFilename = logFilename;
 	}
 
 	private void saveLog(String fname) {
@@ -57,16 +53,29 @@ public class FileReady {
 		log.println("fn." + fname + "=1");
 		log.close();
 	}
+	
+	private Properties getProperties() throws IOException {
+		Properties props = new Properties();
+		
+		String legacyLogFilename = CommonUtils.concatFile(file.getParentFile().getAbsolutePath(), ".job.log");
+		File legacyLogFile = new File(legacyLogFilename);
+		if(legacyLogFile.exists()) {
+			props.putAll(CommonUtils.getProperties(legacyLogFilename));	
+		}
+		
+		File logFile = new File(logFilename);
+		if(logFile.exists()) {
+			props.putAll(CommonUtils.getProperties(logFilename));
+		}
+		return props;
+	}
 
 	public void waitFile() throws JMSException, NoSuchAlgorithmException, IOException {
 		Properties props;
 		String v;
 		while (true) {
 
-			props = CommonUtils.getProperties(logFilename);
-			if (props == null) {
-				props = new Properties();
-			}
+			props = getProperties();			
 			v = props.getProperty("fn." + file.getName());
 			if (v != null) {
 				return;
