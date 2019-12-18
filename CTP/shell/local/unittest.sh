@@ -29,7 +29,11 @@ function init {
 }
 
 function list {
+    # below to 10.1
     find $CUBRID/util $CUBRID/bin -name unittests* 2>/dev/null | grep -v CMake
+    # over to 10.2
+    find $CUBRID/build_release/bin $CUBRID/build_debug/bin -name "unittests*" 2>/dev/null
+    find $CUBRID/build_*/util/unittest* 2>/dev/null
 }
 
 function execute {

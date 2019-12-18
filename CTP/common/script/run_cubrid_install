@@ -421,7 +421,6 @@ function change_url_to_local {
     return 1
 }
 
-
 function BuildAndInstallForUnitTest()
 {
     build_url=$1
@@ -435,61 +434,60 @@ function BuildAndInstallForUnitTest()
     echo ""
 
     cmake >/dev/null 2>&1
-    [ $? -ne 0 ] && echo "Please make sure CMAKE is installed!" && exit 0    
+    [ $? -ne 0 ] && echo "Please make sure CMAKE is installed!" && exit 0
 
     rm $buildFile >/dev/null 2>&1
     wget -t 3 -T 120 $build_url
     if [ $? -ne 0 ];then
-	echo "[ERROR] download build fail with url $build_url"
-	print_current_machine_status
+        echo "[ERROR] download build fail with url $build_url"
+        print_current_machine_status
     fi
 
     if [ -d $cub ]
     then
             rm -rf $cub
     fi
-    
+
     mkdir -p $cub
-    tar -zvxf $buildFile 
-    cp -rf ${buildName}/* $cub/  
+    tar -zvxf $buildFile
+    cp -rf ${buildName}/* $cub/
     cd $cub
     if [ -f VERSION ]; then
-    	version_file=VERSION
+        version_file=VERSION
     elif [ -f VERSION-DIST ]; then
-    	version_file=VERSION-DIST
+        version_file=VERSION-DIST
     fi
     version=$(cat $version_file)
 
-    change_url_to_local ./CMakeLists.txt "http://thrysoee.dk/editline/"  
-    change_url_to_local ./CMakeLists.txt "https://github.com/Tencent/rapidjson/archive/"  
-    change_url_to_local ./CMakeLists.txt "https://github.com/libexpat/libexpat/releases/download/R_2_2_5/"  
-    change_url_to_local ./CMakeLists.txt "http://www.digip.org/jansson/releases/jansson-2.10.tar.gz"  
-    change_url_to_local ./CMakeLists.txt "http://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz"  
-    change_url_to_local ./CMakeLists.txt "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.27.tar.bz2"  
+    change_url_to_local ./CMakeLists.txt "http://thrysoee.dk/editline/"
+    change_url_to_local ./CMakeLists.txt "https://github.com/Tencent/rapidjson/archive/"
+    change_url_to_local ./CMakeLists.txt "https://github.com/libexpat/libexpat/releases/download/R_2_2_5/"
+    change_url_to_local ./CMakeLists.txt "http://www.digip.org/jansson/releases/jansson-2.10.tar.gz"
+    change_url_to_local ./CMakeLists.txt "http://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz"
+    change_url_to_local ./CMakeLists.txt "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.27.tar.bz2"
 
-    configure_options="-DCMAKE_BUILD_TYPE=Debug"
+    configure_options=" -t 64 -m debug -b build_debug "
     if [ "$tCat" == "unit-release" ];then
-	configure_options="-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+        configure_options=" -t 64 -m release -b build_release "
     fi
-    	 
+
     if [ "`needDevToolSet ${version}`" == "true" ];then
-	[ ! -f "/opt/rh/devtoolset-6/enable" ] && echo "[Error]: devtoolset-6 is not found" && exit 1
-	(
-	  source /opt/rh/devtoolset-6/enable
-	  cmake ${configure_options}
-          make -j
-	)
+        [ ! -f "/opt/rh/devtoolset-8/enable" ] && echo "[Error]: devtoolset-8 is not found" && exit 1
+        (
+          source /opt/rh/devtoolset-8/enable
+          sh build.sh ${configure_options}
+        )
     else
-	  cmake ${configure_options}
-          make -j
-    fi 
-    
-    cd $HOME   
+        sh build.sh ${configure_options}
+    fi
+
+    cd $HOME
     rm $buildFile
     rm -rf ${buildName}
     echo "INSTALL `date '+%Y%m%d%H%M%s'` $@" 2>&1 |tee -a $HOME/.unitTestInstall.log
     cd $curDir
 }
+
 
 if [ "$tCat" == "general" ]
 then
