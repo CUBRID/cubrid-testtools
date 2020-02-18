@@ -393,7 +393,8 @@ function needDevToolSet()
     version=$1
     major_version=$(echo $version | cut -d . -f 1)
     minor_version=$(echo $version | cut -d . -f 2)
-    if [ $major_version -ge 10 -a $minor_version -ge 2 ];then
+    compare_version=${major_version}${minor_version}
+    if [ $compare_version -ge 102 ];then
 	echo true
     else
 	echo false
