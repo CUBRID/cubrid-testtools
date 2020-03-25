@@ -122,81 +122,39 @@ function run_shell_legacy() {
     clean
     install_cubrid
 
-    curDir=`pwd`
-    category=$COMPAT_TEST_CATAGORY
-    (cd $QA_REPOSITORY; sh upgrade.sh)
-    tmplog=$QA_REPOSITORY/temp/tmp.log
-    if [ -f $tmplog ];then
-        rm -f $tmplog
+    test_config_template=${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf
+    if [ ! -f ${test_config_template} ]; then
+        test_config_template=${CTP_HOME}/conf/shell_template.conf
     fi
+    if [ ! -f ${test_config_template} ]; then
+        echo ERROR: shell configuration file does not exist. Please check it.
+        exit
+    fi
+    cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
 
-    #close shard 
-    shard_service=`ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE`
-    if [ "$shard_service" = "ON" ]
-    then
-        ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE OFF
-    fi
-  
-    #get branch and path of test cases and exclude file
-    if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
-        branch=$COMPAT_BUILD_SVN_BRANCH
-        if [ "$BUILD_IS_FROM_GIT" == "1" ];then
-           exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
-           exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
-           run_git_update -f $HOME/cubrid-testcases-private -b $exclude_branch
-        elif [ "$BUILD_IS_FROM_GIT" == "0" ];then
-           exclude_file_dir=$HOME/dailyqa/$BUILD_SVN_BRANCH_NEW/config
-           run_svn_update -f $exclude_file_dir
-        fi
-    elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
-        branch=$BUILD_SVN_BRANCH_NEW
-        exclude_file_dir=$HOME/dailyqa/$branch/config
-        run_svn_update -f $exclude_file_dir
-    fi
-    get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
- 
-    #mv scenario/interface/CCI/shell to scenario/shell structure
-    cd $HOME/dailyqa/$branch/scenario 
-    bkname="shell_"`date +%s`"_bk"
-    cci="$HOME/dailyqa/$branch/interface/CCI/shell"
-    if [ -L shell ]
-    then
-         rm -f shell
+    #init and clean log
+    if [ -d "${TEST_RESULT_DIR}" ];then
+        rm ${TEST_RESULT_DIR}/*
     else
-         mv shell $bkname
+        mkdir -p ${TEST_RESULT_DIR}
     fi
-    ln -s $cci shell    
-    
-    #update cases
-    cd $HOME/dailyqa/$branch/scenario
-    run_svn_update -f shell 
 
-    #exclude cases
-    cat $exclude_file|grep "^shell"|xargs -i rm -rf {}
- 
-    #runCCI
-    exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh"    
-    ${exec_script_file} -h $CUBRID -v $branch -s shell -q -no-i18n -x |tee -a $tmplog
-
-    #upload test results
-    logPath=`cat $tmplog|grep RESULT_DIR|awk -F ':' '{print $NF}'|tr -d " "`
-    testResultPath=`cat $logPath|grep "Result Root Dir:"|awk -F ':' '{print $NF}'|tr -d " "`
-    testResultName="`basename ${testResultPath}`"
-    cd $testResultPath
-    typ=`echo $testResultName|awk -F '_' '{print $3}'`
-    sed -i "s/<catPath>${typ}</<catPath>$category</g" summary.info    
-    cd ..
+    #get branch
     if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
-        prefix=`echo $testResultName|awk -F '_' '{print $1"_"$2"_"$3"_"$4"_"$5}'` 
-        newName="${prefix}"_"${BUILD_ID}"
-        name=`echo $newName|tr -d " "`
-        rm -rf $name
-        mv $testResultName $name
+        branch=$COMPAT_BUILD_SCENARIO_BRANCH_GIT
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
-        name=$testResultName
+        branch=$BUILD_SCENARIO_BRANCH_GIT
     fi
-    upload_to_dailysrv "$name" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$name" 
-    cd $curDir
+
+    #update configuration file
+    ini.sh -u "cubrid_download_url=" $TEST_RUNTIME_CONF
+    ini.sh -u "scenario=$HOME/cubridqa-legacy/interface/CCI/shell" $TEST_RUNTIME_CONF
+    ini.sh -u "testcase_git_branch=$branch" $TEST_RUNTIME_CONF
+    ini.sh -u "test_category=$COMPAT_TEST_CATAGORY" $TEST_RUNTIME_CONF
+    ini.sh -u "test_continue_yn=false" $TEST_RUNTIME_CONF
+
+    #execute testing
+    ctp.sh shell -c $TEST_RUNTIME_CONF 2>&1 | tee ${TEST_RESULT_DIR}/runtime.log
 }
 
 #todo simplify this file
@@ -242,11 +200,7 @@ function is_server_ge_10_0 () {
 }
 
 if [ "$is_continue_mode" == "YES" ];then
-    if [ `is_server_ge_10_0` = "YES" ];then
-        run_shell_continue
-    else
-        echo WARN: Legacy test does not support CONTINUE mode
-    fi
+   run_shell_continue
 else
    if [ `is_server_ge_10_0` = "YES" ];then
         run_shell
