@@ -192,89 +192,153 @@ function run_sql() {
 }
 
 function run_sql_legacy() {
-    curdir=`pwd`
+    curDir=`pwd`
+    tmplog=$QA_REPOSITORY/temp/tmp.log
+    tmpdir=$QA_REPOSITORY/temp
     category=$COMPAT_TEST_CATAGORY
 
-    # init
-    tmplog=${CTP_HOME}/tmp.log
-    tmptxt=${CTP_HOME}/tmp.txt
-
     # VARIABLES
-    git_repo_name=""
-    ctp_type=""
-    ctp_scenario=""
+    cqt_scenario=""
+    exclude_git_repo_name=""
 
     clean
     install_cubrid
 
-    test_config_template=${CTP_HOME}/conf/sql_template_for_${BUILD_SCENARIOS}.conf
-    if [ ! -f ${test_config_template} ]; then
-        test_config_template=${CTP_HOME}/conf/sql_template.conf
-    fi
-    if [ ! -f ${test_config_template} ]; then
-        echo ERROR: shell configuration file does not exist. Please check it.
-        exit
-    fi
-    cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
-
     if [ "$COMPAT_BUILD_SCENARIOS" == "medium" ];then
-        ctp_type="medium"
-        git_repo_name=cubridqa-legacy
-        ctp_scenario=scenario/medium
+        cqt_scenario=medium
+        exclude_git_repo_name=cubrid-testcases
     elif [ "$COMPAT_BUILD_SCENARIOS" == "sql" ];then
-        ctp_type="sql"
-        git_repo_name=cubridqa-legacy
-        ctp_scenario=scenario/sql
+        cqt_scenario=sql
+        exclude_git_repo_name=cubrid-testcases
+    elif [ "$COMPAT_BUILD_SCENARIOS" == "sql_ext" ];then
+        cqt_scenario=sql
+        exclude_git_repo_name=cubrid-testcases-private
+    elif [ "$COMPAT_BUILD_SCENARIOS" == "site" ];then
+        cqt_scenario=site
     else
         echo "Unknown scenario type, stop test."
         echo "Please check and re-send message."
         exit
     fi
 
-    #get branch
-    if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
-        branch=$COMPAT_BUILD_SCENARIO_BRANCH_GIT
-    elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D" ]; then
-        branch=$BUILD_SCENARIO_BRANCH_GIT
+    (cd $QA_REPOSITORY; sh upgrade.sh)
+    if [ -f $tmplog ];then
+        rm -f $tmplog
     fi
+
+    if [ ! -d "$QA_REPOSITORY/temp" ];then
+       mkdir -p $QA_REPOSITORY/temp
+    fi
+   
+
+    #close shard 
+    shard_service=`ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE`
+    if [ "$shard_service" = "ON" ]
+    then
+        ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE OFF
+    fi
+    sed -i "s@<cubridHome>.*</cubridHome>@<cubridHome>${CUBRID/\\/\\\\}</cubridHome>@g" $QA_REPOSITORY/configuration/System.xml
+    sed -i "s@<jdbcPath>.*</jdbcPath>@<jdbcPath>${CUBRID/\\/\\\\}\\\\jdbc\\\\cubrid_jdbc.jar</jdbcPath>@g" $QA_REPOSITORY/configuration/System.xml
+  
+    #get branch and path of test cases and exclude file
+    if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
+        branch=$COMPAT_BUILD_SVN_BRANCH
+        if [ "$BUILD_IS_FROM_GIT" == "1" ];then
+           exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
+           exclude_file_dir=$HOME/${exclude_git_repo_name}/${cqt_scenario}/config/daily_regression_test_exclude_list_compatibility
+           run_git_update -f $HOME/${exclude_git_repo_name} -b $exclude_branch
+        elif [ "$BUILD_IS_FROM_GIT" == "0" ];then
+           exclude_file_dir=$HOME/dailyqa/$BUILD_SVN_BRANCH_NEW/config
+           run_svn_update -f $exclude_file_dir
+        fi
+    elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D" ]; then
+        branch=$BUILD_SVN_BRANCH_NEW
+        exclude_file_dir=$HOME/dailyqa/$branch/config
+        run_svn_update -f $exclude_file_dir
+    fi
+    get_best_version_for_exclude_patch_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
+    fileName=${exclude_file##*/}
+    fileName2=${patch_file##*/}
+    cp -f $exclude_file $tmpdir/$fileName
+    cp -f $patch_file $tmpdir/$fileName2
+    exclude_file=$tmpdir/$fileName
+    patch_file=$tmpdir/$fileName2
+    if [ ` cat ${exclude_file}|grep "^scenario"|wc -l` -ge 1 ];then
+         sed -i 's/scenario\///g' $exclude_file
+    fi
+
+    #update cases
+    cd $HOME/dailyqa/$branch/scenario 
+    run_svn_update -f .
 
     #exclude cases and do patch for some case
-    cd ${CTP_HOME}/../${git_repo_name}
-    run_git_update -f . -b $branch
-    git status .
+    cd $HOME/dailyqa/$branch/scenario
+    if [ -f $exclude_file ];then
+       cat $exclude_file|grep "^${cqt_scenario}"|xargs -i rm -rf {}
+    fi
+    cd $cqt_scenario
+    if [ -f $patch_file ];then
+       patch -p0 -f < $patch_file
+    fi 
+    cd ..
 
-    cd ${CTP_HOME}/..
+    #edited by cn15209, because CUBRIDSUS-17766 issue
+    #2015.11.19
+    if [ "$COMPAT_BUILD_SCENARIOS" == "site" ];then
+         export _JAVA_OPTIONS=-Dfile.encoding=euckr
+    else
+         export _JAVA_OPTIONS=-Dfile.encoding=utf8
+    fi
 
-    ini.sh -s sql ${TEST_RUNTIME_CONF} scenario '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario
-    ini.sh -s sql ${TEST_RUNTIME_CONF} data_file '${CTP_HOME}'/../${git_repo_name}/$ctp_scenario/files
-    ini.sh -s sql ${TEST_RUNTIME_CONF} test_category $COMPAT_TEST_CATAGORY
-    #set supported param
-    ini.sh -s "sql/cubrid.conf" ${TEST_RUNTIME_CONF} | util_filter_supported_parameters.sh > $tmptxt
-    ini.sh -s "sql/cubrid.conf" ${TEST_RUNTIME_CONF} --update-from-file=$tmptxt --clear-first
-    ini.sh -s "sql/cubrid.conf" ${TEST_RUNTIME_CONF} test_mode yes
-    ini.sh -s "sql/cubrid_ha.conf" ${TEST_RUNTIME_CONF} | util_filter_supported_parameters.sh > $tmptxt
-    ini.sh -s "sql/cubrid_ha.conf" ${TEST_RUNTIME_CONF} --update-from-file=$tmptxt --clear-first
-
-    #execute testing
-    export _JAVA_OPTIONS=-Dfile.encoding=utf8
-    ctp.sh ${ctp_type} -c ${TEST_RUNTIME_CONF} | tee $tmplog
+    #runJDBC
+    exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh"    
+    ${exec_script_file} -h $CUBRID -v $branch -s $COMPAT_BUILD_SCENARIOS -t $COMPAT_BUILD_BIT -x -q -random_port|tee $tmplog
 
     #upload test results
-    testResultPath=`cat $tmplog|grep "^Test Result Directory"|awk -F ':' '{print $NF}'|tr -d " "`
-    testResultName="`basename ${testResultPath}`"
-    cd $testResultPath/..
-    #if it is driver test,rename the test result name
-    if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
-        prefix=`echo $testResultName|awk -F '_' '{print $1"_"$2"_"$3"_"$4"_"$5}'`
-        newName="${prefix}"_"${BUILD_ID}"
-        name=`echo $newName|tr -d " "`
-        rm -rf $name
-        mv $testResultName $name
-    elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D" ]; then
-        name=$testResultName
-    fi
-    upload_to_dailysrv "$name" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$name"
-    cd $curdir
+    logPath=`cat $tmplog|grep RESULT_DIR|awk -F ':' '{print $NF}'|tr -d " "`
+    logDir=`dirname $logPath`
+    cat_cmd="cat $logDir/*.log"
+    
+    for testResultPath in `${cat_cmd}|grep "Result Root Dir:"|awk -F ':' '{print $NF}'|tr -d " "`
+    do
+        testResultName="`basename ${testResultPath}`"
+        #get the value of typ
+        if [ $COMPAT_BUILD_SCENARIOS == "sql_ext" ];then
+           typ="sql_ext"
+        else
+           typ=`echo $testResultName|awk -F '_' '{print $3}'`
+        fi
+        
+        cd $testResultPath    
+        if [ "$typ" == "site" ];then
+           if [ `cat summary.info|grep kcc|grep -v grep|wc -l` -ne 0 ];then
+              site_type="kcc"
+           elif [ `cat summary.info|grep neis05|grep -v grep|wc -l` -ne 0 ];then
+              site_type="neis05"
+           elif [ `cat summary.info|grep neis08|grep -v grep|wc -l` -ne 0 ];then
+              site_type="neis08"
+           fi
+        fi
+   
+        #instead of typ in summary.info by category value
+        if [ -n "$site_type" ];then
+           category=`echo ${COMPAT_TEST_CATAGORY}|sed "s#site#$site_type#g"`
+        fi
+        sed -i "s/<catPath>${typ}</<catPath>$category</g" summary.info
+        cd ..
+        #if it is driver test,rename the test result name 
+        if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then    
+            prefix=`echo $testResultName|awk -F '_' '{print $1"_"$2"_"$3"_"$4"_"$5}'` 
+            newName="${prefix}"_"${BUILD_ID}"
+            name=`echo $newName|tr -d " "`
+            rm -rf $name
+            mv $testResultName $name
+        elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D" ]; then
+            name=$testResultName
+        fi
+        upload_to_dailysrv "$name" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$name" 
+    done
+    cd $curDir
 }
 
 #todo simplify this file
