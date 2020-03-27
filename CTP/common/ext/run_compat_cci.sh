@@ -125,21 +125,26 @@ function run_shell_legacy() {
     curDir=`pwd`
     category=$COMPAT_TEST_CATAGORY
     (cd $QA_REPOSITORY; sh upgrade.sh)
+    
+    if [ ! -d $QA_REPOSITORY/temp ]
+    then
+        mkdir $QA_REPOSITORY/temp
+    fi
     tmplog=$QA_REPOSITORY/temp/tmp.log
     if [ -f $tmplog ];then
         rm -f $tmplog
     fi
 
-    #close shard 
+    #close shard
     shard_service=`ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE`
     if [ "$shard_service" = "ON" ]
     then
         ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE OFF
     fi
-  
+
     #get branch and path of test cases and exclude file
     if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
-        branch=$COMPAT_BUILD_SVN_BRANCH
+        branch=$COMPAT_BUILD_SCENARIO_BRANCH_GIT
         if [ "$BUILD_IS_FROM_GIT" == "1" ];then
            exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
            exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
@@ -154,9 +159,17 @@ function run_shell_legacy() {
         run_svn_update -f $exclude_file_dir
     fi
     get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
- 
+
+    #update cases
+    cd $HOME/dailyqa
+    run_git_update -f $branch -b $branch
+    if [ ! -d $branch/scenario ]
+    then
+        mkdir $branch/scenario
+    fi
+
     #mv scenario/interface/CCI/shell to scenario/shell structure
-    cd $HOME/dailyqa/$branch/scenario 
+    cd $HOME/dailyqa/$branch/scenario
     bkname="shell_"`date +%s`"_bk"
     cci="$HOME/dailyqa/$branch/interface/CCI/shell"
     if [ -L shell ]
@@ -165,17 +178,13 @@ function run_shell_legacy() {
     else
          mv shell $bkname
     fi
-    ln -s $cci shell    
-    
-    #update cases
-    cd $HOME/dailyqa/$branch/scenario
-    run_svn_update -f shell 
+    ln -s $cci shell
 
     #exclude cases
     cat $exclude_file|grep "^shell"|xargs -i rm -rf {}
- 
+
     #runCCI
-    exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh"    
+    exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh"
     ${exec_script_file} -h $CUBRID -v $branch -s shell -q -no-i18n -x |tee -a $tmplog
 
     #upload test results
@@ -184,10 +193,10 @@ function run_shell_legacy() {
     testResultName="`basename ${testResultPath}`"
     cd $testResultPath
     typ=`echo $testResultName|awk -F '_' '{print $3}'`
-    sed -i "s/<catPath>${typ}</<catPath>$category</g" summary.info    
+    sed -i "s/<catPath>${typ}</<catPath>$category</g" summary.info
     cd ..
     if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
-        prefix=`echo $testResultName|awk -F '_' '{print $1"_"$2"_"$3"_"$4"_"$5}'` 
+        prefix=`echo $testResultName|awk -F '_' '{print $1"_"$2"_"$3"_"$4"_"$5}'`
         newName="${prefix}"_"${BUILD_ID}"
         name=`echo $newName|tr -d " "`
         rm -rf $name
@@ -195,7 +204,7 @@ function run_shell_legacy() {
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
         name=$testResultName
     fi
-    upload_to_dailysrv "$name" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$name" 
+    upload_to_dailysrv "$name" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$name"
     cd $curDir
 }
 
