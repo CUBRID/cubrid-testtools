@@ -93,6 +93,7 @@ function run_shell() {
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
         branch=$BUILD_SCENARIO_BRANCH_GIT
         exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
+        run_git_update -f $HOME/cubrid-testcases-private -b $branch
         get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
     fi
 
@@ -139,13 +140,6 @@ function run_shell_legacy() {
         mkdir -p ${TEST_RESULT_DIR}
     fi
 
-    #close shard
-    shard_service=`ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE`
-    if [ "$shard_service" = "ON" ]
-    then
-        ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE OFF
-    fi
-
     #get branch and path of test cases and exclude file
     if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
         branch=$COMPAT_BUILD_SCENARIO_BRANCH_GIT
@@ -153,18 +147,27 @@ function run_shell_legacy() {
            exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
            exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
            run_git_update -f $HOME/cubrid-testcases-private -b $exclude_branch
+           get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
+           fileName=${exclude_file##*/}
+           cp -f $exclude_file ${TEST_RESULT_DIR}/$fileName
+           exclude_file=${TEST_RESULT_DIR}/$fileName
         else
-            echo ERROR: BUILD_IS_FROM_GIT is not set 1
-            exit
+           echo ERROR: BUILD_IS_FROM_GIT is not set 1
+  	   exit
         fi
-    else
-        branch=$BUILD_SCENARIO_BRANCH_GIT
-        exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
-        run_git_update -f $HOME/cubrid-testcases-private -b $branch
+    elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
+        echo ERROR: The lower server version than 10.0 to test driver is not supported.
+        exit 
     fi
-    get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
 
     #update configuration file
+    #close shard
+    shard_service=`ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE`
+    if [ "$shard_service" = "ON" ]
+    then
+        ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE OFF
+    fi
+
     ini.sh -u "cubrid_download_url=" $TEST_RUNTIME_CONF
     ini.sh -u "scenario=$HOME/dailyqa/$branch/interface/CCI/shell" $TEST_RUNTIME_CONF
     ini.sh -u "testcase_git_branch=$branch" $TEST_RUNTIME_CONF
