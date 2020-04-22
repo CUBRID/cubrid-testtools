@@ -93,6 +93,7 @@ function run_shell() {
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
         branch=$BUILD_SCENARIO_BRANCH_GIT
         exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
+        run_git_update -f $HOME/cubrid-testcases-private -b $branch
         get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
     fi
 
@@ -122,81 +123,62 @@ function run_shell_legacy() {
     clean
     install_cubrid
 
-    curDir=`pwd`
-    category=$COMPAT_TEST_CATAGORY
-    (cd $QA_REPOSITORY; sh upgrade.sh)
-    tmplog=$QA_REPOSITORY/temp/tmp.log
-    if [ -f $tmplog ];then
-        rm -f $tmplog
+    test_config_template=${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf
+    if [ ! -f ${test_config_template} ]; then
+        test_config_template=${CTP_HOME}/conf/shell_template.conf
+    fi
+    if [ ! -f ${test_config_template} ]; then
+        echo ERROR: shell configuration file does not exist. Please check it.
+        exit
+    fi
+    cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+
+    #init and clean log
+    if [ -d "${TEST_RESULT_DIR}" ];then
+        rm ${TEST_RESULT_DIR}/*
+    else
+        mkdir -p ${TEST_RESULT_DIR}
     fi
 
-    #close shard 
+    #get branch and path of test cases and exclude file
+    if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
+        branch=$COMPAT_BUILD_SCENARIO_BRANCH_GIT
+        if [ "$BUILD_IS_FROM_GIT" == "1" ];then
+           exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
+           exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
+           run_git_update -f $HOME/cubrid-testcases-private -b $exclude_branch
+           get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
+           fileName=${exclude_file##*/}
+           cp -f $exclude_file ${TEST_RESULT_DIR}/$fileName
+           exclude_file=${TEST_RESULT_DIR}/$fileName
+        else
+           echo ERROR: BUILD_IS_FROM_GIT is not set 1
+  	   exit
+        fi
+    elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
+        echo ERROR: The lower server version than 10.0 to test driver is not supported.
+        exit 
+    fi
+
+    #update configuration file
+    #close shard
     shard_service=`ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE`
     if [ "$shard_service" = "ON" ]
     then
         ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE OFF
     fi
-  
-    #get branch and path of test cases and exclude file
-    if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
-        branch=$COMPAT_BUILD_SVN_BRANCH
-        if [ "$BUILD_IS_FROM_GIT" == "1" ];then
-           exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
-           exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
-           run_git_update -f $HOME/cubrid-testcases-private -b $exclude_branch
-        elif [ "$BUILD_IS_FROM_GIT" == "0" ];then
-           exclude_file_dir=$HOME/dailyqa/$BUILD_SVN_BRANCH_NEW/config
-           run_svn_update -f $exclude_file_dir
-        fi
-    elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
-        branch=$BUILD_SVN_BRANCH_NEW
-        exclude_file_dir=$HOME/dailyqa/$branch/config
-        run_svn_update -f $exclude_file_dir
-    fi
-    get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
- 
-    #mv scenario/interface/CCI/shell to scenario/shell structure
-    cd $HOME/dailyqa/$branch/scenario 
-    bkname="shell_"`date +%s`"_bk"
-    cci="$HOME/dailyqa/$branch/interface/CCI/shell"
-    if [ -L shell ]
-    then
-         rm -f shell
-    else
-         mv shell $bkname
-    fi
-    ln -s $cci shell    
-    
-    #update cases
-    cd $HOME/dailyqa/$branch/scenario
-    run_svn_update -f shell 
 
-    #exclude cases
-    cat $exclude_file|grep "^shell"|xargs -i rm -rf {}
- 
-    #runCCI
-    exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh"    
-    ${exec_script_file} -h $CUBRID -v $branch -s shell -q -no-i18n -x |tee -a $tmplog
-
-    #upload test results
-    logPath=`cat $tmplog|grep RESULT_DIR|awk -F ':' '{print $NF}'|tr -d " "`
-    testResultPath=`cat $logPath|grep "Result Root Dir:"|awk -F ':' '{print $NF}'|tr -d " "`
-    testResultName="`basename ${testResultPath}`"
-    cd $testResultPath
-    typ=`echo $testResultName|awk -F '_' '{print $3}'`
-    sed -i "s/<catPath>${typ}</<catPath>$category</g" summary.info    
-    cd ..
-    if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
-        prefix=`echo $testResultName|awk -F '_' '{print $1"_"$2"_"$3"_"$4"_"$5}'` 
-        newName="${prefix}"_"${BUILD_ID}"
-        name=`echo $newName|tr -d " "`
-        rm -rf $name
-        mv $testResultName $name
-    elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
-        name=$testResultName
+    ini.sh -u "cubrid_download_url=" $TEST_RUNTIME_CONF
+    ini.sh -u "scenario=$HOME/dailyqa/$branch/interface/CCI/shell" $TEST_RUNTIME_CONF
+    ini.sh -u "testcase_git_branch=$branch" $TEST_RUNTIME_CONF
+    ini.sh -u "test_category=$COMPAT_TEST_CATAGORY" $TEST_RUNTIME_CONF
+    ini.sh -u "test_continue_yn=false" $TEST_RUNTIME_CONF
+    if [ -e $exclude_file ];then
+        ini.sh -u "testcase_exclude_from_file=$exclude_file" $TEST_RUNTIME_CONF
     fi
-    upload_to_dailysrv "$name" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$name" 
-    cd $curDir
+
+    #execute testing
+    ctp.sh shell -c $TEST_RUNTIME_CONF 2>&1 | tee ${TEST_RESULT_DIR}/runtime.log
 }
 
 #todo simplify this file

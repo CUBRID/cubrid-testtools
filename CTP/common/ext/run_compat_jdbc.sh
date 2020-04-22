@@ -229,9 +229,9 @@ function run_sql_legacy() {
     if [ ! -d "$QA_REPOSITORY/temp" ];then
        mkdir -p $QA_REPOSITORY/temp
     fi
-   
 
-    #close shard 
+
+    #close shard
     shard_service=`ini.sh -s "%shard1" $CUBRID/conf/cubrid_broker.conf SERVICE`
     if [ "$shard_service" = "ON" ]
     then
@@ -239,10 +239,10 @@ function run_sql_legacy() {
     fi
     sed -i "s@<cubridHome>.*</cubridHome>@<cubridHome>${CUBRID/\\/\\\\}</cubridHome>@g" $QA_REPOSITORY/configuration/System.xml
     sed -i "s@<jdbcPath>.*</jdbcPath>@<jdbcPath>${CUBRID/\\/\\\\}\\\\jdbc\\\\cubrid_jdbc.jar</jdbcPath>@g" $QA_REPOSITORY/configuration/System.xml
-  
+
     #get branch and path of test cases and exclude file
     if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
-        branch=$COMPAT_BUILD_SVN_BRANCH
+        branch=$COMPAT_BUILD_SCENARIO_BRANCH_GIT
         if [ "$BUILD_IS_FROM_GIT" == "1" ];then
            exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
            exclude_file_dir=$HOME/${exclude_git_repo_name}/${cqt_scenario}/config/daily_regression_test_exclude_list_compatibility
@@ -268,8 +268,8 @@ function run_sql_legacy() {
     fi
 
     #update cases
-    cd $HOME/dailyqa/$branch/scenario 
-    run_svn_update -f .
+    cd $HOME/dailyqa
+    run_git_update -f $branch -b $branch
 
     #exclude cases and do patch for some case
     cd $HOME/dailyqa/$branch/scenario
@@ -279,7 +279,7 @@ function run_sql_legacy() {
     cd $cqt_scenario
     if [ -f $patch_file ];then
        patch -p0 -f < $patch_file
-    fi 
+    fi
     cd ..
 
     #edited by cn15209, because CUBRIDSUS-17766 issue
@@ -291,14 +291,14 @@ function run_sql_legacy() {
     fi
 
     #runJDBC
-    exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh"    
+    exec_script_file="sh $QA_REPOSITORY/qatool_bin/console/scripts/cqt.sh"
     ${exec_script_file} -h $CUBRID -v $branch -s $COMPAT_BUILD_SCENARIOS -t $COMPAT_BUILD_BIT -x -q -random_port|tee $tmplog
 
     #upload test results
     logPath=`cat $tmplog|grep RESULT_DIR|awk -F ':' '{print $NF}'|tr -d " "`
     logDir=`dirname $logPath`
     cat_cmd="cat $logDir/*.log"
-    
+
     for testResultPath in `${cat_cmd}|grep "Result Root Dir:"|awk -F ':' '{print $NF}'|tr -d " "`
     do
         testResultName="`basename ${testResultPath}`"
@@ -308,8 +308,8 @@ function run_sql_legacy() {
         else
            typ=`echo $testResultName|awk -F '_' '{print $3}'`
         fi
-        
-        cd $testResultPath    
+
+        cd $testResultPath
         if [ "$typ" == "site" ];then
            if [ `cat summary.info|grep kcc|grep -v grep|wc -l` -ne 0 ];then
               site_type="kcc"
@@ -319,16 +319,16 @@ function run_sql_legacy() {
               site_type="neis08"
            fi
         fi
-   
+
         #instead of typ in summary.info by category value
         if [ -n "$site_type" ];then
            category=`echo ${COMPAT_TEST_CATAGORY}|sed "s#site#$site_type#g"`
         fi
         sed -i "s/<catPath>${typ}</<catPath>$category</g" summary.info
         cd ..
-        #if it is driver test,rename the test result name 
-        if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then    
-            prefix=`echo $testResultName|awk -F '_' '{print $1"_"$2"_"$3"_"$4"_"$5}'` 
+        #if it is driver test,rename the test result name
+        if [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ]; then
+            prefix=`echo $testResultName|awk -F '_' '{print $1"_"$2"_"$3"_"$4"_"$5}'`
             newName="${prefix}"_"${BUILD_ID}"
             name=`echo $newName|tr -d " "`
             rm -rf $name
@@ -336,9 +336,10 @@ function run_sql_legacy() {
         elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D" ]; then
             name=$testResultName
         fi
-        upload_to_dailysrv "$name" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$name" 
+        upload_to_dailysrv "$name" "./qa_repository/function/y`date +%Y`/m`date +%-m`/$name"
     done
     cd $curDir
+
 }
 
 #todo simplify this file
