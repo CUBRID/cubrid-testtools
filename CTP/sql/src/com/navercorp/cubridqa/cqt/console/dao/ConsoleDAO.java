@@ -275,8 +275,8 @@ public class ConsoleDAO extends Executor {
 				String user = dbConf.getDbuser();
 				String password = dbConf.getDbpassword();
 				if (Test.urlProperties != null && Test.urlProperties.length() != 0) {
-            url += "&" + Test.urlProperties;
-        }
+					url += "&" + Test.urlProperties;
+				}
 				conn = MyDriverManager.giveConnection(driver, url, user, password);
 			} else {
 				dataSource = dataSourceMap.get(db);
