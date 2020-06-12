@@ -13,6 +13,7 @@
     <check_server_status>true</check_server_status>
     <add_debug_hint>false</add_debug_hint>
     <need_xml_summary>true</need_xml_summary>
+    <!--<url_properties>useSSL=true</url_properties> -->
    <reset>
        <!-- <item>SET NAMES utf8</item>-->
        <!--   <item>SET SYSTEM PARAMETERS 'dont_reuse_heap_file=no'</item> -->
