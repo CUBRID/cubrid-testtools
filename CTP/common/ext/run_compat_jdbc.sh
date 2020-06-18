@@ -121,6 +121,7 @@ function run_sql() {
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D" ]; then
         branch=$BUILD_SCENARIO_BRANCH_GIT
         exclude_file_dir=$HOME/${git_repo_name}/${ctp_scenario}/config/daily_regression_test_exclude_list_compatibility
+        run_git_update -f $HOME/${git_repo_name} -b $exclude_branch
     fi
     get_best_version_for_exclude_patch_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
 
