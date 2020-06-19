@@ -121,14 +121,10 @@ function run_sql() {
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D" ]; then
         branch=$BUILD_SCENARIO_BRANCH_GIT
         exclude_file_dir=$HOME/${git_repo_name}/${ctp_scenario}/config/daily_regression_test_exclude_list_compatibility
+        run_git_update -f $HOME/${git_repo_name} -b $branch
     fi
     get_best_version_for_exclude_patch_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
 
-    #exclude cases and do patch for some case
-    cd ${CTP_HOME}/../${git_repo_name}
-    run_git_update -f . -b $branch
-    git status .
-   
     fileName=${exclude_file##*/}
     fileName2=${patch_file##*/}
     cp -f $exclude_file $tmpdir/$fileName
@@ -138,6 +134,11 @@ function run_sql() {
     if [ ` cat ${exclude_file}|grep "^scenario"|wc -l` -ge 1 ];then
          sed -i 's/scenario\///g' $exclude_file
     fi
+
+    #exclude cases and do patch for some case
+    cd ${CTP_HOME}/../${git_repo_name}
+    run_git_update -f . -b $branch
+    git status .
 
     cd ${ctp_scenario} 
     if [ -s $patch_file ] 
