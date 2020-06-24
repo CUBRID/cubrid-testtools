@@ -82,7 +82,9 @@ function run_sql() {
         exit
     fi
     cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
- 
+
+    compat_config_repo_name=cubrid-testcases 
+
     if [ "$COMPAT_BUILD_SCENARIOS" == "medium" ];then
         ctp_type="medium"
         git_repo_name=cubrid-testcases
@@ -111,7 +113,7 @@ function run_sql() {
         branch=$COMPAT_BUILD_SCENARIO_BRANCH_GIT
         if [ "$BUILD_IS_FROM_GIT" == "1" ];then
            exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
-           exclude_file_dir=$HOME/${git_repo_name}/${ctp_scenario}/config/daily_regression_test_exclude_list_compatibility
+           exclude_file_dir=$HOME/${compat_config_repo_name}/${ctp_scenario}/config/daily_regression_test_exclude_list_compatibility
            run_git_update -f $HOME/${git_repo_name} -b $exclude_branch
         elif [ "$BUILD_IS_FROM_GIT" == "0" ];then
            exclude_branch=$BUILD_SVN_BRANCH_NEW
@@ -120,7 +122,7 @@ function run_sql() {
         fi
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D" ]; then
         branch=$BUILD_SCENARIO_BRANCH_GIT
-        exclude_file_dir=$HOME/${git_repo_name}/${ctp_scenario}/config/daily_regression_test_exclude_list_compatibility
+        exclude_file_dir=$HOME/${compat_config_repo_name}/${ctp_scenario}/config/daily_regression_test_exclude_list_compatibility
         run_git_update -f $HOME/${git_repo_name} -b $branch
     fi
     get_best_version_for_exclude_patch_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
