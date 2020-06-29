@@ -114,7 +114,7 @@ function run_sql() {
         if [ "$BUILD_IS_FROM_GIT" == "1" ];then
            exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
            exclude_file_dir=$HOME/${compat_config_repo_name}/${ctp_scenario}/config/daily_regression_test_exclude_list_compatibility
-           run_git_update -f $HOME/${git_repo_name} -b $exclude_branch
+           run_git_update -f $HOME/${compat_config_repo_name} -b $exclude_branch
         elif [ "$BUILD_IS_FROM_GIT" == "0" ];then
            exclude_branch=$BUILD_SVN_BRANCH_NEW
            exclude_file_dir=$HOME/dailyqa/$BUILD_SVN_BRANCH_NEW/config
@@ -123,7 +123,7 @@ function run_sql() {
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D" ]; then
         branch=$BUILD_SCENARIO_BRANCH_GIT
         exclude_file_dir=$HOME/${compat_config_repo_name}/${ctp_scenario}/config/daily_regression_test_exclude_list_compatibility
-        run_git_update -f $HOME/${git_repo_name} -b $branch
+        run_git_update -f $HOME/${compat_config_repo_name} -b $branch
     fi
     get_best_version_for_exclude_patch_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
 
