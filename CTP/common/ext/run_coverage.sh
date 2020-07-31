@@ -41,8 +41,8 @@ function deploySource()
   then
 	cd $build_home
         buildID=${BUILD_ID}
+	rm -rf $binary_build_folder > /dev/null
 	mkdir -p $binary_build_folder
-	rm -rf $binary_build_folder/* > /dev/null
 	
 	
         buildPackageName=${BUILD_URLS##*/}
