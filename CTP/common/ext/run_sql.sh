@@ -60,7 +60,6 @@ function run_sql {
     else
         cp -f conf/${MKEY_CONFIG} ${ctp_test_conf}
     fi
-    exit    
     if [ "$BUILD_SCENARIOS" == "medium" -o "$BUILD_SCENARIOS" == "medium_debug" ]; then
         ctp_type="medium"
         git_repo_name=cubrid-testcases
