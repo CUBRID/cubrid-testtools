@@ -23,6 +23,8 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
+source ${CTP_HOME}/common/sched/init.sh $1
+
 set -x
 
 is_continue_mode=$1
@@ -53,7 +55,12 @@ function run_sql {
     close_shard_service
 
     # STEP 3: CONFIGURE CTP
-    cp conf/sql_local.conf ${ctp_test_conf}
+    if [ "${MKEY_CONFIG}" = "" ]; then
+        cp -f conf/sql_local.conf ${ctp_test_conf}
+    else
+        cp -f conf/${MKEY_CONFIG} ${ctp_test_conf}
+    fi
+    exit    
     if [ "$BUILD_SCENARIOS" == "medium" -o "$BUILD_SCENARIOS" == "medium_debug" ]; then
         ctp_type="medium"
         git_repo_name=cubrid-testcases
