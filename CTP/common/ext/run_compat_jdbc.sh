@@ -81,7 +81,12 @@ function run_sql() {
         echo ERROR: shell configuration file does not exist. Please check it.
         exit
     fi
-    cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+
+    if [ "${MKEY_CONFIG}" = "" ]; then
+        cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+    else
+        cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
+    fi
 
     compat_config_repo_name=cubrid-testcases 
 
@@ -89,10 +94,6 @@ function run_sql() {
         ctp_type="medium"
         git_repo_name=cubrid-testcases
         ctp_scenario=medium
-
-        if [ "${MKEY_CONFIG}" != "" ]; then
-            cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
-        fi
     elif [ "$COMPAT_BUILD_SCENARIOS" == "sql" ];then
         ctp_type="sql"
         git_repo_name=cubrid-testcases
