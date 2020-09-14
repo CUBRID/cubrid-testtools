@@ -81,7 +81,12 @@ function run_sql() {
         echo ERROR: shell configuration file does not exist. Please check it.
         exit
     fi
-    cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+
+    if [ "${MKEY_CONFIG}" = "" ]; then
+        cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+    else
+        cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
+    fi
 
     compat_config_repo_name=cubrid-testcases 
 
