@@ -85,7 +85,11 @@ function run_sql() {
     if [ "${MKEY_CONFIG}" = "" ]; then
         cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
     else
-        cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
+        if [ "$COMPAT_BUILD_SCENARIOS" == "medium" ];then
+            cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
+        else
+            cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+        fi
     fi
 
     compat_config_repo_name=cubrid-testcases 
