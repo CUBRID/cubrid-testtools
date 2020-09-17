@@ -32,7 +32,7 @@ function clean_cubrid
   # clean running proccess
   pkill -u $(whoami) -9 qactl >/dev/null 2>&1
   pkill -u $(whoami) -9 qacsql >/dev/null 2>&1
-  cubrid tranlist -u dba $dbname|grep $HOSTNAME|awk '{print $4}'|xargs -i kill -9 {} >/dev/null 2>&1
+  cubrid tranlist $dbname|grep $HOSTNAME|awk '{print $4}'|xargs -i kill -9 {} >/dev/null 2>&1
 
   # delete user
   csql -u dba $dbname -c "select name from db_user where name !='DBA' and name !='PUBLIC'" > ${temp_file_for_clean} 
