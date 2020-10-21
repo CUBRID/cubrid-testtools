@@ -2068,6 +2068,7 @@ int main (int argc, char *argv[])
     char *result;
     char *ans_file = NULL;
     char *test_type = NULL;
+    char *urlproperty = NULL;
     long start_time, end_time, elapse_time;
     if (argc < 4)
     {
@@ -2080,9 +2081,10 @@ int main (int argc, char *argv[])
     test_type      = argv[3];
     char *filename = argv[4];
     result         = argv[5];
+    urlproperty    = argv[6];
 
     //construct the url as "cci:CUBRID:localhost:33888:test_db:dba:12345:"
-    snprintf(url, 256, "cci:CUBRID:%s:%d:%s:%s:%s:", host,port,dbname,user,passwd);
+    snprintf(url, 256, "cci:CUBRID:%s:%d:%s:%s:%s:%s", host,port,dbname,user,passwd,urlproperty==NULL? "":urlproperty);
 
     printf ("Case Name:%s\n", filename);
 

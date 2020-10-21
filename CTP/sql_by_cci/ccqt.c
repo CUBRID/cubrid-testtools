@@ -38,6 +38,7 @@
 
 char *dbname = NULL;
 char *port   = NULL;
+char *urlproperty = NULL;
 char *path   = NULL;
 char *sql_by_cci_home     = NULL;
 char *result = NULL;
@@ -88,7 +89,7 @@ int execute (const char *filename, char *resultfile)
 
     if (fork () == 0)
     {
-        ret = execl (exe_p, "execute", port, dbname, test_tp, filename, resultfile, NULL);
+        ret = execl (exe_p, "execute", port, dbname, test_tp, filename, resultfile, urlproperty, NULL);
         if (ret < 0)
             perror ("Error");
         if (exe_p != NULL)
@@ -310,14 +311,17 @@ int main (int argc, char **argv)
     res_folder_name = argv[4];
     path    = argv[5];		//loop directory for cases
     hm      = argv[6];			//the home directory of ctp
+    urlproperty = argv[7];
+    
     str_date = time_stamp(); 
-
     t = strlen (res_folder_name) + strlen (hm) + strlen ("/result/sql_by_cci/");
     result = malloc (sizeof (char) * (t + 1));
     memset (result, 0, (t + 1));
     sprintf (result, "%s%s%s", hm, "/result/sql_by_cci/", res_folder_name);
     printf("Result Root Dir: %s\n\n", result);
-    sql_by_cci_home=strcat(hm, "/sql_by_cci/");
+    sql_by_cci_home = malloc(strlen (hm) + strlen ("/sql_by_cci/") + 1);
+    memset(sql_by_cci_home, 0x0, strlen (hm) + strlen ("/sql_by_cci/") + 1);
+    sprintf(sql_by_cci_home, "%s%s", hm, "/sql_by_cci/");
     start_time = getCurrentTime();
 
     if (access (result, 0) != 0)
@@ -345,4 +349,9 @@ int main (int argc, char **argv)
     elapse_time = end_time - start_time;
     printf("TOTAL_COUNT: %d\n", count);
     printf("TOTAL_ELAPSE_TIME: %lu\n", elapse_time);
+    
+    if(result != NULL) 
+        free(result);
+    if(sql_by_cci_home != NULL)
+        free(sql_by_cci_home);
 }
