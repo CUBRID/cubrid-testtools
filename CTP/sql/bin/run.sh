@@ -53,6 +53,7 @@ need_make_locale=""
 test_data_file=""
 interface_type=""
 alias ini="sh ${CTP_HOME}/bin/ini.sh"
+cci_urlproperty=""
 
 
 function usage ()
@@ -176,7 +177,9 @@ function do_init()
     if [ "${sql_interface_type}" ];then
          interface_type=${sql_interface_type}	
     fi
-
+    
+    cci_urlproperty=`ini -s sql ${config_file_main} cci_urlproperty`
+    
     cd $curDir
 }
 
@@ -700,13 +703,10 @@ function do_test()
      curDir=`pwd`
      #start  server
      start_db $db_name
- 
      #start broker
      restart_broker
- 
      #check status
      check_status $db_name
- 
      CPLIB=$CTP_HOME/sql/lib
      CPCLASSES=""
      separator=":"
@@ -731,7 +731,6 @@ function do_test()
          fi
      fi
      
-     
      if [ -z "$testcase_exclude_file" ];then
         javaArgs="${scenario_repo_root}?db=${db_name}_qa"
      else
@@ -753,7 +752,7 @@ function do_test()
      elif [ "$interface_type" == "cci" ];then
 	  port=`ini -s "%BROKER1"  $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
 	  resultFolder="schedule_cdriver_${os_type}_${scenario_alias}_`date +"%Y%m%d%H%M%S"`_${cubrid_ver}_${cubrid_bits}"
-	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${resultFolder} ${scenario_repo_root} $CTP_HOME 2>&1 >> $log_filename 
+	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${resultFolder} ${scenario_repo_root} $CTP_HOME ${cci_urlproperty} 2>&1 | tee -a $log_filename 
 	  cd $curDir
 	  
      else   
