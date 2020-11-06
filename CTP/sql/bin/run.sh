@@ -54,7 +54,7 @@ test_data_file=""
 interface_type=""
 alias ini="sh ${CTP_HOME}/bin/ini.sh"
 cci_urlproperty=""
-
+support_javasp=""
 
 function usage ()
 {
@@ -179,6 +179,7 @@ function do_init()
     fi
     
     cci_urlproperty=`ini -s sql ${config_file_main} cci_urlproperty`
+    support_javasp=`cubrid | grep -w javasp | awk '{if($1=="javasp") {print "yes"}}'`
     
     cd $curDir
 }
@@ -455,6 +456,12 @@ function stop_db()
          cubrid server stop $1 2>&1 > /dev/null
      fi
 
+     if [ $support_javasp == "yes" -a $javasp_param == "yes" ]
+     then
+          cubrid javasp stop $1 2>&1 >> $log_filename
+          echo "stop javasp database $1"
+     fi
+
      sleep 2
      cubrid service stop 2>&1 > /dev/null
 }
@@ -517,6 +524,14 @@ function start_db()
      else
          cubrid server start $1 2>&1 >> $log_filename
      fi
+     
+     javasp_param=`ini -s "common"  $CUBRID/conf/cubrid.conf java_stored_procedure`     
+     if [ $support_javasp == "yes" -a $javasp_param == "yes" ]
+     then
+          cubrid javasp start $1 2>&1 >> $log_filename
+          echo "start javasp database $1"
+     fi     
+     
      sleep 2
 }
 
