@@ -456,7 +456,8 @@ function stop_db()
          cubrid server stop $1 2>&1 > /dev/null
      fi
 
-     if [ $support_javasp == "yes" -a $javasp_param == "yes" ]
+     jcnt=`cat $CUBRID/conf/cubrid.conf | grep -v "#" | grep java_stored_procedure | grep -E 'on|yes' | wc -l`
+     if [ $support_javasp == "yes" -a $jcnt -gt 0 ]
      then
           cubrid javasp stop $1 2>&1 >> $log_filename
           echo "stop javasp database $1"
@@ -525,8 +526,8 @@ function start_db()
          cubrid server start $1 2>&1 >> $log_filename
      fi
      
-     javasp_param=`ini -s "common"  $CUBRID/conf/cubrid.conf java_stored_procedure`     
-     if [ $support_javasp == "yes" -a $javasp_param == "yes" ]
+     jcnt=`cat $CUBRID/conf/cubrid.conf | grep -v "#" | grep java_stored_procedure | grep -E 'on|yes' | wc -l`     
+     if [ $support_javasp == "yes" -a $jcnt -gt 0 ]
      then
           cubrid javasp start $1 2>&1 >> $log_filename
           echo "start javasp database $1"
