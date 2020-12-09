@@ -556,7 +556,10 @@ char *trimline (char *str)
     *++p = '\0';
     if (s != str)
     {
-        memcpy (str, s, strlen (s) + 1);
+       char* tmpbuf = (char *)malloc((strlen (s) + 1) * sizeof(char));
+       memcpy (tmpbuf, s, (strlen (s) + 1) * sizeof(char));
+       memcpy (str, tmpbuf, (strlen (s) + 1) * sizeof(char));
+       if(tmpbuf != NULL) free(tmpbuf); 
     }
     return (str);
 }
@@ -972,7 +975,6 @@ int readFile (char *fileName)
 
             //if script like "? = call"
             iscallwithoutvalue = startswith (str, "?");
-
             isparameter = startswith (str, "$");
             if (isparameter)
             {
@@ -987,7 +989,7 @@ int readFile (char *fileName)
                 hasqp = 1;
                 continue;
             }
-
+            
             isline = endwith (str, ';');
             sql_len = strlen (str);
             if (!isline)
@@ -998,12 +1000,12 @@ int readFile (char *fileName)
             {
                 linelenght = linelenght + sql_len + 1;	//"\0"
             }
-
+            
             if (linelenght > MAXLINELENGH)
             {
                 printf ("The sql statment is too long \n");
             }
-
+            
             strcat (str_tmp, str);
             if (!isline)
             {
@@ -1013,7 +1015,6 @@ int readFile (char *fileName)
 
             //clear the str buf, because it have been cat to str_tmp.
             str[0] = 0x00;
-
             if (isline)
             {
                 trimline (str_tmp);
