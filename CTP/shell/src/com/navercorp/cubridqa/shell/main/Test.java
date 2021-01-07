@@ -315,23 +315,32 @@ public class Test {
 
 		ShellScriptInput script = new ShellScriptInput("netstat -abfno | grep -E 'TIME_WAIT|FIN_WAIT1|FIN_WAIT2|CLOSING' | grep -E ':" + brokerFirstPort + "|:" + brokerSecondPort + "|:"
 				+ cubridPortId + "|:" + haPortId + "|:" + cmPortId + "' | wc -l");
-		while (true) {
-			currentTime = System.currentTimeMillis();
-			len = (currentTime - startTime) / 1000;
+                SSHConnect sshRelated = null;
+                try {
+          		sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId);
 
-			if (len > timeout) {
-				workerLog.println("NET NOT READY AND TIMEOUT: " + len);
-				break;
-			}
+         		while (true) {
+	         		currentTime = System.currentTimeMillis();
+		        	len = (currentTime - startTime) / 1000;
 
-			result = ssh.execute(script).trim();
-			if (result.equals("0")) {
-				workerLog.println("NET GOOD in " + len + " seconds");
-				break;
-			}
-			workerLog.println("NET fail: " + result + "(" + len + " secons)");
-			CommonUtils.sleep(1);
-		}
+		        	if (len > timeout) {
+		         		workerLog.println("NET NOT READY AND TIMEOUT: " + len);
+			        	break;
+		        	}
+
+		        	result = sshRelated.execute(script).trim();
+		        	if (result.equals("0")) {
+		        		workerLog.println("NET GOOD in " + len + " seconds");
+		        		break;
+		        	}
+		        	workerLog.println("NET fail: " + result + "(" + len + " secons)");
+		        	CommonUtils.sleep(5);
+	        	}
+                 } finally {
+		        if (sshRelated != null) {
+				sshRelated.close();
+	        	}
+                 }
 	}
 
 	public boolean isTestCaseSkipped() throws Exception {
