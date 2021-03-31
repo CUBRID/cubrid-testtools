@@ -31,6 +31,8 @@ TEST_RUNTIME_CONF="${CTP_HOME}/conf/sql_runtime.conf"
 tmpdir=""
 tmplog=""
 tmptxt=""
+major_version=""
+minor_version=""
 
 #todo remove this file
 exclude_file=""
@@ -82,22 +84,32 @@ function run_sql() {
         exit
     fi
 
-    category_arr=(`echo $COMPAT_TEST_CATAGORY | sed 's/_/\\n/g'`)
+    category_arr=(`echo $COMPAT_TEST_CATAGORY | sed 's/ext_//g' | sed 's/_/\\n/g'`)
 
     if [ "${MKEY_CONFIG}" == "" ]; then
         cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
     else
        if [ "$COMPAT_BUILD_SCENARIOS" == "medium" ];then
-            cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
+           if [ "$major_version" -eq 11 ]; then
+               cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
+           else
+               cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+           fi
        else
            if [ "${category_arr[3]}" == "S64" ]; then
                if [ "${category_arr[2]}" == "10.1" ] || [ "${category_arr[2]}" == "10.2" ]; then
+                   # jdbc_sql_10.1_S64.msg, jdbc_sql_ext_10.1_S64.msg, jdbc_sql_10.2_S64.msg only
                    cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
                else
                    cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
                fi
            else
-               cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+               if [ "$major_version" -eq 10 ] && [ "$minor_version" -gt 0 ]; then
+                   # Engine test version 10.1, 10.2 only
+                   cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
+               else
+                   cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+               fi
            fi
        fi
     fi
@@ -421,8 +433,9 @@ function get_server_version() {
 }
 
 function is_server_ge_10_0 () {
-    fst_num=`get_server_version | awk -F '.' '{print $1}'`
-    if [ $fst_num -ge 10 ];then
+    major_version=`get_server_version | awk -F '.' '{print $1}'`
+    minor_version=`get_server_version | awk -F '.' '{print $2}'`
+    if [ $major_version -ge 10 ];then
         echo YES
     else
         echo NO
