@@ -82,15 +82,26 @@ function run_sql() {
         exit
     fi
 
-    if [ "${MKEY_CONFIG}" = "" ]; then
+    category_arr=(`echo $COMPAT_TEST_CATAGORY | sed 's/_/\\n/g'`)
+
+    if [ "${MKEY_CONFIG}" == "" ]; then
         cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
     else
-        if [ "$COMPAT_BUILD_SCENARIOS" == "medium" ];then
+       if [ "$COMPAT_BUILD_SCENARIOS" == "medium" ];then
             cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
-        else
-            cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
-        fi
+       else
+           if [ "${category_arr[3]}" == "S64" ]; then
+               if [ "${category_arr[2]}" == "10.1" ] || [ "${category_arr[2]}" == "10.2" ]; then
+                   cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
+               else
+                   cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+               fi
+           else
+               cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
+           fi
+       fi
     fi
+
 
     compat_config_repo_name=cubrid-testcases 
 
