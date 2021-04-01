@@ -432,9 +432,7 @@ function get_server_version() {
 }
 
 function is_server_ge_10_0 () {
-    major_version=`get_server_version | awk -F '.' '{print $1}'`
-    minor_version=`get_server_version | awk -F '.' '{print $2}'`
-    engine_version=`echo "${major_version}${minor_version}"`
+    engine_version=`get_server_version | awk -F '.' '{print $1 $2}'`
 
     # if [test_engine_version >= 10.0]
     if [ $engine_version -ge 100 ];then
