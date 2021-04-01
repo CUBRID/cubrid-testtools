@@ -31,8 +31,7 @@ TEST_RUNTIME_CONF="${CTP_HOME}/conf/sql_runtime.conf"
 tmpdir=""
 tmplog=""
 tmptxt=""
-major_version=""
-minor_version=""
+engine_version=""
 
 #todo remove this file
 exclude_file=""
@@ -90,7 +89,7 @@ function run_sql() {
         cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
     else
        if [ "$COMPAT_BUILD_SCENARIOS" == "medium" ];then
-           if [ "$major_version" -eq 11 ]; then
+           if [ "$engine_version" -ge 110 ]; then
                cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
            else
                cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
@@ -104,7 +103,7 @@ function run_sql() {
                    cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
                fi
            else
-               if [ "$major_version" -eq 10 ] && [ "$minor_version" -gt 0 ]; then
+               if [ "$engine_version" -ge 101 ] && [ "$engine_version" -lt 110 ]; then
                    # Engine test version 10.1, 10.2 only
                    cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
                else
@@ -435,7 +434,10 @@ function get_server_version() {
 function is_server_ge_10_0 () {
     major_version=`get_server_version | awk -F '.' '{print $1}'`
     minor_version=`get_server_version | awk -F '.' '{print $2}'`
-    if [ $major_version -ge 10 ];then
+    engine_version=`echo "${major_version}${minor_version}"`
+
+    # if [test_engine_version >= 10.0]
+    if [ $engine_version -ge 100 ];then
         echo YES
     else
         echo NO
