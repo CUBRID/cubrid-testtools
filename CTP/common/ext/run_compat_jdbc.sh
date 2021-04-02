@@ -89,7 +89,7 @@ function run_sql() {
         cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
     else
        if [ "$COMPAT_BUILD_SCENARIOS" == "medium" ];then
-           if [ "$engine_version" -ge 110 ]; then
+           if [ ${engine_version} -ge 110 ]; then
                cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
            else
                cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
@@ -103,7 +103,7 @@ function run_sql() {
                    cp -f ${test_config_template} ${TEST_RUNTIME_CONF}
                fi
            else
-               if [ "$engine_version" -ge 101 ] && [ "$engine_version" -lt 110 ]; then
+               if [ ${engine_version} -ge 101 ] && [ ${engine_version} -lt 110 ]; then
                    # Engine test version 10.1, 10.2 only
                    cp -f ${CTP_HOME}/conf/${MKEY_CONFIG} ${TEST_RUNTIME_CONF}
                else
@@ -435,7 +435,7 @@ function is_server_ge_10_0 () {
     engine_version=`get_server_version | awk -F '.' '{print $1 $2}'`
 
     # if [test_engine_version >= 10.0]
-    if [ $engine_version -ge 100 ];then
+    if [ ${engine_version} -ge 100 ];then
         echo YES
     else
         echo NO
@@ -445,7 +445,8 @@ function is_server_ge_10_0 () {
 if [ "$is_continue_mode" == "YES" ];then
    echo WARN: Legacy test does not support CONTINUE mode
 else
-   if [ `is_server_ge_10_0` = "YES" ];then
+   is_server_ge_10_0
+   if [ ${engine_version} -ge 100 ];then
         run_sql
    else
         run_sql_legacy
