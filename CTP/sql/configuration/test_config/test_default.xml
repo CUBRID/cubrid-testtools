@@ -21,7 +21,9 @@
        <item>SET SYSTEM PARAMETERS 'ansi_quotes=default'</item>
        <item>SET SYSTEM PARAMETERS 'compat_mode=default'</item>
        <item>SET SYSTEM PARAMETERS 'default_week_format=default'</item>
-       <item>SET SYSTEM PARAMETERS 'dont_reuse_heap_file=default'</item>
+       <!-- refered to CBRD-23866, CUBRIDQA-1117. Test setting need value change.(default is no)
+	   <item>SET SYSTEM PARAMETERS 'dont_reuse_heap_file=default'</item>
+	   -->
        <item>SET SYSTEM PARAMETERS 'er_btree_debug=default'</item>
        <item>SET SYSTEM PARAMETERS 'error_log_level=default'</item>
        <item>SET SYSTEM PARAMETERS 'error_log_warning=default'</item>
