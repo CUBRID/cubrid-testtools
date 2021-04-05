@@ -174,8 +174,9 @@ function updateCodes()
                 m=$(date +%M)
 		let "m=m+1"
 		timeStr="$h:$m"
-                schtasks /create /tn "CTP upgrade" /tr sh $HOME/.autoUpdate.sh /sc once /st $timeStr
-		echo "At task will be start: $timeStr" >> $HOME/.autoUpdate.sh
+		schtasks /delete /tn "CTP upgrade" /F
+                schtasks /create /tn "CTP upgrade" /tr "sh $HOME/.autoUpdate.sh" /sc once /st $timeStr
+		echo "The CTP upgrade by schtasks will be start: $timeStr" >> $HOME/.autoUpdate.sh
 	    fi 
 	    export LC_ALL=$default_lc_all
 	    echo "----------------------------Done ----------------------------------------------"
