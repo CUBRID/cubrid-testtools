@@ -242,21 +242,24 @@ function config_jdbc_test_environment()
 	
         if [ "$num" ]
 	then
+		major_version=`echo ${num} | awk -F '.' '{print $1}'`
+		minor_version=`echo ${num} | awk -F '.' '{print $2}'`
+
 		#config file in jdbc folder
 		cd $CUBRID/jdbc
 		rm -f cubrid_jdbc.jar
 	
 		#copy test driver and create link
                 goToInstallationDirectory
-		cp ./CUBRID_${dirver_bk}/jdbc/JDBC-"${num}"-cubrid.jar $CUBRID/jdbc
+		cp ./CUBRID_${dirver_bk}/jdbc/cubrid_jdbc.jar $CUBRID/jdbc/${major_version}.${minor_version}_jdbc.jar
                 if [ $? -ne 0 ]
 	        then
-	            cp ./CUBRID_${dirver_bk}/jdbc/JDBC-"${num}".jar $CUBRID/jdbc
+	            cp ./CUBRID_${dirver_bk}/jdbc/JDBC-"${num}".jar $CUBRID/jdbc/${major_version}.${minor_version}_jdbc.jar
 	            cd $CUBRID/jdbc
-                    ln -s JDBC-"${num}".jar cubrid_jdbc.jar
+                    ln -s ${major_version}.${minor_version}_jdbc.jar cubrid_jdbc.jar
 	        else
                     cd $CUBRID/jdbc 
-	            ln -s JDBC-"${num}"-cubrid.jar cubrid_jdbc.jar
+	            ln -s ${major_version}.${minor_version}_jdbc.jar cubrid_jdbc.jar
 	        fi
     else
         echo "You are missing driver version!!"
