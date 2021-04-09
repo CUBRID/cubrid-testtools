@@ -254,7 +254,7 @@ function config_jdbc_test_environment()
 		cp ./CUBRID_${dirver_bk}/jdbc/cubrid_jdbc.jar $CUBRID/jdbc/${major_version}.${minor_version}_jdbc.jar
                 if [ $? -ne 0 ]
 	        then
-	            cp ./CUBRID_${dirver_bk}/jdbc/${major_version}.${minor_version}_jdbc.jar $CUBRID/jdbc
+	            cp ./CUBRID_${dirver_bk}/jdbc/JDBC-"${num}".jar $CUBRID/jdbc/${major_version}.${minor_version}_jdbc.jar
 	            cd $CUBRID/jdbc
                     ln -s ${major_version}.${minor_version}_jdbc.jar cubrid_jdbc.jar
 	        else
