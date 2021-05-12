@@ -139,7 +139,7 @@ public class Constants {
 		sb.append("taskkill /T /F /IM cub_proxy.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM cub_sainfo.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM cub_server.exe").append(LINE_SEPARATOR);
-                sb.append("taskkill /T /F /IM cub_javasp.exe").append(LINE_SEPARATOR);
+		sb.append("taskkill /T /F /IM cub_javasp.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM loadjava.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM migrate_91_to_92.exe").append(LINE_SEPARATOR);
 		sb.append("taskkill /T /F /IM setupmanage.exe").append(LINE_SEPARATOR);
