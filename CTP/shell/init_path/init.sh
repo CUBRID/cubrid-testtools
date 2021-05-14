@@ -703,8 +703,8 @@ function init
       PATH=${MINGW_PATH}/mingw32/lib:${MINGW_PATH}/libexec/gcc/mingw32/4.6.2:$PATH
       LIBRARY_PATH=`cygpath -w "$MINGW_PATH\bin"`\;`cygpath -w "$MINGW_PATH\lib"`\;`cygpath -w "$MINGW_PATH\mingw32\lib"`\;`cygpath -w "$MINGW_PATH\libexec\gcc\mingw32\4.6.2"`\;.
     else
-      PATH=${MINGW_PATH}/x86_64-w64-mingw32/lib:${MINGW_PATH}/libexec/gcc/x86_64-w64-mingw32/4.7.3:$PATH
-      LIBRARY_PATH=`cygpath -w "$MINGW_PATH\bin"`\;`cygpath -w "$MINGW_PATH\lib"`\;`cygpath -w "$MINGW_PATH\x86_64-w64-mingw32\lib"`\;`cygpath -w "$MINGW_PATH\libexec\gcc\x86_64-w64-mingw32\4.7.3"`\;.
+      PATH=${MINGW_PATH}/x86_64-w64-mingw32/lib:${MINGW_PATH}/libexec/gcc/x86_64-w64-mingw32/8.1.0:$PATH
+      LIBRARY_PATH=`cygpath -w "$MINGW_PATH\x86_64-w64-mingw32\lib"`\;`cygpath -w "$MINGW_PATH\libexec\gcc\x86_64-w64-mingw32\8.1.0"`\;`cygpath -w "$MINGW_PATH\bin"`\;`cygpath -w "$MINGW_PATH\lib"`\;.
     fi
     
     CLASSPATH=`cygpath -w "$CUBRID/jdbc/cubrid_jdbc.jar"`\;`cygpath -w "${init_path}/commonforjdbc.jar"`\;.
