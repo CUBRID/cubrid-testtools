@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Search Solution Corporation. All rights reserved.
+ * Copyright (c) 2016, CUBRI Corporation. All rights reserved.
 
  * 
  * Redistribution and use in source and binary forms, with or without 
