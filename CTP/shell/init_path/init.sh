@@ -657,6 +657,17 @@ function init
   	time_str=`date +%H:%M:%S`
   	echo $time_str----`pwd` >> ~/shell_cases_log/$date_str-time.log	
   fi
+
+  if [ -e "$CUBRID/cci/include/broker_cas_error.h" ]; then
+      if [ ! -e "$CUBRID/include/broker_cas_error.h" ]; then
+          ln -Tfs $CUBRID/cci/include/broker_cas_error.h   $CUBRID/include/broker_cas_error.h
+          ln -Tfs $CUBRID/cci/include/cas_cci.h            $CUBRID/include/cas_cci.h
+          ln -Tfs $CUBRID/cci/include/compat_dbtran_def.h  $CUBRID/include/compat_dbtran_def.h
+
+          ln -Tfs $CUBRID/cci/lib/libcascci.so.11.1        $CUBRID/lib/libcascci.so.11.1
+          ln -Tfs $CUBRID/cci/lib/libcascci.so             $CUBRID/lib/libcascci.so
+      fi
+  fi
   
   cur_path=`pwd`
   cd $cur_path

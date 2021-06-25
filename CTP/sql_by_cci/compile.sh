@@ -23,6 +23,21 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
+if [ -e "$CUBRID/cci/include/broker_cas_error.h" ]; then
+    ln -s $CUBRID/cci/include/broker_cas_error.h   $CUBRID/include/broker_cas_error.h
+    ln -s $CUBRID/cci/include/cas_cci.h            $CUBRID/include/cas_cci.h
+    ln -s $CUBRID/cci/include/compat_dbtran_def.h  $CUBRID/include/compat_dbtran_def.h
+
+    ln -s $CUBRID/cci/lib/libcascci.so.11.1        $CUBRID/lib/libcascci.so.11.1
+    ln -s $CUBRID/cci/lib/libcascci.so             $CUBRID/lib/libcascci.so
+
+    # added to cas_error.h
+    cp cci_sub_execute.c                           execute.c
+else
+    cp ori_execute.c                               execute.c
+fi
+
+
 script_dir=$(dirname $(readlink -f $0))
 cd $script_dir
 
@@ -58,9 +73,9 @@ statOfCcqt=$?
 
 echo ""
 if [ $statOfExecute -eq 0 -a $statOfCcqt -eq 0 ];then
-	echo "======Compile Succuss!!======"
+        echo "======Compile Succuss!!======"
 else
-	echo "======Compile Fail!!======"
+        echo "======Compile Fail!!======"
 fi
 echo "======End Compile======"
 echo ""
