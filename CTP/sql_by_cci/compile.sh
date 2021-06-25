@@ -32,9 +32,9 @@ if [ -e "$CUBRID/cci/include/broker_cas_error.h" ]; then
     ln -s $CUBRID/cci/lib/libcascci.so             $CUBRID/lib/libcascci.so
 
     # added to cas_error.h
-    cp cci_sub_execute.c                           execute.c
+    sed -i 's/#define add_cas_error_header.*/#define add_cas_error_header 1/g' execute.c
 else
-    cp ori_execute.c                               execute.c
+    sed -i 's/#define add_cas_error_header.*/#define add_cas_error_header 0/g' execute.c
 fi
 
 

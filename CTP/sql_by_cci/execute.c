@@ -23,7 +23,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
- 
+
+#define add_cas_error_header 0
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
@@ -35,6 +36,9 @@
 #include <dirent.h>
 #include <time.h>
 #include <sys/time.h>
+#if add_cas_error_header == 1
+    #include <cas_error.h>
+#endif
 #include "interface_verify.h"
 #undef _GNU_SOURCE
 
