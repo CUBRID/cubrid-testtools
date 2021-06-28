@@ -24,7 +24,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#define add_cas_error_header 0
+#define ADD_CAS_ERROR_HEADER 0
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
@@ -36,8 +36,8 @@
 #include <dirent.h>
 #include <time.h>
 #include <sys/time.h>
-#if add_cas_error_header == 1
-    #include <cas_error.h>
+#if ADD_CAS_ERROR_HEADER == 1
+    #include <broker_cas_error.h>
 #endif
 #include "interface_verify.h"
 #undef _GNU_SOURCE

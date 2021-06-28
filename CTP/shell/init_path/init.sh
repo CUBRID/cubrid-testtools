@@ -42,6 +42,9 @@ IGNORE_TEST_PERFORMANCE=""
 #CUBRID_CHARSET=ko_KR.euckr
 #CUBRID_CHARSET=en_US
 #echo $CUBRID_CHARSET
+cci_header=""
+cci_lib=""
+
 if [ ! -n "$CUBRID_CHARSET" ]
 then
    CUBRID_CHARSET=en_US
@@ -658,15 +661,21 @@ function init
   	echo $time_str----`pwd` >> ~/shell_cases_log/$date_str-time.log	
   fi
 
-  if [ -e "$CUBRID/cci/include/broker_cas_error.h" ]; then
-      if [ ! -e "$CUBRID/include/broker_cas_error.h" ]; then
-          ln -Tfs $CUBRID/cci/include/broker_cas_error.h   $CUBRID/include/broker_cas_error.h
-          ln -Tfs $CUBRID/cci/include/cas_cci.h            $CUBRID/include/cas_cci.h
-          ln -Tfs $CUBRID/cci/include/compat_dbtran_def.h  $CUBRID/include/compat_dbtran_def.h
+  if [ -e "$CUBRID/cci" ]; then
+      cci_header=(`find $CUBRID/cci -name "*.h"`)
+      cci_lib=(`find $CUBRID/cci -name "libcascci*"`)
 
-          ln -Tfs $CUBRID/cci/lib/libcascci.so.11.1        $CUBRID/lib/libcascci.so.11.1
-          ln -Tfs $CUBRID/cci/lib/libcascci.so             $CUBRID/lib/libcascci.so
-      fi
+      for header_list in ${cci_header[@]}; do
+          filename=`echo "${header_list}" | rev | cut -d '/' -f1 | rev`
+          rm -rf $CUBRID/include/${filename}
+          ln -Tfs ${header_list} $CUBRID/include/${filename}
+      done
+
+      for lib_list in ${cci_lib[@]}; do
+          filename=`echo "${lib_list}" | rev | cut -d '/' -f1 | rev`
+          rm -rf $CUBRID/include/${filename}
+          ln -Tfs ${lib_list} $CUBRID/include/${filename}
+      done
   fi
   
   cur_path=`pwd`
@@ -1558,6 +1567,17 @@ function finish {
   release_broker_sharedmemory
   delete_ini
   restore_all_conf
+  if [-e "$CUBRID/cci"]; then
+      for header_list in ${cci_header[@]}; do
+          filename=`echo "${header_list}" | rev | cut -d '/' -f1 | rev`
+          rm -rf $CUBRID/include/${filename}
+      done
+
+      for lib_list in ${cci_lib[@]}; do
+          filename=`echo "${lib_list}" | rev | cut -d '/' -f1 | rev`
+          rm -rf $CUBRID/include/${filename}
+      done
+  fi
   echo "[INFO] TEST STOP (`date`)"
 }
 

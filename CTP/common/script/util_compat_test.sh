@@ -222,9 +222,14 @@ function config_cci_test_environment()
              cp ${CUBRID}_${dirver_bk}/include/dbtran_def.h . 
         fi  
 
-        if [ -e "${CUBRID}_${dirver_bk}/cci/include/broker_cas_error.h" ]
+        # cci driver check
+        if [ -e "${CUBRID}/cci" ]
         then
-          cp -rf ${CUBRID}_${dirver_bk}/cci $CUBRID/
+            rm -rf ${CUBRID}/cci
+        fi
+        if [ -e "${CUBRID}_${dirver_bk}/cci" ]
+        then
+            cp -rf ${CUBRID}_${dirver_bk}/cci $CUBRID/
         fi
 	
         #save driver and server info
