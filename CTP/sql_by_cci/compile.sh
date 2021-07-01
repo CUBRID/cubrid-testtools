@@ -24,22 +24,7 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 if [ -e "$CUBRID/cci" ]; then
-    cci_header=(`find $CUBRID/cci -name "*.h"`)
-    cci_lib=(`find $CUBRID/cci -name "libcascci*"`)
-
-    for header_list in ${cci_header[@]}; do
-        filename=`echo "${header_list}" | rev | cut -d '/' -f1 | rev`
-        rm -rf $CUBRID/include/${filename}
-        ln -Tfs ${header_list} $CUBRID/include/${filename}
-    done
-
-    for lib_list in ${cci_lib[@]}; do
-        filename=`echo "${lib_list}" | rev | cut -d '/' -f1 | rev`
-        rm -rf $CUBRID/include/${filename}
-        ln -Tfs ${lib_list} $CUBRID/include/${filename}
-    done
-
-    # added to cas_error.h
+    # added to broker_cas_error.h
     sed -i 's/#define ADD_CAS_ERROR_HEADER.*/#define ADD_CAS_ERROR_HEADER 1/g' execute.c
 else
     sed -i 's/#define ADD_CAS_ERROR_HEADER.*/#define ADD_CAS_ERROR_HEADER 0/g' execute.c

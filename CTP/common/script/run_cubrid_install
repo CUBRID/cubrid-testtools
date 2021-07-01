@@ -218,6 +218,26 @@ EOF
 	fi
     . ~/.cubrid.sh
     fi
+
+
+    if [ -e "$CUBRID/cci" ]; then
+        cci_header=(`find $CUBRID/cci -name "*.h"`)
+        cci_lib=(`find $CUBRID/cci -name "libcascci*"`)
+
+        for header_list in ${cci_header[@]}; do
+            filename=`echo "${header_list}" | rev | cut -d '/' -f1 | rev`
+            rm -rf $CUBRID/include/${filename}
+            ln -Tfs ${header_list} $CUBRID/include/${filename}
+        done
+
+        for lib_list in ${cci_lib[@]}; do
+            filename=`echo "${lib_list}" | rev | cut -d '/' -f1 | rev`
+            rm -rf $CUBRID/include/${filename}
+            ln -Tfs ${lib_list} $CUBRID/include/${filename}
+        done
+
+    fi
+
     rm $buildFile
     cd $curDir
 }
