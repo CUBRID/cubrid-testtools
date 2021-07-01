@@ -23,13 +23,21 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
-if [ -e "$CUBRID/cci/include/broker_cas_error.h" ]; then
-    ln -s $CUBRID/cci/include/broker_cas_error.h   $CUBRID/include/broker_cas_error.h
-    ln -s $CUBRID/cci/include/cas_cci.h            $CUBRID/include/cas_cci.h
-    ln -s $CUBRID/cci/include/compat_dbtran_def.h  $CUBRID/include/compat_dbtran_def.h
+if [ -e "$CUBRID/cci" ]; then
+    cci_header=(`find $CUBRID/cci -name "*.h"`)
+    cci_lib=(`find $CUBRID/cci -name "libcascci*"`)
 
-    ln -s $CUBRID/cci/lib/libcascci.so.11.1        $CUBRID/lib/libcascci.so.11.1
-    ln -s $CUBRID/cci/lib/libcascci.so             $CUBRID/lib/libcascci.so
+    for header_list in ${cci_header[@]}; do
+        filename=`echo "${header_list}" | rev | cut -d '/' -f1 | rev`
+        rm -rf $CUBRID/include/${filename}
+        ln -Tfs ${header_list} $CUBRID/include/${filename}
+    done
+
+    for lib_list in ${cci_lib[@]}; do
+        filename=`echo "${lib_list}" | rev | cut -d '/' -f1 | rev`
+        rm -rf $CUBRID/include/${filename}
+        ln -Tfs ${lib_list} $CUBRID/include/${filename}
+    done
 
     # added to cas_error.h
     sed -i 's/#define ADD_CAS_ERROR_HEADER.*/#define ADD_CAS_ERROR_HEADER 1/g' execute.c
