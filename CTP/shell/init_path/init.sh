@@ -42,9 +42,6 @@ IGNORE_TEST_PERFORMANCE=""
 #CUBRID_CHARSET=ko_KR.euckr
 #CUBRID_CHARSET=en_US
 #echo $CUBRID_CHARSET
-cci_header=""
-cci_lib=""
-
 if [ ! -n "$CUBRID_CHARSET" ]
 then
    CUBRID_CHARSET=en_US
