@@ -232,8 +232,8 @@ EOF
 
         for lib_list in ${cci_lib[@]}; do
             filename=`basename "${lib_list}"`
-            rm -rf $CUBRID/include/${filename}
-            ln -Tfs ${lib_list} $CUBRID/include/${filename}
+            rm -rf $CUBRID/lib/${filename}
+            ln -Tfs ${lib_list} $CUBRID/lib/${filename}
         done
 
     fi
