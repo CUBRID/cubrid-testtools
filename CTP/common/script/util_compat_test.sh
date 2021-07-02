@@ -195,18 +195,19 @@ function config_cci_test_environment()
 
         if [ -e "${CUBRID}_${dirver_bk}/cci" ]
         then
-            cp -rf ${CUBRID}_${dirver_bk}/cci $CUBRID/
+            cci_header=(`find ${CUBRID}_${dirver_bk}/cci -name "*.h"`)
+            cci_lib=(`find ${CUBRID}_${dirver_bk}/cci -name "libcascci*"`)
 
             for header_list in ${cci_header[@]}; do
                 filename=`basename "${header_list}"`
-                rm -rf $CUBRID/include/${filename}
-                cp -rf ${header_list} $CUBRID/include/
+                rm -rf ${CUBRID}_${dirver_bk}/include/${filename}
+                cp -rf ${header_list} ${CUBRID}_${dirver_bk}/include/
             done
 
             for lib_list in ${cci_lib[@]}; do
                 filename=`basename "${lib_list}"`
-                rm -rf $CUBRID/lib/${filename}
-                cp -rf ${lib_list} $CUBRID/lib/
+                rm -rf ${CUBRID}_${dirver_bk}/lib/${filename}
+                cp -rf ${lib_list} ${CUBRID}_${dirver_bk}/lib/
             done
 
         fi
