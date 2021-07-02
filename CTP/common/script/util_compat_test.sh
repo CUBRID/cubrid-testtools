@@ -187,6 +187,30 @@ function config_cci_test_environment()
         miner_v=`echo $the1st |awk -F '.' '{print $2}'`
         the3st=${main_v}"."${miner_v}
 
+        # cci driver check
+        if [ -e "${CUBRID}/cci" ]
+        then
+            rm -rf ${CUBRID}/cci
+        fi
+
+        if [ -e "${CUBRID}_${dirver_bk}/cci" ]
+        then
+            cp -rf ${CUBRID}_${dirver_bk}/cci $CUBRID/
+
+            for header_list in ${cci_header[@]}; do
+                filename=`basename "${header_list}"`
+                rm -rf $CUBRID/include/${filename}
+                cp -rf ${header_list} $CUBRID/include/
+            done
+
+            for lib_list in ${cci_lib[@]}; do
+                filename=`basename "${lib_list}"`
+                rm -rf $CUBRID/lib/${filename}
+                cp -rf ${lib_list} $CUBRID/lib/
+            done
+
+        fi
+
         #config file in lib folder
         cd $CUBRID/lib
         rm libcascci.*
@@ -222,16 +246,6 @@ function config_cci_test_environment()
              cp ${CUBRID}_${dirver_bk}/include/dbtran_def.h . 
         fi  
 
-        # cci driver check
-        if [ -e "${CUBRID}/cci" ]
-        then
-            rm -rf ${CUBRID}/cci
-        fi
-        if [ -e "${CUBRID}_${dirver_bk}/cci" ]
-        then
-            cp -rf ${CUBRID}_${dirver_bk}/cci $CUBRID/
-        fi
-	
         #save driver and server info
         echo "CCI_Version=${the1st}" >$CUBRID/qa.conf
         s=$s_url

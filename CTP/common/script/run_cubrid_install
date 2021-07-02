@@ -219,25 +219,6 @@ EOF
     . ~/.cubrid.sh
     fi
 
-
-    if [ -e "$CUBRID/cci" ]; then
-        cci_header=(`find $CUBRID/cci -name "*.h"`)
-        cci_lib=(`find $CUBRID/cci -name "libcascci*"`)
-
-        for header_list in ${cci_header[@]}; do
-            filename=`basename "${header_list}"`
-            rm -rf $CUBRID/include/${filename}
-            ln -Tfs ${header_list} $CUBRID/include/${filename}
-        done
-
-        for lib_list in ${cci_lib[@]}; do
-            filename=`basename "${lib_list}"`
-            rm -rf $CUBRID/lib/${filename}
-            ln -Tfs ${lib_list} $CUBRID/lib/${filename}
-        done
-
-    fi
-
     rm $buildFile
     cd $curDir
 }
@@ -310,6 +291,30 @@ function InstallBuildForGeneral()
 	 echo "Please confirm your build URL!"
 	 exit
     fi
+
+    if [ -e "$CUBRID/cci" ]
+    then
+        cpCCIDriver
+    fi
+
+}
+
+function cpCCIDriver()
+{
+    cci_header=(`find $CUBRID/cci -name "*.h"`)
+    cci_lib=(`find $CUBRID/cci -name "libcascci*"`)
+
+    for header_list in ${cci_header[@]}; do
+        filename=`basename "${header_list}"`
+        rm -rf $CUBRID/include/${filename}
+        cp -rf ${header_list} $CUBRID/include/
+    done
+
+    for lib_list in ${cci_lib[@]}; do
+        filename=`basename "${lib_list}"`
+        rm -rf $CUBRID/lib/${filename}
+        cp -rf ${lib_list} $CUBRID/lib/
+    done
 
 }
 
