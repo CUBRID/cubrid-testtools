@@ -187,13 +187,6 @@ function config_cci_test_environment()
         miner_v=`echo $the1st |awk -F '.' '{print $2}'`
         the3st=${main_v}"."${miner_v}
 
-                filename=`basename "${lib_list}"`
-                rm -rf ${CUBRID}_${dirver_bk}/lib/${filename}
-                cp -rf ${lib_list} ${CUBRID}_${dirver_bk}/lib/
-            done
-
-        fi
-
         #config file in lib folder
         cd $CUBRID/lib
         rm libcascci.*
