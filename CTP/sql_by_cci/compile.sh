@@ -23,6 +23,14 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
+if [ -e "$CUBRID/cci" ]; then
+    # added to broker_cas_error.h
+    sed -i 's/#define ADD_CAS_ERROR_HEADER.*/#define ADD_CAS_ERROR_HEADER 1/g' execute.c
+else
+    sed -i 's/#define ADD_CAS_ERROR_HEADER.*/#define ADD_CAS_ERROR_HEADER 0/g' execute.c
+fi
+
+
 script_dir=$(dirname $(readlink -f $0))
 cd $script_dir
 

@@ -530,6 +530,31 @@ EOF
     . ~/.cubrid.sh
     rm $buildFile
     cd $curDir
+
+    if [ -e "$CUBRID/cci" ]
+    then
+        cpCCIDriver
+    fi
+
+}
+
+function cpCCIDriver()
+{
+    cci_header=(`find $CUBRID/cci -name "*.h"`)
+    cci_lib=(`find $CUBRID/cci -name "libcascci*"`)
+
+    for header_list in ${cci_header[@]}; do
+        filename=`basename "${header_list}"`
+        rm -rf $CUBRID/include/${filename}
+        cp -rf ${header_list} $CUBRID/include/
+    done
+
+    for lib_list in ${cci_lib[@]}; do
+        filename=`basename "${lib_list}"`
+        rm -rf $CUBRID/lib/${filename}
+        cp -rf ${lib_list} $CUBRID/lib/
+    done
+
 }
 
 
