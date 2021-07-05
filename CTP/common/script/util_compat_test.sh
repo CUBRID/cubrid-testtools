@@ -221,7 +221,7 @@ function config_cci_test_environment()
         then
           ln -s $exactfile libcascci.so
         fi  
-        
+	
         if [ ! -e libcascci.so.${the1st} ]
         then
           ln -s $exactfile libcascci.so.${the1st}

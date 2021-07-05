@@ -218,7 +218,6 @@ EOF
 	fi
     . ~/.cubrid.sh
     fi
-
     rm $buildFile
     cd $curDir
 }

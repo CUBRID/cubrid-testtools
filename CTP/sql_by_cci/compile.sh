@@ -66,9 +66,9 @@ statOfCcqt=$?
 
 echo ""
 if [ $statOfExecute -eq 0 -a $statOfCcqt -eq 0 ];then
-        echo "======Compile Succuss!!======"
+	echo "======Compile Succuss!!======"
 else
-        echo "======Compile Fail!!======"
+	echo "======Compile Fail!!======"
 fi
 echo "======End Compile======"
 echo ""

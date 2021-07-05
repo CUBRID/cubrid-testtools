@@ -657,7 +657,7 @@ function init
   	time_str=`date +%H:%M:%S`
   	echo $time_str----`pwd` >> ~/shell_cases_log/$date_str-time.log	
   fi
-
+  
   cur_path=`pwd`
   cd $cur_path
   case_no=1
