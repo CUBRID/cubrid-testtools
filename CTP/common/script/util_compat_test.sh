@@ -221,7 +221,7 @@ function config_cci_test_environment()
         then
           ln -s $exactfile libcascci.so
         fi  
-	
+        
         if [ ! -e libcascci.so.${the1st} ]
         then
           ln -s $exactfile libcascci.so.${the1st}
@@ -246,7 +246,7 @@ function config_cci_test_environment()
         then
              cp ${CUBRID}_${dirver_bk}/include/dbtran_def.h . 
         fi  
-
+	
         #save driver and server info
         echo "CCI_Version=${the1st}" >$CUBRID/qa.conf
         s=$s_url
