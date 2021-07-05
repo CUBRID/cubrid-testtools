@@ -187,24 +187,6 @@ function config_cci_test_environment()
         miner_v=`echo $the1st |awk -F '.' '{print $2}'`
         the3st=${main_v}"."${miner_v}
 
-        # cci driver check
-        if [ -e "${CUBRID}/cci" ]
-        then
-            rm -rf ${CUBRID}/cci
-        fi
-
-        if [ -e "${CUBRID}_${dirver_bk}/cci" ]
-        then
-            cci_header=(`find ${CUBRID}_${dirver_bk}/cci -name "*.h"`)
-            cci_lib=(`find ${CUBRID}_${dirver_bk}/cci -name "libcascci*"`)
-
-            for header_list in ${cci_header[@]}; do
-                filename=`basename "${header_list}"`
-                rm -rf ${CUBRID}_${dirver_bk}/include/${filename}
-                cp -rf ${header_list} ${CUBRID}_${dirver_bk}/include/
-            done
-
-            for lib_list in ${cci_lib[@]}; do
                 filename=`basename "${lib_list}"`
                 rm -rf ${CUBRID}_${dirver_bk}/lib/${filename}
                 cp -rf ${lib_list} ${CUBRID}_${dirver_bk}/lib/
@@ -555,6 +537,31 @@ EOF
     . ~/.cubrid.sh
     rm $buildFile
     cd $curDir
+
+    if [ -e "$CUBRID/cci" ]
+    then
+        cpCCIDriver
+    fi
+
+}
+
+function cpCCIDriver()
+{
+    cci_header=(`find $CUBRID/cci -name "*.h"`)
+    cci_lib=(`find $CUBRID/cci -name "libcascci*"`)
+
+    for header_list in ${cci_header[@]}; do
+        filename=`basename "${header_list}"`
+        rm -rf $CUBRID/include/${filename}
+        cp -rf ${header_list} $CUBRID/include/
+    done
+
+    for lib_list in ${cci_lib[@]}; do
+        filename=`basename "${lib_list}"`
+        rm -rf $CUBRID/lib/${filename}
+        cp -rf ${lib_list} $CUBRID/lib/
+    done
+
 }
 
 
