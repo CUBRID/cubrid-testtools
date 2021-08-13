@@ -165,7 +165,7 @@ function updateCodes()
 	    echo "chmod u+x *">> $HOME/.autoUpdate.sh
        	    echo "./stop_consumer.sh" >>$HOME/.autoUpdate.sh
             echo "./upgrade.sh" >>$HOME/.autoUpdate.sh
-            echo "nohup ${commands} 2>&1 >> $HOME/nohup.out &">>$HOME/.autoUpdate.sh
+            echo "nohup ${commands} >> $HOME/nohup.out 2>&1 &">>$HOME/.autoUpdate.sh
             echo "cd -" >>$HOME/.autoUpdate.sh
 	    if [ "$os" == "Linux" -o "$os" = "AIX" ];then
 	    	at -f $HOME/.autoUpdate.sh now+1 minutes 2>&1 | xargs -i echo \#{} >> $HOME/.autoUpdate.sh
