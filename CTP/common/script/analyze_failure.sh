@@ -200,6 +200,11 @@ function gen_data_template()
 	core_name="${core_file_path##*/}"
 	build_id=`cat readme.txt |grep TEST_INFO_BUILD_ID|grep -v export|awk -F '=' '{print $NF}'`
 	affect_version=`get_affect_version $build_id`
+	if [ `echo $affect_version|sed "s/\.//"` -ge 120 ]; then
+		issue_key="LETS"
+	else
+		issue_key="CBRD"
+	fi
 	echo "" > core_file.info
 	for x in `find ./ -name "core.[0-9]*"`;do
                 core_file_name_with_separator="`basename $x`:"
@@ -221,6 +226,7 @@ ISSUEDESCDATA
 
 	#generate issue field data
 	cat > issue_create.data <<ISSUEFILDDATA
+JSON_TPL_ISSUE_KEY=$issue_key
 JSON_TPL_ISSUE_SUMMARY_INFO=$summary_info
 JSON_TPL_AFFECT_VERSION=$affect_version
 JSON_TPL_CALL_STACK_INFO=json_file:issue_create_desc.out

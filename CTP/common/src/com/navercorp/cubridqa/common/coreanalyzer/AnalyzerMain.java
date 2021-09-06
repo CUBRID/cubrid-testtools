@@ -86,7 +86,7 @@ public class AnalyzerMain {
 				// do save
 				String issueKey = args1[1];
 				issueKey = CommonUtil.replace(issueKey.trim().toUpperCase(), " ", "");
-				if (issueKey.startsWith("CUBRIDSUS-") == false && issueKey.startsWith("CBRD-") == false) {
+				if (issueKey.startsWith("CUBRIDSUS-") == false && issueKey.startsWith("CBRD-") == false && issueKey.startsWith("LETS-") == false) {
 					showHelp("Incorrect for BTS issue key: " + issueKey, options);
 					return;
 				}

@@ -1,7 +1,7 @@
 { 
    "fields": {
 	   "project":{
-		"key":"CBRD"
+		"key":"#JSON_TPL_ISSUE_KEY#"
 	   },
 	   "issuetype":{
 	        "name":"Correct Error",
