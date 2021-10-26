@@ -8,7 +8,7 @@ public class SpTest8 {
                 ResultSet       rs = null;
                 String          sql = null;                
                 try {
-                        Class.forName("cubrid.jdbc.driver.CUBRIDDriver");                        
+                        Class.forName("cubrid.jdbc.driver.CUBRIDDriver");
                         conn = DriverManager.getConnection("jdbc:default:connection:");
                         pstmt = conn.prepareStatement("select class_name from db_class");
                         rs = pstmt.executeQuery();
@@ -18,8 +18,6 @@ public class SpTest8 {
                         rs.close();
                         pstmt.close();
                         conn.close();                
-                } catch (Exception e) {
-                        e.printStackTrace();
                 } finally {
                         if (rs != null) rs.close();
                         if (pstmt != null) pstmt.close();
@@ -45,8 +43,6 @@ public class SpTest8 {
                         rs.close();
                         pstmt.close();
                         conn.close();
-                } catch (Exception e) {
-                        e.printStackTrace();
                 } finally {
                         if (rs != null) rs.close();
                         if (pstmt != null) pstmt.close();
