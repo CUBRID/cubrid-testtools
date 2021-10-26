@@ -2,11 +2,11 @@ import java.sql.*;
 import java.util.*;
 public class SpTest8 {
 	public static String SP() {
-		String          URL = null;
-		Connection      conn = null;
-		PreparedStatement       pstmt = null;
-		ResultSet       rs = null;
-		String          sql = null;
+		String URL = null;
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		String sql = null;
 		try {
 			Class.forName("cubrid.jdbc.driver.CUBRIDDriver");
 			conn = DriverManager.getConnection("jdbc:default:connection:");
@@ -33,11 +33,11 @@ public class SpTest8 {
 	}
 
 	public static String SP2() {
-		String          URL = null;
-		Connection      conn = null;
-		PreparedStatement       pstmt = null;
-		ResultSet       rs = null;
-		String          sql = null;
+		String URL = null;
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		String sql = null;
 		try {
 			Class.forName("cubrid.jdbc.driver.CUBRIDDriver");
 			conn = DriverManager.getConnection("jdbc:default:connection:");
