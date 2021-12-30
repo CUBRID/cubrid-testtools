@@ -94,9 +94,10 @@ function run_sql {
     ini.sh -s "sql/cubrid_ha.conf" ${ctp_test_conf} | util_filter_supported_parameters.sh > $tmptxt
     ini.sh -s "sql/cubrid_ha.conf" ${ctp_test_conf} --update-from-file=$tmptxt --clear-first
 
-    #export CORE_BACKUP_DIR for core backup dir
-    export CORE_BACKUP_DIR="${USER}@`hostname -i`${core_backup_root}" 
-
+    if [ "$OS" != "Windows_NT" ]; then
+        #export CORE_BACKUP_DIR for core backup dir
+        export CORE_BACKUP_DIR="${USER}@`hostname -i`${core_backup_root}" 
+    fi
 
     # STEP 4: execute test
     export _JAVA_OPTIONS=-Dfile.encoding=utf8
