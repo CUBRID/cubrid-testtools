@@ -1367,7 +1367,7 @@ function gcc(){
 gcc_exec=`which gcc`
 gcc_option=$@
 
-if [ -e libcascci_compat.so ]
+if [ -e ${CUBRID}/lib/libcascci_compat.so ]
 then
     gcc_option=`echo $gcc_option|sed "s#-lcascci#-lcascci_compat#g"`
 fi
@@ -1400,7 +1400,7 @@ gcc_option=`echo $gcc_option|sed "s#-lpthread##g"`
 
 #CBRD-23843 : libcascci name is changed only for QA test. 
 #get common compile option
-if [ ! -e libcascci_compat.so ]
+if [ ! -e ${CUBRID}/lib/libcascci_compat.so ]
 then 
     gcc_option="-g -I$CUBRID/include -L$CUBRID/lib -lcascci $gcc_option"
 else
