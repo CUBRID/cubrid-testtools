@@ -187,30 +187,36 @@ function config_cci_test_environment()
         miner_v=`echo $the1st |awk -F '.' '{print $2}'`
         the3st=${main_v}"."${miner_v}
 
-        #config file in lib folder
-        cd $CUBRID/lib
-        rm libcascci.*
-        cp -d ${CUBRID}_${dirver_bk}/lib/libcascci.* .
+        #CBRD-23843 (dblink) : The libcubridsa.so links libcascci.so 
+        #If The libcascci.so is changed, The libcubridsa.so can't link libcascci.so
+	cd ${CUBRID}_${dirver_bk}/lib
         exactfile=`find . -type f -name "libcascci.so.*" |uniq|sort -r| head -n 1`
-        if [ ! -e libcascci.so ]
+	
+	if [ ! -e libcascci.so ]
         then
           ln -s $exactfile libcascci.so
-        fi  
-        
+        fi
+	mv libcascci.so libcascci_compat.so
+
         if [ ! -e libcascci.so.${the1st} ]
         then
           ln -s $exactfile libcascci.so.${the1st}
         fi
-        
+
         if [ ! -e libcascci.so.${the2nd} ]
         then
           ln -s $exactfile libcascci.so.${the2nd}
         fi
-        
+
         if [ ! -e libcascci.so.${the3st} ]
         then
           ln -s $exactfile libcascci.so.${the3st}
         fi
+
+
+        #config file in lib folder
+        cd $CUBRID/lib
+        cp -d ${CUBRID}_${dirver_bk}/lib/libcascci*.* .
         
         #config include file
         cd $CUBRID/include
