@@ -1362,8 +1362,24 @@ fi
 echo $BIT_VERSION
 }
 
+#CBRD-23843 (dblink) : Another file name of libcascci.so is used only for QA test.
+function gcc(){
+gcc_exec=`which gcc`
+gcc_option=$@
+
+if [ -e ${CUBRID}/lib/libcascci_compat.so ]
+then
+    gcc_option=`echo $gcc_option|sed "s#-lcascci#-lcascci_compat#g"`
+fi
+
+$gcc_exec $gcc_option
+}
+
+
 #replace gcc to cross platforms
 function xgcc(){
+gcc_exec=`which gcc`
+
 BIT_VERSION=`get_bit_ver`
 
 #recive parameters and delete options
@@ -1382,8 +1398,14 @@ gcc_option=`echo $gcc_option|sed "s#-lcascci##g"`
 gcc_option=`echo $gcc_option|sed "s#-lpthread##g"`
 
 
+#CBRD-23843 : libcascci name is changed only for QA test. 
 #get common compile option
-gcc_option="-g -I$CUBRID/include -L$CUBRID/lib -lcascci $gcc_option"
+if [ ! -e ${CUBRID}/lib/libcascci_compat.so ]
+then 
+    gcc_option="-g -I$CUBRID/include -L$CUBRID/lib -lcascci $gcc_option"
+else
+    gcc_option="-g -I$CUBRID/include -L$CUBRID/lib -lcascci_compat $gcc_option"
+fi
 
 #get bit version of cubrid
 if [ "$BIT_VERSION" -eq 32 ]
@@ -1407,7 +1429,7 @@ else
     esac
 fi
 #compile c program using gcc_option
-gcc $gcc_option
+$gcc_exec $gcc_option
 
 } 
 
