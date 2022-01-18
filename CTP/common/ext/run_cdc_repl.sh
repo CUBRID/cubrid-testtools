@@ -100,7 +100,7 @@ function run_cdc_repl()
    fi
 		
    if [ "x${testcase_path}" != "x" ];then
-	#run_git_update -f $testcase_path  -b $BUILD_SCENARIO_BRANCH_GIT
+	run_git_update -f $testcase_path  -b $BUILD_SCENARIO_BRANCH_GIT
 	#ini.sh -u "scenario=$testcase_path" $cdc_repl_fm_test_conf
 	ini.sh -u "testcase_exclude_from_file=${testcase_path}/config/daily_regression_test_exclude_list_cdc_repl.conf" $cdc_repl_fm_test_conf
    fi
