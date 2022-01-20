@@ -187,8 +187,7 @@ function config_cci_test_environment()
         miner_v=`echo $the1st |awk -F '.' '{print $2}'`
         the3st=${main_v}"."${miner_v}
 
-        #CBRD-23843 (dblink) : The libcubridsa.so links libcascci.so 
-        #If The libcascci.so is changed, The libcubridsa.so can't link libcascci.so
+        #CBRD-23843 (dblink) : The current version of libcascci.so should not be removed because the libcubridsa has to link it. 
 	cd ${CUBRID}_${dirver_bk}/lib
         exactfile=`find . -type f -name "libcascci.so.*" |uniq|sort -r| head -n 1`
 	
@@ -196,7 +195,6 @@ function config_cci_test_environment()
         then
           ln -s $exactfile libcascci.so
         fi
-	mv libcascci.so libcascci_compat.so
 
         if [ ! -e libcascci.so.${the1st} ]
         then
