@@ -239,10 +239,10 @@ function modify_cubrid_broker_conf
   fi
 
   sed -i '1,34 s/^BROKER_PORT.*$/BROKER_PORT             ='$BROKER_PORT1'/' $1
-  sed -i '34,80 s/^BROKER_PORT.*$/BROKER_PORT             ='$BROKER_PORT2'/' $1
+  sed -i '34,50 s/^BROKER_PORT.*$/BROKER_PORT             ='$BROKER_PORT2'/' $1
   sed -i 's/^MASTER_SHM_ID.*$/MASTER_SHM_ID           ='$MASTER_SHM_ID'/' $1
   sed -i '1,34 s/^APPL_SERVER_SHM_ID.*$/APPL_SERVER_SHM_ID      ='$APPL_SERVER_SHM_ID1'/' $1
-  sed -i '34,80 s/^APPL_SERVER_SHM_ID.*$/APPL_SERVER_SHM_ID      ='$APPL_SERVER_SHM_ID2'/' $1
+  sed -i '34,50 s/^APPL_SERVER_SHM_ID.*$/APPL_SERVER_SHM_ID      ='$APPL_SERVER_SHM_ID2'/' $1
   #sed -i '/\[%shard1\]/,/BROKER_PORT/ s/BROKER_PORT.*$/BROKER_PORT             ='$BROKER_PORT3'/' $1
   #sed -i '/\[%shard1\]/,/APPL_SERVER_SHM_ID/ s/^APPL_SERVER_SHM_ID.*$/APPL_SERVER_SHM_ID      ='$APPL_SERVER_SHM_ID3'/' $1
   #sed -i '/\[%shard1\]/,/SHARD_PROXY_SHM_ID/ s/^SHARD_PROXY_SHM_ID .*$/SHARD_PROXY_SHM_ID       ='$SHARD_PROXY_SHM_ID'/' $1
