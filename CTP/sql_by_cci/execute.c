@@ -24,7 +24,6 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#define ADD_CAS_ERROR_HEADER 0
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
