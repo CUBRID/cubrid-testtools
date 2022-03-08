@@ -22,14 +22,6 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
-#
-if [ -e "$CUBRID/cci" ]; then
-    # added to broker_cas_error.h
-    sed -i 's/#define ADD_CAS_ERROR_HEADER.*/#define ADD_CAS_ERROR_HEADER 1/g' execute.c
-else
-    sed -i 's/#define ADD_CAS_ERROR_HEADER.*/#define ADD_CAS_ERROR_HEADER 0/g' execute.c
-fi
-
 
 script_dir=$(dirname $(readlink -f $0))
 cd $script_dir
@@ -59,7 +51,13 @@ rm -f *.o ccqt execute interface_verify
 #Do compile
 echo ""
 echo "======Start Compile======"
-gcc -o execute execute.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
+if [ -e "$CUBRID/cci" ]; then
+    # added to broker_cas_error.h
+    MACRO_OPTION="-D ADD_CAS_ERROR_HEADER=1"
+else
+    MACRO_OPTION="-D ADD_CAS_ERROR_HEADER=0"
+fi
+gcc $MACRO_OPTION -o execute execute.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
 statOfExecute=$?
 gcc -o ccqt ccqt.c $CFLAGS
 statOfCcqt=$?
