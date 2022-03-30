@@ -173,7 +173,12 @@ public class StringUtil {
 					stmtCount = 0;
 					message = reader.readLine();
 					continue;
-				}
+				} else if (message.startsWith("Query hints:")) {
+          				flag = "hint";
+          				ret.append(message + separator);
+          				message = reader.readLine();
+          				continue;
+        			}
 
 				if (systemModel.isQueryPlan()) {
 					ret.append(message + separator);
@@ -188,7 +193,9 @@ public class StringUtil {
 							ret.append(message + separator);
 						}
 					}
-				}
+				} else if ("hint".equals(flag)) {
+              				ret.append(message + separator);
+          			}  
 
 				message = reader.readLine();
 			}
