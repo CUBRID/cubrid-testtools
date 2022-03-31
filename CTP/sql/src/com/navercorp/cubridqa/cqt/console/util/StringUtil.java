@@ -192,10 +192,10 @@ public class StringUtil {
 						} else if (message.startsWith("/")) {
 							ret.append(message + separator);
 						}
+					} else if ("hint".equals(flag)) {
+                                        	ret.append(message + separator);
 					}
-				} else if ("hint".equals(flag)) {
-              				ret.append(message + separator);
-          			}  
+                                }
 
 				message = reader.readLine();
 			}
