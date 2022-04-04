@@ -61,14 +61,14 @@ public class SpTest6 {
               conn.setAutoCommit (false) ;
               ret = ret + oid.getTableName() + " | ";
               ret = ret + oid.isInstance() + " | ";
-              CUBRIDResultSet rs = (CUBRIDResultSet) oid.getValues(attrs);
+              ResultSet rs = oid.getValues(attrs);
               int i = 0;
               while (rs.next()) {
             	  ret = ret + " || " + rs.getString(1);
               }
               oid.setValues(attrs, values);
               oid.getValues(attrs) ;
-              rs = (CUBRIDResultSet) oid.getValues(attrs);
+              rs = oid.getValues(attrs);
               while (rs.next()) {
             	  ret = ret + " || " + rs.getString(1);
               }
