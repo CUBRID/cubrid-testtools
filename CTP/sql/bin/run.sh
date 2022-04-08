@@ -649,7 +649,12 @@ function make_db_data()
      cp $data_file .
  
      tar -zxvf mdb.tar.gz
-     cubrid loaddb -s ${db_name}_schema -i ${db_name}_indexes -d ${db_name}_objects -u dba ${db_name} >> $log_filename
+     loaddb=`cubrid loaddb 2>&1`
+     if [[ $loaddb =~ "--no-user-specified-name" ]];then
+        cubrid loaddb -s ${db_name}_schema -i ${db_name}_indexes -d ${db_name}_objects -u dba ${db_name} --no-user-specified-name >> $log_filename
+     else
+        cubrid loaddb -s ${db_name}_schema -i ${db_name}_indexes -d ${db_name}_objects -u dba ${db_name} >> $log_filename
+     fi
      optimize_db $db_name
  
      rm *.gz 2>&1 >/dev/null
