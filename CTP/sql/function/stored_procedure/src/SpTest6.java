@@ -22,19 +22,15 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
-
-import cubrid.jdbc.driver.*;
 import java.util.*;
 
-import cubrid.sql.*;
+
 
 public class SpTest6 {
 
@@ -61,14 +57,14 @@ public class SpTest6 {
               conn.setAutoCommit (false) ;
               ret = ret + oid.getTableName() + " | ";
               ret = ret + oid.isInstance() + " | ";
-              CUBRIDResultSet rs = (CUBRIDResultSet) oid.getValues(attrs);
+              ResultSet rs = oid.getValues(attrs);
               int i = 0;
               while (rs.next()) {
             	  ret = ret + " || " + rs.getString(1);
               }
               oid.setValues(attrs, values);
               oid.getValues(attrs) ;
-              rs = (CUBRIDResultSet) oid.getValues(attrs);
+              rs = oid.getValues(attrs);
               while (rs.next()) {
             	  ret = ret + " || " + rs.getString(1);
               }
