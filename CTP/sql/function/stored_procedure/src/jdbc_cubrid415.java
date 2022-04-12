@@ -247,10 +247,16 @@ public class jdbc_cubrid415 {
 		try { 
 			Class.forName("cubrid.jdbc.driver.CUBRIDDriver"); 
 			Connection con = DriverManager.getConnection("jdbc:default:connection:"); 
-	
+
+			if (con instanceof CUBRIDConnection) {
+				((CUBRIDConnection)con).setCharset("euc_kr");
+			}
 			String query = "select * from kor order by id,name"; 
 			Statement stmt = con.createStatement(); 
-			ResultSet rs = stmt.executeQuery(query); 
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs instanceof CUBRIDResultSet) {
+				((CUBRIDResultSet)rs).setReturnable();
+			}
 			return rs;
 		} catch (Exception e) { 
 			//e.printStackTrace(); 
