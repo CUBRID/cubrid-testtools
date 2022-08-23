@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdbool.h>
 
 #include "cas_cci.h"
 #include "cubrid_log.h"
@@ -26,6 +27,7 @@ enum
   TIME = 10,
   TIMESTAMP = 11,
   DATE = 12,
+  MONETARY = 13,
   SHORT = 18,
   NUMERIC = 22,
   BIT = 23,
@@ -136,6 +138,7 @@ struct tran
   int tran_id;
   char *sql_list[1000];
   int sql_count;
+  bool has_serial;
 };
 
 typedef struct tran_table_global TRAN_TABLE_GLOBAL;
@@ -980,6 +983,10 @@ convert_ddl_type_to_string (int ddl_type)
       return "rename";
     case 4:
       return "truncate";
+    case 5:
+      return "grant";
+    case 6:
+      return "revoke";
     default:
       assert (0);
     }
@@ -1004,6 +1011,8 @@ convert_object_type_to_string (int object_type)
       return "procedure";
     case 6:
       return "trigger";
+    case 7:
+      return "user";
     default:
       assert (0);
     }
@@ -1205,6 +1214,8 @@ convert_ddl (CUBRID_DATA_ITEM * data_item, char **sql)
     case 2:
     case 3:
     case 4:
+    case 5:
+    case 6:
 
       break;
 
@@ -1409,6 +1420,7 @@ process_changed_column (CUBRID_DATA_ITEM * data_item, int col_idx,
 
 	case NCHAR:
 	case VARNCHAR:
+	case MONETARY:
 	  {
 	    char *value;
 
@@ -2061,10 +2073,56 @@ find_or_alloc_tran (int tran_id)
       tran = &tran_table_Gl.tran_table[tran_table_Gl.tran_count];
       tran->tran_id = tran_id;
       tran->sql_count = 0;
+      tran->has_serial = false;
       tran_table_Gl.tran_count++;
     }
 
   return tran;
+}
+
+bool
+check_if_serial_in_tran (int tran_id, bool * has_serial)
+{
+  TRAN *tran;
+
+  int error_code;
+
+  tran = find_or_alloc_tran (tran_id);
+  if (tran == NULL)
+    {
+      PRINT_ERRMSG_GOTO_ERR (error_code);
+    }
+
+  *has_serial = tran->has_serial;
+
+  return NO_ERROR;
+
+error:
+
+  return YES_ERROR;
+
+}
+
+int
+register_serial_to_tran (int tran_id)
+{
+  TRAN *tran;
+
+  int error_code;
+
+  tran = find_or_alloc_tran (tran_id);
+  if (tran == NULL)
+    {
+      PRINT_ERRMSG_GOTO_ERR (error_code);
+    }
+
+  tran->has_serial = true;
+
+  return NO_ERROR;
+
+error:
+
+  return YES_ERROR;
 }
 
 int
@@ -2207,13 +2265,21 @@ apply_target_db (int tran_id)
 	{
 	  printf ("[ERROR] [cci] req_handle=%d, err_code=%d, err_msg=%s\n", req_handle, err_buf.err_code,
 		  err_buf.err_msg);
-	  PRINT_ERRMSG_GOTO_ERR (error_code);
 	}
 
-      error_code = cci_close_req_handle (req_handle);
-      if (error_code < 0)
+      if (req_handle != CCI_ER_DBMS)
 	{
-	  PRINT_ERRMSG_GOTO_ERR (error_code);
+	  /* CCI_ER_DBMS is transaction error, not a cci internal error (connection, timeout, ...)
+	   * SERIAL changes are required to be sent to target even if the transaction is aborted
+	   * But, if transaction is aborted by some transaction error (e.g. unique violation)
+	   * cci also returns a CCI_ER_DBMS error, and cdc_test_helper can be quitted.
+	   * So, cdc_test_helper is allowed to quit only if req_handle is not a CCI_ER_DBMS */
+
+	  error_code = cci_close_req_handle (req_handle);
+	  if (error_code < 0 && error_code != CCI_ER_DBMS)
+	    {
+	      PRINT_ERRMSG_GOTO_ERR (error_code);
+	    }
 	}
     }
 
@@ -2271,6 +2337,12 @@ convert_log_item_to_sql (CUBRID_LOG_ITEM * log_item)
 	  PRINT_ERRMSG_GOTO_ERR (error_code);
 	}
 
+      if (log_item->data_item.ddl.object_type == 2)
+	{
+	  /* register serial in TRAN */
+	  register_serial_to_tran (log_item->transaction_id);
+	}
+
       error_code = register_sql_to_tran (log_item->transaction_id, sql);
       if (error_code != NO_ERROR)
 	{
@@ -2326,7 +2398,8 @@ convert_log_item_to_sql (CUBRID_LOG_ITEM * log_item)
 
   if (log_item->data_item_type != 3 && helper_Gl.disable_print_sql != 1)
     {
-      if (helper_Gl.ignore_trigger_dml && is_trigger_dml (log_item->data_item.dml.dml_type))
+      if (log_item->data_item_type == 1 && helper_Gl.ignore_trigger_dml
+	  && is_trigger_dml (log_item->data_item.dml.dml_type))
 	{
 	  /* Nothing to do */
 	}
@@ -2342,12 +2415,16 @@ convert_log_item_to_sql (CUBRID_LOG_ITEM * log_item)
 
   if (log_item->data_item_type == 2)
     {
+      bool has_serial = false;
+
+      (void) check_if_serial_in_tran (log_item->transaction_id, &has_serial);
+
       if (helper_Gl.print_transaction)
 	{
 	  print_sql_list_in_tran (log_item->transaction_id);
 	}
 
-      if (is_apply_target_db () && log_item->data_item.dcl.dcl_type == 0)
+      if (is_apply_target_db () && (has_serial || log_item->data_item.dcl.dcl_type == 0))
 	{
 	  error_code = apply_target_db (log_item->transaction_id);
 	  if (error_code != NO_ERROR)
@@ -2805,6 +2882,8 @@ update_class_info (CUBRID_DATA_ITEM * data_item)
 
       /* truncate */
     case 4:
+    case 5:
+    case 6:
 
       break;
     default:
@@ -2865,6 +2944,8 @@ validate_class_oid_for_ddl (CUBRID_DATA_ITEM * data_item)
     case 5:
       // trigger
     case 6:
+      // user
+    case 7:
 
       break;
 
@@ -3020,7 +3101,7 @@ extract_log (void)
   // dir path (".")
   // 0 ~ 2 (0)
   // 10 ~ 512 (8)
-  error_code = cubrid_log_set_tracelog ("./tracelog.err", 0, 8);
+  error_code = cubrid_log_set_tracelog ("./tracelog", 0, 8);
   if (error_code != CUBRID_LOG_SUCCESS)
     {
       PRINT_ERRMSG_GOTO_ERR (error_code);
