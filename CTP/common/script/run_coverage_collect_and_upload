@@ -116,7 +116,7 @@ function collectCoverage()
       fi
       coverage_controller_cc4c_home=`sh ${CTP_HOME}/bin/ini.sh coverage.conf coverage_controller_cc4c_home`
       
-      lcov --gcov-tool=${CTP_HOME}/common/gcov/gcov  -d . -c -t "cubrid" -o cubrid_o.lcov --rc geninfo_adjust_src_path="$HOME => ${coverage_controller_home}"
+      lcov --gcov-tool=${CTP_HOME}/common/gcov/gcov  -d . -c -t "cubrid" -o cubrid_o.lcov --rc geninfo_adjust_src_path="${coverage_controller_home} => $HOME"
       tStamp=`date '+%Y%m%d%H%M%s'`
       host_name=`hostname -s`
       lcov_data_name="cubrid_[${category}]_${USER}-${host_name}_${tStamp}.lcov"
