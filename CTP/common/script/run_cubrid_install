@@ -421,6 +421,11 @@ function InstallBuildForCoverage()
     	rm $cov_source_file_name
     fi
 
+    if [ -e "$CUBRID/cci" ]
+    then
+        cpCCIDriver
+    fi
+
     checkEnvironmentVariable
     cd $curDir
     echo INSTALL `date '+%Y%m%d%H%M%s'` $@ 2>&1 | tee -a $HOME/.qacoverage
