@@ -766,6 +766,7 @@ function do_test()
           export bits_in_interactive=${cubrid_bits}
           export db_name_in_interactive=$db_name
           export client_charset_in_interactive=$jdbc_config_file_ext
+          export cci_urlproperty_in_interactive=$cci_urlproperty
           export PS1="sql> ";cd ${scenario_repo_root}; source ${CTP_HOME}/sql/bin/interactive.sh; help; bash --posix)
 	
           #do clean for interactive mode
