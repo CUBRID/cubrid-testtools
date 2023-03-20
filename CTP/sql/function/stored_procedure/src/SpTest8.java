@@ -64,4 +64,24 @@ public class SpTest8 {
 			return sql;
 		}
 	}
+
+        public static void SP3() throws Exception{
+                StringBuilder stringBuilder = new StringBuilder();
+                try{
+                        Connection conn = DriverManager.getConnection("jdbc:default:connection:");
+
+                        stringBuilder.append ("select * from ");
+                        for (int i = 0; i < 10000; i++) {
+                                stringBuilder.append (" ");
+                        }
+                        stringBuilder.append ("tbl;");
+
+                        PreparedStatement pstmt = conn.prepareStatement(stringBuilder.toString());
+                        ResultSet rs = pstmt.executeQuery();
+                        pstmt.close();
+                        conn.close();
+                } catch (SQLException e) {
+                        System.err.println(e.getMessage());
+                }
+        }
 }
