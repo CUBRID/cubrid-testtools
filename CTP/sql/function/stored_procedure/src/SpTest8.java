@@ -65,7 +65,7 @@ public class SpTest8 {
 		}
 	}
 
-        public static void SP3() throws Exception{
+        public static int SP3(String table) throws Exception{
                 StringBuilder stringBuilder = new StringBuilder();
                 try{
                         Connection conn = DriverManager.getConnection("jdbc:default:connection:");
@@ -74,14 +74,18 @@ public class SpTest8 {
                         for (int i = 0; i < 10000; i++) {
                                 stringBuilder.append (" ");
                         }
-                        stringBuilder.append ("tbl;");
+                        stringBuilder.append (table + ";");
 
                         PreparedStatement pstmt = conn.prepareStatement(stringBuilder.toString());
                         ResultSet rs = pstmt.executeQuery();
+                        rs.next();
+
                         pstmt.close();
                         conn.close();
+                        return rs.getInt(1);
                 } catch (SQLException e) {
                         System.err.println(e.getMessage());
                 }
+                return 0;
         }
 }
