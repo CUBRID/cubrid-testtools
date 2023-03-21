@@ -65,6 +65,7 @@ public class SpTest8 {
 		}
 	}
 
+	//This is a function to verify that a server-side JDBC request greater than 4096 is executed. (CBRD-24693)
         public static int SP3(String table) throws Exception{
                 StringBuilder stringBuilder = new StringBuilder();
                 try{
