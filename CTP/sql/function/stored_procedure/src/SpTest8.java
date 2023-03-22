@@ -69,6 +69,7 @@ public class SpTest8 {
         public static int SP3(String table) throws Exception{
                 StringBuilder stringBuilder = new StringBuilder();
                 try{
+			int ret = 0;
                         Connection conn = DriverManager.getConnection("jdbc:default:connection:");
 
                         stringBuilder.append ("select * from ");
@@ -80,10 +81,10 @@ public class SpTest8 {
                         PreparedStatement pstmt = conn.prepareStatement(stringBuilder.toString());
                         ResultSet rs = pstmt.executeQuery();
                         rs.next();
-
+			ret = rs.getInt(1);
                         pstmt.close();
                         conn.close();
-                        return rs.getInt(1);
+                        return ret;
                 } catch (SQLException e) {
                         System.err.println(e.getMessage());
                 }
