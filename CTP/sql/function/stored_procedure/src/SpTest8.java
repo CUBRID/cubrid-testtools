@@ -68,8 +68,8 @@ public class SpTest8 {
 	//This is a function to verify that a server-side JDBC request greater than 4096 is executed. (CBRD-24693)
         public static int SP3(String table) throws Exception{
                 StringBuilder stringBuilder = new StringBuilder();
+		int ret = 0;
                 try{
-			int ret = 0;
                         Connection conn = DriverManager.getConnection("jdbc:default:connection:");
 
                         stringBuilder.append ("select * from ");
@@ -84,10 +84,9 @@ public class SpTest8 {
 			ret = rs.getInt(1);
                         pstmt.close();
                         conn.close();
-                        return ret;
                 } catch (SQLException e) {
                         System.err.println(e.getMessage());
                 }
-                return 0;
+                return ret;
         }
 }
