@@ -44,7 +44,6 @@ public class SpTest9 {
                 }
 
         } catch (SQLException e) {
-                return result;
         } finally {
                 if (conn != null) try { conn.close(); } catch (Exception e) {}
                 return result;
@@ -72,7 +71,6 @@ public class SpTest9 {
                         }
                 }
         } catch (SQLException e) {
-                return result;
         } finally {
                 if (stmt != null) try { stmt.execute("drop table if exists test");stmt.close(); } catch (Exception e) {}
                 if (pstmt != null) try { pstmt.close(); } catch (Exception e) {}
@@ -105,7 +103,6 @@ public class SpTest9 {
                         }
                 }
         } catch (SQLException e) {
-                return result;
         } finally {
                 if (stmt != null) try { stmt.execute("drop table if exists test"); stmt.close(); } catch (Exception e) {}
                 if (conn != null) try { conn.close(); } catch (Exception e) {}
@@ -129,7 +126,6 @@ public class SpTest9 {
                         }
                 }
         } catch (SQLException e) {
-                return result;
         } finally {
                 if (conn != null) try { conn.close(); } catch (Exception e) {}
                 return result;
@@ -157,7 +153,6 @@ public class SpTest9 {
                         }
                 }
         } catch (SQLException e) {
-                return result;
         } finally {
                 if (stmt != null) try { stmt.execute("drop table if exists test");stmt.close(); } catch (Exception e) {}
                 if (pstmt != null) try { pstmt.close(); } catch (Exception e) {}
@@ -190,7 +185,6 @@ public class SpTest9 {
                         }
                 }
         } catch (SQLException e) {
-                return result;
         } finally {
                 if (stmt != null) try { stmt.execute("drop table if exists test"); stmt.close(); } catch (Exception e) {}
                 if (conn != null) try { conn.close(); } catch (Exception e) {}
