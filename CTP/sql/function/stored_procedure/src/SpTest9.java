@@ -231,5 +231,65 @@ public class SpTest9 {
                 if (conn != null) try { conn.close(); } catch (Exception e) {}
                 return result;
         }
-  }
+   }
+
+   public static String testcatalog() {
+        Connection conn = null;
+        String result = null;
+
+        try {
+                conn = DriverManager.getConnection("jdbc:default:connection:", "", "");
+                try {
+                        conn.setCatalog("basic");
+                        result = conn.getCatalog();
+                } catch (SQLException e) {
+                        result = e.getMessage();
+                }
+
+        } catch (SQLException e) {
+        } finally {
+                if (conn != null) try { conn.close(); } catch (Exception e) {}
+                return result;
+        }
+    }
+
+    public static String testtransactionisolation() {
+        Connection conn = null;
+        String result = null;
+
+        try {
+                conn = DriverManager.getConnection("jdbc:default:connection:", "", "");
+                try {
+                        conn.setTransactionIsolation(4);
+                        result = String.valueOf(conn.getTransactionIsolation());
+                } catch (SQLException e) {
+                        result = e.getMessage();
+                }
+        } catch (SQLException e) {
+        } finally {
+                if (conn != null) try { conn.close(); } catch (Exception e) {}
+                return result;
+        }
+
+    }
+
+    public static String testautocommit() {
+        Connection conn = null;
+        String result = null;
+
+        try {
+                conn = DriverManager.getConnection("jdbc:default:connection:", "", "");
+                try {
+                        conn.setAutoCommit(true);
+                        result = String.valueOf(conn.getAutoCommit());
+                } catch (SQLException e) {
+                        result = e.getMessage();
+                }
+        } catch (SQLException e) {
+        } finally {
+                if (conn != null) try { conn.close(); } catch (Exception e) {}
+                return result;
+        }
+
+    }
 }
