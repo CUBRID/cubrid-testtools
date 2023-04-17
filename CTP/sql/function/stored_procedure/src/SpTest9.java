@@ -91,6 +91,7 @@ public class SpTest9 {
                 stmt = conn.createStatement();
                 stmt.execute("drop table if exists test");
                 stmt.execute("create table test (a blob)");
+		stmt.execute("insert into test values (CHAR_TO_BLOB('0123456'))");
                 rs = stmt.executeQuery("select * from test");
                 rs.next();
                 try {
@@ -171,7 +172,7 @@ public class SpTest9 {
                 stmt = conn.createStatement();
                 stmt.execute("drop table if exists test");
                 stmt.execute("create table test (a clob)");
-
+                stmt.execute("insert into test values (CHAR_TO_CLOB('0123456'))");
                 rs = stmt.executeQuery("select * from test");
                 rs.next();
                 try {
