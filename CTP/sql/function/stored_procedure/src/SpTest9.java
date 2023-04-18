@@ -199,7 +199,7 @@ public class SpTest9 {
 
         try {
                 conn = DriverManager.getConnection("jdbc:default:connection:", "", "");
-                stmt = conn.createStatement();
+                stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
                 res = stmt.executeQuery("select * from ttbl");
                 res.next();
                 try {
@@ -230,7 +230,10 @@ public class SpTest9 {
                 return result;
         }
    }
-
+   
+   /*
+     For testing setCatalog and getCatalog which shouldn't be working. 
+   */
    public static String testcatalog() {
         Connection conn = null;
         String result = null;
@@ -250,7 +253,10 @@ public class SpTest9 {
                 return result;
         }
     }
-
+    
+   /*
+     For testing setTransactionIsolation and getTransactionIsolation which shouldn't be working.
+   */
     public static String testtransactionisolation() {
         Connection conn = null;
         String result = null;
@@ -258,8 +264,8 @@ public class SpTest9 {
         try {
                 conn = DriverManager.getConnection("jdbc:default:connection:", "", "");
                 try {
-                        conn.setTransactionIsolation(4);
-                        result = String.valueOf(conn.getTransactionIsolation());
+                        conn.setTransactionIsolation(4); // TRANSACTION_REPEATABLE_READ
+                        result = String.valueOf(conn.getTransactionIsolation()); //= 2(TRANSACTION_READ_COMMITTED)
                 } catch (SQLException e) {
                         result = e.getMessage();
                 }
@@ -271,6 +277,9 @@ public class SpTest9 {
 
     }
 
+   /*
+     For testing setAutoCommit and getAutoCommit which shouldn't be working.
+   */
     public static String testautocommit() {
         Connection conn = null;
         String result = null;
