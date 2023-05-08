@@ -163,9 +163,11 @@ public class jdbc_cubrid415 {
 		try {
 			Class.forName("cubrid.jdbc.driver.CUBRIDDriver"); 
 			Connection con = DriverManager.getConnection("jdbc:default:connection:"); 
+
+			if (con instanceof CUBRIDConnection) {
+				((CUBRIDConnection)con).setCharset("euc_kr");
+			}
 	
-			((CUBRIDConnection)con).setCharset("euc_kr"); 
-			
 			CallableStatement cstmt = con.prepareCall("? = CALL testResultSet(?)"); 
 			cstmt.registerOutParameter(1, Types.JAVA_OBJECT); 
 			cstmt.registerOutParameter(2, Types.VARCHAR); 
@@ -197,12 +199,17 @@ public class jdbc_cubrid415 {
 		try { 
 			Class.forName("cubrid.jdbc.driver.CUBRIDDriver"); 
 			Connection con = DriverManager.getConnection("jdbc:default:connection:"); 
-	
-			((CUBRIDConnection)con).setCharset("euc_kr"); 
+
+			if (con instanceof CUBRIDConnection) {
+				((CUBRIDConnection)con).setCharset("euc_kr");
+			}
+			
 			String query = sql; 
 			Statement stmt = con.createStatement(); 
-			ResultSet rs = stmt.executeQuery(query); 
-			((CUBRIDResultSet) rs).setReturnable(); 
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs instanceof CUBRIDResultSet) {
+				((CUBRIDResultSet)rs).setReturnable();
+			}
 			return rs; 
 		} catch (Exception e) { 
 			//e.printStackTrace(); 
@@ -215,9 +222,11 @@ public class jdbc_cubrid415 {
 		try {
 			Class.forName("cubrid.jdbc.driver.CUBRIDDriver"); 
 			Connection con = DriverManager.getConnection("jdbc:default:connection:"); 
-			
-			((CUBRIDConnection)con).setCharset("euc_kr"); 
-                        CallableStatement cstmt = con.prepareCall("? = CALL testResultSet1()");
+			if (con instanceof CUBRIDConnection) {
+				((CUBRIDConnection)con).setCharset("euc_kr");
+			}
+
+			CallableStatement cstmt = con.prepareCall("? = CALL testResultSet1()");
 			cstmt.registerOutParameter(1, Types.JAVA_OBJECT); 
 			cstmt.execute(); 
 			ResultSet rs = (ResultSet) cstmt.getObject(1); 
@@ -238,12 +247,16 @@ public class jdbc_cubrid415 {
 		try { 
 			Class.forName("cubrid.jdbc.driver.CUBRIDDriver"); 
 			Connection con = DriverManager.getConnection("jdbc:default:connection:"); 
-	
-			((CUBRIDConnection)con).setCharset("euc_kr"); 
+
+			if (con instanceof CUBRIDConnection) {
+				((CUBRIDConnection)con).setCharset("euc_kr");
+			}
 			String query = "select * from kor order by id,name"; 
 			Statement stmt = con.createStatement(); 
-			ResultSet rs = stmt.executeQuery(query); 
-			((CUBRIDResultSet) rs).setReturnable(); 
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs instanceof CUBRIDResultSet) {
+				((CUBRIDResultSet)rs).setReturnable();
+			}
 			return rs;
 		} catch (Exception e) { 
 			//e.printStackTrace(); 
@@ -256,14 +269,14 @@ public class jdbc_cubrid415 {
 		try {
 			Class.forName("cubrid.jdbc.driver.CUBRIDDriver"); 
 			Connection con = DriverManager.getConnection("jdbc:default:connection:"); 
-	
-			((CUBRIDConnection)con).setCharset("euc_kr"); 
+			if (con instanceof CUBRIDConnection) {
+				((CUBRIDConnection)con).setCharset("euc_kr");
+			}
 			
 			CallableStatement cstmt = con.prepareCall("? = CALL testResultSet10()"); 
 			cstmt.registerOutParameter(1, Types.JAVA_OBJECT); 
 			cstmt.execute(); 
 			ResultSet rs = (ResultSet) cstmt.getObject(1); 
-			
 			
 			while(rs.next()) { 
 				ret = ret + rs.getString(1)+ " || "; 
@@ -280,8 +293,10 @@ public class jdbc_cubrid415 {
 		try { 
 			Class.forName("cubrid.jdbc.driver.CUBRIDDriver"); 
 			Connection con = DriverManager.getConnection("jdbc:default:connection:"); 
-	
-			((CUBRIDConnection)con).setCharset("euc_kr"); 
+			if (con instanceof CUBRIDConnection) {
+				((CUBRIDConnection)con).setCharset("euc_kr");
+			}
+
 			String query = "select * from kor order by id,name"; 
 			Statement stmt = con.createStatement(); 
 			ResultSet rs = stmt.executeQuery(query); 
