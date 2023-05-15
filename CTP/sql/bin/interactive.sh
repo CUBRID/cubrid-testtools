@@ -73,7 +73,7 @@ function run_cci()
    cd $CTP_HOME/sql_by_cci
    sh compile.sh >/dev/null 2>&1
    cd -
-   $CTP_HOME/sql_by_cci/ccqt $port ${db_name_in_interactive} $scenario_alias_in_interactive $result_folder $case_file $CTP_HOME $cci_urlproperty_in_interactive 2>&1 | tee $log_file_in_interactive
+   $CTP_HOME/sql_by_cci/ccqt $port ${db_name_in_interactive} $scenario_alias_in_interactive $result_folder $case_file $CTP_HOME 2>&1 | tee $log_file_in_interactive
 
    print_summary $log_file_in_interactive cci
 }

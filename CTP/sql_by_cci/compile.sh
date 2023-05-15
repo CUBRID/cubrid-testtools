@@ -51,13 +51,7 @@ rm -f *.o ccqt execute interface_verify
 #Do compile
 echo ""
 echo "======Start Compile======"
-if [ -e "$CUBRID/cci" ]; then
-    # added to broker_cas_error.h
-    MACRO_OPTION="-D ADD_CAS_ERROR_HEADER=1"
-else
-    MACRO_OPTION="-D ADD_CAS_ERROR_HEADER=0"
-fi
-gcc $MACRO_OPTION -o execute execute.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
+gcc -o execute execute.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
 statOfExecute=$?
 gcc -o ccqt ccqt.c $CFLAGS
 statOfCcqt=$?

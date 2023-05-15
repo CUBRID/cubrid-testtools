@@ -274,9 +274,6 @@ public class ConsoleDAO extends Executor {
 				String url = dbConf.getDburl() + "?charset=" + dbConf.getCharSet();
 				String user = dbConf.getDbuser();
 				String password = dbConf.getDbpassword();
-				if (Test.urlProperties != null && Test.urlProperties.length() != 0) {
-					url += "&" + Test.urlProperties;
-				}
 				conn = MyDriverManager.giveConnection(driver, url, user, password);
 			} else {
 				dataSource = dataSourceMap.get(db);
@@ -391,12 +388,9 @@ public class ConsoleDAO extends Executor {
 		Iterator<DefTestDB> iter = dbMap.values().iterator();
 		while (iter.hasNext()) {
 			DefTestDB dbConf = (DefTestDB) iter.next();
-			url = dbConf.getDburl()  + "?charset=" + dbConf.getCharSet();
+			url = dbConf.getDburl();
 			user = dbConf.getDbuser();
 			password = dbConf.getDbpassword();
-			if (Test.urlProperties != null && Test.urlProperties.length() != 0) {
-				url += "&" + Test.urlProperties;
-			}
 
 			Connection conn = null;
 			conn = MyDriverManager.giveConnection(driver, url, user, password);

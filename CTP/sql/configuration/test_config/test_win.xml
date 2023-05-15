@@ -13,7 +13,6 @@
     <check_server_status>true</check_server_status>
     <add_debug_hint>false</add_debug_hint>
     <need_xml_summary>true</need_xml_summary>
-    <!--<url_properties>useSSL=true</url_properties> -->
    <reset>
        <!-- <item>SET NAMES utf8</item>-->
        <!--   <item>SET SYSTEM PARAMETERS 'dont_reuse_heap_file=no'</item> -->
@@ -22,10 +21,8 @@
        <item>SET SYSTEM PARAMETERS 'ansi_quotes=default'</item>
        <item>SET SYSTEM PARAMETERS 'compat_mode=default'</item>
        <item>SET SYSTEM PARAMETERS 'default_week_format=default'</item>
-       <!-- refered to CBRD-23866, CUBRIDQA-1117. Test setting need value change.(default is no)
-	   <item>SET SYSTEM PARAMETERS 'dont_reuse_heap_file=default'</item>
-       -->
-	   <item>SET SYSTEM PARAMETERS 'er_btree_debug=default'</item>
+       <item>SET SYSTEM PARAMETERS 'dont_reuse_heap_file=default'</item>
+       <item>SET SYSTEM PARAMETERS 'er_btree_debug=default'</item>
        <item>SET SYSTEM PARAMETERS 'error_log_level=default'</item>
        <item>SET SYSTEM PARAMETERS 'error_log_warning=default'</item>
        <item>SET SYSTEM PARAMETERS 'group_concat_max_len=default'</item>

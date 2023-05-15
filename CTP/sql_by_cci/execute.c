@@ -35,9 +35,6 @@
 #include <dirent.h>
 #include <time.h>
 #include <sys/time.h>
-#if ADD_CAS_ERROR_HEADER == 1
-    #include <broker_cas_error.h>
-#endif
 #include "interface_verify.h"
 #undef _GNU_SOURCE
 
@@ -559,10 +556,7 @@ char *trimline (char *str)
     *++p = '\0';
     if (s != str)
     {
-       char* tmpbuf = (char *)malloc((strlen (s) + 1) * sizeof(char));
-       memcpy (tmpbuf, s, (strlen (s) + 1) * sizeof(char));
-       memcpy (str, tmpbuf, (strlen (s) + 1) * sizeof(char));
-       if(tmpbuf != NULL) free(tmpbuf); 
+        memcpy (str, s, strlen (s) + 1);
     }
     return (str);
 }
@@ -2074,7 +2068,6 @@ int main (int argc, char *argv[])
     char *result;
     char *ans_file = NULL;
     char *test_type = NULL;
-    char *urlproperty = NULL;
     long start_time, end_time, elapse_time;
     if (argc < 4)
     {
@@ -2087,10 +2080,9 @@ int main (int argc, char *argv[])
     test_type      = argv[3];
     char *filename = argv[4];
     result         = argv[5];
-    urlproperty    = argv[6];
 
     //construct the url as "cci:CUBRID:localhost:33888:test_db:dba:12345:"
-    snprintf(url, 256, "cci:CUBRID:%s:%d:%s:%s:%s:%s", host,port,dbname,user,passwd,urlproperty==NULL? "":urlproperty);
+    snprintf(url, 256, "cci:CUBRID:%s:%d:%s:%s:%s:", host,port,dbname,user,passwd);
 
     printf ("Case Name:%s\n", filename);
 

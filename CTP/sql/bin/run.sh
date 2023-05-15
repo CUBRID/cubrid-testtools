@@ -53,7 +53,7 @@ need_make_locale=""
 test_data_file=""
 interface_type=""
 alias ini="sh ${CTP_HOME}/bin/ini.sh"
-cci_urlproperty=""
+
 
 function usage ()
 {
@@ -177,7 +177,6 @@ function do_init()
          interface_type=${sql_interface_type}	
     fi
 
-    cci_urlproperty=`ini -s sql ${config_file_main} cci_urlproperty`
     cd $curDir
 }
 
@@ -631,12 +630,7 @@ function make_db_data()
      cp $data_file .
  
      tar -zxvf mdb.tar.gz
-     loaddb=`cubrid loaddb 2>&1`
-     if [[ $loaddb =~ "--no-user-specified-name" ]];then
-        cubrid loaddb -s ${db_name}_schema -i ${db_name}_indexes -d ${db_name}_objects -u dba ${db_name} --no-user-specified-name >> $log_filename
-     else
-        cubrid loaddb -s ${db_name}_schema -i ${db_name}_indexes -d ${db_name}_objects -u dba ${db_name} >> $log_filename
-     fi
+     cubrid loaddb -s ${db_name}_schema -i ${db_name}_indexes -d ${db_name}_objects -u dba ${db_name} >> $log_filename
      optimize_db $db_name
  
      rm *.gz 2>&1 >/dev/null
@@ -752,7 +746,6 @@ function do_test()
           export bits_in_interactive=${cubrid_bits}
           export db_name_in_interactive=$db_name
           export client_charset_in_interactive=$jdbc_config_file_ext
-          export cci_urlproperty_in_interactive=$cci_urlproperty
           export PS1="sql> ";cd ${scenario_repo_root}; source ${CTP_HOME}/sql/bin/interactive.sh; help; bash --posix)
 	
           #do clean for interactive mode
@@ -760,7 +753,7 @@ function do_test()
      elif [ "$interface_type" == "cci" ];then
 	  port=`ini -s "%BROKER1"  $CUBRID/conf/cubrid_broker.conf BROKER_PORT`
 	  resultFolder="schedule_cdriver_${os_type}_${scenario_alias}_`date +"%Y%m%d%H%M%S"`_${cubrid_ver}_${cubrid_bits}"
-	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${resultFolder} ${scenario_repo_root} $CTP_HOME ${cci_urlproperty} 2>&1 | tee -a $log_filename 
+	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${resultFolder} ${scenario_repo_root} $CTP_HOME 2>&1 >> $log_filename 
 	  cd $curDir
 	  
      else   
