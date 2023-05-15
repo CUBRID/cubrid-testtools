@@ -63,8 +63,8 @@ function format_ctl_result()
 	sed -i 's/STATUS: forcefully killing pid [0-9]*/STATUS: forcefully killing pid ?/g' $1
 	sed -i 's/key: [0-9]*(OID:/key: ?(OID:/g' $1
 	sed -i 's/\: [0-9]*|[0-9]*|[0-9]*/\: ?/g' $1
-	for i in `cat -n $1 | grep "ERROR RETURNED" | grep "You are waiting for user" | awk '{print $1}'`; do 
-	    sed -i "${i}s/`hostname`/localhost/g" $1
+	for i in `cat -n $1 | grep -E "(ERROR RETURNED|timed out waiting on)" | grep "You are waiting for user" | awk '{print $1}'`; do 
+	    sed -i "${i}s/`hostname -f`/localhost/g" $1
 	    sed -E -i "${i}s/([0-9])+/?/g" $1
 	done
     else
