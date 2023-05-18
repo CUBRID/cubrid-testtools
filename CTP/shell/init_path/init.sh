@@ -856,19 +856,18 @@ function change_db_parameter
 }
 
 # Usage:
-#       change_db_section_parameter common ORACLE_STYLE_EMPTY_STRING  0 
+#       change_db_section_parameter common "ORACLE_STYLE_EMPTY_STRING = 0" 
 function change_db_section_parameter
 {
   local sec=$1  
   local prm=$2  
-  local val=$3  
 
   if [ ! -f "$CUBRID/conf/cubrid.conf.org" ]
   then
        cp $CUBRID/conf/cubrid.conf $CUBRID/conf/cubrid.conf.org
   fi
 
-  change_conifg_section_parameter $sec $prm $val $CUBRID/conf/cubrid.conf
+  change_config_section_parameter $sec $prm $CUBRID/conf/cubrid.conf
 }
 
 # Restore DB .ini file from source file
@@ -884,17 +883,21 @@ function delete_ini
 }
 
 # Usage:
-#       change_conifg_section_parameter common ORACLE_STYLE_EMPTY_STRING  0 $CUBRID/conf/cubrid.conf
-function change_conifg_section_parameter
+#       change_config_section_parameter common "ORACLE_STYLE_EMPTY_STRING = 0" $CUBRID/conf/cubrid.conf
+function change_config_section_parameter
 {
   local sec=$1
   local prm=$2
-  local val=$3
-  local file=$4
+  local file=$3
 
-  sed -i "/^\[$sec]/,/^\[/{s/^$prm[[:space:]]*=.*/$prm = $val/}" $file
+  local key=${prm%%=*}
+  local val=${prm#*=}
+  key=`echo $key|sed 's/^ *//g'`
+  key=`echo $key|sed 's/ *$//g'`
+  
+  sed -i "/^\[$sec]/,/^\[/{s/^$key[[:space:]]*=.*/$key = $val/}" $file
   awk "/\[$sec\]/{flag=1;next}/\[.*\]/{flag=0}flag && NF" $file \
-  | grep "$prm = $val" > /dev/null || sed -i  "/$sec/a\\$prm = $val" $file
+  | grep "$key = $val" > /dev/null || sed -i  "/$sec/a\\$key = $val" $file
 }
 
 
@@ -932,35 +935,33 @@ function change_ha_parameter
 } 
 
 # Usage:
-#       change_broker_section_parameter %BROKER1 MIN_NUM_APPL_SERVER 4000
+#       change_broker_section_parameter %BROKER1 "MIN_NUM_APPL_SERVER = 4000"
 function change_broker_section_parameter
 {
     local sec=$1
     local prm=$2
-    local val=$3
 
     if [ ! -f "$CUBRID/conf/cubrid_broker.conf.org" ]
     then
         cp $CUBRID/conf/cubrid_broker.conf $CUBRID/conf/cubrid_broker.conf.org
     fi
 
-    change_conifg_section_parameter $sec $prm $val $CUBRID/conf/cubrid_broker.conf
+    change_config_section_parameter $sec $prm $CUBRID/conf/cubrid_broker.conf
 }
 
 # Usage:
-#       change_ha_section_parameter common ha_port_id 59901
+#       change_ha_section_parameter common "ha_port_id = 59901"
 function change_ha_section_parameter
 {
     local sec=$1
     local prm=$2
-    local val=$3
     
     if [ ! -f "$CUBRID/conf/cubrid_ha.conf.org" ]
     then
         cp $CUBRID/conf/cubrid_ha.conf $CUBRID/conf/cubrid_ha.conf.org
     fi
     
-    change_conifg_section_parameter $sec $prm $val $CUBRID/conf/cubrid_ha.conf
+    change_config_section_parameter $sec $prm $CUBRID/conf/cubrid_ha.conf
 }
 
 
