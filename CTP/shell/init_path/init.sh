@@ -855,6 +855,22 @@ function change_db_parameter
   fi
 }
 
+# Usage:
+#       change_db_section_parameter common ORACLE_STYLE_EMPTY_STRING  0 
+function change_db_section_parameter
+{
+  local sec=$1  
+  local prm=$2  
+  local val=$3  
+
+  if [ ! -f "$CUBRID/conf/cubrid.conf.org" ]
+  then
+       cp $CUBRID/conf/cubrid.conf $CUBRID/conf/cubrid.conf.org
+  fi
+
+  change_conifg_section_parameter $sec $prm $val $CUBRID/conf/cubrid.conf
+}
+
 # Restore DB .ini file from source file
 
 function delete_ini
@@ -866,6 +882,21 @@ function delete_ini
         cp $CUBRID/conf/cubrid.conf.org $CUBRID/conf/cubrid.conf
   fi
 }
+
+# Usage:
+#       change_conifg_section_parameter common ORACLE_STYLE_EMPTY_STRING  0 $CUBRID/conf/cubrid.conf
+function change_conifg_section_parameter
+{
+  local sec=$1
+  local prm=$2
+  local val=$3
+  local file=$4
+
+  sed -i "/^\[$sec]/,/^\[/{s/^$prm[[:space:]]*=.*/$prm = $val/}" $file
+  awk "/\[$sec\]/{flag=1;next}/\[.*\]/{flag=0}flag && NF" $file \
+  | grep "$prm = $val" > /dev/null || sed -i  "/$sec/a\\$prm = $val" $file
+}
+
 
 # Change DB Broker parameter in the cubrid_broker.conf
 # Use only in the broker1  
@@ -899,6 +930,39 @@ function change_ha_parameter
         echo "$1" >> $CUBRID/conf/cubrid_ha.conf
     fi  
 } 
+
+# Usage:
+#       change_broker_section_parameter %BROKER1 MIN_NUM_APPL_SERVER 4000
+function change_broker_section_parameter
+{
+    local sec=$1
+    local prm=$2
+    local val=$3
+
+    if [ ! -f "$CUBRID/conf/cubrid_broker.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_broker.conf $CUBRID/conf/cubrid_broker.conf.org
+    fi
+
+    change_conifg_section_parameter $sec $prm $val $CUBRID/conf/cubrid_broker.conf
+}
+
+# Usage:
+#       change_ha_section_parameter common ha_port_id 59901
+function change_ha_section_parameter
+{
+    local sec=$1
+    local prm=$2
+    local val=$3
+    
+    if [ ! -f "$CUBRID/conf/cubrid_ha.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_ha.conf $CUBRID/conf/cubrid_ha.conf.org
+    fi
+    
+    change_conifg_section_parameter $sec $prm $val $CUBRID/conf/cubrid_ha.conf
+}
+
 
 # Restore cubrid_broker.conf file from source file
 
