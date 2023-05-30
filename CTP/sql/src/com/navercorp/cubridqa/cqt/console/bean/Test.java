@@ -92,6 +92,8 @@ public class Test {
 
 	private String autocommit = "";
 
+	private String serverOutput = "off";
+
 	private boolean needSummaryXML = false;
 
 	private boolean needAnswerInSummary = false;
@@ -201,6 +203,14 @@ public class Test {
 
 	public void setHoldcas(String holdcas) {
 		this.holdcas = holdcas;
+	}
+
+	public String getServerOutput() {
+		return serverOutput;
+	}
+	
+	public void setServerOutput (String so) {
+		this.serverOutput = so;
 	}
 
 	public String getReset_scripts() {
