@@ -298,13 +298,27 @@ public class ConsoleDAO extends Executor {
 	}
 
 	public void execute(Connection conn, Sql sql, boolean isPrintQueryPlan) {
+		this.onMessage("sql.script: " + sql.getScript());
 		this.onMessage("sql.getType: " + sql.getType());
+
 		if (sql.getType() == Sql.TYPE_CALL) {
 			executeCall(conn, sql);
 		} else if (sql.getType() == Sql.TYPE_PRE_STMT) {
 			executePrepareStatement(conn, sql, isPrintQueryPlan);
 		} else {
 			executeStatement(conn, sql, isPrintQueryPlan);
+		}
+
+		// Print Output messages
+		if (test.getServerOutput().equalsIgnoreCase("on")) {
+			ArrayList<SqlParam> params = new ArrayList<SqlParam>();
+			params.add(new SqlParam("OUT", 1, null, Types.VARCHAR));
+			params.add(new SqlParam("OUT", 2, null, Types.INTEGER));
+			Sql getLine = new Sql(test.getConnId(), "CALL GET_LINE (?, ?);", params, true);
+
+			String messages = getServerOutputMessage (conn, getLine);
+
+			sql.setResult (sql.getResult() + System.getProperty("line.separator") + messages);
 		}
 	}
 
@@ -520,6 +534,7 @@ public class ConsoleDAO extends Executor {
 					if (paramType.indexOf("OUT") != -1) {
 						Object o = ps.getObject(index);
 						sb.append(o + System.getProperty("line.separator"));
+						param.setValue(o);
 					}
 				}
 				sql.setResult(sql.getResult() + sb.toString());
@@ -702,6 +717,36 @@ public class ConsoleDAO extends Executor {
 			} catch (Exception e) {
 			}
 		}
+	}
+
+	/**
+	 * 
+	 * @Title: getServerOutputMessage
+	 * @Description:Get exception message.
+	 * @param @param e
+	 * @param @param editorExecute
+	 * @param @return
+	 * @return String
+	 * @throws
+	 */
+	private String getServerOutputMessage(Connection conn, Sql sql) {
+		StringBuilder message = new StringBuilder();
+
+		try {
+			while (true) {
+				executeCall (conn, sql);
+				List<SqlParam> params = sql.getParamList ();
+				if (((Integer) params.get(1).getValue ()) == 0) { /* status */
+					message.append(((String) params.get(0).getValue ()) + System.getProperty("line.separator")); /* message */
+				} else {
+					break;
+				}
+			}
+		} catch (Exception e) {
+			// error?
+		}
+
+		return message.toString();
 	}
 
 	/**

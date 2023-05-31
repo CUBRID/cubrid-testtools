@@ -108,7 +108,7 @@ public abstract class Executor {
 	public void onMessage(String message) {
 		switch (printType) {
 		case PRINT_STDOUT:
-			//System.out.println(message);
+			System.out.println(message);
 			break;
 		case PRINT_UI:
 			//ConsoleAgent.addMessage(message + System.getProperty("line.separator"));
