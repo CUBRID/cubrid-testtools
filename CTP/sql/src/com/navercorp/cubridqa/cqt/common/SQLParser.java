@@ -85,9 +85,6 @@ public class SQLParser {
             EditContents cts = new EditContents();
 
             int lineCnt = 0;
-            int sqlCnt = 0;
-
-            boolean isInBlock = false;
             boolean hasNewStmt = false;
             boolean needNewLine = false;
 
@@ -110,18 +107,15 @@ public class SQLParser {
 
                 if (line == null) {
                     /* if eof is reached, execute all */
-                    isInBlock = false;
-
-                    String str = cts.builder.toString();
-                    if (str.length() > 0) {
+                    if (cts.builder.length() > 0) {
                         Sql sql = createNewSql(test, cts, sqlfilePath, lineCnt);
+                        if (sql != null) {
                         list.add(sql);
+                        }
                     }
 
                     break;
                 } else {
-                    // line = line.trim();
-                    // System.out.println("line (" + lineCnt + "): " + line);
                     idx = parseLine(cts, line);
                     if (idx == -1) {
                         needNewLine = true;
@@ -130,79 +124,9 @@ public class SQLParser {
                         needNewLine = true;
                     }
 
-                    // System.out.println (line);
-
-                    /*
-                    isInBlock = isStatementInBlock(cts);
-
-                    if (idx > line.length()) {
-                        idx = line.length();
-                        needNewLine = true;
-                    }
-
-                    // System.out.println(line + "("+ line.length() +")");
-                    String token = line.substring(0, idx);// .trim();
-
-                    if (cts.state == STATE_SEMICOLON) {
-                        if (cts.builder.length() == 0 && token.replaceAll(";", "").isEmpty()) {
-                            // do not add empty string
-                            //. e.g.) INSERT INTO dba.DCL1(id) VALUES(1);; => INSERT INTO dba.DCL1(id) VALUES(1); + ;
-                            idx++;
-                            needNewLine = true;
-                            cts.state = STATE_GENERAL;
-                            continue;
-                        } else {
-                            needNewLine = true;
-                            cts.state = STATE_STATEMENT_END;
-                        }
-                    }
-
-                    System.out.println (cts.state);
-                    System.out.println ("token = " + token);
-                    if (cts.state == STATE_GENERAL || cts.state == STATE_STATEMENT_END || cts.state == STATE_C_COMMENT_HINT_END || cts.state == STATE_SINGLE_LINE_COMMENT_HINT_END
-                        || cts.state == STATE_SINGLE_QUOTE || cts.state == STATE_DOUBLE_QUOTE_IDENTIFIER || cts.state == STATE_BACKTICK_IDENTIFIER || cts.state == STATE_BRACKET_IDENTIFIER) {
-                        cts.builder.append(token);
-
-                        if (needNewLine) {
-                            cts.builder.append('\n');
-                        } else {
-                            cts.builder.append(' ');
-                        }
-                    }
-
-                    if (idx >= line.length()) {
-                        needNewLine = true;
-                    }
-                    */
-
-                    /*
-                    if (needNewLine) {
-                        cts.builder.append('\n');
-                    } else {
-                        cts.builder.append(' ');
-                    }
-                    */
-
-                    /*
-                    if (cts.state == STATE_CPP_COMMENT
-                            || cts.state == STATE_SQL_COMMENT || cts.state == STATE_PARAMETER || cts.state == STATE_CTP_HINT) {
-                        // ignore comments
-                        cts.state = STATE_GENERAL;
-                    } else if (cts.state == STATE_C_COMMENT_END || cts.state == STATE_C_COMMENT_HINT_END) {
-                        // needNewLine = false;
-                        cts.state = STATE_GENERAL;
-                        cts.builder.append(' ');
-                    } else if (cts.state == STATE_CTP_HINT || cts.state == STATE_SINGLE_LINE_COMMENT_HINT_END) {
-                        cts.state = STATE_GENERAL;
-                        cts.builder.append('\n');
-                    } else if (cts.state == STATE_C_COMMENT) {
-                        // do nothing
-                    }
-                    */
-
                     if (cts.state == STATE_STATEMENT_END) {
-                        // GO: System.out.println ("complete = " + cts.builder.toString() + "(" +
-                        // cts.sqlCnt++ + ")");
+                        // GO: 
+                        System.out.println ("complete = " + cts.builder.toString() + "(" + cts.sqlCnt++ + ")");
                         hasNewStmt = true;
                     }
                 }
@@ -237,16 +161,11 @@ public class SQLParser {
     private Sql createNewSql(Test test, EditContents cts, String filePath, int lineCnt) {
         String str = cts.builder.toString();
 
-        // System.out.println ("complete = " + str);
-
-        /*
         if (str.isEmpty()) {
             // do not add empty string e.g.) INSERT INTO dba.DCL1(id) VALUES(1);;
             cts.clear();
-            needNewLine = true;
-            continue;
+            return null;
         }
-        */
 
         boolean isCall = checkIsCall(str);
 
@@ -285,14 +204,16 @@ public class SQLParser {
         contents.isLastStmtValid = true;
         contents.isIncludeStmt = false;
 
+        /*
         if (contents.state == STATE_CPP_COMMENT
                 || contents.state == STATE_SQL_COMMENT
                 || contents.state == STATE_C_COMMENT_END
                 || contents.state == STATE_PARAMETER
                 || contents.state == STATE_C_COMMENT_HINT_END) {
-            /* these are single line comments and we're parsing a new line */
+            // these are single line comments and we're parsing a new line
             contents.state = STATE_GENERAL;
         }
+        */
 
         if (contents.state == STATE_STATEMENT_END) {
             /* reset state in prev statement */

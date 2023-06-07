@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 
 import com.navercorp.cubridqa.common.coreanalyzer.AnalyzerMain;
 import com.navercorp.cubridqa.cqt.common.CommonUtils;
-import com.navercorp.cubridqa.cqt.common.Parser;
+import com.navercorp.cubridqa.cqt.common.SQLParser;
 import com.navercorp.cubridqa.cqt.console.Executor;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.ProcessMonitor;
@@ -947,7 +947,7 @@ public class ConsoleBO extends Executor {
 		StringBuilder result = new StringBuilder();
 		// List<Sql> sqlList = parseSqlFile(caseFile, test);
 
-		Parser parser = new Parser();
+		SQLParser parser = new SQLParser();
 		List<Sql> sqlList = parser.parseSqlFile(caseFile, test);
 		// System.out.println (sqlList.toString());
 		if (sqlList == null) {
@@ -1710,7 +1710,7 @@ public class ConsoleBO extends Executor {
 			StringBuilder result = new StringBuilder();
 			// List<Sql> sqlList = parseSqlFile(caseFile, test);
 
-			Parser parser = new Parser();
+			SQLParser parser = new SQLParser();
 			List<Sql> sqlList = parser.parseSqlFile(caseFile, test);
 			// System.out.println(sqlList.toString());
 
