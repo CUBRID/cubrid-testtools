@@ -3,7 +3,7 @@
   <name>medium</name>
   <dbaPwd></dbaPwd>
   <pubPwd></pubPwd>
-  <dburl>jdbc:cubrid:localhost:33120:mdb:::</dburl>
+  <dburl>jdbc:cubrid:localhost:33030:mdb:::</dburl>
   <dbuser>dba</dbuser>
   <dbpassword></dbpassword>
   <connectionType>DriverManager</connectionType>
