@@ -45,7 +45,7 @@ public class SQLParser {
     private static final int STATE_CPP_COMMENT = 2;
     private static final int STATE_SQL_COMMENT = 3;
     private static final int STATE_SINGLE_QUOTE = 4;
-    private static final int STATE_MYSQL_QUOTE = 5;
+    private static final int STATE_MYSQL_QUOTE = 5; // ?
     private static final int STATE_DOUBLE_QUOTE_IDENTIFIER = 6;
     private static final int STATE_BACKTICK_IDENTIFIER = 7;
     private static final int STATE_BRACKET_IDENTIFIER = 8;
@@ -58,7 +58,6 @@ public class SQLParser {
     private static final int STATE_C_COMMENT_HINT_END = 15;
     private static final int STATE_C_COMMENT_END = 16;
     private static final int STATE_SINGLE_LINE_COMMENT_HINT_END = 17;
-    private static final int STATE_ESCAPE_END = 18;
 
     private static final int SUBSTATE_INITIAL = 50;
     private static final int SUBSTATE_SEEN_CREATE = 51;
@@ -74,8 +73,6 @@ public class SQLParser {
 
     public List<Sql> parseSqlFile(String sqlfilePath, Test test) {
         List<Sql> list = new ArrayList<Sql>();
-        boolean hasFileQueryPlan = TestUtil.isPrintQueryPlan(sqlfilePath);
-
         BufferedReader reader = null;
         try {
             reader =
@@ -107,13 +104,6 @@ public class SQLParser {
 
                 if (line == null) {
                     /* if eof is reached, execute all */
-                    if (cts.builder.length() > 0) {
-                        Sql sql = createNewSql(test, cts, sqlfilePath, lineCnt);
-                        if (sql != null) {
-                        list.add(sql);
-                        }
-                    }
-
                     break;
                 } else {
                     idx = parseLine(cts, line);
@@ -125,8 +115,8 @@ public class SQLParser {
                     }
 
                     if (cts.state == STATE_STATEMENT_END) {
-                        // GO: 
-                        System.out.println ("complete = " + cts.builder.toString() + "(" + cts.sqlCnt++ + ")");
+                        // GO: System.out.println ("complete = " + cts.builder.toString() + "(" +
+                        // cts.sqlCnt++ + ")");
                         hasNewStmt = true;
                     }
                 }
@@ -184,7 +174,7 @@ public class SQLParser {
         }
 
         Sql sql = new Sql(cts.connId, str, cts.params, isCall);
-        sql.setQueryplan(cts.hasQueryPlan); // || hasFileQueryPlan
+        sql.setQueryplan(cts.hasQueryPlan);
 
         cts.clear();
         return sql;
@@ -204,38 +194,26 @@ public class SQLParser {
         contents.isLastStmtValid = true;
         contents.isIncludeStmt = false;
 
-        /*
-        if (contents.state == STATE_CPP_COMMENT
-                || contents.state == STATE_SQL_COMMENT
-                || contents.state == STATE_C_COMMENT_END
-                || contents.state == STATE_PARAMETER
-                || contents.state == STATE_C_COMMENT_HINT_END) {
-            // these are single line comments and we're parsing a new line
-            contents.state = STATE_GENERAL;
-        }
-        */
-
         if (contents.state == STATE_STATEMENT_END) {
             /* reset state in prev statement */
             contents.state = STATE_GENERAL;
             contents.substate = SUBSTATE_INITIAL;
         }
 
-        int prev = i;
-
-        // line = line.trim();
         int lineCnt = line.length();
 
         boolean doStop = false;
         boolean firstIteration = true;
 
         for (i = 0; i < lineCnt; i++) {
+            // System.out.println ("char =" + line.charAt(i));
             switch (contents.state) {
                 case STATE_GENERAL:
                     {
+                        // Do not remove blanks
                         /*
                         if (firstIteration == true && isBlank(line.charAt(i))) {
-                                prev = i; // remove black
+                                // prev = i; // remove black
                                 continue;
                         }
                         */
@@ -262,37 +240,21 @@ public class SQLParser {
                             continue;
                         }
 
-                        if (isIdentifierLetter(line.charAt(i))) {
+                        while (i < lineCnt && isIdentifierLetter(line.charAt(i))) {
+                            /* consume identifier letters */
                             contents.isLastStmtValid = true;
-
-                            while (i + 1 < lineCnt) {
-                                if (isIdentifierLetter(line.charAt(i + 1))) {
-                                    i++;
-                                } else {
-                                    break;
-                                }
-                            }
+                            i++;
                         }
 
-                        prev = i;
-                        i = checkComment(contents, line, i);
+                        i = checkCommentQuote(contents, line, i);
                         if (contents.state != STATE_GENERAL) {
+                            /* transition to comment/quote mode */
                             doStop = true;
                             break;
                         }
 
-                        if (contents.state == STATE_GENERAL && searchSemicolonEnd(line) == true) {
+                        if (searchSemicolonEnd(line) == true) {
                             if (contents.substate != SUBSTATE_PLCSQL_TEXT) {
-                                /*
-                                while (i + 1 < lineCnt) {
-                                    if (isSemicolon(line.charAt(i + 1))) {
-                                        // consume multiple semicolons
-                                        i++;
-                                    }
-                                    break;
-                                }
-                                */
-
                                 assert (contents.substate != SUBSTATE_SEEN_END);
                                 contents.isIncludeStmt = true;
                                 contents.isLastStmtValid = false;
@@ -304,8 +266,18 @@ public class SQLParser {
 
                                 contents.state = STATE_SEMICOLON;
 
+                                doStop = true;
                                 i = line.length();
-                                continue;
+                                break;
+                            }
+                        } else if (contents.state == STATE_GENERAL
+                                && i < lineCnt
+                                && line.charAt(i) == ';') {
+                            if (contents.substate != SUBSTATE_PLCSQL_TEXT) {
+                                contents.state = STATE_SEMICOLON;
+                                doStop = true;
+                                i++;
+                                break;
                             }
                         }
                     }
@@ -313,24 +285,32 @@ public class SQLParser {
 
                 case STATE_C_COMMENT:
                 case STATE_C_COMMENT_HINT:
-                    while (true) {
-                        while (i < lineCnt && line.charAt(i) != '*') {
+                    // System.out.println ("c comment");
+                    while (!doStop) {
+                        while (i < lineCnt) {
                             // find '*' or whole line
+                            if (line.charAt(i) == '*') {
+                                i++;
+                                break;
+                            }
                             i++;
                         }
 
                         if (i == lineCnt) {
                             // find the end of C comment at the next line
+                            doStop = true;
                             break;
                         }
 
-                        if ((i + 1 < lineCnt) && line.charAt(i + 1) == '/') {
+                        // System.out.println ("comment i = " + i + "," + line.charAt(i));
+                        if ((i < lineCnt) && line.charAt(i) == '/') {
                             if (contents.state == STATE_C_COMMENT) {
                                 contents.state = STATE_C_COMMENT_END;
                             } else {
                                 contents.state = STATE_C_COMMENT_HINT_END;
                             }
-                            return i + 2;
+                            i += 2;
+                            doStop = true;
                         } else {
                             i++;
                         }
@@ -346,6 +326,7 @@ public class SQLParser {
                     break;
 
                 case STATE_CTP_HINT:
+                    i = line.length();
                     doStop = true;
                     break;
                     /*
@@ -359,6 +340,8 @@ public class SQLParser {
                             i++;
                         } else {
                             contents.state = STATE_GENERAL;
+                            // doStop = true;
+                            // break;
                         }
                     }
                     break;
@@ -436,7 +419,7 @@ public class SQLParser {
         }
         */
 
-        // GO:         System.out.println ("state = " + contents.state);
+        // GO: System.out.println ("state = " + contents.state);
         boolean doAdd = true;
         switch (contents.state) {
             case STATE_SQL_COMMENT:
@@ -448,20 +431,23 @@ public class SQLParser {
                 doAdd = false;
                 break;
             case STATE_C_COMMENT:
-            case STATE_C_COMMENT_HINT:
+                // case STATE_C_COMMENT_HINT:
                 doAdd = false;
                 break;
             case STATE_SINGLE_LINE_COMMENT_HINT_END:
             case STATE_C_COMMENT_HINT_END:
                 contents.state = STATE_GENERAL;
                 break;
+            default:
+                doAdd = true;
+                break;
         }
 
-        // GO:         System.out.println ("token = " + token);
+        // GO: System.out.println ("token = " + token + " \n\tAdd?=>" + doAdd);
         if (doAdd) {
             contents.builder.append(token);
             if (i == lineCnt) {
-                contents.builder.append('\n');
+                contents.builder.append(System.getProperty("line.separator"));
             } else {
                 // contents.builder.append(' ');
             }
@@ -526,61 +512,8 @@ public class SQLParser {
                 || (c == '_'));
     }
 
-    private boolean isSemicolon(char c) {
-        return c == ';';
-    }
-
     private boolean searchSemicolonEnd(String line) {
-        /*
-        int i = line.length();
-        boolean found = false;
-        while (i > 0) {
-            i--;
-            char c = line.charAt(i);
-            if (c == ' ') {
-                continue;
-            } else if (c == ';') {
-                found = true;
-                break;
-            } else {
-                // any other character
-                break;
-            }
-        }
-        return found;
-        */
         return line.trim().endsWith(";");
-    }
-
-    private boolean isInComment(int state) {
-        switch (state) {
-            case STATE_CPP_COMMENT:
-            case STATE_C_COMMENT:
-            case STATE_SQL_COMMENT:
-                return true;
-        }
-
-        return false;
-    }
-
-    private boolean isStatementInBlock(EditContents contents) {
-        int state = contents.state;
-        if (state == STATE_C_COMMENT
-                || state == STATE_SINGLE_QUOTE
-                || state == STATE_MYSQL_QUOTE
-                || state == STATE_DOUBLE_QUOTE_IDENTIFIER
-                || state == STATE_BACKTICK_IDENTIFIER
-                || state == STATE_BRACKET_IDENTIFIER) {
-            return true;
-        }
-
-        int substate = contents.substate;
-        if (state == STATE_GENERAL
-                && (substate == SUBSTATE_PLCSQL_TEXT || substate == SUBSTATE_SEEN_END)) {
-            return true;
-        }
-
-        return false;
     }
 
     private boolean checkIsCall(String str) {
@@ -640,14 +573,17 @@ public class SQLParser {
     int PL_CHECK_CONTINUE_WITHOUT_ADVANCE = 1;
     int PL_CHECK_STOP = 2;
 
-    private int checkComment(EditContents contents, String line, int idx) {
+    private int checkCommentQuote(EditContents contents, String line, int idx) {
+        if (idx >= line.length()) {
+            return line.length();
+        }
+
         switch (line.charAt(idx)) {
             case '/':
                 if (idx + 1 < line.length() && line.charAt(idx + 1) == '/') {
-                    if (contents.isFirstStmt == true
-                            && idx != 0
-                            && idx + 2 < line.length()
-                            && line.charAt(idx + 2) == '+') {
+                    if ( // contents.isFirstStmt == true
+                    // && idx != 0
+                    idx + 2 < line.length() && line.charAt(idx + 2) == '+') {
                         //  SQL hint.
                         // e.g.)
                         //  select //+ RECOMPILE USE_MERGE
@@ -657,19 +593,20 @@ public class SQLParser {
                         return line.length();
                     }
 
+                    /*
                     if (contents.isFirstStmt == true && idx != 0) {
                         contents.builder.append(line.substring(0, idx));
                     }
+                    */
 
                     contents.state = STATE_CPP_COMMENT;
                     return line.length();
                 }
 
                 if (idx + 1 < line.length() && line.charAt(idx + 1) == '*') {
-                    if (contents.isFirstStmt == true
-                            && idx != 0
-                            && idx + 2 < line.length()
-                            && line.charAt(idx + 2) == '+') {
+                    if ( // contents.isFirstStmt == true &&
+                    // idx != 0 &&
+                    idx + 2 < line.length() && line.charAt(idx + 2) == '+') {
                         // SQL Hint
                         // e.g.)
                         //  select /*+ RECOMPILE
@@ -681,9 +618,11 @@ public class SQLParser {
                         return idx + 3;
                     }
 
-                    if (idx != 0) {
+                    /*
+                    if (contents.isFirstStmt == true && idx != 0) {
                         contents.builder.append(line.substring(0, idx));
                     }
+                    */
 
                     idx++;
                     contents.state = STATE_C_COMMENT;
@@ -696,20 +635,9 @@ public class SQLParser {
                     if (contents.isFirstStmt == true && idx == 0) {
 
                         /* CTP Special Hints */
-                        String comment =
-                                line.substring(0, line.length()).trim().replaceAll(" ", "");
-                        if (comment.startsWith("--@queryplan")) {
-                            contents.hasQueryPlan = true;
+                        // --@queryplan, --+holdcas
+                        if (hasCTPHint(contents, line)) {
                             contents.state = STATE_CTP_HINT;
-                        } else if (comment.startsWith("--+holdcas")) {
-                            contents.hasHoldcas = true;
-                            contents.state = STATE_CTP_HINT;
-                        } else if (comment.startsWith("--+server-output")) {
-                            contents.hasServerOutput = true;
-                            contents.state = STATE_CTP_HINT;
-                        }
-
-                        if (contents.state == STATE_CTP_HINT) {
                             return line.length();
                         }
                     }
@@ -724,54 +652,38 @@ public class SQLParser {
                         return line.length();
                     }
 
+                    /*
                     if (contents.isFirstStmt == true && idx != 0) {
                         contents.builder.append(line.substring(0, idx));
                     }
+                    */
 
-                    // idx++;
                     contents.state = STATE_SQL_COMMENT;
-                    return line.length();
-                    // break;
+                    return line.length(); /* whole line */
                 }
                 contents.isLastStmtValid = true;
                 break;
 
             case '\'':
-                /*
-                    if (idx != 0) {
-                        contents.builder.append(line.substring(0, idx));
-                    }
-                */
+                idx++;
                 contents.state = STATE_SINGLE_QUOTE;
                 contents.isLastStmtValid = true;
                 break;
 
             case '"':
-                /*
-                if (idx != 0) {
-                    contents.builder.append(line.substring(0, idx));
-                }
-                            */
+                idx++;
                 contents.state = STATE_DOUBLE_QUOTE_IDENTIFIER;
                 contents.isLastStmtValid = true;
                 break;
 
             case '`':
-                /*
-                if (idx != 0) {
-                    contents.builder.append(line.substring(0, idx));
-                }
-                */
+                idx++;
                 contents.state = STATE_BACKTICK_IDENTIFIER;
                 contents.isLastStmtValid = true;
                 break;
 
             case '[':
-                /*
-                if (idx != 0) {
-                    contents.builder.append(line.substring(0, idx));
-                }
-                */
+                idx++;
                 contents.state = STATE_BRACKET_IDENTIFIER;
                 contents.isLastStmtValid = true;
                 break;
@@ -782,7 +694,7 @@ public class SQLParser {
             case '\n':
                 // System.out.println ("unreachable");
                 assert (false); // unreachable
-                idx++;
+                // idx++;
                 break;
             default:
                 if (!contents.isLastStmtValid) {
@@ -794,7 +706,20 @@ public class SQLParser {
         return idx;
     }
 
-    private List<SqlParam> checkParams(EditContents contents, String line) throws Exception {
+    private boolean hasCTPHint(EditContents contents, String line) {
+        boolean hasHint = false;
+        String comment = line.trim().replaceAll(" ", "");
+        if (comment.startsWith("--@queryplan")) {
+            hasHint = contents.hasQueryPlan = true;
+        } else if (comment.startsWith("--+holdcas")) {
+            hasHint = contents.hasHoldcas = true;
+        } else if (comment.startsWith("--+server-output")) {
+            hasHint = contents.hasServerOutput = true;
+        }
+        return hasHint;
+    }
+
+    private List<SqlParam> checkParams(EditContents contents, String line) {
         List<SqlParam> list = new ArrayList<SqlParam>();
 
         line = line.trim().replaceAll(";", ""); // remove ;
@@ -806,7 +731,6 @@ public class SQLParser {
                 temp[temp.length - 1] = "";
                 parts = temp;
             } else {
-                // System.out.println(parts);
                 // throw new Exception("parameters is invalid in sqlFile");
                 return null;
             }
@@ -1164,6 +1088,7 @@ public class SQLParser {
 
     // add hint for CREATE/ALTER/INSERT/UPDATE/DELETE/DROP/MERGE/PREPARE/REPLACE
     // sql
+    // legacy code
     private String addHintForSQL(String sql, boolean isNewLine, int lineNum, String sqlFile) {
         String ret = "";
         String prefix_tmpStr = "";
