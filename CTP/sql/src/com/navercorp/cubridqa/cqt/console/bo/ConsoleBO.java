@@ -1361,6 +1361,7 @@ public class ConsoleBO extends Executor {
 					continue;
 				}
 
+                Sql sql = null;
 				boolean isStatement = !(line.startsWith("$"));
 				if (!isStatement) { // parameters
 					paramList = new ArrayList<SqlParam>();
@@ -1413,13 +1414,31 @@ public class ConsoleBO extends Executor {
 						}
 					}
 				} else { // statement
-					int pos = line.indexOf(":");
-					if (line.endsWith(";")) {
-						String lineCopy = line;
-						if (lineCopy.startsWith("@") && pos != -1) {
-							lineCopy = lineCopy.substring(pos);
+
+					if (isNewStatement) {
+						if (line.startsWith("@")) {
+                            int pos = line.indexOf(":");
+                            if (pos != -1) {
+                                connId = line.substring(1, pos);
+                                line = line.substring(pos + 1);
+                            }
 						}
-						int positionCall = lineCopy.replaceAll(" ", "").indexOf("call");
+					}
+
+					// set sql hint for debug
+					if (test.isNeedDebugHint()) {
+						String tmpSQL = line;
+						String hint_sql = addHintForSQL(tmpSQL, isNewStatement, lineCount, sqlFile);
+
+						ret.append(hint_sql + "\n");
+					} else {
+						ret.append(line + "\n");
+					}
+
+                    if (line.endsWith(";")) {
+
+                        // set isCall
+   						int positionCall = line.replaceAll(" ", "").indexOf("call");
 						if (positionCall != -1) {
 							if (positionCall == 0) {
 								int position1 = line.indexOf("(");
@@ -1434,43 +1453,19 @@ public class ConsoleBO extends Executor {
 								} else {
 									isCall = false;
 								}
-							} else if (lineCopy.replaceAll(" ", "").indexOf("?=call") == 0) {
+							} else if (line.replaceAll(" ", "").indexOf("?=call") == 0) {
 								isCall = true;
 							}
 						}
-					}
 
-					if (isNewStatement) {
-						if (line.startsWith("@")) {
-							connId = line.substring(1, pos);
-							line = line.substring(pos + 1);
-						}
-					}
-
-					// set sql hint for debug
-					if (test.isNeedDebugHint()) {
-						String tmpSQL = line;
-						String hint_sql = addHintForSQL(tmpSQL, isNewStatement, lineCount, sqlFile);
-
-						ret.append(hint_sql + "\n");
-					} else {
-						ret.append(line + "\n");
-					}
-
-					if (!isCall) {
-						if (line.endsWith(";")) {
-							Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-							sql.setQueryplan(isQueryplan);
-							list.add(sql);
-						}
-					} else {
-						Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-						sql.setQueryplan(isQueryplan);
-						list.add(sql);
-					}
+                        // new sql
+                        sql = new Sql(connId, ret.toString(), paramList, isCall);
+                        sql.setQueryplan(isQueryplan);
+                        list.add(sql);
+                    }
 				}
 
-				if (isStatement && line.endsWith(";")) {
+				if (sql != null) {
 					isNewStatement = true;
 					isQueryplan = false;
 
