@@ -945,11 +945,13 @@ public class ConsoleBO extends Executor {
 
 		String caseFile = caseResult.getCaseFile();
 		StringBuilder result = new StringBuilder();
-		// List<Sql> sqlList = parseSqlFile(caseFile, test);
+		List<Sql> sqlList = parseSqlFile(caseFile, test);
 
+        /*
 		SQLParser parser = new SQLParser();
 		List<Sql> sqlList = parser.parseSqlFile(caseFile, test);
 		// System.out.println (sqlList.toString());
+         */
 		if (sqlList == null) {
 			return null;
 		}
@@ -1287,12 +1289,12 @@ public class ConsoleBO extends Executor {
 	}
 
 	public boolean isServerOutputStatement(String sql) {
-		System.out.println ("IsServerOutputStatement");
 		boolean ret = false;
 		String str = "";
 		if (sql.startsWith("--+")) {
 			str = sql.trim().replaceAll(" ", "");
-			if ("--+server-output".equalsIgnoreCase(str.substring(0, "--+server-output".length()))) {
+            int len = "--+server-output".length();
+			if (len <= str.length() && "--+server-output".equalsIgnoreCase(str.substring(0, len))) {
 				ret = true;
 			}
 		}
@@ -1708,11 +1710,13 @@ public class ConsoleBO extends Executor {
 			}
 			String caseFile = caseResult.getCaseFile();
 			StringBuilder result = new StringBuilder();
-			// List<Sql> sqlList = parseSqlFile(caseFile, test);
+			List<Sql> sqlList = parseSqlFile(caseFile, test);
 
+            /*
 			SQLParser parser = new SQLParser();
 			List<Sql> sqlList = parser.parseSqlFile(caseFile, test);
 			// System.out.println(sqlList.toString());
+            */
 
 			String dbId = test.getDbId();
 			String connId = test.getConnId();
