@@ -1326,7 +1326,9 @@ public class ConsoleBO extends Executor {
 			boolean isQueryplan = false;
 			boolean isHoldCas = false;
 			boolean isServerOutput = false;
-			boolean isPLCSQLMode = false;
+            LineScanner scanner = new LineScanner();
+
+            LineScanner lineScanner = new LineScanner();
 
 			while (line != null) {
 				line = line.trim();
@@ -1435,7 +1437,8 @@ public class ConsoleBO extends Executor {
 						ret.append(line + "\n");
 					}
 
-                    if (line.endsWith(";")) {
+                    scanner.scan(line);
+                    if (scanner.isStatementComplete()) {
 
                         // set isCall
    						int positionCall = line.replaceAll(" ", "").indexOf("call");
@@ -1462,6 +1465,8 @@ public class ConsoleBO extends Executor {
                         sql = new Sql(connId, ret.toString(), paramList, isCall);
                         sql.setQueryplan(isQueryplan);
                         list.add(sql);
+
+                        scanner.clear();
                     }
 				}
 
