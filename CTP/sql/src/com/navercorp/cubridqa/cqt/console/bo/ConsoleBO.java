@@ -1293,7 +1293,8 @@ public class ConsoleBO extends Executor {
 		String str = "";
 		if (sql.startsWith("--+")) {
 			str = sql.trim().replaceAll(" ", "");
-			if ("--+server-output".equalsIgnoreCase(str.substring(0, "--+server-output".length()))) {
+            int len = "--+server-output".length();
+			if (len <= str.length() && "--+server-output".equalsIgnoreCase(str.substring(0, len))) {
 				ret = true;
 			}
 		}
@@ -1340,7 +1341,7 @@ public class ConsoleBO extends Executor {
 					isServerOutput = isServerOutputStatement(line);
 					if ("--@queryplan".equals(line.trim())) {
 						isQueryplan = true;
-					} else if (isHoldCas || isServerOutput) {
+					} else if (isHoldCas) {
 						line = line.replaceFirst("--\\+", "").trim();
 						ret.append(line + "" + System.getProperty("line.separator"));
 						Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
@@ -1353,6 +1354,8 @@ public class ConsoleBO extends Executor {
 						paramList = null;
 						isCall = false;
 						connId = "";
+					} else if (isServerOutput) {
+
 					}
 
 					line = reader.readLine();
