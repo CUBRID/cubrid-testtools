@@ -1438,7 +1438,8 @@ public class ConsoleBO extends Executor {
 					}
 
                     scanner.scan(line);
-                    if (scanner.isStatementComplete()) {
+                    //if (scanner.isStatementComplete()) {
+                    if (line.endsWith(";") && !scanner.isInPlcsqlText()) {
 
                         // set isCall
    						int positionCall = line.replaceAll(" ", "").indexOf("call");
