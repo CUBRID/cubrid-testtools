@@ -311,13 +311,7 @@ public class ConsoleDAO extends Executor {
 
 		// Print Output messages
 		if (test.getServerOutput().equalsIgnoreCase("on")) {
-			ArrayList<SqlParam> params = new ArrayList<SqlParam>();
-			params.add(new SqlParam("OUT", 1, null, Types.VARCHAR));
-			params.add(new SqlParam("OUT", 2, null, Types.INTEGER));
-			Sql getLine = new Sql(test.getConnId(), "CALL GET_LINE (?, ?);", params, true);
-
-			String messages = getServerOutputMessage (conn, getLine);
-
+			String messages = getServerOutputMessage (conn);
 			sql.setResult (sql.getResult() + System.getProperty("line.separator") + messages);
 		}
 	}
@@ -729,15 +723,21 @@ public class ConsoleDAO extends Executor {
 	 * @return String
 	 * @throws
 	 */
-	private String getServerOutputMessage(Connection conn, Sql sql) {
+	private String getServerOutputMessage(Connection conn) {
 		StringBuilder message = new StringBuilder();
+
+		ArrayList<SqlParam> params = new ArrayList<SqlParam>();
+		params.add(new SqlParam("OUT", 1, null, Types.VARCHAR));
+		params.add(new SqlParam("OUT", 2, null, Types.INTEGER));
+		Sql getLine = new Sql(test.getConnId(), "CALL GET_LINE (?, ?);", params, true);
 
 		try {
 			while (true) {
-				executeCall (conn, sql);
-				List<SqlParam> params = sql.getParamList ();
-				if (((Integer) params.get(1).getValue ()) == 0) { /* status */
-					message.append(((String) params.get(0).getValue ()) + System.getProperty("line.separator")); /* message */
+				executeCall (conn, getLine);
+				if (((Integer) getLine.getParamList ().get(1).getValue ()) == 0) { /* status */
+					message.append(((String) getLine.getParamList ().get(0).getValue ()) + System.getProperty("line.separator")); /* message */
+
+					System.out.println ((String) getLine.getParamList ().get(0).getValue ());
 				} else {
 					break;
 				}
