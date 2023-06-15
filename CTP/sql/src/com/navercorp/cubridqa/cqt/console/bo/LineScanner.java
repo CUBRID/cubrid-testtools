@@ -126,7 +126,7 @@ class LineScanner {
                     break;
 
                 case '"':
-                    /*if (prm_get_bool_value (PRM_ID_ANSI_QUOTES) == false) {
+                    /*if (prm_get_bool_value (PRM_ID_ANSI_QUOTES) == false) {   TODO: can we see the parameter?
                       state = State.MYSQL_QUOTE;
                     } else*/ {
                       state = State.DOUBLE_QUOTE_IDENTIFIER;
@@ -186,7 +186,8 @@ class LineScanner {
                 break;
 
             case SINGLE_QUOTE:
-                /*if (prm_get_bool_value (PRM_ID_NO_BACKSLASH_ESCAPES) == false && c == '\\') { // TODO
+                /*if (prm_get_bool_value (PRM_ID_NO_BACKSLASH_ESCAPES) == false &&
+                      c == '\\') {      TODO: can we see the parameter?
                     i++;
                 } else */ if (c == '\'') {
                     if (charAtStr(line, i + 1) == '\'') {
@@ -199,7 +200,8 @@ class LineScanner {
                 break;
 
             case MYSQL_QUOTE:
-                /*if (prm_get_bool_value (PRM_ID_NO_BACKSLASH_ESCAPES) == false && c == '\\') { // TODO
+                /*if (prm_get_bool_value (PRM_ID_NO_BACKSLASH_ESCAPES) == false &&
+                      c == '\\') {      TODO: can we see the parameter?
                     i++;
                 } else */ if (c == '"') {
                     if (charAtStr(line, i + 1) == '"') {

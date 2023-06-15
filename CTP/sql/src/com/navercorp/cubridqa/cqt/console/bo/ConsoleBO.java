@@ -36,6 +36,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -46,7 +47,6 @@ import java.util.regex.Pattern;
 
 import com.navercorp.cubridqa.common.coreanalyzer.AnalyzerMain;
 import com.navercorp.cubridqa.cqt.common.CommonUtils;
-import com.navercorp.cubridqa.cqt.common.SQLParser;
 import com.navercorp.cubridqa.cqt.console.Executor;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.ProcessMonitor;
@@ -946,12 +946,6 @@ public class ConsoleBO extends Executor {
 		String caseFile = caseResult.getCaseFile();
 		StringBuilder result = new StringBuilder();
 		List<Sql> sqlList = parseSqlFile(caseFile, test);
-
-        /*
-		SQLParser parser = new SQLParser();
-		List<Sql> sqlList = parser.parseSqlFile(caseFile, test);
-		// System.out.println (sqlList.toString());
-         */
 		if (sqlList == null) {
 			return null;
 		}
@@ -1275,32 +1269,86 @@ public class ConsoleBO extends Executor {
 		return caseResult.toString();
 	}
 
-	public boolean isHoldCasStatement(String sql) {
-		boolean ret = false;
-		String str = "";
-		if (sql.startsWith("--+")) {
-			str = sql.trim().replaceAll(" ", "");
-			if ("--+holdcas".equalsIgnoreCase(str.substring(0, "--+holdcas".length()))) {
-				ret = true;
-			}
-		}
+    private String getControlCommand(String line) {
+        if (line.startsWith("--+")) {
+            String s = line.replaceAll(" ", "").toLowerCase();
+            if (s.startsWith("--+holdcas") || s.startsWith("--+server-output")) {
+                return line.substring(3).trim() + System.getProperty("line.separator");
+            }
+        }
 
-		return ret;
-	}
+        return null;
+    }
 
-	public boolean isServerOutputStatement(String sql) {
-		boolean ret = false;
-		String str = "";
-		if (sql.startsWith("--+")) {
-			str = sql.trim().replaceAll(" ", "");
-            int len = "--+server-output".length();
-			if (len <= str.length() && "--+server-output".equalsIgnoreCase(str.substring(0, len))) {
-				ret = true;
-			}
-		}
+    private ArrayList<SqlParam> getParamList(String line, String sqlFile) {
 
-		return ret;
-	}
+        ArrayList<SqlParam> ret = new ArrayList<SqlParam>();
+
+        if (line.endsWith(";")) {
+            line = line.substring(0, line.length() - 1);
+        }
+
+        String[] parts = line.split(",( )*\\$");
+        if (parts.length % 2 != 0) {
+            if (line.matches(".+,( )*\\$$")) {
+                parts = Arrays.copyOf(parts, parts.length + 1);
+                parts[parts.length - 1] = "";
+            } else {
+                throw new RuntimeException("parameters is invalid in sqlFile:" + sqlFile);
+            }
+        }
+        assert(parts[0].startsWith("$"));
+        parts[0] = parts[0].substring(1);
+
+        int index = 1;
+        String paramType = null;
+        int type = 0;
+        for (int i = 0; i < parts.length; i++) {
+            String value = parts[i];
+
+            if (i % 2 == 0) { // type
+                String typeName = value.trim().toUpperCase();
+                int position = typeName.indexOf(":");
+                if (position != -1) {
+                    paramType = typeName.substring(0, position);
+                    typeName = typeName.substring(position + 1);
+                } else {
+                    paramType = null;
+                }
+                type = CubridUtil.getSqlType(typeName);
+            } else { // value
+                Object param = CubridUtil.getObject(type, value);
+                ret.add(new SqlParam(paramType, index, param, type));
+
+                index++;
+            }
+        }
+
+        return ret;
+    }
+
+    private boolean isCall(String line) {
+
+        boolean isCall = false;
+
+        int positionCall = line.replaceAll(" ", "").indexOf("call");
+        if (positionCall != -1) {
+            if (positionCall == 0) {
+                int position1 = line.indexOf("(");
+                int position2 = line.indexOf(")");
+                if (position1 != -1 && position2 != -1) {
+                    String params = line.substring(position1, position2);
+                    if (params.indexOf("?") != -1) {
+                        isCall = true;
+                    }
+                }
+            } else if (line.replaceAll(" ", "").indexOf("?=call") == 0) {
+                isCall = true;
+            }
+        }
+
+        return isCall;
+    }
 
 	/**
 	 * parse the sql script file .
@@ -1312,110 +1360,42 @@ public class ConsoleBO extends Executor {
 		List<Sql> list = new ArrayList<Sql>();
 		BufferedReader reader = null;
 		try {
-			// reader = new BufferedReader(new InputStreamReader(
-			// new FileInputStream(new File(sqlFile)), "UTF-8"));
 			reader = new BufferedReader(
 					new InputStreamReader(new FileInputStream(new File(sqlFile)), test.getCodeset()));
 			String line = reader.readLine();
 			int lineCount = 1;
+
 			StringBuilder ret = new StringBuilder();
 			List<SqlParam> paramList = null;
 			String connId = "";
 			boolean isCall = false;
 			boolean isNewStatement = true;
 			boolean isQueryplan = false;
-			boolean isHoldCas = false;
-			boolean isServerOutput = false;
-            LineScanner scanner = new LineScanner();
 
             LineScanner lineScanner = new LineScanner();
 
 			while (line != null) {
 				line = line.trim();
 
-				if ("".equals(line) || line.startsWith("--")) {
-					// When this line is "--@queryplan", the next line should
-					// show
-					// query plan
-					isHoldCas = isHoldCasStatement(line);
-					isServerOutput = isServerOutputStatement(line);
+				if ("".equals(line)) {
+                    // empty line. do nothing
+                } else if (line.startsWith("--")) {
+
 					if ("--@queryplan".equals(line.trim())) {
 						isQueryplan = true;
-					} else if (isHoldCas) {
-						line = line.replaceFirst("--\\+", "").trim();
-						ret.append(line + "" + System.getProperty("line.separator"));
-						Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-						sql.setQueryplan(isQueryplan);
-						list.add(sql);
-
-						isNewStatement = true;
-						isQueryplan = false;
-						ret = new StringBuilder();
-						paramList = null;
-						isCall = false;
-						connId = "";
-					} else if (isServerOutput) {
-
-					}
-
-					line = reader.readLine();
-					lineCount++;
-					continue;
-				}
-
-                Sql sql = null;
-				boolean isStatement = !(line.startsWith("$"));
-				if (!isStatement) { // parameters
-					paramList = new ArrayList<SqlParam>();
-
-					if (line.endsWith(";")) {
-						line = line.substring(0, line.length() - 1);
-					}
-
-					String[] parts = line.split("\\,( )*\\$");
-					if (parts.length % 2 != 0) {
-						if (line.endsWith(",$")) {
-							String[] temp = new String[parts.length + 1];
-							System.arraycopy(parts, 0, temp, 0, parts.length);
-							temp[temp.length - 1] = "";
-							parts = temp;
-						} else {
-							throw new Exception("parameters is invalid in sqlFile:" + sqlFile);
-						}
-					}
-
-					int index = 1;
-					String paramType = null;
-					String typeName = null;
-					int type = Types.VARCHAR;
-					for (int i = 0; i < parts.length; i++) {
-						String value = parts[i];
-						if (i % 2 == 0) { // type
-							typeName = value.trim().toUpperCase();
-							if (typeName.startsWith("$")) {
-								typeName = typeName.substring(1);
-							}
-							int position = typeName.indexOf(":");
-							if (position != -1) {
-								paramType = typeName.substring(0, position);
-								typeName = typeName.substring(position + 1);
-							} else {
-								paramType = null;
-							}
-							type = CubridUtil.getSqlType(typeName);
-						} else { // value
-							if (value.startsWith("$")) {
-								value = value.substring(1);
-							}
-							Object param = null;
-							param = CubridUtil.getObject(type, value);
-							SqlParam sqlParam = new SqlParam(paramType, index, param, type);
-							paramList.add(sqlParam);
-
-							index++;
-						}
-					}
-				} else { // statement
+                    } else {
+                        String controlCmd = getControlCommand(line);
+                        if (controlCmd != null) {
+                            // control command : either hodcas or server-output
+                            Sql sql = new Sql("", controlCmd, null, false);
+                            list.add(sql);
+                        }
+                    }
+				} else if (line.startsWith("$")) {
+                    // parameters
+                    paramList = getParamList(line, sqlFile);
+                } else {
+				    // statement
 
 					if (isNewStatement) {
 						if (line.startsWith("@")) {
@@ -1429,58 +1409,34 @@ public class ConsoleBO extends Executor {
 
 					// set sql hint for debug
 					if (test.isNeedDebugHint()) {
-						String tmpSQL = line;
-						String hint_sql = addHintForSQL(tmpSQL, isNewStatement, lineCount, sqlFile);
-
+						String hint_sql = addHintForSQL(line, isNewStatement, lineCount, sqlFile);
 						ret.append(hint_sql + "\n");
 					} else {
 						ret.append(line + "\n");
 					}
 
-                    scanner.scan(line);
-                    //if (scanner.isStatementComplete()) {
-                    if (line.endsWith(";") && !scanner.isInPlcsqlText()) {
+                    lineScanner.scan(line);
+                    if (line.endsWith(";") && !lineScanner.isInPlcsqlText()) {
 
-                        // set isCall
-   						int positionCall = line.replaceAll(" ", "").indexOf("call");
-						if (positionCall != -1) {
-							if (positionCall == 0) {
-								int position1 = line.indexOf("(");
-								int position2 = line.indexOf(")");
-								if (position1 != -1 && position2 != -1) {
-									String params = line.substring(position1, position2);
-									if (params.indexOf("?") != -1) {
-										isCall = true;
-									} else {
-										isCall = false;
-									}
-								} else {
-									isCall = false;
-								}
-							} else if (line.replaceAll(" ", "").indexOf("?=call") == 0) {
-								isCall = true;
-							}
-						}
+                        isCall = isCall(line);
 
                         // new sql
-                        sql = new Sql(connId, ret.toString(), paramList, isCall);
+                        Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
                         sql.setQueryplan(isQueryplan);
                         list.add(sql);
 
-                        scanner.clear();
+                        // initialize state variables
+                        isNewStatement = true;
+                        isQueryplan = false;
+                        ret.setLength(0);
+                        paramList = null;
+                        isCall = false;
+                        connId = "";
+
+                        lineScanner.clear();
+                    } else {
+                        isNewStatement = false;
                     }
-				}
-
-				if (sql != null) {
-					isNewStatement = true;
-					isQueryplan = false;
-
-					ret = new StringBuilder();
-					paramList = null;
-					isCall = false;
-					connId = "";
-				} else {
-					isNewStatement = false;
 				}
 
 				line = reader.readLine();
@@ -1712,12 +1668,6 @@ public class ConsoleBO extends Executor {
 			String caseFile = caseResult.getCaseFile();
 			StringBuilder result = new StringBuilder();
 			List<Sql> sqlList = parseSqlFile(caseFile, test);
-
-            /*
-			SQLParser parser = new SQLParser();
-			List<Sql> sqlList = parser.parseSqlFile(caseFile, test);
-			// System.out.println(sqlList.toString());
-            */
 
 			String dbId = test.getDbId();
 			String connId = test.getConnId();
