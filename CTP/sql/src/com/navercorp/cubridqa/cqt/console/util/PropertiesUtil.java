@@ -102,6 +102,13 @@ public class PropertiesUtil {
 			test.setHoldcas(val);
 		}
 
+		List sol = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.SERVER_OUTPUT);
+		if (!sol.isEmpty()) {
+			Element so = (Element) sol.get(0);
+			val = so.getText();
+			test.setServerOutput(val);
+		}
+
 		List checkAlive = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.CHECK_SERVER_STATUS);
 		if (!checkAlive.isEmpty()) {
 			Element serverStatus = (Element) checkAlive.get(0);

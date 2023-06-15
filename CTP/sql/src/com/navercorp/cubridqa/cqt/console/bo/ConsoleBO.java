@@ -36,6 +36,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -311,13 +312,13 @@ public class ConsoleBO extends Executor {
 			int position = file.toLowerCase().indexOf("?db=");
 			if (position != -1) {
 				file = files[i].substring(0, position);
-				if(files[i].indexOf("&filter=")>=0){
+				if (files[i].indexOf("&filter=") >= 0) {
 					db = files[i].substring(position + "?db=".length(), files[i].indexOf("&filter="));
 					filter = files[i].substring(files[i].indexOf("&filter=") + "&filter=".length());
-				}else{
+				} else {
 					db = files[i].substring(position + "?db=".length());
 				}
-				
+
 				test.setDbId(db);
 				test.setCaseFilter(filter);
 				test.setScenarioRootPath(file);
@@ -326,10 +327,9 @@ public class ConsoleBO extends Executor {
 			String[] postFixes = TestUtil.getCaseFilePostFix(file);
 			TestUtil.getCaseFiles(test, file, test.getCaseFileList(), postFixes);
 			TestUtil.filterExcludedCaseFile(test.getCaseFileList(), filter, file);
-			
+
 		}
 	}
-	
 
 	/**
 	 * build the test .
@@ -432,7 +432,7 @@ public class ConsoleBO extends Executor {
 			boolean endfile = false;
 			int currentCount = 0;
 			int totalCaseCount = caseFileList.size();
-			
+
 			for (int i = 0; i < totalCaseCount; i++) {
 				if (processMonitor.getCurrentstate() == processMonitor.Status_Stoping) {
 					break;
@@ -446,8 +446,10 @@ public class ConsoleBO extends Executor {
 				format.setMinimumFractionDigits(2);
 				float ratio = (float) currentCount / totalCaseCount * 100;
 				String completeRatio = format.format((ratio / 100.0));
-				printMessage("Testing " + caseFile + " ("+ currentCount + "/"+ totalCaseCount +" " + completeRatio + ")", true, false);
-				
+				printMessage(
+						"Testing " + caseFile + " (" + currentCount + "/" + totalCaseCount + " " + completeRatio + ")",
+						true, false);
+
 				CaseResult caseResult = test.getCaseResultFromMap(caseFile);
 				if (caseResult == null || !caseResult.isShouldRun()) {
 					processMonitor.setCompleteFile(processMonitor.getCompleteFile() + 1);
@@ -470,16 +472,17 @@ public class ConsoleBO extends Executor {
 					}
 					caseResult.setResult("");
 				}
-				
+
 				boolean isSucc = caseResult.isSuccessFul();
-				if(!isSucc){
-					List<File> coreFileList = CommonFileUtile.getCoreFiles(CubridUtil.getCubridPath(), test.getAllCoreList());
+				if (!isSucc) {
+					List<File> coreFileList = CommonFileUtile.getCoreFiles(CubridUtil.getCubridPath(),
+							test.getAllCoreList());
 					if (coreFileList != null && coreFileList.size() > 0) {
-							test.putCoreCaseIntoMap(caseFile, coreFileList);
-							caseResult.setHasCore(true);
+						test.putCoreCaseIntoMap(caseFile, coreFileList);
+						caseResult.setHasCore(true);
 					}
 				}
-				printMessage(isSucc?" [OK]": " [NOK]", false, true);
+				printMessage(isSucc ? " [OK]" : " [NOK]", false, true);
 				if (ErrorInterruptUtil.isCaseRunError(this, caseFile)) {
 					this.onMessage("[ERROR]: Run case interrupt error!");
 					break;
@@ -518,7 +521,8 @@ public class ConsoleBO extends Executor {
 		this.onMessage("*********create answer dirs...");
 		for (int i = 0; i < caseFileList.size(); i++) {
 			String caseFile = (String) caseFileList.get(i);
-			if (TestUtil.getTestType(caseFile) == CaseResult.TYPE_SQL || TestUtil.getTestType(caseFile) == CaseResult.TYPE_GROOVY) {
+			if (TestUtil.getTestType(caseFile) == CaseResult.TYPE_SQL
+					|| TestUtil.getTestType(caseFile) == CaseResult.TYPE_GROOVY) {
 				CaseResult caseResult = (CaseResult) test.getCaseResultFromMap(caseFile);
 				FileUtil.createDir(FileUtil.getDirPath(caseResult.getAnswerFile()));
 			}
@@ -635,7 +639,8 @@ public class ConsoleBO extends Executor {
 				String testType = test.getTestType();
 
 				int rootPathLength = rootPath.length();
-				caseFileDir = testType + File.separator + StringUtil.replaceSlashBasedSystem(caseFile).substring(rootPathLength);
+				caseFileDir = testType + File.separator
+						+ StringUtil.replaceSlashBasedSystem(caseFile).substring(rootPathLength);
 				answerFileDir = testType + File.separator + ansFile.substring(rootPathLength);
 
 				fs.setCaseFile(StringUtil.replaceSlash(caseFileDir));
@@ -660,7 +665,7 @@ public class ConsoleBO extends Executor {
 		}
 	}
 
-	public void saveCoreCallStackFile(String caseFile, List<File> coreFileList){
+	public void saveCoreCallStackFile(String caseFile, List<File> coreFileList) {
 		CaseResult caseResult = (CaseResult) test.getCaseResultFromMap(caseFile);
 		String caseResultDir = caseResult.getResultDir();
 		String coreFile = caseResultDir + File.separator + caseResult.getCaseName() + ".err";
@@ -668,26 +673,28 @@ public class ConsoleBO extends Executor {
 		StringBuffer bodyText = new StringBuffer();
 		int coreFileListSize = coreFileList == null ? 0 : coreFileList.size();
 		String rootCoreBackupDir = EnvGetter.getenv("CORE_BACKUP_DIR");
-		if (coreFileListSize != 0){
+		if (coreFileListSize != 0) {
 			headerText.append("SUMMARY:");
 			headerText.append(System.getProperty("line.separator"));
 			if (rootCoreBackupDir != null && rootCoreBackupDir.length() > 0) {
 				headerText.append("CORE_DIR:" + rootCoreBackupDir + File.separator + test.getTestId());
 				headerText.append(System.getProperty("line.separator"));
-			}else{
+			} else {
 				headerText.append("CORE_DIR:" + CubridUtil.getCubridPath());
 				headerText.append(System.getProperty("line.separator"));
 			}
 		}
-		
-		for(int i=0; i<coreFileList.size();i++){
+
+		for (int i = 0; i < coreFileList.size(); i++) {
 			File coreFileName = coreFileList.get(i);
 			try {
 				String[] callStackInfo = AnalyzerMain.fetchCoreFullStack(coreFileName);
 				String coreName = coreFileName.getName();
-				if(callStackInfo!=null &&callStackInfo.length>1){
-					headerText.append(coreName + " [" + callStackInfo[2] + "] " + callStackInfo[0] + System.getProperty("line.separator"));
-					bodyText.append(System.getProperty("line.separator") + "==================" + coreName + "==================" + System.getProperty("line.separator"));
+				if (callStackInfo != null && callStackInfo.length > 1) {
+					headerText.append(coreName + " [" + callStackInfo[2] + "] " + callStackInfo[0]
+							+ System.getProperty("line.separator"));
+					bodyText.append(System.getProperty("line.separator") + "==================" + coreName
+							+ "==================" + System.getProperty("line.separator"));
 					bodyText.append("");
 					bodyText.append(callStackInfo[1]);
 				}
@@ -695,10 +702,11 @@ public class ConsoleBO extends Executor {
 				e.printStackTrace();
 			}
 		}
-		
+
 		CommonFileUtile.writeFile(headerText.toString() + bodyText.toString(), coreFile);
-		
+
 	}
+
 	/**
 	 * save the answer file .
 	 * 
@@ -775,13 +783,16 @@ public class ConsoleBO extends Executor {
 		cubCon.isAvlible();
 		conn = cubCon.getConn();
 
-		if (test.getReset_scripts() == null || (test.getReset_scripts()).length() == 0 || "".equalsIgnoreCase((test.getReset_scripts()).trim())) {
-			if (test.getAutocommit() != null && test.getAutocommit().length() != 0 && conn != null && !"medium".equalsIgnoreCase(test.getTestType())) {
+		if (test.getReset_scripts() == null || (test.getReset_scripts()).length() == 0
+				|| "".equalsIgnoreCase((test.getReset_scripts()).trim())) {
+			if (test.getAutocommit() != null && test.getAutocommit().length() != 0 && conn != null
+					&& !"medium".equalsIgnoreCase(test.getTestType())) {
 				try {
 					conn.setAutoCommit(Boolean.valueOf(test.getAutocommit()));
 					resetHoldCas(conn);
 				} catch (SQLException e) {
-					String exceptionMessage = TestUtil.TEST_CONFIG + " file:" + test.getCharset_file() + System.getProperty("line.separator");
+					String exceptionMessage = TestUtil.TEST_CONFIG + " file:" + test.getCharset_file()
+							+ System.getProperty("line.separator");
 					this.onMessage(exceptionMessage);
 					e.printStackTrace();
 				}
@@ -802,7 +813,8 @@ public class ConsoleBO extends Executor {
 			stmt = conn.createStatement();
 			stmt.execute(charset_sql);
 		} catch (SQLException e) {
-			String exceptionMessage = TestUtil.TEST_CONFIG + " file:" + test.getCharset_file() + System.getProperty("line.separator");
+			String exceptionMessage = TestUtil.TEST_CONFIG + " file:" + test.getCharset_file()
+					+ System.getProperty("line.separator");
 			String msg = "Set System Parameter Error: ";
 			this.onMessage(msg + exceptionMessage);
 		} finally {
@@ -864,7 +876,8 @@ public class ConsoleBO extends Executor {
 					this.onMessage(e.getMessage());
 				}
 				timer += 5;
-				String message = "Server status is not alive, CQT will try to check it again after  " + timer + " seconds!!";
+				String message = "Server status is not alive, CQT will try to check it again after  " + timer
+						+ " seconds!!";
 				this.onMessage(message);
 			}
 		}
@@ -1021,10 +1034,12 @@ public class ConsoleBO extends Executor {
 					// ===============2010-10-20==========================
 
 					// ===============replace above=======================
-					boolean isOn = isSetAutoCommitOn(script);
-					boolean isOff = isSetAutoCommitOff(script);
-					boolean isHoldCasOn = isHoldCASON(script);
-					boolean isHoldCasOff = isHoldCASOFF(script);
+					boolean isOn = isPropOn(TestUtil.AUTOCOMMIT, script);
+					boolean isOff = isPropOff(TestUtil.AUTOCOMMIT, script);
+					boolean isHoldCasOn = isPropOn(TestUtil.HOLDCAS, script);
+					boolean isHoldCasOff = isPropOff(TestUtil.HOLDCAS, script);
+					boolean isServerOutputOn = isPropOn(TestUtil.SERVER_OUTPUT, script);
+					boolean isServerOutputOff = isPropOff(TestUtil.SERVER_OUTPUT, script);
 
 					if (isOn) {
 						conn.setAutoCommit(isOn);
@@ -1056,9 +1071,39 @@ public class ConsoleBO extends Executor {
 							String message = "Exception: the current version can't support hold cas!";
 							this.onMessage(message);
 						}
+					} else if (isServerOutputOn) {
+						try {
+							String message = "@" + test.getConnId() + ": server output " + isServerOutputOn;
+							this.onMessage(message);
+							test.setServerOutput("on");
+							// TODO: DBMS_OUTPUT.enable ()
+							Sql enableSql = new Sql(connId, "CALL enable(20000)", null, true); // TODO: set
+																											// size of
+																											// enable
+							dao.execute(conn, enableSql, false);
+						} catch (Exception e) {
+							String message = "Exception: the current version can't support DBMS_OUTPUT!";
+							this.onMessage(message);
+						}
+					} else if (isServerOutputOff) {
+						try {
+							String message = "@" + test.getConnId() + ": server output " + isServerOutputOff;
+							this.onMessage(message);
+
+							test.setServerOutput("off");
+							// TODO: DBMS_OUTPUT.disable()
+							Sql disableSql = new Sql(connId, "CALL disable()", null, true);
+							dao.execute(conn, disableSql, false);
+						} catch (Exception e) {
+							String message = "Exception: the current version can't support DBMS_OUTPUT!";
+							this.onMessage(message);
+						}
 					} else {
 						String message = "@" + test.getDbId() + "/" + test.getConnId() + ":" + sql.getScript();
 						this.onMessage(message);
+
+						// System.out.println ("script = " + sql.getScript());
+
 						dao.execute(conn, sql, caseResult.isPrintQueryPlan());
 
 						if (i == 0) {
@@ -1114,28 +1159,32 @@ public class ConsoleBO extends Executor {
 						sql = "select class_name,class_type from db_class where is_system_class<>'YES'";
 						rs = stmt.executeQuery(sql);
 						while (rs.next()) {
-							this.onMessage("[QA REVIEW] FOGOT TO DELETE " + rs.getString(1) + " with " + rs.getString(2) + " type" + " (" + caseFile + ")");
+							this.onMessage("[QA REVIEW] FOGOT TO DELETE " + rs.getString(1) + " with " + rs.getString(2)
+									+ " type" + " (" + caseFile + ")");
 						}
 						rs.close();
 
 						sql = "select name from db_serial";
 						rs = stmt.executeQuery(sql);
 						while (rs.next()) {
-							this.onMessage("[QA REVIEW] FOGOT TO DELETE serial " + rs.getString(1) + " (" + caseFile + ")");
+							this.onMessage(
+									"[QA REVIEW] FOGOT TO DELETE serial " + rs.getString(1) + " (" + caseFile + ")");
 						}
 						rs.close();
 
 						sql = "select name from db_trigger";
 						rs = stmt.executeQuery(sql);
 						while (rs.next()) {
-							this.onMessage("[QA REVIEW] FOGOT TO DELETE trigger " + rs.getString(1) + " (" + caseFile + ")");
+							this.onMessage(
+									"[QA REVIEW] FOGOT TO DELETE trigger " + rs.getString(1) + " (" + caseFile + ")");
 						}
 						rs.close();
 
 						sql = "select name from db_user where name not in ('DBA', 'PUBLIC');";
 						rs = stmt.executeQuery(sql);
 						while (rs.next()) {
-							this.onMessage("[QA REVIEW] FOGOT TO DELETE user " + rs.getString(1) + " (" + caseFile + ")");
+							this.onMessage(
+									"[QA REVIEW] FOGOT TO DELETE user " + rs.getString(1) + " (" + caseFile + ")");
 						}
 						rs.close();
 
@@ -1178,19 +1227,23 @@ public class ConsoleBO extends Executor {
 
 						if (charset == 4) {
 							if (!collation.equalsIgnoreCase("euckr_bin")) {
-								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")");
+								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile
+										+ ")");
 							}
 						} else if (charset == 5) {
 							if (!collation.equalsIgnoreCase("utf8_bin")) {
-								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")");
+								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile
+										+ ")");
 							}
 						} else if (charset == 3) {
 							if (!collation.equalsIgnoreCase("iso88591_bin")) {
-								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")");
+								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile
+										+ ")");
 							}
 						} else {
 							if (!collation.equalsIgnoreCase("iso88591_bin")) {
-								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile + ")");
+								this.onMessage("[QA REVIEW] FOGOT TO RECOVERY collation: " + collation + " (" + caseFile
+										+ ")");
 							}
 						}
 
@@ -1216,18 +1269,86 @@ public class ConsoleBO extends Executor {
 		return caseResult.toString();
 	}
 
-	public boolean isHoldCasStatement(String sql) {
-		boolean ret = false;
-		String str = "";
-		if (sql.startsWith("--+")) {
-			str = sql.trim().replaceAll(" ", "");
-			if ("--+holdcas".equalsIgnoreCase(str.substring(0, "--+holdcas".length()))) {
-				ret = true;
-			}
-		}
+    private String getControlCommand(String line) {
+        if (line.startsWith("--+")) {
+            String s = line.replaceAll(" ", "").toLowerCase();
+            if (s.startsWith("--+holdcas") || s.startsWith("--+server-output")) {
+                return line.substring(3).trim() + System.getProperty("line.separator");
+            }
+        }
 
-		return ret;
-	}
+        return null;
+    }
+
+    private ArrayList<SqlParam> getParamList(String line, String sqlFile) {
+
+        ArrayList<SqlParam> ret = new ArrayList<SqlParam>();
+
+        if (line.endsWith(";")) {
+            line = line.substring(0, line.length() - 1);
+        }
+
+        String[] parts = line.split(",( )*\\$");
+        if (parts.length % 2 != 0) {
+            if (line.matches(".+,( )*\\$$")) {
+                parts = Arrays.copyOf(parts, parts.length + 1);
+                parts[parts.length - 1] = "";
+            } else {
+                throw new RuntimeException("parameters is invalid in sqlFile:" + sqlFile);
+            }
+        }
+        assert(parts[0].startsWith("$"));
+        parts[0] = parts[0].substring(1);
+
+        int index = 1;
+        String paramType = null;
+        int type = 0;
+        for (int i = 0; i < parts.length; i++) {
+            String value = parts[i];
+
+            if (i % 2 == 0) { // type
+                String typeName = value.trim().toUpperCase();
+                int position = typeName.indexOf(":");
+                if (position != -1) {
+                    paramType = typeName.substring(0, position);
+                    typeName = typeName.substring(position + 1);
+                } else {
+                    paramType = null;
+                }
+                type = CubridUtil.getSqlType(typeName);
+            } else { // value
+                Object param = CubridUtil.getObject(type, value);
+                ret.add(new SqlParam(paramType, index, param, type));
+
+                index++;
+            }
+        }
+
+        return ret;
+    }
+
+    private boolean isCall(String line) {
+
+        boolean isCall = false;
+
+        int positionCall = line.replaceAll(" ", "").indexOf("call");
+        if (positionCall != -1) {
+            if (positionCall == 0) {
+                int position1 = line.indexOf("(");
+                int position2 = line.indexOf(")");
+                if (position1 != -1 && position2 != -1) {
+                    String params = line.substring(position1, position2);
+                    if (params.indexOf("?") != -1) {
+                        isCall = true;
+                    }
+                }
+            } else if (line.replaceAll(" ", "").indexOf("?=call") == 0) {
+                isCall = true;
+            }
+        }
+
+        return isCall;
+    }
 
 	/**
 	 * parse the sql script file .
@@ -1239,167 +1360,83 @@ public class ConsoleBO extends Executor {
 		List<Sql> list = new ArrayList<Sql>();
 		BufferedReader reader = null;
 		try {
-			// reader = new BufferedReader(new InputStreamReader(
-			// new FileInputStream(new File(sqlFile)), "UTF-8"));
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(sqlFile)), test.getCodeset()));
+			reader = new BufferedReader(
+					new InputStreamReader(new FileInputStream(new File(sqlFile)), test.getCodeset()));
 			String line = reader.readLine();
 			int lineCount = 1;
+
 			StringBuilder ret = new StringBuilder();
 			List<SqlParam> paramList = null;
 			String connId = "";
 			boolean isCall = false;
 			boolean isNewStatement = true;
 			boolean isQueryplan = false;
-			boolean isHoldCas = false;
+
+            LineScanner lineScanner = new LineScanner();
+
 			while (line != null) {
 				line = line.trim();
 
-				if ("".equals(line) || line.startsWith("--")) {
-					// When this line is "--@queryplan", the next line should
-					// show
-					// query plan
-					isHoldCas = isHoldCasStatement(line);
+				if ("".equals(line)) {
+                    // empty line. do nothing
+                } else if (line.startsWith("--")) {
+
 					if ("--@queryplan".equals(line.trim())) {
 						isQueryplan = true;
-					} else if (isHoldCas) {
-						line = line.replaceFirst("--\\+", "").trim();
-						ret.append(line + "" + System.getProperty("line.separator"));
-						Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-						sql.setQueryplan(isQueryplan);
-						list.add(sql);
-
-						isNewStatement = true;
-						isQueryplan = false;
-						ret = new StringBuilder();
-						paramList = null;
-						isCall = false;
-						connId = "";
-					}
-					
-					line = reader.readLine();
-					lineCount++;
-					continue;
-				}
-				
-				boolean isStatement = !(line.startsWith("$"));
-				if (!isStatement) { // parameters
-					paramList = new ArrayList<SqlParam>();
-
-					if (line.endsWith(";")) {
-						line = line.substring(0, line.length() - 1);
-					}
-
-					String[] parts = line.split("\\,( )*\\$");
-					if (parts.length % 2 != 0) {
-						if (line.endsWith(",$")) {
-							String[] temp = new String[parts.length + 1];
-							System.arraycopy(parts, 0, temp, 0, parts.length);
-							temp[temp.length - 1] = "";
-							parts = temp;
-						} else {
-							throw new Exception("parameters is invalid in sqlFile:" + sqlFile);
-						}
-					}
-
-					int index = 1;
-					String paramType = null;
-					String typeName = null;
-					int type = Types.VARCHAR;
-					for (int i = 0; i < parts.length; i++) {
-						String value = parts[i];
-						if (i % 2 == 0) { // type
-							typeName = value.trim().toUpperCase();
-							if (typeName.startsWith("$")) {
-								typeName = typeName.substring(1);
-							}
-							int position = typeName.indexOf(":");
-							if (position != -1) {
-								paramType = typeName.substring(0, position);
-								typeName = typeName.substring(position + 1);
-							} else {
-								paramType = null;
-							}
-							type = CubridUtil.getSqlType(typeName);
-						} else { // value
-							if (value.startsWith("$")) {
-								value = value.substring(1);
-							}
-							Object param = null;
-							param = CubridUtil.getObject(type, value);
-							SqlParam sqlParam = new SqlParam(paramType, index, param, type);
-							paramList.add(sqlParam);
-
-							index++;
-						}
-					}
-				} else { // statement
-					int pos = line.indexOf(":");
-					if (line.endsWith(";")) {
-						String lineCopy = line;
-						if (lineCopy.startsWith("@") && pos != -1) {
-							lineCopy = lineCopy.substring(pos);
-						}
-						int positionCall = lineCopy.replaceAll(" ", "").indexOf("call");
-						if (positionCall != -1) {
-							if (positionCall == 0) {
-								int position1 = line.indexOf("(");
-								int position2 = line.indexOf(")");
-								if (position1 != -1 && position2 != -1) {
-									String params = line.substring(position1, position2);
-									if (params.indexOf("?") != -1) {
-										isCall = true;
-									} else {
-										isCall = false;
-									}
-								} else {
-									isCall = false;
-								}
-							} else if (lineCopy.replaceAll(" ", "").indexOf("?=call") == 0) {
-								isCall = true;
-							}
-						}
-					}
+                    } else {
+                        String controlCmd = getControlCommand(line);
+                        if (controlCmd != null) {
+                            // control command : either hodcas or server-output
+                            Sql sql = new Sql("", controlCmd, null, false);
+                            list.add(sql);
+                        }
+                    }
+				} else if (line.startsWith("$")) {
+                    // parameters
+                    paramList = getParamList(line, sqlFile);
+                } else {
+				    // statement
 
 					if (isNewStatement) {
 						if (line.startsWith("@")) {
-							connId = line.substring(1, pos);
-							line = line.substring(pos + 1);
+                            int pos = line.indexOf(":");
+                            if (pos != -1) {
+                                connId = line.substring(1, pos);
+                                line = line.substring(pos + 1);
+                            }
 						}
 					}
 
 					// set sql hint for debug
 					if (test.isNeedDebugHint()) {
-						String tmpSQL = line;
-						String hint_sql = addHintForSQL(tmpSQL, isNewStatement, lineCount, sqlFile);
-
+						String hint_sql = addHintForSQL(line, isNewStatement, lineCount, sqlFile);
 						ret.append(hint_sql + "\n");
 					} else {
 						ret.append(line + "\n");
 					}
 
-					if (!isCall) {
-						if (line.endsWith(";")) {
-							Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-							sql.setQueryplan(isQueryplan);
-							list.add(sql);
-						}
-					} else {
-						Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-						sql.setQueryplan(isQueryplan);
-						list.add(sql);
-					}
-				}
+                    lineScanner.scan(line);
+                    if (line.endsWith(";") && !lineScanner.isInPlcsqlText()) {
 
-				if (isStatement && line.endsWith(";")) {
-					isNewStatement = true;
-					isQueryplan = false;
+                        isCall = isCall(line);
 
-					ret = new StringBuilder();
-					paramList = null;
-					isCall = false;
-					connId = "";
-				} else {
-					isNewStatement = false;
+                        // new sql
+                        Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
+                        sql.setQueryplan(isQueryplan);
+                        list.add(sql);
+
+                        // initialize state variables
+                        isNewStatement = true;
+                        isQueryplan = false;
+                        ret.setLength(0);
+                        paramList = null;
+                        isCall = false;
+                        connId = "";
+
+                        lineScanner.clear();
+                    } else {
+                        isNewStatement = false;
+                    }
 				}
 
 				line = reader.readLine();
@@ -1435,14 +1472,16 @@ public class ConsoleBO extends Executor {
 		return ret;
 	}
 
-	private String reConstructSQLForHint(String origSQL, String prefSQL, String suffSQL, String sqlFile, int lineNum, boolean hasHint) {
+	private String reConstructSQLForHint(String origSQL, String prefSQL, String suffSQL, String sqlFile, int lineNum,
+			boolean hasHint) {
 		String ret = "";
 
 		if (hasHint) {
 			int start_pos = origSQL.indexOf("*/");
 			String sub_Prefix = origSQL.substring(0, start_pos);
 			String sub_Suff = origSQL.substring(start_pos, origSQL.length());
-			ret = sub_Prefix + TestUtil.APPEND_HINT_PREFIX + sqlFile + ":" + lineNum + TestUtil.APPEND_HINT_SUFFIX + " " + sub_Suff;
+			ret = sub_Prefix + TestUtil.APPEND_HINT_PREFIX + sqlFile + ":" + lineNum + TestUtil.APPEND_HINT_SUFFIX + " "
+					+ sub_Suff;
 		} else {
 			ret = prefSQL + " " + TestUtil.HINT_PREFIX + sqlFile + ":" + lineNum + TestUtil.HINT_SUFFIX + " " + suffSQL;
 		}
@@ -1622,7 +1661,8 @@ public class ConsoleBO extends Executor {
 		@Override
 		public void run() {
 			List<Connection> ConnList = new ArrayList<Connection>();
-			if (test == null || caseResult == null || processMonitor.getCurrentstate() == processMonitor.Status_Stoping || processMonitor.getCurrentstate() == processMonitor.Status_Stoping) {
+			if (test == null || caseResult == null || processMonitor.getCurrentstate() == processMonitor.Status_Stoping
+					|| processMonitor.getCurrentstate() == processMonitor.Status_Stoping) {
 				return;
 			}
 			String caseFile = caseResult.getCaseFile();
@@ -1649,7 +1689,8 @@ public class ConsoleBO extends Executor {
 				test.setDbId(test.getDbId(caseFile));
 				long startTime = System.currentTimeMillis();
 				for (int k = 0; k < sqlList.size(); k++) {
-					if (processMonitor.getCurrentstate() == processMonitor.Status_Stoping || processMonitor.getCurrentstate() == processMonitor.Status_Stoping) {
+					if (processMonitor.getCurrentstate() == processMonitor.Status_Stoping
+							|| processMonitor.getCurrentstate() == processMonitor.Status_Stoping) {
 						return;
 					}
 					Sql sql = (Sql) sqlList.get(k);
@@ -1671,10 +1712,12 @@ public class ConsoleBO extends Executor {
 					cubridConnection.isAvlible();
 					Connection conn = cubridConnection.getConn();
 					ConnList.add(conn);
-					boolean isOn = isSetAutoCommitOn(script);
-					boolean isOff = isSetAutoCommitOff(script);
-					boolean isHoldCasOn = isHoldCASON(script);
-					boolean isHoldCasOff = isHoldCASOFF(script);
+					boolean isOn = isPropOn(TestUtil.AUTOCOMMIT, script);
+					boolean isOff = isPropOff(TestUtil.AUTOCOMMIT, script);
+					boolean isHoldCasOn = isPropOn(TestUtil.HOLDCAS, script);
+					boolean isHoldCasOff = isPropOff(TestUtil.HOLDCAS, script);
+					boolean isServerOutputOn = isPropOn(TestUtil.SERVER_OUTPUT, script);
+					boolean isServerOutputOff = isPropOn(TestUtil.SERVER_OUTPUT, script);
 
 					if (isOn) {
 						conn.setAutoCommit(isOn);
@@ -1706,10 +1749,35 @@ public class ConsoleBO extends Executor {
 							String message = "Exception: the current version can't support hold cas!";
 							bo.onMessage(message);
 						}
+					} else if (isServerOutputOn) {
+						try {
+							String message = "@" + test.getConnId() + ": server output " + isServerOutputOn;
+							bo.onMessage(message);
+
+							Sql enableSql = new Sql(connId, "CALL DBMS_OUTPUT.enable(20000)", null, true); // TODO: set
+																											// size of
+																											// enable
+							dao.execute(conn, enableSql, false);
+						} catch (Exception e) {
+							String message = "Exception: the current version can't support DBMS_OUTPUT!";
+							bo.onMessage(message);
+						}
+					} else if (isServerOutputOff) {
+						try {
+							String message = "@" + test.getConnId() + ": server output " + isServerOutputOff;
+							bo.onMessage(message);
+							Sql disableSql = new Sql(connId, "CALL DBMS_OUTPUT.disable()", null, true);
+							dao.execute(conn, disableSql, false);
+						} catch (Exception e) {
+							String message = "Exception: the current version can't support DBMS_OUTPUT!";
+							bo.onMessage(message);
+						}
 					} else {
-						//System.out.println("--- use default autocommit -- " + conn.getAutoCommit());
+						// System.out.println("--- use default autocommit -- " + conn.getAutoCommit());
 						String message = "@" + test.getDbId() + "/" + test.getConnId() + ":" + sql.getScript();
 						bo.onMessage("[THREAD:" + index + "]" + message);
+
+						// System.out.println ("script = " + sql.getScript());
 
 						dao.execute(conn, sql, caseResult.isPrintQueryPlan());
 						result.append("===================================================");
@@ -1755,38 +1823,19 @@ public class ConsoleBO extends Executor {
 		return test;
 	}
 
-	private boolean isHoldCASON(String sql) {
+	private boolean isPropOn(String prop, String sql) {
 		String tmp = sql.trim();
-		String regex = "holdcas\\s+on\\s*;";
+		String regex = prop + "\\s+on\\s*;?";
 		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(tmp);
 		return matcher.find();
 	}
 
-	private boolean isHoldCASOFF(String sql) {
+	private boolean isPropOff(String prop, String sql) {
 		String tmp = sql.trim();
-		String regex = "holdcas\\s+off\\s*;";
+		String regex = prop + "\\s+off\\s*;?";
 		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(tmp);
 		return matcher.find();
 	}
-
-	private boolean isSetAutoCommitOn(String s) {
-		// String s = " autocommit on ; ";
-		String tmp = s.trim();
-		String regex = "autocommit\\s+on\\s*;";
-		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(tmp);
-		return matcher.find();
-	}
-
-	private boolean isSetAutoCommitOff(String s) {
-		// String s = " autocommit on ; ";
-		String tmp = s.trim();
-		String regex = "autocommit\\s+off\\s*;";
-		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(tmp);
-		return matcher.find();
-	}
-
 }
