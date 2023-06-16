@@ -1,1 +1,7 @@
 /build/
+
+*.log
+.script_cont*.sh
+*.jar
+
+local.properties

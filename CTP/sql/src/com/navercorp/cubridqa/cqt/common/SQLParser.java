@@ -149,7 +149,7 @@ public class SQLParser {
         if (line.startsWith("--+")) {
             String s = line.replaceAll(" ", "").toLowerCase();
             if (s.startsWith("--+holdcas") || s.startsWith("--+server-output")) {
-                return line.substring(3).trim() + System.getProperty("line.separator");
+                return line.trim() + System.getProperty("line.separator");
             }
         }
 

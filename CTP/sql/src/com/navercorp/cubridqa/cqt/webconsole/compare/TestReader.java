@@ -49,12 +49,29 @@ public class TestReader {
     }
 
     public String nextStatement() throws IOException {
-        if (sqls == null || sqls.isEmpty()) {
+        if (sqls == null || sqls.isEmpty() || idx >= sqls.size()) {
             return null;
         }
 
-        String sql = sqls.get(idx++).getScript();
-        return (sql.trim().length() == 0) ? null : sql;
+        StringBuilder builder = new StringBuilder();
+        do {
+            String sql = sqls.get(idx).getScript().trim();
+            idx++;
+
+            if (builder.length() > 0) {
+                builder.append("\n");
+            }
+            builder.append(sql);
+
+            if (sql.startsWith("--") || sql.startsWith("$") || sql.startsWith("autocommit")) {
+                continue;
+            } else {
+                break;
+            }
+
+        } while (idx < sqls.size());
+
+        return (builder.length() == 0) ? null : builder.toString();
     }
 
     public void closeFile() {
