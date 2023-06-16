@@ -1,1 +1,13 @@
 /build/
+
+*.log
+.script_cont*.sh
+*.jar
+
+local.properties
+
+sql/webconsole/*.txt
+
+sql/result/
+
+.vscode

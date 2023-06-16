@@ -68,6 +68,7 @@ import com.navercorp.cubridqa.cqt.console.util.RepositoryPathUtil;
 import com.navercorp.cubridqa.cqt.console.util.StringUtil;
 import com.navercorp.cubridqa.cqt.console.util.SystemUtil;
 import com.navercorp.cubridqa.cqt.console.util.TestUtil;
+import com.navercorp.cubridqa.cqt.common.SQLParser;
 
 import cubrid.jdbc.driver.CUBRIDConnection;
 
@@ -945,7 +946,7 @@ public class ConsoleBO extends Executor {
 
 		String caseFile = caseResult.getCaseFile();
 		StringBuilder result = new StringBuilder();
-		List<Sql> sqlList = parseSqlFile(caseFile, test);
+		List<Sql> sqlList = SQLParser.parseSqlFile(caseFile, test.getCodeset(), test.isNeedDebugHint ());
 		if (sqlList == null) {
 			return null;
 		}
@@ -1078,8 +1079,8 @@ public class ConsoleBO extends Executor {
 							test.setServerOutput("on");
 							// TODO: DBMS_OUTPUT.enable ()
 							Sql enableSql = new Sql(connId, "CALL enable(20000)", null, true); // TODO: set
-																											// size of
-																											// enable
+																								// size of
+																								// enable
 							dao.execute(conn, enableSql, false);
 						} catch (Exception e) {
 							String message = "Exception: the current version can't support DBMS_OUTPUT!";
@@ -1269,326 +1270,6 @@ public class ConsoleBO extends Executor {
 		return caseResult.toString();
 	}
 
-    private String getControlCommand(String line) {
-        if (line.startsWith("--+")) {
-            String s = line.replaceAll(" ", "").toLowerCase();
-            if (s.startsWith("--+holdcas") || s.startsWith("--+server-output")) {
-                return line.substring(3).trim() + System.getProperty("line.separator");
-            }
-        }
-
-        return null;
-    }
-
-    private ArrayList<SqlParam> getParamList(String line, String sqlFile) {
-
-        ArrayList<SqlParam> ret = new ArrayList<SqlParam>();
-
-        if (line.endsWith(";")) {
-            line = line.substring(0, line.length() - 1);
-        }
-
-        String[] parts = line.split(",( )*\\$");
-        if (parts.length % 2 != 0) {
-            if (line.matches(".+,( )*\\$$")) {
-                parts = Arrays.copyOf(parts, parts.length + 1);
-                parts[parts.length - 1] = "";
-            } else {
-                throw new RuntimeException("parameters is invalid in sqlFile:" + sqlFile);
-            }
-        }
-        assert(parts[0].startsWith("$"));
-        parts[0] = parts[0].substring(1);
-
-        int index = 1;
-        String paramType = null;
-        int type = 0;
-        for (int i = 0; i < parts.length; i++) {
-            String value = parts[i];
-
-            if (i % 2 == 0) { // type
-                String typeName = value.trim().toUpperCase();
-                int position = typeName.indexOf(":");
-                if (position != -1) {
-                    paramType = typeName.substring(0, position);
-                    typeName = typeName.substring(position + 1);
-                } else {
-                    paramType = null;
-                }
-                type = CubridUtil.getSqlType(typeName);
-            } else { // value
-                Object param = CubridUtil.getObject(type, value);
-                ret.add(new SqlParam(paramType, index, param, type));
-
-                index++;
-            }
-        }
-
-        return ret;
-    }
-
-    private boolean isCall(String line) {
-
-        boolean isCall = false;
-
-        int positionCall = line.replaceAll(" ", "").indexOf("call");
-        if (positionCall != -1) {
-            if (positionCall == 0) {
-                int position1 = line.indexOf("(");
-                int position2 = line.indexOf(")");
-                if (position1 != -1 && position2 != -1) {
-                    String params = line.substring(position1, position2);
-                    if (params.indexOf("?") != -1) {
-                        isCall = true;
-                    }
-                }
-            } else if (line.replaceAll(" ", "").indexOf("?=call") == 0) {
-                isCall = true;
-            }
-        }
-
-        return isCall;
-    }
-
-	/**
-	 * parse the sql script file .
-	 * 
-	 * @param sqlFile
-	 * @return
-	 */
-	private List<Sql> parseSqlFile(String sqlFile, Test test) {
-		List<Sql> list = new ArrayList<Sql>();
-		BufferedReader reader = null;
-		try {
-			reader = new BufferedReader(
-					new InputStreamReader(new FileInputStream(new File(sqlFile)), test.getCodeset()));
-			String line = reader.readLine();
-			int lineCount = 1;
-
-			StringBuilder ret = new StringBuilder();
-			List<SqlParam> paramList = null;
-			String connId = "";
-			boolean isCall = false;
-			boolean isNewStatement = true;
-			boolean isQueryplan = false;
-
-            LineScanner lineScanner = new LineScanner();
-
-			while (line != null) {
-				line = line.trim();
-
-				if ("".equals(line)) {
-                    // empty line. do nothing
-                } else if (line.startsWith("--")) {
-
-					if ("--@queryplan".equals(line.trim())) {
-						isQueryplan = true;
-                    } else {
-                        String controlCmd = getControlCommand(line);
-                        if (controlCmd != null) {
-                            // control command : either hodcas or server-output
-                            Sql sql = new Sql("", controlCmd, null, false);
-                            list.add(sql);
-                        }
-                    }
-				} else if (line.startsWith("$")) {
-                    // parameters
-                    paramList = getParamList(line, sqlFile);
-                } else {
-				    // statement
-
-					if (isNewStatement) {
-						if (line.startsWith("@")) {
-                            int pos = line.indexOf(":");
-                            if (pos != -1) {
-                                connId = line.substring(1, pos);
-                                line = line.substring(pos + 1);
-                            }
-						}
-					}
-
-					// set sql hint for debug
-					if (test.isNeedDebugHint()) {
-						String hint_sql = addHintForSQL(line, isNewStatement, lineCount, sqlFile);
-						ret.append(hint_sql + "\n");
-					} else {
-						ret.append(line + "\n");
-					}
-
-                    lineScanner.scan(line);
-                    if (line.endsWith(";") && !lineScanner.isInPlcsqlText()) {
-
-                        isCall = isCall(line);
-
-                        // new sql
-                        Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
-                        sql.setQueryplan(isQueryplan);
-                        list.add(sql);
-
-                        // initialize state variables
-                        isNewStatement = true;
-                        isQueryplan = false;
-                        ret.setLength(0);
-                        paramList = null;
-                        isCall = false;
-                        connId = "";
-
-                        lineScanner.clear();
-                    } else {
-                        isNewStatement = false;
-                    }
-				}
-
-				line = reader.readLine();
-				lineCount++;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			if (reader != null) {
-				try {
-					reader.close();
-				} catch (IOException e) {
-				}
-			}
-		}
-		return list;
-	}
-
-	private boolean hasHint(String sql) {
-		boolean ret = false;
-		String copySQL = sql;
-		int hasCompileKey = -1;
-		int hasSlashAndStar = -1;
-		if (copySQL != null && copySQL.length() != 0) {
-			hasCompileKey = copySQL.toUpperCase().indexOf("RECOMPILE");
-			hasSlashAndStar = copySQL.indexOf("/*");
-		}
-
-		if (hasCompileKey != -1 && hasSlashAndStar != -1) {
-			ret = true;
-		}
-
-		return ret;
-	}
-
-	private String reConstructSQLForHint(String origSQL, String prefSQL, String suffSQL, String sqlFile, int lineNum,
-			boolean hasHint) {
-		String ret = "";
-
-		if (hasHint) {
-			int start_pos = origSQL.indexOf("*/");
-			String sub_Prefix = origSQL.substring(0, start_pos);
-			String sub_Suff = origSQL.substring(start_pos, origSQL.length());
-			ret = sub_Prefix + TestUtil.APPEND_HINT_PREFIX + sqlFile + ":" + lineNum + TestUtil.APPEND_HINT_SUFFIX + " "
-					+ sub_Suff;
-		} else {
-			ret = prefSQL + " " + TestUtil.HINT_PREFIX + sqlFile + ":" + lineNum + TestUtil.HINT_SUFFIX + " " + suffSQL;
-		}
-
-		return ret;
-	}
-
-	// add hint for CREATE/ALTER/INSERT/UPDATE/DELETE/DROP/MERGE/PREPARE/REPLACE
-	// sql
-	private String addHintForSQL(String sql, boolean isNewLine, int lineNum, String sqlFile) {
-		String ret = "";
-		String prefix_tmpStr = "";
-		String prefix_sql = "";
-		String suff_sql = "";
-		int prefix_pos = -1;
-		boolean hasHint = false;
-		String copy_SQL = sql;
-		String tmpStr = sql;
-		String script = sql.toLowerCase();
-		tmpStr = tmpStr.replaceAll(" ", "");
-		if (tmpStr.length() >= 4) {
-			prefix_tmpStr = tmpStr.substring(0, 4);
-
-		} else {
-			return sql;
-		}
-
-		if (isNewLine) {
-			if ("CREA".equalsIgnoreCase(prefix_tmpStr)) {
-				prefix_pos = script.indexOf("create") + 6;
-				prefix_sql = copy_SQL.substring(0, prefix_pos);
-				suff_sql = copy_SQL.substring(prefix_pos, copy_SQL.length());
-				hasHint = hasHint(copy_SQL);
-				ret = reConstructSQLForHint(copy_SQL, prefix_sql, suff_sql, sqlFile, lineNum, hasHint);
-
-			} else if ("ALTE".equalsIgnoreCase(prefix_tmpStr)) {
-				prefix_pos = script.indexOf("alter") + 5;
-				prefix_sql = copy_SQL.substring(0, prefix_pos);
-				suff_sql = copy_SQL.substring(prefix_pos, copy_SQL.length());
-				hasHint = hasHint(copy_SQL);
-				ret = reConstructSQLForHint(copy_SQL, prefix_sql, suff_sql, sqlFile, lineNum, hasHint);
-
-				// }else if("DROP".equalsIgnoreCase(prefix_tmpStr))
-				// {
-				// prefix_pos = script.indexOf("drop") + 4;
-				// prefix_sql = copy_SQL.substring(0, prefix_pos);
-				// suff_sql = copy_SQL.substring(prefix_pos, copy_SQL.length());
-				// hasHint = hasHint(copy_SQL);
-				// ret = reConstructSQLForHint(copy_SQL, prefix_sql, suff_sql,
-				// sqlFile, lineNum, hasHint);
-				//
-			} else if ("UPDA".equalsIgnoreCase(prefix_tmpStr)) {
-				prefix_pos = script.indexOf("update") + 6;
-				prefix_sql = copy_SQL.substring(0, prefix_pos);
-				suff_sql = copy_SQL.substring(prefix_pos, copy_SQL.length());
-				hasHint = hasHint(copy_SQL);
-				ret = reConstructSQLForHint(copy_SQL, prefix_sql, suff_sql, sqlFile, lineNum, hasHint);
-
-			} else if ("SELE".equalsIgnoreCase(prefix_tmpStr)) {
-				prefix_pos = script.indexOf("select") + 6;
-				prefix_sql = copy_SQL.substring(0, prefix_pos);
-				suff_sql = copy_SQL.substring(prefix_pos, copy_SQL.length());
-				hasHint = hasHint(copy_SQL);
-				ret = reConstructSQLForHint(copy_SQL, prefix_sql, suff_sql, sqlFile, lineNum, hasHint);
-
-			} else if ("DELE".equalsIgnoreCase(prefix_tmpStr)) {
-				prefix_pos = script.indexOf("delete") + 6;
-				prefix_sql = copy_SQL.substring(0, prefix_pos);
-				suff_sql = copy_SQL.substring(prefix_pos, copy_SQL.length());
-				hasHint = hasHint(copy_SQL);
-				ret = reConstructSQLForHint(copy_SQL, prefix_sql, suff_sql, sqlFile, lineNum, hasHint);
-
-			} else if ("MERG".equalsIgnoreCase(prefix_tmpStr)) {
-				prefix_pos = script.indexOf("merge") + 5;
-				prefix_sql = copy_SQL.substring(0, prefix_pos);
-				suff_sql = copy_SQL.substring(prefix_pos, copy_SQL.length());
-				hasHint = hasHint(copy_SQL);
-				ret = reConstructSQLForHint(copy_SQL, prefix_sql, suff_sql, sqlFile, lineNum, hasHint);
-			} else if ("INSE".equalsIgnoreCase(prefix_tmpStr)) {
-				prefix_pos = script.indexOf("insert") + 6;
-				prefix_sql = copy_SQL.substring(0, prefix_pos);
-				suff_sql = copy_SQL.substring(prefix_pos, copy_SQL.length());
-				hasHint = hasHint(copy_SQL);
-				ret = reConstructSQLForHint(copy_SQL, prefix_sql, suff_sql, sqlFile, lineNum, hasHint);
-			} else if ("PREP".equalsIgnoreCase(prefix_tmpStr)) {
-				prefix_pos = script.indexOf("select") + 6;
-				prefix_sql = copy_SQL.substring(0, prefix_pos);
-				suff_sql = copy_SQL.substring(prefix_pos, copy_SQL.length());
-				hasHint = hasHint(copy_SQL);
-				ret = reConstructSQLForHint(copy_SQL, prefix_sql, suff_sql, sqlFile, lineNum, hasHint);
-			} else if ("REPL".equalsIgnoreCase(prefix_tmpStr)) {
-				prefix_pos = script.indexOf("replace") + 7;
-				prefix_sql = copy_SQL.substring(0, prefix_pos);
-				suff_sql = copy_SQL.substring(prefix_pos, copy_SQL.length());
-				hasHint = hasHint(copy_SQL);
-				ret = reConstructSQLForHint(copy_SQL, prefix_sql, suff_sql, sqlFile, lineNum, hasHint);
-			} else {
-				ret = sql;
-			}
-
-		} else {
-			ret = sql;
-		}
-
-		return ret;
-	}
-
 	/**
 	 * determine if Database is normal.
 	 * 
@@ -1667,7 +1348,7 @@ public class ConsoleBO extends Executor {
 			}
 			String caseFile = caseResult.getCaseFile();
 			StringBuilder result = new StringBuilder();
-			List<Sql> sqlList = parseSqlFile(caseFile, test);
+			List<Sql> sqlList = SQLParser.parseSqlFile(caseFile, test.getCodeset(), test.isNeedDebugHint ());
 
 			String dbId = test.getDbId();
 			String connId = test.getConnId();
