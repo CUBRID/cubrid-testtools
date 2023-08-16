@@ -892,12 +892,13 @@ function change_config_section_parameter
 
   local key=${prm%%=*}
   local val=${prm#*=}
+  val=`echo $val | sed "s@\/@\\\\\/@g"`
   key=`echo $key|sed 's/^ *//g'`
   key=`echo $key|sed 's/ *$//g'`
-  
-  sed -i "/^\[$sec]/,/^\[/{s/^$key[[:space:]]*=.*/$key = $val/}" $file
+
+  sed -i "/^\[$sec\]/,/^\[/{s/^$key[[:space:]]*=.*/$key = $val/}" $file
   awk "/\[$sec\]/{flag=1;next}/\[.*\]/{flag=0}flag && NF" $file \
-  | grep "$key = $val" > /dev/null || sed -i  "/$sec/a\\$key = $val" $file
+  | grep "$key = $val" > /dev/null || sed -i  "/\[$sec\]/a\\$key = $val" $file  
 }
 
 
