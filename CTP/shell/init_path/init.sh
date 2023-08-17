@@ -883,7 +883,7 @@ function delete_ini
 }
 
 # Usage:
-#       change_config_section_parameter common "ORACLE_STYLE_EMPTY_STRING = 0" $CUBRID/conf/cubrid.conf
+#       change_config_section_parameter common "ORACLE_COMPAT_NUMBGER_BEHAVIOR = 0" $CUBRID/conf/cubrid.conf
 function change_config_section_parameter
 {
   local sec=$1
@@ -892,15 +892,17 @@ function change_config_section_parameter
 
   local key=${prm%%=*}
   local val=${prm#*=}
-  val=`echo $val | sed "s@\/@\\\\\/@g"`
+
+  sec=`echo $sec|sed "s@\/@\\\\\/@g"`
+  key=`echo $key|sed "s@\/@\\\\\/@g"`
   key=`echo $key|sed 's/^ *//g'`
   key=`echo $key|sed 's/ *$//g'`
+  val=`echo $val|sed "s@\/@\\\\\/@g"`
 
   sed -i "/^\[$sec\]/,/^\[/{s/^$key[[:space:]]*=.*/$key = $val/}" $file
   awk "/\[$sec\]/{flag=1;next}/\[.*\]/{flag=0}flag && NF" $file \
-  | grep "$key = $val" > /dev/null || sed -i  "/\[$sec\]/a\\$key = $val" $file  
+  | grep "$key = $val" > /dev/null || sed -i  "/\[$sec\]/a\\$key = $val" $file
 }
-
 
 # Change DB Broker parameter in the cubrid_broker.conf
 # Use only in the broker1  
