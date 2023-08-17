@@ -883,7 +883,7 @@ function delete_ini
 }
 
 # Usage:
-#       change_config_section_parameter common "ORACLE_COMPAT_NUMBGER_BEHAVIOR = 0" $CUBRID/conf/cubrid.conf
+#       change_config_section_parameter common "ORACLE_COMPAT_NUMBER_BEHAVIOR = 0" $CUBRID/conf/cubrid.conf
 function change_config_section_parameter
 {
   local sec=$1
