@@ -3,7 +3,7 @@ on:
   pull_request:
     branches:
       - develop
-      -'feature/**'
+      - 'feature/**'
 jobs:
   code-style:
     name: code-style
