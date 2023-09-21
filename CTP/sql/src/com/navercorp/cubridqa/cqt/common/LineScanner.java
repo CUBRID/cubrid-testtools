@@ -329,7 +329,7 @@ class LineScanner {
                 if (d >= 0) {
                     substate = Substate.INITIAL;
                     return d;
-                } else if ((d = matchWordCI(line, "java", i)) >= 0) {
+                } else if ((d = matchWordCI(line, "plcsql", i)) >= 0) {
                     substate = Substate.PLCSQL_TEXT;
                     plcsqlBeginEndBalance = 0;
                     plcsqlNestLevel = 0;
