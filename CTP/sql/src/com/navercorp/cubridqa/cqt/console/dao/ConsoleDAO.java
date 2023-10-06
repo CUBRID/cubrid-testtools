@@ -723,7 +723,7 @@ public class ConsoleDAO extends Executor {
                 executeCall(conn, getLine);
                 List<SqlParam> paramList = getLine.getParamList();
                 if (((Integer) paramList.get(1).getValue()) == 0) {
-                        /* status */
+                    /* status */
                     message.append(
                             ((String) paramList.get(0).getValue())
                                     + System.getProperty("line.separator")); /* message */
