@@ -53,9 +53,8 @@ class LineScanner {
 
         assert (line != null);
         assert (state
-                != State
-                        .STATEMENT_END); // the state must be cleared to State.GENERAL before this
-                                         // call
+                != State.STATEMENT_END); // the state must be cleared to State.GENERAL before this
+        // call
         assert ((plcsqlBeginEndBalance == 0 && plcsqlNestLevel == 0)
                 || (substate == Substate.PLCSQL_TEXT || substate == Substate.SEEN_END));
 
@@ -321,9 +320,8 @@ class LineScanner {
                         substate = Substate.PLCSQL_TEXT;
                         plcsqlBeginEndBalance = 0;
                         plcsqlNestLevel = 0;
-                        continue
-                                substate_transition; // repeat a substate transition without
-                                                     // increasing i
+                        continue substate_transition; // repeat a substate transition without
+                        // increasing i
                     }
 
                     // break; unreachable
@@ -384,9 +382,8 @@ class LineScanner {
                             substate = Substate.INITIAL;
                             plcsqlBeginEndBalance = 0;
                             plcsqlNestLevel = 0;
-                            continue
-                                    substate_transition; // repeat a substate transition without
-                                                         // increasing i
+                            continue substate_transition; // repeat a substate transition without
+                            // increasing i
                         }
                     }
 
@@ -398,9 +395,8 @@ class LineScanner {
                             || (d = matchWordCI(line, "loop", i)) >= 0) {
                         return d;
                     } else {
-                        continue
-                                substate_transition; // repeat a substate transition without
-                                                     // increasing i
+                        continue substate_transition; // repeat a substate transition without
+                        // increasing i
                     }
 
                     // break; unreachable
