@@ -26,7 +26,10 @@
 package com.navercorp.cubridqa.cqt.console.bo;
 
 import com.navercorp.cubridqa.common.coreanalyzer.AnalyzerMain;
+<<<<<<< HEAD
 import com.navercorp.cubridqa.cqt.common.SQLParser;
+=======
+>>>>>>> upstream/develop
 import com.navercorp.cubridqa.cqt.console.Executor;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.ProcessMonitor;
@@ -734,7 +737,10 @@ public class ConsoleBO extends Executor {
 
         CommonFileUtile.writeFile(headerText.toString() + bodyText.toString(), coreFile);
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/develop
     /**
      * save the answer file .
      *

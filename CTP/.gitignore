@@ -6,8 +6,11 @@
 
 local.properties
 
+# webconsole output
 sql/webconsole/*.txt
 
 sql/result/
 
+.project
 .vscode
+
