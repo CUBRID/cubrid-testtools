@@ -1,1 +1,6 @@
 /build/
+
+.project
+
+# webconsole output
+sql/webconsole/*.txt
