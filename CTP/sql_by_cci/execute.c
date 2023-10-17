@@ -1483,7 +1483,7 @@ int execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
 
     //if find the sql was "show trace;". then mark it.
     //add by charlie for format the show trace
-    if (char_cmp (sql, "show trace;"))
+    if (char_cmp (sql, "show trace;") || char_cmp (sql, "SHOW TRACE;"))
     {
         has_st = 1;
     }
