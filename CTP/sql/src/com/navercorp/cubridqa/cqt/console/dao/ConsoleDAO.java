@@ -306,7 +306,7 @@ public class ConsoleDAO extends Executor {
         }
 
         // Print Output messages
-        if (test.getServerOutput().equalsIgnoreCase("on")) {
+        if (test.getServerMessage().equalsIgnoreCase("on")) {
             String messages = getServerOutputMessage(conn);
             sql.setResult(sql.getResult() + System.getProperty("line.separator") + messages);
         }
@@ -768,6 +768,16 @@ public class ConsoleDAO extends Executor {
                                 + System.getProperty("line.separator"));
             } else {
                 message.append("Error:" + e.getErrorCode() + System.getProperty("line.separator"));
+                if (test.getServerMessage().equalsIgnoreCase("on")) {
+                    String errmsg = e.getMessage();
+                    if (errmsg != null) {
+                        int idx = errmsg.indexOf("[CAS INFO");
+                        if (idx >= 0) {
+                            errmsg = errmsg.substring(0, idx);
+                        }
+                    }
+                    message.append(errmsg + System.getProperty("line.separator"));
+                }
             }
         }
         return message.toString();

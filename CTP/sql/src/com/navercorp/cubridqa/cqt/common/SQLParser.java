@@ -76,7 +76,7 @@ public class SQLParser {
                     } else {
                         String controlCmd = getControlCommand(line);
                         if (controlCmd != null) {
-                            // control command : either hodcas or server-output
+                            // control command : either hodcas or server-message
                             Sql sql = new Sql("", controlCmd, null, false);
                             list.add(sql);
                         }
@@ -148,7 +148,7 @@ public class SQLParser {
     private static String getControlCommand(String line) {
         if (line.startsWith("--+")) {
             String s = line.replaceAll(" ", "").toLowerCase();
-            if (s.startsWith("--+holdcas") || s.startsWith("--+server-output")) {
+            if (s.startsWith("--+holdcas") || s.startsWith("--+server-message")) {
                 return line.trim() + System.getProperty("line.separator");
             }
         }

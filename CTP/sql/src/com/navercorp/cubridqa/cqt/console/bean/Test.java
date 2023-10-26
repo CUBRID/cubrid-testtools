@@ -92,7 +92,7 @@ public class Test {
 
 	private String autocommit = "";
 
-	private String serverOutput = "off";
+	private String serverMessage = "off";
 
 	private boolean needSummaryXML = false;
 
@@ -205,12 +205,12 @@ public class Test {
 		this.holdcas = holdcas;
 	}
 
-	public String getServerOutput() {
-		return serverOutput;
+	public String getServerMessage() {
+		return serverMessage;
 	}
 	
-	public void setServerOutput (String so) {
-		this.serverOutput = so;
+	public void setServerMessage (String so) {
+		this.serverMessage = so;
 	}
 
 	public String getReset_scripts() {
