@@ -734,6 +734,7 @@ public class ConsoleBO extends Executor {
 
         CommonFileUtile.writeFile(headerText.toString() + bodyText.toString(), coreFile);
     }
+
     /**
      * save the answer file .
      *
@@ -1084,8 +1085,8 @@ public class ConsoleBO extends Executor {
                     boolean isOff = isPropOff(TestUtil.AUTOCOMMIT, script);
                     boolean isHoldCasOn = isPropOn(TestUtil.HOLDCAS, script);
                     boolean isHoldCasOff = isPropOff(TestUtil.HOLDCAS, script);
-                    boolean isServerOutputOn = isPropOn(TestUtil.SERVER_OUTPUT, script);
-                    boolean isServerOutputOff = isPropOff(TestUtil.SERVER_OUTPUT, script);
+                    boolean isServerMessageOn = isPropOn(TestUtil.SERVER_MESSAGE, script);
+                    boolean isServerMessageOff = isPropOff(TestUtil.SERVER_MESSAGE, script);
 
                     if (isOn) {
                         conn.setAutoCommit(isOn);
@@ -1125,12 +1126,15 @@ public class ConsoleBO extends Executor {
                                     "Exception: the current version can't support hold cas!";
                             this.onMessage(message);
                         }
-                    } else if (isServerOutputOn) {
+                    } else if (isServerMessageOn) {
                         try {
                             String message =
-                                    "@" + test.getConnId() + ": server output " + isServerOutputOn;
+                                    "@"
+                                            + test.getConnId()
+                                            + ": server message "
+                                            + isServerMessageOn;
                             this.onMessage(message);
-                            test.setServerOutput("on");
+                            test.setServerMessage("on");
                             // TODO: DBMS_OUTPUT.enable ()
                             Sql enableSql =
                                     new Sql(connId, "CALL enable(20000)", null, true); // TODO: set
@@ -1142,13 +1146,16 @@ public class ConsoleBO extends Executor {
                                     "Exception: the current version can't support DBMS_OUTPUT!";
                             this.onMessage(message);
                         }
-                    } else if (isServerOutputOff) {
+                    } else if (isServerMessageOff) {
                         try {
                             String message =
-                                    "@" + test.getConnId() + ": server output " + isServerOutputOff;
+                                    "@"
+                                            + test.getConnId()
+                                            + ": server message "
+                                            + isServerMessageOff;
                             this.onMessage(message);
 
-                            test.setServerOutput("off");
+                            test.setServerMessage("off");
                             // TODO: DBMS_OUTPUT.disable()
                             Sql disableSql = new Sql(connId, "CALL disable()", null, true);
                             dao.execute(conn, disableSql, false);
@@ -1397,6 +1404,7 @@ public class ConsoleBO extends Executor {
     }
 
     /** */
+    @Override
     protected void init() {
         long startTime = System.currentTimeMillis();
         startTime = System.currentTimeMillis();
@@ -1509,8 +1517,8 @@ public class ConsoleBO extends Executor {
                     boolean isOff = isPropOff(TestUtil.AUTOCOMMIT, script);
                     boolean isHoldCasOn = isPropOn(TestUtil.HOLDCAS, script);
                     boolean isHoldCasOff = isPropOff(TestUtil.HOLDCAS, script);
-                    boolean isServerOutputOn = isPropOn(TestUtil.SERVER_OUTPUT, script);
-                    boolean isServerOutputOff = isPropOn(TestUtil.SERVER_OUTPUT, script);
+                    boolean isServerMessageOn = isPropOn(TestUtil.SERVER_MESSAGE, script);
+                    boolean isServerMessageOff = isPropOff(TestUtil.SERVER_MESSAGE, script);
 
                     if (isOn) {
                         conn.setAutoCommit(isOn);
@@ -1550,10 +1558,13 @@ public class ConsoleBO extends Executor {
                                     "Exception: the current version can't support hold cas!";
                             bo.onMessage(message);
                         }
-                    } else if (isServerOutputOn) {
+                    } else if (isServerMessageOn) {
                         try {
                             String message =
-                                    "@" + test.getConnId() + ": server output " + isServerOutputOn;
+                                    "@"
+                                            + test.getConnId()
+                                            + ": server message "
+                                            + isServerMessageOn;
                             bo.onMessage(message);
 
                             Sql enableSql =
@@ -1570,10 +1581,13 @@ public class ConsoleBO extends Executor {
                                     "Exception: the current version can't support DBMS_OUTPUT!";
                             bo.onMessage(message);
                         }
-                    } else if (isServerOutputOff) {
+                    } else if (isServerMessageOff) {
                         try {
                             String message =
-                                    "@" + test.getConnId() + ": server output " + isServerOutputOff;
+                                    "@"
+                                            + test.getConnId()
+                                            + ": server message "
+                                            + isServerMessageOff;
                             bo.onMessage(message);
                             Sql disableSql =
                                     new Sql(connId, "CALL DBMS_OUTPUT.disable()", null, true);

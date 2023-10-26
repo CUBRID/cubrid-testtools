@@ -36,8 +36,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.dom4j.Document;
-import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 public class PropertiesUtil {
@@ -110,7 +108,7 @@ public class PropertiesUtil {
             test.setHoldcas(val);
         }
 
-        List sol = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.SERVER_OUTPUT);
+        List sol = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.SERVER_MESSAGE);
         if (!sol.isEmpty()) {
             Element so = (Element) sol.get(0);
             val = so.getText();
