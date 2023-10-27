@@ -36,6 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import org.dom4j.Document;
+import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 public class PropertiesUtil {
@@ -112,7 +114,7 @@ public class PropertiesUtil {
         if (!sol.isEmpty()) {
             Element so = (Element) sol.get(0);
             val = so.getText();
-            test.setServerOutput(val);
+            test.setServerMessage(val);
         }
 
         List checkAlive = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.CHECK_SERVER_STATUS);

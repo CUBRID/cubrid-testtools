@@ -214,14 +214,6 @@ public class Test {
         this.holdcas = holdcas;
     }
 
-    public String getServerOutput() {
-        return serverOutput;
-    }
-
-    public void setServerOutput(String so) {
-        this.serverOutput = so;
-    }
-
     public String getReset_scripts() {
         return reset_scripts;
     }
