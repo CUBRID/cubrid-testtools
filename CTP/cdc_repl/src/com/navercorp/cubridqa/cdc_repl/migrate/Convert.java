@@ -22,9 +22,57 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
-package com.navercorp.cubridqa.ctp;
+package com.navercorp.cubridqa.cdc_repl.migrate;
 
-public enum ComponentEnum {
+import java.io.File;
 
-	SQL, MEDIUM, KCC, NEIS05, NEIS08, SHELL, CCI, DOTS, HA_REPL, ISOLATION, JDBC, NBD, SQL_BY_CCI, SYSBENCH, TPCC, TPCW, YCSB, WEBCONSOLE, UNITTEST, RQG, CDC_REPL;
+public class Convert {
+
+	String rootFilename;
+	int count = 0;
+
+	public Convert(String rootFilename) {
+		this.rootFilename = rootFilename;
+		System.out.println("Convert Root:  " + this.rootFilename);
+	}
+
+	public static void main(String[] args) throws Exception {
+		// Convert c = new Convert("D:\\_20_apricot_qa");
+		Convert c = new Convert("./1016.sql");
+		// Convert c = new Convert("./update_order_by_001.sql");
+		// Convert c = new Convert("./test/sql");
+		c.convert();
+	}
+
+	public void convert() throws Exception {
+		travel(new File(rootFilename));
+		System.out.println("Finished covert files: " + count);
+	}
+
+	private void travel(File testCaseFile) throws Exception {
+		if (testCaseFile.isDirectory()) {
+			File[] subList = testCaseFile.listFiles();
+			for (File subFile : subList) {
+				travel(subFile);
+			}
+		} else {
+			if (testCaseFile.getName().toUpperCase().endsWith(".SQL")) {
+				convert(testCaseFile);
+			}
+		}
+	}
+
+	private void convert(File f) throws Exception {
+
+		if (count % 100 == 0) {
+			System.out.println(count);
+		}
+		count++;
+		SQLFileReader r = new SQLFileReader(f);
+		try {
+			r.convert();
+		} finally {
+			r.close();
+		}
+	}
 }
