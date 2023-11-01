@@ -70,7 +70,7 @@
 		<delete dir="shell/lib/cubridqa-shell.jar" />
 		<delete dir="shell/lib/cubridqa-isolation.jar" />
 		<delete dir="shell/lib/cubridqa-ha_repl.jar" />
-		<delete dir="shell/lib/cubridqa-cdc_repl.jar" />
+		<delete file="cdc_repl/lib/cubridqa-cdc_repl.jar" />
 	</target>
 
 	<target name="dist" depends="clean,compile" description="generate the distribution">
