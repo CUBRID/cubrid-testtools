@@ -109,12 +109,19 @@ public class PropertiesUtil {
 			test.setNeedCheckServerStatus(Boolean.parseBoolean(val));
 		}
 
-		List urlProperties = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.URL_PROPERTIES);
-		if (!urlProperties.isEmpty()) {
-			Element urlProp = (Element) urlProperties.get(0);
-			val = urlProp.getText();
-			test.setUrlProperties(val);
-		}
+        List sol = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.SERVER_MESSAGE);
+        if (!sol.isEmpty()) {
+            Element so = (Element) sol.get(0);
+            val = so.getText();
+            test.setServerMessage(val);
+        }
+
+        List checkAlive = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.CHECK_SERVER_STATUS);
+        if (!checkAlive.isEmpty()) {
+            Element serverStatus = (Element) checkAlive.get(0);
+            val = serverStatus.getText();
+            test.setNeedCheckServerStatus(Boolean.parseBoolean(val));
+        }
 
 		List needXmlSummary = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.NEED_XML_SUMMARY);
 		if (!needXmlSummary.isEmpty()) {

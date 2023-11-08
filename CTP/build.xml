@@ -61,12 +61,13 @@
 
 	<target name="clean">
 		<delete dir="${build}" />
-		<delete dir="common/lib/cubridqa-common.jar" />
-		<delete dir="common/lib/cubridqa-scheduler.jar" />		
-		<delete dir="sql/lib/cubridqa-cqt.jar" />		
-		<delete dir="shell/lib/cubridqa-shell.jar" />
-		<delete dir="shell/lib/cubridqa-isolation.jar" />
-		<delete dir="shell/lib/cubridqa-ha_repl.jar" />
+		<delete file="common/lib/cubridqa-common.jar" />
+		<delete file="common/sched/lib/cubridqa-scheduler.jar" />		
+		<delete file="sql/lib/cubridqa-cqt.jar" />		
+		<delete file="shell/lib/cubridqa-shell.jar" />
+		<delete file="isolation/lib/cubridqa-isolation.jar" />
+		<delete file="ha_repl/lib/cubridqa-ha_repl.jar" />
+		<delete file="shell/init_path/commonforjdbc.jar" />
 	</target>
 
 	<target name="dist" depends="clean,compile" description="generate the distribution">

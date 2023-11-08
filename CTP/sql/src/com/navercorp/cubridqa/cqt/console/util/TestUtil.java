@@ -80,7 +80,9 @@ public class TestUtil {
 
 	public static final String AUTOCOMMIT = "autocommit";
 
-	public static final String CHECK_SERVER_STATUS = "check_server_status";
+    public static final String SERVER_MESSAGE = "server-message";
+
+    public static final String HOLDCAS = "holdcas";
 
 	public static final String URL_PROPERTIES = "url_properties";
 

@@ -94,7 +94,9 @@ public class Test {
 
 	private boolean needSummaryXML = false;
 
-	private boolean needAnswerInSummary = false;
+    private String serverMessage = "off";
+
+    private boolean needSummaryXML = false;
 
 	private boolean needCheckServerStatus = false;
 
@@ -207,9 +209,17 @@ public class Test {
 		return reset_scripts;
 	}
 
-	public void setReset_scripts(String reset_scripts) {
-		this.reset_scripts = reset_scripts;
-	}
+    public String getServerMessage() {
+        return serverMessage;
+    }
+
+    public void setServerMessage(String so) {
+        this.serverMessage = so;
+    }
+
+    public void setAutocommit(String autocommit) {
+        this.autocommit = autocommit;
+    }
 
 	public String getRun_mode() {
 		return run_mode;
