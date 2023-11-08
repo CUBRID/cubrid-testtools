@@ -93,6 +93,8 @@ public class Test {
 
     private String autocommit = "";
 
+    private String serverMessage = "off";
+
     private boolean needSummaryXML = false;
 
     private boolean needAnswerInSummary = false;
@@ -190,6 +192,14 @@ public class Test {
 
     public String getAutocommit() {
         return autocommit;
+    }
+
+    public String getServerMessage() {
+        return serverMessage;
+    }
+
+    public void setServerMessage(String so) {
+        this.serverMessage = so;
     }
 
     public void setAutocommit(String autocommit) {

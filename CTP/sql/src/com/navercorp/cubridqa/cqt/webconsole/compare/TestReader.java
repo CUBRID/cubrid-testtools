@@ -25,12 +25,13 @@
  */
 package com.navercorp.cubridqa.cqt.webconsole.compare;
 
+import com.navercorp.cubridqa.cqt.common.SQLParser;
+import com.navercorp.cubridqa.cqt.console.bean.Sql;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 public class TestReader {
 
@@ -40,42 +41,37 @@ public class TestReader {
 
     public static final String SPLIT = "===================================================";
 
+    private List<Sql> sqls = null;
+    private int idx = 0;
+
     public TestReader(String filename1) throws FileNotFoundException, UnsupportedEncodingException {
-        FileInputStream fis = new FileInputStream(filename1);
-        InputStreamReader fsr = new InputStreamReader(fis, "UTF-8");
-        this.reader1 = new BufferedReader(fsr);
+        sqls = SQLParser.parseSqlFile(filename1, "UTF-8", false);
     }
 
     public String nextStatement() throws IOException {
-        StringBuffer sb = new StringBuffer();
-
-        String line;
-        while (!isEOF) {
-            try {
-                line = reader1.readLine();
-            } catch (IOException e) {
-                closeFile();
-                throw e;
-            }
-
-            if (line == null) {
-                closeFile();
-                break;
-            }
-
-            line = line.trim();
-
-            sb.append(line + "\n");
-
-            if (line.startsWith("--") || line.startsWith("$") || line.startsWith("autocommit")) {
-                continue;
-            } else if (line.endsWith(";")) {
-                break;
-            }
+        if (sqls == null || sqls.isEmpty() || idx >= sqls.size()) {
+            return null;
         }
 
-        String sql = sb.toString().trim() + "\n";
-        return (sql.trim().length() == 0) ? null : sql;
+        StringBuilder builder = new StringBuilder();
+        do {
+            String sql = sqls.get(idx).getScript().trim();
+            idx++;
+
+            if (builder.length() > 0) {
+                builder.append("\n");
+            }
+            builder.append(sql);
+
+            if (sql.startsWith("--") || sql.startsWith("$") || sql.startsWith("autocommit")) {
+                continue;
+            } else {
+                break;
+            }
+
+        } while (idx < sqls.size());
+
+        return (builder.length() == 0) ? null : builder.toString();
     }
 
     public void closeFile() {

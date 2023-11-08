@@ -57,4 +57,8 @@ public class SqlParam {
     public String getParamType() {
         return paramType;
     }
+
+    public void setValue(Object o) {
+        this.value = o;
+    }
 }

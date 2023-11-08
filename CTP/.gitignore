@@ -1,6 +1,16 @@
 /build/
 
-.project
+*.log
+.script_cont*.sh
+*.jar
+
+local.properties
 
 # webconsole output
 sql/webconsole/*.txt
+
+sql/result/
+
+.project
+.vscode
+

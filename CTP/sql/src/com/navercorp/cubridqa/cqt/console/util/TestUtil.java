@@ -73,6 +73,8 @@ public class TestUtil {
 
     public static final String RUN_MODE_SECONDARY = "run_mode_secondary";
 
+    public static final String SERVER_MESSAGE = "server-message";
+
     public static final String HOLDCAS = "holdcas";
 
     public static final String AUTOCOMMIT = "autocommit";
