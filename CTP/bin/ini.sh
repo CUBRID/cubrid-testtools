@@ -26,7 +26,22 @@
 
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/..; pwd)
 
+BUILD_DIR=$CTP_HOME/build
 JAVA_CPS=$CTP_HOME/common/lib/cubridqa-common.jar
+
+if [ ! -d "$BUILD_DIR" ] || [ ! -n "$(ls -A $BUILD_DIR)" ]
+then
+  cd $CTP_HOME && ant dist
+
+  if [ ! -d "$BUILD_DIR" ] || [ ! -n "$(ls -A $BUILD_DIR)" ]
+  then
+    echo "Building CTP has been failed. Please check Ant and Java environments!" && exit 1
+  fi
+
+  echo "CTP has been built successfully"
+
+  cd -
+fi
 
 if [ "$OSTYPE" == "cygwin" ]
 then
