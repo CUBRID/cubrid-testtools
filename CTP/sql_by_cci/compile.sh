@@ -26,17 +26,17 @@
 script_dir=$(dirname $(readlink -f $0))
 cd $script_dir
 
-isSupportHoldCas=`cat ${CUBRID}/include/cas_cci.h | grep "cci_set_cas_change_mode" | wc -l`
+isSupportHoldCas=`cat ${CUBRID}/cci/include/cas_cci.h | grep "cci_set_cas_change_mode" | wc -l`
 if [ $isSupportHoldCas -ne 0 ];then
-     echo "#define CCI_SET_CAS_CHANGE_MODE_INTERFACE  1" >interface_verify.h
+     echo "#define CCI_SET_CAS_CHANGE_MODE_INTERFACE  1" > interface_verify.h
 else
      echo ""> interface_verify.h
 fi
 
 
-CUBRID_INCLUDE="-I$CUBRID/include"
+CUBRID_INCLUDE="-I$CUBRID/include -I$CUBRID/cci/include"
 CFLAGS="-O0 -g -W -Wall"
-CUBRID_LDFLAGS="-L$CUBRID/lib -lcascci"
+CUBRID_LDFLAGS="-L$CUBRID/cci/lib -lcascci"
 
 bits=`cubrid_rel|grep 64bit|grep -v grep|wc -l`
 if [ $bits -eq 1 ];then
@@ -46,7 +46,7 @@ else
 fi
 
 #Do clean
-rm -f *.o ccqt execute interface_verify
+rm -f *.o ccqt execute interface_verify.h
 
 #Do compile
 echo ""
