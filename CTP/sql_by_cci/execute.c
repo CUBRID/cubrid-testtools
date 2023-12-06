@@ -580,39 +580,13 @@ void trimbit (char *str)
 
 int iscomment (char *str)
 {
-    int i = 0;
-
-    while ( i < MAX_SQL_LEN )
-    {
-        if (str[i] == 0x00)// NULL
-        {
+    if (startswith(str, "--")) {
+        if (!startswith(str, "--@queryplan") &&
+            !startswithCI(str, "--+ holdcas") && !startswithCI(str, "--+holdcas")) {
             return 1;
         }
-        else if (str[i] == 0x20)//" " blank char
-        {
-            i++;
-            continue;
-        }
-        else if (str[i] == 45 && str[i + 1] == 45)// "-"
-        {
-            if(strstr(str, "@queryplan"))
-            {
-                return 0;
-            } //support --+ holdcas on; --+ holdcas off;
-            else if(!(strncasecmp (str, "--+ HOLDCAS ON", 14)) || !(strncasecmp (str, "--+ HOLDCAS OFF", 15))) C
-            {
-                return 0;
-            }
-            else
-            {
-                return 1;
-            }
-        }
-        else
-        {
-            return 0;
-        }
     }
+
     return 0;
 }
 
@@ -771,14 +745,14 @@ T_CCI_A_TYPE getatype (T_CCI_U_TYPE utype)
     }
 }
 
-int endwith (char *source, char str)
+int endswithsemicolon (char *source)
 {
     int i = 0;
 
     if(source == NULL)
         return 0;
 
-    i = strlen (trimline (source));
+    i = strlen (source);
     if (source[i - 1] == ';')
         return 1;
 
@@ -793,7 +767,7 @@ char *getvalue (char *p)
     }
     char *temp = trimline (p);
 
-    if (endwith (temp, ';'))
+    if (endswithsemicolon (temp))
     {
         p[strlen (p) - 1] = 0;
     }
@@ -811,7 +785,7 @@ void get_value_by_type(char *str, char *type, void *buf)
         memcpy(buf, (void*)p, sizeof(char));
 
     temp = trimline (p);
-    if (endwith (temp, ';'))
+    if (endswithsemicolon (temp))
         p[strlen (p) - 1] = 0;
     //remove $ character
     p = p + 1;
@@ -836,24 +810,17 @@ void get_value_by_type(char *str, char *type, void *buf)
     }
 }
 
-int char_cmp (char *source, char *str)
+int startswith (char *source, char *str)
 {
     int ret;
     ret = strncmp (source, str, strlen (str));
     return ((ret == 0) ? 1 : 0);
 }
 
-int startswith (char *source, char *str)
+int startswithCI (char *source, char *str)
 {
     int ret;
-    int LEN = strlen(source);
-    char *pv;
-    pv = (char *)malloc((LEN + 1) * sizeof(char));
-    strcpy(pv, source);
-    pv = trimline(pv);
-    ret = strncmp (pv, str, strlen (str));
-    if(pv != NULL) free(pv);
-
+    ret = strncasecmp (source, str, strlen (str));
     return ((ret == 0) ? 1 : 0);
 }
 
@@ -943,97 +910,79 @@ int executebindparameter (int req, char *str, int n)
 int readFile (char *fileName)
 {
     FILE *sql_file;
-    int linelength = 0;
+    int sql_len = 0;
     int ascii1 = 0, ascii2 = 0;
     char str[MAX_SQL_LEN];
+    char sql_buf[MAXLINELENGH];
     int isline = 0;
-    char *str_tmp = NULL;
-    int sql_len = 0;
-    int isparameter = 0;
     bool hasqp = 0;
 
     //initial the total sql count.
     total_sql = 0;
-    str_tmp = (char *) malloc (sizeof (char) * (MAXLINELENGH));
 
-    memset (str_tmp, 0, sizeof (char) * (MAXLINELENGH));
+    memset (sql_buf, 0, sizeof (char) * (MAXLINELENGH));
     if ((sql_file = fopen (fileName, "r")) != NULL)
     {
         while (fgets (str, MAX_SQL_LEN, sql_file) != NULL)
         {
-            ascii1 = str[0];
-            if (ascii1 == 10)// if it is new line.
-            {
-                continue;
-            }
-            else if (iscomment (str))
+            trimline(str);  // NOTE: str does not end with a '/n' after this line
+
+            if (strlen(str) == 0 || iscomment (str))
             {
                 continue;
             }
 
-            iscallwithoutvalue = n
-            isparameter = startswith (str, "$");
-            if (isparameter)
+            if (str[0] == '$')
             {
                 parameter[total_sql] = (char *) malloc (sizeof (char) * (strlen (str) + 1));
-                memcpy (parameter[total_sql], str, sizeof (char) * strlen (str));
-                parameter[total_sql][strlen (str)] = 0; //delete \n  .like '$integer,$10;\n' 2013.12.2
+                strcpy(parameter[total_sql], str);
                 continue;
             }
 
-            if (char_cmp (str, "--@queryplan"))
+            if (startswith (str, "--@queryplan"))
             {
                 hasqp = 1;
                 continue;
             }
 
-            isline = endwith (str, ';');
-            sql_len = strlen (str);
-            if (!isline)
-            {
-                linelength = linelength + sql_len;
-            }
-            else
-            {
-                linelength = linelength + sql_len + 1;	//"\0"
-            }
+            isline = endswithsemicolon (str);
+            sql_len += strlen (str);
 
-            if (linelength > MAXLINELENGH)
+            if (sql_len >= MAXLINELENGH)
             {
                 printf ("The sql statment is too long \n");
+                exit(1);
             }
 
-            strcat (str_tmp, str);
+            strcat (sql_buf, str);
             if (!isline)
             {
-                strcat (str_tmp, "\n");
-                linelength = linelength + 2;
+                strcat (sql_buf, "\n");
+                sql_len++;
             }
 
-            //clear the str buf, because it have been cat to str_tmp.
-            str[0] = 0x00;
             if (isline)
             {
-                trimline (str_tmp);
-                sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * (linelength));
-                strncpy (sqlstate[total_sql].sql, str_tmp, linelength);
+                sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * (sql_len) + 1);
+                strcpy (sqlstate[total_sql].sql, sql_buf);
                 sqlstate[total_sql].hasqp = hasqp;
                 //if script like "? = call"
                 sqlstate[total_sql].iscallwithoutvalue = startswith (str, "?");
+
                 total_sql++;
-                linelength = 0;
+
+                memset (sql_buf, 0, sql_len);
+                sql_len = 0;
                 hasqp = 0;
-                memset (str_tmp, 0, sizeof (char) * (MAXLINELENGH));
                 isline = 0;
             }
+            str[0] = 0x00;
         }
     }
 
     if (sql_file != NULL)
         fclose (sql_file);
 
-    if (str_tmp != NULL)
-        free (str_tmp);
     return 0;
 }
 
@@ -1060,25 +1009,28 @@ void formatplan (FILE * fp, char *plan)
                 str[i - newline + 1] = 0x00;
                 p[i - newline + 1] = 0x00;
                 newline = i + 1;
-                if (trimline (p) == "" || (trimline (p))[0] == 0)
+
+                trimline(p);
+                if (strlen(p) == 0)
                 {
                     continue;
                 }
-                else if (startswith (trimline (p), "Query plan:"))
+
+                if (startswith (p, "Query plan:"))
                 {
                     isplan = 1;
                     isstmt = 0;
                     fprintf (fp, "%s", str);
                     continue;
                 }
-                else if (startswith (trimline (p), "Query stmt:"))
+                else if (startswith (p, "Query stmt:"))
                 {
                     isplan = 0;
                     isstmt = 1;
                     fprintf (fp, "%s", str);
                     continue;
                 }
-                else if (startswith (trimline (p), "Trace Statistics:"))
+                else if (startswith (p, "Trace Statistics:"))
                 {
                     isplan = 0;
                     isstmt = 0;
@@ -1477,7 +1429,7 @@ int execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
 
     //if find the sql was "show trace;". then mark it.
     //add by charlie for format the show trace
-    if (char_cmp (sql, "show trace;") || char_cmp (sql, "SHOW TRACE;"))
+    if (startswith (sql, "show trace;") || startswith (sql, "SHOW TRACE;"))
     {
         has_st = 1;
     }
@@ -1796,7 +1748,7 @@ int test(FILE * fp)
             p = sqlstate[sql_count].sql;
 
             tmp = strcasestr(p, "to");
-            if (tmp != NULL && endwith (tmp, ';'))
+            if (tmp != NULL && endswithsemicolon (tmp))
             {
                 tmp[strlen (tmp) - 1] = 0;
             }
@@ -1845,7 +1797,7 @@ int test(FILE * fp)
             char *p = NULL;
             p = sqlstate[sql_count].sql;
             p = p + strlen("savepoint ");
-            if (endwith (p, ';'))
+            if (endswithsemicolon (p))
                 p[strlen (p) - 1] = 0;
             res = cci_savepoint(conn, CCI_SP_SET, p, &error);
             if (res >=0 )
