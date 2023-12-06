@@ -1,27 +1,27 @@
 /**
  * Copyright (c) 2016, Search Solution Corporation. All rights reserved.
 
- * 
- * Redistribution and use in source and binary forms, with or without 
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
- *   * Redistributions of source code must retain the above copyright notice, 
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
  *     this list of conditions and the following disclaimer.
- * 
- *   * Redistributions in binary form must reproduce the above copyright 
- *     notice, this list of conditions and the following disclaimer in 
+ *
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
  *     the documentation and/or other materials provided with the distribution.
- * 
- *   * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
+ *
+ *   * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
- * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #define _GNU_SOURCE
@@ -273,7 +273,7 @@ void formatdatetime (FILE * fp, char *buffer)
             break;
         }
     }
-    
+
     if (allzero)
     {
         if (_position > -1 && dot_position > -1 && dot_position < length)
@@ -601,7 +601,7 @@ int iscomment (char *str)
             } //support --+ holdcas on; --+ holdcas off;
             else if(!(strncasecmp (str, "--+ HOLDCAS ON", 14)) || !(strncasecmp (str, "--+ HOLDCAS OFF", 15))) C
             {
-                return 0; 
+                return 0;
             }
             else
             {
@@ -809,7 +809,7 @@ void get_value_by_type(char *str, char *type, void *buf)
     p = str;
     if (strlen (p) < 1)
         memcpy(buf, (void*)p, sizeof(char));
-    
+
     temp = trimline (p);
     if (endwith (temp, ';'))
         p[strlen (p) - 1] = 0;
@@ -850,7 +850,7 @@ int startswith (char *source, char *str)
     char *pv;
     pv = (char *)malloc((LEN + 1) * sizeof(char));
     strcpy(pv, source);
-    pv = trimline(pv); 
+    pv = trimline(pv);
     ret = strncmp (pv, str, strlen (str));
     if(pv != NULL) free(pv);
 
@@ -878,7 +878,7 @@ int executebindparameter (int req, char *str, int n)
     const char *split = ",";
     int parLen = ParStrLen (str, '$');
     T_CCI_BIT value;
-    
+
     if (parLen / 2 != n)
         return 0;
 
@@ -929,7 +929,7 @@ int executebindparameter (int req, char *str, int n)
             else
             {
                 res = cci_bind_param (req, (parLen / 2 + 1), atype, getvalue (p), utype, CCI_BIND_PTR);
-            } 
+            }
 
             if (res < 0)
                 return 0;
@@ -986,7 +986,7 @@ int readFile (char *fileName)
                 hasqp = 1;
                 continue;
             }
-            
+
             isline = endwith (str, ';');
             sql_len = strlen (str);
             if (!isline)
@@ -997,12 +997,12 @@ int readFile (char *fileName)
             {
                 linelength = linelength + sql_len + 1;	//"\0"
             }
-            
+
             if (linelength > MAXLINELENGH)
             {
                 printf ("The sql statment is too long \n");
             }
-            
+
             strcat (str_tmp, str);
             if (!isline)
             {
@@ -1155,8 +1155,8 @@ _NEXT_MULTIPLE_LINE_SQL:
     {
         if (cmd_type != CUBRID_STMT_SELECT && cmd_type != CUBRID_STMT_CALL)
         {
-            fprintf(fp, "%d\n", res);  
-            goto _FOR_DML_STATEMENT_END;  
+            fprintf(fp, "%d\n", res);
+            goto _FOR_DML_STATEMENT_END;
         }
         else
         {
@@ -1176,7 +1176,7 @@ _NEXT_MULTIPLE_LINE_SQL:
 
             fprintf (fp, "%s", CCI_GET_RESULT_INFO_NAME (res_col_info, index_count));
             fprintf (stdout, "%s", CCI_GET_RESULT_INFO_NAME (res_col_info, index_count));
-        }     
+        }
         fprintf (fp, "    ");
         fprintf (stdout, "    ");
     }
@@ -1267,7 +1267,7 @@ _NEXT_MULTIPLE_LINE_SQL:
                             {
                                 fprintf (fp, "%s", (char *) bufferset);
                             }
-                        } 
+                        }
                         fprintf (fp, ",");
                     }
                 }
@@ -1364,7 +1364,7 @@ _NEXT_MULTIPLE_LINE_SQL:
                     else
                     {
                         if ( has_st )//add by charlie for format the show trace
-                        {    
+                        {
                             trannum ((char *) buffer);
                             has_st = 0;
                         }
@@ -1378,7 +1378,7 @@ _NEXT_MULTIPLE_LINE_SQL:
                     fprintf (fp, "     ");
                 }
             }
-            //finish to restrive data 
+            //finish to restrive data
             // fprintf (fp, "\n");
             // goto _DUMPTABLE_WHILE_END;
         }
@@ -1387,7 +1387,7 @@ _NEXT_MULTIPLE_LINE_SQL:
         if (res == CCI_ER_NO_MORE_DATA)
         {
             fprintf (fp, "\n");
-            if (queryplan || hasqueryplan) 
+            if (queryplan || hasqueryplan)
             {
                 res = cci_get_query_plan (req, &plan);
                 {
@@ -1420,7 +1420,7 @@ _FOR_DML_STATEMENT_END:
         {
             fprintf (stdout, "Error:%d\n", error.err_code);
             goto _DUMPTABLE_ERROR;
-        }  
+        }
     }
 
     //release
@@ -1493,7 +1493,7 @@ int execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
     {
         fprintf (fp, "%d\n", res);
         if ( hasqueryplan )
-        {    
+        {
             res = cci_get_query_plan (req, &plan);
             if (res < 0)
             {
@@ -1504,7 +1504,7 @@ int execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
             {
                 formatplan (fp, plan);
             }
-        }    
+        }
     }
     else
     {
@@ -1535,7 +1535,7 @@ int execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
             fprintf (fp, "%d\n", res);
         }
     }
-    
+
     if (req > 0)
         cci_close_req_handle (req);
     return 0;
@@ -1681,7 +1681,7 @@ int executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan
             }
         }
     }
-    
+
     if (req > 0)
         cci_close_req_handle (req);
     return 0;
@@ -1712,7 +1712,7 @@ int test(FILE * fp)
             goto _END;
         }else{
 	    fprintf (stdout, "CUBRID server is not available, waiting for recovery - (%s) \n", get_err_msg (conn));
-	    sleep(5); 
+	    sleep(5);
         }
 
         count++;
@@ -1755,7 +1755,7 @@ int test(FILE * fp)
                 fprintf (stdout, "(%s, %d) %s ERROR : cci_connect(%s %d)\n\n",
                         __FILE__, __LINE__, get_err_msg (conn), error.err_msg, error.err_code);
             }
-        } 
+        }
         /*support -- holdcas on; --+ holdcas on; -- holdcas off; --+ holdcas off;
           2013.12.5 cn15209
           autocommit on;  <====> --+ holdcas off; <====>  CCI_CAS_CHANGE_MODE_AUTO
@@ -1876,7 +1876,7 @@ int test(FILE * fp)
     {
         goto _END;
     }
-    
+
     for (sql_count = 0; sql_count < total_sql; sql_count++)
     {
         if (sqlstate[sql_count].sql != NULL)
@@ -2028,9 +2028,9 @@ char *merge_result_path (const char *result_path, char *res_path)
     int len = 0;
     char *new_path = NULL;
     char *res_ralative_path = NULL;
-    
+
     res_ralative_path = getRelativeCasePath(res_path);
-  
+
     len = strlen(result_path) + strlen("/") +  strlen(res_ralative_path);
     new_path = malloc (sizeof (char) * (len + 1));
     sprintf (new_path, "%s/%s", result_path, res_ralative_path);
@@ -2120,7 +2120,7 @@ int main (int argc, char *argv[])
     end_time = getCurrentTime();
     elapse_time = end_time - start_time;
     //end to test the case by cci.
-   
+
     if (fp)
     {
         fclose (fp);
@@ -2144,7 +2144,7 @@ int main (int argc, char *argv[])
         char *result_p = NULL;
         char *pos = NULL;
 
-        //mkdir folder for result, and create result file for failed cases            
+        //mkdir folder for result, and create result file for failed cases
         result_p = merge_result_path (result, resname);
         mkdir_r (result_p, result);
         copyfile (resname, result_p);
