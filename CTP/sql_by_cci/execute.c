@@ -559,10 +559,7 @@ char *trimline (char *str)
     *++p = '\0';
     if (s != str)
     {
-       char* tmpbuf = (char *)malloc((strlen (s) + 1) * sizeof(char));
-       memcpy (tmpbuf, s, (strlen (s) + 1) * sizeof(char));
-       memcpy (str, tmpbuf, (strlen (s) + 1) * sizeof(char));
-       if(tmpbuf != NULL) free(tmpbuf); 
+       memmove (str, s, (strlen (s) + 1) * sizeof(char));
     }
     return (str);
 }
@@ -601,9 +598,8 @@ int iscomment (char *str)
             if(strstr(str, "@queryplan"))
             {
                 return 0;
-            }
-            else if(!(strncasecmp (str, "--+ HOLDCAS ON", 14)) || !(strncasecmp (str, "-- HOLDCAS ON", 13))||
-                    !(strncasecmp (str, "--+ HOLDCAS OFF", 15))|| !(strncasecmp (str, "-- HOLDCAS OFF", 14))) //support -- holdcas on; --+ holdcas on; -- holdcas off; --+ holdcas off; 2013.12.4 cn15209
+            } //support --+ holdcas on; --+ holdcas off;
+            else if(!(strncasecmp (str, "--+ HOLDCAS ON", 14)) || !(strncasecmp (str, "--+ HOLDCAS OFF", 15))) C
             {
                 return 0; 
             }
@@ -947,7 +943,7 @@ int executebindparameter (int req, char *str, int n)
 int readFile (char *fileName)
 {
     FILE *sql_file;
-    int linelenght = 0;
+    int linelength = 0;
     int ascii1 = 0, ascii2 = 0;
     char str[MAX_SQL_LEN];
     int isline = 0;
@@ -955,7 +951,6 @@ int readFile (char *fileName)
     int sql_len = 0;
     int isparameter = 0;
     bool hasqp = 0;
-    bool iscallwithoutvalue = 0;
 
     //initial the total sql count.
     total_sql = 0;
@@ -976,8 +971,7 @@ int readFile (char *fileName)
                 continue;
             }
 
-            //if script like "? = call"
-            iscallwithoutvalue = startswith (str, "?");
+            iscallwithoutvalue = n
             isparameter = startswith (str, "$");
             if (isparameter)
             {
@@ -997,14 +991,14 @@ int readFile (char *fileName)
             sql_len = strlen (str);
             if (!isline)
             {
-                linelenght = linelenght + sql_len;
+                linelength = linelength + sql_len;
             }
             else
             {
-                linelenght = linelenght + sql_len + 1;	//"\0"
+                linelength = linelength + sql_len + 1;	//"\0"
             }
             
-            if (linelenght > MAXLINELENGH)
+            if (linelength > MAXLINELENGH)
             {
                 printf ("The sql statment is too long \n");
             }
@@ -1013,7 +1007,7 @@ int readFile (char *fileName)
             if (!isline)
             {
                 strcat (str_tmp, "\n");
-                linelenght = linelenght + 2;
+                linelength = linelength + 2;
             }
 
             //clear the str buf, because it have been cat to str_tmp.
@@ -1021,14 +1015,14 @@ int readFile (char *fileName)
             if (isline)
             {
                 trimline (str_tmp);
-                sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * (linelenght));
-                strncpy (sqlstate[total_sql].sql, str_tmp, linelenght);
+                sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * (linelength));
+                strncpy (sqlstate[total_sql].sql, str_tmp, linelength);
                 sqlstate[total_sql].hasqp = hasqp;
-                sqlstate[total_sql].iscallwithoutvalue = iscallwithoutvalue;
+                //if script like "? = call"
+                sqlstate[total_sql].iscallwithoutvalue = startswith (str, "?");
                 total_sql++;
-                linelenght = 0;
+                linelength = 0;
                 hasqp = 0;
-                iscallwithoutvalue = 0;
                 memset (str_tmp, 0, sizeof (char) * (MAXLINELENGH));
                 isline = 0;
             }
