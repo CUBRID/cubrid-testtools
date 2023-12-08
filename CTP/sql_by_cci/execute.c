@@ -1709,11 +1709,11 @@ int test(FILE * fp)
                         __FILE__, __LINE__, get_err_msg (conn), error.err_msg, error.err_code);
             }
         }
-        /*support -- holdcas on; --+ holdcas on; -- holdcas off; --+ holdcas off;
+        /*support --+ holdcas on; --+ holdcas off;
           2013.12.5 cn15209
           autocommit on;  <====> --+ holdcas off; <====>  CCI_CAS_CHANGE_MODE_AUTO
           autocommit off; <====> --+ holdcas on;  <====>  CCI_CAS_CHANGE_MODE_KEEP*/
-        else if (!(strncasecmp (sqlstate[sql_count].sql, "--+ HOLDCAS ON", 14)) || !(strncasecmp (sqlstate[sql_count].sql, "-- HOLDCAS ON", 13)))
+        else if (!(strncasecmp (sqlstate[sql_count].sql, "--+ HOLDCAS ON", 14)) || !(strncasecmp (sqlstate[sql_count].sql, "--+HOLDCAS ON", 13)))
         {
 #ifdef CCI_SET_CAS_CHANGE_MODE_INTERFACE
             //printf("%s\n",sqlstate[j].sql);
@@ -1727,7 +1727,7 @@ int test(FILE * fp)
             fprintf (stdout,"The program doesn't compile cci_set_cas_change_mode interface.\n");
 #endif
         }
-        else if (!(strncasecmp (sqlstate[sql_count].sql, "--+ HOLDCAS OFF", 15)) || !(strncasecmp (sqlstate[sql_count].sql, "-- HOLDCAS OFF", 14)))
+        else if (!(strncasecmp (sqlstate[sql_count].sql, "--+ HOLDCAS OFF", 15)) || !(strncasecmp (sqlstate[sql_count].sql, "--+HOLDCAS OFF", 14)))
         {
 #ifdef CCI_SET_CAS_CHANGE_MODE_INTERFACE
             res = cci_set_cas_change_mode (conn,CCI_CAS_CHANGE_MODE_AUTO,&error);
