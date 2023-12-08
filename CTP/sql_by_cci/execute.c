@@ -46,6 +46,10 @@
 #define MAX_SQL_LEN 1024*200
 #define MAX_LEN 1024
 
+extern int is_in_plcsql_text(void);
+extern void clear_line_scanner_state ();
+extern void scan_line (const char *line);
+
 char host[32]   = "localhost";
 char user[32]   = "dba";
 char passwd[32] = "";
@@ -912,9 +916,8 @@ int readFile (char *fileName)
     FILE *sql_file;
     int sql_len = 0;
     int ascii1 = 0, ascii2 = 0;
-    char str[MAX_SQL_LEN];
+    char line[MAX_SQL_LEN];
     char sql_buf[MAXLINELENGH];
-    int isline = 0;
     bool hasqp = 0;
 
     //initial the total sql count.
@@ -923,60 +926,58 @@ int readFile (char *fileName)
     memset (sql_buf, 0, sizeof (char) * (MAXLINELENGH));
     if ((sql_file = fopen (fileName, "r")) != NULL)
     {
-        while (fgets (str, MAX_SQL_LEN, sql_file) != NULL)
+        while (fgets (line, MAX_SQL_LEN, sql_file) != NULL)
         {
-            trimline(str);  // NOTE: str does not end with a '/n' after this line
+            trimline(line);  // NOTE: in-line modification. line does not end with a '/n' after this line
 
-            if (strlen(str) == 0 || iscomment (str))
+            if (strlen(line) == 0 || iscomment (line))
             {
                 continue;
             }
 
-            if (str[0] == '$')
+            if (line[0] == '$')
             {
-                parameter[total_sql] = (char *) malloc (sizeof (char) * (strlen (str) + 1));
-                strcpy(parameter[total_sql], str);
+                parameter[total_sql] = (char *) malloc (sizeof (char) * (strlen (line) + 1));
+                strcpy(parameter[total_sql], line);
                 continue;
             }
 
-            if (startswith (str, "--@queryplan"))
+            if (startswith (line, "--@queryplan"))
             {
                 hasqp = 1;
                 continue;
             }
 
-            isline = endswithsemicolon (str);
-            sql_len += strlen (str);
-
+            sql_len += strlen (line);
             if (sql_len >= MAXLINELENGH)
             {
                 printf ("The sql statment is too long \n");
                 exit(1);
             }
+            strcat (sql_buf, line);
 
-            strcat (sql_buf, str);
-            if (!isline)
-            {
-                strcat (sql_buf, "\n");
-                sql_len++;
-            }
-
-            if (isline)
+            scan_line(line);
+            if (endswithsemicolon (line) && !is_in_plcsql_text())
             {
                 sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * (sql_len) + 1);
                 strcpy (sqlstate[total_sql].sql, sql_buf);
                 sqlstate[total_sql].hasqp = hasqp;
                 //if script like "? = call"
-                sqlstate[total_sql].iscallwithoutvalue = startswith (str, "?");
+                sqlstate[total_sql].iscallwithoutvalue = startswith (line, "?");
 
                 total_sql++;
 
                 memset (sql_buf, 0, sql_len);
                 sql_len = 0;
                 hasqp = 0;
-                isline = 0;
+                clear_line_scanner_state();
             }
-            str[0] = 0x00;
+            else
+            {
+                strcat (sql_buf, "\n");
+                sql_len++;
+            }
+            line[0] = 0x00;
         }
     }
 

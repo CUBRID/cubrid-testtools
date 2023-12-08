@@ -56,7 +56,7 @@ if [ -e "$CUBRID/cci" ]; then
 else
     MACRO_OPTION="-D ADD_CAS_ERROR_HEADER=0"
 fi
-gcc $MACRO_OPTION -o execute execute.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
+gcc $MACRO_OPTION -o execute execute.c line_scanner.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
 statOfExecute=$?
 gcc -o ccqt ccqt.c $CFLAGS
 statOfCcqt=$?

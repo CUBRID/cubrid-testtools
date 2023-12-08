@@ -41,10 +41,6 @@ class LineScanner {
         plcsqlNestLevel = 0;
     }
 
-    boolean isStatementComplete() {
-        return (state == State.STATEMENT_END);
-    }
-
     boolean isInPlcsqlText() {
         return (substate == Substate.PLCSQL_TEXT || substate == Substate.SEEN_END);
     }
@@ -52,9 +48,8 @@ class LineScanner {
     void scan(String line) {
 
         assert (line != null);
-        assert (state
-                != State.STATEMENT_END); // the state must be cleared to State.GENERAL before this
-        // call
+        // the state must be cleared to State.GENERAL before this call
+        assert (state != State.STATEMENT_END);
         assert ((plcsqlBeginEndBalance == 0 && plcsqlNestLevel == 0)
                 || (substate == Substate.PLCSQL_TEXT || substate == Substate.SEEN_END));
 
