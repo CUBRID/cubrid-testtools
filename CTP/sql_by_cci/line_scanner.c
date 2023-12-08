@@ -25,7 +25,7 @@ typedef enum csql_statement_state
   CSQL_STATE_CPP_COMMENT,
   CSQL_STATE_SQL_COMMENT,
   CSQL_STATE_SINGLE_QUOTE,
-  CSQL_STATE_MYSQL_QUOTE,
+  //CSQL_STATE_MYSQL_QUOTE,
   CSQL_STATE_DOUBLE_QUOTE_IDENTIFIER,
   CSQL_STATE_BACKTICK_IDENTIFIER,
   CSQL_STATE_BRACKET_IDENTIFIER,
@@ -361,14 +361,7 @@ scan_line (const char *line)
 	      stmt_complete = 0;
 	      break;
 	    case '"':
-	      /* if (!prm_get_bool_value (PRM_ID_ANSI_QUOTES))
-		{
-		  g_state = CSQL_STATE_MYSQL_QUOTE;
-		}
-	      else TODO: can we see the system parameter? */
-		{
-		  g_state = CSQL_STATE_DOUBLE_QUOTE_IDENTIFIER;
-		}
+	      g_state = CSQL_STATE_DOUBLE_QUOTE_IDENTIFIER;
 	      stmt_complete = 0;
 	      break;
 	    case '`':
@@ -431,34 +424,11 @@ scan_line (const char *line)
 	  break;
 
 	case CSQL_STATE_SINGLE_QUOTE:
-	  /* if (!prm_get_bool_value (PRM_ID_NO_BACKSLASH_ESCAPES) && *p == '\\')
-	    {
-	      p++;
-	    }
-	  else TODO: can we see the system parameter */ if (*p == '\'')
+	  if (*p == '\'')
 	    {
 	      if (*(p + 1) == '\'')
 		{
 		  /* escape by '' */
-		  p++;
-		}
-	      else
-		{
-		  g_state = CSQL_STATE_GENERAL;
-		}
-	    }
-	  break;
-
-	case CSQL_STATE_MYSQL_QUOTE:
-	  /* if (!prm_get_bool_value (PRM_ID_NO_BACKSLASH_ESCAPES) && *p == '\\')
-	    {
-	      p++;
-	    }
-	  else TODO: can we see the system parameter */ if (*p == '"')
-	    {
-	      if (*(p + 1) == '\"')
-		{
-		  /* escape by "" */
 		  p++;
 		}
 	      else
