@@ -75,7 +75,13 @@ match_word_ci (const char *word, const char **bufp)
 }
 
 int
-is_in_plcsql_text(void)
+is_statement_end()
+{
+  return (g_state == CSQL_STATE_STATEMENT_END) ? 1 : 0;
+}
+
+int
+is_in_plcsql_text()
 {
   return (g_substate == CSQL_SUBSTATE_PLCSQL_TEXT || g_substate == CSQL_SUBSTATE_SEEN_END) ? 1 : 0;
 }
@@ -379,7 +385,7 @@ scan_line (const char *line)
 
 		  stmt_complete = 1;
 
-		  // initialize the g_state variables used to identify PL/CSQL text
+		  // initialize the state variables used to identify PL/CSQL text
 		  g_substate = CSQL_SUBSTATE_INITIAL;
 		  g_plcsql_begin_end_balance = 0;
 		  g_plcsql_nest_level = 0;

@@ -46,7 +46,8 @@
 #define MAX_SQL_LEN 1024*200
 #define MAX_LEN 1024
 
-extern int is_in_plcsql_text(void);
+extern int is_statement_end();
+extern int is_in_plcsql_text();
 extern void clear_line_scanner_state ();
 extern void scan_line (const char *line);
 
@@ -957,6 +958,8 @@ int readFile (char *fileName)
             strcat (sql_buf, line);
 
             scan_line(line);
+            // the following condition should be replaced with is_statement_end()
+            // but it hugely alters the test results.
             if (endswithsemicolon (line) && !is_in_plcsql_text())
             {
                 sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * (sql_len) + 1);
@@ -970,14 +973,17 @@ int readFile (char *fileName)
                 memset (sql_buf, 0, sql_len);
                 sql_len = 0;
                 hasqp = 0;
-                clear_line_scanner_state();
             }
             else
             {
                 strcat (sql_buf, "\n");
                 sql_len++;
             }
+
             line[0] = 0x00;
+            if (is_statement_end()) {
+                clear_line_scanner_state();
+            }
         }
     }
 

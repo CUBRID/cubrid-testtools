@@ -65,7 +65,7 @@ int testdir (char *path)
 int checkext (char *path)
 {
     const char *ext = strrchr (path, '.');
-    if (!strcmp (ext, ".sql"))
+    if (ext && !strcmp (ext, ".sql"))
     {
         return 1;
     }

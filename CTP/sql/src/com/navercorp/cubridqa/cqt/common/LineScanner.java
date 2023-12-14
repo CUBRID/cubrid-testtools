@@ -41,6 +41,10 @@ class LineScanner {
         plcsqlNestLevel = 0;
     }
 
+    boolean isStatementEnd() {
+        return (state == State.STATEMENT_END);
+    }
+
     boolean isInPlcsqlText() {
         return (substate == Substate.PLCSQL_TEXT || substate == Substate.SEEN_END);
     }
