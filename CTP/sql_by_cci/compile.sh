@@ -26,9 +26,20 @@
 script_dir=$(dirname $(readlink -f $0))
 cd $script_dir
 
-CUBRID_INCLUDE="-I$CUBRID/include -I$CUBRID/cci/include"
+if [ -d "$CUBRID/cci" ]; then
+    # since CUBRID 11.2.0
+    CUBRID_INCLUDE="-I$CUBRID/include -I$CUBRID/cci/include"
+    CUBRID_LDFLAGS="-L$CUBRID/cci/lib -lcascci"
+    isSupportHoldCas=`cat ${CUBRID}/cci/include/cas_cci.h | grep "cci_set_cas_change_mode" | wc -l`
+    MACRO_OPTION="-D ADD_CAS_ERROR_HEADER=1"
+else
+    # before CUBRID 11.2.0
+    CUBRID_INCLUDE="-I$CUBRID/include"
+    CUBRID_LDFLAGS="-L$CUBRID/lib -lcascci"
+    isSupportHoldCas=`cat ${CUBRID}/include/cas_cci.h | grep "cci_set_cas_change_mode" | wc -l`
+    MACRO_OPTION="-D ADD_CAS_ERROR_HEADER=0"
+fi
 CFLAGS="-O0 -g -W -Wall"
-CUBRID_LDFLAGS="-L$CUBRID/cci/lib -lcascci"
 
 bits=`cubrid_rel|grep 64bit|grep -v grep|wc -l`
 if [ $bits -eq 1 ];then
@@ -40,7 +51,6 @@ fi
 #Do clean
 rm -f *.o ccqt execute interface_verify.h
 
-isSupportHoldCas=`cat ${CUBRID}/cci/include/cas_cci.h | grep "cci_set_cas_change_mode" | wc -l`
 if [ $isSupportHoldCas -ne 0 ];then
      echo "#define CCI_SET_CAS_CHANGE_MODE_INTERFACE  1" > interface_verify.h
 else
@@ -50,12 +60,6 @@ fi
 #Do compile
 echo ""
 echo "======Start Compile======"
-if [ -e "$CUBRID/cci" ]; then
-    # added to broker_cas_error.h
-    MACRO_OPTION="-D ADD_CAS_ERROR_HEADER=1"
-else
-    MACRO_OPTION="-D ADD_CAS_ERROR_HEADER=0"
-fi
 gcc $MACRO_OPTION -o execute execute.c line_scanner.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
 statOfExecute=$?
 gcc -o ccqt ccqt.c $CFLAGS
@@ -70,8 +74,4 @@ fi
 echo "======End Compile======"
 echo ""
 cd -
-
-
-
-
 
