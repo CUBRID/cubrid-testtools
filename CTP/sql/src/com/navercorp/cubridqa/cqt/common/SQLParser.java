@@ -106,6 +106,8 @@ public class SQLParser {
                     }
 
                     lineScanner.scan(line);
+                    // the following condition should be replaced with is_statement_end()
+                    // but it hugely alters the test results.
                     if (line.endsWith(";") && !lineScanner.isInPlcsqlText()) {
 
                         isCall = isCall(line);
@@ -122,10 +124,12 @@ public class SQLParser {
                         paramList = null;
                         isCall = false;
                         connId = "";
-
-                        lineScanner.clear();
                     } else {
                         isNewStatement = false;
+                    }
+
+                    if (lineScanner.isStatementEnd()) {
+                        lineScanner.clear();
                     }
                 }
 
