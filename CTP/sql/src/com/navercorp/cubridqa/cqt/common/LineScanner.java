@@ -394,7 +394,7 @@ class LineScanner {
         CPP_COMMENT,
         SQL_COMMENT,
         SINGLE_QUOTE,
-        //MYSQL_QUOTE,
+        // MYSQL_QUOTE,
         DOUBLE_QUOTE_IDENTIFIER,
         BACKTICK_IDENTIFIER,
         BRACKET_IDENTIFIER,
