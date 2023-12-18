@@ -40,9 +40,8 @@ public class Deploy {
 	String currEnvId;
 	String cubridPackageUrl;
 	String host;
-
 	String envIdentify;
-
+        String testcategory;
 	Log log;
 
 	public Deploy(Context context, String currEnvId, boolean laterJoined) throws Exception {
@@ -53,6 +52,7 @@ public class Deploy {
 		envIdentify = "EnvId=" + currEnvId + "[" + (ShellHelper.getTestNodeTitle(context, currEnvId, host)) + "]";
 
 		this.cubridPackageUrl = context.getCubridPackageUrl();
+                this.testcategory = context.getTestCategory();
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + currEnvId + ".log"), false, laterJoined ? true : context.isContinueMode());
 	}
 
@@ -70,9 +70,15 @@ public class Deploy {
 		}
 
 		if (relatedHosts != null && relatedHosts.size() > 0) {
-			DeployHA dHa = new DeployHA(context, currEnvId, relatedHosts.get(0), log);
-			dHa.deploy();
-			dHa.close();
+                        if (testcategory.equals("scl_shell")) {
+                                DeploySCL dscl = new DeploySCL(context, currEnvId, relatedHosts.get(0), log);
+                                dscl.deploy();
+                                dscl.close();
+                        } else {
+				DeployHA dHa = new DeployHA(context, currEnvId, relatedHosts.get(0), log);
+				dHa.deploy();
+				dHa.close();
+                        }
 		}
 
 		context.getFeedback().onDeployStop(envIdentify);
