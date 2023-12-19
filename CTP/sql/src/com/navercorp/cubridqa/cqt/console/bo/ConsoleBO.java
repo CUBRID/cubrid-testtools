@@ -1137,7 +1137,7 @@ public class ConsoleBO extends Executor {
                             test.setServerMessage("on");
                             // TODO: DBMS_OUTPUT.enable ()
                             Sql enableSql =
-                                    new Sql(connId, "CALL enable(20000)", null, true); // TODO: set
+                                    new Sql(connId, "CALL enable(50000)", null, true); // TODO: set
                             // size of
                             // enable
                             dao.execute(conn, enableSql, false);
