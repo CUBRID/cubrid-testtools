@@ -617,103 +617,103 @@ iscomment (char *str)
 T_CCI_U_TYPE
 getutype (char *p)
 {
-  if (!strncasecmp (trimline (p) + 1, "INT", 3))
+  if (startswithCI (trimline (p) + 1, "INT"))
     {
       return CCI_U_TYPE_INT;
     }
-  if (!strncasecmp (trimline (p) + 1, "CHAR", 4))
+  if (startswithCI (trimline (p) + 1, "CHAR"))
     {
       return CCI_U_TYPE_CHAR;
     }
-  if (!strncasecmp (trimline (p) + 1, "STRING", 6))
+  if (startswithCI (trimline (p) + 1, "STRING"))
     {
       return CCI_U_TYPE_STRING;
     }
-  if (!strncasecmp (trimline (p) + 1, "VARCHAR", 7))
+  if (startswithCI (trimline (p) + 1, "VARCHAR"))
     {
       return CCI_U_TYPE_VARNCHAR;
     }
-  if (!strncasecmp (trimline (p) + 1, "BIT", 3))
+  if (startswithCI (trimline (p) + 1, "BIT"))
     {
       return CCI_U_TYPE_BIT;
     }
-  if (!strncasecmp (trimline (p) + 1, "VARBIT", 6))
+  if (startswithCI (trimline (p) + 1, "VARBIT"))
     {
       return CCI_U_TYPE_VARBIT;
     }
-  if (!strncasecmp (trimline (p) + 1, "NUMERIC", 7))
+  if (startswithCI (trimline (p) + 1, "NUMERIC"))
     {
       return CCI_U_TYPE_NUMERIC;
     }
-  if (!strncasecmp (trimline (p) + 1, "INT", 3))
+  if (startswithCI (trimline (p) + 1, "INT"))
     {
       return CCI_U_TYPE_INT;
     }
-  if (!strncasecmp (trimline (p) + 1, "SHORT", 5))
+  if (startswithCI (trimline (p) + 1, "SHORT"))
     {
       return CCI_U_TYPE_SHORT;
     }
-  if (!strncasecmp (trimline (p) + 1, "MONETARY", 8))
+  if (startswithCI (trimline (p) + 1, "MONETARY"))
     {
       return CCI_U_TYPE_MONETARY;
     }
-  if (!strncasecmp (trimline (p) + 1, "FLOAT", 7))
+  if (startswithCI (trimline (p) + 1, "FLOAT"))
     {
       return CCI_U_TYPE_FLOAT;
     }
-  if (!strncasecmp (trimline (p) + 1, "DOUBLE", 6))
+  if (startswithCI (trimline (p) + 1, "DOUBLE"))
     {
       return CCI_U_TYPE_DOUBLE;
     }
-  if (!strncasecmp (trimline (p) + 1, "DATE", 4))
+  if (startswithCI (trimline (p) + 1, "DATE"))
     {
       return CCI_U_TYPE_DATE;
     }
-  if (!strncasecmp (trimline (p) + 1, "TIME", 4))
+  if (startswithCI (trimline (p) + 1, "TIME"))
     {
       return CCI_U_TYPE_TIME;
     }
-  if (!strncasecmp (trimline (p) + 1, "TIMESTAMP", 9))
+  if (startswithCI (trimline (p) + 1, "TIMESTAMP"))
     {
       return CCI_U_TYPE_TIMESTAMP;
     }
-  if (!strncasecmp (trimline (p) + 1, "SET", 3))
+  if (startswithCI (trimline (p) + 1, "SET"))
     {
       return CCI_U_TYPE_SET;
     }
-  if (!strncasecmp (trimline (p) + 1, "MULTISET", 8))
+  if (startswithCI (trimline (p) + 1, "MULTISET"))
     {
       return CCI_U_TYPE_MULTISET;
     }
-  if (!strncasecmp (trimline (p) + 1, "SEQUENCE", 8))
+  if (startswithCI (trimline (p) + 1, "SEQUENCE"))
     {
       return CCI_U_TYPE_SEQUENCE;
     }
-  if (!strncasecmp (trimline (p) + 1, "OBJECT", 6))
+  if (startswithCI (trimline (p) + 1, "OBJECT"))
     {
       return CCI_U_TYPE_OBJECT;
     }
-  if (!strncasecmp (trimline (p) + 1, "RESULTSET", 9))
+  if (startswithCI (trimline (p) + 1, "RESULTSET"))
     {
       return CCI_U_TYPE_RESULTSET;
     }
-  if (!strncasecmp (trimline (p) + 1, "BIGINT", 6))
+  if (startswithCI (trimline (p) + 1, "BIGINT"))
     {
       return CCI_U_TYPE_BIGINT;
     }
-  if (!strncasecmp (trimline (p) + 1, "DATETIME", 8))
+  if (startswithCI (trimline (p) + 1, "DATETIME"))
     {
       return CCI_U_TYPE_DATETIME;
     }
-  if (!strncasecmp (trimline (p) + 1, "BLOB", 4))
+  if (startswithCI (trimline (p) + 1, "BLOB"))
     {
       return CCI_U_TYPE_BLOB;
     }
-  if (!strncasecmp (trimline (p) + 1, "CLOB", 4))
+  if (startswithCI (trimline (p) + 1, "CLOB"))
     {
       return CCI_U_TYPE_CLOB;
     }
-  if (!strncasecmp (trimline (p) + 1, "SMALLINT", 8))
+  if (startswithCI (trimline (p) + 1, "SMALLINT"))
     {
       return CCI_U_TYPE_INT;
     }
@@ -888,7 +888,7 @@ executebindparameter (int req, char *str, int n)
     {
       if (!(parLen % 2))
 	{
-	  if (!strncasecmp (p, "$OUT:", 5))
+	  if (startswithCI (p, "$OUT:"))
 	    {
 	      parLen = parLen + 2;
 	      p = strtok (NULL, split);
@@ -1724,7 +1724,7 @@ test (FILE * fp)
 	{
 	  continue;
 	}
-      if (!(strncasecmp (sqlstate[sql_count].sql, "AUTOCOMMIT OFF", 14)))
+      if (startswithCI (sqlstate[sql_count].sql, "AUTOCOMMIT OFF"))
 	{
 	  res = cci_set_autocommit (conn, CCI_AUTOCOMMIT_FALSE);
 	  if (res < 0)
@@ -1733,7 +1733,7 @@ test (FILE * fp)
 		       __FILE__, __LINE__, get_err_msg (conn), error.err_msg, error.err_code);
 	    }
 	}
-      else if (!(strncasecmp (sqlstate[sql_count].sql, "AUTOCOMMIT ON", 13)))
+      else if (startswithCI (sqlstate[sql_count].sql, "AUTOCOMMIT ON"))
 	{
 	  res = cci_set_autocommit (conn, CCI_AUTOCOMMIT_TRUE);
 	  if (res < 0)
@@ -1742,7 +1742,7 @@ test (FILE * fp)
 		       __FILE__, __LINE__, get_err_msg (conn), error.err_msg, error.err_code);
 	    }
 	}
-      else if (!(strncasecmp (sqlstate[sql_count].sql, "COMMIT", 6)))
+      else if (startswithCI (sqlstate[sql_count].sql, "COMMIT"))
 	{
 	  res = cci_end_tran (conn, CCI_TRAN_COMMIT, &error);
 	  if (res >= 0)
@@ -1760,8 +1760,8 @@ test (FILE * fp)
          2013.12.5 cn15209
          autocommit on;  <====> --+ holdcas off; <====>  CCI_CAS_CHANGE_MODE_AUTO
          autocommit off; <====> --+ holdcas on;  <====>  CCI_CAS_CHANGE_MODE_KEEP */
-      else if (!(strncasecmp (sqlstate[sql_count].sql, "--+ HOLDCAS ON", 14))
-	       || !(strncasecmp (sqlstate[sql_count].sql, "--+HOLDCAS ON", 13)))
+      else if (startswithCI (sqlstate[sql_count].sql, "--+ HOLDCAS ON")
+	       || startswithCI (sqlstate[sql_count].sql, "--+HOLDCAS ON"))
 	{
 #ifdef CCI_SET_CAS_CHANGE_MODE_INTERFACE
 	  //printf("%s\n",sqlstate[j].sql);
@@ -1775,8 +1775,8 @@ test (FILE * fp)
 	  fprintf (stdout, "The program doesn't compile cci_set_cas_change_mode interface.\n");
 #endif
 	}
-      else if (!(strncasecmp (sqlstate[sql_count].sql, "--+ HOLDCAS OFF", 15))
-	       || !(strncasecmp (sqlstate[sql_count].sql, "--+HOLDCAS OFF", 14)))
+      else if (startswithCI (sqlstate[sql_count].sql, "--+ HOLDCAS OFF")
+	       || startswithCI (sqlstate[sql_count].sql, "--+HOLDCAS OFF"))
 	{
 #ifdef CCI_SET_CAS_CHANGE_MODE_INTERFACE
 	  res = cci_set_cas_change_mode (conn, CCI_CAS_CHANGE_MODE_AUTO, &error);
@@ -1789,7 +1789,7 @@ test (FILE * fp)
 	  fprintf (stdout, "The program doesn't compile cci_set_cas_change_mode interface.\n");
 #endif
 	}
-      else if (!(strncasecmp (sqlstate[sql_count].sql, "ROLLBACK", 8)))
+      else if (startswithCI (sqlstate[sql_count].sql, "ROLLBACK"))
 	{
 	  char *p = NULL;
 	  char *tmp = NULL;
@@ -1840,7 +1840,7 @@ test (FILE * fp)
 		}
 	    }
 	}
-      else if (!(strncasecmp (sqlstate[sql_count].sql, "SAVEPOINT", 9)))
+      else if (startswithCI (sqlstate[sql_count].sql, "SAVEPOINT"))
 	{
 	  char *p = NULL;
 	  p = sqlstate[sql_count].sql;
