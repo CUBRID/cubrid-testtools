@@ -76,7 +76,7 @@ static char *summarylog = NULL;
 static int port = 0;
 static int total_sql = 0;
 static int queryplan = 0;
-static int has_st = 0;			//add by charlie for format the show trace
+static int has_st = 0;		//add by charlie for format the show trace
 
 static char *parameter[MAX_SQL_NUM];
 static FILE *result_recorder = NULL;
@@ -953,73 +953,72 @@ readFile (char *fileName)
 
 	  if (strlen (line) == 0)
 	    {
-	      ; // do nothing
+	      ;			// do nothing
 	    }
-          else if (startswith(line, "--"))
-            {
-              if (startswith (line, "--@queryplan"))
-                {
-                  hasqp = 1;
-                }
-              else if (startswithCI (line, "--+ server-message") ||
-                       startswithCI (line, "--+server-message") ||
-                       startswithCI (line, "--+ holdcas") ||
-                       startswithCI (line, "--+holdcas"))
-                {
-                  sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * strlen(line) + 1);
-                  strcpy (sqlstate[total_sql].sql, line);
-                  sqlstate[total_sql].hasqp = 0;
-                  //if script like "? = call"
-                  sqlstate[total_sql].iscallwithoutvalue = 0;
+	  else if (startswith (line, "--"))
+	    {
+	      if (startswith (line, "--@queryplan"))
+		{
+		  hasqp = 1;
+		}
+	      else if (startswithCI (line, "--+ server-message") ||
+		       startswithCI (line, "--+server-message") ||
+		       startswithCI (line, "--+ holdcas") || startswithCI (line, "--+holdcas"))
+		{
+		  sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * strlen (line) + 1);
+		  strcpy (sqlstate[total_sql].sql, line);
+		  sqlstate[total_sql].hasqp = 0;
+		  //if script like "? = call"
+		  sqlstate[total_sql].iscallwithoutvalue = 0;
 
-                  total_sql++;
-                }
-            }
-          else if (line[0] == '$')
+		  total_sql++;
+		}
+	    }
+	  else if (line[0] == '$')
 	    {
 	      parameter[total_sql] = (char *) malloc (sizeof (char) * (strlen (line) + 1));
 	      strcpy (parameter[total_sql], line);
 	    }
-          else
-            {
-              // statement
+	  else
+	    {
+	      // statement
 
-              sql_len += strlen (line);
-              if (sql_len >= MAXLINELENGH)
-                {
-                  printf ("The sql statment is too long \n");
-                  exit (1);
-                }
-              strcat (sql_buf, line);
+	      sql_len += strlen (line);
+	      if (sql_len >= MAXLINELENGH)
+		{
+		  printf ("The sql statment is too long \n");
+		  exit (1);
+		}
+	      strcat (sql_buf, line);
 
-              scan_line (line);
-              // the following condition should be replaced with is_statement_end()
-              // but it hugely alters the test results.
-              if (endswithsemicolon (line) && !is_in_plcsql_text ())
-                {
-                  sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * sql_len + 1);
-                  strcpy (sqlstate[total_sql].sql, sql_buf);
-                  sqlstate[total_sql].hasqp = hasqp;
-                  //if script like "? = call"
-                  sqlstate[total_sql].iscallwithoutvalue = startswith (line, "?");
+	      scan_line (line);
+	      // the following condition should be replaced with is_statement_end()
+	      // but it hugely alters the test results.
+	      if (endswithsemicolon (line) && !is_in_plcsql_text ())
+		{
+		  sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * sql_len + 1);
+		  strcpy (sqlstate[total_sql].sql, sql_buf);
+		  sqlstate[total_sql].hasqp = hasqp;
+		  //if script like "? = call"
+		  sqlstate[total_sql].iscallwithoutvalue = startswith (line, "?");
 
-                  total_sql++;
+		  total_sql++;
 
-                  memset (sql_buf, 0, sql_len);
-                  sql_len = 0;
-                  hasqp = 0;
-                }
-              else
-                {
-                  strcat (sql_buf, "\n");
-                  sql_len++;
-                }
+		  memset (sql_buf, 0, sql_len);
+		  sql_len = 0;
+		  hasqp = 0;
+		}
+	      else
+		{
+		  strcat (sql_buf, "\n");
+		  sql_len++;
+		}
 
-              if (is_statement_end ())
-                {
-                  clear_line_scanner_state ();
-                }
-            }
+	      if (is_statement_end ())
+		{
+		  clear_line_scanner_state ();
+		}
+	    }
 	}
     }
 
@@ -1447,17 +1446,20 @@ _DUMPTABLE_ERROR:return -1;
 }
 
 static int
-set_server_message(FILE * fp, char conn, bool on) {
+set_server_message (FILE * fp, char conn, bool on)
+{
   char sql[20];
   int req, res;
   T_CCI_ERROR error;
 
   if (on)
-  {
-    sprintf(sql, "call enable(%d)", DBMS_OUTPUT_BUFFER_SIZE);
-  } else {
-    sprintf(sql, "call disable()");
-  }
+    {
+      sprintf (sql, "call enable(%d)", DBMS_OUTPUT_BUFFER_SIZE);
+    }
+  else
+    {
+      sprintf (sql, "call disable()");
+    }
 
   req = cci_prepare (conn, sql, CCI_PREPARE_CALL, &error);
   if (req < 0)
@@ -1480,19 +1482,20 @@ set_server_message(FILE * fp, char conn, bool on) {
 
 _END:
   if (req > 0)
-   {
-    cci_close_req_handle (req);
-   }
+    {
+      cci_close_req_handle (req);
+    }
   return res;
 }
 
-static char*
-get_server_output(FILE * fp, char conn) {
+static char *
+get_server_output (FILE * fp, char conn)
+{
   int req = 0, res = 0;
   T_CCI_ERROR error;
-  static const char* sql = "call get_line(?, ?)";
+  static const char *sql = "call get_line(?, ?)";
   static char buff[DBMS_OUTPUT_BUFFER_SIZE];
-  char* ret = NULL, *p, *str;
+  char *ret = NULL, *p, *str;
   int status, ind;
 
   req = cci_prepare (conn, sql, CCI_PREPARE_CALL, &error);
@@ -1503,87 +1506,96 @@ get_server_output(FILE * fp, char conn) {
       goto _END;
     }
 
-  res = cci_register_out_param(req, 1);
-  if (res < 0) {
+  res = cci_register_out_param (req, 1);
+  if (res < 0)
+    {
       fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
       fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
       goto _END;
-  }
+    }
 
-  res = cci_register_out_param(req, 2);
-  if (res < 0) {
+  res = cci_register_out_param (req, 2);
+  if (res < 0)
+    {
       fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
       fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
       goto _END;
-  }
+    }
 
   buff[0] = '\n';
   buff[1] = '\0';
   p = buff + 1;
-  while (1) {
+  while (1)
+    {
       res = cci_execute (req, 0, 0, &error);
       if (res < 0)
-        {
-          fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-          fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-          goto _END;
-        }
+	{
+	  fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	  fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	  goto _END;
+	}
 
       res = cci_cursor (req, 1, CCI_CURSOR_FIRST, &error);
       if (res == CCI_ER_NO_MORE_DATA)
-      {
-          fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-          fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-          goto _END;
-      }
+	{
+	  fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	  fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	  goto _END;
+	}
 
       res = cci_fetch (req, &error);
       if (res < 0)
-      {
-          fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-          fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-          goto _END;
-      }
+	{
+	  fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	  fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	  goto _END;
+	}
 
       res = cci_get_data (req, 2, CCI_A_TYPE_INT, &status, &ind);
       if (res < 0)
-      {
-          fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-          fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-          goto _END;
-      }
+	{
+	  fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	  fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	  goto _END;
+	}
 
-      if (ind == 0 && status == 0) {
+      if (ind == 0 && status == 0)
+	{
 
-          res = cci_get_data (req, 1, CCI_A_TYPE_STR, &str, &ind);
-          if (res < 0)
-          {
-              fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-              fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-              goto _END;
-          }
+	  res = cci_get_data (req, 1, CCI_A_TYPE_STR, &str, &ind);
+	  if (res < 0)
+	    {
+	      fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	      fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	      goto _END;
+	    }
 
-          assert(ind >= 0);
-          if (ind > 0) {
-              sprintf(p, "%s\n", str);
-              p += (ind + 1);
-          } else {
-              strcpy(p, "\n");
-              p++;
-          }
+	  assert (ind >= 0);
+	  if (ind > 0)
+	    {
+	      sprintf (p, "%s\n", str);
+	      p += (ind + 1);
+	    }
+	  else
+	    {
+	      strcpy (p, "\n");
+	      p++;
+	    }
 
-      } else {
-          break;
-      }
+	}
+      else
+	{
+	  break;
+	}
 
       res = cci_close_query_result (req, &error);
       if (res < 0)
-      {
-          fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-          fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-          goto _END;
-      }
-  }
+	{
+	  fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	  fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	  goto _END;
+	}
+    }
 
   ret = buff;
 
@@ -1604,7 +1616,7 @@ execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
   char *plan = NULL;
   T_CCI_COL_INFO *res_col_info;
   T_CCI_SQLX_CMD cmd_type;
-  char* server_output_buffer = NULL;
+  char *server_output_buffer = NULL;
 
   fprintf (fp, "===================================================\n");
 
@@ -1613,32 +1625,37 @@ execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
     {
       fprintf (stdout, "Error:%d\n", error.err_code);
       fprintf (fp, "Error:%d\n", error.err_code);
-      if (is_server_message_on) {
-          char* end = strstr(error.err_msg, "[CAS INFO");
-          if (end) {
-              *end = '\0';
-          }
-          fprintf (fp, "%s\n\n", error.err_msg);
-      }
+      if (is_server_message_on)
+	{
+	  char *end = strstr (error.err_msg, "[CAS INFO");
+	  if (end)
+	    {
+	      *end = '\0';
+	    }
+	  fprintf (fp, "%s\n\n", error.err_msg);
+	}
       ret = -1;
       goto _END;
     }
 
   res = cci_execute (req, CCI_EXEC_QUERY_ALL, 0, &error);
-  if (is_server_message_on) {
-      server_output_buffer = get_server_output(fp, conn);
-  }
+  if (is_server_message_on)
+    {
+      server_output_buffer = get_server_output (fp, conn);
+    }
   if (res < 0)
     {
       fprintf (stdout, "Error:%d\n", error.err_code);
       fprintf (fp, "Error:%d\n", error.err_code);
-      if (is_server_message_on) {
-          char* end = strstr(error.err_msg, "[CAS INFO");
-          if (end) {
-              *end = '\0';
-          }
-          fprintf (fp, "%s\n", error.err_msg);
-      }
+      if (is_server_message_on)
+	{
+	  char *end = strstr (error.err_msg, "[CAS INFO");
+	  if (end)
+	    {
+	      *end = '\0';
+	    }
+	  fprintf (fp, "%s\n", error.err_msg);
+	}
       ret = -1;
       goto _END;
     }
@@ -1690,7 +1707,7 @@ execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
 	{
 	  fprintf (stdout, "Error:%d\n", error.err_code);
 	  fprintf (fp, "Error:%d\n", error.err_code);
-          ret = -1;
+	  ret = -1;
 	  goto _END;
 	}
 
@@ -1707,9 +1724,10 @@ execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
     }
 
 _END:
-  if (server_output_buffer) {
-      fprintf(fp, server_output_buffer);
-  }
+  if (server_output_buffer)
+    {
+      fprintf (fp, server_output_buffer);
+    }
   if (req > 0)
     cci_close_req_handle (req);
   return ret;
@@ -1730,7 +1748,7 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
   char *buffer;
   T_CCI_COL_INFO *res_col_info;
   T_CCI_SQLX_CMD cmd_type;
-  char* server_output_buffer;
+  char *server_output_buffer;
 
   fprintf (fp, "===================================================\n");
 
@@ -1747,13 +1765,15 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
     {
       fprintf (stdout, "Error:%d\n", error.err_code);
       fprintf (fp, "Error:%d\n", error.err_code);
-      if (is_server_message_on) {
-          char* end = strstr(error.err_msg, "[CAS INFO");
-          if (end) {
-              *end = '\0';
-          }
-          fprintf (fp, "%s\n\n", error.err_msg);
-      }
+      if (is_server_message_on)
+	{
+	  char *end = strstr (error.err_msg, "[CAS INFO");
+	  if (end)
+	    {
+	      *end = '\0';
+	    }
+	  fprintf (fp, "%s\n\n", error.err_msg);
+	}
       ret = -1;
       goto _END;
     }
@@ -1772,26 +1792,29 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
       if ((cci_register_out_param (req, t)) < 0)
 	{
 	  fprintf (stdout, "register parameter error\n");
-          ret = -1;
+	  ret = -1;
 	  goto _END;
 	}
     }
 
   res = cci_execute (req, CCI_EXEC_QUERY_ALL, 0, &error);
-  if (is_server_message_on) {
-      server_output_buffer = get_server_output(fp, conn);
-  }
+  if (is_server_message_on)
+    {
+      server_output_buffer = get_server_output (fp, conn);
+    }
   if (res < 0)
     {
       fprintf (stdout, "Error:%d\n", error.err_code);
       fprintf (fp, "Error:%d\n", error.err_code);
-      if (is_server_message_on) {
-          char* end = strstr(error.err_msg, "[CAS INFO");
-          if (end) {
-              *end = '\0';
-          }
-          fprintf (fp, "%s\n", error.err_msg);
-      }
+      if (is_server_message_on)
+	{
+	  char *end = strstr (error.err_msg, "[CAS INFO");
+	  if (end)
+	    {
+	      *end = '\0';
+	    }
+	  fprintf (fp, "%s\n", error.err_msg);
+	}
       ret = -1;
       goto _END;
     }
@@ -1817,21 +1840,21 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
       if (res == CCI_ER_NO_MORE_DATA)
 	{
 	  fprintf (fp, "Error:%d\n", error.err_code);
-          ret = -1;
+	  ret = -1;
 	  goto _END;
 	}
 
       if ((res = cci_fetch (req, &error) < 0))
 	{
 	  fprintf (fp, "Error:%d\n", error.err_code);
-          ret = -1;
+	  ret = -1;
 	  goto _END;
 	}
 
       if ((res = cci_get_data (req, 1, CCI_A_TYPE_STR, &buffer, &ind)) < 0)
 	{
 	  fprintf (fp, "Error:%d\n", error.err_code);
-          ret = -1;
+	  ret = -1;
 	  goto _END;
 	}
       // ind: string length, buffer: a string which came from the out binding parameter of test_out(?) Java SP.
@@ -1864,7 +1887,7 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
 	    {
 	      fprintf (stdout, "Error:%d\n", error.err_code);
 	      fprintf (fp, "Error:%d\n", error.err_code);
-              ret = -1;
+	      ret = -1;
 	      goto _END;
 	    }
 	  res_col_info = cci_get_result_info (req, &cmd_type, &col_count);
@@ -1880,9 +1903,10 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
     }
 
 _END:
-  if (server_output_buffer) {
-      fprintf(fp, server_output_buffer);
-  }
+  if (server_output_buffer)
+    {
+      fprintf (fp, server_output_buffer);
+    }
   if (req > 0)
     cci_close_req_handle (req);
   return ret;
@@ -1960,13 +1984,13 @@ test (FILE * fp)
       else if (startswithCI (sqlstate[sql_count].sql, "--+ SERVER-MESSAGE ON")
 	       || startswithCI (sqlstate[sql_count].sql, "--+SERVER-MESSAGE ON"))
 	{
-          set_server_message(fp, conn, 1);
-        }
+	  set_server_message (fp, conn, 1);
+	}
       else if (startswithCI (sqlstate[sql_count].sql, "--+ SERVER-MESSAGE OFF")
 	       || startswithCI (sqlstate[sql_count].sql, "--+SERVER-MESSAGE OFF"))
 	{
-          set_server_message(fp, conn, 0);
-        }
+	  set_server_message (fp, conn, 0);
+	}
       /*support --+ holdcas on; --+ holdcas off;
          2013.12.5 cn15209
          autocommit on;  <====> --+ holdcas off; <====>  CCI_CAS_CHANGE_MODE_AUTO
