@@ -846,7 +846,7 @@ public class Test {
 
 		StringBuffer s = new StringBuffer();
 		s.append("select 'TABLE'||':db_class' check_table, t.* from db_class t where is_system_class='NO' and upper(class_name)<>'QA_SYSTEM_TB_FLAG';");
-		s.append("select 'TABLE'||':db_stored_procedure', t.* from db_stored_procedure t; ");
+		s.append("select 'TABLE'||':db_stored_procedure', t.* from db_stored_procedure t where target not like 'com.cubrid.plcsql.builtin%'; ");
 		s.append("select 'TABLE'||':db_trig', t.* from db_trig t; ");
 		s.append("select 'TABLE'||':db_partition', t.* from db_partition t; ");
 		s.append("select 'TABLE'||':db_meth_file', t.* from db_meth_file t; ");
