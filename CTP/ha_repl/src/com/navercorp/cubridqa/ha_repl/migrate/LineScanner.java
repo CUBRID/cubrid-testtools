@@ -41,7 +41,7 @@ class LineScanner {
         plcsqlNestLevel = 0;
     }
 
-    boolean isStatementComplete() {
+    boolean isStatementEnd() {
         return (state == State.STATEMENT_END);
     }
 
@@ -52,9 +52,8 @@ class LineScanner {
     void scan(String line) {
 
         assert (line != null);
-        assert (state
-                != State.STATEMENT_END); // the state must be cleared to State.GENERAL before this
-        // call
+        // the state must be cleared to State.GENERAL before this call
+        assert (state != State.STATEMENT_END);
         assert ((plcsqlBeginEndBalance == 0 && plcsqlNestLevel == 0)
                 || (substate == Substate.PLCSQL_TEXT || substate == Substate.SEEN_END));
 
@@ -129,12 +128,7 @@ class LineScanner {
                             break;
 
                         case '"':
-                            /*if (prm_get_bool_value (PRM_ID_ANSI_QUOTES) == false) {   TODO: can we see the parameter?
-                              state = State.MYSQL_QUOTE;
-                            } else*/ {
-                                state = State.DOUBLE_QUOTE_IDENTIFIER;
-                            }
-
+                            state = State.DOUBLE_QUOTE_IDENTIFIER;
                             stmtComplete = false;
                             break;
 
@@ -189,26 +183,9 @@ class LineScanner {
                     break;
 
                 case SINGLE_QUOTE:
-                    /*if (prm_get_bool_value (PRM_ID_NO_BACKSLASH_ESCAPES) == false &&
-                          c == '\\') {      TODO: can we see the parameter?
-                        i++;
-                    } else */ if (c == '\'') {
+                    if (c == '\'') {
                         if (charAtStr(line, i + 1) == '\'') {
                             // escape by ''
-                            i++;
-                        } else {
-                            state = State.GENERAL;
-                        }
-                    }
-                    break;
-
-                case MYSQL_QUOTE:
-                    /*if (prm_get_bool_value (PRM_ID_NO_BACKSLASH_ESCAPES) == false &&
-                          c == '\\') {      TODO: can we see the parameter?
-                        i++;
-                    } else */ if (c == '"') {
-                        if (charAtStr(line, i + 1) == '"') {
-                            // escape by ""
                             i++;
                         } else {
                             state = State.GENERAL;
@@ -417,7 +394,7 @@ class LineScanner {
         CPP_COMMENT,
         SQL_COMMENT,
         SINGLE_QUOTE,
-        MYSQL_QUOTE,
+        //MYSQL_QUOTE,
         DOUBLE_QUOTE_IDENTIFIER,
         BACKTICK_IDENTIFIER,
         BRACKET_IDENTIFIER,

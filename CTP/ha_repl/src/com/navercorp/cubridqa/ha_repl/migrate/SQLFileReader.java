@@ -374,7 +374,6 @@ public class SQLFileReader {
 					isMultipleLine = false;
 					shouldBeDeleted = false;
 					isDML = false;
-					lineScanner.clear();
 				}
 			} else {
 				if (isMultipleLine) {
@@ -391,6 +390,9 @@ public class SQLFileReader {
 					}
 					isMultipleLine = true;
 				}
+			}
+			if (lineScanner.isStatementEnd()) {
+				lineScanner.clear();
 			}
 		}
 		out.flush();
