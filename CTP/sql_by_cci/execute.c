@@ -1748,7 +1748,7 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
   char *buffer;
   T_CCI_COL_INFO *res_col_info;
   T_CCI_SQLX_CMD cmd_type;
-  char *server_output_buffer;
+  char *server_output_buffer = NULL;
 
   fprintf (fp, "===================================================\n");
 
