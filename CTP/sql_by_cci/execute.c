@@ -1962,20 +1962,6 @@ test (FILE * fp)
 		       __FILE__, __LINE__, get_err_msg (conn), error.err_msg, error.err_code);
 	    }
 	}
-      else if (startswithCI (sqlstate[sql_count].sql, "COMMIT"))
-	{
-	  res = cci_end_tran (conn, CCI_TRAN_COMMIT, &error);
-	  if (res >= 0)
-	    {
-	      fprintf (fp, "===================================================\n");
-	      fprintf (fp, "0\n");
-	    }
-	  else
-	    {
-	      fprintf (stdout, "(%s, %d) %s ERROR : cci_connect(%s %d)\n\n",
-		       __FILE__, __LINE__, get_err_msg (conn), error.err_msg, error.err_code);
-	    }
-	}
       else if (startswithCI (sqlstate[sql_count].sql, "--+ SERVER-MESSAGE ON")
 	       || startswithCI (sqlstate[sql_count].sql, "--+SERVER-MESSAGE ON"))
 	{
@@ -1986,10 +1972,6 @@ test (FILE * fp)
 	{
 	  set_server_message (fp, conn, 0);
 	}
-      /*support --+ holdcas on; --+ holdcas off;
-         2013.12.5 cn15209
-         autocommit on;  <====> --+ holdcas off; <====>  CCI_CAS_CHANGE_MODE_AUTO
-         autocommit off; <====> --+ holdcas on;  <====>  CCI_CAS_CHANGE_MODE_KEEP */
       else if (startswithCI (sqlstate[sql_count].sql, "--+ HOLDCAS ON")
 	       || startswithCI (sqlstate[sql_count].sql, "--+HOLDCAS ON"))
 	{
@@ -2018,75 +2000,6 @@ test (FILE * fp)
 #else
 	  fprintf (stdout, "The program doesn't compile cci_set_cas_change_mode interface.\n");
 #endif
-	}
-      else if (startswithCI (sqlstate[sql_count].sql, "ROLLBACK"))
-	{
-	  char *p = NULL;
-	  char *tmp = NULL;
-	  int _len = 0;
-
-	  p = sqlstate[sql_count].sql;
-
-	  tmp = strcasestr (p, "to");
-	  if (tmp != NULL && endswithsemicolon (tmp))
-	    {
-	      tmp[strlen (tmp) - 1] = 0;
-	    }
-
-	  if (tmp != NULL)
-	    {
-	      if (strcasestr (p, "savepoint") != NULL)
-		{
-		  _len = strlen ("to savepoint ");
-		}
-	      else
-		{
-		  _len = strlen ("to ");
-		}
-
-	      res = cci_savepoint (conn, CCI_SP_ROLLBACK, tmp + _len, &error);
-	      if (res >= 0)
-		{
-		  fprintf (fp, "===================================================\n");
-		  fprintf (fp, "0\n");
-		}
-	      else
-		{
-		  fprintf (stdout, "rollback error: %s\n", error.err_msg);
-		}
-	    }
-	  else
-	    {
-	      res = cci_end_tran (conn, CCI_TRAN_ROLLBACK, &error);
-	      if (res >= 0)
-		{
-		  fprintf (fp, "===================================================\n");
-		  fprintf (fp, "0\n");
-		}
-	      else
-		{
-		  fprintf (stdout, "(%s, %d) %s ERROR : cci_connect(%s %d)\n\n",
-			   __FILE__, __LINE__, get_err_msg (conn), error.err_msg, error.err_code);
-		}
-	    }
-	}
-      else if (startswithCI (sqlstate[sql_count].sql, "SAVEPOINT"))
-	{
-	  char *p = NULL;
-	  p = sqlstate[sql_count].sql;
-	  p = p + strlen ("savepoint ");
-	  if (endswithsemicolon (p))
-	    p[strlen (p) - 1] = 0;
-	  res = cci_savepoint (conn, CCI_SP_SET, p, &error);
-	  if (res >= 0)
-	    {
-	      fprintf (fp, "===================================================\n");
-	      fprintf (fp, "0\n");
-	    }
-	  else
-	    {
-	      fprintf (stdout, "save point error: %s\n", error.err_msg);
-	    }
 	}
       else
 	{
