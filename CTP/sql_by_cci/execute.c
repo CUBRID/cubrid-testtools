@@ -982,14 +982,14 @@ readFile (char *fileName)
 	  else
 	    {
 	      // statement
-              char* p = sql_buf + sql_len;
+	      char *p = sql_buf + sql_len;
 	      sql_len += strlen (line) + 1;
 	      if (sql_len >= MAXLINELENGH)
 		{
 		  printf ("The sql statment is too long \n");
 		  exit (1);
 		}
-	      sprintf(p, "%s\n", line);
+	      sprintf (p, "%s\n", line);
 
 	      scan_line (line);
 	      // the following condition should be replaced with is_statement_end()
