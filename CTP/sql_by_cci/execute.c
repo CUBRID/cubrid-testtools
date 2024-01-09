@@ -1444,7 +1444,7 @@ static int
 set_server_message (FILE * fp, char conn, bool on)
 {
   char sql[20];
-  int req, res;
+  int req, res = 0;
   T_CCI_ERROR error;
 
   if (on)
@@ -2000,6 +2000,89 @@ test (FILE * fp)
 #else
 	  fprintf (stdout, "The program doesn't compile cci_set_cas_change_mode interface.\n");
 #endif
+	}
+      else if (startswithCI (sqlstate[sql_count].sql, "COMMIT"))
+	{
+	  res = cci_end_tran (conn, CCI_TRAN_COMMIT, &error);
+	  if (res >= 0)
+	    {
+	      fprintf (fp, "===================================================\n");
+	      fprintf (fp, "0\n");
+	    }
+	  else
+	    {
+	      fprintf (stdout, "(%s, %d) %s ERROR : cci_connect(%s %d)\n\n",
+		       __FILE__, __LINE__, get_err_msg (conn), error.err_msg, error.err_code);
+	    }
+	}
+      else if (startswithCI (sqlstate[sql_count].sql, "ROLLBACK"))
+	{
+	  char *p = NULL;
+	  char *tmp = NULL;
+	  int _len = 0;
+
+	  p = sqlstate[sql_count].sql;
+
+	  tmp = strcasestr (p, "to");
+	  if (tmp != NULL && endswithsemicolon (tmp))
+	    {
+	      tmp[strlen (tmp) - 1] = 0;
+	    }
+
+	  if (tmp != NULL)
+	    {
+	      if (strcasestr (p, "savepoint") != NULL)
+		{
+		  _len = strlen ("to savepoint ");
+		}
+	      else
+		{
+		  _len = strlen ("to ");
+		}
+
+	      res = cci_savepoint (conn, CCI_SP_ROLLBACK, tmp + _len, &error);
+	      if (res >= 0)
+		{
+		  fprintf (fp, "===================================================\n");
+		  fprintf (fp, "0\n");
+		}
+	      else
+		{
+		  fprintf (stdout, "rollback error: %s\n", error.err_msg);
+		}
+	    }
+	  else
+	    {
+	      res = cci_end_tran (conn, CCI_TRAN_ROLLBACK, &error);
+	      if (res >= 0)
+		{
+		  fprintf (fp, "===================================================\n");
+		  fprintf (fp, "0\n");
+		}
+	      else
+		{
+		  fprintf (stdout, "(%s, %d) %s ERROR : cci_connect(%s %d)\n\n",
+			   __FILE__, __LINE__, get_err_msg (conn), error.err_msg, error.err_code);
+		}
+	    }
+	}
+      else if (startswithCI (sqlstate[sql_count].sql, "SAVEPOINT"))
+	{
+	  char *p = NULL;
+	  p = sqlstate[sql_count].sql;
+	  p = p + strlen ("savepoint ");
+	  if (endswithsemicolon (p))
+	    p[strlen (p) - 1] = 0;
+	  res = cci_savepoint (conn, CCI_SP_SET, p, &error);
+	  if (res >= 0)
+	    {
+	      fprintf (fp, "===================================================\n");
+	      fprintf (fp, "0\n");
+	    }
+	  else
+	    {
+	      fprintf (stdout, "save point error: %s\n", error.err_msg);
+	    }
 	}
       else
 	{
