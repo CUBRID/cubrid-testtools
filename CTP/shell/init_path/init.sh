@@ -1071,7 +1071,7 @@ function xkill
    if [ "$OS" == Windows_NT ]
    then
        win_svr_pid=`get_win_service_pid`
-       for pid in `ps -W | grep "${strkill}" | awk '{print $1}'`
+       for pid in `ps -W | grep -w "${strkill}" | awk '{print $1}'`
        do
           is_in_white_list=0
           for svr_id in ${win_svr_pid}
@@ -1088,9 +1088,9 @@ function xkill
    else
        if [ $fullCommand -eq 1 ]
        then
-		pids=`ps -u $USER -o pid,command | grep "$strkill" | grep -v grep | awk '{print $1}'`
+		pids=`ps -u $USER -o pid,command | grep -w "$strkill" | grep -v grep | awk '{print $1}'`
        else
-		pids=`ps -u $USER -o pid,comm | grep "$strkill" | grep -v grep | awk '{print $1}'`
+		pids=`ps -u $USER -o pid,comm | grep -w "$strkill" | grep -v grep | awk '{print $1}'`
        fi 
 
        for pid in $pids
