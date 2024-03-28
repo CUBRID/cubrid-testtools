@@ -1070,21 +1070,8 @@ function xkill
    
    if [ "$OS" == Windows_NT ]
    then
-       win_svr_pid=`get_win_service_pid`
-       for pid in `ps -W | grep "${strkill}" | awk '{print $1}'`
-       do
-          is_in_white_list=0
-          for svr_id in ${win_svr_pid}
-          do
-	          if [ "${pid}" == "${svr_id}" ]; then
-	          	is_in_white_list=1
-			break
-	          fi
-          done
-          if [ "${is_in_white_list}" == "0" ]; then
-             /bin/kill -9 -f ${pid}
-          fi
-       done
+	win_svr_pid=$(get_win_service_pid | tr '\n' '|')
+    	ps -W | grep "${strkill}" | awk -v win_svr_pid="${win_svr_pid}" '{ if (index(win_svr_pid, $1) == 0) print $1 }' | xargs -I {} /bin/kill -9 -f {}
    else
        if [ $fullCommand -eq 1 ]
        then
@@ -1122,7 +1109,26 @@ function xkill_java_windows {
 
 
 function get_win_service_pid {
-    wmic PROCESS WHERE \( Name != \'wmic.exe\' and CommandLine LIKE \'%service.Server%\' \)  get processid | grep -v ProcessId | sed 's/ //g'
+    wmic PROCESS WHERE "(
+        Name = 'System Idle Process' or 
+        Name = 'System' or 
+        Name = 'smss.exe' or 
+        Name = 'csrss.exe' or 
+        Name = 'wininit.exe' or 
+        Name = 'winlogon.exe' or 
+        Name = 'services.exe' or 
+        Name = 'lsass.exe' or 
+        Name = 'svchost.exe' or 
+        Name = 'conhost.exe' or 
+        Name = 'WmiPrvSE.exe' or
+        Name = 'taskhostex.exe' or 
+        Name = 'dwm.exe' or 
+        Name = 'rdpclip.exe'
+    ) or (
+	CommandLine LIKE '%service.Server%' or 
+	CommandLine LIKE '%RMIService%' or 
+	CommandLine LIKE '%start_service%'
+    )" get processid | grep -v ProcessId | sed 's/ //g'
 }
 
 #format number like 0|123|456
