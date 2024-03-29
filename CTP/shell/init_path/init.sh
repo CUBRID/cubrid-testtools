@@ -1123,7 +1123,9 @@ function get_win_service_pid {
         Name = 'WmiPrvSE.exe' or
         Name = 'taskhostex.exe' or 
         Name = 'dwm.exe' or 
-        Name = 'rdpclip.exe'
+        Name = 'rdpclip.exe' or
+        Name = 'explorer.exe' or
+        Name = 'wmic.exe'
     ) or (
 	CommandLine LIKE '%service.Server%' or 
 	CommandLine LIKE '%RMIService%' or 
