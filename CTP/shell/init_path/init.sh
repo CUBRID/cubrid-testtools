@@ -1107,7 +1107,9 @@ function xkill_java_windows {
 }
 
 
-
+# This function returns whitelist.
+# Whitelist includes pids for critical process that can occure system crash when it is killed.
+# Also includes process for running regression test.
 function get_win_service_pid {
     wmic PROCESS WHERE "(
         Name = 'System Idle Process' or 
