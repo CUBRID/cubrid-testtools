@@ -867,7 +867,7 @@ function change_db_section_parameter
        cp $CUBRID/conf/cubrid.conf $CUBRID/conf/cubrid.conf.org
   fi
 
-  change_config_section_parameter $sec $prm $CUBRID/conf/cubrid.conf
+  change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid.conf
 }
 
 # Restore DB .ini file from source file
@@ -949,7 +949,7 @@ function change_broker_section_parameter
         cp $CUBRID/conf/cubrid_broker.conf $CUBRID/conf/cubrid_broker.conf.org
     fi
 
-    change_config_section_parameter $sec $prm $CUBRID/conf/cubrid_broker.conf
+    change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid_broker.conf
 }
 
 # Usage:
@@ -964,7 +964,7 @@ function change_ha_section_parameter
         cp $CUBRID/conf/cubrid_ha.conf $CUBRID/conf/cubrid_ha.conf.org
     fi
     
-    change_config_section_parameter $sec $prm $CUBRID/conf/cubrid_ha.conf
+    change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid_ha.conf
 }
 
 
