@@ -1030,6 +1030,9 @@ function format_query_plan
     sed -i 's/ioread: [0-9]*/ioread:?/g' $1
     sed -i 's/"time": [0-9]*/"time":?/g' $1
     sed -i 's/"fetch": [0-9]*/"fetch":?/g' $1
+    sed -i 's/hit: [0-9]*/hit:?/g' $1
+    sed -i 's/miss: [0-9]*/miss:?/g' $1
+    sed -i 's/size: [0-9]*/size:?/g' $1
 }
 
 function format_path_output
