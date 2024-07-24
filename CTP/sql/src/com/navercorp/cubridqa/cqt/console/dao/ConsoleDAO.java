@@ -716,7 +716,7 @@ public class ConsoleDAO extends Executor {
         ArrayList<SqlParam> params = new ArrayList<SqlParam>();
         params.add(new SqlParam("OUT", 1, null, Types.VARCHAR));
         params.add(new SqlParam("OUT", 2, null, Types.INTEGER));
-        Sql getLine = new Sql(test.getConnId(), "CALL GET_LINE (?, ?);", params, true);
+        Sql getLine = new Sql(test.getConnId(), "CALL DBMS_OUTPUT.GET_LINE (?, ?);", params, true);
 
         try {
             while (true) {
