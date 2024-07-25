@@ -1137,14 +1137,30 @@ public class ConsoleBO extends Executor {
                             test.setServerMessage("on");
                             // TODO: DBMS_OUTPUT.enable ()
                             Sql enableSql =
-                                    new Sql(connId, "CALL enable(50000)", null, true); // TODO: set
+                                    new Sql(connId, "CALL DBMS_OUTPUT.enable(50000)", null, true); // TODO: set
                             // size of
                             // enable
                             dao.execute(conn, enableSql, false);
                         } catch (Exception e) {
-                            String message =
-                                    "Exception: the current version can't support DBMS_OUTPUT!";
-                            this.onMessage(message);
+                            try {
+                                String message =
+                                        "@"     
+                                                + test.getConnId()
+                                                + ": server message "
+                                                + isServerMessageOn;
+                                this.onMessage(message);
+                                test.setServerMessage("on");
+                                // TODO: DBMS_OUTPUT.enable ()
+                                Sql enableSql =
+                                        new Sql(connId, "CALL enable(50000)", null, true); // TODO: set
+                                // size of
+                                // enable
+                                dao.execute(conn, enableSql, false);
+                            } catch (Exception e2) {
+                                String message =
+                                        "Exception: the current version can't support DBMS_OUTPUT!";
+                                this.onMessage(message);
+                            }
                         }
                     } else if (isServerMessageOff) {
                         try {
@@ -1157,12 +1173,26 @@ public class ConsoleBO extends Executor {
 
                             test.setServerMessage("off");
                             // TODO: DBMS_OUTPUT.disable()
-                            Sql disableSql = new Sql(connId, "CALL disable()", null, true);
+                            Sql disableSql = new Sql(connId, "CALL DBMS_OUTPUT.disable()", null, true);
                             dao.execute(conn, disableSql, false);
                         } catch (Exception e) {
-                            String message =
+                            try {
+                                String message =
+                                        "@"
+                                                + test.getConnId()
+                                                + ": server message "
+                                                + isServerMessageOff;
+                                this.onMessage(message);
+
+                                test.setServerMessage("off");
+                                // TODO: DBMS_OUTPUT.disable()
+                                Sql disableSql = new Sql(connId, "CALL disable()", null, true);
+                                dao.execute(conn, disableSql, false);
+                            } catch (Exception e2) {
+                                String message =
                                     "Exception: the current version can't support DBMS_OUTPUT!";
-                            this.onMessage(message);
+                                this.onMessage(message);
+                            }
                         }
                     } else {
                         String message =

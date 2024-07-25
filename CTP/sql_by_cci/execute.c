@@ -1449,11 +1449,11 @@ set_server_message (FILE * fp, char conn, bool on)
 
   if (on)
     {
-      sprintf (sql, "call enable(%d)", DBMS_OUTPUT_BUFFER_SIZE);
+      sprintf (sql, "call DBMS_OUTPUT.enable(%d)", DBMS_OUTPUT_BUFFER_SIZE);
     }
   else
     {
-      sprintf (sql, "call disable()");
+      sprintf (sql, "call DBMS_OUTPUT.disable()");
     }
 
   req = cci_prepare (conn, sql, CCI_PREPARE_CALL, &error);
@@ -1488,7 +1488,7 @@ get_server_output (FILE * fp, char conn)
 {
   int req = 0, res = 0;
   T_CCI_ERROR error;
-  static const char *sql = "call get_line(?, ?)";
+  static const char *sql = "call DBMS_OUTPUT.get_line(?, ?)";
   static char buff[DBMS_OUTPUT_BUFFER_SIZE];
   char *ret = NULL, *p, *str;
   int status, ind;
