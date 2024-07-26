@@ -732,7 +732,7 @@ public class ConsoleDAO extends Executor {
                 }
             }
         } catch (Exception e) {
-            Sql getLine = new Sql(test.getConnId(), "CALL GET_LINE (?, ?);", params, true);
+            getLine = new Sql(test.getConnId(), "CALL GET_LINE (?, ?);", params, true);
             try {
                 while (true) {
                     executeCall(conn, getLine);
