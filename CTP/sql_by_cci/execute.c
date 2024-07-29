@@ -1481,22 +1481,9 @@ set_server_message (FILE * fp, char conn, bool on)
   res = cci_execute (req, 0, 0, &error);
   if (res < 0)
     {
-      if (on)
-        {
-	  sprintf (sql, "call enable(%d)", DBMS_OUTPUT_BUFFER_SIZE);
-	}
-      else
-        {
-	  sprintf (sql, "call disable()");
-	}
-      
-      res = cci_execute (req, 0, 0, &error);
-      if (res < 0)
-        {
-          fprintf (stdout, "Set Server-Message Error:%d\n", error.err_code);
-          fprintf (fp, "Set Server-Message Error:%d\n", error.err_code);
-          goto _END;
-	}
+      fprintf (stdout, "Set Server-Message Error:%d\n", error.err_code);
+      fprintf (fp, "Set Server-Message Error:%d\n", error.err_code);
+      goto _END;
     }
 
   is_server_message_on = on;
@@ -1536,29 +1523,17 @@ get_server_output (FILE * fp, char conn)
   res = cci_register_out_param (req, 1);
   if (res < 0)
     {
-      sql = "CALL GET_LINE (?, ?);"
-
-      res = cci_register_out_param (req, 1);
-      if (res < 0)
-        {
-          fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-          fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-          goto _END;
-	}
+      fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+      fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+      goto _END;
     }
 
   res = cci_register_out_param (req, 2);
   if (res < 0)
     {
-      sql = "CALL GET_LINE (?, ?);"
-
-      res = cci_register_out_param (req, 2);
-      if (res < 0)
-        {
-          fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-          fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-          goto _END;
-	}
+      fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+      fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+      goto _END;
     }
 
   buff[0] = '\n';
@@ -1569,57 +1544,33 @@ get_server_output (FILE * fp, char conn)
       res = cci_execute (req, 0, 0, &error);
       if (res < 0)
 	{
-	  sql = "CALL GET_LINE (?, ?);"
-
-	  res = cci_execute (req, 0, 0, &error);
-	  if (res < 0)
-	    {
-	      fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-	      fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-	      goto _END;
-	    }
+	  fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	  fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	  goto _END;
 	}
 
       res = cci_cursor (req, 1, CCI_CURSOR_FIRST, &error);
       if (res == CCI_ER_NO_MORE_DATA)
 	{
-	  sql = "CALL GET_LINE (?, ?);"
-
-	  res = cci_cursor (req, 1, CCI_CURSOR_FIRST, &error);
-	  if (res == CCI_ER_NO_MORE_DATA)
-	    {
-	      fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-	      fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-	      goto _END;
-	    }
+	  fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	  fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	  goto _END;
 	}
 
       res = cci_fetch (req, &error);
       if (res < 0)
 	{
-	  sql = "CALL GET_LINE (?, ?);"
-
-	  res = cci_fetch (req, &error);
-	  if (res < 0)
-	    {
-	      fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-	      fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-	      goto _END;
-	    }
+	  fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	  fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	  goto _END;
 	}
 
       res = cci_get_data (req, 2, CCI_A_TYPE_INT, &status, &ind);
       if (res < 0)
 	{
-	  sql = "CALL GET_LINE (?, ?);"
-
-	  res = cci_get_data (req, 2, CCI_A_TYPE_INT, &status, &ind);
-	  if (res < 0)
-	    {
-	      fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-	      fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-	      goto _END;
-	    }
+	  fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	  fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	  goto _END;
 	}
 
       if (ind == 0 && status == 0)
@@ -1628,15 +1579,9 @@ get_server_output (FILE * fp, char conn)
 	  res = cci_get_data (req, 1, CCI_A_TYPE_STR, &str, &ind);
 	  if (res < 0)
 	    {
-	      sql = "CALL GET_LINE (?, ?);"
-
-	      res = cci_get_data (req, 1, CCI_A_TYPE_STR, &str, &ind);
-	      if (res < 0)
-	        {
-	          fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-	          fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-	          goto _END;
-		}
+	      fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	      fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	      goto _END;
 	    }
 
 	  assert (ind >= 0);
@@ -1660,15 +1605,9 @@ get_server_output (FILE * fp, char conn)
       res = cci_close_query_result (req, &error);
       if (res < 0)
 	{
-	  sql = "CALL GET_LINE (?, ?);"
-
-	  res = cci_close_query_result (req, &error);
-	  if (res < 0)
-	    {
-	      fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-	      fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-	      goto _END;
-	    }
+	  fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+	  fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+	  goto _END;
 	}
     }
 
