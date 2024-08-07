@@ -663,11 +663,16 @@ public class ConsoleDAO extends Executor {
             boolean isRs = st.execute(sql.getScript());
             getAllResult(st, isRs, sql);
             String script = sql.getScript().trim().toUpperCase();
-            if ((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) {
+            boolean isOnlyJoinGraph = sql.isJoingraph();
+            if (((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) || isOnlyJoinGraph) {
                 Method method = st.getClass().getMethod("getQueryplan", stringType);
                 String queryPlan = (String) method.invoke(st, new Object[] {sql.getScript()});
                 queryPlan = queryPlan + System.getProperty("line.separator");
-                queryPlan = StringUtil.replaceQureyPlan(queryPlan);
+                if (isOnlyJoinGraph) {
+                      queryPlan = StringUtil.replaceJoingraph(queryPlan);
+                } else {
+                      queryPlan = StringUtil.replaceQureyPlan(queryPlan);
+                }
                 sql.setResult(sql.getResult() + queryPlan);
                 method = null;
                 queryPlan = null;

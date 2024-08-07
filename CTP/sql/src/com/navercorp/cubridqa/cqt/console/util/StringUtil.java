@@ -204,19 +204,79 @@ public class StringUtil {
 		return ret.toString();
 	}
 
-	/**
-	 * translate byte array to Hex String .
-	 * 
-	 * @param b
-	 * @return
-	 */
-	public static String toHexString(byte[] b) {
-		StringBuffer buffer = new StringBuffer();
-		for (int i = 0; i < b.length; ++i) {
-			buffer.append(toHexString(b[i]));
-		}
-		return buffer.toString();
-	}
+   /**
+    * Show only the join graph. 
+    *
+    * @param queryPlan
+    * @return
+    */
+    public static String replaceJoingraph(String queryPlan) {
+        if (queryPlan == null) {
+            return null;
+        }
+
+        StringBuilder ret = new StringBuilder();
+
+        String flag = "default";
+        String separator = System.getProperty("line.separator");
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new StringReader(queryPlan));
+
+            String message = reader.readLine();
+            while (message != null) {
+                if (message.trim().equals("")) {
+                    message = reader.readLine();
+                    continue;
+                }
+
+                if (message.startsWith("Join graph edges:")) {
+                    flag = "edges";
+                    ret.append(message + separator);
+                    message = reader.readLine();
+                    continue;
+                } else if (message.startsWith("Join graph")) {
+                    flag = "default";
+                    ret.append(message + separator);
+                    message = reader.readLine();
+                    continue;
+                } else if (message.startsWith("Query plan:")) {
+                    break;
+                }
+               
+                // make chageable values hidden. 
+                if ("edges".equals(flag)) {
+                    message = message.replaceAll("sel [0-9]+\\.[0-9]+", "sel ?"); 
+                }
+                
+                ret.append(message + separator);
+                message = reader.readLine();
+            }
+        } catch (Exception e) {
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return ret.toString();
+    }
+
+    /**
+     * translate byte array to Hex String .
+     *
+     * @param b
+     * @return
+     */
+    public static String toHexString(byte[] b) {
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < b.length; ++i) {
+            buffer.append(toHexString(b[i]));
+        }
+        return buffer.toString();
+    }
 
 	/**
 	 * replace dir for Windows OS which using cygwin.
