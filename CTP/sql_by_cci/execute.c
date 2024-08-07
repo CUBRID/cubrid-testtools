@@ -1446,23 +1446,37 @@ set_server_message (FILE * fp, char conn, bool on)
   char sql[20];
   int req, res = 0;
   T_CCI_ERROR error;
-
+  
+  /* if phase-1 */
   if (on)
     {
-      sprintf (sql, "call enable(%d)", DBMS_OUTPUT_BUFFER_SIZE);
+      sprintf (sql, "call DBMS_OUTPUT.enable(%d)", DBMS_OUTPUT_BUFFER_SIZE);
     }
   else
     {
-      sprintf (sql, "call disable()");
+      sprintf (sql, "call DBMS_OUTPUT.disable()");
     }
 
   req = cci_prepare (conn, sql, CCI_PREPARE_CALL, &error);
   if (req < 0)
     {
-      fprintf (stdout, "Set Server-Message Error:%d\n", error.err_code);
-      fprintf (fp, "Set Server-Message Error:%d\n", error.err_code);
-      res = -1;
-      goto _END;
+      /* if phase-0 */
+      if (on)
+        {
+          sprintf (sql, "call enable(%d)", DBMS_OUTPUT_BUFFER_SIZE);
+        }
+      else
+        {
+          sprintf (sql, "call disable()");
+        }
+      req = cci_prepare (conn, sql, CCI_PREPARE_CALL, &error);
+      if (req < 0)
+        {
+          fprintf (stdout, "Set Server-Message Error:%d\n", error.err_code);
+          fprintf (fp, "Set Server-Message Error:%d\n", error.err_code);
+          res = -1;
+          goto _END;
+	}
     }
 
   res = cci_execute (req, 0, 0, &error);
@@ -1488,17 +1502,25 @@ get_server_output (FILE * fp, char conn)
 {
   int req = 0, res = 0;
   T_CCI_ERROR error;
-  static const char *sql = "call get_line(?, ?)";
+  static const char *sql = "call DBMS_OUTPUT.get_line(?, ?)";
   static char buff[DBMS_OUTPUT_BUFFER_SIZE];
   char *ret = NULL, *p, *str;
   int status, ind;
-
+  
+  /* if phase-1 */
   req = cci_prepare (conn, sql, CCI_PREPARE_CALL, &error);
   if (req < 0)
     {
-      fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
-      fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
-      goto _END;
+      /* if phase-0 */
+      sql = "CALL GET_LINE (?, ?);"
+
+      req = cci_prepare (conn, sql, CCI_PREPARE_CALL, &error);
+      if (req < 0)
+        {
+          fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
+          fprintf (fp, "Get Server-Output Error:%d\n", error.err_code);
+          goto _END;
+	}
     }
 
   res = cci_register_out_param (req, 1);

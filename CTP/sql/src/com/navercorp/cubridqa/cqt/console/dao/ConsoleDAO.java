@@ -717,7 +717,7 @@ public class ConsoleDAO extends Executor {
         ArrayList<SqlParam> params = new ArrayList<SqlParam>();
         params.add(new SqlParam("OUT", 1, null, Types.VARCHAR));
         params.add(new SqlParam("OUT", 2, null, Types.INTEGER));
-        Sql getLine = new Sql(test.getConnId(), "CALL GET_LINE (?, ?);", params, true);
+        Sql getLine = new Sql(test.getConnId(), "CALL DBMS_OUTPUT.get_line (?, ?);", params, true);
 
         try {
             while (true) {
@@ -733,7 +733,24 @@ public class ConsoleDAO extends Executor {
                 }
             }
         } catch (Exception e) {
-            // error?
+            getLine = new Sql(test.getConnId(), "CALL get_line (?, ?);", params, true);
+
+            try {
+                while (true) {
+                    executeCall(conn, getLine);
+                    List<SqlParam> paramList = getLine.getParamList();
+                    if (((Integer) paramList.get(1).getValue()) == 0) {
+                        /* status */
+                        message.append(
+                                ((String) paramList.get(0).getValue())
+                                        + System.getProperty("line.separator")); /* message */
+                    } else {
+                        break;
+                    }
+                }
+            } catch (Exception e2) {
+                // error?
+            }
         }
 
         return message.toString();

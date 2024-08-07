@@ -1147,42 +1147,127 @@ public class ConsoleBO extends Executor {
                             this.onMessage(message);
                         }
                     } else if (isServerMessageOn) {
+                        /*temporary*/
+                        boolean phase_1_flag = false;
+
+                        Statement temp_stmt;
+                        conn.setAutoCommit(true);
+                        temp_stmt = conn.createStatement();
                         try {
-                            String message =
-                                    "@"
-                                            + test.getConnId()
-                                            + ": server message "
-                                            + isServerMessageOn;
-                            this.onMessage(message);
-                            test.setServerMessage("on");
-                            // TODO: DBMS_OUTPUT.enable ()
-                            Sql enableSql =
-                                    new Sql(connId, "CALL enable(50000)", null, true); // TODO: set
-                            // size of
-                            // enable
-                            dao.execute(conn, enableSql, false);
-                        } catch (Exception e) {
-                            String message =
-                                    "Exception: the current version can't support DBMS_OUTPUT!";
-                            this.onMessage(message);
+                            temp_stmt.executeQuery("call DBMS_OUTPUT.put_line('Temporary !!');");
+
+                            phase_1_flag = true;
+                        } catch (SQLException s) {
+                            phase_1_flag = false;
+                        }
+                        temp_stmt.close();
+
+                        if (phase_1_flag) {
+                            /* if phase-1 */
+                            try {
+                                String message =
+                                        "@"
+                                                + test.getConnId()
+                                                + ": server message "
+                                                + isServerMessageOn;
+                                this.onMessage(message);
+                                test.setServerMessage("on");
+                                // TODO: DBMS_OUTPUT.enable ()
+                                Sql enableSql =
+                                        new Sql(
+                                                connId,
+                                                "CALL DBMS_OUTPUT.enable(50000)",
+                                                null,
+                                                true); // TODO: set
+                                // size of
+                                // enable
+                                dao.execute(conn, enableSql, false);
+                            } catch (Exception e) {
+                                String message =
+                                        "Exception: the current version can't support DBMS_OUTPUT!";
+                                this.onMessage(message);
+                            }
+                        } else {
+                            /* if phase-0 */
+                            try {
+                                String message =
+                                        "@"
+                                                + test.getConnId()
+                                                + ": server message "
+                                                + isServerMessageOn;
+                                this.onMessage(message);
+                                test.setServerMessage("on");
+                                // TODO: DBMS_OUTPUT.enable ()
+                                Sql enableSql =
+                                        new Sql(
+                                                connId,
+                                                "CALL enable(50000)",
+                                                null,
+                                                true); // TODO: set
+                                // size of
+                                // enable
+                                dao.execute(conn, enableSql, false);
+                            } catch (Exception e) {
+                                String message =
+                                        "Exception: the current version can't support DBMS_OUTPUT!";
+                                this.onMessage(message);
+                            }
                         }
                     } else if (isServerMessageOff) {
-                        try {
-                            String message =
-                                    "@"
-                                            + test.getConnId()
-                                            + ": server message "
-                                            + isServerMessageOff;
-                            this.onMessage(message);
+                        /*temporary*/
+                        boolean phase_1_flag = false;
 
-                            test.setServerMessage("off");
-                            // TODO: DBMS_OUTPUT.disable()
-                            Sql disableSql = new Sql(connId, "CALL disable()", null, true);
-                            dao.execute(conn, disableSql, false);
-                        } catch (Exception e) {
-                            String message =
-                                    "Exception: the current version can't support DBMS_OUTPUT!";
-                            this.onMessage(message);
+                        Statement temp_stmt;
+                        conn.setAutoCommit(true);
+                        temp_stmt = conn.createStatement();
+                        try {
+                            temp_stmt.executeQuery("call DBMS_OUTPUT.put_line('Temporary !!');");
+
+                            phase_1_flag = true;
+                        } catch (SQLException s) {
+                            phase_1_flag = false;
+                        }
+                        temp_stmt.close();
+
+                        if (phase_1_flag) {
+                            /* if phase-1 */
+                            try {
+                                String message =
+                                        "@"
+                                                + test.getConnId()
+                                                + ": server message "
+                                                + isServerMessageOff;
+                                this.onMessage(message);
+
+                                test.setServerMessage("off");
+                                // TODO: DBMS_OUTPUT.disable()
+                                Sql disableSql =
+                                        new Sql(connId, "CALL DBMS_OUTPUT.disable()", null, true);
+                                dao.execute(conn, disableSql, false);
+                            } catch (Exception e) {
+                                String message =
+                                        "Exception: the current version can't support DBMS_OUTPUT!";
+                                this.onMessage(message);
+                            }
+                        } else {
+                            /* if phase-0 */
+                            try {
+                                String message =
+                                        "@"
+                                                + test.getConnId()
+                                                + ": server message "
+                                                + isServerMessageOff;
+                                this.onMessage(message);
+
+                                test.setServerMessage("off");
+                                // TODO: DBMS_OUTPUT.disable()
+                                Sql disableSql = new Sql(connId, "CALL disable()", null, true);
+                                dao.execute(conn, disableSql, false);
+                            } catch (Exception e) {
+                                String message =
+                                        "Exception: the current version can't support DBMS_OUTPUT!";
+                                this.onMessage(message);
+                            }
                         }
                     } else {
                         String message =
