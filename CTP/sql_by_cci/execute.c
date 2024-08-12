@@ -1512,9 +1512,9 @@ get_server_output (FILE * fp, char conn)
   if (req < 0)
     {
       /* if phase-0 */
-      sql = "CALL GET_LINE (?, ?);"
+      static const char *sql2 = "CALL GET_LINE (?, ?)";
 
-      req = cci_prepare (conn, sql, CCI_PREPARE_CALL, &error);
+      req = cci_prepare (conn, sql2, CCI_PREPARE_CALL, &error);
       if (req < 0)
         {
           fprintf (stdout, "Get Server-Output Error:%d\n", error.err_code);
