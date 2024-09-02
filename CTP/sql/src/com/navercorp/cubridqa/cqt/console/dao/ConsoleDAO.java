@@ -613,18 +613,30 @@ public class ConsoleDAO extends Executor {
                 }
             }
             String script = sql.getScript().trim().toUpperCase();
-            if ((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) {
+            boolean isOnlyJoinGraph = sql.isJoingraph();
+            if (((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) || isOnlyJoinGraph) {
                 Method method2 =
                         ps.getClass().getMethod("setQueryInfo", new Class[] {boolean.class});
                 method2.invoke(ps, new Object[] {true});
             }
-            boolean isRs = ps.execute();
+            boolean isRs = false;
+            // [BUG] The plan is not returned when using execute() 
+            if (script.startsWith("SELECT")) {
+              ps.executeQuery();
+              isRs = true;
+            } else {
+              isRs = ps.execute();
+            }
             getAllResult(ps, isRs, sql);
-            if ((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) {
+            if (((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) || isOnlyJoinGraph) {
                 Method method = ps.getClass().getMethod("getQueryplan", new Class[] {});
                 String queryPlan = (String) method.invoke(ps, new Object[] {});
                 queryPlan = queryPlan + System.getProperty("line.separator");
-                queryPlan = StringUtil.replaceQureyPlan(queryPlan);
+                if (isOnlyJoinGraph) {
+                      queryPlan = StringUtil.replaceJoingraph(queryPlan);
+                } else {
+                      queryPlan = StringUtil.replaceQureyPlan(queryPlan);
+                }
                 sql.setResult(sql.getResult() + queryPlan);
                 method = null;
                 queryPlan = null;

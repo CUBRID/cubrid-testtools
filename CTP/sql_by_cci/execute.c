@@ -27,6 +27,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <cas_cci.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -37,6 +38,7 @@
 #include <string.h>
 #include <assert.h>
 #include <sys/time.h>
+#include <regex.h>
 #if ADD_CAS_ERROR_HEADER == 1
 #include <broker_cas_error.h>
 #endif
@@ -49,12 +51,15 @@
 #define MAX_SQL_LEN 1024*200
 #define MAX_LEN 1024
 
-typedef int bool;
-
 typedef struct SqlStateStruct
 {
   char *sql;
-  bool hasqp;
+  // query plan
+  struct {
+    bool hasqp; 
+    bool onlyjg; /*join graph without queryplan */
+  };
+
   bool iscallwithoutvalue;
 } SqlStateStruce;
 
@@ -605,6 +610,50 @@ trimbit (char *str)
     }
 }
 
+void 
+replace_substring(char *source, const char *pattern, const char *replacement)
+{
+    char *buffer = NULL;
+    char *cursor = source;
+    int pattern_len = 0;
+    int replacement_len = strlen(replacement);
+    regex_t regex;
+    regmatch_t match;
+
+    if (regcomp(&regex, pattern, REG_EXTENDED) != 0) 
+      {
+        printf("Could not compile regex\n");
+        return;
+      }
+    // Buffer size limitation.
+    if (regexec(&regex, cursor, 1, &match, 0) == 0)
+     {
+        pattern_len = match.rm_eo - match.rm_so;
+        if ( pattern_len < replacement_len)
+          {
+            printf("The replacement size should be smaller that the pattern size.\n");
+            return;
+          }
+     }
+    
+    buffer = (char *) malloc (sizeof (char) * (strlen (source) + 1)); 
+    memset (buffer, 0x00, sizeof (char) * (strlen (source) + 1)); 
+
+    while (regexec(&regex, cursor, 1, &match, 0) == 0) 
+     {
+        strncat(buffer, cursor, match.rm_so);
+        strcat(buffer, replacement);
+        cursor += match.rm_eo;
+     }
+
+    strcat(buffer, cursor);
+    strcpy(source, buffer);
+    
+    free (buffer); 
+    regfree(&regex);
+}
+
+
 T_CCI_U_TYPE
 getutype (char *p)
 {
@@ -939,7 +988,7 @@ readFile (char *fileName)
   int ascii1 = 0, ascii2 = 0;
   char line[MAX_SQL_LEN];
   char sql_buf[MAXLINELENGH];
-  bool hasqp = 0;
+  bool hasqp = 0,hasjg = 0;
 
   //initial the total sql count.
   total_sql = 0;
@@ -961,6 +1010,11 @@ readFile (char *fileName)
 		{
 		  hasqp = 1;
 		}
+	      else if (startswith(line, "--@joingraph"))
+		{
+		  hasjg = 1;
+		  hasqp = 1;
+		}
 	      else if (startswithCI (line, "--+ server-message") ||
 		       startswithCI (line, "--+server-message") ||
 		       startswithCI (line, "--+ holdcas") || startswithCI (line, "--+holdcas"))
@@ -968,6 +1022,7 @@ readFile (char *fileName)
 		  sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * strlen (line) + 1);
 		  strcpy (sqlstate[total_sql].sql, line);
 		  sqlstate[total_sql].hasqp = 0;
+		  sqlstate[total_sql].onlyjg = 0;
 		  //if script like "? = call"
 		  sqlstate[total_sql].iscallwithoutvalue = 0;
 
@@ -999,6 +1054,7 @@ readFile (char *fileName)
 		  sqlstate[total_sql].sql = (char *) malloc (sizeof (char) * sql_len + 1);
 		  strcpy (sqlstate[total_sql].sql, sql_buf);
 		  sqlstate[total_sql].hasqp = hasqp;
+		  sqlstate[total_sql].onlyjg = hasjg;
 		  //if script like "? = call"
 		  sqlstate[total_sql].iscallwithoutvalue = startswith (line, "?");
 
@@ -1007,6 +1063,7 @@ readFile (char *fileName)
 		  memset (sql_buf, 0, sql_len);
 		  sql_len = 0;
 		  hasqp = 0;
+		  hasjg = 0;
 		}
 
 	      if (is_statement_end ())
@@ -1121,8 +1178,70 @@ formatplan (FILE * fp, char *plan)
     }
 }
 
+void
+formatjoingraph (FILE * fp, char *joingraph)
+{
+  char *str, *p;
+  int i, joingraphLen, newline;
+  bool joingraph_found = false; 
+  joingraphLen = strlen (joingraph);
+  str = (char *) malloc (sizeof (char) * (joingraphLen + 1));
+  memset (str, 0, sizeof (char) * (joingraphLen + 1));
+  p = (char *) malloc (sizeof (char) * (joingraphLen + 1));
+  memset (p, 0, sizeof (char) * (joingraphLen + 1));
+  newline = 0;
+ 
+  if (joingraph != NULL)
+    {
+      for (i = 0; i < joingraphLen; i++)
+        {
+          if (joingraph[i] == '\n')
+            {
+              strncpy (str, joingraph + newline, i - newline + 1);
+              strncpy (p, joingraph + newline, i - newline + 1);
+              str[i - newline + 1] = 0x00;
+              p[i - newline + 1] = 0x00;
+              newline = i + 1;
+
+              trimline (p);
+              if (strlen (p) == 0)
+                {
+                  continue;
+                }
+
+              if (startswith (p, "Join graph"))
+                {
+                joingraph_found = true;
+                  fprintf (fp, "%s", str);
+                  continue;
+                }
+              else if (startswith (p, "Query plan:"))
+                {
+                  break;
+                }
+              else
+                {
+                  if (joingraph_found)
+                   {
+                     regex_t regex;
+                     // hide selectivity rewriting '?'.
+                     replace_substring (str, "sel [0-9]+\\.[0-9]+", "sel ?");
+                     fprintf (fp, "%s", str);
+                     continue;
+                   }
+                }
+            }
+        }
+      strncpy (str, joingraph + newline, i - newline + 1);
+      str[i - newline + 1] = 0x00;
+      fprintf (fp, "%s", str);
+      free (str);
+      free (p);
+    }
+}
+
 int
-dumptable (FILE * fp, int req, char con, bool hasqueryplan)
+dumptable (FILE * fp, int req, char con, bool hasqueryplan, bool onlyjoingraph)
 {
   int res = 0;
   int ind = 0, index_count = 0, col_count = 0, setsize = -1, index_set = 0;
@@ -1392,7 +1511,14 @@ _NEXT_MULTIPLE_LINE_SQL:
 		  }
 		if (res >= 0)
 		  {
-		    formatplan (fp, plan);
+             if (onlyjoingraph)
+               {
+                 formatjoingraph (fp, plan);
+               }
+             else
+               {
+                 formatplan (fp, plan);
+               }
 		  }
 	      }
 	    }
@@ -1433,7 +1559,14 @@ _PRINT_QUERY_PLAN:
     }
   if (res >= 0)
     {
-      formatplan (fp, plan);
+      if (onlyjoingraph)
+        {
+           formatjoingraph (fp, plan);
+        }
+      else
+        {
+           formatplan (fp, plan);
+        }
     }
   goto _DUMPTABLE_WHILE_END;
 _DUMPTABLE_WHILE_END:return 0;
@@ -1623,7 +1756,7 @@ _END:
 }
 
 int
-execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
+execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
 {
   static int seq = 0;
   int req = 0, res = 0, ret = 0;
@@ -1634,6 +1767,9 @@ execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
   T_CCI_COL_INFO *res_col_info;
   T_CCI_SQLX_CMD cmd_type;
   char *server_output_buffer = NULL;
+  char *sql = pSqlState->sql;
+  bool hasqueryplan = pSqlState->hasqp;
+  bool onlyjoingraph = pSqlState->onlyjg;
 
   fprintf (fp, "===================================================\n");
 
@@ -1689,7 +1825,7 @@ execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
   if (cmd_type == CUBRID_STMT_SELECT || cmd_type == CUBRID_STMT_CALL || cmd_type == CUBRID_STMT_EVALUATE
       || cmd_type == CUBRID_STMT_GET_STATS)
     {
-      dumptable (fp, req, conn, hasqueryplan);
+      dumptable (fp, req, conn, hasqueryplan, onlyjoingraph);
       goto _END;
     }
   else if (cmd_type == CUBRID_STMT_UPDATE)
@@ -1705,7 +1841,14 @@ execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
 	    }
 	  if (res >= 0)
 	    {
-	      formatplan (fp, plan);
+	      if (onlyjoingraph)
+	        { 
+	          formatjoingraph (fp, plan);
+	        }
+	      else
+	        {
+	          formatplan (fp, plan);
+	        }
 	    }
 	}
     }
@@ -1731,7 +1874,7 @@ execute (FILE * fp, char conn, char *sql, bool hasqueryplan)
       res_col_info = cci_get_result_info (req, &cmd_type, &col_count);
       if (cmd_type == CUBRID_STMT_SELECT || cmd_type == CUBRID_STMT_CALL)
 	{
-	  dumptable (fp, req, conn, hasqueryplan);
+	  dumptable (fp, req, conn, hasqueryplan, onlyjoingraph);
 	}
       else
 	{
@@ -1751,7 +1894,7 @@ _END:
 }
 
 int
-executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bool iscall)
+executebind (FILE * fp, char conn, char *param, const SqlStateStruce *pSqlState)
 {
   static int seq = 0;
   int bnum = 0i, ind;
@@ -1766,16 +1909,19 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
   T_CCI_COL_INFO *res_col_info;
   T_CCI_SQLX_CMD cmd_type;
   char *server_output_buffer = NULL;
-
+  char *sql = pSqlState->sql;
+  bool hasqueryplan = pSqlState->hasqp;
+  bool onlyjoingraph = pSqlState->onlyjg;
+  bool iscall = pSqlState->iscallwithoutvalue;
   fprintf (fp, "===================================================\n");
 
   if (iscall)
     {
-      req = cci_prepare (conn, sql1, CCI_PREPARE_CALL, &error);
+      req = cci_prepare (conn, sql, CCI_PREPARE_CALL, &error);
     }
   else
     {
-      req = cci_prepare (conn, sql1, 0, &error);
+      req = cci_prepare (conn, sql, 0, &error);
     }
 
   if (req < 0)
@@ -1796,14 +1942,14 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
     }
 
   bnum = cci_get_bind_num (req);
-  if (!executebindparameter (req, sql2, bnum))
+  if (!executebindparameter (req, param, bnum))
     {
       fprintf (stdout, "bind parameter error\n");
       ret = -1;
       goto _END;
     }
 
-  out_count = get_out_num_by_str (sql2);
+  out_count = get_out_num_by_str (param);
   for (t = 1; t <= out_count; t++)
     {
       if ((cci_register_out_param (req, t)) < 0)
@@ -1890,7 +2036,7 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
   res_col_info = cci_get_result_info (req, &cmd_type, &col_count);
   if (cmd_type == CUBRID_STMT_SELECT || cmd_type == CUBRID_STMT_CALL)
     {
-      dumptable (fp, req, conn, hasqueryplan);
+      dumptable (fp, req, conn, hasqueryplan, onlyjoingraph);
     }
   else
     {
@@ -1910,7 +2056,7 @@ executebind (FILE * fp, char conn, char *sql1, char *sql2, bool hasqueryplan, bo
 	  res_col_info = cci_get_result_info (req, &cmd_type, &col_count);
 	  if (cmd_type == CUBRID_STMT_SELECT || cmd_type == CUBRID_STMT_CALL)
 	    {
-	      dumptable (fp, req, conn, hasqueryplan);
+	      dumptable (fp, req, conn, hasqueryplan, onlyjoingraph);
 	    }
 	  else
 	    {
@@ -2110,12 +2256,11 @@ test (FILE * fp)
 	{
 	  if (parameter[sql_count] != NULL)
 	    {
-	      executebind (fp, conn, sqlstate[sql_count].sql, parameter[sql_count], sqlstate[sql_count].hasqp,
-			   sqlstate[sql_count].iscallwithoutvalue);
+	      executebind (fp, conn, parameter[sql_count], &sqlstate[sql_count]); 
 	    }
 	  else
 	    {
-	      execute (fp, conn, sqlstate[sql_count].sql, sqlstate[sql_count].hasqp);
+	      execute (fp, conn, &sqlstate[sql_count]);
 	    }
 	}
     }

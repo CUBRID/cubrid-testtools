@@ -230,13 +230,8 @@ public class StringUtil {
                     continue;
                 }
 
-                if (message.startsWith("Join graph edges:")) {
-                    flag = "edges";
-                    ret.append(message + separator);
-                    message = reader.readLine();
-                    continue;
-                } else if (message.startsWith("Join graph")) {
-                    flag = "default";
+                if (message.startsWith("Join graph")) {
+                    flag = "join";
                     ret.append(message + separator);
                     message = reader.readLine();
                     continue;
@@ -245,7 +240,7 @@ public class StringUtil {
                 }
                
                 // make chageable values hidden. 
-                if ("edges".equals(flag)) {
+                if ("join".equals(flag)) {
                     message = message.replaceAll("sel [0-9]+\\.[0-9]+", "sel ?"); 
                 }
                 
