@@ -236,15 +236,18 @@ public class StringUtil {
                     message = reader.readLine();
                     continue;
                 } else if (message.startsWith("Query plan:")) {
-                    break;
-                }
-               
+                    // ignore
+                    flag = "queryplan";
+                    message = reader.readLine();
+                    continue;
+                }       
+    
                 // make chageable values hidden. 
                 if ("join".equals(flag)) {
-                    message = message.replaceAll("sel [0-9]+\\.[0-9]+", "sel ?"); 
+                    message = message.replaceAll("sel [0-9]+\\.[0-9]+", "sel ?");
+                    ret.append(message + separator);
                 }
-                
-                ret.append(message + separator);
+
                 message = reader.readLine();
             }
         } catch (Exception e) {
