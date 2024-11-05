@@ -614,7 +614,8 @@ public class ConsoleDAO extends Executor {
             }
             String script = sql.getScript().trim().toUpperCase();
             boolean isOnlyJoinGraph = sql.isJoingraph();
-            if (((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) || isOnlyJoinGraph) {
+            boolean isFullplan = sql.isFullplan();
+            if (((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) || isOnlyJoinGraph || isFullplan) {
                 Method method2 =
                         ps.getClass().getMethod("setQueryInfo", new Class[] {boolean.class});
                 method2.invoke(ps, new Object[] {true});
@@ -628,13 +629,16 @@ public class ConsoleDAO extends Executor {
               isRs = ps.execute();
             }
             getAllResult(ps, isRs, sql);
-            if (((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) || isOnlyJoinGraph) {
+            if (((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) || isOnlyJoinGraph || isFullplan) {
                 Method method = ps.getClass().getMethod("getQueryplan", new Class[] {});
                 String queryPlan = (String) method.invoke(ps, new Object[] {});
                 queryPlan = queryPlan + System.getProperty("line.separator");
                 if (isOnlyJoinGraph) {
                       queryPlan = StringUtil.replaceJoingraph(queryPlan);
-                } else {
+                } else if (isFullplan) {
+                      queryPlan = StringUtil.replaceFullplan(queryPlan);
+                }                
+                else {
                       queryPlan = StringUtil.replaceQureyPlan(queryPlan);
                 }
                 sql.setResult(sql.getResult() + queryPlan);
@@ -676,13 +680,17 @@ public class ConsoleDAO extends Executor {
             getAllResult(st, isRs, sql);
             String script = sql.getScript().trim().toUpperCase();
             boolean isOnlyJoinGraph = sql.isJoingraph();
-            if (((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) || isOnlyJoinGraph) {
+            boolean isFullplan = sql.isFullplan();
+            if (((isPrintQueryPlan && script.startsWith("SELECT")) || sql.isQueryplan()) || isOnlyJoinGraph || isFullplan) {
                 Method method = st.getClass().getMethod("getQueryplan", stringType);
                 String queryPlan = (String) method.invoke(st, new Object[] {sql.getScript()});
                 queryPlan = queryPlan + System.getProperty("line.separator");
                 if (isOnlyJoinGraph) {
                       queryPlan = StringUtil.replaceJoingraph(queryPlan);
-                } else {
+                } else if (isFullplan) {
+                      queryPlan = StringUtil.replaceFullplan(queryPlan);
+                }
+                else {
                       queryPlan = StringUtil.replaceQureyPlan(queryPlan);
                 }
                 sql.setResult(sql.getResult() + queryPlan);

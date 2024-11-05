@@ -61,7 +61,8 @@ public class SQLParser {
             boolean isCall = false;
             boolean isNewStatement = true;
             boolean isQueryplan = false;
-            boolean isJoingraph = false;
+            boolean isJoingraph = false;    
+            boolean isFullplan = false;
 
             LineScanner lineScanner = new LineScanner();
 
@@ -76,6 +77,8 @@ public class SQLParser {
                         isQueryplan = true;
                     } else if ("--@joingraph".equals(line.trim())) {
                         isJoingraph = true;
+                    } else if ("--@fullplan".equals(line.trim())) {
+                        isFullplan = true;
                     } else {
                         String controlCmd = getControlCommand(line);
                         if (controlCmd != null) {
@@ -119,12 +122,14 @@ public class SQLParser {
                         Sql sql = new Sql(connId, ret.toString(), paramList, isCall);
                         sql.setQueryplan(isQueryplan);
                         sql.setJoingraph(isJoingraph);
+                        sql.setFullplan(isFullplan);
                         list.add(sql);
 
                         // initialize state variables
                         isNewStatement = true;
                         isQueryplan = false;
                         isJoingraph = false;
+                        isFullplan = false;
                         ret.setLength(0);
                         paramList = null;
                         isCall = false;

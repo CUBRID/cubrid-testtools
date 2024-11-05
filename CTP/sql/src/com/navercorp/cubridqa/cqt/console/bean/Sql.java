@@ -38,6 +38,9 @@ public class Sql {
     // Only join graph xxx
     private boolean isJoingraph = false;
 
+    // Adds both join graph and query plan
+    private boolean isFullplan = false;
+
     private int type;
 
 	// add query plan for single sql statement
@@ -282,5 +285,12 @@ public class Sql {
     public void setJoingraph(boolean isJoingraph) {
         this.isJoingraph = isJoingraph;
     }
->>>>>>> 39d3cd4... [CBRD-25335] Print the join graph using the keyword '--@joingraph' (#680)
+
+    public boolean isFullplan() {
+        return isFullplan;
+    }
+
+    public void setFullplan(boolean isFullplan) {
+        this.isFullplan = isFullplan;
+    }
 }
