@@ -2057,7 +2057,7 @@ execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
 _END:
   if (server_output_buffer)
     {
-      fprintf (fp, server_output_buffer);
+      fprintf (fp, "%s", server_output_buffer);
     }
   if (req > 0)
     cci_close_req_handle (req);
@@ -2240,7 +2240,7 @@ executebind (FILE * fp, char conn, char *param, const SqlStateStruce *pSqlState)
 _END:
   if (server_output_buffer)
     {
-      fprintf (fp, server_output_buffer);
+      fprintf (fp, "%s", server_output_buffer);
     }
   if (req > 0)
     cci_close_req_handle (req);
