@@ -1995,7 +1995,7 @@ execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
       dumptable (fp, req, conn, hasqueryplan, onlyjoingraph, hasfullplan);
       goto _END;
     }
-  else if (cmd_type == CUBRID_STMT_UPDATE)
+  else if (cmd_type == CUBRID_STMT_UPDATE || cmd_type == CUBRID_STMT_DELETE)
     {
       fprintf (fp, "%d\n", res);
       if (hasqueryplan)
