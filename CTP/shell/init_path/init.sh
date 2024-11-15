@@ -993,6 +993,14 @@ function restore_broker_conf
     fi
 }
 
+function restore_gateway_conf
+{
+    if [ -f "$CUBRID/conf/cubrid_gateway.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_gateway.conf.org $CUBRID/conf/cubrid_gateway.conf
+    fi
+}
+
 function restore_ha_conf
 {    
     if [ -f "$CUBRID/conf/cubrid_ha.conf.org" ]
@@ -1013,6 +1021,7 @@ function restore_all_conf
 {    
     restore_db_conf
     restore_broker_conf
+    restore_gateway_conf
     restore_ha_conf
 }
 
