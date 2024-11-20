@@ -921,6 +921,21 @@ function change_broker_section_parameter
 }
 
 # Usage:
+#       change_gateway_section_parameter %BROKER1 "MIN_NUM_APPL_SERVER = 4000"
+function change_gateway_section_parameter
+{
+    local sec=$1
+    local prm=$2
+
+    if [ ! -f "$CUBRID/conf/cubrid_gateway.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_gateway.conf $CUBRID/conf/cubrid_gateway.conf.org
+    fi
+
+    change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid_gateway.conf
+}
+
+# Usage:
 #       change_ha_section_parameter common "ha_port_id = 59901"
 function change_ha_section_parameter
 {
@@ -946,6 +961,14 @@ function restore_broker_conf
     fi
 }
 
+function restore_gateway_conf
+{
+    if [ -f "$CUBRID/conf/cubrid_gateway.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_gateway.conf.org $CUBRID/conf/cubrid_gateway.conf
+    fi
+}
+
 function restore_ha_conf
 {    
     if [ -f "$CUBRID/conf/cubrid_ha.conf.org" ]
@@ -966,6 +989,7 @@ function restore_all_conf
 {    
     restore_db_conf
     restore_broker_conf
+    restore_gateway_conf
     restore_ha_conf
 }
 
