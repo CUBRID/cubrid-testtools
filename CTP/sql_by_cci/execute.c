@@ -1937,6 +1937,7 @@ execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
   bool hasqueryplan = pSqlState->hasqp;
   bool onlyjoingraph = pSqlState->onlyjg;
   bool hasfullplan = pSqlState->hasfullp;
+  bool executed = false;
 
   fprintf (fp, "===================================================\n");
 
@@ -1959,10 +1960,7 @@ execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
     }
 
   res = cci_execute (req, CCI_EXEC_QUERY_ALL, 0, &error);
-  if (is_server_message_on)
-    {
-      server_output_buffer = get_server_output (fp, conn);
-    }
+  executed = true;
   if (res < 0)
     {
       fprintf (stdout, "Error:%d\n", error.err_code);
@@ -2055,9 +2053,13 @@ execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
     }
 
 _END:
-  if (server_output_buffer)
+  if (executed && is_server_message_on)
     {
-      fprintf (fp, "%s", server_output_buffer);
+      server_output_buffer = get_server_output (fp, conn);
+      if (server_output_buffer)
+        {
+          fprintf (fp, "%s", server_output_buffer);
+        }
     }
   if (req > 0)
     cci_close_req_handle (req);
@@ -2085,6 +2087,8 @@ executebind (FILE * fp, char conn, char *param, const SqlStateStruce *pSqlState)
   bool onlyjoingraph = pSqlState->onlyjg;
   bool hasfullplan = pSqlState->hasfullp;
   bool iscall = pSqlState->iscallwithoutvalue;
+  bool executed = false;
+
   fprintf (fp, "===================================================\n");
 
   if (iscall)
@@ -2133,10 +2137,7 @@ executebind (FILE * fp, char conn, char *param, const SqlStateStruce *pSqlState)
     }
 
   res = cci_execute (req, CCI_EXEC_QUERY_ALL, 0, &error);
-  if (is_server_message_on)
-    {
-      server_output_buffer = get_server_output (fp, conn);
-    }
+  executed = true;
   if (res < 0)
     {
       fprintf (stdout, "Error:%d\n", error.err_code);
@@ -2238,9 +2239,13 @@ executebind (FILE * fp, char conn, char *param, const SqlStateStruce *pSqlState)
     }
 
 _END:
-  if (server_output_buffer)
+  if (executed && is_server_message_on)
     {
-      fprintf (fp, "%s", server_output_buffer);
+      server_output_buffer = get_server_output (fp, conn);
+      if (server_output_buffer)
+        {
+          fprintf (fp, "%s", server_output_buffer);
+        }
     }
   if (req > 0)
     cci_close_req_handle (req);
