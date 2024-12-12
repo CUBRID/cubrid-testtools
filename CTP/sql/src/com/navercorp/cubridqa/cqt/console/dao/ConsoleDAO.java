@@ -900,11 +900,18 @@ public class ConsoleDAO extends Executor {
             } catch (Exception e) {
             }
         }
-
+        SystemModel systemModel =
+                (SystemModel)
+                        XstreamHelper.fromXml(
+                                EnvGetter.getenv("CTP_HOME")
+                                        + File.separator
+                                        + "sql/configuration/System.xml");
         String script = sql.getScript().trim().toUpperCase();
         if (script.startsWith("SHOW TRACE")) {
             String res = ret.toString();
-            res = res.replaceAll("[0-9]+", "?");
+            if (!systemModel.isShowTrace()) {
+                res = res.replaceAll("[0-9]+", "?");
+            }
             sql.setResult(sql.getResult() + res + System.getProperty("line.separator"));
         } else {
             sql.setResult(sql.getResult() + ret.toString() + System.getProperty("line.separator"));

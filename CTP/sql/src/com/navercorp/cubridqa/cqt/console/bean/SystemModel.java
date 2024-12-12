@@ -45,6 +45,8 @@ public class SystemModel {
 
     private boolean queryPlan;
 
+    private boolean showTrace;
+
     private boolean cpResultToRemoteHost;
 
     private boolean errorMessage;
@@ -117,6 +119,14 @@ public class SystemModel {
 
     public void setQueryPlan(boolean queryPlan) {
         this.queryPlan = queryPlan;
+    }
+
+    public boolean isShowTrace() {
+        return showTrace;
+    }
+
+    public void setShowTrace(boolean showTrace) {
+        this.showTrace = showTrace;
     }
 
     public String getRemoteHost() {
