@@ -335,7 +335,7 @@ function diff_ignore_lineno
 
 # After comparing two files, This function write the result int result files.
 # Usage:
-#        compare_result_between_files file1 file2 [error]
+#        compare_result_between_files file1 file2 [error|sort]
 
 function compare_result_between_files
 {
