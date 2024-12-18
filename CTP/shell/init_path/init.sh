@@ -386,6 +386,23 @@ function compare_result_between_files
                 write_ok
         fi
         let "answer_no = answer_no + 1"
+  elif [ "$3" = "sort" ]
+  then
+        sorted_left="${left}_sorted"
+        sorted_right="${right}_sorted"
+        sort $left > $sorted_left
+        sort $right > $sorted_right
+
+        if diff_ignore_lineno $sorted_left $sorted_right -b
+        then
+                write_ok
+        else
+                write_nok
+                echo "diff $sorted_left $sorted_right failed" >> $result_file
+                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a $result_file
+        fi
+
+        rm -f $sorted_left $sorted_right
   else
         if diff_ignore_lineno $left $right -b
         then
