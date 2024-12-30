@@ -303,7 +303,7 @@ function get_best_compat_file
 
 # After comparing two files, This function write the result int result files.
 # Usage:
-#        compare_result_between_files file1 file2 [error]
+#        compare_result_between_files file1 file2 [error|sort]
 
 function compare_result_between_files
 {
@@ -342,18 +342,51 @@ function compare_result_between_files
   dos2unix $right
 
   echo "start to compare files: diff $left $right"  
-  if [ "$3" = "error" ]
+  if [ "$3" = "error" ] && [ "$4" = "sort" ] || [ "$3" = "sort" ] && [ "$4" = "error" ]
+  then
+        sorted_left="${left}_sorted"
+        sorted_right="${right}_sorted"
+        sort $left > $sorted_left
+        sort $right > $sorted_right
+
+        if diff_ignore_lineno $sorted_left $sorted_right -b
+        then
+                write_nok
+                echo "diff $sorted_left $sorted_right failed" >> $result_file
+                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a $result_file
+        else
+                write_ok
+        fi
+
+        rm -f $sorted_left $sorted_right
+  elif [ "$3" = "error" ]
   then
         if diff $left $right -b
         then
                 write_nok
                 echo "diff $left $right failed" >> $result_file
-                #diff $left $right -y >> $result_file
-		diff $left $right -y |tee -a $result_file
+                diff_ignore_lineno $left $right -y |tee -a $result_file
         else
                 write_ok
         fi
         let "answer_no = answer_no + 1"
+  elif [ "$3" = "sort" ]
+  then
+        sorted_left="${left}_sorted"
+        sorted_right="${right}_sorted"
+        sort $left > $sorted_left
+        sort $right > $sorted_right
+
+        if diff_ignore_lineno $sorted_left $sorted_right -b
+        then
+                write_ok
+        else
+                write_nok
+                echo "diff $sorted_left $sorted_right failed" >> $result_file
+                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a $result_file
+        fi
+
+        rm -f $sorted_left $sorted_right
   else
         if diff $left $right -b
         then
@@ -361,8 +394,7 @@ function compare_result_between_files
         else
                 write_nok
                 echo "diff $left $right failed" >> $result_file
-                #diff $left $right -y >> $result_file
-		diff $left $right -y |tee -a $result_file
+                diff_ignore_lineno $left $right -y |tee -a $result_file
         fi
         let "answer_no = answer_no + 1"
   fi
