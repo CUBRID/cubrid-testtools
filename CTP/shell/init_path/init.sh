@@ -34,7 +34,7 @@ begin_time=0
 ## the end time for case
 end_time=0
 #0: not count time  1: count time
-need_count_time=0
+need_count_time=1
 cubrid_major=""
 cubrid_minor=""
 IGNORE_TEST_PERFORMANCE=""
@@ -637,16 +637,15 @@ function count_time
   duration=$(($end_time-$begin_time))
   date_str=`date +"%Y-%m-%d"`
   time_str=`date +%H:%M:%S`
-  cur_pwd=`pwd`
-  echo $time_str----$cur_pwd---'time'=$duration >> ~/shell_cases_log/$date_str-time.log	
+  echo $time_str----$cur_path--- time="$duration" >> ${cur_path}/$result_file
   if [ $duration -gt 7200 ]; then # 2hours
-  	echo $time_str----$cur_pwd---$duration >> ~/shell_cases_log/$date_str-gt_2hours.log
+  	echo $time_str----$cur_pwd--- over 2hour time="$duration" >> ${cur_path}/$result_file
   elif [ $duration -gt 3600 ]; then # 1hours
-  	echo $time_str----$cur_pwd---$duration >> ~/shell_cases_log/$date_str-gt_1hours.log  
+  	echo $time_str----$cur_pwd--- over 1hour time="$duration" >> ${cur_path}/$result_file
   elif [ $duration -gt 1800 ]; then # 30minutes
-  	echo $time_str----$cur_pwd---$duration >> ~/shell_cases_log/$date_str-gt_30minutes.log  
+  	echo $time_str----$cur_pwd--- over 30minutes time="$duration" >> ${cur_path}/$result_file
   elif [ $duration -gt 600 ]; then # 10minutes
-  	echo $time_str----$cur_pwd---$duration >> ~/shell_cases_log/$date_str-gt_10minutes.log
+  	echo $time_str----$cur_pwd--- over 10minutes time="$duration" >> ${cur_path}/$result_file
   fi
 }
 
@@ -687,7 +686,7 @@ function init
   	begin_time=`get_curr_second`
   	date_str=`date +"%Y-%m-%d"`
   	time_str=`date +%H:%M:%S`
-  	echo $time_str----`pwd` >> ~/shell_cases_log/$date_str-time.log	
+  	echo $time_str----$cur_path---- test start >> ${cur_path}/$result_file	
   fi
   
   cur_path=`pwd`
