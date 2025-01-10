@@ -682,12 +682,6 @@ function get_language()
 function init 
 {
   echo "[INFO] TEST START (`date`)"
-  if [ $need_count_time -eq 1 ]; then
-  	begin_time=`get_curr_second`
-  	date_str=`date +"%Y-%m-%d"`
-  	time_str=`date +%H:%M:%S`
-  	echo $time_str----$cur_path---- test start >> ${cur_path}/$result_file	
-  fi
   
   cur_path=`pwd`
   cd $cur_path
@@ -695,7 +689,14 @@ function init
   full_name=$0
   answer_no=1 
   mode=$1
-  
+
+  if [ $need_count_time -eq 1 ]; then
+  	begin_time=`get_curr_second`
+  	date_str=`date +"%Y-%m-%d"`
+  	time_str=`date +%H:%M:%S`
+  	echo $time_str----$cur_path---- test start >> ${cur_path}/$result_file	
+  fi
+
   if [ "$OS" = "Windows_NT" ]; then
   	export init_path=`cygpath "${init_path}"`
     export REAL_INIT_PATH=`cygpath -w "${init_path}"`
