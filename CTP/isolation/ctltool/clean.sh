@@ -35,14 +35,14 @@ function clean_cubrid
   cubrid tranlist $dbname|grep $HOSTNAME|awk '{print $4}'|xargs -i kill -9 {} >/dev/null 2>&1
   if [ `csql -u dba $dbname -c "show create table db_trigger"|grep -c "unique_name"` -eq 1 ];then
     sql_trigger="select unique_name from db_trigger;"
-    sql_serial="select unique_name from db_serial where att_name is null;"
+    sql_serial="select unique_name from db_serial where attr_name is null;"
     sql_function="SELECT owner||'.'||sp_name FROM db_stored_procedure where sp_type='FUNCTION' and sp_name !='sleep' and sp_name !='sleep1' and sp_name !='sleep2'"
     sql_procedure="SELECT owner||'.'||sp_name FROM db_stored_procedure where sp_type='PROCEDURE';"
     sql_vclass="select owner_name||'.'||class_name from db_class where is_system_class='NO' and class_type='VCLASS';"
     sql_class="select owner_name||'.'||class_name from db_class where is_system_class='NO' and class_type='CLASS';"
   else
     sql_trigger="select name from db_trigger;"
-    sql_serial="select name from db_serial where att_name is null;"
+    sql_serial="select name from db_serial where attr_name is null;"
     sql_function="SELECT sp_name FROM db_stored_procedure where sp_type='FUNCTION' and sp_name !='sleep' and sp_name !='sleep1' and sp_name !='sleep2'"
     sql_procedure="SELECT sp_name FROM db_stored_procedure where sp_type='PROCEDURE';"
     sql_vclass="select class_name from db_class where is_system_class='NO' and class_type='VCLASS';"
