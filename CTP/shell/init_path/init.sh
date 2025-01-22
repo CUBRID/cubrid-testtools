@@ -384,8 +384,8 @@ function compare_result_between_files
         if diff_ignore_lineno $sorted_left $sorted_right -b
         then
                 write_nok
-                echo "diff $sorted_left $sorted_right failed" >> $result_file
-                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a $result_file
+                echo "diff $sorted_left $sorted_right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a ${cur_path}/$result_file
         else
                 write_ok
         fi
@@ -396,8 +396,8 @@ function compare_result_between_files
         if diff_ignore_lineno $left $right -b
         then
                 write_nok
-                echo "diff $left $right failed" >> $result_file
-                diff_ignore_lineno $left $right -y |tee -a $result_file
+                echo "diff $left $right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $left $right -y |tee -a ${cur_path}/$result_file
         else
                 write_ok
         fi
@@ -414,8 +414,8 @@ function compare_result_between_files
                 write_ok
         else
                 write_nok
-                echo "diff $sorted_left $sorted_right failed" >> $result_file
-                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a $result_file
+                echo "diff $sorted_left $sorted_right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a ${cur_path}/$result_file
         fi
 
         rm -f $sorted_left $sorted_right
@@ -425,8 +425,8 @@ function compare_result_between_files
                 write_ok
         else
                 write_nok
-                echo "diff $left $right failed" >> $result_file
-                diff_ignore_lineno $left $right -y |tee -a $result_file
+                echo "diff $left $right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $left $right -y |tee -a ${cur_path}/$result_file
         fi
         let "answer_no = answer_no + 1"
   fi
@@ -830,7 +830,7 @@ function get_comment {
   
     if [ $line_no -ne 1 ] && [ "$first_char" = "#" ] && [ $start_prog -eq 0 ]
     then
-      echo `echo $line | cut -c2-` >> $result_file
+      echo `echo $line | cut -c2-` >> ${cur_path}/$result_file
     fi
   
     let "line_no = line_no + 1"
