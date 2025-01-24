@@ -603,6 +603,7 @@ function write_nok
         let "case_no = case_no + 1"
   elif [ -f "$1" ]; 
   then
+	echo "----------------- $case_no : NOK"
 	echo "$case_name-$case_no : NOK"  >> ${cur_path}/$result_file
 	cat $1 >> ${cur_path}/$result_file
 	let "case_no = case_no + 1"
