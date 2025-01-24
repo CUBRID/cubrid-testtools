@@ -179,7 +179,7 @@ function do_init()
     fi
     
     cci_urlproperty=`ini -s sql ${config_file_main} cci_urlproperty`
-    support_javasp=`cubrid | grep -w javasp | awk '{if($1=="javasp") {print "yes"}}'`
+    support_javasp=`echo $(cubrid | grep -w javasp) | awk '{if($1=="javasp") {print "yes"} else {print "no"}}'`
     
     cd $curDir
 }
