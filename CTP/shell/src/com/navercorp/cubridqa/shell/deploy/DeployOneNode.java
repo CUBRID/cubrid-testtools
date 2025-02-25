@@ -115,13 +115,6 @@ public class DeployOneNode {
 			scripts.addCommand("chmod -R u+x CUBRID");
 		}
 
-		String buildId = context.getTestBuild();
-		String[] arr = buildId.split("\\.");
-		if (Integer.parseInt(arr[0]) >= 10) {
-			scripts.addCommand("echo inquire_on_exit=3 >> $CUBRID/conf/cubrid.conf");
-		}
-		scripts.addCommand("echo error_log_size=800000000 >> $CUBRID/conf/cubrid.conf");
-
 		String result;
 		try {
 			result = ssh.execute(scripts);
@@ -154,13 +147,6 @@ public class DeployOneNode {
 			scripts.addCommand(CommonUtils.getExportsOfMEKYParams());
 			scripts.addCommand("run_cubrid_install " + role + " " + buildUrl + " " + context.getProperty(ConfigParameterConstants.CUBRID_ADDITIONAL_DOWNLOAD_URL, "").trim() + " 2>&1");
 		}
-
-		String buildId = context.getTestBuild();
-		String[] arr = buildId.split("\\.");
-		if (Integer.parseInt(arr[0]) >= 10) {
-			scripts.addCommand("echo inquire_on_exit=3 >> $CUBRID/conf/cubrid.conf");
-		}
-		scripts.addCommand("echo error_log_size=800000000 >> $CUBRID/conf/cubrid.conf");
 
 		String result;
 		try {
