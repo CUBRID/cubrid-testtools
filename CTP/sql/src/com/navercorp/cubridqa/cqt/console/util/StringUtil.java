@@ -204,19 +204,174 @@ public class StringUtil {
 		return ret.toString();
 	}
 
-	/**
-	 * translate byte array to Hex String .
-	 * 
-	 * @param b
-	 * @return
-	 */
-	public static String toHexString(byte[] b) {
-		StringBuffer buffer = new StringBuffer();
-		for (int i = 0; i < b.length; ++i) {
-			buffer.append(toHexString(b[i]));
-		}
-		return buffer.toString();
-	}
+   /**
+    * Show only the join graph. 
+    *
+    * @param queryPlan
+    * @return
+    */
+    public static String replaceJoingraph(String queryPlan) {
+        if (queryPlan == null) {
+            return null;
+        }
+
+        StringBuilder ret = new StringBuilder();
+
+        String flag = "default";
+        String separator = System.getProperty("line.separator");
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new StringReader(queryPlan));
+
+            String message = reader.readLine();
+            while (message != null) {
+                if (message.trim().equals("")) {
+                    message = reader.readLine();
+                    continue;
+                }
+
+                if (message.startsWith("Join graph")) {
+                    flag = "join";
+                    ret.append(message + separator);
+                    message = reader.readLine();
+                    continue;
+                } else if (message.startsWith("Query plan:")) {
+                    // ignore
+                    flag = "queryplan";
+                    message = reader.readLine();
+                    continue;
+                }       
+    
+                // make chageable values hidden. 
+                if ("join".equals(flag)) {
+                    message = message.replaceAll("sel [0-9]+\\.[0-9]+", "sel ?");
+                    ret.append(message + separator);
+                }
+
+                message = reader.readLine();
+            }
+        } catch (Exception e) {
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return ret.toString();
+    }
+
+    /**
+     * replace the full query plan (query plan + join graph + query stmt)
+     *
+     * @param queryPlan
+     * @return
+     */
+    public static String replaceFullplan(String queryPlan) {
+        if (queryPlan == null) {
+            return null;
+        }
+
+        SystemModel systemModel =
+                (SystemModel)
+                        XstreamHelper.fromXml(
+                                EnvGetter.getenv("CTP_HOME")
+                                        + File.separator
+                                        + "sql/configuration/System.xml");
+        StringBuilder ret = new StringBuilder();
+
+        String flag = "default";
+        int stmtCount = 0;
+        String separator = System.getProperty("line.separator");
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new StringReader(queryPlan));
+
+            String message = reader.readLine();
+            while (message != null) {
+                if (message.trim().equals("")) {
+                    message = reader.readLine();
+                    continue;
+                }
+
+                // Handle join graph section
+                if (message.startsWith("Join graph")) {
+                    flag = "join";
+                    ret.append(message + separator);
+                    message = reader.readLine();
+                    continue;
+                }
+                
+                // Handle query plan section
+                if (message.startsWith("Query plan:")) {
+                    flag = "plan";
+                    ret.append(message + separator);
+                    message = reader.readLine();
+                    continue;
+                }
+
+                // Handle query statement section
+                if (message.startsWith("Query stmt:")) {
+                    flag = "stmt";
+                    ret.append(message + separator);
+                    stmtCount = 0;
+                    message = reader.readLine();
+                    continue;
+                }
+
+                // Append messages according to the current flag
+                if ("join".equals(flag)) {
+                    // Modify join graph details if needed
+                    message = message.replaceAll("sel [0-9]+\\.[0-9]+", "sel ?");
+                    ret.append(message + separator);
+                } else if ("plan".equals(flag) || "stmt".equals(flag)) {
+                    if (systemModel.isQueryPlan()) {
+                        ret.append(message + separator);
+                    } else {
+                        if ("plan".equals(flag)) {
+                            message = message.replaceAll("[0-9]+", "?");
+                            ret.append(message + separator);
+                        } else if ("stmt".equals(flag)) {
+                            if (stmtCount == 0) {
+                                message = message.replaceAll("[0-9]+", "?");
+                                ret.append(message + separator);
+                                stmtCount++;
+                            } else if (message.startsWith("/")) {
+                                message = message.replaceAll("[0-9]+", "?");
+                                ret.append(message + separator);
+                            }
+                        }
+                    }
+                }
+
+                message = reader.readLine();
+            }
+        } catch (Exception e) {
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return ret.toString();
+    }
+
+    /**
+     * translate byte array to Hex String .
+     *
+     * @param b
+     * @return
+     */
+    public static String toHexString(byte[] b) {
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < b.length; ++i) {
+            buffer.append(toHexString(b[i]));
+        }
+        return buffer.toString();
+    }
 
 	/**
 	 * replace dir for Windows OS which using cygwin.

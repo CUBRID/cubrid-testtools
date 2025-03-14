@@ -303,7 +303,7 @@ function get_best_compat_file
 
 # After comparing two files, This function write the result int result files.
 # Usage:
-#        compare_result_between_files file1 file2 [error]
+#        compare_result_between_files file1 file2 [error|sort]
 
 function compare_result_between_files
 {
@@ -342,27 +342,59 @@ function compare_result_between_files
   dos2unix $right
 
   echo "start to compare files: diff $left $right"  
-  if [ "$3" = "error" ]
+  if [ "$3" = "error" ] && [ "$4" = "sort" ] || [ "$3" = "sort" ] && [ "$4" = "error" ]
+  then
+        sorted_left="${left}_sorted"
+        sorted_right="${right}_sorted"
+        sort $left > $sorted_left
+        sort $right > $sorted_right
+
+        if diff_ignore_lineno $sorted_left $sorted_right -b
+        then
+                write_nok
+                echo "diff $sorted_left $sorted_right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a ${cur_path}/$result_file
+        else
+                write_ok
+        fi
+
+        rm -f $sorted_left $sorted_right
+  elif [ "$3" = "error" ]
   then
         if diff $left $right -b
         then
                 write_nok
-                echo "diff $left $right failed" >> $result_file
-                #diff $left $right -y >> $result_file
-		diff $left $right -y |tee -a $result_file
+                echo "diff $left $right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $left $right -y |tee -a ${cur_path}/$result_file
         else
                 write_ok
         fi
         let "answer_no = answer_no + 1"
+  elif [ "$3" = "sort" ]
+  then
+        sorted_left="${left}_sorted"
+        sorted_right="${right}_sorted"
+        sort $left > $sorted_left
+        sort $right > $sorted_right
+
+        if diff_ignore_lineno $sorted_left $sorted_right -b
+        then
+                write_ok
+        else
+                write_nok
+                echo "diff $sorted_left $sorted_right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a ${cur_path}/$result_file
+        fi
+
+        rm -f $sorted_left $sorted_right
   else
         if diff $left $right -b
         then
                 write_ok
         else
                 write_nok
-                echo "diff $left $right failed" >> $result_file
-                #diff $left $right -y >> $result_file
-		diff $left $right -y |tee -a $result_file
+                echo "diff $left $right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $left $right -y |tee -a ${cur_path}/$result_file
         fi
         let "answer_no = answer_no + 1"
   fi
@@ -539,6 +571,7 @@ function write_nok
         let "case_no = case_no + 1"
   elif [ -f "$1" ]; 
   then
+	echo "----------------- $case_no : NOK"
 	echo "$case_name-$case_no : NOK"  >> ${cur_path}/$result_file
 	cat $1 >> ${cur_path}/$result_file
 	let "case_no = case_no + 1"
@@ -766,7 +799,7 @@ function get_comment {
   
     if [ $line_no -ne 1 ] && [ "$first_char" = "#" ] && [ $start_prog -eq 0 ]
     then
-      echo `echo $line | cut -c2-` >> $result_file
+      echo `echo $line | cut -c2-` >> ${cur_path}/$result_file
     fi
   
     let "line_no = line_no + 1"
@@ -823,6 +856,21 @@ function change_db_parameter
   fi
 }
 
+# Usage:
+#       change_db_section_parameter common "ORACLE_STYLE_EMPTY_STRING = 0" 
+function change_db_section_parameter
+{
+  local sec=$1  
+  local prm=$2  
+
+  if [ ! -f "$CUBRID/conf/cubrid.conf.org" ]
+  then
+       cp $CUBRID/conf/cubrid.conf $CUBRID/conf/cubrid.conf.org
+  fi
+
+  change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid.conf
+}
+
 # Restore DB .ini file from source file
 
 function delete_ini
@@ -833,6 +881,28 @@ function delete_ini
   else
         cp $CUBRID/conf/cubrid.conf.org $CUBRID/conf/cubrid.conf
   fi
+}
+
+# Usage:
+#       change_config_section_parameter common "ORACLE_COMPAT_NUMBER_BEHAVIOR = 0" $CUBRID/conf/cubrid.conf
+function change_config_section_parameter
+{
+  local sec=$1
+  local prm=$2
+  local file=$3
+
+  local key=${prm%%=*}
+  local val=${prm#*=}
+
+  sec=`echo $sec|sed "s@\/@\\\\\/@g"`
+  key=`echo $key|sed "s@\/@\\\\\/@g"`
+  key=`echo $key|sed 's/^ *//g'`
+  key=`echo $key|sed 's/ *$//g'`
+  val=`echo $val|sed "s@\/@\\\\\/@g"`
+
+  sed -i "/^\[$sec\]/,/^\[/{s/^$key[[:space:]]*=.*/$key = $val/}" $file
+  awk "/\[$sec\]/{flag=1;next}/\[.*\]/{flag=0}flag && NF" $file \
+  | grep "$key = $val" > /dev/null || sed -i  "/\[$sec\]/a\\$key = $val" $file
 }
 
 # Change DB Broker parameter in the cubrid_broker.conf
@@ -868,6 +938,52 @@ function change_ha_parameter
     fi  
 } 
 
+# Usage:
+#       change_broker_section_parameter %BROKER1 "MIN_NUM_APPL_SERVER = 4000"
+function change_broker_section_parameter
+{
+    local sec=$1
+    local prm=$2
+
+    if [ ! -f "$CUBRID/conf/cubrid_broker.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_broker.conf $CUBRID/conf/cubrid_broker.conf.org
+    fi
+
+    change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid_broker.conf
+}
+
+# Usage:
+#       change_gateway_section_parameter %BROKER1 "MIN_NUM_APPL_SERVER = 4000"
+function change_gateway_section_parameter
+{
+    local sec=$1
+    local prm=$2
+
+    if [ ! -f "$CUBRID/conf/cubrid_gateway.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_gateway.conf $CUBRID/conf/cubrid_gateway.conf.org
+    fi
+
+    change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid_gateway.conf
+}
+
+# Usage:
+#       change_ha_section_parameter common "ha_port_id = 59901"
+function change_ha_section_parameter
+{
+    local sec=$1
+    local prm=$2
+    
+    if [ ! -f "$CUBRID/conf/cubrid_ha.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_ha.conf $CUBRID/conf/cubrid_ha.conf.org
+    fi
+    
+    change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid_ha.conf
+}
+
+
 # Restore cubrid_broker.conf file from source file
 
 function restore_broker_conf
@@ -875,6 +991,14 @@ function restore_broker_conf
     if [ -f "$CUBRID/conf/cubrid_broker.conf.org" ]
     then
         cp $CUBRID/conf/cubrid_broker.conf.org $CUBRID/conf/cubrid_broker.conf
+    fi
+}
+
+function restore_gateway_conf
+{
+    if [ -f "$CUBRID/conf/cubrid_gateway.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_gateway.conf.org $CUBRID/conf/cubrid_gateway.conf
     fi
 }
 
@@ -898,6 +1022,7 @@ function restore_all_conf
 {    
     restore_db_conf
     restore_broker_conf
+    restore_gateway_conf
     restore_ha_conf
 }
 
@@ -930,6 +1055,9 @@ function format_query_plan
     sed -i 's/ioread: [0-9]*/ioread:?/g' $1
     sed -i 's/"time": [0-9]*/"time":?/g' $1
     sed -i 's/"fetch": [0-9]*/"fetch":?/g' $1
+    sed -i 's/hit: [0-9]*/hit:?/g' $1
+    sed -i 's/miss: [0-9]*/miss:?/g' $1
+    sed -i 's/size: [0-9]*/size:?/g' $1
 }
 
 function format_path_output

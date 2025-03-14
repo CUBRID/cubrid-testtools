@@ -24,12 +24,13 @@
  */
 package com.navercorp.cubridqa.cqt.webconsole.compare;
 
+import com.navercorp.cubridqa.cqt.common.SQLParser;
+import com.navercorp.cubridqa.cqt.console.bean.Sql;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 public class TestReader {
 
@@ -39,54 +40,37 @@ public class TestReader {
 
 	public final static String SPLIT = "===================================================";
 
-	public TestReader(String filename1) throws FileNotFoundException, UnsupportedEncodingException {
-		FileInputStream fis = new FileInputStream(filename1);
-		InputStreamReader fsr = new InputStreamReader(fis, "UTF-8");
-		this.reader1 = new BufferedReader(fsr);
-	}
+    private List<Sql> sqls = null;
+    private int idx = 0;
 
-	public String nextStatement() throws IOException {
-		StringBuffer sb = new StringBuffer();
+    public TestReader(String filename1) throws FileNotFoundException, UnsupportedEncodingException {
+        sqls = SQLParser.parseSqlFile(filename1, "UTF-8", false);
+    }
 
-		String line;
-		while (!isEOF) {
-			try {
-				line = reader1.readLine();
-			} catch (IOException e) {
-				closeFile();
-				throw e;
-			}
+    public String nextStatement() throws IOException {
+        if (sqls == null || sqls.isEmpty() || idx >= sqls.size()) {
+            return null;
+        }
 
-			if (line == null) {
-				closeFile();
-				break;
-			}
+        StringBuilder builder = new StringBuilder();
+        do {
+            String sql = sqls.get(idx).getScript().trim();
+            idx++;
 
-			line = line.trim();
+            if (builder.length() > 0) {
+                builder.append("\n");
+            }
+            builder.append(sql);
 
-			sb.append(line + "\n");
+            if (sql.startsWith("--") || sql.startsWith("$") || sql.startsWith("autocommit")) {
+                continue;
+            } else {
+                break;
+            }
 
-			if (line.startsWith("--") || line.startsWith("$") || line.startsWith("autocommit")) {
-				continue;
-			} else if (line.endsWith(";")) {
-				break;
-			}
-		}
+        } while (idx < sqls.size());
 
-		String sql = sb.toString().trim() + "\n";
-		return (sql.trim().length() == 0) ? null : sql;
-	}
-
-	public void closeFile() {
-		if (reader1 != null) {
-			try {
-				reader1.close();
-				reader1 = null;
-				isEOF = true;
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-	}
+        return (builder.length() == 0) ? null : builder.toString();
+    }
 
 }

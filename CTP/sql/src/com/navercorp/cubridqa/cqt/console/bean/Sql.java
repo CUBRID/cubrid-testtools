@@ -40,7 +40,13 @@ public class Sql {
 	// add query plan for single sql statement
 	private boolean isQueryplan = false;
 
-	private int type;
+    // Only join graph xxx
+    private boolean isJoingraph = false;
+
+    // Adds both join graph and query plan
+    private boolean isFullplan = false;
+
+    private int type;
 
 	private String result = "";
 
@@ -50,116 +56,129 @@ public class Sql {
 
 	private String connId = "";
 
-	public Sql(String connId, String src, List<SqlParam> paramList, boolean isCall) {
-		setConnId(connId);
-		setScript(src);
-		setParamList(paramList);
+    public Sql(String connId, String src, List<SqlParam> paramList, boolean isCall) {
+        setConnId(connId);
+        setScript(src);
+        setParamList(paramList);
 
-		int type = Sql.TYPE_STMT;
-		if (isCall) {
-			type = Sql.TYPE_CALL;
-		} else if (isPrep(src)) {// .indexOf("?") != -1) {
-			type = Sql.TYPE_PRE_STMT;
-		}
-		setType(type);
-	}
+        int type = Sql.TYPE_STMT;
+        if (isCall) {
+            type = Sql.TYPE_CALL;
+        } else if (isPrep(src)) { // .indexOf("?") != -1) {
+            type = Sql.TYPE_PRE_STMT;
+        }
+        setType(type);
+    }
 
-	private boolean isPrep(String sql) {
-		char[] cs = sql.toCharArray();
-		boolean lock = true;
-		for (char key : cs) {
-			if (key == '\'') {
-				lock = !lock;
-			}
-			if (key == '?') {
-				if (lock) {
-					return true;
-				}
-			}
+    private boolean isPrep(String sql) {
+        char[] cs = sql.toCharArray();
+        boolean lock = true;
+        for (char key : cs) {
+            if (key == '\'') {
+                lock = !lock;
+            }
+            if (key == '?') {
+                if (lock) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
-		}
-		return false;
+    public List<SqlParam> getParamList() {
+        return paramList;
+    }
 
-	}
+    public void setParamList(List<SqlParam> paramList) {
+        this.paramList = paramList;
+    }
 
-	public List<SqlParam> getParamList() {
-		return paramList;
-	}
+    public String getScript() {
+        return script;
+    }
 
-	public void setParamList(List<SqlParam> paramList) {
-		this.paramList = paramList;
-	}
+    public void setScript(String script) {
+        this.script = script;
+    }
 
-	public String getScript() {
-		return script;
-	}
+    public String toString() {
+        StringBuilder ret = new StringBuilder();
+        ret.append(script);
+        ret.append(" type:" + type);
 
-	public void setScript(String script) {
-		this.script = script;
-	}
+        if (paramList != null) {
+            ret.append("  values[");
+            for (int i = 0; i < paramList.size(); i++) {
+                ret.append(((SqlParam) paramList.get(i)).getValue() + ",");
+            }
+            ret.append("]");
+        }
 
-	public String toString() {
-		StringBuilder ret = new StringBuilder();
-		ret.append(script);
-		ret.append(" type:" + type);
+        return ret.toString();
+    }
 
-		if (paramList != null) {
-			ret.append("  values[");
-			for (int i = 0; i < paramList.size(); i++) {
-				ret.append(((SqlParam) paramList.get(i)).getValue() + ",");
-			}
-			ret.append("]");
-		}
+    public boolean isSuccessful() {
+        return isSuccessful;
+    }
 
-		return ret.toString();
-	}
+    public void setSuccessful(boolean isSuccessful) {
+        this.isSuccessful = isSuccessful;
+    }
 
-	public boolean isSuccessful() {
-		return isSuccessful;
-	}
+    public String getResult() {
+        return result;
+    }
 
-	public void setSuccessful(boolean isSuccessful) {
-		this.isSuccessful = isSuccessful;
-	}
+    public void setResult(String result) {
+        this.result = result;
+    }
 
-	public String getResult() {
-		return result;
-	}
+    public int getType() {
+        return type;
+    }
 
-	public void setResult(String result) {
-		this.result = result;
-	}
+    public void setType(int type) {
+        this.type = type;
+    }
 
-	public int getType() {
-		return type;
-	}
+    public long getTime() {
+        return time;
+    }
 
-	public void setType(int type) {
-		this.type = type;
-	}
+    public void setTime(long time) {
+        this.time = time;
+    }
 
-	public long getTime() {
-		return time;
-	}
+    public String getConnId() {
+        return connId;
+    }
 
-	public void setTime(long time) {
-		this.time = time;
-	}
+    public void setConnId(String connId) {
+        this.connId = connId;
+    }
 
-	public String getConnId() {
-		return connId;
-	}
+    public boolean isQueryplan() {
+        return isQueryplan;
+    }
 
-	public void setConnId(String connId) {
-		this.connId = connId;
-	}
+    public void setQueryplan(boolean isQueryplan) {
+        this.isQueryplan = isQueryplan;
+    }
 
-	public boolean isQueryplan() {
-		return isQueryplan;
-	}
+    public boolean isJoingraph() {
+        return isJoingraph;
+    }
 
-	public void setQueryplan(boolean isQueryplan) {
-		this.isQueryplan = isQueryplan;
-	}
+    public void setJoingraph(boolean isJoingraph) {
+        this.isJoingraph = isJoingraph;
+    }
 
+    public boolean isFullplan() {
+        return isFullplan;
+    }
+
+    public void setFullplan(boolean isFullplan) {
+        this.isFullplan = isFullplan;
+    }
 }

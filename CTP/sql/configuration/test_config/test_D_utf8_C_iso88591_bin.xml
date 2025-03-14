@@ -10,6 +10,7 @@
     <client_charset>iso88591_bin</client_charset>
     <autocommit>true</autocommit>
     <holdcas>off</holdcas>
+    <server-message>off</server-message>
     <check_server_status>true</check_server_status>
     <add_debug_hint>false</add_debug_hint>
     <need_xml_summary>true</need_xml_summary>
