@@ -102,13 +102,6 @@ public class PropertiesUtil {
 			test.setHoldcas(val);
 		}
 
-		List checkAlive = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.CHECK_SERVER_STATUS);
-		if (!checkAlive.isEmpty()) {
-			Element serverStatus = (Element) checkAlive.get(0);
-			val = serverStatus.getText();
-			test.setNeedCheckServerStatus(Boolean.parseBoolean(val));
-		}
-
         List sol = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.SERVER_MESSAGE);
         if (!sol.isEmpty()) {
             Element so = (Element) sol.get(0);
@@ -116,12 +109,12 @@ public class PropertiesUtil {
             test.setServerMessage(val);
         }
 
-        List checkAlive = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.CHECK_SERVER_STATUS);
-        if (!checkAlive.isEmpty()) {
-            Element serverStatus = (Element) checkAlive.get(0);
-            val = serverStatus.getText();
-            test.setNeedCheckServerStatus(Boolean.parseBoolean(val));
-        }
+		List checkAlive = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.CHECK_SERVER_STATUS);
+		if (!checkAlive.isEmpty()) {
+			Element serverStatus = (Element) checkAlive.get(0);
+			val = serverStatus.getText();
+			test.setNeedCheckServerStatus(Boolean.parseBoolean(val));
+		}
 
 		List needXmlSummary = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.NEED_XML_SUMMARY);
 		if (!needXmlSummary.isEmpty()) {

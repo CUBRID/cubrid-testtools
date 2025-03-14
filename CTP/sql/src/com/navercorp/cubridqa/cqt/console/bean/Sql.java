@@ -35,6 +35,11 @@ public class Sql {
 
 	private String script;
 
+	private List<SqlParam> paramList;
+
+	// add query plan for single sql statement
+	private boolean isQueryplan = false;
+
     // Only join graph xxx
     private boolean isJoingraph = false;
 
@@ -43,11 +48,6 @@ public class Sql {
 
     private int type;
 
-	// add query plan for single sql statement
-	private boolean isQueryplan = false;
-
-	private int type;
-
 	private String result = "";
 
 	private boolean isSuccessful = true;
@@ -55,118 +55,6 @@ public class Sql {
 	private long time;
 
 	private String connId = "";
-
-	public Sql(String connId, String src, List<SqlParam> paramList, boolean isCall) {
-		setConnId(connId);
-		setScript(src);
-		setParamList(paramList);
-
-		int type = Sql.TYPE_STMT;
-		if (isCall) {
-			type = Sql.TYPE_CALL;
-		} else if (isPrep(src)) {// .indexOf("?") != -1) {
-			type = Sql.TYPE_PRE_STMT;
-		}
-		setType(type);
-	}
-
-	private boolean isPrep(String sql) {
-		char[] cs = sql.toCharArray();
-		boolean lock = true;
-		for (char key : cs) {
-			if (key == '\'') {
-				lock = !lock;
-			}
-			if (key == '?') {
-				if (lock) {
-					return true;
-				}
-			}
-
-		}
-		return false;
-
-	}
-
-	public List<SqlParam> getParamList() {
-		return paramList;
-	}
-
-	public void setParamList(List<SqlParam> paramList) {
-		this.paramList = paramList;
-	}
-
-	public String getScript() {
-		return script;
-	}
-
-	public void setScript(String script) {
-		this.script = script;
-	}
-
-	public String toString() {
-		StringBuilder ret = new StringBuilder();
-		ret.append(script);
-		ret.append(" type:" + type);
-
-		if (paramList != null) {
-			ret.append("  values[");
-			for (int i = 0; i < paramList.size(); i++) {
-				ret.append(((SqlParam) paramList.get(i)).getValue() + ",");
-			}
-			ret.append("]");
-		}
-
-		return ret.toString();
-	}
-
-	public boolean isSuccessful() {
-		return isSuccessful;
-	}
-
-	public void setSuccessful(boolean isSuccessful) {
-		this.isSuccessful = isSuccessful;
-	}
-
-	public String getResult() {
-		return result;
-	}
-
-	public void setResult(String result) {
-		this.result = result;
-	}
-
-	public int getType() {
-		return type;
-	}
-
-	public void setType(int type) {
-		this.type = type;
-	}
-
-	public long getTime() {
-		return time;
-	}
-
-	public void setTime(long time) {
-		this.time = time;
-	}
-
-	public String getConnId() {
-		return connId;
-	}
-
-	public void setConnId(String connId) {
-		this.connId = connId;
-	}
-
-	public boolean isQueryplan() {
-		return isQueryplan;
-	}
-
-	public void setQueryplan(boolean isQueryplan) {
-		this.isQueryplan = isQueryplan;
-	}
 
     public Sql(String connId, String src, List<SqlParam> paramList, boolean isCall) {
         setConnId(connId);
