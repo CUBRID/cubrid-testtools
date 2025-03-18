@@ -53,7 +53,7 @@ function run_sql {
     close_shard_service
 
     # STEP 3: CONFIGURE CTP
-    if [ -n ${MKEY_CONFIG} ]; then
+    if [ -n "${MKEY_CONFIG}" ]; then
       sql_by_cci_config_template=${CTP_HOME}/conf/${MKEY_CONFIG}
     elif [ -f ${CTP_HOME}/conf/sql_by_cci_template_for_${BUILD_SCENARIOS}.conf ]; then
       sql_by_cci_config_template=${CTP_HOME}/conf/sql_by_cci_template_for_${BUILD_SCENARIOS}.conf
