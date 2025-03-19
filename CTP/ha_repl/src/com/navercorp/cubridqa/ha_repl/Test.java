@@ -69,7 +69,18 @@ public class Test {
 
 		this.mlog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + envId + ".log"), false, context.isContinueMode());
 		this.finishedLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt"), false, context.isContinueMode());
-		this.commonReader = new CommonReader(CommonUtils.concatFile(com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME + "/ha_repl/lib", "common.inc"));
+
+		String buildId = context.getBuildId();
+                String[] versionParts = buildId.split("\\.");
+                String majorMinorVersion = versionParts[0] + "." + versionParts[1];
+                // Use common.inc for version 11.4 or higher, common.inc_legacy for lower versions
+                String commonIncFile = "common.inc";
+                if (Double.parseDouble(majorMinorVersion) < 11.4) {
+                        commonIncFile = "common.inc.legacy";
+                }
+
+                mlog.println("Using common.inc file: " + commonIncFile);
+                this.commonReader = new CommonReader(CommonUtils.concatFile(com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME + "/ha_repl/lib", commonIncFile));
 	}
 
 	public void runAll() {
