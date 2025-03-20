@@ -73,7 +73,7 @@ public class Test {
 		String buildId = context.getBuildId();
                 String[] versionParts = buildId.split("\\.");
                 String majorMinorVersion = versionParts[0] + "." + versionParts[1];
-                // Use common.inc for version 11.4 or higher, common.inc_legacy for lower versions
+                // Use common.inc for version 11.4 or higher, common.inc.legacy for lower versions
                 String commonIncFile = "common.inc";
                 if (Double.parseDouble(majorMinorVersion) < 11.4) {
                         commonIncFile = "common.inc.legacy";
