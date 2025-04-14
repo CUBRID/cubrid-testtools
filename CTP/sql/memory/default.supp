@@ -3866,3 +3866,20 @@
    fun:(below main)
 }
 
+{
+   suppress_uninit_sendto 
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:send
+   fun:pl_writen
+   fun:_ZN5cubpl10connection11send_bufferERKN6cubmem5blockE
+   fun:send_buffer_args<cubpl::bootstrap_request&>
+   fun:_ZN5cubpl19server_monitor_task20do_bootstrap_requestEv
+   fun:_ZN5cubpl19server_monitor_task13do_initializeEv
+   fun:_ZN5cubpl19server_monitor_task14wait_for_readyEv
+   fun:_ZN5cubpl14server_manager21wait_for_server_readyEv
+   fun:_Z19boot_restart_serverPN9cubthread5entryEbPKcbP10check_argsP14bo_restart_argb
+   fun:_Z16net_server_startPKc
+   fun:(below main)
+}
+
