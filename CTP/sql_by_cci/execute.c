@@ -46,6 +46,7 @@
 #undef _GNU_SOURCE
 
 #define DBMS_OUTPUT_BUFFER_SIZE (50000)
+#define MAX_DBMS_OUTPUT_BUFFER_SIZE (1024 * 1024)  /* 1MB */
 #define MAXLINELENGH 1024*1024*5
 #define MAX_SQL_NUM 100*256
 #define MAX_SQL_LEN 1024*200
@@ -1801,11 +1802,23 @@ get_server_output (FILE * fp, char conn)
 {
   int req = 0, res = 0;
   T_CCI_ERROR error;
-  static const char *sql = "call DBMS_OUTPUT.get_line(?, ?)";
-  static char buff[DBMS_OUTPUT_BUFFER_SIZE];
-  char *ret = NULL, *p, *str;
+  const char *sql = "call DBMS_OUTPUT.get_line(?, ?)";
+  char *buff = NULL, *p, *str;
+  size_t buf_size = DBMS_OUTPUT_BUFFER_SIZE;
   int status, ind;
   
+  /* allocate initial buffer */
+  buff = malloc (buf_size);
+  if (buff == NULL)
+    {
+      fprintf (stdout, "Get Server-Output Error: malloc failed\n");
+      fprintf (fp, "Get Server-Output Error: malloc failed\n");
+      goto _END;
+    }
+  buff[0] = '\n';
+  buff[1] = '\0';
+  p = buff + 1;
+
   /* if phase-1 */
   req = cci_prepare (conn, sql, CCI_PREPARE_CALL, &error);
   if (req < 0)
@@ -1838,9 +1851,6 @@ get_server_output (FILE * fp, char conn)
       goto _END;
     }
 
-  buff[0] = '\n';
-  buff[1] = '\0';
-  p = buff + 1;
   while (1)
     {
       res = cci_execute (req, 0, 0, &error);
@@ -1889,8 +1899,42 @@ get_server_output (FILE * fp, char conn)
 	  assert (ind >= 0);
 	  if (ind > 0)
 	    {
-	      sprintf (p, "%s\n", str);
-	      p += (ind + 1);
+              size_t need = (p - buff) + ind + 2;
+              if (need > buf_size)
+                {
+                  size_t new_size = buf_size;
+                  while (new_size < need && new_size < MAX_DBMS_OUTPUT_BUFFER_SIZE)
+                    new_size *= 2;
+                  if (new_size < need)
+                    {
+                      fprintf (stdout, "Warning: buffer max size reached\n");
+                      break;
+                    }
+                  size_t offset = p - buff;
+                  buff = realloc (buff, new_size);
+                  if (buff == NULL)
+                    {
+                      fprintf (stdout, "Get Server-Output Error: realloc failed\n");
+                      goto _END;
+                    }
+                  buf_size = new_size;
+                  p = buff + offset;
+                }
+              {
+                int written = snprintf (p, buf_size - (p - buff), "%s\n", str);
+                if (written < 0)
+                  {
+                    fprintf (stdout, "Get Server-Output Error: snprintf failed\n");
+                    goto _END;
+                  }
+                if ((size_t)written >= buf_size - (p - buff))
+                  {
+                    fprintf (stdout, "Warning: Buffer truncated while writing server output.\n");
+                    p += buf_size - (p - buff) - 1;
+                    break;
+                  }
+                p += written;
+              }
 	    }
 	  else
 	    {
@@ -1916,10 +1960,13 @@ get_server_output (FILE * fp, char conn)
   ret = buff;
 
 _END:
+  if (ret == NULL && buff != NULL)
+    free (buff);
   if (req > 0)
     cci_close_req_handle (req);
   return ret;
 }
+
 
 int
 execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
