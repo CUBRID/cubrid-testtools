@@ -1815,6 +1815,7 @@ get_server_output (FILE * fp, char conn)
       fprintf (fp, "Get Server-Output Error: malloc failed\n");
       goto _END;
     }
+  memset (buff, 0, buf_size);
   buff[0] = '\n';
   buff[1] = '\0';
   p = buff + 1;
@@ -1910,15 +1911,20 @@ get_server_output (FILE * fp, char conn)
                       fprintf (stdout, "Warning: buffer max size reached\n");
                       break;
                     }
-                  size_t offset = p - buff;
-                  buff = realloc (buff, new_size);
-                  if (buff == NULL)
+                    size_t offset = p - buff;
+                    char *tmp = realloc (buff, new_size);
+                    if (tmp == NULL)
                     {
-                      fprintf (stdout, "Get Server-Output Error: realloc failed\n");
+                      fprintf(stdout, "Get Server-Output Error: realloc failed\n");
                       goto _END;
                     }
-                  buf_size = new_size;
-                  p = buff + offset;
+                    buff = tmp;
+                    if (new_size > offset)
+                    {
+                      memset (buff + offset, 0, new_size - offset);
+                    }
+                    buf_size = new_size;
+                    p = buff + offset;
                 }
               {
                 int written = snprintf (p, buf_size - (p - buff), "%s\n", str);
