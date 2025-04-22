@@ -1911,20 +1911,20 @@ get_server_output (FILE * fp, char conn)
                       fprintf (stdout, "Warning: buffer max size reached\n");
                       break;
                     }
-                    size_t offset = p - buff;
-                    char *tmp = realloc (buff, new_size);
-                    if (tmp == NULL)
+                  size_t offset = p - buff;
+                  char *tmp = realloc (buff, new_size);
+                  if (tmp == NULL)
                     {
                       fprintf(stdout, "Get Server-Output Error: realloc failed\n");
                       goto _END;
                     }
-                    buff = tmp;
-                    if (new_size > offset)
+                  buff = tmp;
+                  if (new_size > offset)
                     {
                       memset (buff + offset, 0, new_size - offset);
                     }
-                    buf_size = new_size;
-                    p = buff + offset;
+                  buf_size = new_size;
+                  p = buff + offset;
                 }
               {
                 int written = snprintf (p, buf_size - (p - buff), "%s\n", str);
