@@ -1905,7 +1905,7 @@ get_server_output (FILE * fp, char conn)
                   size_t new_size = buf_size;
                   while (new_size < need && new_size < MAX_DBMS_OUTPUT_BUFFER_SIZE)
                     new_size *= 2;
-                  if (new_size < need)
+                  if (new_size >= MAX_DBMS_OUTPUT_BUFFER_SIZE)
                     {
                       fprintf (stdout, "Warning: buffer max size reached\n");
                       break;
