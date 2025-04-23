@@ -1933,12 +1933,6 @@ get_server_output (FILE * fp, char conn)
                     fprintf (stdout, "Get Server-Output Error: snprintf failed\n");
                     goto _END;
                   }
-                if ((size_t)written >= buf_size - (p - buff))
-                  {
-                    fprintf (stdout, "Warning: Buffer truncated while writing server output.\n");
-                    p += buf_size - (p - buff) - 1;
-                    break;
-                  }
                 p += written;
               }
 	    }
