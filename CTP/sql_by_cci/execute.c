@@ -1803,7 +1803,7 @@ get_server_output (FILE * fp, char conn)
   int req = 0, res = 0;
   T_CCI_ERROR error;
   const char *sql = "call DBMS_OUTPUT.get_line(?, ?)";
-  char *buff = NULL, *p, *str;
+  char *ret = NULL, *buff = NULL, *p, *str;
   size_t buf_size = DBMS_OUTPUT_BUFFER_SIZE;
   int status, ind;
   
