@@ -383,16 +383,15 @@ public class FileUtil {
      * @return
      */
     public static String getFileName(String path) {
-        String ret = path;
-        int position = path.lastIndexOf("/");
-        if (position > 0) {
-            ret = path.substring(position + 1);
-            int position2 = ret.indexOf(".");
-            if (position2 != -1) {
-                ret = ret.substring(0, position2);
-            }
-        }
-        return ret;
+        if (path == null || path.isEmpty()) return "";
+
+        path = path.replace("\\", "/");
+
+        int lastSlash = path.lastIndexOf("/");
+        String fileName = (lastSlash >= 0) ? path.substring(lastSlash + 1) : path;
+
+        int dot = fileName.lastIndexOf(".");
+        return (dot >= 0) ? fileName.substring(0, dot) : fileName;
     }
 
     /**
