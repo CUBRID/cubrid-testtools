@@ -30,7 +30,7 @@ JAVA_CPS=$CTP_HOME/common/lib/cubridqa-common.jar
 
 if [ "$OSTYPE" == "cygwin" ]
 then
-	"$JAVA_HOME/bin/java" -cp "`cygpath -wp $JAVA_CPS`" com.navercorp.cubridqa.ctp.IniCommand "$@"
+	"$JAVA_HOME/bin/java" -Xmx1g -cp "`cygpath -wp $JAVA_CPS`" com.navercorp.cubridqa.ctp.IniCommand "$@"
 else
-	"$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.ctp.IniCommand "$@"
+	"$JAVA_HOME/bin/java" -Xmx1g -cp "$JAVA_CPS" com.navercorp.cubridqa.ctp.IniCommand "$@"
 fi
