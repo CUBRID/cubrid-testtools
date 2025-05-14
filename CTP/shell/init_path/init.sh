@@ -640,13 +640,13 @@ function count_time
   time_str=`date +%H:%M:%S`
   echo $time_str----$cur_path--- time="$duration" >> ${cur_path}/$result_file
   if [ $duration -gt 7200 ]; then # 2hours
-  	echo $time_str----$cur_pwd--- over 2hour time="$duration" >> ${cur_path}/$result_file
+  	echo $time_str----$cur_path--- over 2hour time="$duration" >> ${cur_path}/$result_file
   elif [ $duration -gt 3600 ]; then # 1hours
-  	echo $time_str----$cur_pwd--- over 1hour time="$duration" >> ${cur_path}/$result_file
+  	echo $time_str----$cur_path--- over 1hour time="$duration" >> ${cur_path}/$result_file
   elif [ $duration -gt 1800 ]; then # 30minutes
-  	echo $time_str----$cur_pwd--- over 30minutes time="$duration" >> ${cur_path}/$result_file
+  	echo $time_str----$cur_path--- over 30minutes time="$duration" >> ${cur_path}/$result_file
   elif [ $duration -gt 600 ]; then # 10minutes
-  	echo $time_str----$cur_pwd--- over 10minutes time="$duration" >> ${cur_path}/$result_file
+  	echo $time_str----$cur_path--- over 10minutes time="$duration" >> ${cur_path}/$result_file
   fi
 }
 
