@@ -10,6 +10,7 @@
 	   "summary": "[Regression] #JSON_TPL_ISSUE_SUMMARY_INFO#",
 	   "components":[{"name":"CUBRID"}],
 	   "versions": [{"name":"#JSON_TPL_AFFECT_VERSION#"}],
+           "customfield_210565": {"value":"Not Required"},
 	   "description": "#JSON_TPL_CALL_STACK_INFO#"
 	}
 }
