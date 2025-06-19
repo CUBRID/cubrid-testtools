@@ -34,7 +34,7 @@ begin_time=0
 ## the end time for case
 end_time=0
 #0: not count time  1: count time
-need_count_time=0
+need_count_time=1
 cubrid_major=""
 cubrid_minor=""
 IGNORE_TEST_PERFORMANCE=""
@@ -335,7 +335,7 @@ function diff_ignore_lineno
 
 # After comparing two files, This function write the result int result files.
 # Usage:
-#        compare_result_between_files file1 file2 [error]
+#        compare_result_between_files file1 file2 [error|sort]
 
 function compare_result_between_files
 {
@@ -374,27 +374,59 @@ function compare_result_between_files
   dos2unix $right
 
   echo "start to compare files: diff $left $right"  
-  if [ "$3" = "error" ]
+  if [ "$3" = "error" ] && [ "$4" = "sort" ] || [ "$3" = "sort" ] && [ "$4" = "error" ]
+  then
+        sorted_left="${left}_sorted"
+        sorted_right="${right}_sorted"
+        sort $left > $sorted_left
+        sort $right > $sorted_right
+
+        if diff_ignore_lineno $sorted_left $sorted_right -b
+        then
+                write_nok
+                echo "diff $sorted_left $sorted_right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a ${cur_path}/$result_file
+        else
+                write_ok
+        fi
+
+        rm -f $sorted_left $sorted_right
+  elif [ "$3" = "error" ]
   then
         if diff_ignore_lineno $left $right -b
         then
                 write_nok
-                echo "diff $left $right failed" >> $result_file
-                #diff $left $right -y >> $result_file
-		diff_ignore_lineno $left $right -y |tee -a $result_file
+                echo "diff $left $right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $left $right -y |tee -a ${cur_path}/$result_file
         else
                 write_ok
         fi
         let "answer_no = answer_no + 1"
+  elif [ "$3" = "sort" ]
+  then
+        sorted_left="${left}_sorted"
+        sorted_right="${right}_sorted"
+        sort $left > $sorted_left
+        sort $right > $sorted_right
+
+        if diff_ignore_lineno $sorted_left $sorted_right -b
+        then
+                write_ok
+        else
+                write_nok
+                echo "diff $sorted_left $sorted_right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $sorted_left $sorted_right -y |tee -a ${cur_path}/$result_file
+        fi
+
+        rm -f $sorted_left $sorted_right
   else
         if diff_ignore_lineno $left $right -b
         then
                 write_ok
         else
                 write_nok
-                echo "diff $left $right failed" >> $result_file
-                #diff $left $right -y >> $result_file
-		diff_ignore_lineno $left $right -y |tee -a $result_file
+                echo "diff $left $right failed" >> ${cur_path}/$result_file
+                diff_ignore_lineno $left $right -y |tee -a ${cur_path}/$result_file
         fi
         let "answer_no = answer_no + 1"
   fi
@@ -571,6 +603,7 @@ function write_nok
         let "case_no = case_no + 1"
   elif [ -f "$1" ]; 
   then
+	echo "----------------- $case_no : NOK"
 	echo "$case_name-$case_no : NOK"  >> ${cur_path}/$result_file
 	cat $1 >> ${cur_path}/$result_file
 	let "case_no = case_no + 1"
@@ -605,16 +638,15 @@ function count_time
   duration=$(($end_time-$begin_time))
   date_str=`date +"%Y-%m-%d"`
   time_str=`date +%H:%M:%S`
-  cur_pwd=`pwd`
-  echo $time_str----$cur_pwd---'time'=$duration >> ~/shell_cases_log/$date_str-time.log	
+  echo $time_str----$cur_path--- time="$duration" >> ${cur_path}/$result_file
   if [ $duration -gt 7200 ]; then # 2hours
-  	echo $time_str----$cur_pwd---$duration >> ~/shell_cases_log/$date_str-gt_2hours.log
+  	echo $time_str----$cur_path--- over 2hour time="$duration" >> ${cur_path}/$result_file
   elif [ $duration -gt 3600 ]; then # 1hours
-  	echo $time_str----$cur_pwd---$duration >> ~/shell_cases_log/$date_str-gt_1hours.log  
+  	echo $time_str----$cur_path--- over 1hour time="$duration" >> ${cur_path}/$result_file
   elif [ $duration -gt 1800 ]; then # 30minutes
-  	echo $time_str----$cur_pwd---$duration >> ~/shell_cases_log/$date_str-gt_30minutes.log  
+  	echo $time_str----$cur_path--- over 30minutes time="$duration" >> ${cur_path}/$result_file
   elif [ $duration -gt 600 ]; then # 10minutes
-  	echo $time_str----$cur_pwd---$duration >> ~/shell_cases_log/$date_str-gt_10minutes.log
+  	echo $time_str----$cur_path--- over 10minutes time="$duration" >> ${cur_path}/$result_file
   fi
 }
 
@@ -651,12 +683,6 @@ function get_language()
 function init 
 {
   echo "[INFO] TEST START (`date`)"
-  if [ $need_count_time -eq 1 ]; then
-  	begin_time=`get_curr_second`
-  	date_str=`date +"%Y-%m-%d"`
-  	time_str=`date +%H:%M:%S`
-  	echo $time_str----`pwd` >> ~/shell_cases_log/$date_str-time.log	
-  fi
   
   cur_path=`pwd`
   cd $cur_path
@@ -664,7 +690,14 @@ function init
   full_name=$0
   answer_no=1 
   mode=$1
-  
+
+  if [ $need_count_time -eq 1 ]; then
+  	begin_time=`get_curr_second`
+  	date_str=`date +"%Y-%m-%d"`
+  	time_str=`date +%H:%M:%S`
+  	echo $time_str----$cur_path---- test start >> ${cur_path}/$result_file	
+  fi
+
   if [ "$OS" = "Windows_NT" ]; then
   	export init_path=`cygpath "${init_path}"`
     export REAL_INIT_PATH=`cygpath -w "${init_path}"`
@@ -798,7 +831,7 @@ function get_comment {
   
     if [ $line_no -ne 1 ] && [ "$first_char" = "#" ] && [ $start_prog -eq 0 ]
     then
-      echo `echo $line | cut -c2-` >> $result_file
+      echo `echo $line | cut -c2-` >> ${cur_path}/$result_file
     fi
   
     let "line_no = line_no + 1"
@@ -855,6 +888,21 @@ function change_db_parameter
   fi
 }
 
+# Usage:
+#       change_db_section_parameter common "ORACLE_STYLE_EMPTY_STRING = 0" 
+function change_db_section_parameter
+{
+  local sec=$1  
+  local prm=$2  
+
+  if [ ! -f "$CUBRID/conf/cubrid.conf.org" ]
+  then
+       cp $CUBRID/conf/cubrid.conf $CUBRID/conf/cubrid.conf.org
+  fi
+
+  change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid.conf
+}
+
 # Restore DB .ini file from source file
 
 function delete_ini
@@ -865,6 +913,28 @@ function delete_ini
   else
         cp $CUBRID/conf/cubrid.conf.org $CUBRID/conf/cubrid.conf
   fi
+}
+
+# Usage:
+#       change_config_section_parameter common "ORACLE_COMPAT_NUMBER_BEHAVIOR = 0" $CUBRID/conf/cubrid.conf
+function change_config_section_parameter
+{
+  local sec=$1
+  local prm=$2
+  local file=$3
+
+  local key=${prm%%=*}
+  local val=${prm#*=}
+
+  sec=`echo $sec|sed "s@\/@\\\\\/@g"`
+  key=`echo $key|sed "s@\/@\\\\\/@g"`
+  key=`echo $key|sed 's/^ *//g'`
+  key=`echo $key|sed 's/ *$//g'`
+  val=`echo $val|sed "s@\/@\\\\\/@g"`
+
+  sed -i "/^\[$sec\]/,/^\[/{s/^$key[[:space:]]*=.*/$key = $val/}" $file
+  awk "/\[$sec\]/{flag=1;next}/\[.*\]/{flag=0}flag && NF" $file \
+  | grep "$key = $val" > /dev/null || sed -i  "/\[$sec\]/a\\$key = $val" $file
 }
 
 # Change DB Broker parameter in the cubrid_broker.conf
@@ -900,6 +970,52 @@ function change_ha_parameter
     fi  
 } 
 
+# Usage:
+#       change_broker_section_parameter %BROKER1 "MIN_NUM_APPL_SERVER = 4000"
+function change_broker_section_parameter
+{
+    local sec=$1
+    local prm=$2
+
+    if [ ! -f "$CUBRID/conf/cubrid_broker.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_broker.conf $CUBRID/conf/cubrid_broker.conf.org
+    fi
+
+    change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid_broker.conf
+}
+
+# Usage:
+#       change_gateway_section_parameter %BROKER1 "MIN_NUM_APPL_SERVER = 4000"
+function change_gateway_section_parameter
+{
+    local sec=$1
+    local prm=$2
+
+    if [ ! -f "$CUBRID/conf/cubrid_gateway.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_gateway.conf $CUBRID/conf/cubrid_gateway.conf.org
+    fi
+
+    change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid_gateway.conf
+}
+
+# Usage:
+#       change_ha_section_parameter common "ha_port_id = 59901"
+function change_ha_section_parameter
+{
+    local sec=$1
+    local prm=$2
+    
+    if [ ! -f "$CUBRID/conf/cubrid_ha.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_ha.conf $CUBRID/conf/cubrid_ha.conf.org
+    fi
+    
+    change_config_section_parameter $sec "$prm" $CUBRID/conf/cubrid_ha.conf
+}
+
+
 # Restore cubrid_broker.conf file from source file
 
 function restore_broker_conf
@@ -907,6 +1023,14 @@ function restore_broker_conf
     if [ -f "$CUBRID/conf/cubrid_broker.conf.org" ]
     then
         cp $CUBRID/conf/cubrid_broker.conf.org $CUBRID/conf/cubrid_broker.conf
+    fi
+}
+
+function restore_gateway_conf
+{
+    if [ -f "$CUBRID/conf/cubrid_gateway.conf.org" ]
+    then
+        cp $CUBRID/conf/cubrid_gateway.conf.org $CUBRID/conf/cubrid_gateway.conf
     fi
 }
 
@@ -930,6 +1054,7 @@ function restore_all_conf
 {    
     restore_db_conf
     restore_broker_conf
+    restore_gateway_conf
     restore_ha_conf
 }
 
@@ -962,6 +1087,9 @@ function format_query_plan
     sed -i 's/ioread: [0-9]*/ioread:?/g' $1
     sed -i 's/"time": [0-9]*/"time":?/g' $1
     sed -i 's/"fetch": [0-9]*/"fetch":?/g' $1
+    sed -i 's/hit: [0-9]*/hit:?/g' $1
+    sed -i 's/miss: [0-9]*/miss:?/g' $1
+    sed -i 's/size: [0-9]*/size:?/g' $1
 }
 
 function format_path_output
@@ -1002,21 +1130,8 @@ function xkill
    
    if [ "$OS" == Windows_NT ]
    then
-       win_svr_pid=`get_win_service_pid`
-       for pid in `ps -W | grep "${strkill}" | awk '{print $1}'`
-       do
-          is_in_white_list=0
-          for svr_id in ${win_svr_pid}
-          do
-	          if [ "${pid}" == "${svr_id}" ]; then
-	          	is_in_white_list=1
-			break
-	          fi
-          done
-          if [ "${is_in_white_list}" == "0" ]; then
-             /bin/kill -9 -f ${pid}
-          fi
-       done
+	win_svr_pid=$(get_win_service_pid | tr '\n' '|')
+    	ps -W | grep "${strkill}" | awk -v win_svr_pid="${win_svr_pid}" '{ if (index(win_svr_pid, $1) == 0) print $1 }' | xargs -I {} /bin/kill -9 -f {}
    else
        if [ $fullCommand -eq 1 ]
        then
@@ -1052,9 +1167,32 @@ function xkill_java_windows {
 }
 
 
-
+# This function returns whitelist.
+# Whitelist includes pids for critical process that can occure system crash when it is killed.
+# Also includes process for running regression test.
 function get_win_service_pid {
-    wmic PROCESS WHERE \( Name != \'wmic.exe\' and CommandLine LIKE \'%service.Server%\' \)  get processid | grep -v ProcessId | sed 's/ //g'
+    wmic PROCESS WHERE "(
+        Name = 'System Idle Process' or 
+        Name = 'System' or 
+        Name = 'smss.exe' or 
+        Name = 'csrss.exe' or 
+        Name = 'wininit.exe' or 
+        Name = 'winlogon.exe' or 
+        Name = 'services.exe' or 
+        Name = 'lsass.exe' or 
+        Name = 'svchost.exe' or 
+        Name = 'conhost.exe' or 
+        Name = 'WmiPrvSE.exe' or
+        Name = 'taskhostex.exe' or 
+        Name = 'dwm.exe' or 
+        Name = 'rdpclip.exe' or
+        Name = 'explorer.exe' or
+        Name = 'wmic.exe'
+    ) or (
+	CommandLine LIKE '%service.Server%' or 
+	CommandLine LIKE '%RMIService%' or 
+	CommandLine LIKE '%start_service%'
+    )" get processid | grep -v ProcessId | sed 's/ //g'
 }
 
 #format number like 0|123|456

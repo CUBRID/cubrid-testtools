@@ -69,7 +69,18 @@ public class Test {
 
 		this.mlog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + envId + ".log"), false, context.isContinueMode());
 		this.finishedLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt"), false, context.isContinueMode());
-		this.commonReader = new CommonReader(CommonUtils.concatFile(com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME + "/ha_repl/lib", "common.inc"));
+
+		String buildId = context.getBuildId();
+                String[] versionParts = buildId.split("\\.");
+                String majorMinorVersion = versionParts[0] + "." + versionParts[1];
+                // Use common.inc for version 11.4 or higher, common.inc.legacy for lower versions
+                String commonIncFile = "common.inc";
+                if (Double.parseDouble(majorMinorVersion) < 11.4) {
+                        commonIncFile = "common.inc.legacy";
+                }
+
+                mlog.println("Using common.inc file: " + commonIncFile);
+                this.commonReader = new CommonReader(CommonUtils.concatFile(com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME + "/ha_repl/lib", commonIncFile));
 	}
 
 	public void runAll() {
@@ -846,7 +857,7 @@ public class Test {
 
 		StringBuffer s = new StringBuffer();
 		s.append("select 'TABLE'||':db_class' check_table, t.* from db_class t where is_system_class='NO' and upper(class_name)<>'QA_SYSTEM_TB_FLAG';");
-		s.append("select 'TABLE'||':db_stored_procedure', t.* from db_stored_procedure t; ");
+		s.append("select 'TABLE'||':db_stored_procedure', t.* from db_stored_procedure t where target not like 'com.cubrid.plcsql.builtin%'; ");
 		s.append("select 'TABLE'||':db_trig', t.* from db_trig t; ");
 		s.append("select 'TABLE'||':db_partition', t.* from db_partition t; ");
 		s.append("select 'TABLE'||':db_meth_file', t.* from db_meth_file t; ");

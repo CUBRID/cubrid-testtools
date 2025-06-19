@@ -121,7 +121,7 @@ public class DeployNode {
 		try {
 			log.log("==> Begin to install CUBRID on " + ssh.toString() + ":");
 			result = ssh.execute(scripts);
-			if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && (result.indexOf("ERROR") != -1)) {
+			if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && (result.indexOf("[ERROR]") != -1)) {
 				isSucc = false;
 				log.println("[ERROR] build install fail!");
 			}

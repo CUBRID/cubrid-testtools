@@ -194,29 +194,37 @@ function rqg_check_db_data()
     do
         table_name=$tbl
         if [ $ori_db_status -ne 0 ];then
-            csql -u dba $ori_db_name -c "select count(*) from $table_name order by pk" > before.log
+            csql -u public $ori_db_name -c "select count(*) from $table_name order by pk" > before.log
         else
-            csql -u dba $ori_db_name -c "select count(*) from $table_name order by pk" -S > before.log
+            csql -u public $ori_db_name -c "select count(*) from $table_name order by pk" -S > before.log
         fi
 
         if [ $target_db_status -ne 0 ];then
-            csql -u dba $target_db_name -c "select count(*) from $table_name order by pk" >after.log
+            csql -u public $target_db_name -c "select count(*) from $table_name order by pk" >after.log
 	else
-	    csql -u dba $target_db_name -c "select count(*) from $table_name order by pk" -S >after.log
+	    csql -u public $target_db_name -c "select count(*) from $table_name order by pk" -S >after.log
         fi
 
-        # compare row number, if it is equal, then compare data
-        sed -i "/row selected/d" before.log
-        sed -i "/row selected/d" after.log
+	if [ `grep -c "row selected" before.log` -gt 0 ]
+	then
+	        # compare row number, if it is equal, then compare data
+       		sed -i "/row selected/d" before.log
+        	sed -i "/row selected/d" after.log
 
-        if diff before.log after.log >/dev/null
-        then
-            write_ok
-        else
-            write_nok "data is different between before.log and after.log"
-            diff before.log after.log
-            break
-        fi
+        	if diff before.log after.log >/dev/null
+        	then
+            		write_ok
+        	else
+            		write_nok "data is different between before.log and after.log"
+            		diff before.log after.log
+            		break
+        	fi
+	else
+		write_nok "ERROR to select data"
+		cat before.log
+		cat after.log
+		break
+	fi
     done
 
     cd $curDir
@@ -233,8 +241,7 @@ function rqg_check_restoredb_consistency()
     cd ${db_name}
     for t in $table_name_list
     do
-	 csql -u dba $db_name -c "select * from $t order by pk" >before_${t}.log
-	 sed -i "/row[s] selected/d" before_${t}.log
+	 csql -u public $db_name -c "select * from $t order by pk" >before_${t}.log
     done
 
     cubrid service stop 
@@ -243,18 +250,29 @@ function rqg_check_restoredb_consistency()
    
     for t in $table_name_list
     do
-         csql -u dba $db_name -c "select * from $t order by pk" >after_${t}.log
-	 sed -i "/row[s] selected/d" after_${t}.log
+         csql -u public $db_name -c "select * from $t order by pk" >after_${t}.log
     done
 
     for t in $table_name_list
     do
-         if diff before_${t}.log after_${t}.log >/dev/null
+	 if [ `grep -cP "rows selected|row selected" before_${t}.log` -gt 0 ]
          then
-		write_ok
+	        # compare row number, if it is equal, then compare data
+       		sed -i "/row[s] selected/d" before_${t}.log
+         	sed -i "/row[s] selected/d" after_${t}.log
+
+         	if diff before_${t}.log after_${t}.log >/dev/null
+         	then
+			write_ok
+         	else
+             		write_nok "data ddis different between before_${t}.log and after_${t}.log"
+             		break
+         	fi
          else
-             	write_nok "data ddis different between before_${t}.log and after_${t}.log"
-             break
+                write_nok "ERROR to select data"
+                cat before_${t}.log
+                cat after_${t}.log
+                break
          fi
     done
 

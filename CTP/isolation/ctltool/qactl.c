@@ -88,7 +88,7 @@ extern int local_tm_isblocked (int tran_index);
 #define STRESSEXEC_TOKEN  STRESSEXEC_CMDNAME
 
 #define SLEEP_MSECS 10
-#define SHORT_DURATION_DEFAULT (30000)	/*  30 seconds */
+#define SHORT_DURATION_DEFAULT (100000)	/*  100 seconds */
 #define LONG_DURATION_DEFAULT (300000)	/* 300 seconds */
 
 #define VALID_CLIENT_ID(TBL, ID)  (((ID) > 0) && ((ID) <= (TBL)->slotsinuse))

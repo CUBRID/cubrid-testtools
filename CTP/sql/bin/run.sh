@@ -179,7 +179,7 @@ function do_init()
     fi
     
     cci_urlproperty=`ini -s sql ${config_file_main} cci_urlproperty`
-    support_javasp=`cubrid | grep -w javasp | awk '{if($1=="javasp") {print "yes"}}'`
+    support_javasp=`echo $(cubrid | grep -w javasp) | awk '{if($1=="javasp") {print "yes"} else {print "no"}}'`
     
     cd $curDir
 }
@@ -649,7 +649,12 @@ function make_db_data()
      cp $data_file .
  
      tar -zxvf mdb.tar.gz
-     cubrid loaddb -s ${db_name}_schema -i ${db_name}_indexes -d ${db_name}_objects -u dba ${db_name} >> $log_filename
+     loaddb=`cubrid loaddb 2>&1`
+     if [[ $loaddb =~ "--no-user-specified-name" ]];then
+        cubrid loaddb -s ${db_name}_schema -i ${db_name}_indexes -d ${db_name}_objects -u dba ${db_name} --no-user-specified-name >> $log_filename
+     else
+        cubrid loaddb -s ${db_name}_schema -i ${db_name}_indexes -d ${db_name}_objects -u dba ${db_name} >> $log_filename
+     fi
      optimize_db $db_name
  
      rm *.gz 2>&1 >/dev/null
@@ -761,6 +766,7 @@ function do_test()
           export bits_in_interactive=${cubrid_bits}
           export db_name_in_interactive=$db_name
           export client_charset_in_interactive=$jdbc_config_file_ext
+          export cci_urlproperty_in_interactive=$cci_urlproperty
           export PS1="sql> ";cd ${scenario_repo_root}; source ${CTP_HOME}/sql/bin/interactive.sh; help; bash --posix)
 	
           #do clean for interactive mode

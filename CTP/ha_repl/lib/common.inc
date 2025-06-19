@@ -3,7 +3,7 @@ check_server_status=cmd:cubrid server status;cubrid_rel | awk '{print $4}'
 HC_CHECK_FOR_CMD_EACH_STATEMENT_0=cmd: sleep 3
 
 HC_CHECK_FOR_EACH_STATEMENT_1=select 'db_stored_procedure_args' TABLE_NAME, db_stored_procedure_args.* from db_stored_procedure_args order by 1,2,3,4,5,6,7;
-HC_CHECK_FOR_EACH_STATEMENT_2=select 'db_stored_procedure' TABLE_NAME, db_stored_procedure.* from db_stored_procedure order by 1,2,3,4,5,6,7,8,9;
+HC_CHECK_FOR_EACH_STATEMENT_2=select 'db_stored_procedure' TABLE_NAME, sp_name, pkg_name, sp_type, return_type, arg_count, lang, authid, owner, code, comment from db_stored_procedure order by 1,2,3,4,5,6,7,8,9;
 HC_CHECK_FOR_EACH_STATEMENT_3=select 'db_partition' TABLE_NAME, db_partition.* from db_partition order by 1,2,3,4,5,6,7,8;
 HC_CHECK_FOR_EACH_STATEMENT_4=select 'db_trig' TABLE_NAME, db_trig.* from db_trig order by 1,2,3,4,5,6,7,8;
 HC_CHECK_FOR_EACH_STATEMENT_5=select 'db_index_key' TABLE_NAME, db_index_key.* from db_index_key order by 1,2,3,4,5,6,7,8;

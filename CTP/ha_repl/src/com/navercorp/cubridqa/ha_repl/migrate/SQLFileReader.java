@@ -318,6 +318,7 @@ public class SQLFileReader {
 
 	public void convert() throws IOException {
 		String line = null;
+		LineScanner lineScanner = new LineScanner();
 		boolean isMultipleLine = false;
 		boolean shouldBeDeleted = false;
 		out.write("--test:" + Constants.LINE_SEPARATOR);
@@ -341,6 +342,7 @@ public class SQLFileReader {
 				if (holdCasCheck.isHoldCas()) {
 					out.write("$HOLDCAS_" + (holdCasCheck.isSwitchOn() ? "ON" : "OFF") + Constants.LINE_SEPARATOR);
 				}
+				// Exclude everything other than holdCas (server-message, etc.)
 				continue;
 			}
 
@@ -349,26 +351,30 @@ public class SQLFileReader {
 			line = editLine.getLine();
 			isCreateTableOrClass = editLine.isCreateTableOrClass();
 			isEnumType = editLine.isEnumType();
+			lineScanner.scan(line);
 			if (line.endsWith(";")) {
-				if (isMultipleLine) {
-					// last line among multiple lines.
-					if (!shouldBeDeleted) {
-						out.write(line + Constants.LINE_SEPARATOR);
-						addCheckPoint();
-					}
+				if (lineScanner.isInPlcsqlText()) {
+					out.write(line + " \\" + Constants.LINE_SEPARATOR);
 				} else {
-					// single line statement
-					shouldBeDeleted = shouldBeDeleted(line);
-					isDML = isDML(line);
-					if (!shouldBeDeleted) {
-						out.write(line + Constants.LINE_SEPARATOR);
-						addCheckPoint();
+					if (isMultipleLine) {
+						// last line among multiple lines.
+						if (!shouldBeDeleted) {
+							out.write(line + Constants.LINE_SEPARATOR);
+							addCheckPoint();
+						}
+					} else {
+						// single line statement
+						shouldBeDeleted = shouldBeDeleted(line);
+						isDML = isDML(line);
+						if (!shouldBeDeleted) {
+							out.write(line + Constants.LINE_SEPARATOR);
+							addCheckPoint();
+						}
 					}
+					isMultipleLine = false;
+					shouldBeDeleted = false;
+					isDML = false;
 				}
-
-				isMultipleLine = false;
-				shouldBeDeleted = false;
-				isDML = false;
 			} else {
 				if (isMultipleLine) {
 					// middle line among multiple lines.
@@ -384,6 +390,9 @@ public class SQLFileReader {
 					}
 					isMultipleLine = true;
 				}
+			}
+			if (lineScanner.isStatementEnd()) {
+				lineScanner.clear();
 			}
 		}
 		out.flush();

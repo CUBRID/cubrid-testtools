@@ -1,26 +1,27 @@
 /**
  * Copyright (c) 2016, Search Solution Corporation. All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions are met:
- * 
- *   * Redistributions of source code must retain the above copyright notice, 
- *     this list of conditions and the following disclaimer.
- * 
- *   * Redistributions in binary form must reproduce the above copyright 
- *     notice, this list of conditions and the following disclaimer in 
- *     the documentation and/or other materials provided with the distribution.
- * 
- *   * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
- *     derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
- * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ *
+ * <p>Redistribution and use in source and binary forms, with or without modification, are permitted
+ * provided that the following conditions are met:
+ *
+ * <p>* Redistributions of source code must retain the above copyright notice, this list of
+ * conditions and the following disclaimer.
+ *
+ * <p>* Redistributions in binary form must reproduce the above copyright notice, this list of
+ * conditions and the following disclaimer in the documentation and/or other materials provided with
+ * the distribution.
+ *
+ * <p>* Neither the name of the copyright holder nor the names of its contributors may be used to
+ * endorse or promote products derived from this software without specific prior written permission.
+ *
+ * <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
+ * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package com.navercorp.cubridqa.cqt.console.bean;
 
@@ -36,549 +37,558 @@ import java.util.Set;
 import java.util.Vector;
 
 public class Test {
-	public static final int MODE_RUN = 0;
+    public static final int MODE_RUN = 0;
 
-	public static final int MODE_MAKE_ANSWER = 1;
+    public static final int MODE_MAKE_ANSWER = 1;
 
-	public static final int MODE_RESULT = 2;
+    public static final int MODE_RESULT = 2;
 
-	public static final int MODE_NO_RESULT = 3;
+    public static final int MODE_NO_RESULT = 3;
 
-	public static final int TYPE_FUNCTION = 0;
+    public static final int TYPE_FUNCTION = 0;
 
-	public static final int TYPE_PERFORMANCE = 1;
+    public static final int TYPE_PERFORMANCE = 1;
 
-	public static String urlProperties = "";
+    public static String urlProperties = "";
 
-	private String testId;
-	
-	private String caseFilter;
+    private String testId;
 
-	private String testType;
+    private String caseFilter;
 
-	private String testTypeAlias;
+    private String testType;
 
-	private String testBit;
+    private String testTypeAlias;
 
-	private String path;
+    private String testBit;
 
-	private int siteRunTimes;
+    private String path;
 
-	private boolean editorExecute;
+    private int siteRunTimes;
 
-	private String version = "";
+    private boolean editorExecute;
 
-	private String codeset = "";
+    private String version = "";
 
-	private String language = "";
+    private String codeset = "";
 
-	private String collation = "";
+    private String language = "";
 
-	private String result_dir = "";
+    private String collation = "";
 
-	private boolean i18n;
+    private String result_dir = "";
 
-	private boolean qaview = false;
+    private boolean i18n;
 
-	private boolean isFirstTime = true;
+    private boolean qaview = false;
 
-	private String run_mode = null;
+    private boolean isFirstTime = true;
 
-	private String runModeSecondary = null;
+    private String run_mode = null;
 
-	private String holdcas = "";
+    private String runModeSecondary = null;
 
-	private String reset_scripts = "";
+    private String holdcas = "";
 
-	private String autocommit = "";
+    private String reset_scripts = "";
 
-	private boolean needSummaryXML = false;
+    private String autocommit = "";
 
-	private boolean needAnswerInSummary = false;
+    private String serverMessage = "off";
 
-	private boolean needCheckServerStatus = false;
+    private boolean needSummaryXML = false;
 
-	private boolean needDebugHint = false;
+    private boolean needAnswerInSummary = false;
 
-	private String scenarioRootPath = "";
-	
-	private Map<String, List<File>> coreCaseMap = new HashMap<String, List<File>>();
-	
-	private List<String> allCoreList = new ArrayList<String>();
+    private boolean needCheckServerStatus = false;
 
-	public List<String> getAllCoreList() {
-		return allCoreList;
-	}
+    private boolean needDebugHint = false;
 
-	public void setAllCoreList(List<String> allCoreList) {
-		this.allCoreList = allCoreList;
-	}
+    private String scenarioRootPath = "";
 
-	public Map<String, List<File>> getCoreCaseMap() {
-		return coreCaseMap;
-	}
-	
-	public void putCoreCaseIntoMap(String caseFile, List<File> flist){
-		this.coreCaseMap.put(caseFile, flist);
-	}
+    private Map<String, List<File>> coreCaseMap = new HashMap<String, List<File>>();
 
-	public String getScenarioRootPath() {
-		return scenarioRootPath;
-	}
+    private List<String> allCoreList = new ArrayList<String>();
 
-	public void setScenarioRootPath(String scenarioRootPath) {
-		this.scenarioRootPath = scenarioRootPath;
-	}
+    public List<String> getAllCoreList() {
+        return allCoreList;
+    }
 
-	public String getUrlProperties() {
-		return urlProperties;
-	}
+    public void setAllCoreList(List<String> allCoreList) {
+        this.allCoreList = allCoreList;
+    }
 
-	public void setUrlProperties(String urlProperties) {
-		this.urlProperties = urlProperties;
-	}
+    public Map<String, List<File>> getCoreCaseMap() {
+        return coreCaseMap;
+    }
 
-	public boolean isNeedDebugHint() {
-		return needDebugHint;
-	}
+    public void putCoreCaseIntoMap(String caseFile, List<File> flist) {
+        this.coreCaseMap.put(caseFile, flist);
+    }
 
-	public void setNeedDebugHint(boolean needDebugHint) {
-		this.needDebugHint = needDebugHint;
-	}
+    public String getScenarioRootPath() {
+        return scenarioRootPath;
+    }
 
-	public boolean isNeedCheckServerStatus() {
-		return needCheckServerStatus;
-	}
+    public void setScenarioRootPath(String scenarioRootPath) {
+        this.scenarioRootPath = scenarioRootPath;
+    }
 
-	public void setNeedCheckServerStatus(boolean needCheckServerStatus) {
-		this.needCheckServerStatus = needCheckServerStatus;
-	}
+    public String getUrlProperties() {
+        return urlProperties;
+    }
 
-	public boolean isNeedSummaryXML() {
-		return needSummaryXML;
-	}
+    public void setUrlProperties(String urlProperties) {
+        this.urlProperties = urlProperties;
+    }
 
-	public void setNeedSummaryXML(boolean needSummaryXML) {
-		this.needSummaryXML = needSummaryXML;
-	}
+    public boolean isNeedDebugHint() {
+        return needDebugHint;
+    }
 
-	private BufferedWriter fileHandle = null;
+    public void setNeedDebugHint(boolean needDebugHint) {
+        this.needDebugHint = needDebugHint;
+    }
 
-	public BufferedWriter getFileHandle() {
-		return fileHandle;
-	}
+    public boolean isNeedCheckServerStatus() {
+        return needCheckServerStatus;
+    }
 
-	public void setFileHandle(BufferedWriter fileHandle) {
-		this.fileHandle = fileHandle;
-	}
+    public void setNeedCheckServerStatus(boolean needCheckServerStatus) {
+        this.needCheckServerStatus = needCheckServerStatus;
+    }
 
-	private TestCaseSummary[] failList;
+    public boolean isNeedSummaryXML() {
+        return needSummaryXML;
+    }
 
-	public TestCaseSummary[] getFailList() {
-		return failList;
-	}
+    public void setNeedSummaryXML(boolean needSummaryXML) {
+        this.needSummaryXML = needSummaryXML;
+    }
 
-	public void setFailList(TestCaseSummary[] failList) {
-		this.failList = failList;
-	}
+    private BufferedWriter fileHandle = null;
 
-	public void initFailSummary() {
-		failList = new TestCaseSummary[100];
-		this.setFailList(failList);
-	}
+    public BufferedWriter getFileHandle() {
+        return fileHandle;
+    }
 
-	public String getAutocommit() {
-		return autocommit;
-	}
+    public void setFileHandle(BufferedWriter fileHandle) {
+        this.fileHandle = fileHandle;
+    }
 
-	public void setAutocommit(String autocommit) {
-		this.autocommit = autocommit;
-	}
+    private TestCaseSummary[] failList;
 
-	public String getHoldcas() {
-		return holdcas;
-	}
+    public TestCaseSummary[] getFailList() {
+        return failList;
+    }
 
-	public void setHoldcas(String holdcas) {
-		this.holdcas = holdcas;
-	}
+    public void setFailList(TestCaseSummary[] failList) {
+        this.failList = failList;
+    }
 
-	public String getReset_scripts() {
-		return reset_scripts;
-	}
+    public void initFailSummary() {
+        failList = new TestCaseSummary[100];
+        this.setFailList(failList);
+    }
 
-	public void setReset_scripts(String reset_scripts) {
-		this.reset_scripts = reset_scripts;
-	}
+    public String getAutocommit() {
+        return autocommit;
+    }
 
-	public String getRun_mode() {
-		return run_mode;
-	}
+    public String getServerMessage() {
+        return serverMessage;
+    }
 
-	public void setRun_mode(String run_mode) {
-		this.run_mode = run_mode;
-	}
+    public void setServerMessage(String so) {
+        this.serverMessage = so;
+    }
 
-	public String[] getScripts() {
-		return scripts;
-	}
+    public void setAutocommit(String autocommit) {
+        this.autocommit = autocommit;
+    }
 
-	public void setScripts(String[] scripts) {
-		this.scripts = scripts;
-	}
+    public String getHoldcas() {
+        return holdcas;
+    }
 
-	private String[] scripts;
+    public void setHoldcas(String holdcas) {
+        this.holdcas = holdcas;
+    }
 
-	private String charset_file = "default_charset.xml";
+    public String getReset_scripts() {
+        return reset_scripts;
+    }
 
-	public boolean isFirstTime() {
-		return isFirstTime;
-	}
+    public void setReset_scripts(String reset_scripts) {
+        this.reset_scripts = reset_scripts;
+    }
 
-	public void setFirstTime(boolean isFirstTime) {
-		this.isFirstTime = isFirstTime;
-	}
+    public String getRun_mode() {
+        return run_mode;
+    }
 
-	public int getSiteRunTimes() {
-		return siteRunTimes;
-	}
+    public void setRun_mode(String run_mode) {
+        this.run_mode = run_mode;
+    }
 
-	public void setSiteRunTimes(int siteRunTimes) {
-		this.siteRunTimes = siteRunTimes;
-	}
+    public String[] getScripts() {
+        return scripts;
+    }
 
-	private int runMode;
+    public void setScripts(String[] scripts) {
+        this.scripts = scripts;
+    }
 
-	private String[] cases;
+    private String[] scripts;
 
-	private Map<String, Object> testInfoMap = new Hashtable<String, Object>();
+    private String charset_file = "default_charset.xml";
 
-	private List<String> caseFileList = new ArrayList<String>();
+    public boolean isFirstTime() {
+        return isFirstTime;
+    }
 
-	private Map<String, CaseResult> caseMap = new Hashtable<String, CaseResult>();
+    public void setFirstTime(boolean isFirstTime) {
+        this.isFirstTime = isFirstTime;
+    }
 
-	private Map<String, Summary> summaryMap = new Hashtable<String, Summary>();
+    public int getSiteRunTimes() {
+        return siteRunTimes;
+    }
 
-	private Map<String, SummaryInfo> summaryInfoMap = new Hashtable<String, SummaryInfo>();
+    public void setSiteRunTimes(int siteRunTimes) {
+        this.siteRunTimes = siteRunTimes;
+    }
 
-	private Map catMap = new Hashtable();
+    private int runMode;
 
-	private Map<String, String> caseDbMap = new Hashtable<String, String>();
+    private String[] cases;
 
-	private String dbId = null;
+    private Map<String, Object> testInfoMap = new Hashtable<String, Object>();
 
-	private String connId = "";
+    private List<String> caseFileList = new ArrayList<String>();
 
-	private List<String> dirPath = new Vector<String>();
+    private Map<String, CaseResult> caseMap = new Hashtable<String, CaseResult>();
 
-	private Summary summary;
+    private Map<String, Summary> summaryMap = new Hashtable<String, Summary>();
 
-	private SummaryInfo summaryInfo;
+    private Map<String, SummaryInfo> summaryInfoMap = new Hashtable<String, SummaryInfo>();
 
-	private String dbVersion;
+    private Map catMap = new Hashtable();
 
-	private String dbBuild;
+    private Map<String, String> caseDbMap = new Hashtable<String, String>();
 
-	private int sqlRunTime = 1;
+    private String dbId = null;
 
-	private int type = 0;
+    private String connId = "";
 
-	private boolean isDebug;
+    private List<String> dirPath = new Vector<String>();
 
-	private Map<String, Object> connIDList = new Hashtable<String, Object>();
+    private Summary summary;
 
-	private Set<String> resultDirSet = new HashSet();
+    private SummaryInfo summaryInfo;
 
-	public Test(String testId) {
-		this.testId = testId;
-	}
+    private String dbVersion;
 
-	public Map getCatMap() {
-		return catMap;
-	}
+    private String dbBuild;
 
-	public String getConnId() {
-		return connId;
-	}
+    private int sqlRunTime = 1;
 
-	public String getTestId() {
-		return testId;
-	}
+    private int type = 0;
 
-	public String getCaseFilter() {
-		return caseFilter;
-	}
+    private boolean isDebug;
 
-	public void setCaseFilter(String caseFilter) {
-		this.caseFilter = caseFilter;
-	}
-	
-	public Summary getSummary() {
-		return summary;
-	}
+    private Map<String, Object> connIDList = new Hashtable<String, Object>();
 
-	public void setSummary(Summary testSummary) {
-		this.summary = testSummary;
-	}
+    private Set<String> resultDirSet = new HashSet();
 
-	public boolean isNeedAnswerInSummary() {
-		return needAnswerInSummary;
-	}
+    public Test(String testId) {
+        this.testId = testId;
+    }
 
-	public void setNeedAnswerInSummary(boolean needAnswerInSummary) {
-		this.needAnswerInSummary = needAnswerInSummary;
-	}
+    public Map getCatMap() {
+        return catMap;
+    }
 
-	public List<String> getDirPath() {
-		return dirPath;
-	}
+    public String getConnId() {
+        return connId;
+    }
 
-	public int getRunMode() {
-		return runMode;
-	}
+    public String getTestId() {
+        return testId;
+    }
 
-	public void setRunMode(int runMode) {
-		this.runMode = runMode;
-	}
+    public String getCaseFilter() {
+        return caseFilter;
+    }
 
-	public String getRunModeSecondary() {
-		return runModeSecondary;
-	}
+    public void setCaseFilter(String caseFilter) {
+        this.caseFilter = caseFilter;
+    }
 
-	public void setRunModeSecondary(String runModeSecondary) {
-		this.runModeSecondary = runModeSecondary;
-	}
+    public Summary getSummary() {
+        return summary;
+    }
 
-	public List<String> getCaseFileList() {
-		return caseFileList;
-	}
+    public void setSummary(Summary testSummary) {
+        this.summary = testSummary;
+    }
 
-	public void putCaseResultToMap(String caseFile, CaseResult caseResult) {
-		caseMap.put(caseFile, caseResult);
-	}
+    public boolean isNeedAnswerInSummary() {
+        return needAnswerInSummary;
+    }
 
-	public CaseResult getCaseResultFromMap(String caseFile) {
-		return (CaseResult) caseMap.get(caseFile);
-	}
+    public void setNeedAnswerInSummary(boolean needAnswerInSummary) {
+        this.needAnswerInSummary = needAnswerInSummary;
+    }
 
-	public void putSummaryToMap(String path, Summary summary) {
-		summaryMap.put(path, summary);
-	}
+    public List<String> getDirPath() {
+        return dirPath;
+    }
 
-	public Summary getSummaryFromMap(String path) {
-		return (Summary) summaryMap.get(path);
-	}
+    public int getRunMode() {
+        return runMode;
+    }
 
-	public void putSummaryInfoToMap(String path, SummaryInfo summaryInfo) {
-		summaryInfoMap.put(path, summaryInfo);
-	}
+    public void setRunMode(int runMode) {
+        this.runMode = runMode;
+    }
 
-	public SummaryInfo getSummaryInfoFromMap(String path) {
-		return (SummaryInfo) summaryInfoMap.get(path);
-	}
+    public String getRunModeSecondary() {
+        return runModeSecondary;
+    }
 
-	public SummaryInfo getSummaryInfo() {
-		return summaryInfo;
-	}
+    public void setRunModeSecondary(String runModeSecondary) {
+        this.runModeSecondary = runModeSecondary;
+    }
 
-	public void setSummaryInfo(SummaryInfo summaryInfo) {
-		this.summaryInfo = summaryInfo;
-	}
+    public List<String> getCaseFileList() {
+        return caseFileList;
+    }
 
-	public void setConnId(String connId) {
-		this.connId = connId;
-	}
+    public void putCaseResultToMap(String caseFile, CaseResult caseResult) {
+        caseMap.put(caseFile, caseResult);
+    }
 
-	public String[] getCases() {
-		return cases;
-	}
+    public CaseResult getCaseResultFromMap(String caseFile) {
+        return (CaseResult) caseMap.get(caseFile);
+    }
 
-	public void setCases(String[] cases) {
-		this.cases = cases;
-	}
+    public void putSummaryToMap(String path, Summary summary) {
+        summaryMap.put(path, summary);
+    }
 
-	public Map<String, Object> getTestInfoMap() {
-		return testInfoMap;
-	}
+    public Summary getSummaryFromMap(String path) {
+        return (Summary) summaryMap.get(path);
+    }
 
-	public void putCaseDbToMap(String caseFile, String db) {
-		caseDbMap.put(caseFile, db);
-	}
+    public void putSummaryInfoToMap(String path, SummaryInfo summaryInfo) {
+        summaryInfoMap.put(path, summaryInfo);
+    }
 
-	public String getDbId(String caseFile) {
-		return (String) caseDbMap.get(caseFile);
-	}
+    public SummaryInfo getSummaryInfoFromMap(String path) {
+        return (SummaryInfo) summaryInfoMap.get(path);
+    }
 
-	public String getDbId() {
-		return dbId;
-	}
+    public SummaryInfo getSummaryInfo() {
+        return summaryInfo;
+    }
 
-	public void setDbId(String dbId) {
-		this.dbId = dbId;
-	}
+    public void setSummaryInfo(SummaryInfo summaryInfo) {
+        this.summaryInfo = summaryInfo;
+    }
 
-	public String getPath() {
-		return path;
-	}
+    public void setConnId(String connId) {
+        this.connId = connId;
+    }
 
-	public void setPath(String path) {
-		this.path = path;
-	}
+    public String[] getCases() {
+        return cases;
+    }
 
-	public String getDbVersion() {
-		return dbVersion;
-	}
+    public void setCases(String[] cases) {
+        this.cases = cases;
+    }
 
-	public void setDbVersion(String dbVersion) {
-		this.dbVersion = dbVersion;
-	}
+    public Map<String, Object> getTestInfoMap() {
+        return testInfoMap;
+    }
 
-	public String getDbBuild() {
-		return dbBuild;
-	}
+    public void putCaseDbToMap(String caseFile, String db) {
+        caseDbMap.put(caseFile, db);
+    }
 
-	public void setDbBuild(String dbBuild) {
-		this.dbBuild = dbBuild;
-	}
+    public String getDbId(String caseFile) {
+        return (String) caseDbMap.get(caseFile);
+    }
 
-	public int getType() {
-		return type;
-	}
+    public String getDbId() {
+        return dbId;
+    }
 
-	public void setType(int type) {
-		this.type = type;
-	}
+    public void setDbId(String dbId) {
+        this.dbId = dbId;
+    }
 
-	public String getTestTypeAlias() {
-		return testTypeAlias;
-	}
+    public String getPath() {
+        return path;
+    }
 
-	public void setTestTypeAlias(String testTypeAlias) {
-		this.testTypeAlias = testTypeAlias;
-	}
+    public void setPath(String path) {
+        this.path = path;
+    }
 
-	public int getSqlRunTime() {
-		return sqlRunTime;
-	}
+    public String getDbVersion() {
+        return dbVersion;
+    }
 
-	public void setSqlRunTime(int sqlRunTime) {
-		this.sqlRunTime = sqlRunTime;
-	}
+    public void setDbVersion(String dbVersion) {
+        this.dbVersion = dbVersion;
+    }
 
-	public Set<String> getResultDirSet() {
-		return resultDirSet;
-	}
+    public String getDbBuild() {
+        return dbBuild;
+    }
 
-	public void setResultDirSet(Set<String> resultDirSet) {
-		this.resultDirSet = resultDirSet;
-	}
+    public void setDbBuild(String dbBuild) {
+        this.dbBuild = dbBuild;
+    }
 
-	public void addResultDir(String resultDir) {
-		resultDirSet.add(resultDir);
-	}
+    public int getType() {
+        return type;
+    }
 
-	public boolean isEditorExecute() {
-		return editorExecute;
-	}
+    public void setType(int type) {
+        this.type = type;
+    }
 
-	public void setEditorExecute(boolean editorExecute) {
-		this.editorExecute = editorExecute;
-	}
+    public String getTestTypeAlias() {
+        return testTypeAlias;
+    }
 
-	public String getVersion() {
-		return version;
-	}
+    public void setTestTypeAlias(String testTypeAlias) {
+        this.testTypeAlias = testTypeAlias;
+    }
 
-	public void setVersion(String version) {
-		this.version = version;
-	}
+    public int getSqlRunTime() {
+        return sqlRunTime;
+    }
 
-	public String getCodeset() {
-		return codeset;
-	}
+    public void setSqlRunTime(int sqlRunTime) {
+        this.sqlRunTime = sqlRunTime;
+    }
 
-	public void setCodeset(String codeset) {
-		this.codeset = codeset;
-	}
+    public Set<String> getResultDirSet() {
+        return resultDirSet;
+    }
 
-	public String getLanguage() {
-		return language;
-	}
+    public void setResultDirSet(Set<String> resultDirSet) {
+        this.resultDirSet = resultDirSet;
+    }
 
-	public void setLanguage(String language) {
-		this.language = language;
-	}
+    public void addResultDir(String resultDir) {
+        resultDirSet.add(resultDir);
+    }
 
-	public String getCollation() {
-		return collation;
-	}
+    public boolean isEditorExecute() {
+        return editorExecute;
+    }
 
-	public void setCollation(String collation) {
-		this.collation = collation;
-	}
+    public void setEditorExecute(boolean editorExecute) {
+        this.editorExecute = editorExecute;
+    }
 
-	public boolean isI18n() {
-		return i18n;
-	}
+    public String getVersion() {
+        return version;
+    }
 
-	public void setI18n(boolean i18n) {
-		this.i18n = i18n;
-	}
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
-	public boolean isQaview() {
-		return qaview;
-	}
+    public String getCodeset() {
+        return codeset;
+    }
 
-	public void setQaview(boolean qaview) {
-		this.qaview = qaview;
-	}
+    public void setCodeset(String codeset) {
+        this.codeset = codeset;
+    }
 
-	public boolean isDebug() {
-		return isDebug;
-	}
+    public String getLanguage() {
+        return language;
+    }
 
-	public void setDebug(boolean isDebug) {
-		this.isDebug = isDebug;
-	}
+    public void setLanguage(String language) {
+        this.language = language;
+    }
 
-	public String getCharset_file() {
-		return charset_file;
-	}
+    public String getCollation() {
+        return collation;
+    }
 
-	public void setCharset_file(String charset_file) {
-		this.charset_file = charset_file;
-	}
+    public void setCollation(String collation) {
+        this.collation = collation;
+    }
 
-	public String getResult_dir() {
-		return result_dir;
-	}
+    public boolean isI18n() {
+        return i18n;
+    }
 
-	public void setResult_dir(String result_dir) {
-		this.result_dir = result_dir;
-	}
+    public void setI18n(boolean i18n) {
+        this.i18n = i18n;
+    }
 
-	public Map<String, Object> getConnIDList() {
-		return connIDList;
-	}
+    public boolean isQaview() {
+        return qaview;
+    }
 
-	public void setConnIDList(Map<String, Object> connIDList) {
-		this.connIDList = connIDList;
-	}
+    public void setQaview(boolean qaview) {
+        this.qaview = qaview;
+    }
 
-	public String getTestType() {
-		return testType;
-	}
+    public boolean isDebug() {
+        return isDebug;
+    }
 
-	public void setTestType(String testType) {
-		this.testType = testType;
-	}
+    public void setDebug(boolean isDebug) {
+        this.isDebug = isDebug;
+    }
 
-	public String getTestBit() {
-		return testBit;
-	}
+    public String getCharset_file() {
+        return charset_file;
+    }
 
-	public void setTestBit(String testBit) {
-		this.testBit = testBit;
-	}
+    public void setCharset_file(String charset_file) {
+        this.charset_file = charset_file;
+    }
 
+    public String getResult_dir() {
+        return result_dir;
+    }
+
+    public void setResult_dir(String result_dir) {
+        this.result_dir = result_dir;
+    }
+
+    public Map<String, Object> getConnIDList() {
+        return connIDList;
+    }
+
+    public void setConnIDList(Map<String, Object> connIDList) {
+        this.connIDList = connIDList;
+    }
+
+    public String getTestType() {
+        return testType;
+    }
+
+    public void setTestType(String testType) {
+        this.testType = testType;
+    }
+
+    public String getTestBit() {
+        return testBit;
+    }
+
+    public void setTestBit(String testBit) {
+        this.testBit = testBit;
+    }
 }
