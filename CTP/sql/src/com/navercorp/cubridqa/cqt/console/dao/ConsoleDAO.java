@@ -515,9 +515,15 @@ public class ConsoleDAO extends Executor {
                     if (paramType == null) {
                         continue;
                     }
+
                     if (paramType.indexOf("OUT") != -1) {
                         Object o = ps.getObject(index);
-                        sb.append(o + System.getProperty("line.separator"));
+                        if ( isNumeric(o != null ? o.toString() : "")) {
+                            String s = ps.getString(index);
+                            sb.append(s + System.getProperty("line.separator"));
+                        } else {
+                            sb.append(o + System.getProperty("line.separator"));
+                        }
                         param.setValue(o);
                     }
                 }
@@ -567,7 +573,7 @@ public class ConsoleDAO extends Executor {
                                 case Types.CHAR:
                                     ps.setString(index, (String) value);
                                     break;
-                                case Types.VARCHAR:
+                                case Types.VARCHAR: 
                                     ps.setString(index, (String) value);
                                     break;
                                     // case Types.NCHAR:
@@ -878,11 +884,19 @@ public class ConsoleDAO extends Executor {
 
             while (rs.next()) {
                 for (int i = 0; i < columnCount; i++) {
+                    String value;
+                    Object data; 
                     int index = i + 1;
                     String columnTypeName = meta.getColumnTypeName(index);
                     int columnType = meta.getColumnType(index);
-                    Object data = rs.getObject(index);
-                    String value = getColumnValue(columnType, columnTypeName, data, rs, index);
+                    data = rs.getObject(index);
+                    if ( columnType == Types.DOUBLE || 
+                         columnType == Types.REAL || 
+                         (columnType == Types.OTHER && isNumeric(data != null ? data.toString() : ""))) {
+                        value = rs.getString(index);
+                    } else {
+                        value = getColumnValue(columnType, columnTypeName, data, rs, index);
+                    }
                     ret.append(value + "     ");
                 }
                 ret.append(System.getProperty("line.separator"));
@@ -917,6 +931,15 @@ public class ConsoleDAO extends Executor {
             sql.setResult(sql.getResult() + ret.toString() + System.getProperty("line.separator"));
         }
     }
+
+     private Boolean isNumeric(String str) {
+            try {
+                Double.parseDouble(str);
+                return true;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+     }
 
     /**
      * @Title: getColumnValue @Description:Get every column's result.
