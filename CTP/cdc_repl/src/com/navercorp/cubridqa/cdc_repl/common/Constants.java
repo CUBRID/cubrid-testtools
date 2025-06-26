@@ -22,9 +22,30 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
-package com.navercorp.cubridqa.ctp;
+package com.navercorp.cubridqa.cdc_repl.common;
 
-public enum ComponentEnum {
+public class Constants {
+	public static final String LINE_SEPARATOR = System.getProperty("line.separator");;
 
-	SQL, MEDIUM, KCC, NEIS05, NEIS08, SHELL, CCI, DOTS, HA_REPL, ISOLATION, JDBC, NBD, SQL_BY_CCI, SYSBENCH, TPCC, TPCW, YCSB, WEBCONSOLE, UNITTEST, RQG, CDC_REPL;
+	public static final int TYPE_MASTER = 1;
+	public static final int TYPE_SLAVE = 2;
+	public static final int TYPE_REPLICA = 3;
+
+	public static String FM_DATE_SNAPSHOT = "yyyyMMdd_hhmmss";
+
+	public static final String SKIP_TYPE_NO = "0";
+	public static final String SKIP_TYPE_BY_MACRO = "1"; // Not implement.
+															// Please ignore. By
+															// Fan
+	public static final String SKIP_TYPE_BY_TEMP = "2";
+
+	public static final String DIR_ERROR_BACKUP = "~/ERROR_BACKUP";
+
+	public static final String GET_BROKER_PORT_CMD = "cat $CUBRID/conf/cubrid_broker.conf| grep '^SERVICE\\|^BROKER_PORT' |grep -A1 'ON' |grep 'BROKER_PORT'|tail -n 1|awk -F '=' '{print $NF}'|tr -d '[[:space:]]'";
+	
+	public static final int CDC_SYNC_DETECT_TIMEOUT_IN_MS_DEFAULT = 600 * 1000;
+	
+	public static final int CDC_SYNC_FAILURE_RESOLVE_MODE_STOP = 1;
+	public static final int CDC_SYNC_FAILURE_RESOLVE_MODE_CONTINUE = 2;
+	public static final int CDC_SYNC_FAILURE_RESOLVE_MODE_WAIT = 3;
 }

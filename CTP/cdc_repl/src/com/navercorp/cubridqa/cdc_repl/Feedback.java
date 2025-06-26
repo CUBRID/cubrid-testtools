@@ -22,9 +22,36 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
-package com.navercorp.cubridqa.ctp;
+package com.navercorp.cubridqa.cdc_repl;
 
-public enum ComponentEnum {
+import com.navercorp.cubridqa.common.Log;
 
-	SQL, MEDIUM, KCC, NEIS05, NEIS08, SHELL, CCI, DOTS, HA_REPL, ISOLATION, JDBC, NBD, SQL_BY_CCI, SYSBENCH, TPCC, TPCW, YCSB, WEBCONSOLE, UNITTEST, RQG, CDC_REPL;
+public interface Feedback {
+
+	public void onTaskStartEvent();
+
+	public void onTaskContinueEvent();
+
+	public void onTaskStopEvent();
+
+	public void setTotalTestCase(int tbdNum, int macroSkippedNum, int tempSkippedNum);
+
+	public void onTestCaseStartEvent(String testCase, String envIdentify);
+
+	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedKind);
+
+	public void onTestCaseMonitor(String testCase, String action, String envIdentify);
+
+	public void onDeployStart(String envIdentify);
+
+	public void onDeployStop(String envIdentify);
+
+	public void onConvertEventStart();
+
+	public void onConvertEventStop();
+
+	public int getTaskId();
+
+	public void onStopEnvEvent(InstanceManager hostManager, Log log);
+
 }
