@@ -518,7 +518,7 @@ public class ConsoleDAO extends Executor {
 
                     if (paramType.indexOf("OUT") != -1) {
                         Object o = ps.getObject(index);
-                        if ( isNumeric(o != null ? o.toString() : "")) {
+                        if ( Test.oracleCompatNumber.equals("on") && isNumeric(o != null ? o.toString() : "")) {
                             String s = ps.getString(index);
                             sb.append(s + System.getProperty("line.separator"));
                         } else {
@@ -890,9 +890,10 @@ public class ConsoleDAO extends Executor {
                     String columnTypeName = meta.getColumnTypeName(index);
                     int columnType = meta.getColumnType(index);
                     data = rs.getObject(index);
-                    if ( columnType == Types.DOUBLE || 
+                    if ( Test.oracleCompatNumber.equals("on") && 
+                         (columnType == Types.DOUBLE || 
                          columnType == Types.REAL || 
-                         (columnType == Types.OTHER && isNumeric(data != null ? data.toString() : ""))) {
+                         (columnType == Types.OTHER && isNumeric(data != null ? data.toString() : "")))) {
                         value = rs.getString(index);
                     } else {
                         value = getColumnValue(columnType, columnTypeName, data, rs, index);

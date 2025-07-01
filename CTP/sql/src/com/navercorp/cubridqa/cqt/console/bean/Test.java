@@ -51,6 +51,8 @@ public class Test {
 
     public static String urlProperties = "";
 
+    public static String oracleCompatNumber = "";
+
     private String testId;
 
     private String caseFilter;
@@ -139,6 +141,14 @@ public class Test {
 
     public void setUrlProperties(String urlProperties) {
         this.urlProperties = urlProperties;
+    }
+
+    public String getOracleCompatNumber() {
+        return oracleCompatNumber;
+    }
+
+    public void setOracleCompatNumber(String oracleCompatNumber) {
+        this.oracleCompatNumber = oracleCompatNumber;
     }
 
     public boolean isNeedDebugHint() {

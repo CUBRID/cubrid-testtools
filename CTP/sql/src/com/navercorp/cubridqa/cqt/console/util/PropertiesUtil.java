@@ -130,6 +130,12 @@ public class PropertiesUtil {
             val = urlProp.getText();
             test.setUrlProperties(val);
         }
+       List oracle_number = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.ORACLE_COMPAT_NUMBER);
+        if (!oracle_number.isEmpty()) {
+            Element oranum = (Element) oracle_number.get(0);
+            val = oranum.getText();
+            test.setOracleCompatNumber(val);
+        }
 
         List needXmlSummary = root.selectNodes(TestUtil.ROOT_NODE + TestUtil.NEED_XML_SUMMARY);
         if (!needXmlSummary.isEmpty()) {
