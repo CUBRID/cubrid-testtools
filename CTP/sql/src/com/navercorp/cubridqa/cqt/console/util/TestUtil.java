@@ -83,6 +83,8 @@ public class TestUtil {
 
     public static final String URL_PROPERTIES = "url_properties";
 
+    public static final String ORACLE_COMPAT_NUMBER = "oracle_compat_number";
+
     public static final String ADD_DEBUG_HINT = "add_debug_hint";
 
     public static final String NEED_XML_SUMMARY = "need_xml_summary";
