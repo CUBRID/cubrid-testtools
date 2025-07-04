@@ -80,7 +80,7 @@ function get_cubrid_port_id(){
     if [ "${port_id}" = "" ]
     then
         echo "1523"
-	else
+    else
         echo "${port_id}"
     fi
 }
