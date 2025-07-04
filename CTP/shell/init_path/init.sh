@@ -76,7 +76,7 @@ function get_broker_port_from_shell_config
 }
 
 function get_cubrid_port_id(){
-    local port_id=`grep -i "cubrid_port_id" $CUBRID/conf/cubrid.conf | awk -F '=' '{print $2}'`
+    local port_id=`ini.sh -s "common" $CUBRID/conf/cubrid.conf cubrid_port_id`
     if [ "${port_id}" = "" ]
     then
         echo "1523"
