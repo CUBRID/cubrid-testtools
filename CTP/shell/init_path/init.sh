@@ -75,6 +75,11 @@ function get_broker_port_from_shell_config
   echo $port
 }
 
+function get_cubrid_port_id(){
+    local port_id=`grep "cubrid_port_id" $CUBRID/conf/cubrid.conf | awk -F '=' '{print $2}'`
+    echo "${port_id}"
+}
+
 # This function is not recommended.
 # It is used to get another available port. 
 function generate_port {
