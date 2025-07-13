@@ -22,9 +22,55 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
-package com.navercorp.cubridqa.ctp;
+package com.navercorp.cubridqa.cdc_repl.deploy;
 
-public enum ComponentEnum {
+import java.util.ArrayList;
 
-	SQL, MEDIUM, KCC, NEIS05, NEIS08, SHELL, CCI, DOTS, HA_REPL, ISOLATION, JDBC, NBD, SQL_BY_CCI, SYSBENCH, TPCC, TPCW, YCSB, WEBCONSOLE, UNITTEST, RQG, CDC_REPL;
+import com.navercorp.cubridqa.common.Log;
+import com.navercorp.cubridqa.cdc_repl.Context;
+import com.navercorp.cubridqa.cdc_repl.InstanceManager;
+import com.navercorp.cubridqa.cdc_repl.common.Constants;
+import com.navercorp.cubridqa.shell.common.SSHConnect;
+
+public class Deploy {
+
+	String envId;
+	InstanceManager hostManager;
+	Boolean logStart = false;
+	Context context;
+	Log log;
+
+	public Deploy(Context context, String envId) throws Exception {
+		this.envId = envId;
+		this.context = context;
+		this.hostManager = new InstanceManager(context, envId);
+		this.log = new Log(context.getCurrentLogDir() + "/deploy_" + envId + ".log", true, context.isContinueMode());
+	}
+
+	public void deployAll() throws Exception {
+		SSHConnect ssh;
+
+		log.log("Start deployAll");
+
+		ssh = hostManager.getHost("master");
+		deployOne(ssh);
+		log.log("envId is " + envId + ". Master deployment finished." + ssh.getTitle());
+
+		ArrayList<SSHConnect> list;
+
+		list = hostManager.getAllHost("slave");
+		for (SSHConnect slave : list) {
+			deployOne(slave);
+			log.log("envId is " + envId + ". Slave deployment finished." + slave.getTitle());
+		}
+	}
+
+	public void close() {
+		this.hostManager.close();
+	}
+
+	private void deployOne(SSHConnect ssh) throws Exception {
+		DeployNode deployNode = new DeployNode(context, hostManager, ssh);
+		deployNode.deploy();
+	}
 }

@@ -75,6 +75,16 @@ function get_broker_port_from_shell_config
   echo $port
 }
 
+function get_cubrid_port_id(){
+    local port_id=`ini.sh -s "common" $CUBRID/conf/cubrid.conf cubrid_port_id`
+    if [ "${port_id}" = "" ]
+    then
+        echo "1523"
+    else
+        echo "${port_id}"
+    fi
+}
+
 # This function is not recommended.
 # It is used to get another available port. 
 function generate_port {

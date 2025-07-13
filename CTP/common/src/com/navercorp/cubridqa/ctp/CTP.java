@@ -172,6 +172,9 @@ public class CTP {
 				case HA_REPL:
 					executeHaRepl(getConfigData(taskLabel, configFilename, "ha_repl"), "ha_repl");
 					break;
+				case CDC_REPL:
+					executeCdcRepl(getConfigData(taskLabel, configFilename, "cdc_repl"), "cdc_repl");
+					break;
 				case JDBC:
 					executeJdbc(getConfigData(taskLabel, configFilename, "jdbc"), "jdbc");
 					break;
@@ -281,6 +284,25 @@ public class CTP {
 		}
 	}
 
+	private static void executeCdcRepl(IniData config, String suite) {
+		String jar = ctpHome + File.separator + "cdc_repl" + File.separator + "lib" + File.separator + "cubridqa-cdc_repl.jar";
+		try {
+			URL url = new URL("file:" + jar);
+			URLClassLoader clzLoader = new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
+			Class<?> clz = clzLoader.loadClass("com.navercorp.cubridqa.cdc_repl.Main");
+			Method m = clz.getDeclaredMethod("exec", String.class);
+			String configFilename;
+			if (CommonUtils.isWindowsPlatform()) {
+				configFilename = CommonUtils.getWindowsStylePath(config.getFilename());
+			} else {
+				configFilename = config.getFilename();
+			}
+			m.invoke(clz, configFilename);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	private static void executeUnitTest(IniData config, String suite) {
 		String jar = ctpHome + File.separator + "shell" + File.separator + "lib" + File.separator + "cubridqa-shell.jar";
 		System.setProperty("TEST_TYPE", "unittest");
@@ -339,7 +361,7 @@ public class CTP {
 			System.out.println("Welcome to use CUBRID Test Program (CTP)");
 		}
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("ctp.sh <sql|medium|shell|ha_repl|isolation|jdbc|unittest> -c <config_file>", OPTIONS);
+		formatter.printHelp("ctp.sh <sql|medium|shell|ha_repl|cdc_repl|isolation|jdbc|unittest> -c <config_file>", OPTIONS);
 		System.out.println();
 		System.out.println("utility: ctp.sh webconsole <start|stop>");
 		System.out.println();
@@ -348,12 +370,14 @@ public class CTP {
 		System.out.println("	ctp.sh medium -c conf/medium.conf");
 		System.out.println("	ctp.sh shell -c conf/shell.conf");
 		System.out.println("	ctp.sh ha_repl -c conf/ha_repl.conf");
+		System.out.println("	ctp.sh cdc_repl -c conf/cdc_repl.conf");
 		System.out.println("	ctp.sh isolation -c conf/isolation.conf");
 		System.out.println("	ctp.sh jdbc -c conf/jdbc.conf");
 		System.out.println("	ctp.sh sql		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "sql.conf");
 		System.out.println("	ctp.sh medium		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "medium.conf");
 		System.out.println("	ctp.sh shell		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "shell.conf");
 		System.out.println("	ctp.sh ha_repl		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "ha_repl.conf");
+		System.out.println("	ctp.sh cdc_repl		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "cdc_repl.conf");
 		System.out.println("	ctp.sh isolation		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "isolation.conf");
 		System.out.println("	ctp.sh jdbc		#use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "jdbc.conf");
 		System.out.println("	ctp.sh unittest #use default configuration file: " + ctpHome + File.separator + "conf" + File.separator + "unittest.conf");
