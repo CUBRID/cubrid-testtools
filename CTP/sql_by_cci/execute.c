@@ -673,7 +673,7 @@ getutype (char *p)
     }
   if (startswithCI (trimline (p) + 1, "VARCHAR"))
     {
-      return CCI_U_TYPE_VARNCHAR;
+      return CCI_U_TYPE_STRING;
     }
   if (startswithCI (trimline (p) + 1, "BIT"))
     {
