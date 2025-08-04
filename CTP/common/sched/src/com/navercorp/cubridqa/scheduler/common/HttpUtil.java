@@ -33,6 +33,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
@@ -54,6 +56,25 @@ public class HttpUtil {
 		HttpEntity entity = response.getEntity();
 		if (entity != null) {
 			return (EntityUtils.toString(entity));
+		}
+		return null;
+	}
+
+	public static String postJson(String url, String jsonPayload) throws ParseException, IOException {
+		HttpParams httpParams = new BasicHttpParams();
+		HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
+		HttpConnectionParams.setSoTimeout(httpParams, 30000);
+		HttpClient httpclient = new DefaultHttpClient(httpParams);
+
+		HttpPost httpPost = new HttpPost(url);
+		httpPost.setHeader("Content-Type", "application/json");
+		httpPost.setEntity(new StringEntity(jsonPayload, "UTF-8"));
+
+		HttpResponse response = httpclient.execute(httpPost);
+		HttpEntity entity = response.getEntity();
+		
+		if (entity != null) {
+			return EntityUtils.toString(entity);
 		}
 		return null;
 	}

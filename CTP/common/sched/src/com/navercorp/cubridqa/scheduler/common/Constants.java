@@ -126,6 +126,21 @@ public class Constants {
 	public static final String MSG_DB_CHARSET = "DB_CHARSET";
 	public static final String MSG_RESET_CONFIG_FILE = "RESET_CONFIG_FILE";
 
+	// New constants for JSON/Callback workflow
+	public static final String MSG_COMMIT_HASH = "COMMIT_HASH";
+	public static final String MSG_TEST_LIST = "TEST_LIST";
+	public static final String MSG_CALLBACK_URL = "CALLBACK_URL";
+	public static final String MSG_ARTIFACT_URI = "ARTIFACT_URI";
+	public static final String MSG_ORIGIN_IP = "ORIGIN_IP";
+	public static final String MSG_WORKER_IP = "WORKER_IP";
+	public static final String MSG_GENERATED_AT = "GENERATED_AT";
+	
+	// New constants for Bisect workflow
+	public static final String MSG_COMMIT_FORMER = "COMMIT_FORMER";
+	public static final String MSG_COMMIT_LATTER = "COMMIT_LATTER";
+	public static final String MSG_FIRST_BAD_COMMIT = "FIRST_BAD_COMMIT";
+	public static final String MSG_COMMIT_AUTHOR = "COMMIT_AUTHOR";
+
 	public static final int BUILD_TYPE_SERVER_SH_LINUX_X86_64 = 1;
 	public static final int BUILD_TYPE_SERVER_SH_LINUX_X86_64_DEBUG = 2;
 	public static final int BUILD_TYPE_SERVER_SH_LINUX_I386 = 3;

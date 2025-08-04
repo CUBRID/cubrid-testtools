@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "RunShellMain",
+            "request": "launch",
+            "mainClass": "com.navercorp.cubridqa.shell.main.RunShellMain",
+            "projectName": "CTP"
+        },
+        {
+            "type": "java",
+            "name": "Configure",
+            "request": "launch",
+            "mainClass": "com.navercorp.cubridqa.scheduler.producer.Configure",
+            "projectName": "CTP"
+        },
+        {
+            "type": "java",
+            "name": "Launch Java Program",
+            "request": "launch",
+            "mainClass": ""
+        },
+        {
+            "type": "java",
+            "name": "Run with AppMap",
+            "request": "launch",
+            "mainClass": "",
+            "vmArgs": "-javaagent:${userHome}/.appmap/lib/java/appmap.jar"
+        }
+    ]
+}

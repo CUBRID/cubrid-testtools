@@ -39,10 +39,16 @@ public class Producer {
 
 	Configure conf;
 	Observer observer;
+	JsonRequestHandler jsonHandler;
 
 	public Producer(Configure conf) throws IOException {
 		this.conf = conf;
 		this.observer = new Observer(conf);
+		
+		// Start JSON request handler on port 8089 (configurable)
+		int jsonPort = Integer.parseInt(conf.getProperty("json.handler.port", "8089"));
+		jsonHandler = new JsonRequestHandler(conf, jsonPort);
+		jsonHandler.start();
 	}
 
 	public void startup() {
