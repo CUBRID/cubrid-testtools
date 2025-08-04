@@ -93,7 +93,9 @@ public class BisectResultAggregator {
                                           String commitLatter, String buildType, String workerIp, String originIp) throws IOException {
         File mainFile = new File(dir, "bisect_main_" + mainId + ".dat");
         
-        try (FileWriter writer = new FileWriter(mainFile)) {
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(mainFile);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             String timestamp = sdf.format(new Date());
             
@@ -107,6 +109,14 @@ public class BisectResultAggregator {
             writer.write("END_TIME=" + timestamp + "\n");
             writer.write("CATEGORY=bisect\n");
             writer.write("TEST_TYPE=shell\n");
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         
         System.out.println("Written main result file: " + mainFile.getAbsolutePath());
@@ -127,7 +137,9 @@ public class BisectResultAggregator {
             
             File testFile = new File(dir, "bisect_result_" + mainId + "_" + i + ".dat");
             
-            try (FileWriter writer = new FileWriter(testFile)) {
+            FileWriter writer = null;
+            try {
+                writer = new FileWriter(testFile);
                 writer.write("MAIN_ID=" + mainId + "\n");
                 writer.write("TEST_NAME=" + name + "\n");
                 writer.write("STATUS=" + status + "\n");
@@ -140,6 +152,14 @@ public class BisectResultAggregator {
                     }
                 } else if ("error".equals(status) && error != null) {
                     writer.write("ERROR_MESSAGE=" + escapeString(error) + "\n");
+                }
+            } finally {
+                if (writer != null) {
+                    try {
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             

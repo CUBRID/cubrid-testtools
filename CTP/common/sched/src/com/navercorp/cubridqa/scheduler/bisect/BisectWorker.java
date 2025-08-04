@@ -87,7 +87,7 @@ public class BisectWorker implements MessageListener {
     }    
     private List<BisectResult> runBisectForTests(String commitFormer, String commitLatter, 
                                                   String buildType, String testList) {
-        List<BisectResult> results = new ArrayList<>();
+        List<BisectResult> results = new ArrayList<BisectResult>();
         
         if (testList == null || testList.isEmpty()) {
             return results;

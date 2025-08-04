@@ -61,8 +61,11 @@ public class JsonRequestHandler extends Thread {
         }
     }    
     private void handleRequest(Socket clientSocket) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             OutputStreamWriter writer = new OutputStreamWriter(clientSocket.getOutputStream())) {
+        BufferedReader reader = null;
+        OutputStreamWriter writer = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            writer = new OutputStreamWriter(clientSocket.getOutputStream());
             
             // StringBuilder requestBuilder = new StringBuilder(); // Not used
             String line;
@@ -112,6 +115,20 @@ public class JsonRequestHandler extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             try {
                 clientSocket.close();
             } catch (IOException e) {
