@@ -7,17 +7,20 @@
 CTP_HOST="localhost"
 CTP_PORT="8089"
 CALLBACK_URL="http://localhost:8080/bisect/result"
+WORKER_IP="$(hostname -I | awk '{print $1}')"  # Current worker IP
 
 # Test data - based on the example from the script
 COMMIT_FORMER="19a9f15"  # Known good commit
 COMMIT_LATTER="e4c8127"  # Known bad commit
+BUILD_TYPE="debug"       # debug or release
 
 # JSON request payload
 read -r -d '' JSON_PAYLOAD << EOF
 {
   "commitFormer": "$COMMIT_FORMER",
   "commitLatter": "$COMMIT_LATTER",
-  "buildType": "debug",
+  "buildType": "$BUILD_TYPE",
+  "workerIp": "$WORKER_IP",
   "tests": [
     "shell/_06_issues/_12_2h/bug_bts_7583/cases/bug_bts_7583.sh",
     "shell/_06_issues/_14_1h/bug_bts_13331/cases/bug_bts_13331.sh",
@@ -36,16 +39,32 @@ read -r -d '' JSON_PAYLOAD << EOF
 EOF
 
 echo "Sending bisect request to CTP..."
+echo "Target: http://$CTP_HOST:$CTP_PORT/bisect"
 echo "From: $COMMIT_FORMER"
 echo "To: $COMMIT_LATTER"
+echo "Build Type: $BUILD_TYPE"
+echo "Worker IP: $WORKER_IP"
 echo "Tests: 10 failing shell tests"
+echo "Callback URL: $CALLBACK_URL"
 echo
 
 # Send the request
-curl -X POST \
+echo "Sending JSON request..."
+RESPONSE=$(curl -s -X POST \
   -H "Content-Type: application/json" \
   -d "$JSON_PAYLOAD" \
-  "http://$CTP_HOST:$CTP_PORT/bisect"
+  "http://$CTP_HOST:$CTP_PORT/bisect")
 
+echo "Response: $RESPONSE"
 echo
-echo "Request sent. Results will be posted to: $CALLBACK_URL"
+echo "Request sent successfully!"
+echo
+echo "=== Next Steps ==="
+echo "1. Check CTP logs for bisect progress"
+echo "2. For file-based feedback (default), check result files in: /tmp/cubrid-bisect-results/"
+echo "3. For HTTP callback feedback, results will be posted to: $CALLBACK_URL"
+echo "4. Use the test_callback_receiver.py script to receive HTTP callbacks"
+echo
+echo "Expected result files:"
+echo "  - bisect_main_<TIMESTAMP>.dat (session metadata)"
+echo "  - bisect_result_<TIMESTAMP>_<N>.dat (individual test results)"
