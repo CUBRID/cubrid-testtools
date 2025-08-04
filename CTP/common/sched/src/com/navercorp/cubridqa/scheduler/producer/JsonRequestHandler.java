@@ -156,39 +156,30 @@ public class JsonRequestHandler extends Thread {
                             value = value.substring(1, value.length() - 1);
                         }
                         
-                        switch (key) {
-                            case "commitHash":
-                                request.commitHash = value;
-                                break;
-                            case "commitFormer":
-                                request.commitFormer = value;
-                                break;
-                            case "commitLatter":
-                                request.commitLatter = value;
-                                break;
-                            case "buildType":
-                                request.buildType = value;
-                                break;
-                            case "workerIp":
-                                request.workerIp = value;
-                                break;
-                            case "callbackUrl":
-                                request.callbackUrl = value;
-                                break;
-                            case "originIp":
-                                request.originIp = value;
-                                break;
-                            case "tests":
-                                // Parse array - simple implementation for ["test1", "test2"]
-                                if (value.startsWith("[") && value.endsWith("]")) {
-                                    value = value.substring(1, value.length() - 1);
-                                    String[] tests = value.split(",");
-                                    request.tests = new String[tests.length];
-                                    for (int i = 0; i < tests.length; i++) {
-                                        request.tests[i] = tests[i].trim().replaceAll("\"", "");
-                                    }
+                        if ("commitHash".equals(key)) {
+                            request.commitHash = value;
+                        } else if ("commitFormer".equals(key)) {
+                            request.commitFormer = value;
+                        } else if ("commitLatter".equals(key)) {
+                            request.commitLatter = value;
+                        } else if ("buildType".equals(key)) {
+                            request.buildType = value;
+                        } else if ("workerIp".equals(key)) {
+                            request.workerIp = value;
+                        } else if ("callbackUrl".equals(key)) {
+                            request.callbackUrl = value;
+                        } else if ("originIp".equals(key)) {
+                            request.originIp = value;
+                        } else if ("tests".equals(key)) {
+                            // Parse array - simple implementation for ["test1", "test2"]
+                            if (value.startsWith("[") && value.endsWith("]")) {
+                                value = value.substring(1, value.length() - 1);
+                                String[] tests = value.split(",");
+                                request.tests = new String[tests.length];
+                                for (int i = 0; i < tests.length; i++) {
+                                    request.tests[i] = tests[i].trim().replaceAll("\"", "");
                                 }
-                                break;
+                            }
                         }
                     }
                 }

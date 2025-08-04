@@ -18,14 +18,14 @@ public class LocalInvoker {
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String line;
         while ((line = reader.readLine()) != null) {
-            Log.print(line);
+            System.out.println(line);
         }
         reader.close();
         
         // Read error output
         reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
         while ((line = reader.readLine()) != null) {
-            Log.print("ERROR: " + line);
+            System.out.println("ERROR: " + line);
         }
         reader.close();
         

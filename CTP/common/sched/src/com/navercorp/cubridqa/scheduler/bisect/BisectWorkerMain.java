@@ -9,7 +9,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
 import com.navercorp.cubridqa.scheduler.common.ActiveMQFactory;
-import com.navercorp.cubridqa.scheduler.common.Log;
+
 import com.navercorp.cubridqa.scheduler.consumer.Configure;
 
 public class BisectWorkerMain {
@@ -37,7 +37,7 @@ public class BisectWorkerMain {
         BisectWorker worker = new BisectWorker(conf);
         consumer.setMessageListener(worker);
         
-        Log.info("Bisect Worker started, listening on bisect.request queue");
+        System.out.println("Bisect Worker started, listening on bisect.request queue");
         
         // Keep the worker running
         while (true) {
