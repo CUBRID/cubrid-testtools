@@ -1,0 +1,14 @@
+# Bisect Consumer Configuration Example
+# Copy this file to bisect_consumer.conf and modify as needed
+
+# HTTP server port for receiving test requests
+listen_port=8090
+
+# Working directory for test execution
+# Build packages will be extracted here
+# Test results will be generated here
+work_dir=/tmp/bisect_consumer
+
+# CUBRID installation directory
+# This is where CUBRID will be installed for testing
+cubrid_install_dir=/tmp/cubrid_test

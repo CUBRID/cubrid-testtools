@@ -1,0 +1,30 @@
+# Bisect Producer Configuration Example
+# Copy this file to bisect_producer.conf and modify as needed
+
+# HTTP server port for receiving bisect requests
+listen_port=8089
+
+# Path to CUBRID source code repository
+# This should be a git repository with full history
+cubrid_src_dir=/home/cubrid/cubrid
+
+# Path to shell test cases repository
+# This directory should contain the shell test scripts
+shell_tc_dir=/home/cubrid/cubrid-testcases-private-ex
+
+# Build arguments for CUBRID
+# For debug build: -g ninja -m debug build
+# For release build: -g ninja -m release build
+build_arg=-g ninja -m debug build
+
+# Build directory name (created under cubrid_src_dir)
+# This directory will be removed and recreated for each build
+build_dir=build_x86_64_debug
+
+# Working directory for temporary files
+# Judge scripts and build packages will be created here
+work_dir=/tmp/bisect_work
+
+# Consumer port
+# The port where consumer nodes are listening for test requests
+consumer_port=8090
