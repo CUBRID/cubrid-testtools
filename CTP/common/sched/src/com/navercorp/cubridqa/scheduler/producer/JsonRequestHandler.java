@@ -9,10 +9,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Properties;
+
 
 import com.navercorp.cubridqa.scheduler.common.Constants;
-import com.navercorp.cubridqa.scheduler.common.Log;
+
 import com.navercorp.cubridqa.scheduler.common.Message;
 import com.navercorp.cubridqa.scheduler.common.SendMessage;
 
@@ -43,7 +43,7 @@ public class JsonRequestHandler extends Thread {
     public void run() {
         try {
             serverSocket = new ServerSocket(port);
-            Log.print("JSON Request Handler listening on port " + port);
+            System.out.println("JSON Request Handler listening on port " + port);
             
             while (running) {
                 try {
@@ -56,7 +56,7 @@ public class JsonRequestHandler extends Thread {
                 }
             }
         } catch (IOException e) {
-            Log.print("Failed to start JSON Request Handler on port " + port);
+            System.out.println("Failed to start JSON Request Handler on port " + port);
             e.printStackTrace();
         }
     }    
@@ -64,7 +64,7 @@ public class JsonRequestHandler extends Thread {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              OutputStreamWriter writer = new OutputStreamWriter(clientSocket.getOutputStream())) {
             
-            StringBuilder requestBuilder = new StringBuilder();
+            // StringBuilder requestBuilder = new StringBuilder(); // Not used
             String line;
             int contentLength = 0;
             
@@ -85,7 +85,7 @@ public class JsonRequestHandler extends Thread {
                 QAHomeRequest request = parseJson(jsonBody);
                 
                 if (request != null) {
-                    Log.print("Received QAHome JSON commit=" + request.commitHash);
+                    System.out.println("Received QAHome JSON request for commits: " + request.commitFormer + " -> " + request.commitLatter);
                     
                     // Create and send message to build.request queue
                     createAndSendMessage(request);
@@ -152,6 +152,9 @@ public class JsonRequestHandler extends Thread {
                             case "buildType":
                                 request.buildType = value;
                                 break;
+                            case "workerIp":
+                                request.workerIp = value;
+                                break;
                             case "callbackUrl":
                                 request.callbackUrl = value;
                                 break;
@@ -190,6 +193,7 @@ public class JsonRequestHandler extends Thread {
             msg.setProperty(Constants.MSG_COMMIT_FORMER, request.commitFormer);
             msg.setProperty(Constants.MSG_COMMIT_LATTER, request.commitLatter);
             msg.setProperty(Constants.MSG_BUILD_TYPE, request.buildType);
+            msg.setProperty(Constants.MSG_WORKER_IP, request.workerIp != null ? request.workerIp : "");
             msg.setProperty(Constants.MSG_CALLBACK_URL, request.callbackUrl);
             msg.setProperty(Constants.MSG_ORIGIN_IP, request.originIp);
             
@@ -199,10 +203,13 @@ public class JsonRequestHandler extends Thread {
             }
             
             // Send message
-            SendMessage.send(msg, 4); // Priority 4 (default)
+            msg.setPriority(4); // Priority 4
+            SendMessage sendMsg = new SendMessage(conf.getProperties());
+            sendMsg.addMessage(msg);
+            sendMsg.send();
             
         } catch (Exception e) {
-            Log.print("Failed to send message to bisect.request queue");
+            System.out.println("Failed to send message to bisect.request queue");
             e.printStackTrace();
         }
     }
@@ -213,6 +220,7 @@ public class JsonRequestHandler extends Thread {
         String commitFormer;
         String commitLatter;
         String buildType = "debug"; // default
+        String workerIp;
         String[] tests;
         String callbackUrl;
         String originIp;
@@ -221,6 +229,7 @@ public class JsonRequestHandler extends Thread {
             // For bisect workflow
             if (commitFormer != null && commitLatter != null) {
                 return !commitFormer.isEmpty() && !commitLatter.isEmpty() &&
+                       workerIp != null && !workerIp.isEmpty() &&
                        callbackUrl != null && !callbackUrl.isEmpty() &&
                        tests != null && tests.length > 0;
             }

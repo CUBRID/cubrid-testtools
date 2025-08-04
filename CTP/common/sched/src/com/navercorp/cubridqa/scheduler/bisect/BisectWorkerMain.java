@@ -37,7 +37,7 @@ public class BisectWorkerMain {
         BisectWorker worker = new BisectWorker(conf);
         consumer.setMessageListener(worker);
         
-        Log.print("Bisect Worker started, listening on bisect.request queue");
+        Log.info("Bisect Worker started, listening on bisect.request queue");
         
         // Keep the worker running
         while (true) {

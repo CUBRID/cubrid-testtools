@@ -18,24 +18,23 @@ import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 
 import com.navercorp.cubridqa.scheduler.common.Constants;
-import com.navercorp.cubridqa.scheduler.common.Log;
+
 import com.navercorp.cubridqa.scheduler.consumer.Configure;
-import com.navercorp.cubridqa.scheduler.consumer.ResultAggregator;
+
 
 public class BisectWorker implements MessageListener {
     
     private Configure conf;
     private String cubridSrcDir;
     private String shellTcDir;
-    private String cubridBuildArg;
-    private String cubridBuildDir;
     
     public BisectWorker(Configure conf) {
         this.conf = conf;
         this.cubridSrcDir = conf.getProperty("cubrid.src.dir", "/home/cubrid/cubrid");
         this.shellTcDir = conf.getProperty("shell.tc.dir", "/home/cubrid/cubrid-testcases-private-ex");
-        this.cubridBuildArg = conf.getProperty("cubrid.build.arg", "-g ninja -m debug build");
-        this.cubridBuildDir = conf.getProperty("cubrid.build.dir", "build_x86_64_debug");
+        
+        // Set configuration for result aggregator
+        BisectResultAggregator.setConfiguration(conf);
     }    
     @Override
     public void onMessage(javax.jms.Message message) {
@@ -53,10 +52,20 @@ public class BisectWorker implements MessageListener {
                 String commitFormer = message.getStringProperty(Constants.MSG_COMMIT_FORMER);
                 String commitLatter = message.getStringProperty(Constants.MSG_COMMIT_LATTER);
                 String buildType = message.getStringProperty(Constants.MSG_BUILD_TYPE);
+                String requestedWorkerIp = message.getStringProperty(Constants.MSG_WORKER_IP);
                 String testList = message.getStringProperty(Constants.MSG_TEST_LIST);
-                String callbackUrl = message.getStringProperty(Constants.MSG_CALLBACK_URL);
+                // String callbackUrl = message.getStringProperty(Constants.MSG_CALLBACK_URL); // Not used in bisect workflow
                 
-                Log.print("Processing bisect request: " + commitFormer + " -> " + commitLatter);
+                // Check if this worker should handle the request (if workerIp is specified)
+                if (requestedWorkerIp != null && !requestedWorkerIp.isEmpty()) {
+                    String actualWorkerIp = InetAddress.getLocalHost().getHostAddress();
+                    if (!requestedWorkerIp.equals(actualWorkerIp)) {
+                        System.out.println("Request is for worker " + requestedWorkerIp + ", but this is " + actualWorkerIp + ". Skipping.");
+                        return;
+                    }
+                }
+                
+                System.out.println("Processing bisect request: " + commitFormer + " -> " + commitLatter);
                 
                 // Run bisect for each test
                 List<BisectResult> results = runBisectForTests(commitFormer, commitLatter, buildType, testList);
@@ -72,7 +81,7 @@ public class BisectWorker implements MessageListener {
                 BisectResultAggregator.aggregateAndPost(message);
             }
         } catch (Exception e) {
-            Log.print("Error processing bisect request: " + e.getMessage());
+            System.out.println("Error processing bisect request: " + e.getMessage());
             e.printStackTrace();
         }
     }    
@@ -87,7 +96,7 @@ public class BisectWorker implements MessageListener {
         String[] tests = testList.split(",");
         for (String test : tests) {
             test = test.trim();
-            Log.print("Starting bisect for test: " + test);
+            System.out.println("Starting bisect for test: " + test);
             BisectResult result = runBisectForSingleTest(commitFormer, commitLatter, buildType, test);
             results.add(result);
         }
@@ -125,7 +134,7 @@ public class BisectWorker implements MessageListener {
             String line;
             while ((line = reader.readLine()) != null) {
                 output.append(line).append("\n");
-                Log.print("BISECT: " + line);
+                System.out.println("BISECT: " + line);
             }
             reader.close();
             p.waitFor();
@@ -164,7 +173,7 @@ public class BisectWorker implements MessageListener {
         } catch (Exception e) {
             result.status = "error";
             result.errorMessage = e.getMessage();
-            Log.print("Error during bisect: " + e.getMessage());
+            System.out.println("Error during bisect: " + e.getMessage());
             e.printStackTrace();
         }
         
@@ -172,13 +181,39 @@ public class BisectWorker implements MessageListener {
         result.runtimeMs = endTime - startTime;
         
         return result;
-    }    
+    }
+    
+    private String getBuildArguments(String buildType) {
+        // Get base build arguments from config, but override the mode based on buildType
+        String baseBuildArg = conf.getProperty("cubrid.build.arg", "-g ninja -m debug build");
+        
+        if ("release".equalsIgnoreCase(buildType)) {
+            // Replace debug with release mode
+            return baseBuildArg.replaceAll("-m\\s+debug", "-m release");
+        } else {
+            // Default to debug mode  
+            return baseBuildArg.replaceAll("-m\\s+release", "-m debug");
+        }
+    }
+    
+    private String getBuildDirectory(String buildType) {
+        if ("release".equalsIgnoreCase(buildType)) {
+            return conf.getProperty("cubrid.build.dir.release", "build_x86_64_release");
+        } else {
+            return conf.getProperty("cubrid.build.dir.debug", "build_x86_64_debug");
+        }
+    }
+    
     private File createJudgeScript(String testPath, String buildType) throws Exception {
         // Extract test information
         String tcDir = shellTcDir + "/" + testPath.substring(0, testPath.lastIndexOf("/"));
         String tcScript = testPath.substring(testPath.lastIndexOf("/") + 1);
         String tcName = tcScript.replace(".sh", "");
         String tcResult = tcName + ".result";
+        
+        // Get build configuration based on buildType
+        String buildArguments = getBuildArguments(buildType);
+        String buildDirectory = getBuildDirectory(buildType);
         
         // Create judge script
         File judgeScript = File.createTempFile("judge_", ".sh");
@@ -190,8 +225,8 @@ public class BisectWorker implements MessageListener {
         writer.write("git submodule foreach git reset --hard HEAD\n");
         writer.write("git submodule update\n");
         writer.write("rm -rf cubridmanager/*  # temporary: currently, cubridmanager fails compilation on Rocky 8\n");
-        writer.write("rm -rf " + cubridBuildDir + "  # for clean rebuild\n");
-        writer.write("./build.sh " + cubridBuildArg + "\n");
+        writer.write("rm -rf " + buildDirectory + "  # for clean rebuild\n");
+        writer.write("./build.sh " + buildArguments + "\n");
         writer.write("cd " + tcDir + "\n");
         writer.write("rm -f " + tcResult + "  # if any\n");
         writer.write("sh " + tcScript + " || true\n");
