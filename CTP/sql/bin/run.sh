@@ -672,7 +672,7 @@ function do_configure()
           then
                db_charset="ko_KR.euckr"
           else
-               if [ $cubrid_ver_p1 -ge 11 ] && [ $cubrid_ver_p2 -ge 5 ]
+               if [ $cubrid_ver_p1 -ge 11 ] && [ $cubrid_ver_p2 -ge 5 ] && [ "$scenario_category" = "sql" -o "$scenario_category" = "sql_by_cci" ]
                then
                     db_charset="en_US.utf8"
                else
