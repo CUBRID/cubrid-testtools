@@ -41,7 +41,7 @@ public class ShellHelper {
 		if (context.isExecuteAtLocal()) {
 			String circleNodeIndex = System.getenv("CIRCLE_NODE_INDEX");
 			if (circleNodeIndex != null && !circleNodeIndex.trim().isEmpty()) {
-				title = circleNodeIndex;
+				title = "parallel-"+circleNodeIndex;
 			} else {
 				title = "local";
 			}
