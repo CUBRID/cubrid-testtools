@@ -39,7 +39,12 @@ public class ShellHelper {
 	public final static String getTestNodeTitle(Context context, String envId, String host) {
 		String title;
 		if (context.isExecuteAtLocal()) {
-			title = "local";
+			String circleNodeIndex = System.getenv("CIRCLE_NODE_INDEX");
+			if (circleNodeIndex != null && !circleNodeIndex.trim().isEmpty()) {
+				title = circleNodeIndex;
+			} else {
+				title = "local";
+			}
 		} else {
 			String port = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_PORT_SUFFIX);
 			String user = context.getInstanceProperty(envId, ConfigParameterConstants.TEST_INSTANCE_USER_SUFFIX);
