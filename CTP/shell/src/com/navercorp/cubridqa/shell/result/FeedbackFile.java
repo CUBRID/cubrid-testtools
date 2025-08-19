@@ -27,10 +27,15 @@
 package com.navercorp.cubridqa.shell.result;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
+
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
@@ -47,6 +52,7 @@ public class FeedbackFile implements Feedback {
 
 	String logName;
 	String statusLogName;
+	String xmlLogName;
 	Log feedbackLog;
 	Log statusLog;
 	long taskStartTime;
@@ -57,10 +63,16 @@ public class FeedbackFile implements Feedback {
 	int totalSuccNum = 0;
 	int totalFailNum = 0;
 	int totalSkipNum = 0;
+	
+	// XML StAX writer for streaming XML generation
+	private XMLStreamWriter xmlWriter;
+	private FileOutputStream xmlFileStream;
+	private boolean xmlInitialized = false;
 
 	public FeedbackFile(Context context) {
 		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
 		statusLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test_status.data");
+		xmlLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test-" + context.getTestCategory() + ".xml");
 		this.context = context;
 	}
 
@@ -75,6 +87,9 @@ public class FeedbackFile implements Feedback {
 		taskStartTime = System.currentTimeMillis();
 		println("[Task Id] is " + this.task_id);
 		println("[TASK START] Current Time is " + new Date() + ", start MSG Id is " + this.context.getMsgId());
+		
+		// Initialize XML output
+		initializeXmlWriter();
 	}
 
 	@Override
@@ -93,6 +108,9 @@ public class FeedbackFile implements Feedback {
 		initStatisticsForContinue();
 		println("[Task Id] is " + this.task_id);
 		println("[TASK CONTINUE] Current Time is " + new Date());
+		
+		// Initialize XML output for continue mode
+		initializeXmlWriter();
 
 	}
 
@@ -102,6 +120,10 @@ public class FeedbackFile implements Feedback {
 
 		long taskStopTime = System.currentTimeMillis();
 		println("[TEST STOP] Current Time is " + new Date(), "Elapse Time:" + ((taskStopTime - this.taskStartTime)));
+		
+		// Finalize and close XML output
+		finalizeXmlWriter();
+		
 		feedbackLog.close();
 	}
 
@@ -116,6 +138,10 @@ public class FeedbackFile implements Feedback {
 		System.out.println("Test Category:" + context.getTestCategory());
 		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
 		System.out.println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
+		
+		// Start testsuite element now that we know the test counts
+		writeTestSuiteStart();
+		
 		updateTestingStatistics();
 	}
 
@@ -184,19 +210,31 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
 		String head;
+		double timeInSeconds = elapseTime / 1000.0;
+		
 		if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
 			head = flag ? "[OK]: " : "[NOK]: " + Constants.RETRY_FLAG + " = " + retryCount;
 			if (flag) {
 				this.totalSuccNum++;
+				// Write XML for successful test
+				writeTestCase(testCase, envIdentify, timeInSeconds, null, null, null);
 			} else {
 				this.totalFailNum++;
+				// Write XML for failed test
+				writeTestCase(testCase, envIdentify, timeInSeconds, "failure", "Test failed", resultCont);
 			}
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_MACRO)) {
 			head = "[SKIP_BY_MACRO]";
+			// Write XML for skipped test by macro
+			writeTestCase(testCase, envIdentify, 0.0, "skipped", "Skipped by macro", null);
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_TEMP)) {
 			head = "[SKIP_BY_BUG]";
+			// Write XML for skipped test by bug
+			writeTestCase(testCase, envIdentify, 0.0, "skipped", "Skipped by bug", null);
 		} else {
 			head = "[UNKNOWN]";
+			// Write XML for unknown status
+			writeTestCase(testCase, envIdentify, timeInSeconds, "error", "Unknown test status", null);
 		}
 
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
@@ -208,6 +246,10 @@ public class FeedbackFile implements Feedback {
 			int retryCount) {
 		String head;
 		head = flag ? "[OK]: " : "[NOK]: ";
+		
+		// Do not write retry attempts to XML - only log to feedback.log
+		// XML should only contain the final result from onTestCaseStopEvent
+		
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, " (" + Constants.RETRY_FLAG + " = " + retryCount + ")");
 	}
 
@@ -304,13 +346,189 @@ public class FeedbackFile implements Feedback {
 			collectCoverageOnOneNode(this.context, envIdentify, host);
 
 			ArrayList<String> relatedHosts = context.getRelatedHosts(envIdentify);
-			int idx = 0;
 			for (String h : relatedHosts) {
 				collectCoverageOnOneNode(this.context, envIdentify, h);
-				idx++;
 			}
 
 		}
 
+	}
+	
+	/**
+	 * Initialize XML StAX writer and write document header
+	 */
+	private void initializeXmlWriter() {
+		if (xmlInitialized) {
+			return;
+		}
+		
+		try {
+			xmlFileStream = new FileOutputStream(xmlLogName);
+			XMLOutputFactory factory = XMLOutputFactory.newInstance();
+			xmlWriter = factory.createXMLStreamWriter(xmlFileStream, "UTF-8");
+			
+			// Write XML declaration
+			xmlWriter.writeStartDocument("UTF-8", "1.0");
+			xmlWriter.writeCharacters("\n");
+			
+			// Write root element
+			xmlWriter.writeStartElement("testsuites");
+			xmlWriter.writeCharacters("\n");
+			
+			xmlInitialized = true;
+			
+		} catch (XMLStreamException e) {
+			System.err.println("Error initializing XML writer: " + e.getMessage());
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.err.println("Error initializing XML writer: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Write testsuite start element with attributes
+	 */
+	private void writeTestSuiteStart() {
+		if (!xmlInitialized || xmlWriter == null) {
+			return;
+		}
+		
+		try {
+			xmlWriter.writeCharacters("  ");
+			xmlWriter.writeStartElement("testsuite");
+			xmlWriter.writeAttribute("name", context.getTestCategory());
+			xmlWriter.writeAttribute("tests", String.valueOf(this.totalCaseNum));
+			// xmlWriter.writeAttribute("failures", "0"); // Will be updated in statistics
+			// xmlWriter.writeAttribute("errors", "0");
+			xmlWriter.writeAttribute("skipped", String.valueOf(this.totalSkipNum));
+			// xmlWriter.writeAttribute("time", "0"); // Will be calculated at end
+			xmlWriter.writeAttribute("timestamp", new Date().toString());
+			xmlWriter.writeCharacters("\n");
+			
+		} catch (XMLStreamException e) {
+			System.err.println("Error writing testsuite start: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Write testcase element
+	 */
+	private void writeTestCase(String testCase, String envIdentify, double timeInSeconds, 
+			String resultType, String message, String details) {
+		if (!xmlInitialized || xmlWriter == null) {
+			return;
+		}
+		
+		try {
+			xmlWriter.writeCharacters("   ");
+			xmlWriter.writeStartElement("testcase");
+			xmlWriter.writeAttribute("classname", envIdentify != null ? envIdentify : "");
+			xmlWriter.writeAttribute("name", extractRelativePath(testCase));
+			xmlWriter.writeAttribute("file", testCase);
+			xmlWriter.writeAttribute("time", String.valueOf(timeInSeconds));
+			
+			// Add result element if needed
+			if (resultType != null) {
+				xmlWriter.writeCharacters("\n      ");
+				xmlWriter.writeStartElement(resultType);
+				if (message != null) {
+					xmlWriter.writeAttribute("message", message);
+				}
+				if ("failure".equals(resultType)) {
+					xmlWriter.writeAttribute("type", "TestFailure");
+				} else if ("error".equals(resultType)) {
+					xmlWriter.writeAttribute("type", "UnknownStatus");
+				}
+				
+				// Add details as child elements or comments
+				if (details != null && !details.trim().isEmpty()) {
+					xmlWriter.writeCharacters("\n        ");
+					xmlWriter.writeComment(" Failure description or stack trace ");
+					xmlWriter.writeCharacters("\n        ");
+					xmlWriter.writeCData(details);
+					xmlWriter.writeCharacters("\n      ");
+				}
+				
+				xmlWriter.writeEndElement(); // End result element
+				xmlWriter.writeCharacters("\n    ");
+			}
+			
+			xmlWriter.writeEndElement(); // End testcase element
+			xmlWriter.writeCharacters("\n");
+			
+		} catch (XMLStreamException e) {
+			System.err.println("Error writing testcase: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+		
+	/**
+	 * Finalize XML document and close writer
+	 */
+	private void finalizeXmlWriter() {
+		if (!xmlInitialized || xmlWriter == null) {
+			return;
+		}
+		
+		try {
+			// End testsuite element
+			xmlWriter.writeCharacters("  ");
+			xmlWriter.writeEndElement(); // End testsuite
+			xmlWriter.writeCharacters("\n");
+			
+			// End testsuites element
+			xmlWriter.writeEndElement(); // End testsuites
+			xmlWriter.writeCharacters("\n");
+			
+			// End document
+			xmlWriter.writeEndDocument();
+			
+			// Close resources
+			xmlWriter.flush();
+			xmlWriter.close();
+			xmlFileStream.close();
+			
+		} catch (XMLStreamException e) {
+			System.err.println("Error finalizing XML writer: " + e.getMessage());
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.err.println("Error finalizing XML writer: " + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			xmlInitialized = false;
+		}
+	}
+	
+	/**
+	 * Extract relative path from testCase starting from the test category
+	 * Example: /home/cubrid-testcases-private-ex/shell/_01_utility/_01_sqlx/bug_xdbms_sus1198/cases/bug_xdbms_sus1198.sh
+	 * Returns: shell/_01_utility/_01_sqlx/bug_xdbms_sus1198/cases/bug_xdbms_sus1198.sh
+	 */
+	private String extractRelativePath(String testCase) {
+		if (testCase == null) {
+			return "";
+		}
+		
+		String testCategory = context.getTestCategory();
+		if (testCategory == null) {
+			return testCase;
+		}
+		
+		// Find the position of test category in the path
+		int categoryIndex = testCase.indexOf("/" + testCategory + "/");
+		if (categoryIndex != -1) {
+			// Extract from category onwards (including category)
+			return testCase.substring(categoryIndex + 1); // +1 to skip the leading slash
+		}
+		
+		// If category not found in the path, check if testCase starts with category
+		if (testCase.startsWith(testCategory + "/")) {
+			return testCase;
+		}
+		
+		// If still not found, return the original testCase
+		return testCase;
 	}
 }
