@@ -37,10 +37,9 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
-
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
+import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -66,10 +65,9 @@ public class FeedbackFile implements Feedback {
 	int totalFailNum = 0;
 	int totalSkipNum = 0;
 	
-	// XML StAX writer for streaming XML generation
-	private XMLStreamWriter xmlWriter;
-	private FileOutputStream xmlFileStream;
-	private boolean xmlInitialized = false;
+	XMLStreamWriter xmlWriter;
+	FileOutputStream xmlFileStream;
+	boolean xmlInitialized = false;
 
 	public FeedbackFile(Context context) {
 		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
@@ -90,7 +88,6 @@ public class FeedbackFile implements Feedback {
 		println("[Task Id] is " + this.task_id);
 		println("[TASK START] Current Time is " + new Date() + ", start MSG Id is " + this.context.getMsgId());
 		
-		// Initialize XML output
 		initializeXmlWriter();
 	}
 
@@ -111,7 +108,6 @@ public class FeedbackFile implements Feedback {
 		println("[Task Id] is " + this.task_id);
 		println("[TASK CONTINUE] Current Time is " + new Date());
 		
-		// Initialize XML output for continue mode
 		initializeXmlWriter();
 
 	}
@@ -123,7 +119,6 @@ public class FeedbackFile implements Feedback {
 		long taskStopTime = System.currentTimeMillis();
 		println("[TEST STOP] Current Time is " + new Date(), "Elapse Time:" + ((taskStopTime - this.taskStartTime)));
 		
-		// Finalize and close XML output
 		finalizeXmlWriter();
 		
 		feedbackLog.close();
@@ -141,10 +136,9 @@ public class FeedbackFile implements Feedback {
 		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
 		System.out.println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
 		
-		// Start testsuite element now that we know the test counts
 		writeTestSuiteStart();
-		
-		updateTestingStatistics();
+
+		updateTestingStatistics();				
 	}
 
 	public void showTestResult() {
@@ -218,24 +212,19 @@ public class FeedbackFile implements Feedback {
 			head = flag ? "[OK]: " : "[NOK]: " + Constants.RETRY_FLAG + " = " + retryCount;
 			if (flag) {
 				this.totalSuccNum++;
-				// Write XML for successful test
 				writeTestCase(testCase, envIdentify, timeInSeconds, null, null, null);
 			} else {
 				this.totalFailNum++;
-				// Write XML for failed test
 				writeTestCase(testCase, envIdentify, timeInSeconds, "failure", "Test failed", resultCont);
 			}
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_MACRO)) {
 			head = "[SKIP_BY_MACRO]";
-			// Write XML for skipped test by macro
 			writeTestCase(testCase, envIdentify, 0.0, "skipped", "Skipped by macro", null);
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_TEMP)) {
 			head = "[SKIP_BY_BUG]";
-			// Write XML for skipped test by bug
 			writeTestCase(testCase, envIdentify, 0.0, "skipped", "Skipped by bug", null);
 		} else {
 			head = "[UNKNOWN]";
-			// Write XML for unknown status
 			writeTestCase(testCase, envIdentify, timeInSeconds, "error", "Unknown test status", null);
 		}
 
@@ -250,7 +239,6 @@ public class FeedbackFile implements Feedback {
 		head = flag ? "[OK]: " : "[NOK]: ";
 		
 		// Do not write retry attempts to XML - only log to feedback.log
-		// XML should only contain the final result from onTestCaseStopEvent
 		
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, " (" + Constants.RETRY_FLAG + " = " + retryCount + ")");
 	}
@@ -356,27 +344,19 @@ public class FeedbackFile implements Feedback {
 
 	}
 	
-	/**
-	 * Initialize XML StAX writer and write document header
-	 */
 	private void initializeXmlWriter() {
 		if (xmlInitialized) {
 			return;
 		}
-		
+
 		try {
 			xmlFileStream = new FileOutputStream(xmlLogName);
 			XMLOutputFactory factory = XMLOutputFactory.newInstance();
 			XMLStreamWriter baseWriter = factory.createXMLStreamWriter(xmlFileStream, "UTF-8");
 			xmlWriter = new IndentingXMLStreamWriter(baseWriter);
-			// Write XML declaration
 			xmlWriter.writeStartDocument("UTF-8", "1.0");
-			
-			// Write root element
 			xmlWriter.writeStartElement("testsuites");
-			
 			xmlInitialized = true;
-			
 		} catch (XMLStreamException e) {
 			System.err.println("Error initializing XML writer: " + e.getMessage());
 			e.printStackTrace();
@@ -386,47 +366,35 @@ public class FeedbackFile implements Feedback {
 		}
 	}
 	
-	/**
-	 * Write testsuite start element with attributes
-	 */
 	private void writeTestSuiteStart() {
 		if (!xmlInitialized || xmlWriter == null) {
 			return;
 		}
-		
+
 		try {
 			xmlWriter.writeStartElement("testsuite");
 			xmlWriter.writeAttribute("name", context.getTestCategory());
 			xmlWriter.writeAttribute("tests", String.valueOf(this.totalCaseNum));
-			xmlWriter.writeAttribute("failures", "0"); // Will be updated in statistics
-			xmlWriter.writeAttribute("errors", "0");
 			xmlWriter.writeAttribute("skipped", String.valueOf(this.totalSkipNum));
-			xmlWriter.writeAttribute("time", "0"); // Will be calculated at end
 			xmlWriter.writeAttribute("timestamp", new Date().toString());
-			
 		} catch (XMLStreamException e) {
 			System.err.println("Error writing testsuite start: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
 	
-	/**
-	 * Write testcase element
-	 */
-	private void writeTestCase(String testCase, String envIdentify, double timeInSeconds, 
-			String resultType, String message, String details) {
+	private void writeTestCase(String testCase, String envIdentify, double timeInSeconds, String resultType, String message, String details) {
 		if (!xmlInitialized || xmlWriter == null) {
 			return;
 		}
-		
+
 		try {
 			xmlWriter.writeStartElement("testcase");
 			xmlWriter.writeAttribute("classname", extractRelativePath(testCase, "url"));
 			xmlWriter.writeAttribute("name", extractRelativePath(testCase, "name"));
 			xmlWriter.writeAttribute("file", testCase);
 			xmlWriter.writeAttribute("time", String.valueOf(timeInSeconds));
-			
-			// Add result element if needed
+
 			if (resultType != null) {
 				xmlWriter.writeStartElement(resultType);
 				if (message != null) {
@@ -437,16 +405,12 @@ public class FeedbackFile implements Feedback {
 				} else if ("error".equals(resultType)) {
 					xmlWriter.writeAttribute("type", "UnknownStatus");
 				}
-				
-				// Add details as child elements or comments
+
 				if (details != null && !details.trim().isEmpty()) {
-					xmlWriter.writeComment(" Failure description or stack trace ");
-					xmlWriter.writeCData(details);
+					xmlWriter.writeCData("\n" + details + "\n");
 				}
-				
 				xmlWriter.writeEndElement(); // End result element
 			}
-			
 			xmlWriter.writeEndElement(); // End testcase element
 			
 		} catch (XMLStreamException e) {
@@ -455,81 +419,49 @@ public class FeedbackFile implements Feedback {
 		}
 	}
 		
-	/**
-	 * Finalize XML document and close writer
-	 */
 	private void finalizeXmlWriter() {
 		if (!xmlInitialized || xmlWriter == null) {
 			return;
 		}
-		
+
 		try {
-			// End testsuite element
 			xmlWriter.writeEndElement(); // End testsuite
-			
-			// End testsuites element
 			xmlWriter.writeEndElement(); // End testsuites
-			
-			// End document
 			xmlWriter.writeEndDocument();
 			xmlWriter.flush();
 			xmlWriter.close();
 			xmlFileStream.close();
-			
 		} catch (XMLStreamException e) {
 			System.err.println("Error finalizing XML writer: " + e.getMessage());
 			e.printStackTrace();
 		} catch (IOException e) {
 			System.err.println("Error closing XML file: " + e.getMessage());
 			e.printStackTrace();
-		} catch (Exception e) {
-			System.err.println("Error formatting XML: " + e.getMessage());
-			e.printStackTrace();
 		} finally {
 			xmlInitialized = false;
 		}
 	}
 	
-	/**
-	 * Extract relative path from testCase starting from the test category or generate GitHub URL
-	 * Example: /home/cubrid-testcases-private-ex/shell/_01_utility/_01_sqlx/bug_xdbms_sus1198/cases/bug_xdbms_sus1198.sh
-	 * type="name": Returns shell/_01_utility/_01_sqlx/bug_xdbms_sus1198/cases/bug_xdbms_sus1198.sh
-	 * type="url": Returns https://github.com/CUBRID/cubrid-testcases-private-ex/blob/develop/shell/_01_utility/_01_sqlx/bug_xdbms_sus1198/cases/bug_xdbms_sus1198.sh
-	 */
 	private String extractRelativePath(String testCase, String type) {
-		if (testCase == null) {
-			return "";
+		if (testCase == null || context.getTestCategory() == null) {
+			return testCase == null ? "" : testCase;
 		}
-		
+
 		String testCategory = context.getTestCategory();
-		if (testCategory == null) {
-			return testCase;
-		}
-		
-		// Find the position of test category in the path
+		String relativePath = testCase;
+
+		// Find testCategory in path and extract relative path
 		int categoryIndex = testCase.indexOf("/" + testCategory + "/");
-		String relativePath;
-		
 		if (categoryIndex != -1) {
-			// Extract from category onwards (including category)
-			relativePath = testCase.substring(categoryIndex + 1); // +1 to skip the leading slash
-		} else if (testCase.startsWith(testCategory + "/")) {
-			relativePath = testCase;
-		} else {
-			// If still not found, return the original testCase
-			if ("url".equals(type)) {
-				return testCase; // Cannot generate URL for non-standard path
-			}
-			return testCase;
+			relativePath = testCase.substring(categoryIndex + 1);
+		} else if (!testCase.startsWith(testCategory + "/")) {
+			return testCase; // Cannot extract relative path
 		}
-		
-		// Return based on requested type
+
+		// Return GitHub URL or relative path based on type
 		if ("url".equals(type)) {
-			// Generate GitHub URL
 			return "https://github.com/CUBRID/cubrid-testcases-private-ex/blob/develop/" + relativePath;
-		} else {
-			// Default: return name (relative path)
-			return relativePath;
 		}
+		return relativePath;
 	}
 }
