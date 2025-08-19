@@ -365,15 +365,17 @@ public class FeedbackFile implements Feedback {
 		try {
 			xmlFileStream = new FileOutputStream(xmlLogName);
 			XMLOutputFactory factory = XMLOutputFactory.newInstance();
+			
+			// Set indentation properties
+			factory.setProperty("javax.xml.stream.isRepairingNamespaces", Boolean.FALSE);
+			
 			xmlWriter = factory.createXMLStreamWriter(xmlFileStream, "UTF-8");
 			
 			// Write XML declaration
 			xmlWriter.writeStartDocument("UTF-8", "1.0");
-			xmlWriter.writeCharacters("\n");
 			
 			// Write root element
 			xmlWriter.writeStartElement("testsuites");
-			xmlWriter.writeCharacters("\n");
 			
 			xmlInitialized = true;
 			
@@ -395,7 +397,6 @@ public class FeedbackFile implements Feedback {
 		}
 		
 		try {
-			xmlWriter.writeCharacters("  ");
 			xmlWriter.writeStartElement("testsuite");
 			xmlWriter.writeAttribute("name", context.getTestCategory());
 			xmlWriter.writeAttribute("tests", String.valueOf(this.totalCaseNum));
@@ -404,7 +405,6 @@ public class FeedbackFile implements Feedback {
 			xmlWriter.writeAttribute("skipped", String.valueOf(this.totalSkipNum));
 			// xmlWriter.writeAttribute("time", "0"); // Will be calculated at end
 			xmlWriter.writeAttribute("timestamp", new Date().toString());
-			xmlWriter.writeCharacters("\n");
 			
 		} catch (XMLStreamException e) {
 			System.err.println("Error writing testsuite start: " + e.getMessage());
@@ -422,16 +422,14 @@ public class FeedbackFile implements Feedback {
 		}
 		
 		try {
-			xmlWriter.writeCharacters("   ");
 			xmlWriter.writeStartElement("testcase");
-			xmlWriter.writeAttribute("classname", envIdentify != null ? envIdentify : "");
-			xmlWriter.writeAttribute("name", extractRelativePath(testCase));
+			xmlWriter.writeAttribute("classname", extractRelativePath(testCase, "url"));
+			xmlWriter.writeAttribute("name", extractRelativePath(testCase, "name"));
 			xmlWriter.writeAttribute("file", testCase);
 			xmlWriter.writeAttribute("time", String.valueOf(timeInSeconds));
 			
 			// Add result element if needed
 			if (resultType != null) {
-				xmlWriter.writeCharacters("\n      ");
 				xmlWriter.writeStartElement(resultType);
 				if (message != null) {
 					xmlWriter.writeAttribute("message", message);
@@ -444,19 +442,14 @@ public class FeedbackFile implements Feedback {
 				
 				// Add details as child elements or comments
 				if (details != null && !details.trim().isEmpty()) {
-					xmlWriter.writeCharacters("\n        ");
 					xmlWriter.writeComment(" Failure description or stack trace ");
-					xmlWriter.writeCharacters("\n        ");
 					xmlWriter.writeCData(details);
-					xmlWriter.writeCharacters("\n      ");
 				}
 				
 				xmlWriter.writeEndElement(); // End result element
-				xmlWriter.writeCharacters("\n    ");
 			}
 			
 			xmlWriter.writeEndElement(); // End testcase element
-			xmlWriter.writeCharacters("\n");
 			
 		} catch (XMLStreamException e) {
 			System.err.println("Error writing testcase: " + e.getMessage());
@@ -474,13 +467,10 @@ public class FeedbackFile implements Feedback {
 		
 		try {
 			// End testsuite element
-			xmlWriter.writeCharacters("  ");
 			xmlWriter.writeEndElement(); // End testsuite
-			xmlWriter.writeCharacters("\n");
 			
 			// End testsuites element
 			xmlWriter.writeEndElement(); // End testsuites
-			xmlWriter.writeCharacters("\n");
 			
 			// End document
 			xmlWriter.writeEndDocument();
@@ -502,11 +492,12 @@ public class FeedbackFile implements Feedback {
 	}
 	
 	/**
-	 * Extract relative path from testCase starting from the test category
+	 * Extract relative path from testCase starting from the test category or generate GitHub URL
 	 * Example: /home/cubrid-testcases-private-ex/shell/_01_utility/_01_sqlx/bug_xdbms_sus1198/cases/bug_xdbms_sus1198.sh
-	 * Returns: shell/_01_utility/_01_sqlx/bug_xdbms_sus1198/cases/bug_xdbms_sus1198.sh
+	 * type="name": Returns shell/_01_utility/_01_sqlx/bug_xdbms_sus1198/cases/bug_xdbms_sus1198.sh
+	 * type="url": Returns https://github.com/CUBRID/cubrid-testcases-private-ex/blob/develop/shell/_01_utility/_01_sqlx/bug_xdbms_sus1198/cases/bug_xdbms_sus1198.sh
 	 */
-	private String extractRelativePath(String testCase) {
+	private String extractRelativePath(String testCase, String type) {
 		if (testCase == null) {
 			return "";
 		}
@@ -518,17 +509,28 @@ public class FeedbackFile implements Feedback {
 		
 		// Find the position of test category in the path
 		int categoryIndex = testCase.indexOf("/" + testCategory + "/");
+		String relativePath;
+		
 		if (categoryIndex != -1) {
 			// Extract from category onwards (including category)
-			return testCase.substring(categoryIndex + 1); // +1 to skip the leading slash
-		}
-		
-		// If category not found in the path, check if testCase starts with category
-		if (testCase.startsWith(testCategory + "/")) {
+			relativePath = testCase.substring(categoryIndex + 1); // +1 to skip the leading slash
+		} else if (testCase.startsWith(testCategory + "/")) {
+			relativePath = testCase;
+		} else {
+			// If still not found, return the original testCase
+			if ("url".equals(type)) {
+				return testCase; // Cannot generate URL for non-standard path
+			}
 			return testCase;
 		}
 		
-		// If still not found, return the original testCase
-		return testCase;
+		// Return based on requested type
+		if ("url".equals(type)) {
+			// Generate GitHub URL
+			return "https://github.com/CUBRID/cubrid-testcases-private-ex/blob/develop/" + relativePath;
+		} else {
+			// Default: return name (relative path)
+			return relativePath;
+		}
 	}
 }
