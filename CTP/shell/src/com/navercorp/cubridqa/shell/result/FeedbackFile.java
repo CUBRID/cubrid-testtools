@@ -407,6 +407,8 @@ public class FeedbackFile implements Feedback {
 				}
 
 				if (details != null && !details.trim().isEmpty()) {
+					String hostname = System.getenv("HOSTNAME");
+					details = "EnvIdentify: " + envIdentify + "\nHostname: " + hostname + "\n" + details;
 					xmlWriter.writeCData("\n" + details + "\n");
 				}
 				xmlWriter.writeEndElement(); // End result element
