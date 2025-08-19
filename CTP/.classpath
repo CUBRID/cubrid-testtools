@@ -48,5 +48,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="jdbc/lib/junit-4.8.2.jar"/>
 	<classpathentry kind="lib" path="common/lib/jsch-0.1.55.jar"/>
+	<classpathentry kind="lib" path="common/lib/txw2-20110809.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

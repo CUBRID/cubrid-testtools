@@ -37,6 +37,8 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
+
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
@@ -365,12 +367,8 @@ public class FeedbackFile implements Feedback {
 		try {
 			xmlFileStream = new FileOutputStream(xmlLogName);
 			XMLOutputFactory factory = XMLOutputFactory.newInstance();
-			
-			// Set indentation properties
-			factory.setProperty("javax.xml.stream.isRepairingNamespaces", Boolean.FALSE);
-			
-			xmlWriter = factory.createXMLStreamWriter(xmlFileStream, "UTF-8");
-			
+			XMLStreamWriter baseWriter = factory.createXMLStreamWriter(xmlFileStream, "UTF-8");
+			xmlWriter = new IndentingXMLStreamWriter(baseWriter);
 			// Write XML declaration
 			xmlWriter.writeStartDocument("UTF-8", "1.0");
 			
@@ -383,7 +381,7 @@ public class FeedbackFile implements Feedback {
 			System.err.println("Error initializing XML writer: " + e.getMessage());
 			e.printStackTrace();
 		} catch (IOException e) {
-			System.err.println("Error initializing XML writer: " + e.getMessage());
+			System.err.println("Error creating XML file: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -400,10 +398,10 @@ public class FeedbackFile implements Feedback {
 			xmlWriter.writeStartElement("testsuite");
 			xmlWriter.writeAttribute("name", context.getTestCategory());
 			xmlWriter.writeAttribute("tests", String.valueOf(this.totalCaseNum));
-			// xmlWriter.writeAttribute("failures", "0"); // Will be updated in statistics
-			// xmlWriter.writeAttribute("errors", "0");
+			xmlWriter.writeAttribute("failures", "0"); // Will be updated in statistics
+			xmlWriter.writeAttribute("errors", "0");
 			xmlWriter.writeAttribute("skipped", String.valueOf(this.totalSkipNum));
-			// xmlWriter.writeAttribute("time", "0"); // Will be calculated at end
+			xmlWriter.writeAttribute("time", "0"); // Will be calculated at end
 			xmlWriter.writeAttribute("timestamp", new Date().toString());
 			
 		} catch (XMLStreamException e) {
@@ -474,8 +472,6 @@ public class FeedbackFile implements Feedback {
 			
 			// End document
 			xmlWriter.writeEndDocument();
-			
-			// Close resources
 			xmlWriter.flush();
 			xmlWriter.close();
 			xmlFileStream.close();
@@ -484,7 +480,10 @@ public class FeedbackFile implements Feedback {
 			System.err.println("Error finalizing XML writer: " + e.getMessage());
 			e.printStackTrace();
 		} catch (IOException e) {
-			System.err.println("Error finalizing XML writer: " + e.getMessage());
+			System.err.println("Error closing XML file: " + e.getMessage());
+			e.printStackTrace();
+		} catch (Exception e) {
+			System.err.println("Error formatting XML: " + e.getMessage());
 			e.printStackTrace();
 		} finally {
 			xmlInitialized = false;
