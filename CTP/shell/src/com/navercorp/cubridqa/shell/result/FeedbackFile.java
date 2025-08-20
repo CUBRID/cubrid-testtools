@@ -27,13 +27,19 @@
 package com.navercorp.cubridqa.shell.result;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
 
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
+import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -47,6 +53,7 @@ public class FeedbackFile implements Feedback {
 
 	String logName;
 	String statusLogName;
+	String xmlLogName;
 	Log feedbackLog;
 	Log statusLog;
 	long taskStartTime;
@@ -57,10 +64,15 @@ public class FeedbackFile implements Feedback {
 	int totalSuccNum = 0;
 	int totalFailNum = 0;
 	int totalSkipNum = 0;
+	
+	XMLStreamWriter xmlWriter;
+	FileOutputStream xmlFileStream;
+	boolean xmlInitialized = false;
 
 	public FeedbackFile(Context context) {
 		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
 		statusLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test_status.data");
+		xmlLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test-" + context.getTestCategory() + ".xml");
 		this.context = context;
 	}
 
@@ -75,6 +87,8 @@ public class FeedbackFile implements Feedback {
 		taskStartTime = System.currentTimeMillis();
 		println("[Task Id] is " + this.task_id);
 		println("[TASK START] Current Time is " + new Date() + ", start MSG Id is " + this.context.getMsgId());
+		
+		initializeXmlWriter();
 	}
 
 	@Override
@@ -93,6 +107,8 @@ public class FeedbackFile implements Feedback {
 		initStatisticsForContinue();
 		println("[Task Id] is " + this.task_id);
 		println("[TASK CONTINUE] Current Time is " + new Date());
+		
+		initializeXmlWriter();
 
 	}
 
@@ -102,6 +118,9 @@ public class FeedbackFile implements Feedback {
 
 		long taskStopTime = System.currentTimeMillis();
 		println("[TEST STOP] Current Time is " + new Date(), "Elapse Time:" + ((taskStopTime - this.taskStartTime)));
+		
+		finalizeXmlWriter();
+		
 		feedbackLog.close();
 	}
 
@@ -116,7 +135,10 @@ public class FeedbackFile implements Feedback {
 		System.out.println("Test Category:" + context.getTestCategory());
 		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
 		System.out.println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
-		updateTestingStatistics();
+		
+		writeTestSuiteStart();
+
+		updateTestingStatistics();				
 	}
 
 	public void showTestResult() {
@@ -184,19 +206,26 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
 		String head;
+		double timeInSeconds = elapseTime / 1000.0;
+		
 		if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
 			head = flag ? "[OK]: " : "[NOK]: " + Constants.RETRY_FLAG + " = " + retryCount;
 			if (flag) {
 				this.totalSuccNum++;
+				writeTestCase(testCase, envIdentify, timeInSeconds, null, null, null);
 			} else {
 				this.totalFailNum++;
+				writeTestCase(testCase, envIdentify, timeInSeconds, "failure", "Test failed", resultCont);
 			}
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_MACRO)) {
 			head = "[SKIP_BY_MACRO]";
+			writeTestCase(testCase, envIdentify, 0.0, "skipped", "Skipped by macro", null);
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_TEMP)) {
 			head = "[SKIP_BY_BUG]";
+			writeTestCase(testCase, envIdentify, 0.0, "skipped", "Skipped by bug", null);
 		} else {
 			head = "[UNKNOWN]";
+			writeTestCase(testCase, envIdentify, timeInSeconds, "error", "Unknown test status", null);
 		}
 
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
@@ -208,6 +237,9 @@ public class FeedbackFile implements Feedback {
 			int retryCount) {
 		String head;
 		head = flag ? "[OK]: " : "[NOK]: ";
+		
+		// Do not write retry attempts to XML - only log to feedback.log
+		
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, " (" + Constants.RETRY_FLAG + " = " + retryCount + ")");
 	}
 
@@ -304,13 +336,134 @@ public class FeedbackFile implements Feedback {
 			collectCoverageOnOneNode(this.context, envIdentify, host);
 
 			ArrayList<String> relatedHosts = context.getRelatedHosts(envIdentify);
-			int idx = 0;
 			for (String h : relatedHosts) {
 				collectCoverageOnOneNode(this.context, envIdentify, h);
-				idx++;
 			}
 
 		}
 
+	}
+	
+	private void initializeXmlWriter() {
+		if (xmlInitialized) {
+			return;
+		}
+
+		try {
+			xmlFileStream = new FileOutputStream(xmlLogName);
+			XMLOutputFactory factory = XMLOutputFactory.newInstance();
+			XMLStreamWriter baseWriter = factory.createXMLStreamWriter(xmlFileStream, "UTF-8");
+			xmlWriter = new IndentingXMLStreamWriter(baseWriter);
+			xmlWriter.writeStartDocument("UTF-8", "1.0");
+			xmlWriter.writeStartElement("testsuites");
+			xmlInitialized = true;
+		} catch (XMLStreamException e) {
+			System.err.println("Error initializing XML writer: " + e.getMessage());
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.err.println("Error creating XML file: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	private void writeTestSuiteStart() {
+		if (!xmlInitialized || xmlWriter == null) {
+			return;
+		}
+
+		try {
+			xmlWriter.writeStartElement("testsuite");
+			xmlWriter.writeAttribute("name", context.getTestCategory());
+			xmlWriter.writeAttribute("tests", String.valueOf(this.totalCaseNum));
+			xmlWriter.writeAttribute("skipped", String.valueOf(this.totalSkipNum));
+			xmlWriter.writeAttribute("timestamp", new Date().toString());
+		} catch (XMLStreamException e) {
+			System.err.println("Error writing testsuite start: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	private void writeTestCase(String testCase, String envIdentify, double timeInSeconds, String resultType, String message, String details) {
+		if (!xmlInitialized || xmlWriter == null) {
+			return;
+		}
+
+		try {
+			xmlWriter.writeStartElement("testcase");
+			xmlWriter.writeAttribute("classname", extractRelativePath(testCase, "url"));
+			xmlWriter.writeAttribute("name", extractRelativePath(testCase, "name"));
+			xmlWriter.writeAttribute("file", testCase);
+			xmlWriter.writeAttribute("time", String.valueOf(timeInSeconds));
+
+			if (resultType != null) {
+				xmlWriter.writeStartElement(resultType);
+				if (message != null) {
+					xmlWriter.writeAttribute("message", message);
+				}
+				if ("failure".equals(resultType)) {
+					xmlWriter.writeAttribute("type", "TestFailure");
+				} else if ("error".equals(resultType)) {
+					xmlWriter.writeAttribute("type", "UnknownStatus");
+				}
+
+				if (details != null && !details.trim().isEmpty()) {
+					String hostname = System.getenv("HOSTNAME");
+					details = "EnvIdentify: " + envIdentify + "\nHostname: " + hostname + "\n" + details;
+					xmlWriter.writeCData("\n" + details + "\n");
+				}
+				xmlWriter.writeEndElement(); // End result element
+			}
+			xmlWriter.writeEndElement(); // End testcase element
+			
+		} catch (XMLStreamException e) {
+			System.err.println("Error writing testcase: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+		
+	private void finalizeXmlWriter() {
+		if (!xmlInitialized || xmlWriter == null) {
+			return;
+		}
+
+		try {
+			xmlWriter.writeEndElement(); // End testsuite
+			xmlWriter.writeEndElement(); // End testsuites
+			xmlWriter.writeEndDocument();
+			xmlWriter.flush();
+			xmlWriter.close();
+			xmlFileStream.close();
+		} catch (XMLStreamException e) {
+			System.err.println("Error finalizing XML writer: " + e.getMessage());
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.err.println("Error closing XML file: " + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			xmlInitialized = false;
+		}
+	}
+	
+	private String extractRelativePath(String testCase, String type) {
+		if (testCase == null || context.getTestCategory() == null) {
+			return testCase == null ? "" : testCase;
+		}
+
+		String testCategory = context.getTestCategory();
+		String relativePath = testCase;
+
+		// Find testCategory in path and extract relative path
+		int categoryIndex = testCase.indexOf("/" + testCategory + "/");
+		if (categoryIndex != -1) {
+			relativePath = testCase.substring(categoryIndex + 1);
+		} else if (!testCase.startsWith(testCategory + "/")) {
+			return testCase; // Cannot extract relative path
+		}
+
+		// Return GitHub URL or relative path based on type
+		if ("url".equals(type)) {
+			return "https://github.com/CUBRID/cubrid-testcases-private-ex/blob/develop/" + relativePath;
+		}
+		return relativePath;
 	}
 }
