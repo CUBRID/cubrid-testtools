@@ -667,20 +667,15 @@ function do_configure()
      curDir=`pwd`
      #get charset config
      db_charset=`ini -s sql ${config_file_main} db_charset`
-     if [ -z "$db_charset" ] || [ "$db_charset" = "en_US" ];then
-          if [ $cubrid_ver_p1 -ge 10 ] && [ "$scenario_category" == "site" ]
-          then
-               db_charset="ko_KR.euckr"
-          else
-               if [ $cubrid_ver_p1 -ge 11 ] && [ $cubrid_ver_p2 -ge 5 ] && [ "$scenario_category" = "sql" -o "$scenario_category" = "sql_by_cci" ]
-               then
-                    db_charset="en_US.utf8"
-               else
-                    db_charset="en_US.iso88591"
-               fi
+     if [ -z "$db_charset" ];then
+     	if [ $cubrid_ver_p1 -ge 10 ] && [ "$scenario_category" == "site" ]
+     	then
+  		db_charset="ko_KR.euckr"
+     	else
+  		db_charset="en_US.iso88591"
           fi
-     fi
-
+     fi 
+     
      LD_LIBRARY_PATH=$LD_LIBRARY_PATH
   
      java_version=`file $JAVA_HOME/bin/java|grep 64-bit|wc -l`
