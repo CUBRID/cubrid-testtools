@@ -679,7 +679,7 @@ function do_configure()
      # [CUBRIDQA-1287] Change the charset of the 'basic' database used in SQL tests
      # from iso88591 to utf8 starting from version 11.5+
      if [ "${scenario_category}" = "sql" ] || [ "${scenario_category}" = "sql_by_cci" ]; then
-        if [ $cubrid_ver_p1 -gt 11 ] || { [ $cubrid_ver_p1 -eq 11 ] && [ $cubrid_ver_p2 -ge 5 ]; }; then
+        if [ "${cubrid_ver_p1}" -gt 11 ] || { [ "${cubrid_ver_p1}" -eq 11 ] && [ "${cubrid_ver_p2}" -ge 5 ]; }; then
            db_charset="en_US.utf8"
         fi
      fi
