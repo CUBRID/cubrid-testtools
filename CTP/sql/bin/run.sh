@@ -673,9 +673,17 @@ function do_configure()
   		db_charset="ko_KR.euckr"
      	else
   		db_charset="en_US.iso88591"
-          fi
+        fi
      fi 
-     
+
+     # [CUBRIDQA-1287] Change the charset of the 'basic' database used in SQL tests
+     # from iso88591 to utf8 starting from version 11.5+
+     if [ "${scenario_category}" = "sql" ] || [ "${scenario_category}" = "sql_by_cci" ]; then
+        if [ "${cubrid_ver_p1}" -gt 11 ] || { [ "${cubrid_ver_p1}" -eq 11 ] && [ "${cubrid_ver_p2}" -ge 5 ]; }; then
+           db_charset="en_US.utf8"
+        fi
+     fi
+
      LD_LIBRARY_PATH=$LD_LIBRARY_PATH
   
      java_version=`file $JAVA_HOME/bin/java|grep 64-bit|wc -l`
