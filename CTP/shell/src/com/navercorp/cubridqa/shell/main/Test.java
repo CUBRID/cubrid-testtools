@@ -183,11 +183,21 @@ public class Test {
 				// Get current retry count for this test case
 				int currentRetryCount = Dispatch.getInstance().getRetryCount(this.testCaseFullName);
 				
-				// Always send final result
-				context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
-						Constants.SKIP_TYPE_NO, currentRetryCount);
-				System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
-						+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 && currentRetryCount > 0 ? ", " + Constants.RETRY_FLAG + currentRetryCount : "")));
+				// Send appropriate feedback based on retry status
+				if (currentRetryCount > 0) {
+					// This is a retry case - use onTestCaseStopEventForRetry (doesn't count in statistics)
+					context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
+							Constants.SKIP_TYPE_NO, currentRetryCount);
+					// Only show retry count in output for retry cases
+					System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
+							+ (testCaseSuccess ? "[OK]" : "[NOK]") + ", " + Constants.RETRY_FLAG + currentRetryCount);
+				} else {
+					// This is the first execution - use normal onTestCaseStopEvent (counts in statistics)
+					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
+							Constants.SKIP_TYPE_NO, currentRetryCount);
+					System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
+							+ (testCaseSuccess ? "[OK]" : "[NOK]"));
+				}
 
 				workerLog.println("");
 			}
