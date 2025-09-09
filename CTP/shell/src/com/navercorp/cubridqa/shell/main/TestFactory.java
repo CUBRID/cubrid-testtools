@@ -126,7 +126,6 @@ public class TestFactory {
 		this.testPool.shutdown();
 		this.configPool.shutdown();
 
-		// Final results will be updated by FeedbackFile.updateRetrySuccessStatistics()
 		
 		feedback.onTaskStopEvent();
 		CommonUtils.generateFailBackupPackage(context);
