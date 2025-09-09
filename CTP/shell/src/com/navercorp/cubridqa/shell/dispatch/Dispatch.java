@@ -62,6 +62,7 @@ public class Dispatch {
 	private ArrayList<String> retryQueue;
 	private int maxRetryCount;
 	private java.util.HashMap<String, Integer> retryCountMap;
+	private java.util.HashMap<String, Boolean> finalResultMap;
 
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
@@ -72,6 +73,7 @@ public class Dispatch {
 		this.retryQueue = new ArrayList<String>();
 		this.maxRetryCount = context.getMaxRetryCount();
 		this.retryCountMap = new java.util.HashMap<String, Integer>();
+		this.finalResultMap = new java.util.HashMap<String, Boolean>();
 		load();
 	}
 
@@ -125,6 +127,18 @@ public class Dispatch {
 	public synchronized Integer getRetryCount(String testCase) {
 		Integer count = retryCountMap.get(testCase);
 		return count != null ? count : 0;
+	}
+	
+	public synchronized void updateFinalResult(String testCase, boolean success) {
+		finalResultMap.put(testCase, success);
+	}
+	
+	public synchronized Boolean getFinalResult(String testCase) {
+		return finalResultMap.get(testCase);
+	}
+	
+	public ArrayList<String> getTbdList() {
+		return tbdList;
 	}
 
 	private void load() throws Exception {

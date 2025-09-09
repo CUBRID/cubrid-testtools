@@ -183,6 +183,9 @@ public class Test {
 				// Get current retry count for this test case
 				int currentRetryCount = Dispatch.getInstance().getRetryCount(this.testCaseFullName);
 				
+				// Update final result in Dispatch
+				Dispatch.getInstance().updateFinalResult(this.testCaseFullName, testCaseSuccess);
+				
 				// Send appropriate feedback based on retry status
 				if (currentRetryCount > 0) {
 					// This is a retry case - use onTestCaseStopEventForRetry (doesn't count in statistics)
