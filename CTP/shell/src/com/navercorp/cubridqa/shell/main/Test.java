@@ -123,100 +123,74 @@ public class Test {
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
 
-			boolean needRetry = true;
-			int retryCount = 0;
+			// Batch retry mode - execute once and add to retry queue if failed
+			/*
+			 * Reset test environment Kill CUBRID process, clear SSH and
+			 * clear result item list
+			 */
+			resetProcess();
+			resetCUBRID();
+			resetSSH();
+			startTime = -1;
+			if (this.context.enableCheckDiskSpace()) {
+				checkDiskSpace();
+			}
 
-			do {
-				/*
-				 * Reset test environment Kill CUBRID process, clear SSH and
-				 * clear result item list
-				 */
-				resetProcess();
-				resetCUBRID();
-				resetSSH();
-				startTime = -1;
-				if (this.context.enableCheckDiskSpace()) {
-					checkDiskSpace();
+			resultItemList.clear();
+			startTime = System.currentTimeMillis();
+			this.isTimeOut = false;
+			this.testCaseSuccess = true;
+			this.hasCore = false;
+
+			try {
+				consoleOutput = runTestCase();
+				doFinalCheck();
+				collectGeneralResult();
+			} catch (Exception e) {
+				this.addResultItem("NOK", "Runtime error (" + e.getMessage() + ")");
+			} finally {
+				endTime = System.currentTimeMillis();
+
+				StringBuffer resultCont = new StringBuffer();
+				for (String item : this.resultItemList) {
+					if (testCaseSuccess) {
+						if (item.indexOf("NOK") != -1) {
+							this.testCaseSuccess = false;
+						}
+					}
+					if (hasCore == false) {
+						if (item.indexOf("NOK found core file") != -1 || item.indexOf("NOK found fatal error") != -1) {
+							this.hasCore = true;
+						}
+					}
+
+					workerLog.println(item);
+					resultCont.append(item).append(Constants.LINE_SEPARATOR);
 				}
 
-				resultItemList.clear();
-				startTime = System.currentTimeMillis();
-				this.isTimeOut = false;
-				this.testCaseSuccess = true;
-				this.hasCore = false;
-
-				try {
-					consoleOutput = runTestCase();
-					doFinalCheck();
-					collectGeneralResult();
-				} catch (Exception e) {
-					this.addResultItem("NOK", "Runtime error (" + e.getMessage() + ")");
-				} finally {
-					endTime = System.currentTimeMillis();
-
-					StringBuffer resultCont = new StringBuffer();
-					for (String item : this.resultItemList) {
-						if (testCaseSuccess) {
-							if (item.indexOf("NOK") != -1) {
-								this.testCaseSuccess = false;
-							}
-						}
-						if (hasCore == false) {
-							if (item.indexOf("NOK found core file") != -1 || item.indexOf("NOK found fatal error") != -1) {
-								this.hasCore = true;
-							}
-						}
-
-						workerLog.println(item);
-						resultCont.append(item).append(Constants.LINE_SEPARATOR);
-					}
-
-					if (testCaseSuccess == false && hasCore == false && context.getEnableSaveNormalErrorLog() == true) {
-						String saveErrorLogResult = doSaveNormalErrorLog();
-						resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
-					}
-					if (testCaseSuccess == false) {
-						// System.out.println("Execute retry Time - " +
-						// retryCount + ", Max retry count - " + maxRetryCount);
-						// workerLog.println("Execute retry Time - " +
-						// retryCount + ", Max retry count - " + maxRetryCount);
-						if (hasCore) {
-							needRetry = false;
-						} else {
-							needRetry = true;
-						}
-
-						resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
-						resultCont.append(consoleOutput);
-
-					} else {
-						needRetry = false;
-					}
-					// If retryCount already reach the maxRetryCount, tool need
-					// stop retry
-					if (retryCount >= maxRetryCount) {
-						needRetry = false;
-					}
-
-					if (needRetry) {
-						/*
-						 * For each testing, the retry count just will be
-						 * updated as 1.
-						 */
-						context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
-								Constants.SKIP_TYPE_NO, retryCount);
-					} else {
-						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
-								Constants.SKIP_TYPE_NO, retryCount);
-						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
-								+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + retryCount : "")));
-					}
-
-					workerLog.println("");
-					retryCount++;
-
+				if (testCaseSuccess == false && hasCore == false && context.getEnableSaveNormalErrorLog() == true) {
+					String saveErrorLogResult = doSaveNormalErrorLog();
+					resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
 				}
-			} while (needRetry);
+				
+				// Add failed test case to retry queue (only if no core file and maxRetryCount > 0)
+				if (testCaseSuccess == false && hasCore == false && this.maxRetryCount > 0) {
+					Dispatch.getInstance().addFailedTestCaseForRetry(this.testCaseFullName);
+					resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
+					resultCont.append(consoleOutput);
+				}
+
+				// Get current retry count for this test case
+				int currentRetryCount = Dispatch.getInstance().getRetryCount(this.testCaseFullName);
+				
+				// Always send final result
+				context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
+						Constants.SKIP_TYPE_NO, currentRetryCount);
+				System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
+						+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 && currentRetryCount > 0 ? ", " + Constants.RETRY_FLAG + currentRetryCount : "")));
+
+				workerLog.println("");
+			}
 
 			if (needDropTestCase) {
 				dropTestCaseAfterTest();

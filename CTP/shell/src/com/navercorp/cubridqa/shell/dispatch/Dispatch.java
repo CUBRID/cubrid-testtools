@@ -57,6 +57,11 @@ public class Dispatch {
 	private Log all;
 
 	private boolean isFinished;
+	
+	// Batch retry related fields
+	private ArrayList<String> retryQueue;
+	private int maxRetryCount;
+	private java.util.HashMap<String, Integer> retryCountMap;
 
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
@@ -64,6 +69,9 @@ public class Dispatch {
 		this.totalTbdSize = 0;
 		this.isFinished = false;
 		this.nextTestFileIndex = -1;
+		this.retryQueue = new ArrayList<String>();
+		this.maxRetryCount = context.getMaxRetryCount();
+		this.retryCountMap = new java.util.HashMap<String, Integer>();
 		load();
 	}
 
@@ -76,20 +84,47 @@ public class Dispatch {
 	}
 
 	public synchronized String nextTestFile() {
-
 		if (isFinished)
 			return null;
 
-		if (totalTbdSize == 0 || this.nextTestFileIndex >= totalTbdSize) {
-			isFinished = true;
-			return null;
+		// First, process all normal test cases
+		if (this.nextTestFileIndex < totalTbdSize) {
+			if (this.nextTestFileIndex < 0) {
+				this.nextTestFileIndex = 0;
+			}
+			String nextTestFile = tbdList.get(this.nextTestFileIndex);
+			this.nextTestFileIndex++;
+			return nextTestFile;
 		}
-		if (this.nextTestFileIndex < 0) {
-			this.nextTestFileIndex = 0;
+
+		// After all normal cases are done, process retry cases
+		if (!retryQueue.isEmpty()) {
+			String retryTestFile = retryQueue.remove(0);
+			return retryTestFile;
 		}
-		String nextTestFile = tbdList.get(this.nextTestFileIndex);
-		this.nextTestFileIndex++;
-		return nextTestFile;
+
+		// All done
+		isFinished = true;
+		return null;
+	}
+	
+	public synchronized void addFailedTestCaseForRetry(String testCase) {
+		if (maxRetryCount > 0) {
+			Integer currentRetryCount = retryCountMap.get(testCase);
+			if (currentRetryCount == null) {
+				currentRetryCount = 0;
+			}
+			
+			if (currentRetryCount < maxRetryCount) {
+				retryQueue.add(testCase);
+				retryCountMap.put(testCase, currentRetryCount + 1);
+			}
+		}
+	}
+	
+	public synchronized Integer getRetryCount(String testCase) {
+		Integer count = retryCountMap.get(testCase);
+		return count != null ? count : 0;
 	}
 
 	private void load() throws Exception {
