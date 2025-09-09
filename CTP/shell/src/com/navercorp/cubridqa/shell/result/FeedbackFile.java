@@ -114,6 +114,9 @@ public class FeedbackFile implements Feedback {
 
 	@Override
 	public void onTaskStopEvent() {
+		// Update statistics for retry succeeded cases
+		updateRetrySuccessStatistics();
+		
 		showTestResult();
 
 		long taskStopTime = System.currentTimeMillis();
@@ -122,6 +125,28 @@ public class FeedbackFile implements Feedback {
 		finalizeXmlWriter();
 		
 		feedbackLog.close();
+	}
+	
+	private void updateRetrySuccessStatistics() {
+		if (context.getMaxRetryCount() > 0) {
+			com.navercorp.cubridqa.shell.dispatch.Dispatch dispatch = com.navercorp.cubridqa.shell.dispatch.Dispatch.getInstance();
+			int retrySuccessCount = 0;
+			
+			// Count how many cases were initially failed but ultimately succeeded
+			for (String testCase : dispatch.getTbdList()) {
+				Boolean finalResult = dispatch.getFinalResult(testCase);
+				Integer retryCount = dispatch.getRetryCount(testCase);
+				
+				// If this test case had retries and ultimately succeeded
+				if (retryCount != null && retryCount > 0 && finalResult != null && finalResult == true) {
+					retrySuccessCount++;
+				}
+			}
+			
+			// Adjust statistics: move retry succeeded cases from fail to success
+			this.totalFailNum -= retrySuccessCount;
+			this.totalSuccNum += retrySuccessCount;
+		}
 	}
 
 	@Override

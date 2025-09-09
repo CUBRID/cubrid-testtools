@@ -176,6 +176,12 @@ public class Test {
 				// Get current retry count for this test case (before adding to retry queue)
 				int currentRetryCount = Dispatch.getInstance().getRetryCount(this.testCaseFullName);
 				
+				// Add console output for failed cases BEFORE sending feedback
+				if (testCaseSuccess == false && hasCore == false && this.maxRetryCount > 0) {
+					resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
+					resultCont.append(consoleOutput);
+				}
+				
 				// Update final result in Dispatch
 				Dispatch.getInstance().updateFinalResult(this.testCaseFullName, testCaseSuccess);
 				
@@ -198,11 +204,6 @@ public class Test {
 				// Add failed test case to retry queue AFTER sending feedback (only if no core file and maxRetryCount > 0)
 				if (testCaseSuccess == false && hasCore == false && this.maxRetryCount > 0) {
 					Dispatch.getInstance().addFailedTestCaseForRetry(this.testCaseFullName);
-					if (currentRetryCount == 0) {
-						// Add console output only for initial failure
-						resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
-						resultCont.append(consoleOutput);
-					}
 				}
 
 				workerLog.println("");

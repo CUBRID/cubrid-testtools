@@ -126,8 +126,7 @@ public class TestFactory {
 		this.testPool.shutdown();
 		this.configPool.shutdown();
 
-		// Update final results for retry cases that succeeded
-		updateFinalResults();
+		// Final results will be updated by FeedbackFile.updateRetrySuccessStatistics()
 		
 		feedback.onTaskStopEvent();
 		CommonUtils.generateFailBackupPackage(context);
@@ -379,22 +378,4 @@ public class TestFactory {
 		return pass;
 	}
 	
-	private void updateFinalResults() {
-		// Update statistics for retry cases that succeeded
-		if (context.getMaxRetryCount() > 0) {
-			Dispatch dispatch = Dispatch.getInstance();
-			// Check each test case to see if it was originally failed but ultimately succeeded
-			for (String testCase : dispatch.getTbdList()) {
-				Boolean finalResult = dispatch.getFinalResult(testCase);
-				Integer retryCount = dispatch.getRetryCount(testCase);
-				
-				// If this test case had retries and ultimately succeeded
-				if (retryCount != null && retryCount > 0 && finalResult != null && finalResult == true) {
-					// This test case was initially failed but succeeded after retry
-					// We need to correct the statistics: -1 fail, +1 success
-					context.getFeedback().onTestCaseStopEvent(testCase, true, 0, "", "", false, false, Constants.SKIP_TYPE_NO, 0);
-				}
-			}
-		}
-	}
 }
