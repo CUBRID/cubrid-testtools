@@ -59,10 +59,7 @@ public class Dispatch {
 	private boolean isFinished;
 	
 	// Batch retry related fields
-	private ArrayList<String> retryQueue;
-	private int maxRetryCount;
 	private java.util.HashMap<String, Integer> retryCountMap;
-	private java.util.HashMap<String, Boolean> finalResultMap;
 
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
@@ -70,10 +67,7 @@ public class Dispatch {
 		this.totalTbdSize = 0;
 		this.isFinished = false;
 		this.nextTestFileIndex = -1;
-		this.retryQueue = new ArrayList<String>();
-		this.maxRetryCount = context.getMaxRetryCount();
 		this.retryCountMap = new java.util.HashMap<String, Integer>();
-		this.finalResultMap = new java.util.HashMap<String, Boolean>();
 		load();
 	}
 
@@ -100,8 +94,10 @@ public class Dispatch {
 		}
 
 		// After all normal cases are done, process retry cases
-		if (!retryQueue.isEmpty()) {
-			String retryTestFile = retryQueue.remove(0);
+		if (!retryCountMap.isEmpty()) {
+			// Get and remove first retry case
+			String retryTestFile = retryCountMap.keySet().iterator().next();
+			retryCountMap.remove(retryTestFile);
 			return retryTestFile;
 		}
 
@@ -111,16 +107,14 @@ public class Dispatch {
 	}
 	
 	public synchronized void addFailedTestCaseForRetry(String testCase) {
-		if (maxRetryCount > 0) {
-			Integer currentRetryCount = retryCountMap.get(testCase);
-			if (currentRetryCount == null) {
-				currentRetryCount = 0;
-			}
-			
-			if (currentRetryCount < maxRetryCount) {
-				retryQueue.add(testCase);
-				retryCountMap.put(testCase, currentRetryCount + 1);
-			}
+		Integer currentRetryCount = retryCountMap.get(testCase);
+		if (currentRetryCount == null) {
+			currentRetryCount = 0;
+		}
+		
+		// Only add if retry count is less than max retry count
+		if (currentRetryCount < context.getMaxRetryCount()) {
+			retryCountMap.put(testCase, currentRetryCount + 1);
 		}
 	}
 	
@@ -129,17 +123,6 @@ public class Dispatch {
 		return count != null ? count : 0;
 	}
 	
-	public synchronized void updateFinalResult(String testCase, boolean success) {
-		finalResultMap.put(testCase, success);
-	}
-	
-	public synchronized Boolean getFinalResult(String testCase) {
-		return finalResultMap.get(testCase);
-	}
-	
-	public ArrayList<String> getTbdList() {
-		return tbdList;
-	}
 
 	private void load() throws Exception {
 

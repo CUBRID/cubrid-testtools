@@ -122,6 +122,9 @@ public class Test {
 			context.getFeedback().onTestCaseStartEvent(this.testCaseFullName, envIdentify);
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
+			
+			// Get retry count at the beginning of test execution
+			int currentRetryCount = Dispatch.getInstance().getRetryCount(this.testCaseFullName);
 
 			// Batch retry mode - execute once and add to retry queue if failed
 			/*
@@ -173,55 +176,43 @@ public class Test {
 					resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
 				}
 				
-				// Get current retry count for this test case (before adding to retry queue)
-				int currentRetryCount = Dispatch.getInstance().getRetryCount(this.testCaseFullName);
+				// Use the retry count obtained at the beginning
 				
-				// Add console output for failed cases BEFORE sending feedback
-				if (testCaseSuccess == false && hasCore == false && this.maxRetryCount > 0) {
+				// Determine if this case needs retry
+				boolean needRetry = false;
+				if (testCaseSuccess == false) {
+					if (hasCore) {
+						needRetry = false;
+					} else {
+						needRetry = true;
+					}
+					
+					// Add console output for failed cases
 					resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
 					resultCont.append(consoleOutput);
 				}
 				
-				// Update final result in Dispatch
-				Dispatch.getInstance().updateFinalResult(this.testCaseFullName, testCaseSuccess);
+				// If retryCount already reach the maxRetryCount, tool need stop retry
+				if (currentRetryCount >= maxRetryCount) {
+					needRetry = false;
+				}
 				
 				// Send appropriate feedback based on retry status
-				if (currentRetryCount > 0) {
-					// This is a retry case - only update statistics and print if succeeded
-					if (testCaseSuccess) {
-						// Retry succeeded - update the original failed result to success
-						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, true, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
-								Constants.SKIP_TYPE_NO, 0);
-						// Print success message for final retry success
-						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " [OK]");
-					}
-					// Don't print anything for retry failures (quiet)
+				if (needRetry) {
+					// This is a retry case - use onTestCaseStopEventForRetry (doesn't count in statistics)
+					context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
+							Constants.SKIP_TYPE_NO, currentRetryCount);
 				} else {
-					// This is the first execution
-					if (testCaseSuccess) {
-						// First execution succeeded - normal handling
-						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
-								Constants.SKIP_TYPE_NO, currentRetryCount);
-						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " [OK]");
-					} else {
-						// First execution failed - only send feedback, don't print (will be quiet until final result)
-						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
-								Constants.SKIP_TYPE_NO, currentRetryCount);
-						// Don't print failure message yet (quiet)
-					}
+					// This is the final result - use normal onTestCaseStopEvent (counts in statistics)
+					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
+							Constants.SKIP_TYPE_NO, currentRetryCount);
+					System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
+							+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + currentRetryCount : "")));
 				}
 				
-				// Add failed test case to retry queue AFTER sending feedback (only if no core file and maxRetryCount > 0)
-				if (testCaseSuccess == false && hasCore == false && this.maxRetryCount > 0) {
+				// Add failed test case to retry queue AFTER sending feedback (only if needRetry and maxRetryCount > 0)
+				if (needRetry && this.maxRetryCount > 0) {
 					Dispatch.getInstance().addFailedTestCaseForRetry(this.testCaseFullName);
-				}
-				
-				// If this is a retry case that ultimately failed, print final failure message
-				if (currentRetryCount > 0 && !testCaseSuccess) {
-					// Check if this is the last retry attempt
-					if (currentRetryCount >= this.maxRetryCount) {
-						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " [NOK]");
-					}
 				}
 
 				workerLog.println("");
