@@ -125,7 +125,6 @@ public class TestFactory {
 		}
 		this.testPool.shutdown();
 		this.configPool.shutdown();
-
 		
 		feedback.onTaskStopEvent();
 		CommonUtils.generateFailBackupPackage(context);
@@ -376,5 +375,4 @@ public class TestFactory {
 		}
 		return pass;
 	}
-	
 }
