@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -58,8 +59,8 @@ public class Dispatch {
 
 	private boolean isFinished;
 	
-	// Batch retry related fields
-	private java.util.HashMap<String, Integer> retryCountMap;
+	// Retry management
+	private HashMap<String, Integer> retryCountMap;
 
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
@@ -67,7 +68,7 @@ public class Dispatch {
 		this.totalTbdSize = 0;
 		this.isFinished = false;
 		this.nextTestFileIndex = -1;
-		this.retryCountMap = new java.util.HashMap<String, Integer>();
+		this.retryCountMap = new HashMap<String, Integer>();
 		load();
 	}
 
@@ -111,7 +112,6 @@ public class Dispatch {
 			currentRetryCount = 0;
 		}
 		
-		// Only add if retry count is less than max retry count
 		if (currentRetryCount < context.getMaxRetryCount()) {
 			retryCountMap.put(testCase, currentRetryCount + 1);
 		}

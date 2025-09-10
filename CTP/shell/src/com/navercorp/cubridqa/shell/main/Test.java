@@ -123,10 +123,9 @@ public class Test {
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
 			
-			// Get retry count at the beginning of test execution
+			// Get current retry count for this test case
 			int currentRetryCount = Dispatch.getInstance().getRetryCount(this.testCaseFullName);
 
-			// Batch retry mode - execute once and add to retry queue if failed
 			/*
 			 * Reset test environment Kill CUBRID process, clear SSH and
 			 * clear result item list
@@ -176,8 +175,6 @@ public class Test {
 					resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
 				}
 				
-				// Use the retry count obtained at the beginning
-				
 				// Determine if this case needs retry
 				boolean needRetry = false;
 				if (testCaseSuccess == false) {
@@ -199,22 +196,23 @@ public class Test {
 				
 				// Send appropriate feedback based on retry status
 				if (needRetry) {
-					// This is a retry case - use onTestCaseStopEventForRetry (doesn't count in statistics)
+					// This is a retry case (doesn't count in statistics)
 					context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
 							Constants.SKIP_TYPE_NO, currentRetryCount);
 				} else {
-					// This is the final result - use normal onTestCaseStopEvent (counts in statistics)
+					// This is the final result (counts in statistics)
 					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
 							Constants.SKIP_TYPE_NO, currentRetryCount);
 					System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
 							+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + currentRetryCount : "")));
 				}
 				
-				// Add failed test case to retry queue AFTER sending feedback (only if needRetry and maxRetryCount > 0)
+				// Handle retry queue management
 				if (needRetry && this.maxRetryCount > 0) {
+					// Add failed test case to retry queue
 					Dispatch.getInstance().addFailedTestCaseForRetry(this.testCaseFullName);
 				} else if (currentRetryCount > 0) {
-					// This is a retry case that's completed (either success or max retry reached)
+					// Remove completed retry case from queue
 					Dispatch.getInstance().removeFromRetryQueue(this.testCaseFullName);
 				}
 
