@@ -95,9 +95,8 @@ public class Dispatch {
 
 		// After all normal cases are done, process retry cases
 		if (!retryCountMap.isEmpty()) {
-			// Get and remove first retry case
+			// Get first retry case
 			String retryTestFile = retryCountMap.keySet().iterator().next();
-			retryCountMap.remove(retryTestFile);
 			return retryTestFile;
 		}
 
@@ -121,6 +120,10 @@ public class Dispatch {
 	public synchronized Integer getRetryCount(String testCase) {
 		Integer count = retryCountMap.get(testCase);
 		return count != null ? count : 0;
+	}
+	
+	public synchronized void removeFromRetryQueue(String testCase) {
+		retryCountMap.remove(testCase);
 	}
 	
 

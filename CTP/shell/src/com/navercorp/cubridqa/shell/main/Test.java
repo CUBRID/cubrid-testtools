@@ -213,6 +213,9 @@ public class Test {
 				// Add failed test case to retry queue AFTER sending feedback (only if needRetry and maxRetryCount > 0)
 				if (needRetry && this.maxRetryCount > 0) {
 					Dispatch.getInstance().addFailedTestCaseForRetry(this.testCaseFullName);
+				} else if (currentRetryCount > 0) {
+					// This is a retry case that's completed (either success or max retry reached)
+					Dispatch.getInstance().removeFromRetryQueue(this.testCaseFullName);
 				}
 
 				workerLog.println("");
