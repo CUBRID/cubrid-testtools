@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -57,6 +58,9 @@ public class Dispatch {
 	private Log all;
 
 	private boolean isFinished;
+	
+	// Retry management
+	private HashMap<String, Integer> retryCountMap;
 
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
@@ -64,6 +68,7 @@ public class Dispatch {
 		this.totalTbdSize = 0;
 		this.isFinished = false;
 		this.nextTestFileIndex = -1;
+		this.retryCountMap = new HashMap<String, Integer>();
 		load();
 	}
 
@@ -76,21 +81,51 @@ public class Dispatch {
 	}
 
 	public synchronized String nextTestFile() {
-
 		if (isFinished)
 			return null;
 
-		if (totalTbdSize == 0 || this.nextTestFileIndex >= totalTbdSize) {
-			isFinished = true;
-			return null;
+		// First, process all normal test cases
+		if (this.nextTestFileIndex < totalTbdSize) {
+			if (this.nextTestFileIndex < 0) {
+				this.nextTestFileIndex = 0;
+			}
+			String nextTestFile = tbdList.get(this.nextTestFileIndex);
+			this.nextTestFileIndex++;
+			return nextTestFile;
 		}
-		if (this.nextTestFileIndex < 0) {
-			this.nextTestFileIndex = 0;
+
+		// After all normal cases are done, process retry cases
+		if (!retryCountMap.isEmpty()) {
+			// Get first retry case
+			String retryTestFile = retryCountMap.keySet().iterator().next();
+			return retryTestFile;
 		}
-		String nextTestFile = tbdList.get(this.nextTestFileIndex);
-		this.nextTestFileIndex++;
-		return nextTestFile;
+
+		// All done
+		isFinished = true;
+		return null;
 	}
+	
+	public synchronized void addFailedTestCaseForRetry(String testCase) {
+		Integer currentRetryCount = retryCountMap.get(testCase);
+		if (currentRetryCount == null) {
+			currentRetryCount = 0;
+		}
+		
+		if (currentRetryCount < context.getMaxRetryCount()) {
+			retryCountMap.put(testCase, currentRetryCount + 1);
+		}
+	}
+	
+	public synchronized Integer getRetryCount(String testCase) {
+		Integer count = retryCountMap.get(testCase);
+		return count != null ? count : 0;
+	}
+	
+	public synchronized void removeFromRetryQueue(String testCase) {
+		retryCountMap.remove(testCase);
+	}
+	
 
 	private void load() throws Exception {
 
