@@ -522,6 +522,10 @@ function BuildAndInstallForUnitTest()
           sh build.sh ${configure_options}
         )
     else
+        #http://jira.cubrid.org/browse/CUBRIDQA-1306
+        export CC=$HOME/gcc-4.8.5/bin/gcc
+        export CXX=$HOME/gcc-4.8.5/bin/g++
+
         sh build.sh ${configure_options}
     fi
 
