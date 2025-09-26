@@ -27,6 +27,7 @@ HC_CHECK_FOR_EACH_STATEMENT_22=select 'db_password' TABLE_NAME, db_password.* fr
 HC_CHECK_FOR_EACH_STATEMENT_23=select 'db_root' TABLE_NAME, db_root.* from db_root order by 1,2,3,4,5;
 
 --HC_CHECK_FOR_EACH_STATEMENT_5=select * from db_auth order by 1,2,3,4;
+--HC_CHECK_FOR_EACH_STATEMENT_32=select * from db_authorizations;
 --HC_CHECK_FOR_EACH_STATEMENT_33=select * from db_authorization order by 1,2;
 --HC_CHECK_FOR_EACH_STATEMENT_35=select * from db_user order by 1,2,3,4,5,6,7;
 --HC_CHECK_FOR_EACH_STATEMENT_21=select * from _db_auth order by 1,2,3,4,5;
