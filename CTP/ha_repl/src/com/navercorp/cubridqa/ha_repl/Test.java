@@ -72,6 +72,7 @@ public class Test {
 
 		String buildId = context.getBuildId();
                 String[] versionParts = buildId.split("\\.");
+		
 		// Select common.inc by version:
                 // <= 11.3 -> common.inc.legacy
                 // == 11.4 -> common.inc.114 (CUBRIDQA-1244)
