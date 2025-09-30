@@ -72,11 +72,19 @@ public class Test {
 
 		String buildId = context.getBuildId();
                 String[] versionParts = buildId.split("\\.");
-                String majorMinorVersion = versionParts[0] + "." + versionParts[1];
-                // Use common.inc for version 11.4 or higher, common.inc.legacy for lower versions
-                String commonIncFile = "common.inc";
-                if (Double.parseDouble(majorMinorVersion) < 11.4) {
+		// Select common.inc by version:
+                // <= 11.3 -> common.inc.legacy
+                // == 11.4 -> common.inc.114 (CUBRIDQA-1244)
+                // >= 11.5 -> common.inc (CBRD-25862)
+                String commonIncFile;
+                int major = Integer.parseInt(versionParts[0]);
+                int minor = Integer.parseInt(versionParts[1]);
+                if (major < 11 || (major == 11 && minor <= 3)) {
                         commonIncFile = "common.inc.legacy";
+                } else if (major == 11 && minor == 4) {
+                        commonIncFile = "common.inc.114";
+                } else {
+                        commonIncFile = "common.inc";
                 }
 
                 mlog.println("Using common.inc file: " + commonIncFile);
