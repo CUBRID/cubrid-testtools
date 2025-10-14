@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # 
 # Copyright (c) 2016, Search Solution Corporation. All rights reserved.
 # 
