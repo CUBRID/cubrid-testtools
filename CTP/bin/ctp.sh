@@ -37,6 +37,8 @@ file_output=${CTP_HOME}/.output_${key}.log
 file_script=${CTP_HOME}/.script_cont_${key}.sh
 [ ! "${JAVA_HOME}" ] && echo "Please confirm JAVA_HOME is configured!" && exit 1
 "$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.ctp.CTP "$@" 2>&1 | tee ${file_output}
+java_exit_code=${PIPESTATUS[0]}
 cat ${file_output} | grep SCRIPTCONT > ${file_script} 
 sh ${file_script} 
 rm -rf ${file_output} ${file_script} >/dev/null 2>&1
+exit $java_exit_code
