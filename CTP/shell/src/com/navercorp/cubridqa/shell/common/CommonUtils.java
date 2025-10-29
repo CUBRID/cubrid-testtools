@@ -241,11 +241,15 @@ public class CommonUtils {
 
 	public static String resetProcess(SSHConnect ssh, boolean isWindows, boolean executeAtLocal) {
 		try {
+			String processListResult = "";
+			// Show process list before killing
 			if (isWindows) {
-				return ssh.execute(executeAtLocal ? Constants.WIN_KILL_PROCESS_LOCAL : Constants.WIN_KILL_PROCESS)
+				processListResult = "=== Process List Before Kill ===\n" + ssh.execute("tasklist") + "\n";
+				return processListResult + ssh.execute(executeAtLocal ? Constants.WIN_KILL_PROCESS_LOCAL : Constants.WIN_KILL_PROCESS)
 						+ ssh.execute(executeAtLocal ? Constants.WIN_KILL_PROCESS_NATIVE_LOCAL : Constants.WIN_KILL_PROCESS_NATIVE, true);
 			} else {
-				return ssh.execute(executeAtLocal ? Constants.LIN_KILL_PROCESS_LOCAL : Constants.LIN_KILL_PROCESS);
+				processListResult = "=== Process List Before Kill ===\n" + ssh.execute("ps -u $USER -o pid,comm") + "\n";
+				return processListResult + ssh.execute(executeAtLocal ? Constants.LIN_KILL_PROCESS_LOCAL : Constants.LIN_KILL_PROCESS);
 			}
 		} catch (Exception e) {
 			return "fail to reset processes: " + e.getMessage();
@@ -283,6 +287,25 @@ public class CommonUtils {
 			value = entry.getValue();
 
 			if (key.startsWith("MKEY") && value != null) {
+				result.append("export ").append(key).append("=\"").append(value).append("\";");
+			}
+		}
+		return result.toString();
+	}
+
+	public static String getExportsOfENVParams() {
+		Map<String, String> map = System.getenv();
+
+		Set<Map.Entry<String, String>> entries = map.entrySet();
+		StringBuffer result = new StringBuffer();
+
+		String key, value;
+		for (Map.Entry<String, String> entry : entries) {
+			key = entry.getKey().trim();
+			value = entry.getValue();
+
+			// Export CTP related variables that were set by ENV_ prefix
+			if ((key.startsWith("CTP_") || key.equals("BUILD_SCENARIO_BRANCH_GIT")) && value != null) {
 				result.append("export ").append(key).append("=\"").append(value).append("\";");
 			}
 		}
