@@ -302,15 +302,6 @@ function config_cubrid_without_ha()
 {
      build_ver_type=""
      cubrid_conf_para=`ini -s "sql/cubrid.conf" --separator="||" ${config_file_main}`
-
-     # [CBRD-26220] In CUBRID 11.5+, the java_stored_procedure parameters are identical to PL,
-     # no longer documented, and marked as DEPRECATED. 
-     # Therefore, they are filtered out in CTP for 11.5+.
-     if [ "${cubrid_ver_p1}" -gt 11 ] || { [ "${cubrid_ver_p1}" -eq 11 ] && [ "${cubrid_ver_p2}" -ge 5 ]; }; then
-        echo "Filtering out deprecated parameters for CUBRID 11.5+"
-        cubrid_conf_para=`echo "$cubrid_conf_para" | sed 's/java_stored_procedure=[^|]*||*//g' | sed 's/||*$//'`
-     fi
-
      if [ "$cubrid_conf_para" ];then
      	ini -s common -u "${cubrid_conf_para}" $CUBRID/conf/cubrid.conf
      fi
