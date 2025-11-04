@@ -160,6 +160,7 @@ function updateCodes()
 	    echo "then " >> $HOME/.autoUpdate.sh
 	    echo "	  . ~/.bash_profile " >> $HOME/.autoUpdate.sh
 	    echo "fi " >> $HOME/.autoUpdate.sh
+	    echo "export CTP_BRANCH_NAME=$branchName" >> $HOME/.autoUpdate.sh
 	    echo "set -x " >> $HOME/.autoUpdate.sh
 	    echo "cd ${CURRENT_TOOL_HOME}/../script ">> $HOME/.autoUpdate.sh
 	    echo "chmod u+x *">> $HOME/.autoUpdate.sh
