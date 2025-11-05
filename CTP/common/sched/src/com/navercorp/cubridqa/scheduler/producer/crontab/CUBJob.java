@@ -193,7 +193,7 @@ public class CUBJob implements Job {
 		while (it.hasNext()) {
 			key = it.next().trim();
 			value = testProps.getProperty(key);
-			if (key.startsWith("MKEY_")) {
+			if (key.startsWith("MKEY_") || key.startsWith("ENV_")) {
 				msgProps.put(key, value);
 			}
 		}
