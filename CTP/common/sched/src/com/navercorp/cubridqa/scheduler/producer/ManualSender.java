@@ -325,7 +325,7 @@ public class ManualSender {
 
 	private static void showHelp() {
 		System.out
-				.println("Usage: java com.navercorp.cubridqa.scheduler.producer.ManualSender <queue> <url1,url2,...> <scenario> <priority> [compat_file|-i18nAll|-dbimgAll|-compatAll] [PROPS:MKEY_TEST1=v1;MKEY_TEST2=v2]");
+				.println("Usage: java com.navercorp.cubridqa.scheduler.producer.ManualSender <queue> <url1,url2,...> <scenario> <priority> [compat_file|-i18nAll|-dbimgAll|-compatAll] [PROPS:MKEY_TEST1=v1;MKEY_TEST2=v2|ENV_TEST1=v1;ENV_TEST2=v2]");
 		System.out.println();
 	}
 
