@@ -139,6 +139,18 @@ function updateCodes()
 { 
     curDir=`pwd`
     branchName=$1
+    
+    # Check branch change and remove cache if needed
+    branchMarkerFile="${CTP_HOME}/.dailyqa/.current_branch"
+    if [ -f "$branchMarkerFile" ]; then
+        currentBranch=`cat $branchMarkerFile`
+        if [ "$currentBranch" != "$branchName" ]; then
+            localBranchName=`echo $branchName|sed 's#/#_#g'`
+            cacheFile="${CTP_HOME}/.dailyqa/cubrid-testtools_${localBranchName}_CTP.zip"
+            [ -f "$cacheFile" ] && rm -f "$cacheFile" && echo "Branch changed: $currentBranch -> $branchName (cache removed)"
+        fi
+    fi
+    
     changedCount=`cd ${CTP_HOME}; run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" --check-only . | grep "fetch" | grep CHANGED | wc -l`
         
     if [ "$changedCount" -gt "0" ]
@@ -160,6 +172,7 @@ function updateCodes()
 	    echo "then " >> $HOME/.autoUpdate.sh
 	    echo "	  . ~/.bash_profile " >> $HOME/.autoUpdate.sh
 	    echo "fi " >> $HOME/.autoUpdate.sh
+	    echo "export CTP_BRANCH_NAME=$branchName" >> $HOME/.autoUpdate.sh
 	    echo "set -x " >> $HOME/.autoUpdate.sh
 	    echo "cd ${CURRENT_TOOL_HOME}/../script ">> $HOME/.autoUpdate.sh
 	    echo "chmod u+x *">> $HOME/.autoUpdate.sh
@@ -367,11 +380,27 @@ do
 		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
 		then
 			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
+			# Update CTP if ENV_CTP_BRANCH_NAME is set in continue mode
+			tempBranchContinue=""
+			if [ $withoutSync -ne 1 ]
+			then
+				source ${CTP_HOME}/common/sched/init.sh $ser_site
+				if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]
+				then
+					echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
+					updateCodes $CTP_BRANCH_NAME
+					tempBranchContinue="$branchName"
+				fi
+			fi
 			(cd ${CTP_HOME}; export BUILD_IS_FROM_GIT=$isFromGit ;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
 			
 			echo
             echo "End continue mode test!"
 			consumerTimer ${existsMsgId} "stop"
+			
+			# Restore original branch if temp branch was used
+			[ -n "$tempBranchContinue" ] && updateCodes $tempBranchContinue
+			
 			contimeENDTIME=`getTimeStamp`
 			echo "END_CONTINUE_TIME:${contimeENDTIME}"
 			echo '' > ${CTP_HOME}/common/sched/status/${x}
@@ -380,6 +409,20 @@ do
 
 		startAgent $x 
 		hasTestBuild
+		
+		#update client again if ENV_CTP_BRANCH_NAME is set in message
+		tempBranch=""
+		if [ "$hasBuild" == "true" ] && [ $withoutSync -ne 1 ]
+		then
+			source ${CTP_HOME}/common/sched/init.sh $ser_site
+			if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]
+			then
+				echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
+				updateCodes $CTP_BRANCH_NAME
+				tempBranch="$branchName"
+			fi
+		fi
+		
 		if [ "$isDebug" == "--debug" ]
 		then
 			echo "-------------------------- Debug Message Information -----------------------------"
@@ -416,6 +459,9 @@ do
 				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/${q_exec[$count]}.sh)
 			
 				consumerTimer $msgId "stop"
+
+				# Restore original branch if temp branch was used
+				[ -n "$tempBranch" ] && updateCodes $tempBranch
 
 				ENDTIME=`getTimeStamp`
 				echo 
