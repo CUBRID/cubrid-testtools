@@ -160,6 +160,7 @@ function updateCodes()
 	    echo "then " >> $HOME/.autoUpdate.sh
 	    echo "	  . ~/.bash_profile " >> $HOME/.autoUpdate.sh
 	    echo "fi " >> $HOME/.autoUpdate.sh
+	    echo "export CTP_BRANCH_NAME=$branchName" >> $HOME/.autoUpdate.sh
 	    echo "set -x " >> $HOME/.autoUpdate.sh
 	    echo "cd ${CURRENT_TOOL_HOME}/../script ">> $HOME/.autoUpdate.sh
 	    echo "chmod u+x *">> $HOME/.autoUpdate.sh
@@ -367,6 +368,16 @@ do
 		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
 		then
 			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
+			# Update CTP if ENV_CTP_BRANCH_NAME is set in continue mode
+			if [ $withoutSync -ne 1 ]
+			then
+				source ${CTP_HOME}/common/sched/init.sh $ser_site
+				if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]
+				then
+					echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
+					updateCodes $CTP_BRANCH_NAME
+				fi
+			fi
 			(cd ${CTP_HOME}; export BUILD_IS_FROM_GIT=$isFromGit ;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
 			
 			echo
@@ -380,6 +391,18 @@ do
 
 		startAgent $x 
 		hasTestBuild
+		
+		#update client again if ENV_CTP_BRANCH_NAME is set in message
+		if [ "$hasBuild" == "true" ] && [ $withoutSync -ne 1 ]
+		then
+			source ${CTP_HOME}/common/sched/init.sh $ser_site
+			if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]
+			then
+				echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
+				updateCodes $CTP_BRANCH_NAME
+			fi
+		fi
+		
 		if [ "$isDebug" == "--debug" ]
 		then
 			echo "-------------------------- Debug Message Information -----------------------------"

@@ -36,6 +36,11 @@ function analyzeMessageInfo() {
 		BUILD_SVN_BRANCH=$BUILD_SVN_BRANCH_NEW
 		export BUILD_SVN_BRANCH
 	 fi
+	 
+	# Process ENV_ prefixed variables (ENV_CTP_BRANCH_NAME -> export CTP_BRANCH_NAME)
+	for env_var in `cat $result | grep "^ENV_" | sed "s/:/=/" | sed "s/^ENV_//"`; do
+		eval "export $env_var"
+	done
  
     if [ "$SVR_SITE" == 'china' ]
     then

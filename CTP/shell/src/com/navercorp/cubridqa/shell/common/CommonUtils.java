@@ -289,6 +289,25 @@ public class CommonUtils {
 		return result.toString();
 	}
 
+	public static String getExportsOfENVParams() {
+		Map<String, String> map = System.getenv();
+
+		Set<Map.Entry<String, String>> entries = map.entrySet();
+		StringBuffer result = new StringBuffer();
+
+		String key, value;
+		for (Map.Entry<String, String> entry : entries) {
+			key = entry.getKey().trim();
+			value = entry.getValue();
+
+			// Export CTP related variables that were set by ENV_ prefix
+			if ((key.startsWith("CTP_") || key.equals("BUILD_SCENARIO_BRANCH_GIT")) && value != null) {
+				result.append("export ").append(key).append("=\"").append(value).append("\";");
+			}
+		}
+		return result.toString();
+	}
+
 	public static String convertNumberSystemToFixedLength(String simplifiedBuildId) {
 		if (simplifiedBuildId == null) {
 			return simplifiedBuildId;
