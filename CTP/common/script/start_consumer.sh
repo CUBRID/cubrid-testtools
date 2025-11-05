@@ -139,6 +139,18 @@ function updateCodes()
 { 
     curDir=`pwd`
     branchName=$1
+    
+    # Check branch change and remove cache if needed
+    branchMarkerFile="${CTP_HOME}/.dailyqa/.current_branch"
+    if [ -f "$branchMarkerFile" ]; then
+        currentBranch=`cat $branchMarkerFile`
+        if [ "$currentBranch" != "$branchName" ]; then
+            localBranchName=`echo $branchName|sed 's#/#_#g'`
+            cacheFile="${CTP_HOME}/.dailyqa/cubrid-testtools_${localBranchName}_CTP.zip"
+            [ -f "$cacheFile" ] && rm -f "$cacheFile" && echo "Branch changed: $currentBranch -> $branchName (cache removed)"
+        fi
+    fi
+    
     changedCount=`cd ${CTP_HOME}; run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" --check-only . | grep "fetch" | grep CHANGED | wc -l`
         
     if [ "$changedCount" -gt "0" ]
@@ -369,6 +381,7 @@ do
 		then
 			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
 			# Update CTP if ENV_CTP_BRANCH_NAME is set in continue mode
+			tempBranchContinue=""
 			if [ $withoutSync -ne 1 ]
 			then
 				source ${CTP_HOME}/common/sched/init.sh $ser_site
@@ -376,6 +389,7 @@ do
 				then
 					echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
 					updateCodes $CTP_BRANCH_NAME
+					tempBranchContinue="$branchName"
 				fi
 			fi
 			(cd ${CTP_HOME}; export BUILD_IS_FROM_GIT=$isFromGit ;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
@@ -383,6 +397,10 @@ do
 			echo
             echo "End continue mode test!"
 			consumerTimer ${existsMsgId} "stop"
+			
+			# Restore original branch if temp branch was used
+			[ -n "$tempBranchContinue" ] && updateCodes $tempBranchContinue
+			
 			contimeENDTIME=`getTimeStamp`
 			echo "END_CONTINUE_TIME:${contimeENDTIME}"
 			echo '' > ${CTP_HOME}/common/sched/status/${x}
@@ -393,6 +411,7 @@ do
 		hasTestBuild
 		
 		#update client again if ENV_CTP_BRANCH_NAME is set in message
+		tempBranch=""
 		if [ "$hasBuild" == "true" ] && [ $withoutSync -ne 1 ]
 		then
 			source ${CTP_HOME}/common/sched/init.sh $ser_site
@@ -400,6 +419,7 @@ do
 			then
 				echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
 				updateCodes $CTP_BRANCH_NAME
+				tempBranch="$branchName"
 			fi
 		fi
 		
@@ -439,6 +459,9 @@ do
 				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/${q_exec[$count]}.sh)
 			
 				consumerTimer $msgId "stop"
+
+				# Restore original branch if temp branch was used
+				[ -n "$tempBranch" ] && updateCodes $tempBranch
 
 				ENDTIME=`getTimeStamp`
 				echo 
