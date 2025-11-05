@@ -103,15 +103,15 @@ function check_local_disk_space () {
     )
 }
 
-export DAILYQA_DAILYSRV_HOST=`ini.sh conf/common.conf qahome_server_host`
-export DAILYQA_DAILYSRV_USER=`ini.sh conf/common.conf qahome_server_user`
-export DAILYQA_DAILYSRV_PWD=`ini.sh conf/common.conf qahome_server_pwd`
-export DAILYQA_DAILYSRV_PORT=`ini.sh conf/common.conf qahome_server_port`
-export DAILYQA_GIT_USER=`ini.sh conf/common.conf git_user`
-export DAILYQA_GIT_PWD=`ini.sh conf/common.conf git_pwd`
-export DAILYQA_GIT_EMAIL=`ini.sh conf/common.conf git_email`
-export DAILYQA_SSH_PWD_DEFAULT=`ini.sh conf/common.conf default_ssh_pwd`
-export DAILYQA_SSH_PORT_DEFAULT=`ini.sh conf/common.conf default_ssh_port`
+export DAILYQA_DAILYSRV_HOST=`ini.sh ${CTP_HOME}/conf/common.conf qahome_server_host`
+export DAILYQA_DAILYSRV_USER=`ini.sh ${CTP_HOME}/conf/common.conf qahome_server_user`
+export DAILYQA_DAILYSRV_PWD=`ini.sh ${CTP_HOME}/conf/common.conf qahome_server_pwd`
+export DAILYQA_DAILYSRV_PORT=`ini.sh ${CTP_HOME}/conf/common.conf qahome_server_port`
+export DAILYQA_GIT_USER=`ini.sh ${CTP_HOME}/conf/common.conf git_user`
+export DAILYQA_GIT_PWD=`ini.sh ${CTP_HOME}/conf/common.conf git_pwd`
+export DAILYQA_GIT_EMAIL=`ini.sh ${CTP_HOME}/conf/common.conf git_email`
+export DAILYQA_SSH_PWD_DEFAULT=`ini.sh ${CTP_HOME}/conf/common.conf default_ssh_pwd`
+export DAILYQA_SSH_PORT_DEFAULT=`ini.sh ${CTP_HOME}/conf/common.conf default_ssh_port`
 
 analyzeMessageInfo $1
 export -f getMsgValue
