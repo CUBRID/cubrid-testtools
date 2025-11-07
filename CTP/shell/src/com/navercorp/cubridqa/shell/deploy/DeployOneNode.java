@@ -145,7 +145,6 @@ public class DeployOneNode {
 			scripts.addCommand("echo 'ulimit -c unlimited' >> ~/.bash_profile");
 			scripts.addCommand("cat ~/.bash_profile | uniq >  ~/.bash_profile_tmp; cp ~/.bash_profile_tmp ~/.bash_profile");
 			scripts.addCommand(CommonUtils.getExportsOfMEKYParams());
-			scripts.addCommand(CommonUtils.getExportsOfENVParams());
 			scripts.addCommand("run_cubrid_install " + role + " " + buildUrl + " " + context.getProperty(ConfigParameterConstants.CUBRID_ADDITIONAL_DOWNLOAD_URL, "").trim() + " 2>&1");
 		}
 

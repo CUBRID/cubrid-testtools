@@ -69,7 +69,6 @@ public class DeployOneNode {
 			String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
 			log.print("Start Install Build");
 
-			scripts.addCommand(CommonUtils.getExportsOfENVParams());
 			scripts.addCommand("run_cubrid_install " + role + " " + buildUrl + " " + context.getProperty(ConfigParameterConstants.CUBRID_ADDITIONAL_DOWNLOAD_URL, "").trim() + " 2>&1");
 		}
 
@@ -96,8 +95,6 @@ public class DeployOneNode {
 	}
 
 	public void deploy() {
-		updateCTP();
-		
 		while (true) {
 			if (installCUBRID()) {
 				break;
@@ -108,33 +105,6 @@ public class DeployOneNode {
 		}
 
 		updateCUBRIDConfigurations();
-	}
-	
-	private void updateCTP() {
-		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("cd ${CTP_HOME}/common/script");
-		
-		String ctpBranchName = System.getenv(ConfigParameterConstants.CTP_BRANCH_NAME);
-		if (!CommonUtils.isEmpty(ctpBranchName)) {
-			scripts.addCommand("export CTP_BRANCH_NAME=" + ctpBranchName);
-		}
-		
-		String skipUpgrade = System.getenv(ConfigParameterConstants.CTP_SKIP_UPDATE);
-		if (!CommonUtils.isEmpty(skipUpgrade)) {
-			scripts.addCommand("export CTP_SKIP_UPDATE=" + skipUpgrade);
-		}
-		scripts.addCommand("chmod u+x upgrade.sh");
-		scripts.addCommand("./upgrade.sh");
-		
-		String result;
-		try {
-			log.print("==> Begin to update CTP:");
-			result = ssh.execute(scripts);
-			log.println(result);
-			log.print("DONE.");
-		} catch (Exception e) {
-			log.print("[ERROR] Fail to update CTP: " + e.getMessage());
-		}
 	}
 
 	private void updateCUBRIDConfigurations() {
