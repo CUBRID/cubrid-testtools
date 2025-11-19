@@ -112,6 +112,7 @@ public class DeployNode {
 		boolean isSucc = true;
 		String role = context.getProperty(ConfigParameterConstants.CUBRID_INSTALL_ROLE, "").trim();
 		GeneralScriptInput scripts = new GeneralScriptInput();
+		scripts.addCommand(CommonUtils.getExportsOfENVParams());
 		scripts.addCommand("chmod u+x ${CTP_HOME}/common/script/run_cubrid_install");
 		scripts.addCommand("run_cubrid_install " + role + " " + context.getCubridPackageUrl() + " " + context.getProperty(ConfigParameterConstants.CUBRID_ADDITIONAL_DOWNLOAD_URL, "").trim() + " 2>&1");
 
