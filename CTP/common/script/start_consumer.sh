@@ -149,7 +149,7 @@ function updateCodes()
         fi
     fi
 
-    changedCount=`cd ${CTP_HOME}; run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" --check-only . | grep "fetch" | grep CHANGED | wc -l`
+    changedCount=`cd ${CTP_HOME}; run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" -e "common" --check-only . | grep "fetch" | grep CHANGED | wc -l`
 
     if [ "$changedCount" -gt "0" ]; then
         echo "-------------------------- Begin to update codes -----------------------------"
@@ -359,47 +359,61 @@ do
 
         existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
         isFromGit=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep BUILD_IS_FROM_GIT|awk -F ':' '{print $2}'`
+        savedEnvBranch=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep ENV_CTP_BRANCH_NAME|awk -F ':' '{print $2}'`
+        testCompleted=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep TEST_COMPLETED|awk -F ':' '{print $2}'`
         isStartByData=`echo $existsMsgId|grep "[^0-9]"|wc -l`
         if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]; then
             echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
-            # Update CTP if ENV_CTP_BRANCH_NAME is set in continue mode
-            tempBranchContinue=""
-            if [ $withoutSync -ne 1 ]; then
-                source ${CTP_HOME}/common/sched/init.sh $ser_site
-                if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]; then
-                    echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
-                    updateCodes $CTP_BRANCH_NAME
-                    tempBranchContinue="$branchName"
+            
+            # Check if test is already completed (only need restore)
+            if [ "$testCompleted" = "yes" ]; then
+                echo "Test already completed, only restore branch needed"
+                restoreBranch=`cat ${CTP_HOME}/common/sched/status/$x 2> /dev/null | grep RESTORE_BRANCH|awk -F ':' '{print $2}'`
+                if [ "$restoreBranch" ] && [ "$restoreBranch" = "$branchName" ]; then
+                    echo "Restoring CTP to base branch: $branchName (may restart)..."
+                    updateCodes $branchName
+                    echo "CTP restored to: $branchName"
                 fi
+                echo '' > ${CTP_HOME}/common/sched/status/${x}
+                continue
             fi
+            
+            # Update CTP to ENV branch if saved in status (may restart again)
+            if [ $withoutSync -ne 1 ] && [ "$savedEnvBranch" ] && [ "$savedEnvBranch" != "$branchName" ]; then
+                echo "ENV_CTP_BRANCH_NAME found in status: $savedEnvBranch"
+                echo "Updating CTP to ENV branch (may restart)..."
+                updateCodes $savedEnvBranch
+                echo "CTP updated to: $savedEnvBranch"
+            fi
+            
             (cd ${CTP_HOME}; export BUILD_IS_FROM_GIT=$isFromGit ;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
 
             echo
             echo "End continue mode test!"
             consumerTimer ${existsMsgId} "stop"
 
-            # Restore original branch if temp branch was used
-            [ -n "$tempBranchContinue" ] && updateCodes $tempBranchContinue
-
             contimeENDTIME=`getTimeStamp`
             echo "END_CONTINUE_TIME:${contimeENDTIME}"
+            
+            # Check if need to restore to base branch
+            restoreBranch=`cat ${CTP_HOME}/common/sched/status/$x 2> /dev/null | grep RESTORE_BRANCH|awk -F ':' '{print $2}'`
+            if [ "$restoreBranch" ] && [ "$restoreBranch" = "$branchName" ]; then
+                # Mark test as completed, keep only restore info
+                echo "MSG_ID:$existsMsgId" > ${CTP_HOME}/common/sched/status/$x
+                echo "TEST_COMPLETED:yes" >> ${CTP_HOME}/common/sched/status/$x
+                echo "RESTORE_BRANCH:$branchName" >> ${CTP_HOME}/common/sched/status/$x
+                
+                echo "Restoring CTP to base branch: $branchName (may restart)..."
+                updateCodes $branchName
+                echo "CTP restored to: $branchName"
+            fi
+            
             echo '' > ${CTP_HOME}/common/sched/status/${x}
             echo
         fi
 
         startAgent $x
         hasTestBuild
-
-        #update client again if ENV_CTP_BRANCH_NAME is set in message
-        tempBranch=""
-        if [ "$hasBuild" == "true" ] && [ $withoutSync -ne 1 ]; then
-            source ${CTP_HOME}/common/sched/init.sh $ser_site
-            if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]; then
-                echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
-                updateCodes $CTP_BRANCH_NAME
-                tempBranch="$branchName"
-            fi
-        fi
 
         if [ "$isDebug" == "--debug" ]; then
             echo "-------------------------- Debug Message Information -----------------------------"
@@ -422,10 +436,22 @@ do
                 echo "START_TIME:${TestTime}" >> $statFile
 
                 echo
-                echo "Log msg id into queue file!"
+                echo "Save message info to status file for continue mode"
                 echo "MSG_ID:$msgId" > ${CTP_HOME}/common/sched/status/$x
                 echo "BUILD_IS_FROM_GIT:$build_is_from_git" >> ${CTP_HOME}/common/sched/status/$x
                 echo "START_TIME:${TestTime}" >> ${CTP_HOME}/common/sched/status/$x
+                
+                # Check ENV_CTP_BRANCH_NAME and save to status before updateCodes
+                source ${CTP_HOME}/common/sched/init.sh $ser_site
+                if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]; then
+                    echo "ENV_CTP_BRANCH_NAME:$CTP_BRANCH_NAME" >> ${CTP_HOME}/common/sched/status/$x
+                    echo "RESTORE_BRANCH:$branchName" >> ${CTP_HOME}/common/sched/status/$x
+                    echo
+                    echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME"
+                    echo "Updating CTP to ENV branch (may restart)..."
+                    updateCodes $CTP_BRANCH_NAME
+                    echo "CTP updated to: $CTP_BRANCH_NAME"
+                fi
                 echo
 
                 consumerTimer $msgId "start"
@@ -434,11 +460,23 @@ do
 
                 consumerTimer $msgId "stop"
 
-                # Restore original branch if temp branch was used
-                [ -n "$tempBranch" ] && updateCodes $tempBranch
-
                 ENDTIME=`getTimeStamp`
                 echo
+                echo "Test completed. Check if need to restore branch..."
+                
+                # Check if need to restore to base branch
+                restoreBranch=`cat ${CTP_HOME}/common/sched/status/$x 2> /dev/null | grep RESTORE_BRANCH|awk -F ':' '{print $2}'`
+                if [ "$restoreBranch" ] && [ "$restoreBranch" = "$branchName" ]; then
+                    # Mark test as completed, keep only restore info
+                    echo "MSG_ID:$msgId" > ${CTP_HOME}/common/sched/status/$x
+                    echo "TEST_COMPLETED:yes" >> ${CTP_HOME}/common/sched/status/$x
+                    echo "RESTORE_BRANCH:$branchName" >> ${CTP_HOME}/common/sched/status/$x
+                    
+                    echo "Restoring CTP to base branch: $branchName (may restart)..."
+                    updateCodes $branchName
+                    echo "CTP restored to: $branchName"
+                fi
+                
                 echo "Clean msg id from queue file"
                 echo '' > ${CTP_HOME}/common/sched/status/$x
                 echo "END_TIME:${ENDTIME}"
