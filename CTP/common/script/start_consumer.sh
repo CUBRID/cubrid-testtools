@@ -64,82 +64,80 @@ branchName=master
 build_is_from_git=""
 statFile="${CTP_HOME}/common/sched/status/STATUS.TXT"
 
-while [ $# -ne 0 ];do
-	case $1 in
-		-q)
-			shift
-		queue=$1
-		;;
-		-exec)
-			shift
-		s_exec=$1
-		;;
-		--debug)
-		isDebug='--debug'
-		;;
-		--only-max)
-		onlyMax='--only-max'
-		;;
-                -s)
-                        shift
-                ser_site=$1
-                ;;
-                --without-sync)
-                        shift
-                withoutSync=1
-                ;;
-	esac
-	shift
+while [ $# -ne 0 ]; do
+    case $1 in
+        -q)
+            shift
+            queue=$1
+            ;;
+        -exec)
+            shift
+            s_exec=$1
+            ;;
+        --debug)
+            isDebug='--debug'
+            ;;
+        --only-max)
+            onlyMax='--only-max'
+            ;;
+        -s)
+            shift
+            ser_site=$1
+            ;;
+        --without-sync)
+            shift
+            withoutSync=1
+            ;;
+    esac
+    shift
 done
 
-if [ "$os" == "Linux" -o "$os" = "AIX" ]
-then
-        separator=":"
+if [ "$os" == "Linux" -o "$os" = "AIX" ]; then
+    separator=":"
 else
-        separator=";"
+    separator=";"
 fi
 
-if [ "$CTP_BRANCH_NAME" ];then
-   branchName=$CTP_BRANCH_NAME
+if [ "$CTP_BRANCH_NAME" ]; then
+    branchName=$CTP_BRANCH_NAME
 fi
 
 function usage()
 {
-	exec_name=$(basename $0)
-		cat<<EOF
-		Usage:$exec_name <-q queue_name> <-exec script> [--debug] [--only-max] [-s china|kor] [--without-sync]
-		-q <queue name>      | this option represents queue name what you want to consume
-		-exec <script.sh>    | script name you will run
-                -s                   | this option represents what build site you will use, such as 'china', 'kor'
-		--debug              | this option represents you just want to debug test environement,so message will be dequeued
-		--only-max           | this option represents you only need max version in this queue, old ones will be deleted
-                --without-sync       | do not update codes
-	    
+    exec_name=$(basename $0)
+    cat<<EOF
+        Usage:$exec_name <-q queue_name> <-exec script> [--debug] [--only-max] [-s china|kor] [--without-sync]
+        -q <queue name>      | this option represents queue name what you want to consume
+        -exec <script.sh>    | script name you will run
+        -s                   | this option represents what build site you will use, such as 'china', 'kor'
+        --debug              | this option represents you just want to debug test environement,so message will be dequeued
+        --only-max           | this option represents you only need max version in this queue, old ones will be deleted
+        --without-sync       | do not update codes
+
 EOF
 
 }
 
 function getTimeStamp()
 {
-   timeStamp=`date +"%Y-%m-%d %H:%M:%S %Z"`
-   echo $timeStamp
+    timeStamp=`date +"%Y-%m-%d %H:%M:%S %Z"`
+    echo $timeStamp
 }
 
 function consumerTimer()
 {
-     msgId=$1
-     typeName=$2
-     timeStamp=`getTimeStamp`
-     echo "++++++++ Message-${msgId} $typeName at $timeStamp ++++++++"
-     (cd $CURRENT_TOOL_HOME; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerTimer $msgId $typeName)
+    msgId=$1
+    typeName=$2
+    timeStamp=`getTimeStamp`
+    echo "++++++++ Message-${msgId} $typeName at $timeStamp ++++++++"
+    (cd $CURRENT_TOOL_HOME; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerTimer $msgId $typeName)
 }
 
-
 function updateCodes()
-{ 
+{
     curDir=`pwd`
     branchName=$1
-    
+
     # Check branch change and remove cache if needed
     branchMarkerFile="${CTP_HOME}/.dailyqa/.current_branch"
     if [ -f "$branchMarkerFile" ]; then
@@ -150,208 +148,194 @@ function updateCodes()
             [ -f "$cacheFile" ] && rm -f "$cacheFile" && echo "Branch changed: $currentBranch -> $branchName (cache removed)"
         fi
     fi
-    
+
     changedCount=`cd ${CTP_HOME}; run_grepo_fetch -r cubrid-testtools -b "$branchName" -p "CTP" -e "conf" --check-only . | grep "fetch" | grep CHANGED | wc -l`
-        
-    if [ "$changedCount" -gt "0" ]
-    then
-	    echo "-------------------------- Begin to update codes -----------------------------"
-	    default_lc_all=`echo $LC_ALL`
-	    export LC_ALL=en_US
-	    echo "Update status: CHANGED " `date`
-	    if [ "$os" == "Linux" -o "$os" = "AIX" ];then
-	    	commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
-	    else
-		commands="$cmd $params"
-	    fi
 
-	    echo "#!/bin/bash " > $HOME/.autoUpdate.sh
-	    echo "export HOME=$HOME" >> $HOME/.autoUpdate.sh
-	    echo "export USER=$USER" >> $HOME/.autoUpdate.sh
-	    echo "if [ -f ~/.bash_profile ]; " >> $HOME/.autoUpdate.sh
-	    echo "then " >> $HOME/.autoUpdate.sh
-	    echo "	  . ~/.bash_profile " >> $HOME/.autoUpdate.sh
-	    echo "fi " >> $HOME/.autoUpdate.sh
-	    echo "export CTP_BRANCH_NAME=$branchName" >> $HOME/.autoUpdate.sh
-	    echo "set -x " >> $HOME/.autoUpdate.sh
-	    echo "cd ${CURRENT_TOOL_HOME}/../script ">> $HOME/.autoUpdate.sh
-	    echo "chmod u+x *">> $HOME/.autoUpdate.sh
-       	    echo "./stop_consumer.sh" >>$HOME/.autoUpdate.sh
-            echo "./upgrade.sh" >>$HOME/.autoUpdate.sh
-            echo "nohup ${commands} >> $HOME/nohup.out 2>&1 &">>$HOME/.autoUpdate.sh
-            echo "cd -" >>$HOME/.autoUpdate.sh
-	    if [ "$os" == "Linux" -o "$os" = "AIX" ];then
-	    	at -f $HOME/.autoUpdate.sh now+1 minutes 2>&1 | xargs -i echo \#{} >> $HOME/.autoUpdate.sh
-	    else
-		h=$(date +%H)
-                m=$(date +%M)
-		let "m=m+1"
-		timeStr="$h:$m"
-		schtasks /delete /tn "CTP upgrade" /F
-                schtasks /create /tn "CTP upgrade" /tr "sh $HOME/.autoUpdate.sh" /sc once /st $timeStr
-		echo "The CTP upgrade by schtasks will be start: $timeStr" >> $HOME/.autoUpdate.sh
-	    fi 
-	    export LC_ALL=$default_lc_all
-	    echo "----------------------------Done ----------------------------------------------"
-	    exit
-	fi
+    if [ "$changedCount" -gt "0" ]; then
+        echo "-------------------------- Begin to update codes -----------------------------"
+        default_lc_all=`echo $LC_ALL`
+        export LC_ALL=en_US
+        echo "Update status: CHANGED " `date`
+        if [ "$os" == "Linux" -o "$os" = "AIX" ]; then
+            commands=`ps -u $USER -o cmd | awk -F '/bash ' '{print$NF}' | grep start_consumer.sh | grep -v grep|head -1`
+        else
+            commands="$cmd $params"
+        fi
 
-	cd $curDir
+        echo "#!/bin/bash " > $HOME/.autoUpdate.sh
+        echo "export HOME=$HOME" >> $HOME/.autoUpdate.sh
+        echo "export USER=$USER" >> $HOME/.autoUpdate.sh
+        echo "if [ -f ~/.bash_profile ]; " >> $HOME/.autoUpdate.sh
+        echo "then " >> $HOME/.autoUpdate.sh
+        echo "    . ~/.bash_profile " >> $HOME/.autoUpdate.sh
+        echo "fi " >> $HOME/.autoUpdate.sh
+        echo "export CTP_BRANCH_NAME=$branchName" >> $HOME/.autoUpdate.sh
+        echo "set -x " >> $HOME/.autoUpdate.sh
+        echo "cd ${CURRENT_TOOL_HOME}/../script ">> $HOME/.autoUpdate.sh
+        echo "chmod u+x *">> $HOME/.autoUpdate.sh
+        echo "./stop_consumer.sh" >>$HOME/.autoUpdate.sh
+        echo "./upgrade.sh" >>$HOME/.autoUpdate.sh
+        echo "nohup ${commands} >> $HOME/nohup.out 2>&1 &">>$HOME/.autoUpdate.sh
+        echo "cd -" >>$HOME/.autoUpdate.sh
+        if [ "$os" == "Linux" -o "$os" = "AIX" ]; then
+            at -f $HOME/.autoUpdate.sh now+1 minutes 2>&1 | xargs -i echo \#{} >> $HOME/.autoUpdate.sh
+        else
+            h=$(date +%H)
+            m=$(date +%M)
+            let "m=m+1"
+            timeStr="$h:$m"
+            schtasks /delete /tn "CTP upgrade" /F
+            schtasks /create /tn "CTP upgrade" /tr "sh $HOME/.autoUpdate.sh" /sc once /st $timeStr
+            echo "The CTP upgrade by schtasks will be start: $timeStr" >> $HOME/.autoUpdate.sh
+        fi 
+        export LC_ALL=$default_lc_all
+        echo "----------------------------Done ----------------------------------------------"
+        exit
+    fi
+
+    cd $curDir
 }
 
 function startAgent()
-{	
-	rm -rf ${CTP_HOME}/common/sched/result/*
-	queueName=$1
-	(cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $queueName $isDebug $onlyMax > ${CTP_HOME}/common/sched/result/$fileName)
+{
+    rm -rf ${CTP_HOME}/common/sched/result/*
+    queueName=$1
+    (cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $queueName $isDebug $onlyMax > ${CTP_HOME}/common/sched/result/$fileName)
     msgId=`cat ${CTP_HOME}/common/sched/result/$fileName |grep MSG_ID|awk -F ':' '{print $2}'`
 }
 
 function runagent()
 {
-	clpth=$1
-
+    clpth=$1
 }
 
-#add "bak" for this functiong becasue it's same as below function
+# add "bak" for this functiong becasue it's same as below function
 function analyzeMessageInfo_bak()
 {
-	result=$1
-	build_no=`cat $result|awk '/BUILD_ID/'|cut -d ":" -f2`
-	branch=`cat $result|awk '/BUILD_SVN_BRANCH/'|cut -d ":" -f2|tr -d " "`		
-	bit=`cat $result|awk '/BUILD_BIT/'|cut -d ":" -f2|tr -d " "`		
-	scenario=`cat $result|awk '/BUILD_SCENARIOS/'|cut -d ":" -f2|tr -d " "`
-	url_cn=`cat $result|grep "BUILD_URLS:"`
-	url_kr=`cat $result|grep "BUILD_URLS_KR:"`
-	url_cn_1=${url_cn#*:}		
-	url_kr_1=${url_kr#*:}		
-	store_branch=`cat $result|awk '/BUILD_STORE_ID/'|cut -d ":" -f2|tr -d " "`	
+    result=$1
+    build_no=`cat $result|awk '/BUILD_ID/'|cut -d ":" -f2`
+    branch=`cat $result|awk '/BUILD_SVN_BRANCH/'|cut -d ":" -f2|tr -d " "`
+    bit=`cat $result|awk '/BUILD_BIT/'|cut -d ":" -f2|tr -d " "`
+    scenario=`cat $result|awk '/BUILD_SCENARIOS/'|cut -d ":" -f2|tr -d " "`
+    url_cn=`cat $result|grep "BUILD_URLS:"`
+    url_kr=`cat $result|grep "BUILD_URLS_KR:"`
+    url_cn_1=${url_cn#*:}
+    url_kr_1=${url_kr#*:}
+    store_branch=`cat $result|awk '/BUILD_STORE_ID/'|cut -d ":" -f2|tr -d " "`
+    if [ $ser_site == 'china' ]; then
+        url=$url_cn_1
+    else
+        url=$url_kr_1
+    fi
 
-        if [ $ser_site == 'china' ]
-        then
-            url=$url_cn_1
-        else
-            url=$url_kr_1
-        fi
-
-	fn=${url##*/}
-	fexe=${fn##*.}
-	if [ "$fexe" == 'zip' ]
-	then
-		isWin='yes'
-	fi			
+    fn=${url##*/}
+    fexe=${fn##*.}
+    if [ "$fexe" == 'zip' ]; then
+        isWin='yes'
+    fi
 }
-
 
 function splitString()
 {
-	separator=$1
-	str=$2
-	OLD_IFS="$IFS"
-	IFS="$separator"
-	arr=($str)
-	IFS="$OLD_IFS" 
-	echo $arr
+    separator=$1
+    str=$2
+    OLD_IFS="$IFS"
+    IFS="$separator"
+    arr=($str)
+    IFS="$OLD_IFS" 
+    echo $arr
 
 }
 
 function acceptParameters()
 {
-	q=$1
-	if [ "$q" ]
-	then
-        	OLD_IFS="$IFS"
-        	IFS=","
-        	qlist=($q)
-        	IFS="$OLD_IFS"
-	else
-		usage
-		exit 0
-	fi	
-	
-	qexe=$2
-	if [ "$qexe" ]
-	then
-		OLD_IFS="$IFS"
-                IFS=","
-                q_exec=($qexe)
-                IFS="$OLD_IFS"
-	else
-		usage
-		exit 0
-	fi	
-	if [ ${#qlist[*]} -ne ${#q_exec[*]} ]
-	then
-		echo "Queue list does not match with command list"
-		exit 0
-	fi
+    q=$1
+    if [ "$q" ]; then
+        OLD_IFS="$IFS"
+        IFS=","
+        qlist=($q)
+        IFS="$OLD_IFS"
+    else
+        usage
+        exit 0
+    fi
+
+    qexe=$2
+    if [ "$qexe" ]; then
+        OLD_IFS="$IFS"
+        IFS=","
+        q_exec=($qexe)
+        IFS="$OLD_IFS"
+    else
+        usage
+        exit 0
+    fi
+    if [ ${#qlist[*]} -ne ${#q_exec[*]} ]; then
+        echo "Queue list does not match with command list"
+        exit 0
+    fi
 
 }
 
 function checkConsumerStarted()
-
 {
     ps -u $USER -o cmd >~/.tmp
     consumerList=`cat ~/.tmp | grep start_consumer.sh | grep "exec" | grep -v grep|wc -l`
-    if [ ${consumerList} -ge 2 ];then
-	echo
+    if [ ${consumerList} -ge 2 ]; then
+        echo
         echo ERROR: duplicated starting. There is an active process.
-   	echo
+        echo
         exit
     fi
 
     historyAtQId=`cat $HOME/.autoUpdate.sh|grep '#job'|awk '{print $2}'`
-    if [ -z "$historyAtQId" ];then
+    if [ -z "$historyAtQId" ]; then
         return
     fi
     atqListCount=`atq|awk '{print $1}'|grep -w ${historyAtQId}|grep -v grep|wc -l`
-    if [ ${atqListCount} -ne 0 ]
-    then
-	 echo
-	 echo "ERROR: duplicated starting. There is a job in 'at' queue."
-	 echo
-	 exit
+    if [ ${atqListCount} -ne 0 ]; then
+        echo
+        echo "ERROR: duplicated starting. There is a job in 'at' queue."
+        echo
+        exit
     fi
 }
 
 function analyzeMessageInfo()
 {
-        result=$1
-        build_no=`cat $result|awk '/BUILD_ID/'|cut -d ":" -f2`
-        branch=`cat $result|awk '/BUILD_SVN_BRANCH/'|cut -d ":" -f2|tr -d " "`
-        bit=`cat $result|awk '/BUILD_BIT/'|cut -d ":" -f2|tr -d " "`
-        scenario=`cat $result|awk '/BUILD_SCENARIOS/'|cut -d ":" -f2|tr -d " "`
-        build_is_from_git=`cat $result|awk '/BUILD_IS_FROM_GIT/'|cut -d ":" -f2|tr -d " "`
-        url_cn=`cat $result|grep "BUILD_URLS:"`
-        url_kr=`cat $result|grep "BUILD_URLS_KR:"`
-        url_cn_1=${url_cn#*:}
-        url_kr_1=${url_kr#*:}
-        store_branch=`cat $result|awk '/BUILD_STORE_ID/'|cut -d ":" -f2|tr -d " "`
+    result=$1
+    build_no=`cat $result|awk '/BUILD_ID/'|cut -d ":" -f2`
+    branch=`cat $result|awk '/BUILD_SVN_BRANCH/'|cut -d ":" -f2|tr -d " "`
+    bit=`cat $result|awk '/BUILD_BIT/'|cut -d ":" -f2|tr -d " "`
+    scenario=`cat $result|awk '/BUILD_SCENARIOS/'|cut -d ":" -f2|tr -d " "`
+    build_is_from_git=`cat $result|awk '/BUILD_IS_FROM_GIT/'|cut -d ":" -f2|tr -d " "`
+    url_cn=`cat $result|grep "BUILD_URLS:"`
+    url_kr=`cat $result|grep "BUILD_URLS_KR:"`
+    url_cn_1=${url_cn#*:}
+    url_kr_1=${url_kr#*:}
+    store_branch=`cat $result|awk '/BUILD_STORE_ID/'|cut -d ":" -f2|tr -d " "`
 
-        if [ $ser_site == 'china' ]
-        then
-            url=$url_cn_1
-        else
-            url=$url_kr_1
-        fi
+    if [ $ser_site == 'china' ]; then
+        url=$url_cn_1
+    else
+        url=$url_kr_1
+    fi
 
-        fn=${url##*/}
-        fexe=${fn##*.}
-        if [ "$fexe" == 'zip' ]
-        then
-                isWin='yes'
-        fi
+    fn=${url##*/}
+    fexe=${fn##*.}
+    if [ "$fexe" == 'zip' ]; then
+        isWin='yes'
+    fi
 }
 
 function hasTestBuild()
 {
-	analyzeMessageInfo ${CTP_HOME}/common/sched/result/$fileName
-  	if [ "$build_no" ] && [ "$scenario" ] && [ "$branch" ] 
-	then
-		hasBuild="true"
-	else
-		hasBuild="false"
-	fi	
+    analyzeMessageInfo ${CTP_HOME}/common/sched/result/$fileName
+    if [ "$build_no" ] && [ "$scenario" ] && [ "$branch" ]; then
+        hasBuild="true"
+    else
+        hasBuild="false"
+    fi
 }
 
 ##Consumer MAIN##
@@ -364,126 +348,115 @@ checkConsumerStarted
 #loop to consume task messages
 while [ 1 ]
 do
-        count=0
-	#loop queue list
-	for x in ${qlist[@]}
-	do
-		#update client
-        if [ $withoutSync -ne 1 ]
-		then
- 			updateCodes $branchName
-		fi
-	
-		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
-		isFromGit=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep BUILD_IS_FROM_GIT|awk -F ':' '{print $2}'`
-		isStartByData=`echo $existsMsgId|grep "[^0-9]"|wc -l`
-		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
-		then
-			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
-			# Update CTP if ENV_CTP_BRANCH_NAME is set in continue mode
-			tempBranchContinue=""
-			if [ $withoutSync -ne 1 ]
-			then
-				source ${CTP_HOME}/common/sched/init.sh $ser_site
-				if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]
-				then
-					echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
-					updateCodes $CTP_BRANCH_NAME
-					tempBranchContinue="$branchName"
-				fi
-			fi
-			(cd ${CTP_HOME}; export BUILD_IS_FROM_GIT=$isFromGit ;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
-			
-			echo
+    count=0
+    #loop queue list
+    for x in ${qlist[@]}
+    do
+        #update client
+        if [ $withoutSync -ne 1 ]; then
+            updateCodes $branchName
+        fi
+
+        existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
+        isFromGit=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep BUILD_IS_FROM_GIT|awk -F ':' '{print $2}'`
+        isStartByData=`echo $existsMsgId|grep "[^0-9]"|wc -l`
+        if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]; then
+            echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
+            # Update CTP if ENV_CTP_BRANCH_NAME is set in continue mode
+            tempBranchContinue=""
+            if [ $withoutSync -ne 1 ]; then
+                source ${CTP_HOME}/common/sched/init.sh $ser_site
+                if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]; then
+                    echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
+                    updateCodes $CTP_BRANCH_NAME
+                    tempBranchContinue="$branchName"
+                fi
+            fi
+            (cd ${CTP_HOME}; export BUILD_IS_FROM_GIT=$isFromGit ;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
+
+            echo
             echo "End continue mode test!"
-			consumerTimer ${existsMsgId} "stop"
-			
-			# Restore original branch if temp branch was used
-			[ -n "$tempBranchContinue" ] && updateCodes $tempBranchContinue
-			
-			contimeENDTIME=`getTimeStamp`
-			echo "END_CONTINUE_TIME:${contimeENDTIME}"
-			echo '' > ${CTP_HOME}/common/sched/status/${x}
-			echo
-		fi
+            consumerTimer ${existsMsgId} "stop"
 
-		startAgent $x 
-		hasTestBuild
-		
-		#update client again if ENV_CTP_BRANCH_NAME is set in message
-		tempBranch=""
-		if [ "$hasBuild" == "true" ] && [ $withoutSync -ne 1 ]
-		then
-			source ${CTP_HOME}/common/sched/init.sh $ser_site
-			if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]
-			then
-				echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
-				updateCodes $CTP_BRANCH_NAME
-				tempBranch="$branchName"
-			fi
-		fi
-		
-		if [ "$isDebug" == "--debug" ]
-		then
-			echo "-------------------------- Debug Message Information -----------------------------"
-			cat ${CTP_HOME}/common/sched/result/$fileName
-			echo "----------------------------------------------------------------------------------"
-			exit 0
-		elif [ "$hasBuild" == "true" ]
-		then
-			if [ -f ${CTP_HOME}/common/ext/${q_exec[$count]}.sh ] 
-			then
-				echo "Action: $x , ${q_exec[$count]}.sh, GENERAL"
-				
-				if [ -f $statFile ]		
- 				then		
- 					rm -f $statFile		
- 				else		
- 					mkdir -p ${CTP_HOME}/common/sched/status		
-                fi		
- 							
- 				touch $statFile		
- 				TestTime=`getTimeStamp`		
- 				echo "QUEUE:${x}" > $statFile		
- 				echo "START_TIME:${TestTime}" >> $statFile
-			
-				echo
-				echo "Log msg id into queue file!"
-				echo "MSG_ID:$msgId" > ${CTP_HOME}/common/sched/status/$x
-				echo "BUILD_IS_FROM_GIT:$build_is_from_git" >> ${CTP_HOME}/common/sched/status/$x
-				echo "START_TIME:${TestTime}" >> ${CTP_HOME}/common/sched/status/$x
-				echo
+            # Restore original branch if temp branch was used
+            [ -n "$tempBranchContinue" ] && updateCodes $tempBranchContinue
 
-				consumerTimer $msgId "start"
-			
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/${q_exec[$count]}.sh)
-			
-				consumerTimer $msgId "stop"
+            contimeENDTIME=`getTimeStamp`
+            echo "END_CONTINUE_TIME:${contimeENDTIME}"
+            echo '' > ${CTP_HOME}/common/sched/status/${x}
+            echo
+        fi
 
-				# Restore original branch if temp branch was used
-				[ -n "$tempBranch" ] && updateCodes $tempBranch
+        startAgent $x
+        hasTestBuild
 
-				ENDTIME=`getTimeStamp`
-				echo 
-				echo "Clean msg id from queue file"
-				echo '' > ${CTP_HOME}/common/sched/status/$x
-				echo "END_TIME:${ENDTIME}"
-				echo
-				
-			else
-				echo "Please check if your script exists!"
-			fi
-		else
-			echo "No build"
-		fi	
- 	        let "count=count+1"	
- 	        
-		if [ -f $statFile ]		
- 		then		
- 			rm -f $statFile		
- 		fi
-	done
-	sleep 5 
+        #update client again if ENV_CTP_BRANCH_NAME is set in message
+        tempBranch=""
+        if [ "$hasBuild" == "true" ] && [ $withoutSync -ne 1 ]; then
+            source ${CTP_HOME}/common/sched/init.sh $ser_site
+            if [ "$CTP_BRANCH_NAME" ] && [ "$CTP_BRANCH_NAME" != "$branchName" ]; then
+                echo "ENV_CTP_BRANCH_NAME detected: $CTP_BRANCH_NAME (updating from $branchName)"
+                updateCodes $CTP_BRANCH_NAME
+                tempBranch="$branchName"
+            fi
+        fi
+
+        if [ "$isDebug" == "--debug" ]; then
+            echo "-------------------------- Debug Message Information -----------------------------"
+            cat ${CTP_HOME}/common/sched/result/$fileName
+            echo "----------------------------------------------------------------------------------"
+            exit 0
+        elif [ "$hasBuild" == "true" ]; then
+            if [ -f ${CTP_HOME}/common/ext/${q_exec[$count]}.sh ]; then
+                echo "Action: $x , ${q_exec[$count]}.sh, GENERAL"
+
+                if [ -f $statFile ]; then
+                    rm -f $statFile
+                else
+                    mkdir -p ${CTP_HOME}/common/sched/status
+                fi
+
+                touch $statFile
+                TestTime=`getTimeStamp`
+                echo "QUEUE:${x}" > $statFile
+                echo "START_TIME:${TestTime}" >> $statFile
+
+                echo
+                echo "Log msg id into queue file!"
+                echo "MSG_ID:$msgId" > ${CTP_HOME}/common/sched/status/$x
+                echo "BUILD_IS_FROM_GIT:$build_is_from_git" >> ${CTP_HOME}/common/sched/status/$x
+                echo "START_TIME:${TestTime}" >> ${CTP_HOME}/common/sched/status/$x
+                echo
+
+                consumerTimer $msgId "start"
+
+                (cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/${q_exec[$count]}.sh)
+
+                consumerTimer $msgId "stop"
+
+                # Restore original branch if temp branch was used
+                [ -n "$tempBranch" ] && updateCodes $tempBranch
+
+                ENDTIME=`getTimeStamp`
+                echo
+                echo "Clean msg id from queue file"
+                echo '' > ${CTP_HOME}/common/sched/status/$x
+                echo "END_TIME:${ENDTIME}"
+                echo
+
+            else
+                echo "Please check if your script exists!"
+            fi
+        else
+            echo "No build"
+        fi
+        let "count=count+1"
+
+        if [ -f $statFile ]; then
+            rm -f $statFile
+        fi
+    done
+    sleep 5 
 done
 
 echo "-------------------------- End Test -----------------------------"
