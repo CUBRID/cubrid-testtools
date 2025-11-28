@@ -70,22 +70,22 @@ public class Test {
 		this.mlog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "test_" + envId + ".log"), false, context.isContinueMode());
 		this.finishedLog = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "dispatch_tc_FIN_" + envId + ".txt"), false, context.isContinueMode());
 		String buildId = context.getBuildId();
-                String[] versionParts = buildId.split("\\.");
+        String[] versionParts = buildId.split("\\.");
 
 		// Select common.inc by version:
-                // <= 11.3 -> common.inc.legacy
-                // == 11.4 -> common.inc.114 (CUBRIDQA-1244)
-                // >= 11.5 -> common.inc (CBRD-25862)
-                String commonIncFile;
-                int major = Integer.parseInt(versionParts[0]);
-                int minor = Integer.parseInt(versionParts[1]);
-                if (major < 11 || (major == 11 && minor <= 3)) {
-                        commonIncFile = "common.inc.legacy";
-                } else if (major == 11 && minor == 4) {
-                        commonIncFile = "common.inc.114";
-                } else {
-                        commonIncFile = "common.inc";
-                }
+        // <= 11.3 -> common.inc.legacy
+        // == 11.4 -> common.inc.114 (CUBRIDQA-1244)
+        // >= 11.5 -> common.inc (CBRD-25862)
+        String commonIncFile;
+        int major = Integer.parseInt(versionParts[0]);
+        int minor = Integer.parseInt(versionParts[1]);
+        if (major < 11 || (major == 11 && minor <= 3)) {
+                commonIncFile = "common.inc.legacy";
+        } else if (major == 11 && minor == 4) {
+                commonIncFile = "common.inc.114";
+        } else {
+                commonIncFile = "common.inc";
+        }
 		mlog.println("Using common.inc file: " + commonIncFile);
 		this.commonReader = new CommonReader(CommonUtils.concatFile(com.navercorp.cubridqa.common.Constants.ENV_CTP_HOME + "/cdc_repl/lib", commonIncFile));
 	}
