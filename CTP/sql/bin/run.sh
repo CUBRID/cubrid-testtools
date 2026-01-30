@@ -309,6 +309,9 @@ function config_cubrid_without_ha()
      if [ "${cubrid_ver_p1}" -gt 11 ] || { [ "${cubrid_ver_p1}" -eq 11 ] && [ "${cubrid_ver_p2}" -ge 5 ]; }; then
         echo "Filtering out deprecated parameters for CUBRID 11.5+"
         cubrid_conf_para=`echo "$cubrid_conf_para" | sed 's/java_stored_procedure=[^|]*||*//g' | sed 's/||*$//'`
+        # Set ha_mode=no for CUBRID 11.5+ in [sql/cubrid.conf] section
+        echo "Setting ha_mode parameter to no for CUBRID 11.5+"
+        cubrid_conf_para=`echo "$cubrid_conf_para" | sed 's/ha_mode=yes/ha_mode=no/g' | sed 's/ha_mode=on/ha_mode=no/g'`
      fi
 
      if [ "$cubrid_conf_para" ];then
@@ -370,7 +373,12 @@ function config_cubrid_ha()
      fi
 
      cnt=`cat $CUBRID/conf/cubrid.conf | grep -v "#" | grep ha_mode | grep -E 'on|yes' | wc -l `
-     hasConfigHA=`ini -s "sql/cubrid_ha.conf" ${config_file_main} ha_mode`
+     # Set ha_mode=no for CUBRID 11.5+ in [sql/cubrid_ha.conf] section
+     if [ "${cubrid_ver_p1}" -gt 11 ] || { [ "${cubrid_ver_p1}" -eq 11 ] && [ "${cubrid_ver_p2}" -ge 5 ]; }; then
+        hasConfigHA="no"
+     else
+        hasConfigHA=`ini -s "sql/cubrid_ha.conf" ${config_file_main} ha_mode`
+     fi
      if [ "$hasConfigHA" == "yes" ] || [ "$hasConfigHA" == "on" ]
      then
   	if [ "$cnt" -gt 0 ]
