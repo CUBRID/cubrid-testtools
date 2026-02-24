@@ -15,7 +15,7 @@ HC_CHECK_FOR_EACH_STATEMENT_10=select 'db_attr_setdomain_elm' TABLE_NAME, db_att
 HC_CHECK_FOR_EACH_STATEMENT_11=select 'db_attribute' TABLE_NAME, db_attribute.* from db_attribute order by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16;
 HC_CHECK_FOR_EACH_STATEMENT_12=select 'db_vclass' TABLE_NAME, db_vclass.* from db_vclass order by 1,2,3,4;
 HC_CHECK_FOR_EACH_STATEMENT_13=select 'db_direct_super_class' TABLE_NAME, db_direct_super_class.* from db_direct_super_class order by 1,2;
-HC_CHECK_FOR_EACH_STATEMENT_14=select 'db_class' TABLE_NAME, class_name, owner_name, class_type, is_system_class, tde_algorithm, statistics_strategy, partitioned, is_reuse_oid_class, collation, comment from db_class order by 1,2,3,4,5,6,7,8,9,10;
+HC_CHECK_FOR_EACH_STATEMENT_14=select 'db_class' TABLE_NAME, class_name, owner_name, class_type, is_system_class, is_replication_class, tde_algorithm, statistics_strategy, partitioned, is_reuse_oid_class, collation, comment from db_class order by 1,2,3,4,5,6,7,8,9,10,11,12;
 HC_CHECK_FOR_EACH_STATEMENT_15=select '_db_serial' TABLE_NAME, if(owner is null, USER, (select name from db_user where db_user=owner)) owner, _db_serial.name, _db_serial.current_val, _db_serial.increment_val, _db_serial.max_val, _db_serial.min_val, _db_serial.start_val, _db_serial.cyclic, _db_serial.started, _db_serial.class_name, _db_serial.attr_name, _db_serial.cached_num, _db_serial.comment from _db_serial;
 HC_CHECK_FOR_EACH_STATEMENT_16=select '_db_collation' TABLE_NAME, _db_collation.* from _db_collation order by 1,2,3,4,5,6,7,8,9;
 HC_CHECK_FOR_EACH_STATEMENT_17=select '_db_data_type' TABLE_NAME, _db_data_type.* from _db_data_type order by 1,2,3;

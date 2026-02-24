@@ -93,9 +93,12 @@ public class SQLFileReader {
 		int countLeftBracket = CountString(startEnumSubString, "(");
 		int countRightBracket = CountString(startEnumSubString, ")");
 		if (countLeftBracket <= countRightBracket && countRightBracket > 0) {
-			String startSubString = line.substring(0, line.toUpperCase().lastIndexOf("'"));
-			String endSubString = line.toUpperCase().substring(line.toUpperCase().lastIndexOf("'")).replaceFirst("\\)", ")  PRIMARY KEY");
-			line = startSubString + endSubString;
+			// Do not add PRIMARY KEY if REPLICATION option exists
+			if (!editLine.hasReplication()) {
+				String startSubString = line.substring(0, line.toUpperCase().lastIndexOf("'"));
+				String endSubString = line.toUpperCase().substring(line.toUpperCase().lastIndexOf("'")).replaceFirst("\\)", ")  PRIMARY KEY");
+				line = startSubString + endSubString;
+			}
 			editLine.setLine(line);
 			editLine.setEnumType(false);
 			editLine.setCreateTableOrClass(false);
@@ -111,11 +114,26 @@ public class SQLFileReader {
 
 	// Edited by cn15209 20120627
 	// add primary key
-	private EditLine editLineForCreateTableOrClass(String line, boolean isCreateTableOrClass, boolean isEnumType) {
+	private EditLine editLineForCreateTableOrClass(String line, boolean isCreateTableOrClass, boolean isEnumType, boolean hasReplication) {
 		EditLine editLine = new EditLine();
 		editLine.setLine(line);
 		editLine.setCreateTableOrClass(isCreateTableOrClass);
 		editLine.setEnumType(isEnumType);
+		editLine.setHasReplication(hasReplication);
+
+		// Check for REPLICATION ON/OFF option
+		String upperLine = line.toUpperCase();
+		if (upperLine.indexOf("REPLICATION ON") >= 0 || upperLine.indexOf("REPLICATION OFF") >= 0) {
+			editLine.setHasReplication(true);
+			editLine.setCreateTableOrClass(false);
+			return editLine;
+		}
+
+		// If REPLICATION option exists, do not add PRIMARY KEY
+		if (hasReplication) {
+			editLine.setCreateTableOrClass(false);
+			return editLine;
+		}
 
 		if (line.toUpperCase().indexOf("PRIMARY KEY") >= 0) {
 			editLine.setCreateTableOrClass(false);
@@ -283,11 +301,13 @@ public class SQLFileReader {
 		private String line = "";
 		private boolean isCreateTableOrClass = false;
 		private boolean isEnumType = false;
+		private boolean hasReplication = false;
 
 		public EditLine() {
 			setLine("");
 			setCreateTableOrClass(false);
 			setEnumType(false);
+			setHasReplication(false);
 		}
 
 		public void setLine(String line) {
@@ -314,6 +334,14 @@ public class SQLFileReader {
 			return isEnumType;
 		}
 
+		public void setHasReplication(boolean hasReplication) {
+			this.hasReplication = hasReplication;
+		}
+
+		public boolean hasReplication() {
+			return hasReplication;
+		}
+
 	}
 
 	public void convert() throws IOException {
@@ -324,6 +352,7 @@ public class SQLFileReader {
 		out.write("--test:" + Constants.LINE_SEPARATOR);
 		boolean isCreateTableOrClass = false;
 		boolean isEnumType = false;
+		boolean hasReplication = false;
 		EditLine editLine = null;
 		HoldCasCheck holdCasCheck;
 		while ((line = lineReader.readLine()) != null) {
@@ -347,10 +376,11 @@ public class SQLFileReader {
 			}
 
 			// edited by cn15209 20120627
-			editLine = editLineForCreateTableOrClass(line, isCreateTableOrClass, isEnumType);
+			editLine = editLineForCreateTableOrClass(line, isCreateTableOrClass, isEnumType, hasReplication);
 			line = editLine.getLine();
 			isCreateTableOrClass = editLine.isCreateTableOrClass();
 			isEnumType = editLine.isEnumType();
+			hasReplication = editLine.hasReplication();
 			lineScanner.scan(line);
 			if (line.endsWith(";")) {
 				if (lineScanner.isInPlcsqlText()) {
@@ -371,9 +401,10 @@ public class SQLFileReader {
 							addCheckPoint();
 						}
 					}
-					isMultipleLine = false;
-					shouldBeDeleted = false;
-					isDML = false;
+				isMultipleLine = false;
+				shouldBeDeleted = false;
+				isDML = false;
+				hasReplication = false;
 				}
 			} else {
 				if (isMultipleLine) {
@@ -500,3 +531,4 @@ public class SQLFileReader {
 
 	}
 }
+
