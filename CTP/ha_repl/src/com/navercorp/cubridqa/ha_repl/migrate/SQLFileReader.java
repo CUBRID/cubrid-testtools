@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.ha_repl.HoldCasCheck;
@@ -45,6 +46,8 @@ public class SQLFileReader {
 
 	OutputStreamWriter out = null;
 	boolean isDML = false;
+	private File replicationTableFile = null;
+	private ArrayList<String> replicationTableList = new ArrayList<String>();
 
 	public SQLFileReader(File file) throws Exception {
 		this.fis = new FileInputStream(file);
@@ -54,6 +57,7 @@ public class SQLFileReader {
 		String outFilename = file.getAbsolutePath();
 		outFilename = outFilename.substring(0, outFilename.lastIndexOf(".")) + ".test";
 		File outFile = new File(outFilename);
+		this.replicationTableFile = new File(outFilename + ".repl_table");
 		if (!outFile.exists()) {
 			try {
 				outFile.createNewFile();
@@ -66,6 +70,79 @@ public class SQLFileReader {
 			out = new OutputStreamWriter(new FileOutputStream(outFile), "UTF-8");
 		} catch (IOException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	private String extractCreateTableName(String line) {
+		if (line == null) {
+			return "";
+		}
+		String upperLine = line.toUpperCase();
+		int posCreateTable = upperLine.indexOf("CREATE TABLE");
+		int posCreateClass = upperLine.indexOf("CREATE CLASS");
+		if (posCreateTable < 0 && posCreateClass < 0) {
+			return "";
+		}
+
+		String namePart = line;
+		if (posCreateTable >= 0) {
+			namePart = line.substring(posCreateTable).replaceFirst("(?i)CREATE\\s+TABLE\\s+", "");
+		} else if (posCreateClass >= 0) {
+			namePart = line.substring(posCreateClass).replaceFirst("(?i)CREATE\\s+CLASS\\s+", "");
+		}
+		namePart = namePart.trim();
+		if (namePart.length() == 0) {
+			return "";
+		}
+
+		int end = namePart.length();
+		for (int i = 0; i < namePart.length(); i++) {
+			char c = namePart.charAt(i);
+			if (Character.isWhitespace(c) || c == '(') {
+				end = i;
+				break;
+			}
+		}
+		return namePart.substring(0, end).trim();
+	}
+
+	private void addReplicationTableName(String tableName) {
+		if (tableName == null || tableName.trim().length() == 0) {
+			return;
+		}
+		for (String item : replicationTableList) {
+			if (item.equalsIgnoreCase(tableName.trim())) {
+				return;
+			}
+		}
+		replicationTableList.add(tableName.trim());
+	}
+
+	private void writeReplicationTableList() {
+		if (replicationTableList.size() == 0) {
+			if (replicationTableFile != null && replicationTableFile.exists()) {
+				replicationTableFile.delete();
+			}
+			return;
+		}
+
+		OutputStreamWriter tableWriter = null;
+		try {
+			tableWriter = new OutputStreamWriter(new FileOutputStream(replicationTableFile), "UTF-8");
+			for (String tableName : replicationTableList) {
+				tableWriter.write(tableName);
+				tableWriter.write(Constants.LINE_SEPARATOR);
+			}
+			tableWriter.flush();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				if (tableWriter != null) {
+					tableWriter.close();
+				}
+			} catch (Exception e) {
+			}
 		}
 	}
 
@@ -114,17 +191,25 @@ public class SQLFileReader {
 
 	// Edited by cn15209 20120627
 	// add primary key
-	private EditLine editLineForCreateTableOrClass(String line, boolean isCreateTableOrClass, boolean isEnumType, boolean hasReplication) {
+	private EditLine editLineForCreateTableOrClass(String line, boolean isCreateTableOrClass, boolean isEnumType, boolean hasReplication, String createTableName) {
 		EditLine editLine = new EditLine();
 		editLine.setLine(line);
 		editLine.setCreateTableOrClass(isCreateTableOrClass);
 		editLine.setEnumType(isEnumType);
 		editLine.setHasReplication(hasReplication);
+		editLine.setCreateTableName(createTableName);
 
 		// Check for REPLICATION ON/OFF option
 		String upperLine = line.toUpperCase();
+		if (upperLine.indexOf("CREATE TABLE") >= 0 || upperLine.indexOf("CREATE CLASS") >= 0) {
+			String foundTableName = extractCreateTableName(line);
+			if (foundTableName.length() > 0) {
+				editLine.setCreateTableName(foundTableName);
+			}
+		}
 		if (upperLine.indexOf("REPLICATION ON") >= 0 || upperLine.indexOf("REPLICATION OFF") >= 0) {
 			editLine.setHasReplication(true);
+			addReplicationTableName(editLine.getCreateTableName());
 			editLine.setCreateTableOrClass(false);
 			return editLine;
 		}
@@ -211,9 +296,11 @@ public class SQLFileReader {
 			if (line.toUpperCase().indexOf("ENUM") >= 0 && line.toUpperCase().indexOf("'") >= 0) {
 				return checkEnum(line, editLine);
 			} else if (true == isEnumType && line.contains(")")) {
-				String startSubString = line.substring(0, line.toUpperCase().lastIndexOf("'"));
-				String endSubString = line.toUpperCase().substring(line.toUpperCase().lastIndexOf("'")).replaceFirst("\\)", ")  PRIMARY KEY");
-				line = startSubString + endSubString;
+				if (!hasReplication) {
+					String startSubString = line.substring(0, line.toUpperCase().lastIndexOf("'"));
+					String endSubString = line.toUpperCase().substring(line.toUpperCase().lastIndexOf("'")).replaceFirst("\\)", ")  PRIMARY KEY");
+					line = startSubString + endSubString;
+				}
 				editLine.setLine(line);
 				editLine.setEnumType(false);
 				editLine.setCreateTableOrClass(false);
@@ -302,12 +389,14 @@ public class SQLFileReader {
 		private boolean isCreateTableOrClass = false;
 		private boolean isEnumType = false;
 		private boolean hasReplication = false;
+		private String createTableName = "";
 
 		public EditLine() {
 			setLine("");
 			setCreateTableOrClass(false);
 			setEnumType(false);
 			setHasReplication(false);
+			setCreateTableName("");
 		}
 
 		public void setLine(String line) {
@@ -342,6 +431,14 @@ public class SQLFileReader {
 			return hasReplication;
 		}
 
+		public void setCreateTableName(String createTableName) {
+			this.createTableName = createTableName;
+		}
+
+		public String getCreateTableName() {
+			return createTableName;
+		}
+
 	}
 
 	public void convert() throws IOException {
@@ -353,6 +450,7 @@ public class SQLFileReader {
 		boolean isCreateTableOrClass = false;
 		boolean isEnumType = false;
 		boolean hasReplication = false;
+		String createTableName = "";
 		EditLine editLine = null;
 		HoldCasCheck holdCasCheck;
 		while ((line = lineReader.readLine()) != null) {
@@ -376,11 +474,12 @@ public class SQLFileReader {
 			}
 
 			// edited by cn15209 20120627
-			editLine = editLineForCreateTableOrClass(line, isCreateTableOrClass, isEnumType, hasReplication);
+			editLine = editLineForCreateTableOrClass(line, isCreateTableOrClass, isEnumType, hasReplication, createTableName);
 			line = editLine.getLine();
 			isCreateTableOrClass = editLine.isCreateTableOrClass();
 			isEnumType = editLine.isEnumType();
 			hasReplication = editLine.hasReplication();
+			createTableName = editLine.getCreateTableName();
 			lineScanner.scan(line);
 			if (line.endsWith(";")) {
 				if (lineScanner.isInPlcsqlText()) {
@@ -405,6 +504,7 @@ public class SQLFileReader {
 				shouldBeDeleted = false;
 				isDML = false;
 				hasReplication = false;
+				createTableName = "";
 				}
 			} else {
 				if (isMultipleLine) {
@@ -428,6 +528,7 @@ public class SQLFileReader {
 		}
 		out.flush();
 		out.close();
+		writeReplicationTableList();
 	}
 
 	private void addCheckPoint() throws IOException {
