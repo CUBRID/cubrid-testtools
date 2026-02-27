@@ -79,7 +79,7 @@ public class Test {
                 // Select common.inc by version:
                 // <= 11.3 -> common.inc.legacy
                 // == 11.4 -> common.inc.114 (CUBRIDQA-1244)
-                // >= 11.5 -> common.inc (CBRD-25862)
+                // >= 11.5 -> common.inc (CBRD-25862, CBRD-26096)
                 String commonIncFile;
                 int major = Integer.parseInt(versionParts[0]);
                 int minor = Integer.parseInt(versionParts[1]);
