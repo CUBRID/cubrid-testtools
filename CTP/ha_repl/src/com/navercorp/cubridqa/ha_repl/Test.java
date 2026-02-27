@@ -25,6 +25,9 @@
 package com.navercorp.cubridqa.ha_repl;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -62,6 +65,7 @@ public class Test {
 	boolean testCompleted;
 	String currentTestFile;
 	Context context;
+	ArrayList<String> replicationTablesForCurrentTest = new ArrayList<String>();
 
 	public Test(Context context, String envId) throws Exception {
 		this.context = context;
@@ -75,7 +79,7 @@ public class Test {
                 // Select common.inc by version:
                 // <= 11.3 -> common.inc.legacy
                 // == 11.4 -> common.inc.114 (CUBRIDQA-1244)
-                // >= 11.5 -> common.inc (CBRD-25862)
+                // >= 11.5 -> common.inc (CBRD-25862, CBRD-26096)
                 String commonIncFile;
                 int major = Integer.parseInt(versionParts[0]);
                 int minor = Integer.parseInt(versionParts[1]);
@@ -147,6 +151,7 @@ public class Test {
 
 	private void executeTest(File f) {
 		this.currentTestFile = f.getAbsolutePath();
+		this.replicationTablesForCurrentTest = loadReplicationTableList();
 		
 		//do clean
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
@@ -595,6 +600,87 @@ public class Test {
 			this.fail100List.add(info);
 	}
 
+	private ArrayList<String> loadReplicationTableList() {
+		ArrayList<String> tables = new ArrayList<String>();
+		File tableFile = new File(this.currentTestFile + ".repl_table");
+		if (!tableFile.exists()) {
+			return tables;
+		}
+
+		FileInputStream fis = null;
+		InputStreamReader reader = null;
+		LineNumberReader lineReader = null;
+		try {
+			fis = new FileInputStream(tableFile);
+			reader = new InputStreamReader(fis, "UTF-8");
+			lineReader = new LineNumberReader(reader);
+			String line = null;
+			while ((line = lineReader.readLine()) != null) {
+				line = line.trim();
+				if (line.length() == 0) {
+					continue;
+				}
+				boolean duplicated = false;
+				for (String tableName : tables) {
+					if (tableName.equalsIgnoreCase(line)) {
+						duplicated = true;
+						break;
+					}
+				}
+				if (!duplicated) {
+					tables.add(line);
+				}
+			}
+		} catch (Exception e) {
+			mlog.println("fail to read replication table list: " + e.getMessage());
+		} finally {
+			try {
+				if (lineReader != null) {
+					lineReader.close();
+				}
+			} catch (Exception e) {
+			}
+			try {
+				if (reader != null) {
+					reader.close();
+				}
+			} catch (Exception e) {
+			}
+			try {
+				if (fis != null) {
+					fis.close();
+				}
+			} catch (Exception e) {
+			}
+		}
+		if (tableFile.exists()) {
+			tableFile.delete();
+		}
+		return tables;
+	}
+
+	private String escapeSqlLiteral(String input) {
+		if (input == null) {
+			return "";
+		}
+		return CommonUtils.replace(input, "'", "''");
+	}
+
+	private void mergeTableInfo(ArrayList<String[]> target, ArrayList<String[]> source) {
+		for (String[] candidate : source) {
+			boolean exists = false;
+			for (String[] current : target) {
+				if (current[0].equalsIgnoreCase(candidate[0])) {
+					exists = true;
+					break;
+				}
+			}
+			if (!exists) {
+				target.add(candidate);
+			}
+		}
+	}
+
 	private ArrayList<String> getCheckSQLForDML() throws Exception {
 		SSHConnect ssh = hostManager.getHost("master");
 		String script = "cd $CUBRID;";
@@ -604,6 +690,28 @@ public class Test {
 		GeneralScriptInput csql = new GeneralScriptInput(script);
 		String tablesResult = ssh.execute(csql);
 		ArrayList<String[]> tablesToBeVerified = HaReplUtils.extractTableToBeVerified(tablesResult, "FIND_PK_CLASS");
+		ArrayList<String> replicationTables = this.replicationTablesForCurrentTest;
+		if (replicationTables.size() > 0) {
+			StringBuffer inClause = new StringBuffer();
+			for (int i = 0; i < replicationTables.size(); i++) {
+				if (i > 0) {
+					inClause.append(",");
+				}
+				inClause.append("'").append(escapeSqlLiteral(replicationTables.get(i).toLowerCase())).append("'");
+			}
+
+			String replScript = "cd $CUBRID;";
+			replScript += "csql -u dba "
+					+ hostManager.getTestDb()
+					+ " -c \"select 'FIND'||'_'||'REPL_CLASS', class_name, count(*) from db_attribute where lower(class_name) in ("
+					+ inClause.toString()
+					+ ") group by class_name;\" | grep 'FIND_REPL_CLASS' ";
+			GeneralScriptInput replCsql = new GeneralScriptInput(replScript);
+			String replTablesResult = ssh.execute(replCsql);
+			ArrayList<String[]> replTablesToBeVerified = HaReplUtils.extractTableToBeVerified(replTablesResult, "FIND_REPL_CLASS");
+			mergeTableInfo(tablesToBeVerified, replTablesToBeVerified);
+		}
+
 		ArrayList<String> result = new ArrayList<String>();
 		if (tablesToBeVerified.size() == 0) {
 			return result;
@@ -1035,3 +1143,4 @@ public class Test {
 		}
 	}
 }
+
