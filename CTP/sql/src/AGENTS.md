@@ -9,42 +9,30 @@ sql/src/
   com/navercorp/cubridqa/cqt/
     console/
       bo/
-        ConsoleBO.java        1528 lines, 32 methods - Core business logic for test execution
+        ConsoleBO.java        1528 lines - Core orchestrator for test execution
       dao/
-        ConsoleDAO.java       1039 lines - Data access, JDBC operations, connection pooling
+        ConsoleDAO.java       1039 lines - JDBC operations, connection pooling
       bean/
-        CaseResult.java       Test case result data
-        ProcessMonitor.java   Process monitoring
-        Sql.java              SQL statement wrapper
-        Summary.java          Test summary data
-        Test.java             Test definition
-        TestCaseSummary.java  Per-case summary
+        CaseResult.java, ProcessMonitor.java, Sql.java, Summary.java, Test.java, TestCaseSummary.java
+        DefTestDB.java, SqlParam.java, SummaryInfo.java, SystemModel.java
       util/
-        TestUtil.java         1037 lines, 31 methods - Test execution utilities
-        CommonFileUtile.java  614 lines - File operations
-        FileUtil.java         408 lines - File I/O helpers
-        StringUtil.java       418 lines - String manipulation
-        SQLParser.java        416 lines - SQL script parsing
-        (30+ more utilities)
-      Executor.java           Test execution interface
-      ConsoleAgent.java       Console agent for test control
+        TestUtil.java         1037 lines - Test execution utilities
+        CommonFileUtile.java, FileUtil.java, StringUtil.java, SQLParser.java
+        CubridConnManager.java, CubridConnection.java, CubridDBCenter.java, CubridUtil.java
+        EnvSetter.java, EnvGetter.java, EnvironmentCheck.java
+        ConfigurationXMLReader.java, DatabaseXMLReader.java, ConfigureUtil.java
+        CommandExecutor.java, CommandUtil.java, ShellFileMaker.java
+        ErrorInterrupt.java, ErrorInterruptUtil.java, LogUtil.java
+        MyDataSource.java, MyDriverManager.java, PropertiesUtil.java
+        RepositoryPathUtil.java, StdOutJob.java, StreamGobbler.java, SystemConst.java
+      Executor.java, ConsoleAgent.java
     common/
-      SQLParser.java          SQL parsing (splitting statements)
-      LineScanner.java        Line-by-line file scanning
-      SSHConnect.java         SSH wrapper
-      CommonUtils.java        SQL-specific utilities
-      ShellInput.java         Shell interaction
+      SQLParser.java, LineScanner.java, SSHConnect.java, CommonUtils.java, ShellInput.java
+      RunRemoteScript.java, SFTP.java, SFTPDownload.java, SFTPUpload.java
     model/
-      Case.java               Test case model
-      Resource.java           Resource model
+      Case.java, Resource.java
     webconsole/
-      Starter.java            Web console entry point
-      WebServer.java          HTTP server for results
-      WebModel.java           384 lines - Result display logic
-      SummaryModel.java       Summary display
-      SummaryItem.java        Summary item
-      Compare.java            Result comparison
-      Util.java               Web console utilities
+      Starter.java, WebServer.java, WebModel.java, SummaryModel.java, SummaryItem.java, Compare.java, Util.java
   name/fraser/neil/plaintext/
     diff_match_patch.java     2471 lines - Third-party diff library
 ```
@@ -52,26 +40,26 @@ sql/src/
 ## WHERE TO LOOK
 | Task | Location |
 |---|---|
-| SQL test execution logic | `com/navercorp/cubridqa/cqt/console/bo/ConsoleBO.java` |
-| JDBC/connection handling | `com/navercorp/cubridqa/cqt/console/dao/ConsoleDAO.java` |
-| Test utilities | `com/navercorp/cubridqa/cqt/console/util/TestUtil.java` |
-| SQL script parsing | `com/navercorp/cubridqa/cqt/common/SQLParser.java` |
-| Web console | `com/navercorp/cubridqa/cqt/webconsole/` |
-| Result comparison | `com/navercorp/cubridqa/cqt/webconsole/compare/` |
+| SQL test execution | `console/bo/ConsoleBO.java` |
+| JDBC/connection handling | `console/dao/ConsoleDAO.java` |
+| Test utilities | `console/util/TestUtil.java` |
+| SQL script parsing | `common/SQLParser.java` |
+| Web console | `webconsole/` |
+| Result comparison | `webconsole/Compare.java` |
 
 ## CONVENTIONS
-- ConsoleBO is the main orchestrator; it calls ConsoleDAO for DB operations and TestUtil for helpers.
-- SQL files are parsed into individual statements by SQLParser; results compared via diff_match_patch.
-- Web console runs as separate HTTP server on port 8888 (configurable).
-- 35+ utility classes in console/util/ - check there before adding new helpers.
+- ConsoleBO orchestrates; calls ConsoleDAO for DB ops and TestUtil for helpers.
+- SQL files parsed into statements by SQLParser; results compared via diff_match_patch.
+- Web console runs as HTTP server on port 8888 (configurable).
+- 40+ utility classes in console/util/ — check before adding new helpers.
 
 ## ANTI-PATTERNS (This Module)
-- ConsoleBO.java has 10 TODO comments (lines 130, 862, 870, 1155, 1161, 1180, 1186, 1223, 1243, 1482)
-- ConsoleDAO.java uses @Deprecated methods (lines 230, 387, 410, 425, 454) and has BUG comment at line 629
+- ConsoleBO.java: 10 TODO comments (lines 130, 862, 870, 1155, 1161, 1180, 1186, 1223, 1243, 1482)
+- ConsoleDAO.java: @Deprecated methods (lines 230, 387, 410, 425, 454); BUG comment at line 629
 - Multiple @SuppressWarnings("deprecation") in util/ (EnvSetter, MyDriverManager, MyDataSource, ErrorInterruptUtil, ConsoleAgent)
-- ShellFileMaker.java, FileUtil.java, CommonFileUtile.java have empty TODO catch blocks
+- ShellFileMaker.java, FileUtil.java, CommonFileUtile.java: empty TODO catch blocks
 
 ## NOTES
-- ConsoleBO.java (1528 lines) is the most complex file; changes need careful testing.
-- Web console only supports SQL and MEDIUM test types (not SHELL or others).
-- SQLParser handles splitting SQL files on semicolons; be careful with stored procedures.
+- ConsoleBO.java (1528 lines) is most complex; changes need careful testing.
+- Web console supports SQL and MEDIUM only (not SHELL or others).
+- SQLParser splits on semicolons; be careful with stored procedures.

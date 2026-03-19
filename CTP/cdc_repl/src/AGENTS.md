@@ -1,59 +1,48 @@
 # CTP/cdc_repl/src - CDC Replication Testing Framework
 
 ## OVERVIEW
-Change Data Capture (CDC) replication test framework; verifies data change streaming and replication.
+Change Data Capture (CDC) replication test framework; verifies data change streaming and replication. **Nearly identical to ha_repl/ structure.**
 
 ## STRUCTURE
 ```
 cdc_repl/src/com/navercorp/cubridqa/cdc_repl/
-  Main.java                 Entry point for CDC tests
+  Main.java                 Entry point
   Test.java                 1038 lines - Test orchestration (very large)
-  TestReader.java           Test case file parser (deprecated @ line 167)
-  TestMonitor.java          Test execution monitoring
-  Context.java              Configuration management
-  Feedback.java             Result feedback interface
+  TestReader.java           Test case parser (@Deprecated line 167)
+  TestMonitor.java          Execution monitoring
+  Context.java              Configuration
+  Feedback.java             Result interface
   InstanceManager.java      CDC instance lifecycle
-  HoldCasCheck.java         CAS checks
-  CheckRequirement.java     Pre-flight checks
   CheckDiff.java            Data consistency checking
-  CommonReader.java         Common file reading
-  CdcReplUtils.java         CDC-specific utilities
+  CdcReplUtils.java         CDC utilities
   migrate/
-    SQLFileReader.java      493 lines - SQL file migration reader
-    Convert.java            Format conversion
+    SQLFileReader.java      493 lines - SQL migration reader
   deploy/
-    Deploy.java             CDC deployment orchestration
+    Deploy.java             Deployment orchestration
   dispatch/
     Dispatch.java           Test dispatching
   impl/
     FeedbackDB.java         468 lines - Database result storage
-    FeedbackFile.java       File-based result storage
+    FeedbackFile.java       File-based storage
     FeedbackNull.java       No-op feedback
 ```
 
 ## WHERE TO LOOK
 | Task | Location |
 |---|---|
-| Entry point | `com/navercorp/cubridqa/cdc_repl/Main.java` |
-| Test orchestration (largest file) | `com/navercorp/cubridqa/cdc_repl/Test.java` (1038 lines) |
-| SQL migration | `com/navercorp/cubridqa/cdc_repl/migrate/SQLFileReader.java` (493 lines) |
-| Configuration | `com/navercorp/cubridqa/cdc_repl/Context.java` |
-| CDC deployment | `com/navercorp/cubridqa/cdc_repl/deploy/Deploy.java` |
-| Dispatch | `com/navercorp/cubridqa/cdc_repl/dispatch/Dispatch.java` |
-| Results | `com/navercorp/cubridqa/cdc_repl/impl/FeedbackDB.java` |
+| Entry point | `Main.java` |
+| Test orchestration | `Test.java` (1038 lines) |
+| SQL migration | `migrate/SQLFileReader.java` (493 lines) |
+| Configuration | `Context.java` |
+| Results storage | `impl/FeedbackDB.java` (468 lines) |
 
-## CONVENTIONS
-- Nearly identical structure to ha_repl/ (same author/pattern).
-- Uses SQL test cases transformed for CDC validation.
-- Same deploy/dispatch/impl pattern as shell/, isolation/, ha_repl/.
+## ANTI-PATTERNS (Known Issues)
+- **Test.java**: tbd workaround (line 206), TODO catch blocks (lines 718, 725)
+- **TestReader.java**: @Deprecated (line 167)
+- **FeedbackDB.java**: 3 TODO stubs (lines 351, 356, 444)
+- **FeedbackNull.java**: 12 TODO stubs (lines 41-108)
 
-## ANTI-PATTERNS (This Module)
-- Test.java: tbd workaround comment (line 206), TODO Auto-generated catch blocks (lines 718, 725)
-- TestReader.java: @Deprecated at line 167
-- FeedbackDB.java: 3 TODO Auto-generated stubs (lines 351, 356, 444)
-- FeedbackNull.java: 12 TODO Auto-generated stubs (lines 41-108)
-
-## NOTES
-- Test.java is 1038 lines (tied for largest with ha_repl/Test.java).
-- Mirror structure of ha_repl/ - changes to one likely need to be mirrored in the other.
-- CDC is newer feature than HA replication; code is slightly more recent but follows same patterns.
+## CRITICAL NOTES
+- **Mirror structure**: cdc_repl/ mirrors ha_repl/ exactly. Changes to ha_repl/ often need mirroring here.
+- **Shared patterns**: deploy/dispatch/impl structure identical to shell/, isolation/, ha_repl/.
+- **Test.java size**: 1038 lines (tied with ha_repl/Test.java for largest in suite).

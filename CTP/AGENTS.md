@@ -14,6 +14,7 @@ CTP/
   common/
     src/                    Shared framework + dispatcher (CTP.java)
     lib/                    cubridqa-common.jar + runtime deps (mail/, etc)
+    script/                 35 shell scripts for test operations
     sched/
       src/                  Scheduler sources
       lib/                  cubridqa-scheduler.jar
@@ -46,12 +47,14 @@ CTP/
 | Per-suite main classes (reflective loading) | `CTP/shell/src/.../Main.java`, `CTP/isolation/src/.../Main.java`, `CTP/ha_repl/src/.../Main.java`, `CTP/cdc_repl/src/.../Main.java` |
 | Ant jar packaging filters / classpath | `CTP/build.xml`, `CTP/*/lib/MANIFEST.MF` |
 | Native CCI executor build | `CTP/sql_by_cci/compile.sh` |
+| Shell script utilities | `CTP/common/script/` (see AGENTS.md there) |
 
 ## CONVENTIONS
 - Ant compiles multiple `*/src` trees into a single `CTP/build/` output, then jars by package include filters (not a per-module build).
 - Runtime uses URLClassLoader + reflection to call suite `Main.exec(...)` from suite jars (no direct compile-time dependencies).
 - Config is INI-like (`conf/*.conf`) with nested section names like `[sql/cubrid.conf]`; default config is `conf/<suite>.conf` when `-c` is omitted.
 - Java language baseline is strict: `source="1.6" target="1.6"` in `CTP/build.xml` (no Java 7+ features).
+- `jdbc/` and `sql_by_cci/` have no Java src/ directories; they are test runners only.
 
 ## COMMANDS
 | Goal | Command |

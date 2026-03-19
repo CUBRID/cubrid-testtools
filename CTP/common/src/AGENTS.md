@@ -1,15 +1,15 @@
-# CTP/common/src - Shared Utilities
+# CTP/common/src - Shared Utilities & Dispatcher
 
 ## OVERVIEW
-Common framework code shared across all CTP test suites: dispatch logic, utilities, INI parsing, SSH/invoker helpers, and the scheduler.
+Common framework code shared across all CTP test suites: dispatch logic, utilities, INI parsing, SSH/invoker helpers, and the scheduler. Core entry point is `CTP.java` which uses URLClassLoader + reflection to dynamically load and invoke suite runners.
 
 ## STRUCTURE
 ```
 common/src/
   com/navercorp/cubridqa/
     ctp/
-      CTP.java              Main dispatcher; parses CLI, loads suite jars reflectively
-      ComponentEnum.java    Enum of supported test types (sql, shell, isolation...)
+      CTP.java              Main dispatcher; parses CLI, loads suite jars via URLClassLoader
+      ComponentEnum.java    Enum of supported test types (sql, shell, isolation, ha_repl, cdc_repl...)
       IniCommand.java       CLI tool for INI read/write (used by ini.sh)
       Version.java          Version constants
     common/
@@ -23,22 +23,19 @@ common/src/
       ShellInput.java       Shell interaction abstractions
       ScriptInput.java      Script parameter handling
       SparseFsMain.java     Filesystem maintenance tool
+      SFTP.java, SFTPUpload.java, SFTPDownload.java  SFTP file transfer
       coreanalyzer/         Core dump analysis utilities
-        AnalyzerMain.java
-        IssueMain.java
+        AnalyzerMain.java, Analyzer.java, IssueMain.java
       grepo/                 Git repository service
-        RepoService.java
-        UpgradeMain.java
+        RepoService.java, UpgradeMain.java
   com/nhncorp/cubrid/common/
     grepo/                  Legacy package (NHN Corp) for git operations
 common/sched/src/
   com/navercorp/cubridqa/scheduler/
     producer/               Build/schedule producers
-      Main.java
-      Compatibility.java
+      Main.java, Compatibility.java
       crontab/
-        BuildMain.java
-        SchedularMain.java
+        BuildMain.java, SchedularMain.java
     consumer/               Test execution consumers
     common/                 Shared scheduler utilities
 ```
@@ -46,26 +43,28 @@ common/sched/src/
 ## WHERE TO LOOK
 | Task | Location |
 |---|---|
-| Add new test type to CTP | `com/navercorp/cubridqa/ctp/ComponentEnum.java` → add enum → `CTP.java` → add dispatch logic |
-| Change how suites are loaded/invoked | `com/navercorp/cubridqa/ctp/CTP.java` lines 100-200 (URLClassLoader + reflection) |
-| INI section parsing quirks | `com/navercorp/cubridqa/common/IniData.java` (handles `[suite/cubrid.conf]` nesting) |
-| SSH connection handling | `com/navercorp/cubridqa/common/SSHConnect.java`, `RunRemoteScript.java` |
-| Shared string/file/encoding utils | `com/navercorp/cubridqa/common/CommonUtils.java` (55 methods) |
-| Scheduler build triggers | `com/navercorp/cubridqa/scheduler/producer/` |
+| Add new test type to CTP | `ComponentEnum.java` (add enum) → `CTP.java` (add dispatch case) |
+| URLClassLoader + reflection patterns | `CTP.java` (loads suite jars from `CTP/*/lib/*.jar`, calls `Main.exec()` reflectively) |
+| INI section parsing | `IniData.java` (handles nested sections like `[sql/cubrid.conf]`) |
+| SSH/SFTP operations | `SSHConnect.java`, `RunRemoteScript.java`, `SFTP*.java` |
+| String/file/crypto utils | `CommonUtils.java` (55 methods: encoding, hashing, file ops, string manipulation) |
+| Scheduler build triggers | `scheduler/producer/` (crontab-based build scheduling) |
 
 ## CONVENTIONS
-- URLClassLoader loads suite jars at runtime from `CTP/*/lib/*.jar` based on ComponentEnum.
-- `Main.exec(String configFilename)` is the reflective entry point expected by all suites.
-- INI sections can be nested: `[sql/cubrid.conf]` means "cubrid.conf section inside sql".
-- `CommonUtils.java` is the kitchen-sink utility; prefer adding domain-specific helpers to suite-specific utils.
+- **URLClassLoader pattern**: Suite jars loaded at runtime from `CTP/*/lib/*.jar` based on ComponentEnum; no compile-time dependencies.
+- **Reflection entry point**: All suites must implement `Main.exec(String configFilename)` for dynamic invocation.
+- **INI nesting**: Sections like `[sql/cubrid.conf]` map to nested config structures.
+- **CommonUtils**: Kitchen-sink utility; prefer suite-specific helpers for domain logic.
 
 ## COMMANDS
 | Task | Command |
 |---|---|
-| Rebuild only common (then rebuild downstream jars) | `cd CTP && ant compile` (compiles common + all) → `ant dist` |
+| Rebuild common + all suites | `cd CTP && ant clean dist` |
+| Compile only (no jars) | `cd CTP && ant compile` |
 | Test INI parsing | `CTP/bin/ini.sh -s <section> <file> <key>` |
 
 ## NOTES
-- Changing `CTP.java` dispatch logic affects ALL suites; test with at least 2 different suite types before commit.
-- `CommonUtils.java` has 55 methods; use `lsp_find_references` before modifying signatures.
-- Scheduler (`sched/`) is built into separate `cubridqa-scheduler.jar`; rarely needs changes unless modifying build triggers.
+- Changing `CTP.java` dispatch affects ALL suites; test with ≥2 suite types before commit.
+- `CommonUtils.java` has 55 methods; check references before modifying signatures.
+- Scheduler (`sched/`) builds to separate `cubridqa-scheduler.jar`; rarely modified unless changing build triggers.
+- URLClassLoader + reflection allows dynamic suite loading without recompiling CTP core.

@@ -9,10 +9,10 @@ shell/src/com/navercorp/cubridqa/shell/
   main/
     Main.java               Entry point: `shell` suite dispatcher
     RunShellMain.java       1124 lines - Main orchestration with Quartz scheduling
-    Test.java               699 lines - Test case lifecycle management
+    Test.java               Test case lifecycle management
     TestFactory.java        Test case factory
     TestMonitor.java        Test execution monitoring
-    Context.java            560 lines, 73 methods - Configuration management
+    Context.java            560 lines, 80 methods - Configuration management
     ShellHelper.java        Shell-specific helpers
     GeneralLocalTest.java   Local test execution
     JdbcLocalTest.java      JDBC-based local tests
@@ -38,11 +38,11 @@ shell/src/com/navercorp/cubridqa/shell/
   result/
     Feedback.java           Result feedback interface
     FeedbackDB.java         527 lines - Database result storage
-    FeedbackFile.java       File-based result storage
-    FeedbackNull.java       No-op feedback
+    FeedbackFile.java       469 lines - File-based result storage
+    FeedbackNull.java       124 lines - No-op feedback
   service/
     ShellService.java       RMI service interface
-    ShellServiceImpl.java   RMI service implementation
+    ShellServiceImpl.java    RMI service implementation
     Server.java             Service server
 ```
 
@@ -50,15 +50,15 @@ shell/src/com/navercorp/cubridqa/shell/
 | Task | Location |
 |---|---|
 | Main shell test orchestration | `com/navercorp/cubridqa/shell/main/RunShellMain.java` (1124 lines) |
-| Configuration/context | `com/navercorp/cubridqa/shell/main/Context.java` (560 lines, 73 methods) |
-| Test case execution | `com/navercorp/cubridqa/shell/main/Test.java` (699 lines) |
+| Configuration/context | `com/navercorp/cubridqa/shell/main/Context.java` (560 lines, 80 methods) |
+| Test case execution | `com/navercorp/cubridqa/shell/main/Test.java` |
 | SSH operations | `com/navercorp/cubridqa/shell/common/SSHConnect.java` |
 | Multi-node dispatch | `com/navercorp/cubridqa/shell/dispatch/Dispatch.java` |
 | Test deployment | `com/navercorp/cubridqa/shell/deploy/` |
-| Result handling | `com/navercorp/cubridqa/shell/result/FeedbackDB.java` |
+| Result handling | `com/navercorp/cubridqa/shell/result/FeedbackDB.java` (527 lines) |
 
 ## CONVENTIONS
-- Context.java manages ALL configuration with 73 methods - it's the central config hub.
+- Context.java manages ALL configuration with 80 methods - it's the central config hub.
 - RunShellMain.java uses Quartz scheduler for job management.
 - Supports both local and remote (SSH) test execution.
 - Feedback classes handle result reporting to DB, file, or null (no-op).
@@ -69,6 +69,6 @@ shell/src/com/navercorp/cubridqa/shell/
 - FeedbackNull.java: 13 TODO Auto-generated stubs (lines 35-120)
 
 ## NOTES
-- Context.java has the highest method count (73) in the entire CTP codebase; check for existing methods before adding.
+- Context.java has the highest method count (80) in the entire CTP codebase; check for existing methods before adding.
 - RunShellMain.java is the second-largest file (1124 lines) after sql/ConsoleBO.java.
 - Supports SVN and GitHub for test case retrieval (TestCaseSVN.java, TestCaseGithub.java).
