@@ -1,0 +1,219 @@
+{
+  "skill_name": "cubrid-test-skills",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a SQL test case for CUBRID that tests a bug fix for issue CBRD_22696. The bug is related to a problem with string concatenation in SELECT queries. Create a test that creates a table with VARCHAR columns, inserts some data, and tests string concatenation using the || operator.",
+      "expected_output": "A SQL test case file (.sql) with proper structure including DROP TABLE IF EXISTS, CREATE TABLE with test data, concatenation queries using || operator, and proper cleanup.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "Has DROP TABLE IF EXISTS",
+          "type": "contains",
+          "target": "output file",
+          "value": "DROP TABLE IF EXISTS"
+        },
+        {
+          "name": "Has CREATE TABLE",
+          "type": "contains",
+          "target": "output file",
+          "value": "CREATE TABLE"
+        },
+        {
+          "name": "Has string concatenation",
+          "type": "contains",
+          "target": "output file",
+          "value": "||"
+        },
+        {
+          "name": "Has ORDER BY",
+          "type": "contains",
+          "target": "output file",
+          "value": "ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need to run a SQL test case using CTP interactive mode. The test is located at /home/user/cubrid-testcases/sql/_13_issues/_22_1h/cases/cbrd_22696.sql. Show me the exact commands to start interactive mode and run this specific test.",
+      "expected_output": "Commands for starting CTP interactive mode, running a specific SQL test case. Should include ctp.sh sql --interactive and run command.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "Has interactive mode command",
+          "type": "contains",
+          "target": "output file",
+          "value": "--interactive"
+        },
+        {
+          "name": "Has run command",
+          "type": "contains",
+          "target": "output file",
+          "value": "run"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create a shell test case for CUBRID that tests the cubrid compactdb utility. The test should create a database, run compactdb on it, and verify the utility works correctly. Use the standard shell test template with init and finish functions.",
+      "expected_output": "A shell script (.sh) that initializes with init.sh, creates a database using cubrid_createdb, runs cubrid compactdb, verifies success, and cleans up with cubrid deletedb and finish. Should use write_ok/write_nok for assertions.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "Has init.sh sourcing",
+          "type": "contains",
+          "target": "output file",
+          "value": "init.sh"
+        },
+        {
+          "name": "Has cubrid_createdb",
+          "type": "contains",
+          "target": "output file",
+          "value": "cubrid_createdb"
+        },
+        {
+          "name": "Has write_ok or write_nok",
+          "type": "contains_any",
+          "target": "output file",
+          "value": ["write_ok", "write_nok"]
+        },
+        {
+          "name": "Has finish",
+          "type": "contains",
+          "target": "output file",
+          "value": "finish"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write an isolation test case that tests concurrent UPDATE operations on the same row with READ COMMITTED isolation level. The test should have 2 clients: Client 1 should start a transaction and update a row, Client 2 should try to read that row while Client 1's transaction is still open.",
+      "expected_output": "An isolation test case (.ctl) with MC setup for 2 clients, C1 and C2 client definitions, transaction isolation level set to read committed, test scenario with UPDATE, SELECT, COMMIT operations, proper wait commands, and cleanup.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "Has MC setup",
+          "type": "contains",
+          "target": "output file",
+          "value": "MC: setup NUM_CLIENTS"
+        },
+        {
+          "name": "Has isolation level",
+          "type": "contains",
+          "target": "output file",
+          "value": "set transaction isolation level"
+        },
+        {
+          "name": "Has UPDATE statement",
+          "type": "contains",
+          "target": "output file",
+          "value": "UPDATE"
+        },
+        {
+          "name": "Has wait commands",
+          "type": "contains",
+          "target": "output file",
+          "value": "MC: wait until"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "How do I debug a failed HA Replication test? The test shows differences between master and slave results. I need to know where to find the dump files, how to compare them, and when to create a diff file for legitimate differences.",
+      "expected_output": "Procedures for finding HA replication dump files, comparing with diff, and creating .diff_1 files for legitimate differences.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "Has master dump reference",
+          "type": "contains",
+          "target": "output file",
+          "value": ".master.dump"
+        },
+        {
+          "name": "Has slave dump reference",
+          "type": "contains",
+          "target": "output file",
+          "value": ".slave1.dump"
+        },
+        {
+          "name": "Has diff command",
+          "type": "contains",
+          "target": "output file",
+          "value": "diff"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "How do I run all SQL tests in CTP? I need to know the command to execute the full SQL test suite with the default configuration. Also explain where the results will be stored and how to check if any tests failed.",
+      "expected_output": "Full command for running SQL test suite, result locations, and failure checking procedures.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "Has sql suite command",
+          "type": "contains",
+          "target": "output file",
+          "value": "ctp.sh sql"
+        },
+        {
+          "name": "Has result location",
+          "type": "contains",
+          "target": "output file",
+          "value": "result"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Create a JDBC test case for testing the Connection.setAutoCommit() and Connection.getAutoCommit() methods in CUBRID JDBC driver. The test should verify that auto-commit mode can be turned on and off, and that getAutoCommit returns the correct value.",
+      "expected_output": "A Java test class extending GeneralTestCase with @Test annotated methods testing setAutoCommit and getAutoCommit functionality, using Assert assertions, proper package declaration, and imports.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "Has @Test annotation",
+          "type": "contains",
+          "target": "output file",
+          "value": "@Test"
+        },
+        {
+          "name": "Has setAutoCommit",
+          "type": "contains",
+          "target": "output file",
+          "value": "setAutoCommit"
+        },
+        {
+          "name": "Has getAutoCommit",
+          "type": "contains",
+          "target": "output file",
+          "value": "getAutoCommit"
+        },
+        {
+          "name": "Has Assert assertions",
+          "type": "contains",
+          "target": "output file",
+          "value": "Assert."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "I need to compile and run a CCI test case. The file is named test_cci.c. Show me the commands to compile it using CTP's compile.sh and then run the compiled binary.",
+      "expected_output": "Commands for compiling CCI test with compile.sh and executing the compiled binary.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "Has compile command",
+          "type": "contains",
+          "target": "output file",
+          "value": "compile.sh"
+        },
+        {
+          "name": "Has run command",
+          "type": "contains",
+          "target": "output file",
+          "value": "./test"
+        }
+      ]
+    }
+  ]
+}
