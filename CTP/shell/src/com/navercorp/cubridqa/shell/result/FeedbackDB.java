@@ -200,7 +200,7 @@ public class FeedbackDB implements Feedback {
 
 		executed_num = fail_num + succ_num;
 
-		float execute_rate = tbdNum <= 0 ? 0 : (float) executed_num / (float) tbdNum * 100;
+		float execute_rate = calculateExecuteRate(succ_num, fail_num, tbdNum);
 
 		try {
 			float success_rate = tbdNum <= 0 ? 0 : (float) succ_num / (float) executed_num * 100;
@@ -222,6 +222,15 @@ public class FeedbackDB implements Feedback {
 			close(stmt);
 			close(conn);
 		}
+	}
+
+	static float calculateExecuteRate(int succNum, int failNum, int totalTbdNum) {
+		if (totalTbdNum <= 0) {
+			return 0;
+		}
+
+		float executeRate = (float) (succNum + failNum) / (float) totalTbdNum * 100;
+		return executeRate > 100 ? 100 : executeRate;
 	}
 
 	public void showTestResult() {
