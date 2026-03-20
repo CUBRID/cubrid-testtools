@@ -134,9 +134,7 @@ function do_check_more_errors {
 
         host_ip=`hostname -i`
         if [ $core_dump_cnt -gt 0 ]; then
-            out=" : NOK found core file on host "$host_ip"("$backup_dir")"
-            echo $out >> $result_file_full_name
-            echo $out
+            echo " : NOK found core file on host "$host_ip"("$backup_dir")" | tee -a $result_file_full_name
 
             local has_cub_server_crash=0
             local is_cub_server=0
@@ -168,9 +166,14 @@ function do_check_more_errors {
             clear_core_analyzer_files
         fi
         if [ $fatal_err_cnt -gt 0 ]; then
-            out=" : NOK found fatal error on host "$host_ip"("$backup_dir")"
-            echo $out >> $result_file_full_name
-            echo $out
+            echo " : NOK found fatal error on host "$host_ip"("$backup_dir")" | tee -a $result_file_full_name
+            for f in $(grep -RIl 'FATAL ERROR' $CUBRID/log/); do
+                echo "== $f ==" | tee -a $result_file_full_name
+                # print the 'FATAL ERROR' line and 10 lines before and 10 lines after it
+                grep -B 10 -A 10 'FATAL ERROR' $f |& tee -a $result_file_full_name
+                echo "== end ==" | tee -a $result_file_full_name
+            done
+
         fi
         cp -rfp $CUBRID $backup_dir/CUBRID
         cp -rfp $test_case_dir $backup_dir
