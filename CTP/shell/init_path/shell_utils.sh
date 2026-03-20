@@ -169,8 +169,8 @@ function do_check_more_errors {
             echo " : NOK found fatal error on host "$host_ip"("$backup_dir")" | tee -a $result_file_full_name
             for f in $(grep -RIl 'FATAL ERROR' $CUBRID/log/); do
                 echo "== $f ==" | tee -a $result_file_full_name
-                # print the 'FATAL ERROR' line and 10 lines before and 10 lines after it
-                grep -B 10 -A 10 'FATAL ERROR' $f |& tee -a $result_file_full_name
+                # print the 'FATAL ERROR' line and 20 lines before and 20 lines after it
+                grep -B 20 -A 20 'FATAL ERROR' $f |& tee -a $result_file_full_name
                 echo "== end ==" | tee -a $result_file_full_name
             done
 
