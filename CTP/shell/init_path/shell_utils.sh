@@ -168,10 +168,13 @@ function do_check_more_errors {
         if [ $fatal_err_cnt -gt 0 ]; then
             echo " : NOK found fatal error on host "$host_ip"("$backup_dir")" | tee -a $result_file_full_name
             for f in $(grep -RIl 'FATAL ERROR' $CUBRID/log/); do
-                echo "== $f ==" | tee -a $result_file_full_name
-                # print the 'FATAL ERROR' line and 20 lines before and 20 lines after it
-                grep -B 20 -A 20 'FATAL ERROR' $f |& tee -a $result_file_full_name
-                echo "== end ==" | tee -a $result_file_full_name
+                # only for regular files which are not symbolic links
+                if [ -f "$f" ] && [ ! -L "$f" ]; then
+                    echo "== $f ==" | tee -a $result_file_full_name
+                    # print the 'FATAL ERROR' line and 20 lines before and 20 lines after it
+                    grep -B 20 -A 20 'FATAL ERROR' $f |& tee -a $result_file_full_name
+                    echo "== end ==" | tee -a $result_file_full_name
+                fi
             done
 
         fi
