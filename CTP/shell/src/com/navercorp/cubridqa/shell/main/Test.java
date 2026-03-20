@@ -131,6 +131,8 @@ public class Test {
 			
 			int currentRetryCount = dispatchItem.getRetryCount();
 			boolean isRetryDispatch = dispatchItem.isRetryDispatch();
+			boolean retryLifecycleHandled = false;
+			try {
 
 			/*
 			 * Reset test environment Kill CUBRID process, clear SSH and
@@ -214,23 +216,32 @@ public class Test {
 				}
 				
 				// Handle retry queue management
-				try {
-					if (needRetry && this.maxRetryCount > 0) {
-						Dispatch.getInstance().addFailedTestCaseForRetry(this.testCaseFullName, currentRetryCount);
-					}
-				} finally {
-					if (isRetryDispatch) {
-						Dispatch.getInstance().completeRetryDispatch(this.testCaseFullName);
-					}
+				if (isRetryDispatch) {
+					Dispatch.getInstance().completeRetryDispatchAndRequeueIfNeeded(this.testCaseFullName,
+							needRetry && this.maxRetryCount > 0, currentRetryCount);
+					retryLifecycleHandled = true;
+				} else if (needRetry && this.maxRetryCount > 0) {
+					Dispatch.getInstance().addFailedTestCaseForRetry(this.testCaseFullName, currentRetryCount);
 				}
 
 				workerLog.println("");
 			}
 
-			if (needDropTestCase) {
-				dropTestCaseAfterTest();
+				if (needDropTestCase) {
+					dropTestCaseAfterTest();
+				}
+				dispatchLog.println(this.testCaseFullName);
+			} finally {
+				if (isRetryDispatch && !retryLifecycleHandled) {
+					try {
+						Dispatch.getInstance().completeRetryDispatchAndRequeueIfNeeded(this.testCaseFullName,
+								true, currentRetryCount);
+					} catch (Exception e) {
+						workerLog.println("ERROR: fallback retry lifecycle handling failed: "
+								+ e.getMessage());
+					}
+				}
 			}
-			dispatchLog.println(this.testCaseFullName);
 		}
 
 		close();

@@ -31,6 +31,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -153,7 +154,11 @@ public class Dispatch {
 		retryCountMap.remove(testCase);
 	}
 
-	public synchronized void completeRetryDispatch(String testCase) {
+	public synchronized void completeRetryDispatchAndRequeueIfNeeded(String testCase, boolean needRetry, int currentRetryCount) {
+		if (needRetry && currentRetryCount < context.getMaxRetryCount()) {
+			retryCountMap.put(testCase, currentRetryCount + 1);
+		}
+
 		inProgressRetrySet.remove(testCase);
 	}
 	
