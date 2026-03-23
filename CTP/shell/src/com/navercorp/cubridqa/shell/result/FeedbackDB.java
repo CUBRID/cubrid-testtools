@@ -31,6 +31,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 
 import javax.sql.DataSource;
 
@@ -54,6 +55,9 @@ public class FeedbackDB implements Feedback {
 	int tbdNum = 0;
 	int macroSkippedNum = 0;
 	int tempSkippedNum = 0;
+	boolean lastPassEligible = false;
+	String lastPassVersionId = null;
+	String lastPassBuildWid = null;
 
 	public FeedbackDB(Context context) {
 		this.context = context;
@@ -116,6 +120,7 @@ public class FeedbackDB implements Feedback {
 		log.println(String.valueOf(task_id));
 		context.setTaskId(task_id);
 		log.close();
+		resolveLastPassBuildContext(build);
 	}
 
 	@Override
@@ -126,8 +131,10 @@ public class FeedbackDB implements Feedback {
 			cont = CommonUtils.getFileContent(CommonUtils.concatFile(context.getCurrentLogDir(), "current_task_id"));
 			this.task_id = Integer.parseInt(cont.trim());
 			context.setTaskId(task_id);
+			resolveLastPassBuildContext(context.getTestBuild());
 		} catch (Exception e) {
 			this.task_id = -1;
+			clearLastPassBuildContext();
 			e.printStackTrace();
 		}
 	}
@@ -316,58 +323,32 @@ public class FeedbackDB implements Feedback {
 
 	@Override
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
+		String category = context.getTestCategory();
+		Timestamp d = new Timestamp(System.currentTimeMillis());
+		resultCont = trimResultContent(resultCont);
+		boolean isExecutedCase = isExecutedCase(skippedType);
 
 		if (context.isSkipToSaveSuccCase() == false || flag == false) {
 			Connection conn = null;
-			int resultContSize = 0;
-
-			PreparedStatement stmt = null;
-			String sql;
-
-			long caseStopTime = System.currentTimeMillis();
-			Timestamp d = new Timestamp(caseStopTime);
-			if (resultCont != null) {
-				resultContSize = resultCont.length();
-				if (resultContSize > MAX_CONTENT_SIZE) {
-					String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE / 2);
-					String resultContSuffer = resultCont.substring(resultContSize - MAX_CONTENT_SIZE / 2, resultContSize);
-					resultCont = resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********"
-							+ System.getProperty("line.separator") + resultContSuffer;
-				}
-			}
-
-			sql = "insert into shell_items(main_id, case_file, env_node, elapse_time, test_result, is_timeout, has_core, result_cont, end_time, is_skipped, retry_count) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 			try {
 				conn = ds.getConnection();
-
-				stmt = conn.prepareStatement(sql);
-				stmt.setInt(1, task_id);
-				stmt.setString(2, testCase);
-				stmt.setString(3, envIdentify);
-				stmt.setDouble(4, elapseTime);
-				if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
-					stmt.setString(5, (flag ? "OK" : "NOK"));
-				} else {
-					stmt.setString(5, "");
+				int itemId = insertShellItem(conn, testCase, flag, elapseTime, resultCont, envIdentify, isTimeOut, hasCore, skippedType, retryCount, d);
+				if (isExecutedCase && flag == false && itemId > 0) {
+					insertLastPassSnapshot(conn, itemId, category, testCase);
 				}
-				stmt.setString(6, (isTimeOut ? "Y" : "N"));
-				stmt.setString(7, (hasCore ? "Y" : "N"));
-				stmt.setString(8, resultCont);
-				stmt.setTimestamp(9, d);
-				stmt.setString(10, skippedType);
-				stmt.setInt(11, retryCount);
-				stmt.executeUpdate();
-
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
-				close(stmt);
 				close(conn);
 			}
 		}
 
-		if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
+		if (isExecutedCase && flag) {
+			refreshLastPass(category, testCase, resultCont, d);
+		}
+
+		if (isExecutedCase) {
 			updateShellMain(flag, hasCore);
 		}
 	}
@@ -376,22 +357,12 @@ public class FeedbackDB implements Feedback {
 	public void onTestCaseStopEventForRetry(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType,
 			int retryCount) {
 		Connection conn = null;
-		int resultContSize = 0;
 
 		PreparedStatement stmt = null;
 		String sql;
 
-		long caseStopTime = System.currentTimeMillis();
-		Timestamp d = new Timestamp(caseStopTime);
-		if (resultCont != null) {
-			resultContSize = resultCont.length();
-			if (resultContSize > MAX_CONTENT_SIZE) {
-				String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE / 2);
-				String resultContSuffer = resultCont.substring(resultContSize - MAX_CONTENT_SIZE / 2, resultContSize);
-				resultCont = resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********"
-						+ System.getProperty("line.separator") + resultContSuffer;
-			}
-		}
+		Timestamp d = new Timestamp(System.currentTimeMillis());
+		resultCont = trimResultContent(resultCont);
 
 		sql = "insert into shell_retry_log(main_id, case_file, env_node, elapse_time, test_result, is_timeout, has_core, result_cont, end_time, is_skipped, retry_count) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -422,6 +393,248 @@ public class FeedbackDB implements Feedback {
 			close(stmt);
 			close(conn);
 		}
+	}
+
+	private int insertShellItem(Connection conn, String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType,
+			int retryCount, Timestamp endTime) throws Exception {
+		PreparedStatement stmt = null;
+		String sql = "insert into shell_items(main_id, case_file, env_node, elapse_time, test_result, is_timeout, has_core, result_cont, end_time, is_skipped, retry_count) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+		try {
+			stmt = conn.prepareStatement(sql);
+			stmt.setInt(1, task_id);
+			stmt.setString(2, testCase);
+			stmt.setString(3, envIdentify);
+			stmt.setDouble(4, elapseTime);
+			if (isExecutedCase(skippedType)) {
+				stmt.setString(5, (flag ? "OK" : "NOK"));
+			} else {
+				stmt.setString(5, "");
+			}
+			stmt.setString(6, (isTimeOut ? "Y" : "N"));
+			stmt.setString(7, (hasCore ? "Y" : "N"));
+			stmt.setString(8, resultCont);
+			stmt.setTimestamp(9, endTime);
+			stmt.setString(10, skippedType);
+			stmt.setInt(11, retryCount);
+			stmt.executeUpdate();
+		} finally {
+			close(stmt);
+		}
+
+		if (isExecutedCase(skippedType) && flag == false) {
+			return selectLastInsertId(conn);
+		}
+
+		return 0;
+	}
+
+	private void refreshLastPass(String category, String testCase, String resultCont, Timestamp endTime) {
+		if (isLastPassEligible() == false) {
+			return;
+		}
+
+		Connection conn = null;
+		try {
+			conn = ds.getConnection();
+			upsertLastPass(conn, category, testCase, resultCont, endTime, context.getTestBuild());
+		} catch (Exception e) {
+			warnLastPass("shell_last_pass refresh", category, testCase, e);
+		} finally {
+			close(conn);
+		}
+	}
+
+	private void insertLastPassSnapshot(Connection conn, int itemId, String category, String testCase) {
+		if (isLastPassEligible() == false) {
+			return;
+		}
+
+		PreparedStatement selectStmt = null;
+		PreparedStatement insertStmt = null;
+		ResultSet rs = null;
+
+		try {
+			selectStmt = conn.prepareStatement(
+					"select main_id, build_id, result_cont, end_time from shell_last_pass where category=? and version_id=? and case_file=? and build_wid<=? limit 1");
+			selectStmt.setString(1, category);
+			selectStmt.setString(2, lastPassVersionId);
+			selectStmt.setString(3, testCase);
+			selectStmt.setString(4, lastPassBuildWid);
+			rs = selectStmt.executeQuery();
+
+			if (rs.next()) {
+				int lastPassMainId = rs.getInt("main_id");
+				boolean isMainIdNull = rs.wasNull();
+				insertStmt = conn.prepareStatement(
+						"insert into shell_last_pass_snapshot(item_id, last_pass_main_id, last_pass_build_id, last_pass_result_cont, last_pass_end_time) values(?, ?, ?, ?, ?)");
+				insertStmt.setInt(1, itemId);
+				if (isMainIdNull) {
+					insertStmt.setNull(2, Types.INTEGER);
+				} else {
+					insertStmt.setInt(2, lastPassMainId);
+				}
+				insertStmt.setString(3, rs.getString("build_id"));
+				insertStmt.setString(4, rs.getString("result_cont"));
+				insertStmt.setTimestamp(5, rs.getTimestamp("end_time"));
+				insertStmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			warnLastPass("shell_last_pass_snapshot insert", category, testCase, e);
+		} finally {
+			close(rs);
+			close(selectStmt);
+			close(insertStmt);
+		}
+	}
+
+	private void upsertLastPass(Connection conn, String category, String testCase, String resultCont, Timestamp endTime, String buildId) throws Exception {
+		PreparedStatement selectStmt = null;
+		PreparedStatement updateStmt = null;
+		PreparedStatement insertStmt = null;
+		ResultSet rs = null;
+
+		try {
+			selectStmt = conn.prepareStatement("select build_id, build_wid from shell_last_pass where category=? and version_id=? and case_file=?");
+			selectStmt.setString(1, category);
+			selectStmt.setString(2, lastPassVersionId);
+			selectStmt.setString(3, testCase);
+			rs = selectStmt.executeQuery();
+
+			if (rs.next()) {
+				String storedBuildId = rs.getString("build_id");
+				String storedBuildWid = rs.getString("build_wid");
+				if (shouldReplaceLastPass(storedBuildId, storedBuildWid, buildId)) {
+					updateStmt = conn.prepareStatement(
+							"update shell_last_pass set build_id=?, build_wid=?, main_id=?, result_cont=?, end_time=? where category=? and version_id=? and case_file=?");
+					updateStmt.setString(1, buildId);
+					updateStmt.setString(2, lastPassBuildWid);
+					updateStmt.setInt(3, task_id);
+					updateStmt.setString(4, resultCont);
+					updateStmt.setTimestamp(5, endTime);
+					updateStmt.setString(6, category);
+					updateStmt.setString(7, lastPassVersionId);
+					updateStmt.setString(8, testCase);
+					updateStmt.executeUpdate();
+				}
+			} else {
+				insertStmt = conn.prepareStatement(
+						"insert into shell_last_pass(category, version_id, case_file, build_id, build_wid, main_id, result_cont, end_time) values(?, ?, ?, ?, ?, ?, ?, ?)");
+				insertStmt.setString(1, category);
+				insertStmt.setString(2, lastPassVersionId);
+				insertStmt.setString(3, testCase);
+				insertStmt.setString(4, buildId);
+				insertStmt.setString(5, lastPassBuildWid);
+				insertStmt.setInt(6, task_id);
+				insertStmt.setString(7, resultCont);
+				insertStmt.setTimestamp(8, endTime);
+				insertStmt.executeUpdate();
+			}
+		} finally {
+			close(rs);
+			close(selectStmt);
+			close(updateStmt);
+			close(insertStmt);
+		}
+	}
+
+	private boolean shouldReplaceLastPass(String storedBuildId, String storedBuildWid, String buildId) {
+		if (storedBuildWid == null || storedBuildWid.trim().length() == 0) {
+			return true;
+		}
+
+		int compareResult = storedBuildWid.compareTo(lastPassBuildWid);
+		if (compareResult < 0) {
+			return true;
+		}
+
+		return compareResult == 0 && buildId != null && buildId.equals(storedBuildId);
+	}
+
+	private int selectLastInsertId(Connection conn) throws Exception {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+
+		try {
+			stmt = conn.prepareStatement("select last_insert_id()");
+			rs = stmt.executeQuery();
+			if (rs.next()) {
+				return rs.getInt(1);
+			}
+		} finally {
+			close(rs);
+			close(stmt);
+		}
+
+		return 0;
+	}
+
+	private String trimResultContent(String resultCont) {
+		if (resultCont == null) {
+			return null;
+		}
+
+		int resultContSize = resultCont.length();
+		if (resultContSize <= MAX_CONTENT_SIZE) {
+			return resultCont;
+		}
+
+		String resultContPrefix = resultCont.substring(0, MAX_CONTENT_SIZE / 2);
+		String resultContSuffix = resultCont.substring(resultContSize - MAX_CONTENT_SIZE / 2, resultContSize);
+		return resultContPrefix + System.getProperty("line.separator") + "********** THE CONTENT LENGTH IS" + resultContSize + "(TRIMMED) **********" + System.getProperty("line.separator")
+				+ resultContSuffix;
+	}
+
+	private boolean isExecutedCase(String skippedType) {
+		return Constants.SKIP_TYPE_NO.equals(skippedType);
+	}
+
+	private void resolveLastPassBuildContext(String buildId) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+
+		clearLastPassBuildContext();
+		if (buildId == null || buildId.trim().length() == 0) {
+			return;
+		}
+
+		try {
+			conn = ds.getConnection();
+			stmt = conn.prepareStatement("select version_id, cversion(build_id) as build_wid from cubrid_build where build_id=? and build_type='general' limit 1");
+			stmt.setString(1, buildId);
+			rs = stmt.executeQuery();
+			if (rs.next()) {
+				lastPassVersionId = rs.getString("version_id");
+				lastPassBuildWid = rs.getString("build_wid");
+				lastPassEligible = lastPassVersionId != null && lastPassVersionId.trim().length() > 0 && lastPassBuildWid != null && lastPassBuildWid.trim().length() > 0;
+			}
+		} catch (Exception e) {
+			clearLastPassBuildContext();
+			warnLastPassBuild("cubrid_build resolve", buildId, e);
+		} finally {
+			close(rs);
+			close(stmt);
+			close(conn);
+		}
+	}
+
+	private void clearLastPassBuildContext() {
+		lastPassEligible = false;
+		lastPassVersionId = null;
+		lastPassBuildWid = null;
+	}
+
+	private boolean isLastPassEligible() {
+		return lastPassEligible && lastPassVersionId != null && lastPassBuildWid != null;
+	}
+
+	private void warnLastPass(String action, String category, String testCase, Exception e) {
+		System.err.println("[WARN] " + action + " failed for " + category + ":" + testCase + " - " + e.getMessage());
+	}
+
+	private void warnLastPassBuild(String action, String buildId, Exception e) {
+		System.err.println("[WARN] " + action + " failed for build_id=" + buildId + " - " + e.getMessage());
 	}
 
 	/**
