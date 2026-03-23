@@ -1,0 +1,14 @@
+<DefaultTestDB>
+  <id>testdb_for_Linux</id>
+  <name>testdb</name>
+  <dbaPwd></dbaPwd>
+  <pubPwd></pubPwd>
+  <dburl>jdbc:cubrid:localhost:33000:testdb:::</dburl>
+  <dbuser>dba</dbuser>
+  <dbpassword></dbpassword>
+  <connectionType>DriverManager</connectionType>
+  <charSet>UTF-8</charSet>
+  <version>Main</version>
+  <script>
+</script>
+</DefaultTestDB>
