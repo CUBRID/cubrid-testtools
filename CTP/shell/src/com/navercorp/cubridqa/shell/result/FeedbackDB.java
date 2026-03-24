@@ -325,7 +325,8 @@ public class FeedbackDB implements Feedback {
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
 		String category = context.getTestCategory();
 		Timestamp d = new Timestamp(System.currentTimeMillis());
-		resultCont = trimResultContent(resultCont);
+		String lastPassResultCont = resultCont;
+		String shellItemResultCont = trimResultContent(resultCont);
 		boolean isExecutedCase = isExecutedCase(skippedType);
 
 		if (context.isSkipToSaveSuccCase() == false || flag == false) {
@@ -333,7 +334,7 @@ public class FeedbackDB implements Feedback {
 
 			try {
 				conn = ds.getConnection();
-				int itemId = insertShellItem(conn, testCase, flag, elapseTime, resultCont, envIdentify, isTimeOut, hasCore, skippedType, retryCount, d);
+				int itemId = insertShellItem(conn, testCase, flag, elapseTime, shellItemResultCont, envIdentify, isTimeOut, hasCore, skippedType, retryCount, d);
 				if (isExecutedCase && flag == false && itemId > 0) {
 					insertLastPassSnapshot(conn, itemId, category, testCase);
 				}
@@ -345,7 +346,7 @@ public class FeedbackDB implements Feedback {
 		}
 
 		if (isExecutedCase && flag) {
-			refreshLastPass(category, testCase, resultCont, d);
+			refreshLastPass(category, testCase, lastPassResultCont, d);
 		}
 
 		if (isExecutedCase) {
