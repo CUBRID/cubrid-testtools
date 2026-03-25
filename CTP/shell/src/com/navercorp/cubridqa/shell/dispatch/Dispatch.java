@@ -29,8 +29,10 @@ package com.navercorp.cubridqa.shell.dispatch;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -61,6 +63,33 @@ public class Dispatch {
 	
 	// Retry management
 	private HashMap<String, Integer> retryCountMap;
+	private ArrayDeque<String> retryQueue;
+	private HashSet<String> inProgressRetrySet;
+	private HashSet<String> queuedRetrySet;
+
+	public static class DispatchItem {
+		private final String testCase;
+		private final int retryCount;
+		private final boolean retryDispatch;
+
+		public DispatchItem(String testCase, int retryCount, boolean retryDispatch) {
+			this.testCase = testCase;
+			this.retryCount = retryCount;
+			this.retryDispatch = retryDispatch;
+		}
+
+		public String getTestCase() {
+			return testCase;
+		}
+
+		public int getRetryCount() {
+			return retryCount;
+		}
+
+		public boolean isRetryDispatch() {
+			return retryDispatch;
+		}
+	}
 
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
@@ -69,6 +98,9 @@ public class Dispatch {
 		this.isFinished = false;
 		this.nextTestFileIndex = -1;
 		this.retryCountMap = new HashMap<String, Integer>();
+		this.retryQueue = new ArrayDeque<String>();
+		this.inProgressRetrySet = new HashSet<String>();
+		this.queuedRetrySet = new HashSet<String>();
 		load();
 	}
 
@@ -80,10 +112,7 @@ public class Dispatch {
 		return instance;
 	}
 
-	public synchronized String nextTestFile() {
-		if (isFinished)
-			return null;
-
+	public synchronized DispatchItem nextTestItem() {
 		// First, process all normal test cases
 		if (this.nextTestFileIndex < totalTbdSize) {
 			if (this.nextTestFileIndex < 0) {
@@ -91,39 +120,50 @@ public class Dispatch {
 			}
 			String nextTestFile = tbdList.get(this.nextTestFileIndex);
 			this.nextTestFileIndex++;
-			return nextTestFile;
+			return new DispatchItem(nextTestFile, 0, false);
 		}
 
 		// After all normal cases are done, process retry cases
-		if (!retryCountMap.isEmpty()) {
-			// Get first retry case
-			String retryTestFile = retryCountMap.keySet().iterator().next();
-			return retryTestFile;
+		if (!retryQueue.isEmpty()) {
+			String retryTestFile = retryQueue.pollFirst();
+			queuedRetrySet.remove(retryTestFile);
+			Integer retryCountObj = retryCountMap.get(retryTestFile);
+			int retryCount = retryCountObj != null ? retryCountObj : 0;
+			inProgressRetrySet.add(retryTestFile);
+			return new DispatchItem(retryTestFile, retryCount, true);
 		}
 
-		// All done
-		isFinished = true;
 		return null;
 	}
-	
-	public synchronized void addFailedTestCaseForRetry(String testCase) {
-		Integer currentRetryCount = retryCountMap.get(testCase);
-		if (currentRetryCount == null) {
-			currentRetryCount = 0;
+
+	public synchronized void enqueueRetryFromAttempt(String testCase, int currentRetryCount) {
+		if (currentRetryCount >= context.getMaxRetryCount()) {
+			return;
 		}
-		
-		if (currentRetryCount < context.getMaxRetryCount()) {
-			retryCountMap.put(testCase, currentRetryCount + 1);
+		int nextCount = currentRetryCount + 1;
+
+		if (inProgressRetrySet.contains(testCase) || queuedRetrySet.contains(testCase)) {
+			Integer existing = retryCountMap.get(testCase);
+			if (existing == null || nextCount > existing) {
+				retryCountMap.put(testCase, nextCount);
+			}
+			return;
 		}
+
+		retryCountMap.put(testCase, nextCount);
+		retryQueue.addLast(testCase);
+		queuedRetrySet.add(testCase);
 	}
-	
-	public synchronized Integer getRetryCount(String testCase) {
-		Integer count = retryCountMap.get(testCase);
-		return count != null ? count : 0;
-	}
-	
-	public synchronized void removeFromRetryQueue(String testCase) {
-		retryCountMap.remove(testCase);
+
+	public synchronized void finalizeRetryDispatch(String testCase, boolean needRetry, int currentRetryCount) {
+		inProgressRetrySet.remove(testCase);
+		if (needRetry) {
+			enqueueRetryFromAttempt(testCase, currentRetryCount);
+			return;
+		}
+		if (!queuedRetrySet.contains(testCase)) {
+			retryCountMap.remove(testCase);
+		}
 	}
 	
 
@@ -372,7 +412,9 @@ public class Dispatch {
 	}
 
 	public boolean isFinished() {
-		return this.isFinished;
+		boolean normalDone = this.totalTbdSize == 0 || this.nextTestFileIndex >= this.totalTbdSize;
+		boolean retryDone = this.retryQueue.isEmpty() && this.inProgressRetrySet.isEmpty();
+		return normalDone && retryDone;
 	}
 
 	public int getMacroSkippedSize() {

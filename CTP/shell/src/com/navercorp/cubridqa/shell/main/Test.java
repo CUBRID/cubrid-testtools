@@ -107,10 +107,11 @@ public class Test {
 				}
 			}
 
-			testCase = Dispatch.getInstance().nextTestFile();
-			if (testCase == null) {
+			Dispatch.DispatchItem dispatchItem = Dispatch.getInstance().nextTestItem();
+			if (dispatchItem == null) {
 				break;
 			}
+			testCase = dispatchItem.getTestCase();
 
 			consoleOutput = "";
 			this.testCaseFullName = testCase;
@@ -124,7 +125,7 @@ public class Test {
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
 			
 			// Get current retry count for this test case
-			int currentRetryCount = Dispatch.getInstance().getRetryCount(this.testCaseFullName);
+			int currentRetryCount = dispatchItem.getRetryCount();
 
 			/*
 			 * Reset test environment Kill CUBRID process, clear SSH and
@@ -208,12 +209,10 @@ public class Test {
 				}
 				
 				// Handle retry queue management
-				if (needRetry && this.maxRetryCount > 0) {
-					// Add failed test case to retry queue
-					Dispatch.getInstance().addFailedTestCaseForRetry(this.testCaseFullName);
-				} else if (currentRetryCount > 0) {
-					// Remove completed retry case from queue
-					Dispatch.getInstance().removeFromRetryQueue(this.testCaseFullName);
+				if (dispatchItem.isRetryDispatch()) {
+					Dispatch.getInstance().finalizeRetryDispatch(this.testCaseFullName, needRetry, currentRetryCount);
+				} else if (needRetry && this.maxRetryCount > 0) {
+					Dispatch.getInstance().enqueueRetryFromAttempt(this.testCaseFullName, currentRetryCount);
 				}
 
 				workerLog.println("");
