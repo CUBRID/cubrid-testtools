@@ -216,6 +216,10 @@ public class Test {
 					Dispatch.getInstance().removeFromRetryQueue(this.testCaseFullName);
 				}
 
+				if (currentRetryCount == 0) {
+					Dispatch.getInstance().markNormalTestCaseCompleted();
+				}
+
 				workerLog.println("");
 			}
 
