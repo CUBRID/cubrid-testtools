@@ -454,6 +454,11 @@ public class FeedbackDB implements Feedback {
 		PreparedStatement selectStmt = null;
 		PreparedStatement insertStmt = null;
 		ResultSet rs = null;
+		boolean hasLastPass = false;
+		Integer lastPassMainId = null;
+		String lastPassBuildId = null;
+		String lastPassResultCont = null;
+		Timestamp lastPassEndTime = null;
 
 		try {
 			selectStmt = conn.prepareStatement(
@@ -465,19 +470,33 @@ public class FeedbackDB implements Feedback {
 			rs = selectStmt.executeQuery();
 
 			if (rs.next()) {
-				int lastPassMainId = rs.getInt("main_id");
-				boolean isMainIdNull = rs.wasNull();
+				hasLastPass = true;
+				int fetchedLastPassMainId = rs.getInt("main_id");
+				if (rs.wasNull() == false) {
+					lastPassMainId = Integer.valueOf(fetchedLastPassMainId);
+				}
+				lastPassBuildId = rs.getString("build_id");
+				lastPassResultCont = rs.getString("result_cont");
+				lastPassEndTime = rs.getTimestamp("end_time");
+			}
+
+			close(rs);
+			rs = null;
+			close(selectStmt);
+			selectStmt = null;
+
+			if (hasLastPass) {
 				insertStmt = conn.prepareStatement(
 						"insert into shell_last_pass_snapshot(item_id, last_pass_main_id, last_pass_build_id, last_pass_result_cont, last_pass_end_time) values(?, ?, ?, ?, ?)");
 				insertStmt.setInt(1, itemId);
-				if (isMainIdNull) {
+				if (lastPassMainId == null) {
 					insertStmt.setNull(2, Types.INTEGER);
 				} else {
 					insertStmt.setInt(2, lastPassMainId);
 				}
-				insertStmt.setString(3, rs.getString("build_id"));
-				insertStmt.setString(4, rs.getString("result_cont"));
-				insertStmt.setTimestamp(5, rs.getTimestamp("end_time"));
+				insertStmt.setString(3, lastPassBuildId);
+				insertStmt.setString(4, lastPassResultCont);
+				insertStmt.setTimestamp(5, lastPassEndTime);
 				insertStmt.executeUpdate();
 			}
 		} catch (Exception e) {
@@ -494,6 +513,9 @@ public class FeedbackDB implements Feedback {
 		PreparedStatement updateStmt = null;
 		PreparedStatement insertStmt = null;
 		ResultSet rs = null;
+		boolean hasStoredLastPass = false;
+		String storedBuildId = null;
+		String storedBuildWid = null;
 
 		try {
 			selectStmt = conn.prepareStatement("select build_id, build_wid from shell_last_pass where category=? and version_id=? and case_file=?");
@@ -503,8 +525,17 @@ public class FeedbackDB implements Feedback {
 			rs = selectStmt.executeQuery();
 
 			if (rs.next()) {
-				String storedBuildId = rs.getString("build_id");
-				String storedBuildWid = rs.getString("build_wid");
+				hasStoredLastPass = true;
+				storedBuildId = rs.getString("build_id");
+				storedBuildWid = rs.getString("build_wid");
+			}
+
+			close(rs);
+			rs = null;
+			close(selectStmt);
+			selectStmt = null;
+
+			if (hasStoredLastPass) {
 				if (shouldReplaceLastPass(storedBuildId, storedBuildWid, buildId)) {
 					updateStmt = conn.prepareStatement(
 							"update shell_last_pass set build_id=?, build_wid=?, main_id=?, result_cont=?, end_time=? where category=? and version_id=? and case_file=?");
