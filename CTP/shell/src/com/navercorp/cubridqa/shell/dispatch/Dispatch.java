@@ -117,7 +117,12 @@ public class Dispatch {
 			}
 
 			if (normalCompletedCount < totalTbdSize) {
-				try { wait(1000); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+				try {
+					wait(1000);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					return null;
+				}
 				continue;
 			}
 
@@ -128,7 +133,12 @@ public class Dispatch {
 			}
 
 			if (!activeRetrySet.isEmpty()) {
-				try { wait(1000); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+				try {
+					wait(1000);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					return null;
+				}
 				continue;
 			}
 
