@@ -323,9 +323,17 @@ public class FeedbackDB implements Feedback {
 
 	@Override
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
+		onTestCaseStopEvent(testCase, flag, elapseTime, resultCont, resultCont, envIdentify, isTimeOut, hasCore, skippedType, retryCount);
+	}
+
+	@Override
+	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String lastPassResultCont, String envIdentify, boolean isTimeOut, boolean hasCore,
+			String skippedType, int retryCount) {
 		String category = context.getTestCategory();
 		Timestamp d = new Timestamp(System.currentTimeMillis());
-		String lastPassResultCont = resultCont;
+		if (lastPassResultCont == null) {
+			lastPassResultCont = resultCont;
+		}
 		String shellItemResultCont = trimResultContent(resultCont);
 		boolean isExecutedCase = isExecutedCase(skippedType);
 
