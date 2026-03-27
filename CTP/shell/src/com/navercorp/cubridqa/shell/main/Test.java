@@ -194,14 +194,17 @@ public class Test {
 					needRetry = false;
 				}
 				
+				String resultContString = resultCont.toString();
+				String lastPassResultCont = buildLastPassResultCont(resultContString, consoleOutput, testCaseSuccess);
+
 				// Send appropriate feedback based on retry status
 				if (needRetry) {
 					// This is a retry case (doesn't count in statistics)
-					context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
+					context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, envIdentify, isTimeOut, hasCore,
 							Constants.SKIP_TYPE_NO, currentRetryCount);
 				} else {
 					// This is the final result (counts in statistics)
-					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
+					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, lastPassResultCont, envIdentify, isTimeOut, hasCore,
 							Constants.SKIP_TYPE_NO, currentRetryCount);
 					System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
 							+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + currentRetryCount : "")));
@@ -229,6 +232,20 @@ public class Test {
 		context.getFeedback().onStopEnvEvent(currEnvId);
 		System.out.println("[ENV STOP] " + currEnvId);
 		isStopped = true;
+	}
+
+	private String buildLastPassResultCont(String resultCont, String consoleOutput, boolean testCaseSuccess) {
+		if (testCaseSuccess == false || consoleOutput == null || consoleOutput.length() == 0) {
+			return resultCont;
+		}
+
+		StringBuffer fullResultCont = new StringBuffer();
+		if (resultCont != null) {
+			fullResultCont.append(resultCont);
+		}
+		fullResultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
+		fullResultCont.append(consoleOutput);
+		return fullResultCont.toString();
 	}
 
 	public String runTestCase() throws Exception {

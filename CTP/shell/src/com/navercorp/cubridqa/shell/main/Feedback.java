@@ -40,6 +40,9 @@ public interface Feedback {
 
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedKind, int retryCount);
 
+	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String lastPassResultCont, String envIdentify, boolean isTimeOut, boolean hasCore,
+			String skippedKind, int retryCount);
+
 	public void onTestCaseStopEventForRetry(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedKind,
 			int retryCount);
 
