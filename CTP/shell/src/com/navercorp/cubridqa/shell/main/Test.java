@@ -176,11 +176,13 @@ public class Test {
 					resultCont.append(consoleOutput);
 				}
 
+				String resultContString = resultCont.toString();
+
 				if (needRetry) {
-					context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
+					context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, envIdentify, isTimeOut, hasCore,
 							Constants.SKIP_TYPE_NO, retryCount);
 				} else {
-					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
+					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, envIdentify, isTimeOut, hasCore,
 							Constants.SKIP_TYPE_NO, retryCount);
 					System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
 							+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + retryCount : "")));
