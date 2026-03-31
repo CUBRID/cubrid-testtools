@@ -177,12 +177,13 @@ public class Test {
 				}
 
 				String resultContString = resultCont.toString();
+				String lastPassResultCont = buildLastPassResultCont(resultContString, consoleOutput, testCaseSuccess);
 
 				if (needRetry) {
 					context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, envIdentify, isTimeOut, hasCore,
 							Constants.SKIP_TYPE_NO, retryCount);
 				} else {
-					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, envIdentify, isTimeOut, hasCore,
+					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, lastPassResultCont, envIdentify, isTimeOut, hasCore,
 							Constants.SKIP_TYPE_NO, retryCount);
 					System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
 							+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + retryCount : "")));
@@ -201,6 +202,20 @@ public class Test {
 		context.getFeedback().onStopEnvEvent(currEnvId);
 		System.out.println("[ENV STOP] " + currEnvId);
 		isStopped = true;
+	}
+
+	private String buildLastPassResultCont(String resultCont, String consoleOutput, boolean testCaseSuccess) {
+		if (testCaseSuccess == false || consoleOutput == null || consoleOutput.length() == 0) {
+			return resultCont;
+		}
+
+		StringBuffer fullResultCont = new StringBuffer();
+		if (resultCont != null) {
+			fullResultCont.append(resultCont);
+		}
+		fullResultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
+		fullResultCont.append(consoleOutput);
+		return fullResultCont.toString();
 	}
 
 	public String runTestCase() throws Exception {
