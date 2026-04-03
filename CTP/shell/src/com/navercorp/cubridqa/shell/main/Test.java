@@ -146,54 +146,57 @@ public class Test {
 			} catch (Exception e) {
 				this.addResultItem("NOK", "Runtime error (" + e.getMessage() + ")");
 			} finally {
-				endTime = System.currentTimeMillis();
+				try {
+					endTime = System.currentTimeMillis();
 
-				StringBuffer resultCont = new StringBuffer();
-				for (String item : this.resultItemList) {
-					if (testCaseSuccess) {
-						if (item.indexOf("NOK") != -1) {
-							this.testCaseSuccess = false;
+					StringBuffer resultCont = new StringBuffer();
+					for (String item : this.resultItemList) {
+						if (testCaseSuccess) {
+							if (item.indexOf("NOK") != -1) {
+								this.testCaseSuccess = false;
+							}
 						}
-					}
-					if (hasCore == false) {
-						if (item.indexOf("NOK found core file") != -1 || item.indexOf("NOK found fatal error") != -1) {
-							this.hasCore = true;
+						if (hasCore == false) {
+							if (item.indexOf("NOK found core file") != -1 || item.indexOf("NOK found fatal error") != -1) {
+								this.hasCore = true;
+							}
 						}
+
+						workerLog.println(item);
+						resultCont.append(item).append(Constants.LINE_SEPARATOR);
 					}
 
-					workerLog.println(item);
-					resultCont.append(item).append(Constants.LINE_SEPARATOR);
-				}
-
-				if (testCaseSuccess == false && hasCore == false && context.getEnableSaveNormalErrorLog() == true) {
-					String saveErrorLogResult = doSaveNormalErrorLog();
-					resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
-				}
-				if (testCaseSuccess == false) {
-					needRetry = !hasCore && retryCount < maxRetryCount;
-					resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
-					resultCont.append(consoleOutput);
-				}
-
-				String resultContString = resultCont.toString();
-				String lastPassResultCont = buildLastPassResultCont(resultContString, consoleOutput, testCaseSuccess);
-
-				if (needRetry) {
-					context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, envIdentify, isTimeOut, hasCore,
-							Constants.SKIP_TYPE_NO, retryCount);
-				} else {
-					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, lastPassResultCont, envIdentify, isTimeOut, hasCore,
-							Constants.SKIP_TYPE_NO, retryCount);
-					System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
-							+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + retryCount : "")));
-					if (needDropTestCase) {
-						dropTestCaseAfterTest();
+					if (testCaseSuccess == false && hasCore == false && context.getEnableSaveNormalErrorLog() == true) {
+						String saveErrorLogResult = doSaveNormalErrorLog();
+						resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
 					}
-					dispatchLog.println(this.testCaseFullName);
-				}
+					if (testCaseSuccess == false) {
+						needRetry = !hasCore && retryCount < maxRetryCount;
+						resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
+						resultCont.append(consoleOutput);
+					}
 
-				Dispatch.getInstance().complete(dispatchTicket, testCaseSuccess, hasCore);
-				workerLog.println("");
+					String resultContString = resultCont.toString();
+					String lastPassResultCont = buildLastPassResultCont(resultContString, consoleOutput, testCaseSuccess);
+
+					if (needRetry) {
+						context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, envIdentify, isTimeOut, hasCore,
+								Constants.SKIP_TYPE_NO, retryCount);
+					} else {
+						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, lastPassResultCont, envIdentify, isTimeOut, hasCore,
+								Constants.SKIP_TYPE_NO, retryCount);
+						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
+								+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + retryCount : "")));
+						if (needDropTestCase) {
+							dropTestCaseAfterTest();
+						}
+						dispatchLog.println(this.testCaseFullName);
+					}
+
+					workerLog.println("");
+				} finally {
+					Dispatch.getInstance().complete(dispatchTicket, testCaseSuccess, hasCore);
+				}
 			}
 		}
 
