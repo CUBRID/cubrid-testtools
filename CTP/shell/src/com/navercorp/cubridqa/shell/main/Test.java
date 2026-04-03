@@ -124,14 +124,6 @@ public class Test {
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
 
-			resetProcess();
-			resetCUBRID();
-			resetSSH();
-			startTime = -1;
-			if (this.context.enableCheckDiskSpace()) {
-				checkDiskSpace();
-			}
-
 			resultItemList.clear();
 			startTime = System.currentTimeMillis();
 			this.isTimeOut = false;
@@ -141,6 +133,13 @@ public class Test {
 			boolean needRetry = false;
 
 			try {
+				resetProcess();
+				resetCUBRID();
+				resetSSH();
+				if (this.context.enableCheckDiskSpace()) {
+					checkDiskSpace();
+				}
+
 				consoleOutput = runTestCase();
 				doFinalCheck();
 				collectGeneralResult();
