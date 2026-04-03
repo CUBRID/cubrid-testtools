@@ -91,7 +91,7 @@ public class Test {
 		String consoleOutput;
 
 		int p;
-		while (!shouldStop) {
+		while (!shouldStop && !Dispatch.getInstance().isFinished()) {
 
 			if (this.context.getServiceProtocolType() != null && this.context.getServiceProtocolType().equals(SSHConnect.SERVICE_TYPE_RMI)) {
 				ShellScriptInput aliveScript = new ShellScriptInput("echo HELLO");
@@ -140,6 +140,7 @@ public class Test {
 					checkDiskSpace();
 				}
 
+				startTime = System.currentTimeMillis();
 				consoleOutput = runTestCase();
 				doFinalCheck();
 				collectGeneralResult();
@@ -148,6 +149,7 @@ public class Test {
 			} finally {
 				try {
 					endTime = System.currentTimeMillis();
+					long elapseTime = startTime > 0 ? endTime - startTime : 0;
 
 					StringBuffer resultCont = new StringBuffer();
 					for (String item : this.resultItemList) {
@@ -180,10 +182,10 @@ public class Test {
 					String lastPassResultCont = buildLastPassResultCont(resultContString, consoleOutput, testCaseSuccess);
 
 					if (needRetry) {
-						context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, envIdentify, isTimeOut, hasCore,
+						context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, elapseTime, resultContString, envIdentify, isTimeOut, hasCore,
 								Constants.SKIP_TYPE_NO, retryCount);
 					} else {
-						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultContString, lastPassResultCont, envIdentify, isTimeOut, hasCore,
+						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, elapseTime, resultContString, lastPassResultCont, envIdentify, isTimeOut, hasCore,
 								Constants.SKIP_TYPE_NO, retryCount);
 						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
 								+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + retryCount : "")));
@@ -195,6 +197,7 @@ public class Test {
 
 					workerLog.println("");
 				} finally {
+					startTime = -1;
 					Dispatch.getInstance().complete(dispatchTicket, testCaseSuccess, hasCore);
 				}
 			}
