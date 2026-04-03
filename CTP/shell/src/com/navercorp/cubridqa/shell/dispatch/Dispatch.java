@@ -106,25 +106,6 @@ public class Dispatch {
 		load();
 	}
 
-	public Dispatch(ArrayList<String> tbdList, int maxRetryCount) {
-		this.context = null;
-		this.tbdList = new ArrayList<String>(tbdList);
-		this.totalTbdSize = this.tbdList.size();
-		this.macroSkippedList = new ArrayList<String>();
-		this.tempSkippedList = new ArrayList<String>();
-		this.macroSkippedSize = 0;
-		this.tempSkippedSize = 0;
-		this.nextTestFileIndex = 0;
-		this.all = null;
-		this.isFinished = this.totalTbdSize == 0;
-		this.retryQueue = new ArrayDeque<String>();
-		this.retryCountMap = new HashMap<String, Integer>();
-		this.queuedRetrySet = new HashSet<String>();
-		this.inFlightRetrySet = new HashSet<String>();
-		this.maxRetryCount = maxRetryCount;
-		this.normalCompletedCount = 0;
-	}
-
 	public static void init(Context context) throws Exception {
 		instance = new Dispatch(context);
 	}
@@ -183,11 +164,6 @@ public class Dispatch {
 		return null;
 	}
 
-	public synchronized String nextTestFile() {
-		DispatchTicket ticket = claimNext();
-		return ticket == null ? null : ticket.getTestCase();
-	}
-
 	public synchronized void complete(DispatchTicket ticket, boolean success, boolean hasCore) {
 		if (ticket == null) {
 			return;
@@ -229,34 +205,9 @@ public class Dispatch {
 		isFinished = false;
 	}
 
-	public synchronized void addFailedTestCaseForRetry(String testCase) {
-		int retryCount = getRetryCount(testCase) + 1;
-		enqueueRetry(testCase, retryCount);
-		notifyAll();
-	}
-
 	public synchronized Integer getRetryCount(String testCase) {
 		Integer retryCount = retryCountMap.get(testCase);
 		return retryCount == null ? Integer.valueOf(0) : retryCount;
-	}
-
-	public synchronized void markNormalTestCaseCompleted() {
-		normalCompletedCount++;
-		if (this.nextTestFileIndex >= totalTbdSize && this.normalCompletedCount >= totalTbdSize && retryQueue.isEmpty() && inFlightRetrySet.isEmpty()) {
-			isFinished = true;
-		}
-		notifyAll();
-	}
-
-	public synchronized void removeFromRetryQueue(String testCase) {
-		retryQueue.remove(testCase);
-		queuedRetrySet.remove(testCase);
-		inFlightRetrySet.remove(testCase);
-		retryCountMap.remove(testCase);
-		if (this.nextTestFileIndex >= totalTbdSize && this.normalCompletedCount >= totalTbdSize && retryQueue.isEmpty() && inFlightRetrySet.isEmpty()) {
-			isFinished = true;
-		}
-		notifyAll();
 	}
 
 	private void load() throws Exception {
