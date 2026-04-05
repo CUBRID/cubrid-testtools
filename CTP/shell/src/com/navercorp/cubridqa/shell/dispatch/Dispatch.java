@@ -46,12 +46,10 @@ public class Dispatch {
 	public static class DispatchTicket {
 		private final String testCase;
 		private final int retryCount;
-		private final boolean retryCase;
 
-		public DispatchTicket(String testCase, int retryCount, boolean retryCase) {
+		public DispatchTicket(String testCase, int retryCount) {
 			this.testCase = testCase;
 			this.retryCount = retryCount;
-			this.retryCase = retryCase;
 		}
 
 		public String getTestCase() {
@@ -63,7 +61,7 @@ public class Dispatch {
 		}
 
 		public boolean isRetryCase() {
-			return retryCase;
+			return retryCount > 0;
 		}
 	}
 
@@ -96,7 +94,7 @@ public class Dispatch {
 		this.tbdList = new ArrayList<String>();
 		this.totalTbdSize = 0;
 		this.isFinished = false;
-		this.nextTestFileIndex = -1;
+		this.nextTestFileIndex = 0;
 		this.retryQueue = new ArrayDeque<String>();
 		this.retryCountMap = new HashMap<String, Integer>();
 		this.queuedRetrySet = new HashSet<String>();
@@ -117,14 +115,10 @@ public class Dispatch {
 	public synchronized DispatchTicket claimNext() {
 
 		while (!isFinished) {
-			if (this.nextTestFileIndex < 0) {
-				this.nextTestFileIndex = 0;
-			}
-
 			if (this.nextTestFileIndex < totalTbdSize) {
 				String nextTestFile = tbdList.get(this.nextTestFileIndex);
 				this.nextTestFileIndex++;
-				return new DispatchTicket(nextTestFile, 0, false);
+				return new DispatchTicket(nextTestFile, 0);
 			}
 
 			if (this.normalCompletedCount < totalTbdSize) {
@@ -144,7 +138,7 @@ public class Dispatch {
 				}
 				queuedRetrySet.remove(retryTestFile);
 				inFlightRetrySet.add(retryTestFile);
-				return new DispatchTicket(retryTestFile, getRetryCount(retryTestFile), true);
+				return new DispatchTicket(retryTestFile, getRetryCount(retryTestFile));
 			}
 
 			if (!inFlightRetrySet.isEmpty()) {
@@ -164,9 +158,9 @@ public class Dispatch {
 		return null;
 	}
 
-	public synchronized void complete(DispatchTicket ticket, boolean success, boolean hasCore) {
+	public synchronized boolean complete(DispatchTicket ticket, boolean success, boolean hasCore) {
 		if (ticket == null) {
-			return;
+			return false;
 		}
 
 		if (ticket.isRetryCase()) {
@@ -181,33 +175,32 @@ public class Dispatch {
 		} else {
 			retryCountMap.remove(ticket.getTestCase());
 			queuedRetrySet.remove(ticket.getTestCase());
-			inFlightRetrySet.remove(ticket.getTestCase());
 		}
 
-		if (this.nextTestFileIndex >= totalTbdSize && this.normalCompletedCount >= totalTbdSize && retryQueue.isEmpty() && inFlightRetrySet.isEmpty()) {
+		if (this.normalCompletedCount >= totalTbdSize && retryQueue.isEmpty() && inFlightRetrySet.isEmpty()) {
 			isFinished = true;
 		}
 
 		notifyAll();
+		return needRetry;
 	}
 
 	private void enqueueRetry(String testCase, int retryCount) {
 		if (retryCount > maxRetryCount) {
 			return;
 		}
+		retryCountMap.put(testCase, retryCount);
 		if (queuedRetrySet.contains(testCase) || inFlightRetrySet.contains(testCase)) {
-			retryCountMap.put(testCase, Integer.valueOf(retryCount));
 			return;
 		}
-		retryCountMap.put(testCase, Integer.valueOf(retryCount));
 		retryQueue.offer(testCase);
 		queuedRetrySet.add(testCase);
 		isFinished = false;
 	}
 
-	public synchronized Integer getRetryCount(String testCase) {
+	public synchronized int getRetryCount(String testCase) {
 		Integer retryCount = retryCountMap.get(testCase);
-		return retryCount == null ? Integer.valueOf(0) : retryCount;
+		return retryCount == null ? 0 : retryCount;
 	}
 
 	private void load() throws Exception {
@@ -275,7 +268,7 @@ public class Dispatch {
 			}
 			this.all.close();
 		}
-		this.nextTestFileIndex = -1;
+		this.nextTestFileIndex = 0;
 		this.totalTbdSize = this.tbdList.size();
 		this.normalCompletedCount = 0;
 		this.retryQueue.clear();
@@ -398,7 +391,6 @@ public class Dispatch {
 			}
 			script.addCommand("cat " + filename);
 			result = ssh.execute(script);
-			// System.out.println(result);
 		} finally {
 			if (ssh != null)
 				ssh.close();

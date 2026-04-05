@@ -125,12 +125,10 @@ public class Test {
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
 
 			resultItemList.clear();
-			startTime = System.currentTimeMillis();
 			this.isTimeOut = false;
 			this.testCaseSuccess = true;
 			this.hasCore = false;
 			int retryCount = dispatchTicket.getRetryCount();
-			boolean needRetry = false;
 
 			try {
 				resetProcess();
@@ -173,13 +171,13 @@ public class Test {
 						resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
 					}
 					if (testCaseSuccess == false) {
-						needRetry = !hasCore && retryCount < maxRetryCount;
 						resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
 						resultCont.append(consoleOutput);
 					}
 
 					String resultContString = resultCont.toString();
 					String lastPassResultCont = buildLastPassResultCont(resultContString, consoleOutput, testCaseSuccess);
+					boolean needRetry = Dispatch.getInstance().complete(dispatchTicket, testCaseSuccess, hasCore);
 
 					if (needRetry) {
 						context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, elapseTime, resultContString, envIdentify, isTimeOut, hasCore,
@@ -198,7 +196,6 @@ public class Test {
 					workerLog.println("");
 				} finally {
 					startTime = -1;
-					Dispatch.getInstance().complete(dispatchTicket, testCaseSuccess, hasCore);
 				}
 			}
 		}
