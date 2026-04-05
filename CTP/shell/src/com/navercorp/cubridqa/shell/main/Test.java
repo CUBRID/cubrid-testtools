@@ -166,6 +166,8 @@ public class Test {
 						resultCont.append(item).append(Constants.LINE_SEPARATOR);
 					}
 
+					boolean needRetry = Dispatch.getInstance().complete(dispatchTicket, testCaseSuccess, hasCore);
+
 					if (testCaseSuccess == false && hasCore == false && context.getEnableSaveNormalErrorLog() == true) {
 						String saveErrorLogResult = doSaveNormalErrorLog();
 						resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
@@ -177,7 +179,6 @@ public class Test {
 
 					String resultContString = resultCont.toString();
 					String lastPassResultCont = buildLastPassResultCont(resultContString, consoleOutput, testCaseSuccess);
-					boolean needRetry = Dispatch.getInstance().complete(dispatchTicket, testCaseSuccess, hasCore);
 
 					if (needRetry) {
 						context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, elapseTime, resultContString, envIdentify, isTimeOut, hasCore,

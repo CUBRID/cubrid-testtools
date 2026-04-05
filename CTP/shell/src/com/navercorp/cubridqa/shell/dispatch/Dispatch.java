@@ -451,7 +451,7 @@ public class Dispatch {
 		return totalTbdSize;
 	}
 
-	public boolean isFinished() {
+	public synchronized boolean isFinished() {
 		return this.isFinished;
 	}
 
