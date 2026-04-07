@@ -1,3 +1,5 @@
+<!-- Generated: 2026-04-07 | Updated: 2026-04-07 -->
+
 # CTP (CUBRID Test Program) - AGENTS
 
 ## OVERVIEW
@@ -75,3 +77,19 @@ CTP/
 | `#SCRIPTCONT` execution path | Java prints lines ending `#SCRIPTCONT` (see `CTP/common/src/com/navercorp/cubridqa/ctp/CTP.java`); `ctp.sh` extracts them into a temp script and executes it. Treat any changes to those printed commands as security-sensitive. |
 | Fast TDD loop (ultrawork-ready) | 1) Repro with smallest suite command (often `CTP/bin/ctp.sh sql --interactive`) 2) Change code 3) `cd CTP && ant clean dist` 4) Re-run same suite command and compare produced logs/results. |
 | Atomic commit strategy | 1) `docs(ctp): add/update CTP/AGENTS.md` 2) `build(ctp): adjust Ant compile/jar packaging` 3) `fix(ctp): <suite> runner/dispatcher/config handling` (each commit keeps `CTP/bin/ctp.sh <suite>` runnable). |
+
+## Subdirectories
+| Directory | Purpose |
+|-----------|---------|
+| `bin/` | Entry point scripts: ctp.sh, ini.sh (see `bin/AGENTS.md`) |
+| `common/` | Shared framework, utilities, scheduler, scripts (see `common/AGENTS.md`) |
+| `conf/` | INI-style configuration files per suite (see `conf/AGENTS.md`) |
+| `sql/` | SQL/MEDIUM test harness + webconsole (see `sql/AGENTS.md`) |
+| `shell/` | Shell test suite orchestrator (see `shell/AGENTS.md`) |
+| `isolation/` | Transaction isolation test suite (see `isolation/AGENTS.md`) |
+| `ha_repl/` | HA replication test suite (see `ha_repl/AGENTS.md`) |
+| `cdc_repl/` | CDC replication test suite (see `cdc_repl/AGENTS.md`) |
+| `jdbc/` | JDBC test runner scripts (see `jdbc/AGENTS.md`) |
+| `sql_by_cci/` | Native C executor via CCI (see `sql_by_cci/AGENTS.md`) |
+
+<!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->

@@ -1,3 +1,9 @@
+<!-- Parent: ../AGENTS.md -->
+<!-- Generated: 2026-04-07 | Updated: 2026-04-07 -->
+
+<!-- Parent: ../AGENTS.md -->
+<!-- Generated: 2026-04-07 | Updated: 2026-04-07 -->
+
 # CTP/common/script - Shell Script Utilities
 
 ## OVERVIEW

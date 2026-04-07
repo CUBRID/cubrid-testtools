@@ -1,3 +1,6 @@
+<!-- Parent: ../AGENTS.md -->
+<!-- Generated: 2026-04-07 | Updated: 2026-04-07 -->
+
 # CTP/shell/src - Shell Testing Framework
 
 ## OVERVIEW
