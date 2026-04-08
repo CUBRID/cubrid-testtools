@@ -61,6 +61,13 @@ public class FeedbackNull implements Feedback {
 	}
 
 	@Override
+	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String lastPassResultCont, String envIdentify, boolean isTimeOut, boolean hasCore,
+			String skippedType, int retryCount) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
 	public void onTestCaseStopEventForRetry(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedKind,
 			int retryCount) {
 		// TODO Auto-generated method stub

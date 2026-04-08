@@ -29,8 +29,10 @@ package com.navercorp.cubridqa.shell.dispatch;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -40,6 +42,28 @@ import com.navercorp.cubridqa.shell.main.Context;
 import com.navercorp.cubridqa.shell.main.ShellHelper;
 
 public class Dispatch {
+
+	public static class DispatchTicket {
+		private final String testCase;
+		private final int retryCount;
+
+		public DispatchTicket(String testCase, int retryCount) {
+			this.testCase = testCase;
+			this.retryCount = retryCount;
+		}
+
+		public String getTestCase() {
+			return testCase;
+		}
+
+		public int getRetryCount() {
+			return retryCount;
+		}
+
+		public boolean isRetryCase() {
+			return retryCount > 0;
+		}
+	}
 
 	public static Dispatch instance;
 
@@ -58,17 +82,25 @@ public class Dispatch {
 	private Log all;
 
 	private boolean isFinished;
-	
-	// Retry management
+	private ArrayDeque<String> retryQueue;
 	private HashMap<String, Integer> retryCountMap;
+	private HashSet<String> queuedRetrySet;
+	private HashSet<String> inFlightRetrySet;
+	private int maxRetryCount;
+	private int normalCompletedCount;
 
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
 		this.tbdList = new ArrayList<String>();
 		this.totalTbdSize = 0;
 		this.isFinished = false;
-		this.nextTestFileIndex = -1;
+		this.nextTestFileIndex = 0;
+		this.retryQueue = new ArrayDeque<String>();
 		this.retryCountMap = new HashMap<String, Integer>();
+		this.queuedRetrySet = new HashSet<String>();
+		this.inFlightRetrySet = new HashSet<String>();
+		this.maxRetryCount = context.getMaxRetryCount();
+		this.normalCompletedCount = 0;
 		load();
 	}
 
@@ -80,52 +112,96 @@ public class Dispatch {
 		return instance;
 	}
 
-	public synchronized String nextTestFile() {
-		if (isFinished)
-			return null;
+	public synchronized DispatchTicket claimNext() {
 
-		// First, process all normal test cases
-		if (this.nextTestFileIndex < totalTbdSize) {
-			if (this.nextTestFileIndex < 0) {
-				this.nextTestFileIndex = 0;
+		while (!isFinished) {
+			if (this.nextTestFileIndex < totalTbdSize) {
+				String nextTestFile = tbdList.get(this.nextTestFileIndex);
+				this.nextTestFileIndex++;
+				return new DispatchTicket(nextTestFile, 0);
 			}
-			String nextTestFile = tbdList.get(this.nextTestFileIndex);
-			this.nextTestFileIndex++;
-			return nextTestFile;
+
+			if (this.normalCompletedCount < totalTbdSize) {
+				try {
+					wait(1000);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					return null;
+				}
+				continue;
+			}
+
+			if (!retryQueue.isEmpty()) {
+				String retryTestFile = retryQueue.poll();
+				if (retryTestFile == null) {
+					continue;
+				}
+				queuedRetrySet.remove(retryTestFile);
+				inFlightRetrySet.add(retryTestFile);
+				return new DispatchTicket(retryTestFile, getRetryCount(retryTestFile));
+			}
+
+			if (!inFlightRetrySet.isEmpty()) {
+				try {
+					wait(1000);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					return null;
+				}
+				continue;
+			}
+
+			isFinished = true;
+			notifyAll();
 		}
 
-		// After all normal cases are done, process retry cases
-		if (!retryCountMap.isEmpty()) {
-			// Get first retry case
-			String retryTestFile = retryCountMap.keySet().iterator().next();
-			return retryTestFile;
-		}
-
-		// All done
-		isFinished = true;
 		return null;
 	}
-	
-	public synchronized void addFailedTestCaseForRetry(String testCase) {
-		Integer currentRetryCount = retryCountMap.get(testCase);
-		if (currentRetryCount == null) {
-			currentRetryCount = 0;
+
+	public synchronized boolean complete(DispatchTicket ticket, boolean success, boolean hasCore) {
+		if (ticket == null) {
+			return false;
 		}
-		
-		if (currentRetryCount < context.getMaxRetryCount()) {
-			retryCountMap.put(testCase, currentRetryCount + 1);
+
+		if (ticket.isRetryCase()) {
+			inFlightRetrySet.remove(ticket.getTestCase());
+		} else {
+			normalCompletedCount++;
 		}
+
+		boolean needRetry = !success && !hasCore && ticket.getRetryCount() < maxRetryCount;
+		if (needRetry) {
+			enqueueRetry(ticket.getTestCase(), ticket.getRetryCount() + 1);
+		} else {
+			retryCountMap.remove(ticket.getTestCase());
+			queuedRetrySet.remove(ticket.getTestCase());
+		}
+
+		if (this.normalCompletedCount >= totalTbdSize && retryQueue.isEmpty() && inFlightRetrySet.isEmpty()) {
+			isFinished = true;
+		}
+
+		notifyAll();
+		return needRetry;
 	}
-	
-	public synchronized Integer getRetryCount(String testCase) {
-		Integer count = retryCountMap.get(testCase);
-		return count != null ? count : 0;
+
+	private void enqueueRetry(String testCase, int retryCount) {
+		if (retryCount > maxRetryCount) {
+			return;
+		}
+		retryCountMap.put(testCase, retryCount);
+		if (queuedRetrySet.contains(testCase) || inFlightRetrySet.contains(testCase)) {
+			return;
+		}
+		retryQueue.offer(testCase);
+		queuedRetrySet.add(testCase);
+		isFinished = false;
 	}
-	
-	public synchronized void removeFromRetryQueue(String testCase) {
-		retryCountMap.remove(testCase);
+
+	public synchronized int getRetryCount(String testCase) {
+		Integer retryCount = retryCountMap.get(testCase);
+		return retryCount == null ? 0 : retryCount;
 	}
-	
 
 	private void load() throws Exception {
 
@@ -192,8 +268,13 @@ public class Dispatch {
 			}
 			this.all.close();
 		}
-		this.nextTestFileIndex = -1;
+		this.nextTestFileIndex = 0;
 		this.totalTbdSize = this.tbdList.size();
+		this.normalCompletedCount = 0;
+		this.retryQueue.clear();
+		this.retryCountMap.clear();
+		this.queuedRetrySet.clear();
+		this.inFlightRetrySet.clear();
 		if (this.totalTbdSize == 0) {
 			this.isFinished = true;
 		}
@@ -310,7 +391,6 @@ public class Dispatch {
 			}
 			script.addCommand("cat " + filename);
 			result = ssh.execute(script);
-			// System.out.println(result);
 		} finally {
 			if (ssh != null)
 				ssh.close();
@@ -371,7 +451,7 @@ public class Dispatch {
 		return totalTbdSize;
 	}
 
-	public boolean isFinished() {
+	public synchronized boolean isFinished() {
 		return this.isFinished;
 	}
 

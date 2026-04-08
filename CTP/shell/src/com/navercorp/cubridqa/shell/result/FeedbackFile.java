@@ -233,6 +233,12 @@ public class FeedbackFile implements Feedback {
 	}
 
 	@Override
+	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String lastPassResultCont, String envIdentify, boolean isTimeOut, boolean hasCore,
+			String skippedType, int retryCount) {
+		onTestCaseStopEvent(testCase, flag, elapseTime, resultCont, envIdentify, isTimeOut, hasCore, skippedType, retryCount);
+	}
+
+	@Override
 	public void onTestCaseStopEventForRetry(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType,
 			int retryCount) {
 		String head;
