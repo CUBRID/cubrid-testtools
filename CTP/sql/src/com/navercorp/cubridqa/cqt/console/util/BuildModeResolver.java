@@ -28,6 +28,7 @@ package com.navercorp.cubridqa.cqt.console.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 /**
@@ -39,6 +40,14 @@ import java.io.InputStreamReader;
  */
 public final class BuildModeResolver {
 
+    /**
+     * Cached result of the first successful {@link #detect()} call.
+     *
+     * <p>Access discipline: {@code detect()} is {@code synchronized}, which serves as both the
+     * monitor for the cache write and a happens-before barrier for all subsequent reads. Because
+     * every read of {@code CACHED} occurs inside the same {@code synchronized} block, no
+     * {@code volatile} annotation is required.
+     */
     private static String CACHED;
 
     private BuildModeResolver() {}
@@ -53,10 +62,11 @@ public final class BuildModeResolver {
             return CACHED;
         }
         try {
-            Process p = Runtime.getRuntime().exec("cubrid_rel");
-            String stdout = readAll(p.getInputStream());
+            Process p = new ProcessBuilder("cubrid_rel").redirectErrorStream(true).start();
+            p.getOutputStream().close();
+            String output = readAll(p.getInputStream());
             p.waitFor();
-            String mode = pickMode(stdout);
+            String mode = pickMode(output);
             CACHED = mode;
             return mode;
         } catch (IOException e) {
@@ -67,7 +77,7 @@ public final class BuildModeResolver {
         }
     }
 
-    private static String readAll(java.io.InputStream is) throws IOException {
+    private static String readAll(InputStream is) throws IOException {
         BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"));
         try {
             StringBuilder sb = new StringBuilder();
@@ -84,29 +94,67 @@ public final class BuildModeResolver {
 
     private static String pickMode(String text) {
         String lower = text == null ? "" : text.toLowerCase();
-        if (lower.contains("debug")) {
+        int dbgIdx = lower.indexOf("debug");
+        int relIdx = lower.indexOf("release");
+        if (dbgIdx < 0 && relIdx < 0) {
+            throw new RuntimeException(
+                    "cubrid_rel output contained neither 'release' nor 'debug': " + text);
+        }
+        if (relIdx < 0) {
             return "debug";
         }
-        if (lower.contains("release")) {
+        if (dbgIdx < 0) {
             return "release";
         }
-        throw new RuntimeException(
-                "cubrid_rel output contained neither 'release' nor 'debug': " + text);
+        // Both present: return the one that appears first (left-to-right, like grep -oe).
+        return dbgIdx <= relIdx ? "debug" : "release";
     }
 
     public static void main(String[] args) {
+        int passed = 0;
+        // Test pickMode first-occurrence logic (debug before release).
+        passed += checkPick("debug only", "debug", pickMode("CUBRID (debug build)"));
+        passed += checkPick("release only", "release", pickMode("CUBRID release 11.0"));
+        passed += checkPick("debug first", "debug", pickMode("debug symbols, release candidate"));
+        passed += checkPick("release first", "release", pickMode("release build (no debug symbols)"));
+        // Test pickMode exception for unknown output.
+        boolean threw = false;
+        try {
+            pickMode("no keyword here");
+        } catch (RuntimeException e) {
+            threw = true;
+        }
+        passed += threw ? 1 : 0;
+        if (!threw) {
+            System.err.println("  FAIL: pickMode should throw for unknown output");
+        }
+
+        int expectedStatic = 5;
+        if (passed != expectedStatic) {
+            System.err.println("FAIL: BuildModeResolver static tests " + passed + "/" + expectedStatic);
+            System.exit(1);
+        }
+
+        // Live detection test (optional — only works in CUBRID environments).
         try {
             String mode = detect();
             if (!"release".equals(mode) && !"debug".equals(mode)) {
                 System.err.println("FAIL: unexpected mode: " + mode);
                 System.exit(1);
             }
-            System.out.println("OK: BuildModeResolver.detect() -> " + mode);
+            System.out.println("OK: BuildModeResolver " + expectedStatic + "/" + expectedStatic
+                    + " static + live detect() -> " + mode);
         } catch (RuntimeException e) {
-            System.err.println("INFO: cubrid_rel not available in this environment: "
-                    + e.getMessage());
-            System.err.println("This is expected outside of CUBRID test environments.");
-            System.exit(0);
+            System.out.println("OK: BuildModeResolver " + expectedStatic + "/" + expectedStatic
+                    + " static cases passed (cubrid_rel not available: " + e.getMessage() + ")");
         }
+    }
+
+    private static int checkPick(String label, String expected, String actual) {
+        if (expected.equals(actual)) {
+            return 1;
+        }
+        System.err.println("  FAIL pickMode[" + label + "]: expected=" + expected + " got=" + actual);
+        return 0;
     }
 }

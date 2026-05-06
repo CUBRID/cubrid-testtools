@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -71,13 +72,12 @@ import javax.xml.stream.XMLStreamWriter;
  */
 public final class JunitXmlWriter {
 
-    private static final String LOG_ID = "ConsoleBO";
     private static final String TESTCASES_ANCHOR = "/cubrid-testcases/";
 
     private JunitXmlWriter() {}
 
     /** Single entry point. Never throws — all exceptions are caught and logged. */
-    public static void write(Test test) {
+    public static void write(Test test, String logId) {
         try {
             if (test == null) {
                 return;
@@ -95,7 +95,8 @@ public final class JunitXmlWriter {
             try {
                 buildMode = BuildModeResolver.detect();
             } catch (Throwable t) {
-                LogUtil.log(LOG_ID, "[JunitXmlWriter] cubrid_rel failed: " + t.getMessage());
+                LogUtil.log(logId, "[JunitXmlWriter] write failed: "
+                        + t.getClass().getName() + ": " + t.getMessage());
                 return;
             }
             String suiteName = target + "_" + buildMode;
@@ -105,11 +106,12 @@ public final class JunitXmlWriter {
             int failures = countFailures(emitted);
 
             File outFile = new File(resultDir, "test-" + category + ".xml");
-            writeXml(outFile, suiteName, tests, failures, emitted);
-            LogUtil.log(LOG_ID, "[JunitXmlWriter] wrote " + outFile.getAbsolutePath()
+            writeXml(outFile, suiteName, tests, failures, emitted, logId);
+            LogUtil.log(logId, "[JunitXmlWriter] wrote " + outFile.getAbsolutePath()
                     + " (tests=" + tests + ", failures=" + failures + ")");
         } catch (Throwable t) {
-            LogUtil.log(LOG_ID, "[JunitXmlWriter] write failed: " + t.getMessage());
+            LogUtil.log(logId, "[JunitXmlWriter] write failed: "
+                    + t.getClass().getName() + ": " + t.getMessage());
         }
     }
 
@@ -176,15 +178,38 @@ public final class JunitXmlWriter {
     }
 
     private static void writeXml(
-            File outFile, String suiteName, int tests, int failures, List<CaseResult> cases)
+            File outFile, String suiteName, int tests, int failures, List<CaseResult> cases,
+            String logId)
             throws IOException, XMLStreamException {
         File parent = outFile.getParentFile();
-        if (parent != null && !parent.exists()) {
-            parent.mkdirs();
+        if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.exists()) {
+            throw new IOException("cannot create parent dir: " + parent);
         }
-        FileOutputStream fos = new FileOutputStream(outFile);
+        // Sweep stale .tmp files left by previous crashed runs (older than 1 minute).
+        // Skip the tmp file we are about to create so a concurrent sibling run is not disrupted.
+        String currentTmpName = outFile.getName() + ".tmp";
+        if (parent != null) {
+            File[] stale = parent.listFiles();
+            if (stale != null) {
+                long now = System.currentTimeMillis();
+                for (int i = 0; i < stale.length; i++) {
+                    File f = stale[i];
+                    String n = f.getName();
+                    if (n.equals(currentTmpName)) {
+                        continue;
+                    }
+                    if (n.startsWith("test-") && n.endsWith(".xml.tmp")
+                            && now - f.lastModified() > 60000L) {
+                        f.delete();
+                    }
+                }
+            }
+        }
+        File tmpFile = new File(outFile.getAbsolutePath() + ".tmp");
+        FileOutputStream fos = new FileOutputStream(tmpFile);
         XMLStreamWriter raw = null;
         IndentingXMLStreamWriter w = null;
+        boolean success = false;
         try {
             XMLOutputFactory factory = XMLOutputFactory.newInstance();
             raw = factory.createXMLStreamWriter(fos, "UTF-8");
@@ -197,13 +222,14 @@ public final class JunitXmlWriter {
             w.writeAttribute("failures", String.valueOf(failures));
 
             for (CaseResult cr : cases) {
-                writeOneTestcase(w, suiteName, cr);
+                writeOneTestcase(w, suiteName, cr, logId);
             }
 
             w.writeEndElement(); // testsuite
             w.writeEndElement(); // testsuites
             w.writeEndDocument();
             w.flush();
+            success = true;
         } finally {
             if (w != null) {
                 try {
@@ -215,13 +241,27 @@ public final class JunitXmlWriter {
                 fos.close();
             } catch (IOException ignore) {
             }
+            if (success) {
+                if (outFile.exists() && !outFile.delete()) {
+                    LogUtil.log(logId, "[JunitXmlWriter] could not delete existing " + outFile);
+                }
+                boolean renamed = tmpFile.renameTo(outFile);
+                if (!renamed) {
+                    LogUtil.log(logId, "[JunitXmlWriter] rename failed: tmp=" + tmpFile
+                            + " final=" + outFile);
+                    tmpFile.delete();
+                }
+            } else {
+                tmpFile.delete();
+            }
         }
     }
 
-    private static void writeOneTestcase(XMLStreamWriter w, String suiteName, CaseResult cr)
+    private static void writeOneTestcase(
+            XMLStreamWriter w, String suiteName, CaseResult cr, String logId)
             throws XMLStreamException {
         String relPath = relativeToTestcasesRoot(cr.getCaseFile());
-        String time = String.valueOf(cr.getTotalTime() / 1000.0);
+        String time = String.format(Locale.ROOT, "%.3f", cr.getTotalTime() / 1000.0);
         w.writeStartElement("testcase");
         w.writeAttribute("classname", suiteName);
         w.writeAttribute("name", relPath);
@@ -230,7 +270,7 @@ public final class JunitXmlWriter {
         if (!cr.isSuccessFul()) {
             w.writeStartElement("failure");
             w.writeAttribute("message", "unexpected result");
-            String cdata = buildFailureCdata(cr);
+            String cdata = buildFailureCdata(cr, logId);
             if (cdata.length() > 0) {
                 w.writeCData(cdata);
             }
@@ -239,21 +279,21 @@ public final class JunitXmlWriter {
         w.writeEndElement(); // testcase
     }
 
-    private static String buildFailureCdata(CaseResult cr) {
+    private static String buildFailureCdata(CaseResult cr, String logId) {
         try {
             String resultFile =
                     cr.getResultDir() + File.separator + cr.getCaseName() + ".result";
             if (cr.getCaseFile() == null
                     || cr.getAnswerFile() == null
                     || cr.getResultDir() == null) {
-                LogUtil.log(LOG_ID, "[JunitXmlWriter] missing input paths for case "
+                LogUtil.log(logId, "[JunitXmlWriter] missing input paths for case "
                         + cr.getCaseName());
                 return "";
             }
             return FailureCdataBuilder.build(cr.getCaseFile(), cr.getAnswerFile(), resultFile);
         } catch (Throwable t) {
-            LogUtil.log(LOG_ID, "[JunitXmlWriter] CDATA build failed for "
-                    + cr.getCaseFile() + ": " + t.getMessage());
+            LogUtil.log(logId, "[JunitXmlWriter] CDATA build failed for "
+                    + cr.getCaseFile() + ": " + t.getClass().getName() + ": " + t.getMessage());
             return "";
         }
     }
@@ -261,14 +301,29 @@ public final class JunitXmlWriter {
     public static void main(String[] args) {
         int passed = 0;
         passed += testRelativePath();
+        passed += testTimeFormatting();
         passed += testEmptySuite();
-        if (passed == 2) {
-            System.out.println("OK: JunitXmlWriter " + passed + "/2 cases passed");
+        if (passed == 3) {
+            System.out.println("OK: JunitXmlWriter " + passed + "/3 cases passed");
             System.exit(0);
         } else {
-            System.err.println("FAIL: JunitXmlWriter " + passed + "/2 cases passed");
+            System.err.println("FAIL: JunitXmlWriter " + passed + "/3 cases passed");
             System.exit(1);
         }
+    }
+
+    private static int testTimeFormatting() {
+        // 20_000_000 ms = 20000 seconds; String.valueOf(20000000/1000.0) -> "2.0E7" (scientific)
+        long totalTimeMs = 20000000L;
+        String time = String.format(Locale.ROOT, "%.3f", totalTimeMs / 1000.0);
+        boolean startsWithDigit = time.length() > 0 && Character.isDigit(time.charAt(0));
+        boolean hasDot = time.indexOf('.') >= 0;
+        boolean hasExponent = time.indexOf('E') >= 0 || time.indexOf('e') >= 0;
+        if (!startsWithDigit || !hasDot || hasExponent) {
+            System.err.println("  FAIL: testTimeFormatting: got '" + time + "'");
+            return 0;
+        }
+        return 1;
     }
 
     private static int testRelativePath() {
@@ -305,21 +360,47 @@ public final class JunitXmlWriter {
             s.setType(Summary.TYPE_BOTTOM);
             t.setSummary(s);
 
-            // BuildModeResolver may throw if cubrid_rel is unavailable; if so, this
-            // self-test is a no-op rather than a failure (the file simply isn't created).
+            // BuildModeResolver may throw if cubrid_rel is unavailable.
+            // In CI environments, cubrid_rel must be present — treat absence as a failure.
+            // Outside CI, skip gracefully.
+            boolean inCi = System.getenv("CI") != null || System.getenv("CIRCLECI") != null;
             try {
                 BuildModeResolver.detect();
             } catch (RuntimeException re) {
+                if (inCi) {
+                    System.err.println("  FAIL: cubrid_rel unavailable in CI: " + re.getMessage());
+                    return 0;
+                }
                 System.out.println("  SKIP: cubrid_rel unavailable, skipping write check");
                 return 1;
             }
-            write(t);
+            write(t, "JunitXmlWriter-self-test");
             File expected = new File(tmpDir, "test-sql.xml");
             if (!expected.exists()) {
                 System.err.println("  FAIL: expected file not created: " + expected);
                 return 0;
             }
             expected.deleteOnExit();
+            // Content check: file must contain the empty-suite attributes.
+            java.io.InputStream in = new java.io.FileInputStream(expected);
+            byte[] buf = new byte[(int) expected.length()];
+            try {
+                int off = 0;
+                int rem = buf.length;
+                while (rem > 0) {
+                    int r = in.read(buf, off, rem);
+                    if (r < 0) break;
+                    off += r; rem -= r;
+                }
+            } finally {
+                in.close();
+            }
+            String content = new String(buf, "UTF-8");
+            if (!content.contains("tests=\"0\"") || !content.contains("failures=\"0\"")) {
+                System.err.println("  FAIL: testEmptySuite content missing tests/failures attrs: "
+                        + content);
+                return 0;
+            }
             return 1;
         } catch (Exception e) {
             System.err.println("  FAIL: testEmptySuite exception: " + e.getMessage());

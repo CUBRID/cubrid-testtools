@@ -229,7 +229,7 @@ public class ConsoleBO extends Executor {
             }
             onMessage("*******results saved.");
             try {
-                JunitXmlWriter.write(test);
+                JunitXmlWriter.write(test, logId);
             } catch (Throwable t) {
                 LogUtil.log(logId, "[JunitXmlWriter] outer guard: " + t.getMessage());
             }
