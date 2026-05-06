@@ -42,6 +42,7 @@ import com.navercorp.cubridqa.cqt.console.util.CubridUtil;
 import com.navercorp.cubridqa.cqt.console.util.EnvGetter;
 import com.navercorp.cubridqa.cqt.console.util.ErrorInterruptUtil;
 import com.navercorp.cubridqa.cqt.console.util.FileUtil;
+import com.navercorp.cubridqa.cqt.console.util.JunitXmlWriter;
 import com.navercorp.cubridqa.cqt.console.util.LogUtil;
 import com.navercorp.cubridqa.cqt.console.util.RepositoryPathUtil;
 import com.navercorp.cubridqa.cqt.console.util.StringUtil;
@@ -227,6 +228,11 @@ public class ConsoleBO extends Executor {
                         "[time]savePerformanceResult:" + (System.currentTimeMillis() - startTime));
             }
             onMessage("*******results saved.");
+            try {
+                JunitXmlWriter.write(test);
+            } catch (Throwable t) {
+                LogUtil.log(logId, "[JunitXmlWriter] outer guard: " + t.getMessage());
+            }
         } catch (Throwable e) {
             e.printStackTrace();
             onMessage(e.getMessage());
