@@ -16,13 +16,13 @@ HC_CHECK_FOR_EACH_STATEMENT_11=select 'db_attribute' TABLE_NAME, db_attribute.* 
 HC_CHECK_FOR_EACH_STATEMENT_12=select 'db_vclass' TABLE_NAME, db_vclass.* from db_vclass order by 1,2,3,4;
 HC_CHECK_FOR_EACH_STATEMENT_13=select 'db_direct_super_class' TABLE_NAME, db_direct_super_class.* from db_direct_super_class order by 1,2;
 HC_CHECK_FOR_EACH_STATEMENT_14=select 'db_class' TABLE_NAME, class_name, owner_name, class_type, is_system_class, tde_algorithm, statistics_strategy, partitioned, is_reuse_oid_class, collation, comment from db_class order by 1,2,3,4,5,6,7,8,9,10;
-HC_CHECK_FOR_EACH_STATEMENT_15=select '_db_serial' TABLE_NAME, if(owner is null, USER, (select name from db_user where db_user=owner)) owner, _db_serial.name, _db_serial.current_val, _db_serial.increment_val, _db_serial.max_val, _db_serial.min_val, _db_serial.start_val, _db_serial.cyclic, _db_serial.started, _db_serial.class_name, _db_serial.att_name, _db_serial.cached_num, _db_serial.comment from _db_serial;
+HC_CHECK_FOR_EACH_STATEMENT_15=select '_db_serial' TABLE_NAME, if(owner is null, USER, (select name from db_user where db_user=owner)) owner, _db_serial.name, _db_serial.current_val, _db_serial.increment_val, _db_serial.max_val, _db_serial.min_val, _db_serial.start_val, _db_serial.cyclic, _db_serial.started, _db_serial.class_name, _db_serial.attr_name, _db_serial.cached_num, _db_serial.comment from _db_serial;
 HC_CHECK_FOR_EACH_STATEMENT_16=select '_db_collation' TABLE_NAME, _db_collation.* from _db_collation order by 1,2,3,4,5,6,7,8,9;
 HC_CHECK_FOR_EACH_STATEMENT_17=select '_db_data_type' TABLE_NAME, _db_data_type.* from _db_data_type order by 1,2,3;
 HC_CHECK_FOR_EACH_STATEMENT_18=select '_db_query_spec' TABLE_NAME, _db_query_spec.* from _db_query_spec order by 3,1,2;
 HC_CHECK_FOR_EACH_STATEMENT_19=select '_db_meth_arg' TABLE_NAME, _db_meth_arg.* from _db_meth_arg order by 1,2,3,4,5;
 HC_CHECK_FOR_EACH_STATEMENT_20=select '_db_meth_sig' TABLE_NAME, _db_meth_sig.* from _db_meth_sig order by 1,2,3,4,5;
-HC_CHECK_FOR_EACH_STATEMENT_21=select '_db_trigger' TABLE_NAME, unique_name, owner, name, status, priority, event, target_class, target_attribute, target_class_attribute, condition_type, condition, condition_time, action_type, action_definition, action_time, comment from db_trigger order by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16;
+HC_CHECK_FOR_EACH_STATEMENT_21=select '_db_trigger' TABLE_NAME, unique_name, owner, name, status, priority, event, target_class, target_attribute, target_class_attribute, condition_type, condition, condition_time, action_type, action_definition, action_time, comment from _db_trigger order by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16;
 HC_CHECK_FOR_EACH_STATEMENT_22=select 'db_password' TABLE_NAME, db_password.* from db_password order by 1,2;
 HC_CHECK_FOR_EACH_STATEMENT_23=select 'db_root' TABLE_NAME, db_root.* from db_root order by 1,2,3,4,5;
 
