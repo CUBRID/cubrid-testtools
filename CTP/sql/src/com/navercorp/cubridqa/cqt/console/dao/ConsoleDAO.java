@@ -43,6 +43,7 @@ import com.navercorp.cubridqa.cqt.console.util.SystemUtil;
 import com.navercorp.cubridqa.cqt.console.util.TestUtil;
 import com.navercorp.cubridqa.cqt.console.util.XstreamHelper;
 import java.io.File;
+import java.math.BigDecimal;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
@@ -66,6 +67,8 @@ import org.apache.commons.dbcp.BasicDataSource;
 
 public class ConsoleDAO extends Executor {
     private static final String driver = "cubrid.jdbc.driver.CUBRIDDriver";
+
+    private static Boolean cubrid115OrAbove = null;
 
     private String url = null;
 
@@ -942,6 +945,31 @@ public class ConsoleDAO extends Executor {
             }
      }
 
+    private boolean isCubrid115OrAbove() {
+        if (cubrid115OrAbove == null) {
+            cubrid115OrAbove = checkCubrid115OrAbove();
+        }
+        return cubrid115OrAbove;
+    }
+
+    private static boolean checkCubrid115OrAbove() {
+        try {
+            String ver = MyDriverManager.getDatabaseVersion();
+            if (ver == null) return false;
+            for (String token : ver.split("[\\s()]+")) {
+                String[] parts = token.split("\\.");
+                if (parts.length >= 2 && parts[0].matches("\\d+")) {
+                    int p1 = Integer.parseInt(parts[0]);
+                    int p2 = Integer.parseInt(parts[1]);
+                    return p1 > 11 || (p1 == 11 && p2 >= 5);
+                }
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return false;
+    }
+
     /**
      * @Title: getColumnValue @Description:Get every column's result.
      *
@@ -1010,7 +1038,11 @@ public class ConsoleDAO extends Executor {
                     }
                 }
             } else {
-                sb.append(value.toString());
+                if (value instanceof BigDecimal && isCubrid115OrAbove()) {
+                    sb.append(((BigDecimal) value).toPlainString());
+                } else {
+                    sb.append(value.toString());
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
