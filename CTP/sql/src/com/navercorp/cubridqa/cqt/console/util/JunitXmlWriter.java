@@ -72,7 +72,13 @@ import javax.xml.stream.XMLStreamWriter;
  */
 public final class JunitXmlWriter {
 
-    private static final String TESTCASES_ANCHOR = "/cubrid-testcases/";
+    // Recognized test-case repository directory names, longest first so that
+    // "-private-ex" and "-private" win over the bare "cubrid-testcases".
+    private static final String[] TESTCASES_ANCHORS = {
+        "/cubrid-testcases-private-ex/",
+        "/cubrid-testcases-private/",
+        "/cubrid-testcases/"
+    };
 
     private JunitXmlWriter() {}
 
@@ -170,11 +176,32 @@ public final class JunitXmlWriter {
         if (absoluteCaseFile == null) {
             return "";
         }
-        int idx = absoluteCaseFile.indexOf(TESTCASES_ANCHOR);
-        if (idx < 0) {
-            return absoluteCaseFile;
+        for (int i = 0; i < TESTCASES_ANCHORS.length; i++) {
+            String anchor = TESTCASES_ANCHORS[i];
+            int idx = absoluteCaseFile.indexOf(anchor);
+            if (idx >= 0) {
+                return absoluteCaseFile.substring(idx + anchor.length());
+            }
         }
-        return absoluteCaseFile.substring(idx + TESTCASES_ANCHOR.length());
+        return absoluteCaseFile;
+    }
+
+    /**
+     * Repository directory name (without surrounding slashes) that the case file lives under,
+     * e.g. {@code cubrid-testcases-private}. Used as the {@code file=} attribute prefix so the
+     * CI source links resolve to the correct repo. Defaults to {@code cubrid-testcases} when no
+     * known anchor matches.
+     */
+    static String testcasesRepoName(String absoluteCaseFile) {
+        if (absoluteCaseFile != null) {
+            for (int i = 0; i < TESTCASES_ANCHORS.length; i++) {
+                String anchor = TESTCASES_ANCHORS[i];
+                if (absoluteCaseFile.indexOf(anchor) >= 0) {
+                    return anchor.substring(1, anchor.length() - 1);
+                }
+            }
+        }
+        return "cubrid-testcases";
     }
 
     private static void writeXml(
@@ -261,11 +288,12 @@ public final class JunitXmlWriter {
             XMLStreamWriter w, String suiteName, CaseResult cr, String logId)
             throws XMLStreamException {
         String relPath = relativeToTestcasesRoot(cr.getCaseFile());
+        String repoName = testcasesRepoName(cr.getCaseFile());
         String time = String.format(Locale.ROOT, "%.3f", cr.getTotalTime() / 1000.0);
         w.writeStartElement("testcase");
         w.writeAttribute("classname", suiteName);
         w.writeAttribute("name", relPath);
-        w.writeAttribute("file", "cubrid-testcases/" + relPath);
+        w.writeAttribute("file", repoName + "/" + relPath);
         w.writeAttribute("time", time);
         if (!cr.isSuccessFul()) {
             w.writeStartElement("failure");
@@ -281,8 +309,6 @@ public final class JunitXmlWriter {
 
     private static String buildFailureCdata(CaseResult cr, String logId) {
         try {
-            String resultFile =
-                    cr.getResultDir() + File.separator + cr.getCaseName() + ".result";
             if (cr.getCaseFile() == null
                     || cr.getAnswerFile() == null
                     || cr.getResultDir() == null) {
@@ -290,6 +316,9 @@ public final class JunitXmlWriter {
                         + cr.getCaseName());
                 return "";
             }
+            // Match the path convention TestUtil.saveResult uses to write the file ("/"),
+            // not the platform separator.
+            String resultFile = cr.getResultDir() + "/" + cr.getCaseName() + ".result";
             return FailureCdataBuilder.build(cr.getCaseFile(), cr.getAnswerFile(), resultFile);
         } catch (Throwable t) {
             LogUtil.log(logId, "[JunitXmlWriter] CDATA build failed for "
@@ -331,6 +360,34 @@ public final class JunitXmlWriter {
                 "/home/dev/cubrid-testcases/sql/_01_object/_01_type/cases/abc.sql");
         if (!"sql/_01_object/_01_type/cases/abc.sql".equals(rel)) {
             System.err.println("  FAIL: relativeToTestcasesRoot -> " + rel);
+            return 0;
+        }
+        if (!"cubrid-testcases".equals(testcasesRepoName(
+                "/home/dev/cubrid-testcases/sql/_01_object/_01_type/cases/abc.sql"))) {
+            System.err.println("  FAIL: repoName(public)");
+            return 0;
+        }
+        // Private repos must strip their own prefix, not fall through to the absolute path.
+        String priv = relativeToTestcasesRoot(
+                "/home/dev/cubrid-testcases-private/shell_ext/cases/x.sql");
+        if (!"shell_ext/cases/x.sql".equals(priv)) {
+            System.err.println("  FAIL: private relativeToTestcasesRoot -> " + priv);
+            return 0;
+        }
+        if (!"cubrid-testcases-private".equals(testcasesRepoName(
+                "/home/dev/cubrid-testcases-private/shell_ext/cases/x.sql"))) {
+            System.err.println("  FAIL: repoName(private)");
+            return 0;
+        }
+        String privEx = relativeToTestcasesRoot(
+                "/home/dev/cubrid-testcases-private-ex/shell/cases/y.sql");
+        if (!"shell/cases/y.sql".equals(privEx)) {
+            System.err.println("  FAIL: private-ex relativeToTestcasesRoot -> " + privEx);
+            return 0;
+        }
+        if (!"cubrid-testcases-private-ex".equals(testcasesRepoName(
+                "/home/dev/cubrid-testcases-private-ex/shell/cases/y.sql"))) {
+            System.err.println("  FAIL: repoName(private-ex)");
             return 0;
         }
         String passthru = relativeToTestcasesRoot("/some/other/path/abc.sql");

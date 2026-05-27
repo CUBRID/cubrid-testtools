@@ -79,7 +79,7 @@ public final class FailureCdataBuilder {
         if (failing.isEmpty()) {
             return "";
         }
-        return cdataSafe(renderLayout(failing, answerFilePath, resultFilePath));
+        return cdataSafe(renderLayout(failing));
     }
 
     private static final class FailingStatement {
@@ -132,7 +132,8 @@ public final class FailureCdataBuilder {
             if (e instanceof IOException) {
                 throw (IOException) e;
             }
-            throw new IOException(e.getMessage(), e);
+            // Use toString() so the wrapped cause is identifiable even when getMessage() is null.
+            throw new IOException(e.toString(), e);
         } finally {
             if (tr != null) {
                 try {
@@ -165,8 +166,7 @@ public final class FailureCdataBuilder {
         return a.equals(b);
     }
 
-    private static String renderLayout(
-            List<FailingStatement> failing, String answerFilePath, String resultFilePath) {
+    private static String renderLayout(List<FailingStatement> failing) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < failing.size(); i++) {
             if (i > 0) {

@@ -170,6 +170,11 @@ public final class UnifiedDiffUtil extends diff_match_patch {
                 if (op.op == Operation.EQUAL) {
                     trailingEq++;
                     if (trailingEq > 2 * context) {
+                        // This EQUAL line is not appended to the body, so it must not be
+                        // counted when trimming trailing context below; otherwise the trim
+                        // removes one line too many and the hunk keeps context-1 trailing
+                        // context lines instead of context (off-by-one vs `diff -u`).
+                        trailingEq--;
                         break;
                     }
                     h.body.add(" " + op.text);
