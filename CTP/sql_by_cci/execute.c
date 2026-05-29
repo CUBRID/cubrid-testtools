@@ -2031,6 +2031,10 @@ execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
     {
       has_st = 1;
     }
+  else
+    {
+      has_st = 0;
+    }
 
   //getting column information when the prepared statement is the SELECT query
   res_col_info = cci_get_result_info (req, &cmd_type, &col_count);
