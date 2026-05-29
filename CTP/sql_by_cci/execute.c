@@ -2025,17 +2025,6 @@ execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
       goto _END;
     }
 
-  //if find the sql was "show trace;". then mark it.
-  //add by charlie for format the show trace
-  if (startswithCI (sql, "show trace;"))
-    {
-      has_st = 1;
-    }
-  else
-    {
-      has_st = 0;
-    }
-
   //getting column information when the prepared statement is the SELECT query
   res_col_info = cci_get_result_info (req, &cmd_type, &col_count);
   if (cmd_type == CUBRID_STMT_SELECT || cmd_type == CUBRID_STMT_CALL || cmd_type == CUBRID_STMT_EVALUATE
@@ -2482,6 +2471,16 @@ test (FILE * fp)
 	}
       else
 	{
+	  /* reset has_st for every SQL (execute + executebind) */
+	  if (startswithCI (sqlstate[sql_count].sql, "show trace;"))
+	    {
+	      has_st = 1;
+	    }
+	  else
+	    {
+	      has_st = 0;
+	    }
+
 	  if (parameter[sql_count] != NULL)
 	    {
 	      executebind (fp, conn, parameter[sql_count], &sqlstate[sql_count]); 
