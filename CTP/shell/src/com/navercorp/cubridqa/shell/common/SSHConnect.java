@@ -228,31 +228,42 @@ public class SSHConnect {
 		}
 
 		try {
-			int len = 0;
-			while ((len = in.read(b)) > 0) {
-				out.write(b, 0, len);
-				if (out.toString().indexOf(ScriptInput.COMP_FLAG) > 0) {
-					break;
+			try {
+				int len = 0;
+				while ((len = in.read(b)) > 0) {
+					out.write(b, 0, len);
+					if (out.toString().indexOf(ScriptInput.COMP_FLAG) > 0) {
+						break;
+					}
 				}
+			} catch (Exception readEx) {
+				if (timedOut.get()) {
+					throw new SSHTimeoutException("SSH exec timeout after " + readTimeoutSecs + " seconds on " + toString());
+				}
+				throw readEx;
 			}
-		} catch (Exception readEx) {
+
 			if (timedOut.get()) {
 				throw new SSHTimeoutException("SSH exec timeout after " + readTimeoutSecs + " seconds on " + toString());
 			}
-			throw readEx;
+
+			return extractOutput(out.toString());
 		} finally {
+			/*
+			 * Always release the channel and cancel the watchdog, regardless of
+			 * normal completion, timeout, or a read error. Otherwise a non-timeout
+			 * I/O/JSch exception would leave the ChannelExec open and leak channels
+			 * on the reused session over a long regression run. disconnect() is
+			 * idempotent, so it is safe even if the watchdog already disconnected.
+			 */
 			if (watch != null) {
 				watch.cancel(false);
 			}
+			try {
+				exec.disconnect();
+			} catch (Exception e) {
+			}
 		}
-
-		if (timedOut.get()) {
-			throw new SSHTimeoutException("SSH exec timeout after " + readTimeoutSecs + " seconds on " + toString());
-		}
-
-		exec.disconnect();
-
-		return extractOutput(out.toString());
 	}
 
 	private static String extractOutput(String raw) {
