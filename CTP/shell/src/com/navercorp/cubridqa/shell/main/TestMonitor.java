@@ -201,7 +201,21 @@ public class TestMonitor {
 
 	private void resolveTimeout() {
 
+		long elapse_time;
+		String tcName;
+		String envId;
+
 		synchronized (test) {
+			/*
+			 * Resolve a timeout only once per test case. Without this guard the
+			 * monitor re-runs resetProcess() (the CLEAN PROCESSES block) every 3
+			 * seconds for as long as the worker stays blocked, which is the
+			 * infinite "[RESOLVE] ... CLEAN PROCESSES:" loop. isTimeOut is reset
+			 * to false for each new case in Test.runAll().
+			 */
+			if (test.isTimeOut)
+				return;
+
 			if (testCaseTimeout < 0 || test.startTime <= 0)
 				return;
 
@@ -211,26 +225,36 @@ public class TestMonitor {
 				return;
 			}
 
-			long elapse_time = (endTime - test.startTime) / 1000;
+			elapse_time = (endTime - test.startTime) / 1000;
+			tcName = test.testCaseFullName;
+			envId = test.envIdentify;
 
-			String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
-
+			/*
+			 * Mark the result while holding the lock (the result list is shared
+			 * with the worker thread), and set isTimeOut up front so this case is
+			 * resolved exactly once. The slow network work (resetProcess / agent
+			 * restart / feedback) is done OUTSIDE the lock so the worker is never
+			 * blocked on the monitor's remote calls.
+			 */
 			test.testCaseSuccess = false;
 			test.addResultItem("NOK", "timeout");
 			test.isTimeOut = true;
-			if (elapse_time > 120 && context.isWindows()) {
-				this.log.println("Try to restart remote aganet to resovle timeout problem.");
-				try {
-					ssh.restartRemoteAgent();
-					this.log.println("Restart done");
-				} catch (Exception e) {
-					this.log.println("Restart fail: " + e.getMessage());
-				}
-			}
-			context.getFeedback().onTestCaseMonitor(test.testCaseFullName,
-					"[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
-					test.envIdentify);
 		}
+
+		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
+
+		if (elapse_time > 120 && context.isWindows()) {
+			this.log.println("Try to restart remote aganet to resovle timeout problem.");
+			try {
+				ssh.restartRemoteAgent();
+				this.log.println("Restart done");
+			} catch (Exception e) {
+				this.log.println("Restart fail: " + e.getMessage());
+			}
+		}
+		context.getFeedback().onTestCaseMonitor(tcName,
+				"[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
+				envId);
 	}
 
 	public void close() {
