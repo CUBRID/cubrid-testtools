@@ -53,6 +53,8 @@ public class Test {
 	/* written by the monitor thread (resolveTimeout) and read by the worker thread, so keep them visible */
 	volatile boolean testCaseSuccess;
 	volatile boolean isTimeOut = false;
+	/* set by the monitor once it has successfully cleaned up a timed-out case; lets a failed cleanup be retried */
+	volatile boolean timeoutCleanupDone = false;
 	boolean hasCore = false;
 
 	boolean shouldStop = false;
@@ -69,6 +71,7 @@ public class Test {
 		this.shouldStop = false;
 		this.isStopped = false;
 		this.isTimeOut = false;
+		this.timeoutCleanupDone = false;
 		this.hasCore = false;
 		this.context = context;
 		this.currEnvId = currEnvId;
@@ -128,6 +131,7 @@ public class Test {
 
 			resultItemList.clear();
 			this.isTimeOut = false;
+			this.timeoutCleanupDone = false;
 			this.testCaseSuccess = true;
 			this.hasCore = false;
 			int retryCount = dispatchTicket.getRetryCount();

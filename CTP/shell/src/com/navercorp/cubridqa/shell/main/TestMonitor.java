@@ -204,18 +204,9 @@ public class TestMonitor {
 		long elapse_time;
 		String tcName;
 		String envId;
+		boolean justDetected = false;
 
 		synchronized (test) {
-			/*
-			 * Resolve a timeout only once per test case. Without this guard the
-			 * monitor re-runs resetProcess() (the CLEAN PROCESSES block) every 3
-			 * seconds for as long as the worker stays blocked, which is the
-			 * infinite "[RESOLVE] ... CLEAN PROCESSES:" loop. isTimeOut is reset
-			 * to false for each new case in Test.runAll().
-			 */
-			if (test.isTimeOut)
-				return;
-
 			if (testCaseTimeout < 0 || test.startTime <= 0)
 				return;
 
@@ -230,18 +221,46 @@ public class TestMonitor {
 			envId = test.envIdentify;
 
 			/*
-			 * Mark the result while holding the lock (the result list is shared
-			 * with the worker thread), and set isTimeOut up front so this case is
-			 * resolved exactly once. The slow network work (resetProcess / agent
-			 * restart / feedback) is done OUTSIDE the lock so the worker is never
-			 * blocked on the monitor's remote calls.
+			 * Record the timeout result exactly once (the result list is shared
+			 * with the worker thread). isTimeOut tracks ONLY "timeout detected /
+			 * result recorded"; it is reset for each new case in Test.runAll().
 			 */
-			test.testCaseSuccess = false;
-			test.addResultItem("NOK", "timeout");
-			test.isTimeOut = true;
+			if (test.isTimeOut == false) {
+				test.testCaseSuccess = false;
+				test.addResultItem("NOK", "timeout");
+				test.isTimeOut = true;
+				justDetected = true;
+			}
+
+			/*
+			 * Cleanup completion is tracked separately (timeoutCleanupDone) so a
+			 * failed cleanup is retried on the next monitor cycle instead of being
+			 * permanently skipped by the detection guard. Once cleanup has
+			 * succeeded there is nothing more to do for this case.
+			 */
+			if (test.timeoutCleanupDone) {
+				return;
+			}
 		}
 
+		if (justDetected) {
+			this.log.println("[RESOLVE] " + testCaseTimeout + " timeout detected (actual: " + elapse_time + " seconds) for " + tcName + ", cleaning up processes...");
+		}
+
+		/*
+		 * Do the slow work OUTSIDE the lock so the worker is never blocked on the
+		 * monitor's remote calls. resetProcess() returns an error string (it does
+		 * not throw) on SSH/RMI failure; treat that as a failed cleanup and leave
+		 * timeoutCleanupDone false so the next cycle retries while the worker is
+		 * still stuck on this case.
+		 */
 		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
+		boolean cleanupFailed = (result == null) || result.startsWith("fail to reset processes:");
+
+		if (cleanupFailed) {
+			this.log.println("[RESOLVE] process cleanup failed, will retry next cycle: " + result);
+			return;
+		}
 
 		if (elapse_time > 120 && context.isWindows()) {
 			this.log.println("Try to restart remote aganet to resovle timeout problem.");
@@ -252,6 +271,13 @@ public class TestMonitor {
 				this.log.println("Restart fail: " + e.getMessage());
 			}
 		}
+
+		/*
+		 * Mark cleanup done before sending feedback: cleanup has already succeeded,
+		 * so a feedback/logging failure must not trigger another full cleanup.
+		 */
+		test.timeoutCleanupDone = true;
+
 		context.getFeedback().onTestCaseMonitor(tcName,
 				"[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
 				envId);
