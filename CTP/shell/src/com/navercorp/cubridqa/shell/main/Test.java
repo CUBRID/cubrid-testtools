@@ -35,6 +35,7 @@ import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.SSHTimeoutException;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.dispatch.Dispatch;
 
@@ -49,8 +50,9 @@ public class Test {
 	Log dispatchLog;
 	Log workerLog;
 
-	boolean testCaseSuccess;
-	boolean isTimeOut = false;
+	/* written by the monitor thread (resolveTimeout) and read by the worker thread, so keep them visible */
+	volatile boolean testCaseSuccess;
+	volatile boolean isTimeOut = false;
 	boolean hasCore = false;
 
 	boolean shouldStop = false;
@@ -149,25 +151,32 @@ public class Test {
 				doFinalCheck();
 				collectGeneralResult();
 			} catch (Exception e) {
+				/* a hung case that escaped via the SSH read watchdog is a timeout, not a generic failure */
+				if (e instanceof SSHTimeoutException) {
+					this.isTimeOut = true;
+				}
 				this.addResultItem("NOK", "Runtime error (" + e.getMessage() + ")");
 			} finally {
 				endTime = System.currentTimeMillis();
 
 				StringBuffer resultCont = new StringBuffer();
-				for (String item : this.resultItemList) {
-					if (testCaseSuccess) {
-						if (item.indexOf("NOK") != -1) {
-							this.testCaseSuccess = false;
+				/* the monitor thread may add a timeout result item concurrently; iterate under the same lock as addResultItem */
+				synchronized (this) {
+					for (String item : this.resultItemList) {
+						if (testCaseSuccess) {
+							if (item.indexOf("NOK") != -1) {
+								this.testCaseSuccess = false;
+							}
 						}
-					}
-					if (hasCore == false) {
-						if (item.indexOf("NOK found core file") != -1 || item.indexOf("NOK found fatal error") != -1) {
-							this.hasCore = true;
+						if (hasCore == false) {
+							if (item.indexOf("NOK found core file") != -1 || item.indexOf("NOK found fatal error") != -1) {
+								this.hasCore = true;
+							}
 						}
-					}
 
-					workerLog.println(item);
-					resultCont.append(item).append(Constants.LINE_SEPARATOR);
+						workerLog.println(item);
+						resultCont.append(item).append(Constants.LINE_SEPARATOR);
+					}
 				}
 
 				if (testCaseSuccess == false && hasCore == false && context.getEnableSaveNormalErrorLog() == true) {
@@ -179,6 +188,9 @@ public class Test {
 				boolean needRetry = false;
 				if (testCaseSuccess == false) {
 					if (hasCore) {
+						needRetry = false;
+					} else if (isTimeOut) {
+						/* do not retry a timeout: it would simply hang again for another deadline */
 						needRetry = false;
 					} else {
 						needRetry = true;
@@ -595,7 +607,7 @@ public class Test {
 		}
 	}
 
-	public void addResultItem(String flag, String message) {
+	public synchronized void addResultItem(String flag, String message) {
 		if (flag == null)
 			this.resultItemList.add(message);
 		else

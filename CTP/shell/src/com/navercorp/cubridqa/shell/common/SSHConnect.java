@@ -30,6 +30,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.rmi.Naming;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
@@ -53,6 +59,35 @@ public class SSHConnect {
 	String serviceProtocol;
 
 	final int MAX_TRY_TIME = 10;
+
+	/*
+	 * Connect timeout and keepalive settings (milliseconds) to detect dead
+	 * nodes/sockets. Keepalive is kept generous (60s x 10 = 10 minutes) so a
+	 * healthy but heavily-loaded/swapping test node is not falsely severed while
+	 * still making progress; the execute() read deadline (testCaseTimeout + 300)
+	 * is the real upper bound. Keepalive only shortens detection of a truly dead
+	 * node from the full read deadline down to ~10 minutes.
+	 */
+	private static final int CONNECT_TIMEOUT_MS = 30 * 1000;
+	private static final int SERVER_ALIVE_INTERVAL_MS = 60 * 1000;
+	private static final int SERVER_ALIVE_COUNT_MAX = 10;
+
+	/*
+	 * Total read deadline for a single execute() over SSH, in seconds. -1 means
+	 * disabled (legacy behavior: block until ALL_COMPLETED or channel EOF). When
+	 * set, a watchdog forcibly disconnects the channel/session after the deadline
+	 * so a hung test case cannot block the worker thread forever.
+	 */
+	private int readTimeoutSecs = -1;
+
+	/* shared daemon watchdog scheduler for all SSHConnect instances */
+	private static final ScheduledExecutorService WATCHDOG = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+		public Thread newThread(Runnable r) {
+			Thread t = new Thread(r, "ssh-exec-watchdog");
+			t.setDaemon(true);
+			return t;
+		}
+	});
 
 	public SSHConnect() throws JSchException {
 		this(null, -1, null, null, SERVICE_TYPE_LOCAL);
@@ -96,12 +131,26 @@ public class SSHConnect {
 			config.setProperty("StrictHostKeyChecking", "no");
 			session.setConfig("PreferredAuthentications", "password,publickey,keyboard-interactive,");
 			this.session.setConfig(config);
-			this.session.connect();
+			this.session.setServerAliveInterval(SERVER_ALIVE_INTERVAL_MS);
+			this.session.setServerAliveCountMax(SERVER_ALIVE_COUNT_MAX);
+			this.session.connect(CONNECT_TIMEOUT_MS);
 			if ((session != null && session.isConnected()) || count > MAX_TRY_TIME) {
 				break;
 			}
 			count++;
 		}
+	}
+
+	/**
+	 * Set the total read deadline (in seconds) for a single SSH execute(). A value
+	 * of -1 (default) disables the deadline and keeps the legacy blocking behavior.
+	 */
+	public void setReadTimeoutSecs(int readTimeoutSecs) {
+		this.readTimeoutSecs = readTimeoutSecs;
+	}
+
+	public int getReadTimeoutSecs() {
+		return this.readTimeoutSecs;
 	}
 
 	public String execute(ScriptInput scripts) throws Exception {
@@ -146,12 +195,59 @@ public class SSHConnect {
 		exec.setCommand(scripts);
 		exec.connect();
 
-		int len = 0;
-		while ((len = in.read(b)) > 0) {
-			out.write(b, 0, len);
-			if (out.toString().indexOf(ScriptInput.COMP_FLAG) > 0) {
-				break;
+		/*
+		 * A hung test case never prints ALL_COMPLETED and may keep the channel's
+		 * stdout fd open (background/grandchild processes), so neither the
+		 * COMP_FLAG nor the channel EOF condition is ever reached and in.read()
+		 * blocks forever. JSch's socket read is not interruptible via
+		 * Thread.interrupt(), so we arm a watchdog that forcibly disconnects the
+		 * channel and session once the read deadline passes; that makes in.read()
+		 * return/throw and lets the worker thread escape with an exception.
+		 */
+		final ChannelExec execRef = exec;
+		final Session sessionRef = this.session;
+		final AtomicBoolean timedOut = new AtomicBoolean(false);
+		ScheduledFuture<?> watch = null;
+		if (readTimeoutSecs > 0) {
+			watch = WATCHDOG.schedule(new Runnable() {
+				public void run() {
+					timedOut.set(true);
+					try {
+						execRef.disconnect();
+					} catch (Exception e) {
+					}
+					try {
+						/* disconnect only the session this watchdog was armed for, never a later reused session */
+						if (sessionRef != null) {
+							sessionRef.disconnect();
+						}
+					} catch (Exception e) {
+					}
+				}
+			}, readTimeoutSecs, TimeUnit.SECONDS);
+		}
+
+		try {
+			int len = 0;
+			while ((len = in.read(b)) > 0) {
+				out.write(b, 0, len);
+				if (out.toString().indexOf(ScriptInput.COMP_FLAG) > 0) {
+					break;
+				}
 			}
+		} catch (Exception readEx) {
+			if (timedOut.get()) {
+				throw new SSHTimeoutException("SSH exec timeout after " + readTimeoutSecs + " seconds on " + toString());
+			}
+			throw readEx;
+		} finally {
+			if (watch != null) {
+				watch.cancel(false);
+			}
+		}
+
+		if (timedOut.get()) {
+			throw new SSHTimeoutException("SSH exec timeout after " + readTimeoutSecs + " seconds on " + toString());
 		}
 
 		exec.disconnect();

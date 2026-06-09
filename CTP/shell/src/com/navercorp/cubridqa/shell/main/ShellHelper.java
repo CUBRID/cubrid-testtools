@@ -76,6 +76,24 @@ public class ShellHelper {
 
 			ssh = new SSHConnect(host, port, user, pwd, context.getServiceProtocolType());
 		}
+
+		/*
+		 * Give the SSH read loop a hard deadline so a hung test case cannot block
+		 * the worker thread forever. The monitor resolves a timeout at
+		 * testCaseTimeout; the read deadline is set slightly larger so the monitor
+		 * (and channel EOF after its process cleanup) gets the first chance to
+		 * resolve gracefully, and this is only the hard backstop. -1 keeps the
+		 * legacy unbounded behavior.
+		 */
+		try {
+			int testCaseTimeout = Integer.parseInt(context.getTestCaseTimeout());
+			if (testCaseTimeout > 0) {
+				ssh.setReadTimeoutSecs(testCaseTimeout + 300);
+			}
+		} catch (Exception e) {
+			// leave default (-1, disabled)
+		}
+
 		return ssh;
 	}
 }
