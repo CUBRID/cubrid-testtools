@@ -78,22 +78,12 @@ public class ShellHelper {
 		}
 
 		/*
-		 * Give the SSH read loop a hard deadline so a hung test case cannot block
-		 * the worker thread forever. The monitor resolves a timeout at
-		 * testCaseTimeout; the read deadline is set slightly larger so the monitor
-		 * (and channel EOF after its process cleanup) gets the first chance to
-		 * resolve gracefully, and this is only the hard backstop. -1 keeps the
-		 * legacy unbounded behavior.
+		 * NOTE: the SSH read deadline is intentionally NOT set here. This factory is
+		 * shared by discovery (Dispatch's one-time ~17k-file find) and monitor
+		 * connections, where a per-testcase deadline would be wrong (it could abort
+		 * the whole run or stall the monitor). The deadline is applied only to the
+		 * worker's own connection, in Test.applyReadDeadline().
 		 */
-		try {
-			int testCaseTimeout = Integer.parseInt(context.getTestCaseTimeout());
-			if (testCaseTimeout > 0) {
-				ssh.setReadTimeoutSecs(testCaseTimeout + 300);
-			}
-		} catch (Exception e) {
-			// leave default (-1, disabled)
-		}
-
 		return ssh;
 	}
 }

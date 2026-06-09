@@ -204,6 +204,7 @@ public class TestMonitor {
 		long elapse_time;
 		String tcName;
 		String envId;
+		long detectedStartTime;
 		boolean justDetected = false;
 
 		synchronized (test) {
@@ -219,6 +220,7 @@ public class TestMonitor {
 			elapse_time = (endTime - test.startTime) / 1000;
 			tcName = test.testCaseFullName;
 			envId = test.envIdentify;
+			detectedStartTime = test.startTime;
 
 			/*
 			 * Record the timeout result exactly once (the result list is shared
@@ -250,12 +252,13 @@ public class TestMonitor {
 		/*
 		 * Do the slow work OUTSIDE the lock so the worker is never blocked on the
 		 * monitor's remote calls. resetProcess() returns an error string (it does
-		 * not throw) on SSH/RMI failure; treat that as a failed cleanup and leave
-		 * timeoutCleanupDone false so the next cycle retries while the worker is
-		 * still stuck on this case.
+		 * not throw) on SSH/RMI failure; treat null/blank output or the failure
+		 * marker as a failed cleanup (a wedged channel can return empty output with
+		 * no kill evidence) and leave timeoutCleanupDone false so the next cycle
+		 * retries while the worker is still stuck on this case.
 		 */
 		String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
-		boolean cleanupFailed = (result == null) || result.startsWith("fail to reset processes:");
+		boolean cleanupFailed = (result == null) || (result.trim().length() == 0) || result.startsWith(CommonUtils.RESET_PROCESS_FAIL_PREFIX);
 
 		if (cleanupFailed) {
 			this.log.println("[RESOLVE] process cleanup failed, will retry next cycle: " + result);
@@ -273,10 +276,16 @@ public class TestMonitor {
 		}
 
 		/*
-		 * Mark cleanup done before sending feedback: cleanup has already succeeded,
-		 * so a feedback/logging failure must not trigger another full cleanup.
+		 * Mark cleanup done under the lock, but only if the worker is still on the
+		 * SAME timed-out case (startTime unchanged). If it has advanced to the next
+		 * case (which resets timeoutCleanupDone), stamping it now would wrongly skip
+		 * cleanup for that new case.
 		 */
-		test.timeoutCleanupDone = true;
+		synchronized (test) {
+			if (test.startTime == detectedStartTime && test.isTimeOut) {
+				test.timeoutCleanupDone = true;
+			}
+		}
 
 		context.getFeedback().onTestCaseMonitor(tcName,
 				"[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,

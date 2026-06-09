@@ -30,9 +30,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.rmi.Naming;
 import java.util.Properties;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -80,8 +79,13 @@ public class SSHConnect {
 	 */
 	private int readTimeoutSecs = -1;
 
-	/* shared daemon watchdog scheduler for all SSHConnect instances */
-	private static final ScheduledExecutorService WATCHDOG = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+	/*
+	 * Shared daemon watchdog scheduler for all SSHConnect instances. A single
+	 * thread is intentional (low volume); the per-execute task is explicitly
+	 * removed from the queue on normal completion (see execute()) so cancelled
+	 * tasks do not retain their captured ChannelExec/Session until the deadline.
+	 */
+	private static final ScheduledThreadPoolExecutor WATCHDOG = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
 		public Thread newThread(Runnable r) {
 			Thread t = new Thread(r, "ssh-exec-watchdog");
 			t.setDaemon(true);
@@ -163,6 +167,13 @@ public class SSHConnect {
 
 	public String execute(String scripts, boolean pureWindows) throws Exception {
 		// System.out.println(scripts);
+		/*
+		 * NOTE: the read deadline (readTimeoutSecs / watchdog below) applies ONLY to
+		 * the SSH path. The RMI and LOCAL branches return before the watchdog is
+		 * armed, so setReadTimeoutSecs has no effect there. A LOCAL/RMI hang is still
+		 * mitigated by the monitor's resetProcess, but the hard read backstop added
+		 * by this change is SSH-only.
+		 */
 		if (serviceProtocol.equals(SERVICE_TYPE_RMI)) {
 			ShellService srv = null;
 			String url = "rmi://" + host + ":" + port + "/shellService";
@@ -243,11 +254,19 @@ public class SSHConnect {
 				throw readEx;
 			}
 
-			if (timedOut.get()) {
+			/*
+			 * If the full output (COMP_FLAG) was received, return success even if the
+			 * watchdog happened to fire in the tiny window between the read break and
+			 * here; otherwise a case that completed right at the deadline would be
+			 * wrongly recorded as a timeout (and excluded from retry). Only treat it
+			 * as a timeout when we did NOT receive the completion marker.
+			 */
+			String outString = out.toString();
+			if (outString.indexOf(ScriptInput.COMP_FLAG) < 0 && timedOut.get()) {
 				throw new SSHTimeoutException("SSH exec timeout after " + readTimeoutSecs + " seconds on " + toString());
 			}
 
-			return extractOutput(out.toString());
+			return extractOutput(outString);
 		} finally {
 			/*
 			 * Always release the channel and cancel the watchdog, regardless of
@@ -258,6 +277,8 @@ public class SSHConnect {
 			 */
 			if (watch != null) {
 				watch.cancel(false);
+				/* drop the cancelled task from the queue so it does not retain the captured channel/session until its deadline */
+				WATCHDOG.remove((Runnable) watch);
 			}
 			try {
 				exec.disconnect();

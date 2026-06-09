@@ -61,7 +61,8 @@ public class Test {
 	boolean isStopped = false;
 	boolean needDropTestCase = false;
 
-	long startTime = 0;
+	/* written by the worker, read by the monitor (resolveTimeout) to measure elapsed time, so keep it visible */
+	volatile long startTime = 0;
 	int maxRetryCount = 0;
 
 	ArrayList<String> resultItemList = new ArrayList<String>();
@@ -152,31 +153,40 @@ public class Test {
 				/* a hung case that escaped via the SSH read watchdog is a timeout, not a generic failure */
 				if (e instanceof SSHTimeoutException) {
 					this.isTimeOut = true;
+					/* classify as "timeout" (consistent with the monitor path), not a generic runtime error */
+					this.addResultItem("NOK", "timeout (" + e.getMessage() + ")");
+				} else {
+					this.addResultItem("NOK", "Runtime error (" + e.getMessage() + ")");
 				}
-				this.addResultItem("NOK", "Runtime error (" + e.getMessage() + ")");
 			} finally {
 				try {
 					endTime = System.currentTimeMillis();
 					long elapseTime = startTime > 0 ? endTime - startTime : 0;
 
 					StringBuffer resultCont = new StringBuffer();
-					/* the monitor thread may add a timeout result item concurrently; iterate under the same lock as addResultItem */
+					/*
+					 * Snapshot the result list under the lock (the monitor thread may add a
+					 * timeout item concurrently), then do the blocking file I/O OUTSIDE the
+					 * lock so slow disk/NFS cannot delay the monitor's timeout detection.
+					 */
+					ArrayList<String> resultSnapshot;
 					synchronized (this) {
-						for (String item : this.resultItemList) {
-							if (testCaseSuccess) {
-								if (item.indexOf("NOK") != -1) {
-									this.testCaseSuccess = false;
-								}
+						resultSnapshot = new ArrayList<String>(this.resultItemList);
+					}
+					for (String item : resultSnapshot) {
+						if (testCaseSuccess) {
+							if (item.indexOf("NOK") != -1) {
+								this.testCaseSuccess = false;
 							}
-							if (hasCore == false) {
-								if (item.indexOf("NOK found core file") != -1 || item.indexOf("NOK found fatal error") != -1) {
-									this.hasCore = true;
-								}
-							}
-
-							workerLog.println(item);
-							resultCont.append(item).append(Constants.LINE_SEPARATOR);
 						}
+						if (hasCore == false) {
+							if (item.indexOf("NOK found core file") != -1 || item.indexOf("NOK found fatal error") != -1) {
+								this.hasCore = true;
+							}
+						}
+
+						workerLog.println(item);
+						resultCont.append(item).append(Constants.LINE_SEPARATOR);
 					}
 
 					/* exclude timeouts from retry: a hung case would simply hang again for another deadline */
@@ -465,6 +475,29 @@ public class Test {
 			e.printStackTrace();
 		}
 		this.ssh = ShellHelper.createTestNodeConnect(context, currEnvId);
+		applyReadDeadline(this.ssh);
+	}
+
+	/*
+	 * Apply the SSH read deadline only to the worker's own connection so a hung
+	 * test case cannot block the worker forever. The monitor resolves a timeout at
+	 * testCaseTimeout; the read deadline is set slightly larger (testCaseTimeout +
+	 * 300) so the monitor gets the first chance to resolve gracefully and this is
+	 * only the hard backstop. testCaseTimeout <= 0 keeps the legacy unbounded
+	 * behavior. Discovery and monitor connections deliberately get no deadline.
+	 */
+	private void applyReadDeadline(SSHConnect conn) {
+		if (conn == null) {
+			return;
+		}
+		try {
+			int testCaseTimeout = Integer.parseInt(context.getTestCaseTimeout());
+			if (testCaseTimeout > 0) {
+				conn.setReadTimeoutSecs(testCaseTimeout + 300);
+			}
+		} catch (Exception e) {
+			// leave default (-1, disabled)
+		}
 	}
 
 	public void resetProcess() {
@@ -599,7 +632,7 @@ public class Test {
 		}
 	}
 
-	public void addResultItem(String flag, String message) {
+	public synchronized void addResultItem(String flag, String message) {
 		if (flag == null)
 			this.resultItemList.add(message);
 		else
