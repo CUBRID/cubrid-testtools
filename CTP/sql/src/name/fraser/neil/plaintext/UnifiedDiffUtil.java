@@ -43,27 +43,16 @@ public final class UnifiedDiffUtil extends diff_match_patch {
 
     private static final int CONTEXT = 3;
 
-    /** A single op = one input line plus its disposition. */
-    private static final class LineOp {
-        final Operation op;
-        final String text; // includes trailing newline if original had one
-
-        LineOp(Operation op, String text) {
-            this.op = op;
-            this.text = text;
-        }
-    }
-
     /** A unified diff hunk header + body. */
-    public static final class Hunk {
-        public int oldStart;
-        public int oldCount;
-        public int newStart;
-        public int newCount;
+    private static final class Hunk {
+        int oldStart;
+        int oldCount;
+        int newStart;
+        int newCount;
         /** Lines including their leading prefix character (' ', '-', '+') and trailing newline. */
-        public final List<String> body = new ArrayList<String>();
+        final List<String> body = new ArrayList<String>();
 
-        public String header() {
+        String header() {
             int displayOldStart = (oldCount == 0) ? 0 : oldStart;
             int displayNewStart = (newCount == 0) ? 0 : newStart;
             return "@@ -"
@@ -80,19 +69,25 @@ public final class UnifiedDiffUtil extends diff_match_patch {
 
     private UnifiedDiffUtil() {}
 
+    /** {@code diff -u}-style unified diff of oldText -> newText with the given file labels. */
+    public static String unifiedDiff(
+            String oldText, String newText, String oldLabel, String newLabel) {
+        return render(oldLabel, newLabel, diff(oldText, newText));
+    }
+
     /** Compute a list of hunks describing oldText -> newText (line granularity). */
-    public static List<Hunk> diff(String oldText, String newText) {
+    private static List<Hunk> diff(String oldText, String newText) {
         UnifiedDiffUtil dmp = new UnifiedDiffUtil();
         LinesToCharsResult lc = dmp.diff_linesToChars(safe(oldText), safe(newText));
         LinkedList<Diff> diffs = dmp.diff_main(lc.chars1, lc.chars2, false);
         dmp.diff_charsToLines(diffs, lc.lineArray);
         dmp.diff_cleanupSemantic(diffs);
-        List<LineOp> ops = explode(diffs);
+        List<Diff> ops = explode(diffs);
         return groupHunks(ops, CONTEXT);
     }
 
     /** Render hunks as a unified diff string with the given file labels. */
-    public static String render(String oldLabel, String newLabel, List<Hunk> hunks) {
+    private static String render(String oldLabel, String newLabel, List<Hunk> hunks) {
         StringBuilder sb = new StringBuilder();
         sb.append("--- ").append(oldLabel).append('\n');
         sb.append("+++ ").append(newLabel).append('\n');
@@ -112,9 +107,9 @@ public final class UnifiedDiffUtil extends diff_match_patch {
         return s == null ? "" : s;
     }
 
-    /** Split each multi-line Diff into per-line LineOps so hunks can carry exact line counts. */
-    private static List<LineOp> explode(LinkedList<Diff> diffs) {
-        List<LineOp> out = new ArrayList<LineOp>();
+    /** Split each multi-line Diff into per-line Diffs so hunks can carry exact line counts. */
+    private static List<Diff> explode(LinkedList<Diff> diffs) {
+        List<Diff> out = new ArrayList<Diff>();
         for (Diff d : diffs) {
             if (d.text == null || d.text.length() == 0) {
                 continue;
@@ -131,14 +126,16 @@ public final class UnifiedDiffUtil extends diff_match_patch {
                     line = d.text.substring(from, nl + 1);
                     from = nl + 1;
                 }
-                out.add(new LineOp(d.operation, line));
+                out.add(new Diff(d.operation, line));
             }
         }
         return out;
     }
 
-    /** Group LineOps into unified diff hunks with {@code context} surrounding EQUAL lines. */
-    private static List<Hunk> groupHunks(List<LineOp> ops, int context) {
+    /**
+     * Group per-line Diffs into unified diff hunks with {@code context} surrounding EQUAL lines.
+     */
+    private static List<Hunk> groupHunks(List<Diff> ops, int context) {
         List<Hunk> hunks = new ArrayList<Hunk>();
         int oldLine = 1;
         int newLine = 1;
@@ -146,7 +143,7 @@ public final class UnifiedDiffUtil extends diff_match_patch {
         int n = ops.size();
         while (i < n) {
             // Skip leading EQUAL run; advance line counters.
-            while (i < n && ops.get(i).op == Operation.EQUAL) {
+            while (i < n && ops.get(i).operation == Operation.EQUAL) {
                 oldLine++;
                 newLine++;
                 i++;
@@ -163,7 +160,7 @@ public final class UnifiedDiffUtil extends diff_match_patch {
             int oldCount = 0;
             int newCount = 0;
             for (int k = leadStart; k < i; k++) {
-                LineOp eq = ops.get(k);
+                Diff eq = ops.get(k);
                 h.body.add(" " + eq.text);
                 oldCount++;
                 newCount++;
@@ -172,8 +169,8 @@ public final class UnifiedDiffUtil extends diff_match_patch {
             // before closing the hunk.
             int trailingEq = 0;
             while (i < n) {
-                LineOp op = ops.get(i);
-                if (op.op == Operation.EQUAL) {
+                Diff op = ops.get(i);
+                if (op.operation == Operation.EQUAL) {
                     trailingEq++;
                     if (trailingEq > 2 * context) {
                         // This EQUAL line is not appended to the body, so it must not be
@@ -190,7 +187,7 @@ public final class UnifiedDiffUtil extends diff_match_patch {
                     newLine++;
                 } else {
                     trailingEq = 0;
-                    if (op.op == Operation.DELETE) {
+                    if (op.operation == Operation.DELETE) {
                         h.body.add("-" + op.text);
                         oldCount++;
                         oldLine++;

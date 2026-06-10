@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -106,26 +105,15 @@ public final class JunitXmlWriter {
             if (resultDir == null || resultDir.length() == 0) {
                 return;
             }
-            String category = test.getTestType();
-            if (category == null || category.length() == 0) {
+            String testType = test.getTestType();
+            if (testType == null || testType.length() == 0) {
                 return;
             }
             String target = pickTarget(test);
-            String buildMode;
-            try {
-                buildMode = detectBuildMode();
-            } catch (Throwable t) {
-                LogUtil.log(
-                        logId,
-                        "[JunitXmlWriter] write failed: "
-                                + t.getClass().getName()
-                                + ": "
-                                + t.getMessage());
-                return;
-            }
-            String suiteName = target + "_" + buildMode;
+            String suiteName = target + "_" + detectBuildMode();
 
-            List<CaseResult> emitted = collectEmittableCases(test.getSummary());
+            List<CaseResult> emitted = new ArrayList<CaseResult>();
+            walk(test.getSummary(), emitted);
             int tests = emitted.size();
             int failures = countFailures(emitted);
 
@@ -151,15 +139,6 @@ public final class JunitXmlWriter {
     }
 
     /** Walk Summary tree, collect TYPE_SQL/TYPE_GROOVY cases that were actually run. */
-    private static List<CaseResult> collectEmittableCases(Summary root) {
-        List<CaseResult> out = new ArrayList<CaseResult>();
-        if (root == null) {
-            return out;
-        }
-        walk(root, out);
-        return out;
-    }
-
     private static void walk(Summary s, List<CaseResult> out) {
         if (s == null) {
             return;
@@ -176,9 +155,8 @@ public final class JunitXmlWriter {
                 out.add(cr);
             }
         } else {
-            Iterator<Summary> it = s.getChildSummaryMap().values().iterator();
-            while (it.hasNext()) {
-                walk(it.next(), out);
+            for (Summary child : s.getChildSummaryMap().values()) {
+                walk(child, out);
             }
         }
     }
@@ -209,18 +187,24 @@ public final class JunitXmlWriter {
         return sb.toString();
     }
 
-    static String relativeToTestcasesRoot(String absoluteCaseFile) {
-        if (absoluteCaseFile == null) {
-            return "";
-        }
-        for (int i = 0; i < TESTCASES_ANCHORS.length; i++) {
-            String anchor = TESTCASES_ANCHORS[i];
-            int idx = absoluteCaseFile.indexOf(anchor);
-            if (idx >= 0) {
-                return absoluteCaseFile.substring(idx + anchor.length());
+    /** First matching testcases-repo anchor in {@code path} (longest first), or null. */
+    private static String findAnchor(String path) {
+        if (path != null) {
+            for (int i = 0; i < TESTCASES_ANCHORS.length; i++) {
+                if (path.indexOf(TESTCASES_ANCHORS[i]) >= 0) {
+                    return TESTCASES_ANCHORS[i];
+                }
             }
         }
-        return absoluteCaseFile;
+        return null;
+    }
+
+    private static String relativeToTestcasesRoot(String absoluteCaseFile) {
+        String anchor = findAnchor(absoluteCaseFile);
+        if (anchor == null) {
+            return absoluteCaseFile == null ? "" : absoluteCaseFile;
+        }
+        return absoluteCaseFile.substring(absoluteCaseFile.indexOf(anchor) + anchor.length());
     }
 
     /**
@@ -229,34 +213,22 @@ public final class JunitXmlWriter {
      * links resolve to the correct repo. Defaults to {@code cubrid-testcases} when no known anchor
      * matches.
      */
-    static String testcasesRepoName(String absoluteCaseFile) {
-        if (absoluteCaseFile != null) {
-            for (int i = 0; i < TESTCASES_ANCHORS.length; i++) {
-                String anchor = TESTCASES_ANCHORS[i];
-                if (absoluteCaseFile.indexOf(anchor) >= 0) {
-                    return anchor.substring(1, anchor.length() - 1);
-                }
-            }
-        }
-        return "cubrid-testcases";
+    private static String testcasesRepoName(String absoluteCaseFile) {
+        String anchor = findAnchor(absoluteCaseFile);
+        return anchor == null ? "cubrid-testcases" : anchor.substring(1, anchor.length() - 1);
     }
 
     /**
      * Absolute path of the testcases repository the case file lives in (no trailing slash), or
      * {@code null} when the path contains no known anchor.
      */
-    static String testcasesRepoRoot(String absoluteCaseFile) {
-        if (absoluteCaseFile == null) {
+    private static String testcasesRepoRoot(String absoluteCaseFile) {
+        String anchor = findAnchor(absoluteCaseFile);
+        if (anchor == null) {
             return null;
         }
-        for (int i = 0; i < TESTCASES_ANCHORS.length; i++) {
-            String anchor = TESTCASES_ANCHORS[i];
-            int idx = absoluteCaseFile.indexOf(anchor);
-            if (idx >= 0) {
-                return absoluteCaseFile.substring(0, idx + anchor.length() - 1);
-            }
-        }
-        return null;
+        return absoluteCaseFile.substring(
+                0, absoluteCaseFile.indexOf(anchor) + anchor.length() - 1);
     }
 
     /**
@@ -278,46 +250,38 @@ public final class JunitXmlWriter {
         if (base == null) {
             return "";
         }
-        String caseRel = relativeToTestcasesRoot(caseFile);
-        String answerRel = relativeToTestcasesRoot(answerFile);
-        StringBuilder sb = new StringBuilder();
-        sb.append("** Testcase : ")
-                .append(caseRel)
-                .append(" - ")
-                .append(base)
-                .append('/')
-                .append(caseRel)
-                .append('\n');
-        sb.append("** Expected : ")
-                .append(answerRel)
-                .append(" - ")
-                .append(base)
-                .append('/')
-                .append(answerRel)
-                .append('\n');
-        sb.append('\n');
-        return sb.toString();
+        return headerLine("Testcase", relativeToTestcasesRoot(caseFile), base)
+                + headerLine("Expected", relativeToTestcasesRoot(answerFile), base)
+                + "\n";
+    }
+
+    /** One commit-pinned source-link line: {@code ** <label> : <rel> - <base>/<rel>\n}. */
+    private static String headerLine(String label, String rel, String base) {
+        return "** " + label + " : " + rel + " - " + base + '/' + rel + "\n";
     }
 
     /**
      * "&lt;remote-url-without-.git&gt;/blob/&lt;HEAD-hash&gt;" for the repo, or null. Cached per
-     * root.
+     * root; a null result is cached too, so the URL header stays skipped for that repo.
      */
     private static synchronized String baseUrl(String repoRoot) {
         if (BASE_URL_CACHE.containsKey(repoRoot)) {
             return BASE_URL_CACHE.get(repoRoot);
         }
-        String url =
-                composeBaseUrl(
-                        runCommand(
-                                true,
-                                "git",
-                                "-C",
-                                repoRoot,
-                                "config",
-                                "--get",
-                                "remote.origin.url"),
-                        runCommand(true, "git", "-C", repoRoot, "rev-parse", "HEAD"));
+        String remoteUrl =
+                runCommand(true, "git", "-C", repoRoot, "config", "--get", "remote.origin.url");
+        String headHash = runCommand(true, "git", "-C", repoRoot, "rev-parse", "HEAD");
+        String url = null;
+        if (remoteUrl != null && headHash != null) {
+            String remote = remoteUrl.trim();
+            String hash = headHash.trim();
+            if (remote.length() > 0 && hash.length() > 0) {
+                if (remote.endsWith(".git")) {
+                    remote = remote.substring(0, remote.length() - 4);
+                }
+                url = remote + "/blob/" + hash;
+            }
+        }
         BASE_URL_CACHE.put(repoRoot, url);
         return url;
     }
@@ -348,22 +312,6 @@ public final class JunitXmlWriter {
         return BUILD_MODE;
     }
 
-    /** Pure string assembly, separated so the self-test can cover it without invoking git. */
-    static String composeBaseUrl(String remoteUrl, String headHash) {
-        if (remoteUrl == null || headHash == null) {
-            return null;
-        }
-        String remote = remoteUrl.trim();
-        String hash = headHash.trim();
-        if (remote.length() == 0 || hash.length() == 0) {
-            return null;
-        }
-        if (remote.endsWith(".git")) {
-            remote = remote.substring(0, remote.length() - 4);
-        }
-        return remote + "/blob/" + hash;
-    }
-
     /**
      * Entire stdout of the command (stderr merged), or null on failure. When {@code
      * requireCleanExit} is true a non-zero exit code also yields null.
@@ -372,16 +320,13 @@ public final class JunitXmlWriter {
         try {
             Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
             p.getOutputStream().close();
-            BufferedReader r =
-                    new BufferedReader(new InputStreamReader(p.getInputStream(), "UTF-8"));
             StringBuilder sb = new StringBuilder();
-            try {
+            try (BufferedReader r =
+                    new BufferedReader(new InputStreamReader(p.getInputStream(), "UTF-8"))) {
                 String line;
                 while ((line = r.readLine()) != null) {
                     sb.append(line).append('\n');
                 }
-            } finally {
-                r.close();
             }
             int code = p.waitFor();
             return (code == 0 || !requireCleanExit) ? sb.toString() : null;
@@ -402,17 +347,16 @@ public final class JunitXmlWriter {
             String logId)
             throws IOException, XMLStreamException {
         File parent = outFile.getParentFile();
-        if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.exists()) {
-            throw new IOException("cannot create parent dir: " + parent);
+        if (parent != null) {
+            // If this fails, the FileOutputStream below throws with the path in its message.
+            parent.mkdirs();
         }
         FileOutputStream fos = new FileOutputStream(outFile);
-        XMLStreamWriter raw = null;
         IndentingXMLStreamWriter w = null;
         boolean success = false;
         try {
             XMLOutputFactory factory = XMLOutputFactory.newInstance();
-            raw = factory.createXMLStreamWriter(fos, "UTF-8");
-            w = new IndentingXMLStreamWriter(raw);
+            w = new IndentingXMLStreamWriter(factory.createXMLStreamWriter(fos, "UTF-8"));
             w.writeStartDocument("UTF-8", "1.0");
             w.writeStartElement("testsuites");
             w.writeStartElement("testsuite");

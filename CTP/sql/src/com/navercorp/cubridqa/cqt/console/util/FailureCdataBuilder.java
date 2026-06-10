@@ -27,7 +27,6 @@ package com.navercorp.cubridqa.cqt.console.util;
 
 import com.navercorp.cubridqa.cqt.webconsole.compare.ResultReader;
 import com.navercorp.cubridqa.cqt.webconsole.compare.TestReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import name.fraser.neil.plaintext.UnifiedDiffUtil;
@@ -55,6 +54,9 @@ public final class FailureCdataBuilder {
 
     private static final String STATEMENT_BOUNDARY = "--- statement boundary ---";
 
+    private static final String TRUNCATION_NOTICE =
+            "<truncation: answer file and result file have different block counts, diff aborted>";
+
     private FailureCdataBuilder() {}
 
     /**
@@ -64,10 +66,10 @@ public final class FailureCdataBuilder {
      * @param answerFilePath expected output file (.answer)
      * @param resultFilePath actual output file (.result, written by TestUtil.saveResult)
      * @return CDATA-safe string suitable to embed inside {@code <![CDATA[...]]>}
-     * @throws IOException if any of the input files cannot be read or parsed
+     * @throws Exception if any of the input files cannot be read or parsed
      */
     public static String build(String caseFilePath, String answerFilePath, String resultFilePath)
-            throws IOException {
+            throws Exception {
         List<FailingStatement> failing =
                 collectFailingStatements(caseFilePath, answerFilePath, resultFilePath);
         if (failing.isEmpty()) {
@@ -89,7 +91,7 @@ public final class FailureCdataBuilder {
     }
 
     private static List<FailingStatement> collectFailingStatements(
-            String caseFilePath, String answerFilePath, String resultFilePath) throws IOException {
+            String caseFilePath, String answerFilePath, String resultFilePath) throws Exception {
         List<FailingStatement> out = new ArrayList<FailingStatement>();
         TestReader tr = null;
         ResultReader ar = null;
@@ -105,63 +107,37 @@ public final class FailureCdataBuilder {
                 // Detect asymmetric truncation: one side ran out of blocks, the other didn't.
                 if ((answerBlock == null && resultBlock != null)
                         || (answerBlock != null && resultBlock == null)) {
-                    String marker =
-                            "[Query]\n"
-                                    + sql
-                                    + (sql.endsWith("\n") ? "" : "\n")
-                                    + "\n[Diff]\n"
-                                    + "<truncation: answer file and result file have different block counts,"
-                                    + " diff aborted>\n";
-                    List<String> markerLines = new ArrayList<String>();
-                    markerLines.add(marker);
-                    out.add(new FailingStatement(sql, markerLines, new ArrayList<String>()));
+                    // Sentinel: null answerLines = truncation notice; renderLayout branches on it.
+                    out.add(new FailingStatement(sql, null, null));
                     break;
                 }
-                if (!blocksEqual(answerBlock, resultBlock)) {
-                    out.add(
-                            new FailingStatement(
-                                    sql,
-                                    answerBlock != null ? answerBlock : new ArrayList<String>(),
-                                    resultBlock != null ? resultBlock : new ArrayList<String>()));
+                if (answerBlock == null) {
+                    // The asymmetric guard above guarantees resultBlock is also null here:
+                    // both readers are terminally exhausted (ResultReader.isEOF never resets),
+                    // so the remaining statements have no blocks to compare.
+                    break;
+                }
+                if (!answerBlock.equals(resultBlock)) {
+                    out.add(new FailingStatement(sql, answerBlock, resultBlock));
                 }
             }
             return out;
-        } catch (Exception e) {
-            if (e instanceof IOException) {
-                throw (IOException) e;
-            }
-            // Use toString() so the wrapped cause is identifiable even when getMessage() is null.
-            throw new IOException(e.toString(), e);
         } finally {
             if (tr != null) {
                 try {
+                    // closeFile() rethrows IOException as RuntimeException;
+                    // ResultReader.close() below never throws.
                     tr.closeFile();
                 } catch (Exception ignore) {
                 }
             }
-            closeResultReader(ar);
-            closeResultReader(rr);
+            if (ar != null) {
+                ar.close();
+            }
+            if (rr != null) {
+                rr.close();
+            }
         }
-    }
-
-    private static void closeResultReader(ResultReader rr) {
-        if (rr == null) {
-            return;
-        }
-        try {
-            rr.close();
-        } catch (Exception ignore) {
-        }
-    }
-
-    private static boolean blocksEqual(List<String> a, List<String> b) {
-        if (a == null && b == null) {
-            return true;
-        }
-        if (a == null || b == null) {
-            return false;
-        }
-        return a.equals(b);
     }
 
     private static String renderLayout(List<FailingStatement> failing) {
@@ -178,10 +154,16 @@ public final class FailureCdataBuilder {
             }
             sb.append('\n');
             sb.append("[Diff]\n");
-            String answerJoined = joinLines(f.answerLines);
-            String resultJoined = joinLines(f.resultLines);
-            List<UnifiedDiffUtil.Hunk> hunks = UnifiedDiffUtil.diff(answerJoined, resultJoined);
-            sb.append(UnifiedDiffUtil.render("answer", "actual", hunks));
+            if (f.answerLines == null) {
+                sb.append(TRUNCATION_NOTICE).append('\n');
+                continue;
+            }
+            sb.append(
+                    UnifiedDiffUtil.unifiedDiff(
+                            joinLines(f.answerLines),
+                            joinLines(f.resultLines),
+                            "answer",
+                            "actual"));
         }
         return sb.toString();
     }
