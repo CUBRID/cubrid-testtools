@@ -1,21 +1,20 @@
 /**
  * Copyright (c) 2016, Search Solution Corporation. All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted
+ * <p>Redistribution and use in source and binary forms, with or without modification, are permitted
  * provided that the following conditions are met:
  *
- *   * Redistributions of source code must retain the above copyright notice, this list of
- *     conditions and the following disclaimer.
+ * <p>* Redistributions of source code must retain the above copyright notice, this list of
+ * conditions and the following disclaimer.
  *
- *   * Redistributions in binary form must reproduce the above copyright notice, this list of
- *     conditions and the following disclaimer in the documentation and/or other materials provided
- *     with the distribution.
+ * <p>* Redistributions in binary form must reproduce the above copyright notice, this list of
+ * conditions and the following disclaimer in the documentation and/or other materials provided with
+ * the distribution.
  *
- *   * Neither the name of the copyright holder nor the names of its contributors may be used to
- *     endorse or promote products derived from this software without specific prior written
- *     permission.
+ * <p>* Neither the name of the copyright holder nor the names of its contributors may be used to
+ * endorse or promote products derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+ * <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
  * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
@@ -46,11 +45,12 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 /**
- * Writes a CircleCI-compatible JUnit-style XML at
- * {@code ${test.getResult_dir()}/test-<category>.xml}.
+ * Writes a CircleCI-compatible JUnit-style XML at {@code
+ * ${test.getResult_dir()}/test-<category>.xml}.
  *
- * <p>Schema mirrors the existing {@code cubridci/docker/ci/docker-entrypoint.sh xsltproc}
- * output (so the entrypoint cleanup PR can simply remove that XSLT step):
+ * <p>Schema mirrors the existing {@code cubridci/docker/ci/docker-entrypoint.sh xsltproc} output
+ * (so the entrypoint cleanup PR can simply remove that XSLT step):
+ *
  * <pre>
  *   &lt;testsuites&gt;
  *     &lt;testsuite name="$target_$mode" tests="N" failures="M"&gt;
@@ -66,33 +66,32 @@ import javax.xml.stream.XMLStreamWriter;
  *   &lt;/testsuites&gt;
  * </pre>
  *
- * <p>Only TYPE_SQL and TYPE_GROOVY cases that actually ran ({@code shouldRun==true}) are
- * emitted, matching the existing {@code TestUtil.saveResult} / {@code TestUtil.copyCaseAnswerFile}
- * gating.
+ * <p>Only TYPE_SQL and TYPE_GROOVY cases that actually ran ({@code shouldRun==true}) are emitted,
+ * matching the existing {@code TestUtil.saveResult} / {@code TestUtil.copyCaseAnswerFile} gating.
  *
- * <p>The failure CDATA is prefixed with commit-pinned GitHub source links for the case and
- * answer files (same {@code ** Testcase : / ** Expected :} format as the legacy entrypoint
- * {@code .report} header). The links are derived from the testcases repo's own git metadata
- * ({@code remote.origin.url} + {@code rev-parse HEAD}, cached per repo root) and are silently
- * omitted when that metadata is unavailable.
+ * <p>The failure CDATA is prefixed with commit-pinned GitHub source links for the case and answer
+ * files (same {@code ** Testcase : / ** Expected :} format as the legacy entrypoint {@code .report}
+ * header). The links are derived from the testcases repo's own git metadata ({@code
+ * remote.origin.url} + {@code rev-parse HEAD}, cached per repo root) and are silently omitted when
+ * that metadata is unavailable.
  *
- * <p>All exceptions inside this writer are swallowed; failures are logged via
- * {@code LogUtil.log("ConsoleBO", ...)} so that the JUnit XML emission cannot break the test
- * pipeline.
+ * <p>All exceptions inside this writer are swallowed; failures are logged via {@code
+ * LogUtil.log("ConsoleBO", ...)} so that the JUnit XML emission cannot break the test pipeline.
  */
 public final class JunitXmlWriter {
 
     // Recognized test-case repository directory names, longest first so that
     // "-private-ex" and "-private" win over the bare "cubrid-testcases".
     private static final String[] TESTCASES_ANCHORS = {
-        "/cubrid-testcases-private-ex/",
-        "/cubrid-testcases-private/",
-        "/cubrid-testcases/"
+        "/cubrid-testcases-private-ex/", "/cubrid-testcases-private/", "/cubrid-testcases/"
     };
 
     // Cached "<remote-url>/blob/<HEAD-hash>" per testcases repo root. A null value is cached
     // too: it means git metadata was unavailable and the URL header is skipped for that repo.
     private static final Map<String, String> BASE_URL_CACHE = new HashMap<String, String>();
+
+    // Cached cubrid_rel build mode ("release"|"debug"). Guarded by detectBuildMode().
+    private static String BUILD_MODE;
 
     private JunitXmlWriter() {}
 
@@ -113,10 +112,14 @@ public final class JunitXmlWriter {
             String target = pickTarget(test);
             String buildMode;
             try {
-                buildMode = BuildModeResolver.detect();
+                buildMode = detectBuildMode();
             } catch (Throwable t) {
-                LogUtil.log(logId, "[JunitXmlWriter] write failed: "
-                        + t.getClass().getName() + ": " + t.getMessage());
+                LogUtil.log(
+                        logId,
+                        "[JunitXmlWriter] write failed: "
+                                + t.getClass().getName()
+                                + ": "
+                                + t.getMessage());
                 return;
             }
             String suiteName = target + "_" + buildMode;
@@ -127,11 +130,22 @@ public final class JunitXmlWriter {
 
             File outFile = new File(resultDir, "test-" + category + ".xml");
             writeXml(outFile, suiteName, tests, failures, emitted, logId);
-            LogUtil.log(logId, "[JunitXmlWriter] wrote " + outFile.getAbsolutePath()
-                    + " (tests=" + tests + ", failures=" + failures + ")");
+            LogUtil.log(
+                    logId,
+                    "[JunitXmlWriter] wrote "
+                            + outFile.getAbsolutePath()
+                            + " (tests="
+                            + tests
+                            + ", failures="
+                            + failures
+                            + ")");
         } catch (Throwable t) {
-            LogUtil.log(logId, "[JunitXmlWriter] write failed: "
-                    + t.getClass().getName() + ": " + t.getMessage());
+            LogUtil.log(
+                    logId,
+                    "[JunitXmlWriter] write failed: "
+                            + t.getClass().getName()
+                            + ": "
+                            + t.getMessage());
         }
     }
 
@@ -201,10 +215,10 @@ public final class JunitXmlWriter {
     }
 
     /**
-     * Repository directory name (without surrounding slashes) that the case file lives under,
-     * e.g. {@code cubrid-testcases-private}. Used as the {@code file=} attribute prefix so the
-     * CI source links resolve to the correct repo. Defaults to {@code cubrid-testcases} when no
-     * known anchor matches.
+     * Repository directory name (without surrounding slashes) that the case file lives under, e.g.
+     * {@code cubrid-testcases-private}. Used as the {@code file=} attribute prefix so the CI source
+     * links resolve to the correct repo. Defaults to {@code cubrid-testcases} when no known anchor
+     * matches.
      */
     static String testcasesRepoName(String absoluteCaseFile) {
         if (absoluteCaseFile != null) {
@@ -219,8 +233,8 @@ public final class JunitXmlWriter {
     }
 
     /**
-     * Absolute path of the testcases repository the case file lives in (no trailing slash),
-     * or {@code null} when the path contains no known anchor.
+     * Absolute path of the testcases repository the case file lives in (no trailing slash), or
+     * {@code null} when the path contains no known anchor.
      */
     static String testcasesRepoRoot(String absoluteCaseFile) {
         if (absoluteCaseFile == null) {
@@ -238,10 +252,12 @@ public final class JunitXmlWriter {
 
     /**
      * Commit-pinned source-link header, mirroring the legacy entrypoint {@code .report} format:
+     *
      * <pre>
      * ** Testcase : &lt;rel path&gt; - &lt;remote&gt;/blob/&lt;hash&gt;/&lt;rel path&gt;
      * ** Expected : &lt;rel path&gt; - &lt;remote&gt;/blob/&lt;hash&gt;/&lt;rel path&gt;
      * </pre>
+     *
      * Empty when the repo root is unknown or its git metadata is unavailable.
      */
     private static String buildUrlHeader(String caseFile, String answerFile) {
@@ -256,24 +272,71 @@ public final class JunitXmlWriter {
         String caseRel = relativeToTestcasesRoot(caseFile);
         String answerRel = relativeToTestcasesRoot(answerFile);
         StringBuilder sb = new StringBuilder();
-        sb.append("** Testcase : ").append(caseRel)
-                .append(" - ").append(base).append('/').append(caseRel).append('\n');
-        sb.append("** Expected : ").append(answerRel)
-                .append(" - ").append(base).append('/').append(answerRel).append('\n');
+        sb.append("** Testcase : ")
+                .append(caseRel)
+                .append(" - ")
+                .append(base)
+                .append('/')
+                .append(caseRel)
+                .append('\n');
+        sb.append("** Expected : ")
+                .append(answerRel)
+                .append(" - ")
+                .append(base)
+                .append('/')
+                .append(answerRel)
+                .append('\n');
         sb.append('\n');
         return sb.toString();
     }
 
-    /** "&lt;remote-url-without-.git&gt;/blob/&lt;HEAD-hash&gt;" for the repo, or null. Cached per root. */
+    /**
+     * "&lt;remote-url-without-.git&gt;/blob/&lt;HEAD-hash&gt;" for the repo, or null. Cached per
+     * root.
+     */
     private static synchronized String baseUrl(String repoRoot) {
         if (BASE_URL_CACHE.containsKey(repoRoot)) {
             return BASE_URL_CACHE.get(repoRoot);
         }
-        String url = composeBaseUrl(
-                runGit(repoRoot, "config", "--get", "remote.origin.url"),
-                runGit(repoRoot, "rev-parse", "HEAD"));
+        String url =
+                composeBaseUrl(
+                        runCommand(
+                                true,
+                                "git",
+                                "-C",
+                                repoRoot,
+                                "config",
+                                "--get",
+                                "remote.origin.url"),
+                        runCommand(true, "git", "-C", repoRoot, "rev-parse", "HEAD"));
         BASE_URL_CACHE.put(repoRoot, url);
         return url;
+    }
+
+    /**
+     * Current CUBRID build mode ("release"|"debug") from {@code cubrid_rel} output — the same check
+     * as the legacy entrypoint's {@code cubrid_rel | grep -oe 'release\|debug'}. The exit code is
+     * deliberately not checked: cubrid_rel may exit non-zero in some environments while still
+     * printing a valid banner, and the content check is what matters.
+     *
+     * @throws RuntimeException if cubrid_rel cannot be invoked or names neither mode.
+     */
+    private static synchronized String detectBuildMode() {
+        if (BUILD_MODE != null) {
+            return BUILD_MODE;
+        }
+        String out = runCommand(false, "cubrid_rel");
+        if (out == null) {
+            throw new RuntimeException("cubrid_rel invocation failed");
+        }
+        String lower = out.toLowerCase(Locale.ROOT);
+        boolean debug = lower.contains("debug");
+        if (!debug && !lower.contains("release")) {
+            throw new RuntimeException(
+                    "cubrid_rel output contained neither 'release' nor 'debug': " + out);
+        }
+        BUILD_MODE = debug ? "debug" : "release";
+        return BUILD_MODE;
     }
 
     /** Pure string assembly, separated so the self-test can cover it without invoking git. */
@@ -292,31 +355,27 @@ public final class JunitXmlWriter {
         return remote + "/blob/" + hash;
     }
 
-    /** First stdout line of {@code git -C <repoRoot> <args>}, or null on any failure. */
-    private static String runGit(String repoRoot, String... args) {
+    /**
+     * Entire stdout of the command (stderr merged), or null on failure. When {@code
+     * requireCleanExit} is true a non-zero exit code also yields null.
+     */
+    private static String runCommand(boolean requireCleanExit, String... cmd) {
         try {
-            List<String> cmd = new ArrayList<String>();
-            cmd.add("git");
-            cmd.add("-C");
-            cmd.add(repoRoot);
-            for (int i = 0; i < args.length; i++) {
-                cmd.add(args[i]);
-            }
             Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
             p.getOutputStream().close();
-            BufferedReader r = new BufferedReader(
-                    new InputStreamReader(p.getInputStream(), "UTF-8"));
-            String first;
+            BufferedReader r =
+                    new BufferedReader(new InputStreamReader(p.getInputStream(), "UTF-8"));
+            StringBuilder sb = new StringBuilder();
             try {
-                first = r.readLine();
-                while (r.readLine() != null) {
-                    // drain remaining output so the process can exit
+                String line;
+                while ((line = r.readLine()) != null) {
+                    sb.append(line).append('\n');
                 }
             } finally {
                 r.close();
             }
             int code = p.waitFor();
-            return code == 0 ? first : null;
+            return (code == 0 || !requireCleanExit) ? sb.toString() : null;
         } catch (IOException e) {
             return null;
         } catch (InterruptedException e) {
@@ -326,35 +385,18 @@ public final class JunitXmlWriter {
     }
 
     private static void writeXml(
-            File outFile, String suiteName, int tests, int failures, List<CaseResult> cases,
+            File outFile,
+            String suiteName,
+            int tests,
+            int failures,
+            List<CaseResult> cases,
             String logId)
             throws IOException, XMLStreamException {
         File parent = outFile.getParentFile();
         if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.exists()) {
             throw new IOException("cannot create parent dir: " + parent);
         }
-        // Sweep stale .tmp files left by previous crashed runs (older than 1 minute).
-        // Skip the tmp file we are about to create so a concurrent sibling run is not disrupted.
-        String currentTmpName = outFile.getName() + ".tmp";
-        if (parent != null) {
-            File[] stale = parent.listFiles();
-            if (stale != null) {
-                long now = System.currentTimeMillis();
-                for (int i = 0; i < stale.length; i++) {
-                    File f = stale[i];
-                    String n = f.getName();
-                    if (n.equals(currentTmpName)) {
-                        continue;
-                    }
-                    if (n.startsWith("test-") && n.endsWith(".xml.tmp")
-                            && now - f.lastModified() > 60000L) {
-                        f.delete();
-                    }
-                }
-            }
-        }
-        File tmpFile = new File(outFile.getAbsolutePath() + ".tmp");
-        FileOutputStream fos = new FileOutputStream(tmpFile);
+        FileOutputStream fos = new FileOutputStream(outFile);
         XMLStreamWriter raw = null;
         IndentingXMLStreamWriter w = null;
         boolean success = false;
@@ -389,18 +431,9 @@ public final class JunitXmlWriter {
                 fos.close();
             } catch (IOException ignore) {
             }
-            if (success) {
-                if (outFile.exists() && !outFile.delete()) {
-                    LogUtil.log(logId, "[JunitXmlWriter] could not delete existing " + outFile);
-                }
-                boolean renamed = tmpFile.renameTo(outFile);
-                if (!renamed) {
-                    LogUtil.log(logId, "[JunitXmlWriter] rename failed: tmp=" + tmpFile
-                            + " final=" + outFile);
-                    tmpFile.delete();
-                }
-            } else {
-                tmpFile.delete();
+            if (!success) {
+                // do not leave a malformed half-written report for CI to ingest
+                outFile.delete();
             }
         }
     }
@@ -433,8 +466,8 @@ public final class JunitXmlWriter {
             if (cr.getCaseFile() == null
                     || cr.getAnswerFile() == null
                     || cr.getResultDir() == null) {
-                LogUtil.log(logId, "[JunitXmlWriter] missing input paths for case "
-                        + cr.getCaseName());
+                LogUtil.log(
+                        logId, "[JunitXmlWriter] missing input paths for case " + cr.getCaseName());
                 return "";
             }
             // Match the path convention TestUtil.saveResult uses to write the file ("/"),
@@ -451,176 +484,15 @@ public final class JunitXmlWriter {
             }
             return FailureCdataBuilder.cdataSafe(header) + payload;
         } catch (Throwable t) {
-            LogUtil.log(logId, "[JunitXmlWriter] CDATA build failed for "
-                    + cr.getCaseFile() + ": " + t.getClass().getName() + ": " + t.getMessage());
+            LogUtil.log(
+                    logId,
+                    "[JunitXmlWriter] CDATA build failed for "
+                            + cr.getCaseFile()
+                            + ": "
+                            + t.getClass().getName()
+                            + ": "
+                            + t.getMessage());
             return "";
-        }
-    }
-
-    public static void main(String[] args) {
-        int passed = 0;
-        passed += testRelativePath();
-        passed += testTimeFormatting();
-        passed += testSourceLinks();
-        passed += testEmptySuite();
-        if (passed == 4) {
-            System.out.println("OK: JunitXmlWriter " + passed + "/4 cases passed");
-            System.exit(0);
-        } else {
-            System.err.println("FAIL: JunitXmlWriter " + passed + "/4 cases passed");
-            System.exit(1);
-        }
-    }
-
-    private static int testSourceLinks() {
-        String base = composeBaseUrl("https://github.com/CUBRID/cubrid-testcases.git", "abc123\n");
-        if (!"https://github.com/CUBRID/cubrid-testcases/blob/abc123".equals(base)) {
-            System.err.println("  FAIL: composeBaseUrl(.git) -> " + base);
-            return 0;
-        }
-        if (!"https://x/y/blob/h".equals(composeBaseUrl("https://x/y", "h"))) {
-            System.err.println("  FAIL: composeBaseUrl(no .git)");
-            return 0;
-        }
-        if (composeBaseUrl(null, "h") != null
-                || composeBaseUrl("u", null) != null
-                || composeBaseUrl(" ", "h") != null) {
-            System.err.println("  FAIL: composeBaseUrl null/blank should be null");
-            return 0;
-        }
-        if (!"/home/dev/cubrid-testcases-private".equals(testcasesRepoRoot(
-                "/home/dev/cubrid-testcases-private/shell_ext/cases/x.sql"))) {
-            System.err.println("  FAIL: testcasesRepoRoot(private)");
-            return 0;
-        }
-        if (testcasesRepoRoot("/some/other/path/abc.sql") != null) {
-            System.err.println("  FAIL: testcasesRepoRoot(no anchor) should be null");
-            return 0;
-        }
-        return 1;
-    }
-
-    private static int testTimeFormatting() {
-        // 20_000_000 ms = 20000 seconds; String.valueOf(20000000/1000.0) -> "2.0E7" (scientific)
-        long totalTimeMs = 20000000L;
-        String time = String.format(Locale.ROOT, "%.3f", totalTimeMs / 1000.0);
-        boolean startsWithDigit = time.length() > 0 && Character.isDigit(time.charAt(0));
-        boolean hasDot = time.indexOf('.') >= 0;
-        boolean hasExponent = time.indexOf('E') >= 0 || time.indexOf('e') >= 0;
-        if (!startsWithDigit || !hasDot || hasExponent) {
-            System.err.println("  FAIL: testTimeFormatting: got '" + time + "'");
-            return 0;
-        }
-        return 1;
-    }
-
-    private static int testRelativePath() {
-        String rel = relativeToTestcasesRoot(
-                "/home/dev/cubrid-testcases/sql/_01_object/_01_type/cases/abc.sql");
-        if (!"sql/_01_object/_01_type/cases/abc.sql".equals(rel)) {
-            System.err.println("  FAIL: relativeToTestcasesRoot -> " + rel);
-            return 0;
-        }
-        if (!"cubrid-testcases".equals(testcasesRepoName(
-                "/home/dev/cubrid-testcases/sql/_01_object/_01_type/cases/abc.sql"))) {
-            System.err.println("  FAIL: repoName(public)");
-            return 0;
-        }
-        // Private repos must strip their own prefix, not fall through to the absolute path.
-        String priv = relativeToTestcasesRoot(
-                "/home/dev/cubrid-testcases-private/shell_ext/cases/x.sql");
-        if (!"shell_ext/cases/x.sql".equals(priv)) {
-            System.err.println("  FAIL: private relativeToTestcasesRoot -> " + priv);
-            return 0;
-        }
-        if (!"cubrid-testcases-private".equals(testcasesRepoName(
-                "/home/dev/cubrid-testcases-private/shell_ext/cases/x.sql"))) {
-            System.err.println("  FAIL: repoName(private)");
-            return 0;
-        }
-        String privEx = relativeToTestcasesRoot(
-                "/home/dev/cubrid-testcases-private-ex/shell/cases/y.sql");
-        if (!"shell/cases/y.sql".equals(privEx)) {
-            System.err.println("  FAIL: private-ex relativeToTestcasesRoot -> " + privEx);
-            return 0;
-        }
-        if (!"cubrid-testcases-private-ex".equals(testcasesRepoName(
-                "/home/dev/cubrid-testcases-private-ex/shell/cases/y.sql"))) {
-            System.err.println("  FAIL: repoName(private-ex)");
-            return 0;
-        }
-        String passthru = relativeToTestcasesRoot("/some/other/path/abc.sql");
-        if (!"/some/other/path/abc.sql".equals(passthru)) {
-            System.err.println("  FAIL: passthru -> " + passthru);
-            return 0;
-        }
-        return 1;
-    }
-
-    private static int testEmptySuite() {
-        // Build an empty Summary tree and ensure write() doesn't throw and produces a file.
-        try {
-            File tmpDir = File.createTempFile("jxw", ".d");
-            tmpDir.delete();
-            if (!tmpDir.mkdir()) {
-                System.err.println("  FAIL: cannot create temp dir");
-                return 0;
-            }
-            tmpDir.deleteOnExit();
-
-            Test t = new Test("self-test-id");
-            t.setResult_dir(tmpDir.getAbsolutePath());
-            t.setTestType("sql");
-            t.setTestTypeAlias("sql_self");
-            Summary s = new Summary();
-            s.setType(Summary.TYPE_BOTTOM);
-            t.setSummary(s);
-
-            // BuildModeResolver may throw if cubrid_rel is unavailable.
-            // In CI environments, cubrid_rel must be present — treat absence as a failure.
-            // Outside CI, skip gracefully.
-            boolean inCi = System.getenv("CI") != null || System.getenv("CIRCLECI") != null;
-            try {
-                BuildModeResolver.detect();
-            } catch (RuntimeException re) {
-                if (inCi) {
-                    System.err.println("  FAIL: cubrid_rel unavailable in CI: " + re.getMessage());
-                    return 0;
-                }
-                System.out.println("  SKIP: cubrid_rel unavailable, skipping write check");
-                return 1;
-            }
-            write(t, "JunitXmlWriter-self-test");
-            File expected = new File(tmpDir, "test-sql.xml");
-            if (!expected.exists()) {
-                System.err.println("  FAIL: expected file not created: " + expected);
-                return 0;
-            }
-            expected.deleteOnExit();
-            // Content check: file must contain the empty-suite attributes.
-            java.io.InputStream in = new java.io.FileInputStream(expected);
-            byte[] buf = new byte[(int) expected.length()];
-            try {
-                int off = 0;
-                int rem = buf.length;
-                while (rem > 0) {
-                    int r = in.read(buf, off, rem);
-                    if (r < 0) break;
-                    off += r; rem -= r;
-                }
-            } finally {
-                in.close();
-            }
-            String content = new String(buf, "UTF-8");
-            if (!content.contains("tests=\"0\"") || !content.contains("failures=\"0\"")) {
-                System.err.println("  FAIL: testEmptySuite content missing tests/failures attrs: "
-                        + content);
-                return 0;
-            }
-            return 1;
-        } catch (Exception e) {
-            System.err.println("  FAIL: testEmptySuite exception: " + e.getMessage());
-            return 0;
         }
     }
 }
