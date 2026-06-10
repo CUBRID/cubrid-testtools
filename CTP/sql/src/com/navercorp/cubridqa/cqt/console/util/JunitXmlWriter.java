@@ -45,8 +45,9 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 /**
- * Writes a CircleCI-compatible JUnit-style XML at {@code
- * ${test.getResult_dir()}/test-<category>.xml}.
+ * Writes a CircleCI-compatible JUnit-style XML at {@code ${test.getResult_dir()}/<target>.xml},
+ * where {@code <target>} is {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}) — the
+ * same file name and suite label the legacy entrypoint produced.
  *
  * <p>Schema mirrors the existing {@code cubridci/docker/ci/docker-entrypoint.sh xsltproc} output
  * (so the entrypoint cleanup PR can simply remove that XSLT step):
@@ -128,7 +129,7 @@ public final class JunitXmlWriter {
             int tests = emitted.size();
             int failures = countFailures(emitted);
 
-            File outFile = new File(resultDir, "test-" + category + ".xml");
+            File outFile = new File(resultDir, target + ".xml");
             writeXml(outFile, suiteName, tests, failures, emitted, logId);
             LogUtil.log(
                     logId,
@@ -192,12 +193,20 @@ public final class JunitXmlWriter {
         return n;
     }
 
+    /**
+     * Suite/file label identical to the one the legacy entrypoint derived from the schedule
+     * result-directory name: {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}).
+     * Built from the same values {@code TestUtil.getTestId} uses to compose that directory name. An
+     * unset testBit is skipped (defensive; the CQT agent entry points always set it).
+     */
     private static String pickTarget(Test test) {
-        String alias = test.getTestTypeAlias();
-        if (alias != null && alias.length() > 0) {
-            return alias;
+        StringBuilder sb = new StringBuilder(SystemUtil.getOS());
+        sb.append('_').append(test.getTestType());
+        String bit = test.getTestBit();
+        if (bit != null && bit.length() > 0) {
+            sb.append('_').append(bit);
         }
-        return test.getTestType();
+        return sb.toString();
     }
 
     static String relativeToTestcasesRoot(String absoluteCaseFile) {
