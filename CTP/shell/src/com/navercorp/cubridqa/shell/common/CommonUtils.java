@@ -239,8 +239,8 @@ public class CommonUtils {
 		}
 	}
 
-	/* prefix of the string returned by resetProcess() when cleanup failed; callers check this to detect failure */
-	public static final String RESET_PROCESS_FAIL_PREFIX = "fail to reset processes:";
+    /* prefix of the string returned by resetProcess() when cleanup failed; callers check this to detect failure */
+    public static final String RESET_PROCESS_FAIL_PREFIX = "fail to reset processes:";
 
 	public static String resetProcess(SSHConnect ssh, boolean isWindows, boolean executeAtLocal) {
 		try {
@@ -251,7 +251,7 @@ public class CommonUtils {
 				return ssh.execute(executeAtLocal ? Constants.LIN_KILL_PROCESS_LOCAL : Constants.LIN_KILL_PROCESS);
 			}
 		} catch (Exception e) {
-			return RESET_PROCESS_FAIL_PREFIX + " " + e.getMessage();
+            return RESET_PROCESS_FAIL_PREFIX + " " + e.getMessage();
 		}
 	}
 

@@ -59,39 +59,39 @@ public class SSHConnect {
 
 	final int MAX_TRY_TIME = 10;
 
-	/*
-	 * Connect timeout and keepalive settings (milliseconds) to detect dead
-	 * nodes/sockets. Keepalive is kept generous (60s x 10 = 10 minutes) so a
-	 * healthy but heavily-loaded/swapping test node is not falsely severed while
-	 * still making progress; the execute() read deadline (testCaseTimeout + 300)
-	 * is the real upper bound. Keepalive only shortens detection of a truly dead
-	 * node from the full read deadline down to ~10 minutes.
-	 */
-	private static final int CONNECT_TIMEOUT_MS = 30 * 1000;
-	private static final int SERVER_ALIVE_INTERVAL_MS = 60 * 1000;
-	private static final int SERVER_ALIVE_COUNT_MAX = 10;
+    /*
+     * Connect timeout and keepalive settings (milliseconds) to detect dead
+     * nodes/sockets. Keepalive is kept generous (60s x 10 = 10 minutes) so a
+     * healthy but heavily-loaded/swapping test node is not falsely severed while
+     * still making progress; the execute() read deadline (testCaseTimeout + 300)
+     * is the real upper bound. Keepalive only shortens detection of a truly dead
+     * node from the full read deadline down to ~10 minutes.
+     */
+    private static final int CONNECT_TIMEOUT_MS = 30 * 1000;
+    private static final int SERVER_ALIVE_INTERVAL_MS = 60 * 1000;
+    private static final int SERVER_ALIVE_COUNT_MAX = 10;
 
-	/*
-	 * Total read deadline for a single execute() over SSH, in seconds. -1 means
-	 * disabled (legacy behavior: block until ALL_COMPLETED or channel EOF). When
-	 * set, a watchdog forcibly disconnects the channel/session after the deadline
-	 * so a hung test case cannot block the worker thread forever.
-	 */
-	private int readTimeoutSecs = -1;
+    /*
+     * Total read deadline for a single execute() over SSH, in seconds. -1 means
+     * disabled (legacy behavior: block until ALL_COMPLETED or channel EOF). When
+     * set, a watchdog forcibly disconnects the channel/session after the deadline
+     * so a hung test case cannot block the worker thread forever.
+     */
+    private int readTimeoutSecs = -1;
 
-	/*
-	 * Shared daemon watchdog scheduler for all SSHConnect instances. A single
-	 * thread is intentional (low volume); the per-execute task is explicitly
-	 * removed from the queue on normal completion (see execute()) so cancelled
-	 * tasks do not retain their captured ChannelExec/Session until the deadline.
-	 */
-	private static final ScheduledThreadPoolExecutor WATCHDOG = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
-		public Thread newThread(Runnable r) {
-			Thread t = new Thread(r, "ssh-exec-watchdog");
-			t.setDaemon(true);
-			return t;
-		}
-	});
+    /*
+     * Shared daemon watchdog scheduler for all SSHConnect instances. A single
+     * thread is intentional (low volume); the per-execute task is explicitly
+     * removed from the queue on normal completion (see execute()) so cancelled
+     * tasks do not retain their captured ChannelExec/Session until the deadline.
+     */
+    private static final ScheduledThreadPoolExecutor WATCHDOG = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "ssh-exec-watchdog");
+            t.setDaemon(true);
+            return t;
+        }
+    });
 
 	public SSHConnect() throws JSchException {
 		this(null, -1, null, null, SERVICE_TYPE_LOCAL);
@@ -135,9 +135,9 @@ public class SSHConnect {
 			config.setProperty("StrictHostKeyChecking", "no");
 			session.setConfig("PreferredAuthentications", "password,publickey,keyboard-interactive,");
 			this.session.setConfig(config);
-			this.session.setServerAliveInterval(SERVER_ALIVE_INTERVAL_MS);
-			this.session.setServerAliveCountMax(SERVER_ALIVE_COUNT_MAX);
-			this.session.connect(CONNECT_TIMEOUT_MS);
+            this.session.setServerAliveInterval(SERVER_ALIVE_INTERVAL_MS);
+            this.session.setServerAliveCountMax(SERVER_ALIVE_COUNT_MAX);
+            this.session.connect(CONNECT_TIMEOUT_MS);
 			if ((session != null && session.isConnected()) || count > MAX_TRY_TIME) {
 				break;
 			}
@@ -145,17 +145,17 @@ public class SSHConnect {
 		}
 	}
 
-	/**
-	 * Set the total read deadline (in seconds) for a single SSH execute(). A value
-	 * of -1 (default) disables the deadline and keeps the legacy blocking behavior.
-	 */
-	public void setReadTimeoutSecs(int readTimeoutSecs) {
-		this.readTimeoutSecs = readTimeoutSecs;
-	}
+    /**
+     * Set the total read deadline (in seconds) for a single SSH execute(). A value
+     * of -1 (default) disables the deadline and keeps the legacy blocking behavior.
+     */
+    public void setReadTimeoutSecs(int readTimeoutSecs) {
+        this.readTimeoutSecs = readTimeoutSecs;
+    }
 
-	public int getReadTimeoutSecs() {
-		return this.readTimeoutSecs;
-	}
+    public int getReadTimeoutSecs() {
+        return this.readTimeoutSecs;
+    }
 
 	public String execute(ScriptInput scripts) throws Exception {
 		return execute(scripts.getCommands(), scripts.isPureWindows);
@@ -167,13 +167,13 @@ public class SSHConnect {
 
 	public String execute(String scripts, boolean pureWindows) throws Exception {
 		// System.out.println(scripts);
-		/*
-		 * NOTE: the read deadline (readTimeoutSecs / watchdog below) applies ONLY to
-		 * the SSH path. The RMI and LOCAL branches return before the watchdog is
-		 * armed, so setReadTimeoutSecs has no effect there. A LOCAL/RMI hang is still
-		 * mitigated by the monitor's resetProcess, but the hard read backstop added
-		 * by this change is SSH-only.
-		 */
+        /*
+         * NOTE: the read deadline (readTimeoutSecs / watchdog below) applies ONLY to
+         * the SSH path. The RMI and LOCAL branches return before the watchdog is
+         * armed, so setReadTimeoutSecs has no effect there. A LOCAL/RMI hang is still
+         * mitigated by the monitor's resetProcess, but the hard read backstop added
+         * by this change is SSH-only.
+         */
 		if (serviceProtocol.equals(SERVICE_TYPE_RMI)) {
 			ShellService srv = null;
 			String url = "rmi://" + host + ":" + port + "/shellService";
@@ -206,100 +206,100 @@ public class SSHConnect {
 		exec.setCommand(scripts);
 		exec.connect();
 
-		/*
-		 * A hung test case never prints ALL_COMPLETED and may keep the channel's
-		 * stdout fd open (background/grandchild processes), so neither the
-		 * COMP_FLAG nor the channel EOF condition is ever reached and in.read()
-		 * blocks forever. JSch's socket read is not interruptible via
-		 * Thread.interrupt(), so we arm a watchdog that forcibly disconnects the
-		 * channel and session once the read deadline passes; that makes in.read()
-		 * return/throw and lets the worker thread escape with an exception.
-		 */
-		final ChannelExec execRef = exec;
-		final Session sessionRef = this.session;
-		final AtomicBoolean timedOut = new AtomicBoolean(false);
-		ScheduledFuture<?> watch = null;
-		if (readTimeoutSecs > 0) {
-			watch = WATCHDOG.schedule(new Runnable() {
-				public void run() {
-					timedOut.set(true);
-					try {
-						execRef.disconnect();
-					} catch (Exception e) {
-					}
-					try {
-						/* disconnect only the session this watchdog was armed for, never a later reused session */
-						if (sessionRef != null) {
-							sessionRef.disconnect();
-						}
-					} catch (Exception e) {
-					}
-				}
-			}, readTimeoutSecs, TimeUnit.SECONDS);
+        /*
+         * A hung test case never prints ALL_COMPLETED and may keep the channel's
+         * stdout fd open (background/grandchild processes), so neither the
+         * COMP_FLAG nor the channel EOF condition is ever reached and in.read()
+         * blocks forever. JSch's socket read is not interruptible via
+         * Thread.interrupt(), so we arm a watchdog that forcibly disconnects the
+         * channel and session once the read deadline passes; that makes in.read()
+         * return/throw and lets the worker thread escape with an exception.
+         */
+        final ChannelExec execRef = exec;
+        final Session sessionRef = this.session;
+        final AtomicBoolean timedOut = new AtomicBoolean(false);
+        ScheduledFuture<?> watch = null;
+        if (readTimeoutSecs > 0) {
+            watch = WATCHDOG.schedule(new Runnable() {
+                public void run() {
+                    timedOut.set(true);
+                    try {
+                        execRef.disconnect();
+                    } catch (Exception e) {
+                    }
+                    try {
+                        /* disconnect only the session this watchdog was armed for, never a later reused session */
+                        if (sessionRef != null) {
+                            sessionRef.disconnect();
+                        }
+                    } catch (Exception e) {
+                    }
+                }
+            }, readTimeoutSecs, TimeUnit.SECONDS);
 		}
 
-		try {
-			try {
-				/*
-				 * Detect COMP_FLAG incrementally instead of re-decoding the whole
-				 * buffer every chunk (which was O(n^2)). The raw bytes still go to
-				 * `out` (decoded once at the end for the returned result); the flag
-				 * search runs over a small rolling tail decoded as ISO-8859-1, a
-				 * byte-exact 1:1 mapping that is safe because COMP_FLAG is ASCII and
-				 * cannot be corrupted by a multi-byte char split at a chunk boundary.
-				 */
-				final int flagLen = ScriptInput.COMP_FLAG.length();
-				StringBuilder tail = new StringBuilder();
-				int len = 0;
-				while ((len = in.read(b)) > 0) {
-					out.write(b, 0, len);
-					tail.append(new String(b, 0, len, "ISO-8859-1"));
-					if (tail.indexOf(ScriptInput.COMP_FLAG) >= 0) {
-						break;
-					}
-					/* keep only the last (flagLen-1) chars so a flag split across chunks is still found */
-					if (tail.length() > flagLen - 1) {
-						tail.delete(0, tail.length() - (flagLen - 1));
-					}
-				}
-			} catch (Exception readEx) {
-				if (timedOut.get()) {
-					throw new SSHTimeoutException("SSH exec timeout after " + readTimeoutSecs + " seconds on " + toString());
-				}
-				throw readEx;
-			}
+        try {
+            try {
+                /*
+                 * Detect COMP_FLAG incrementally instead of re-decoding the whole
+                 * buffer every chunk (which was O(n^2)). The raw bytes still go to
+                 * `out` (decoded once at the end for the returned result); the flag
+                 * search runs over a small rolling tail decoded as ISO-8859-1, a
+                 * byte-exact 1:1 mapping that is safe because COMP_FLAG is ASCII and
+                 * cannot be corrupted by a multi-byte char split at a chunk boundary.
+                 */
+                final int flagLen = ScriptInput.COMP_FLAG.length();
+                StringBuilder tail = new StringBuilder();
+                int len = 0;
+                while ((len = in.read(b)) > 0) {
+                    out.write(b, 0, len);
+                    tail.append(new String(b, 0, len, "ISO-8859-1"));
+                    if (tail.indexOf(ScriptInput.COMP_FLAG) >= 0) {
+                        break;
+                    }
+                    /* keep only the last (flagLen-1) chars so a flag split across chunks is still found */
+                    if (tail.length() > flagLen - 1) {
+                        tail.delete(0, tail.length() - (flagLen - 1));
+                    }
+                }
+            } catch (Exception readEx) {
+                if (timedOut.get()) {
+                    throw new SSHTimeoutException("SSH exec timeout after " + readTimeoutSecs + " seconds on " + toString());
+                }
+                throw readEx;
+            }
 
-			/*
-			 * If the full output (COMP_FLAG) was received, return success even if the
-			 * watchdog happened to fire in the tiny window between the read break and
-			 * here; otherwise a case that completed right at the deadline would be
-			 * wrongly recorded as a timeout (and excluded from retry). Only treat it
-			 * as a timeout when we did NOT receive the completion marker.
-			 */
-			String outString = out.toString();
-			if (outString.indexOf(ScriptInput.COMP_FLAG) < 0 && timedOut.get()) {
-				throw new SSHTimeoutException("SSH exec timeout after " + readTimeoutSecs + " seconds on " + toString());
-			}
+            /*
+             * If the full output (COMP_FLAG) was received, return success even if the
+             * watchdog happened to fire in the tiny window between the read break and
+             * here; otherwise a case that completed right at the deadline would be
+             * wrongly recorded as a timeout (and excluded from retry). Only treat it
+             * as a timeout when we did NOT receive the completion marker.
+             */
+            String outString = out.toString();
+            if (outString.indexOf(ScriptInput.COMP_FLAG) < 0 && timedOut.get()) {
+                throw new SSHTimeoutException("SSH exec timeout after " + readTimeoutSecs + " seconds on " + toString());
+            }
 
-			return extractOutput(outString);
-		} finally {
-			/*
-			 * Always release the channel and cancel the watchdog, regardless of
-			 * normal completion, timeout, or a read error. Otherwise a non-timeout
-			 * I/O/JSch exception would leave the ChannelExec open and leak channels
-			 * on the reused session over a long regression run. disconnect() is
-			 * idempotent, so it is safe even if the watchdog already disconnected.
-			 */
-			if (watch != null) {
-				watch.cancel(false);
-				/* drop the cancelled task from the queue so it does not retain the captured channel/session until its deadline */
-				WATCHDOG.remove((Runnable) watch);
-			}
-			try {
-				exec.disconnect();
-			} catch (Exception e) {
-			}
-		}
+            return extractOutput(outString);
+        } finally {
+            /*
+             * Always release the channel and cancel the watchdog, regardless of
+             * normal completion, timeout, or a read error. Otherwise a non-timeout
+             * I/O/JSch exception would leave the ChannelExec open and leak channels
+             * on the reused session over a long regression run. disconnect() is
+             * idempotent, so it is safe even if the watchdog already disconnected.
+             */
+            if (watch != null) {
+                watch.cancel(false);
+                /* drop the cancelled task from the queue so it does not retain the captured channel/session until its deadline */
+                WATCHDOG.remove((Runnable) watch);
+            }
+            try {
+                exec.disconnect();
+            } catch (Exception e) {
+            }
+        }
 	}
 
 	private static String extractOutput(String raw) {

@@ -34,9 +34,9 @@ package com.navercorp.cubridqa.shell.common;
  */
 public class SSHTimeoutException extends Exception {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public SSHTimeoutException(String message) {
-		super(message);
-	}
+    public SSHTimeoutException(String message) {
+        super(message);
+    }
 }
