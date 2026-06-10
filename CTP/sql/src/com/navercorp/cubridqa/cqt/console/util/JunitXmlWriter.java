@@ -30,13 +30,17 @@ import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.Summary;
 import com.navercorp.cubridqa.cqt.console.bean.Test;
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -66,6 +70,12 @@ import javax.xml.stream.XMLStreamWriter;
  * emitted, matching the existing {@code TestUtil.saveResult} / {@code TestUtil.copyCaseAnswerFile}
  * gating.
  *
+ * <p>The failure CDATA is prefixed with commit-pinned GitHub source links for the case and
+ * answer files (same {@code ** Testcase : / ** Expected :} format as the legacy entrypoint
+ * {@code .report} header). The links are derived from the testcases repo's own git metadata
+ * ({@code remote.origin.url} + {@code rev-parse HEAD}, cached per repo root) and are silently
+ * omitted when that metadata is unavailable.
+ *
  * <p>All exceptions inside this writer are swallowed; failures are logged via
  * {@code LogUtil.log("ConsoleBO", ...)} so that the JUnit XML emission cannot break the test
  * pipeline.
@@ -79,6 +89,10 @@ public final class JunitXmlWriter {
         "/cubrid-testcases-private/",
         "/cubrid-testcases/"
     };
+
+    // Cached "<remote-url>/blob/<HEAD-hash>" per testcases repo root. A null value is cached
+    // too: it means git metadata was unavailable and the URL header is skipped for that repo.
+    private static final Map<String, String> BASE_URL_CACHE = new HashMap<String, String>();
 
     private JunitXmlWriter() {}
 
@@ -204,6 +218,113 @@ public final class JunitXmlWriter {
         return "cubrid-testcases";
     }
 
+    /**
+     * Absolute path of the testcases repository the case file lives in (no trailing slash),
+     * or {@code null} when the path contains no known anchor.
+     */
+    static String testcasesRepoRoot(String absoluteCaseFile) {
+        if (absoluteCaseFile == null) {
+            return null;
+        }
+        for (int i = 0; i < TESTCASES_ANCHORS.length; i++) {
+            String anchor = TESTCASES_ANCHORS[i];
+            int idx = absoluteCaseFile.indexOf(anchor);
+            if (idx >= 0) {
+                return absoluteCaseFile.substring(0, idx + anchor.length() - 1);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Commit-pinned source-link header, mirroring the legacy entrypoint {@code .report} format:
+     * <pre>
+     * ** Testcase : &lt;rel path&gt; - &lt;remote&gt;/blob/&lt;hash&gt;/&lt;rel path&gt;
+     * ** Expected : &lt;rel path&gt; - &lt;remote&gt;/blob/&lt;hash&gt;/&lt;rel path&gt;
+     * </pre>
+     * Empty when the repo root is unknown or its git metadata is unavailable.
+     */
+    private static String buildUrlHeader(String caseFile, String answerFile) {
+        String root = testcasesRepoRoot(caseFile);
+        if (root == null) {
+            return "";
+        }
+        String base = baseUrl(root);
+        if (base == null) {
+            return "";
+        }
+        String caseRel = relativeToTestcasesRoot(caseFile);
+        String answerRel = relativeToTestcasesRoot(answerFile);
+        StringBuilder sb = new StringBuilder();
+        sb.append("** Testcase : ").append(caseRel)
+                .append(" - ").append(base).append('/').append(caseRel).append('\n');
+        sb.append("** Expected : ").append(answerRel)
+                .append(" - ").append(base).append('/').append(answerRel).append('\n');
+        sb.append('\n');
+        return sb.toString();
+    }
+
+    /** "&lt;remote-url-without-.git&gt;/blob/&lt;HEAD-hash&gt;" for the repo, or null. Cached per root. */
+    private static synchronized String baseUrl(String repoRoot) {
+        if (BASE_URL_CACHE.containsKey(repoRoot)) {
+            return BASE_URL_CACHE.get(repoRoot);
+        }
+        String url = composeBaseUrl(
+                runGit(repoRoot, "config", "--get", "remote.origin.url"),
+                runGit(repoRoot, "rev-parse", "HEAD"));
+        BASE_URL_CACHE.put(repoRoot, url);
+        return url;
+    }
+
+    /** Pure string assembly, separated so the self-test can cover it without invoking git. */
+    static String composeBaseUrl(String remoteUrl, String headHash) {
+        if (remoteUrl == null || headHash == null) {
+            return null;
+        }
+        String remote = remoteUrl.trim();
+        String hash = headHash.trim();
+        if (remote.length() == 0 || hash.length() == 0) {
+            return null;
+        }
+        if (remote.endsWith(".git")) {
+            remote = remote.substring(0, remote.length() - 4);
+        }
+        return remote + "/blob/" + hash;
+    }
+
+    /** First stdout line of {@code git -C <repoRoot> <args>}, or null on any failure. */
+    private static String runGit(String repoRoot, String... args) {
+        try {
+            List<String> cmd = new ArrayList<String>();
+            cmd.add("git");
+            cmd.add("-C");
+            cmd.add(repoRoot);
+            for (int i = 0; i < args.length; i++) {
+                cmd.add(args[i]);
+            }
+            Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
+            p.getOutputStream().close();
+            BufferedReader r = new BufferedReader(
+                    new InputStreamReader(p.getInputStream(), "UTF-8"));
+            String first;
+            try {
+                first = r.readLine();
+                while (r.readLine() != null) {
+                    // drain remaining output so the process can exit
+                }
+            } finally {
+                r.close();
+            }
+            int code = p.waitFor();
+            return code == 0 ? first : null;
+        } catch (IOException e) {
+            return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
+    }
+
     private static void writeXml(
             File outFile, String suiteName, int tests, int failures, List<CaseResult> cases,
             String logId)
@@ -319,7 +440,16 @@ public final class JunitXmlWriter {
             // Match the path convention TestUtil.saveResult uses to write the file ("/"),
             // not the platform separator.
             String resultFile = cr.getResultDir() + "/" + cr.getCaseName() + ".result";
-            return FailureCdataBuilder.build(cr.getCaseFile(), cr.getAnswerFile(), resultFile);
+            String payload =
+                    FailureCdataBuilder.build(cr.getCaseFile(), cr.getAnswerFile(), resultFile);
+            if (payload.length() == 0) {
+                return "";
+            }
+            String header = buildUrlHeader(cr.getCaseFile(), cr.getAnswerFile());
+            if (header.length() == 0) {
+                return payload;
+            }
+            return FailureCdataBuilder.cdataSafe(header) + payload;
         } catch (Throwable t) {
             LogUtil.log(logId, "[JunitXmlWriter] CDATA build failed for "
                     + cr.getCaseFile() + ": " + t.getClass().getName() + ": " + t.getMessage());
@@ -331,14 +461,43 @@ public final class JunitXmlWriter {
         int passed = 0;
         passed += testRelativePath();
         passed += testTimeFormatting();
+        passed += testSourceLinks();
         passed += testEmptySuite();
-        if (passed == 3) {
-            System.out.println("OK: JunitXmlWriter " + passed + "/3 cases passed");
+        if (passed == 4) {
+            System.out.println("OK: JunitXmlWriter " + passed + "/4 cases passed");
             System.exit(0);
         } else {
-            System.err.println("FAIL: JunitXmlWriter " + passed + "/3 cases passed");
+            System.err.println("FAIL: JunitXmlWriter " + passed + "/4 cases passed");
             System.exit(1);
         }
+    }
+
+    private static int testSourceLinks() {
+        String base = composeBaseUrl("https://github.com/CUBRID/cubrid-testcases.git", "abc123\n");
+        if (!"https://github.com/CUBRID/cubrid-testcases/blob/abc123".equals(base)) {
+            System.err.println("  FAIL: composeBaseUrl(.git) -> " + base);
+            return 0;
+        }
+        if (!"https://x/y/blob/h".equals(composeBaseUrl("https://x/y", "h"))) {
+            System.err.println("  FAIL: composeBaseUrl(no .git)");
+            return 0;
+        }
+        if (composeBaseUrl(null, "h") != null
+                || composeBaseUrl("u", null) != null
+                || composeBaseUrl(" ", "h") != null) {
+            System.err.println("  FAIL: composeBaseUrl null/blank should be null");
+            return 0;
+        }
+        if (!"/home/dev/cubrid-testcases-private".equals(testcasesRepoRoot(
+                "/home/dev/cubrid-testcases-private/shell_ext/cases/x.sql"))) {
+            System.err.println("  FAIL: testcasesRepoRoot(private)");
+            return 0;
+        }
+        if (testcasesRepoRoot("/some/other/path/abc.sql") != null) {
+            System.err.println("  FAIL: testcasesRepoRoot(no anchor) should be null");
+            return 0;
+        }
+        return 1;
     }
 
     private static int testTimeFormatting() {
