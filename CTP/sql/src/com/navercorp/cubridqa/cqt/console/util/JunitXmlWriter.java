@@ -31,6 +31,7 @@ import com.navercorp.cubridqa.cqt.console.bean.Test;
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,6 +43,7 @@ import java.util.Map;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import name.fraser.neil.plaintext.UnifiedDiffUtil;
 
 /**
  * Writes a CircleCI-compatible JUnit-style XML at {@code ${test.getResult_dir()}/<target>.xml},
@@ -107,6 +109,11 @@ public final class JunitXmlWriter {
             }
             String testType = test.getTestType();
             if (testType == null || testType.length() == 0) {
+                return;
+            }
+            if (test.getRunMode() != Test.MODE_RESULT) {
+                // Only the answer-comparison mode produces pass/fail judgements; emitting a
+                // report from MODE_MAKE_ANSWER/MODE_RUN would show every case as passed.
                 return;
             }
             String target = pickTarget(test);
@@ -312,6 +319,19 @@ public final class JunitXmlWriter {
         return BUILD_MODE;
     }
 
+    /** Entire UTF-8 content of the file. Errors propagate to buildFailureCdata's guard. */
+    private static String readFile(String path) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader r =
+                new BufferedReader(new InputStreamReader(new FileInputStream(path), "UTF-8"))) {
+            String line;
+            while ((line = r.readLine()) != null) {
+                sb.append(line).append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
     /**
      * Entire stdout of the command (stderr merged), or null on failure. When {@code
      * requireCleanExit} is true a non-zero exit code also yields null.
@@ -395,12 +415,17 @@ public final class JunitXmlWriter {
             XMLStreamWriter w, String suiteName, CaseResult cr, String logId)
             throws XMLStreamException {
         String relPath = relativeToTestcasesRoot(cr.getCaseFile());
-        String repoName = testcasesRepoName(cr.getCaseFile());
+        // Without a known repo anchor relPath is the absolute path; prefixing it with a
+        // repo name would yield a bogus "cubrid-testcases//abs/path", so emit it as-is.
+        String fileAttr =
+                findAnchor(cr.getCaseFile()) == null
+                        ? relPath
+                        : testcasesRepoName(cr.getCaseFile()) + "/" + relPath;
         String time = String.format(Locale.ROOT, "%.3f", cr.getTotalTime() / 1000.0);
         w.writeStartElement("testcase");
         w.writeAttribute("classname", suiteName);
         w.writeAttribute("name", relPath);
-        w.writeAttribute("file", repoName + "/" + relPath);
+        w.writeAttribute("file", fileAttr);
         w.writeAttribute("time", time);
         if (!cr.isSuccessFul()) {
             w.writeStartElement("failure");
@@ -426,8 +451,22 @@ public final class JunitXmlWriter {
             // Match the path convention TestUtil.saveResult uses to write the file ("/"),
             // not the platform separator.
             String resultFile = cr.getResultDir() + "/" + cr.getCaseName() + ".result";
-            String payload =
-                    FailureCdataBuilder.build(cr.getCaseFile(), cr.getAnswerFile(), resultFile);
+            String payload;
+            if (cr.getType() == CaseResult.TYPE_SQL) {
+                payload =
+                        FailureCdataBuilder.build(cr.getCaseFile(), cr.getAnswerFile(), resultFile);
+            } else {
+                // Groovy cases have no SQL statement/block structure for the lockstep walk;
+                // fall back to the whole-file diff the legacy entrypoint produced.
+                payload =
+                        FailureCdataBuilder.cdataSafe(
+                                "[Diff]\n"
+                                        + UnifiedDiffUtil.unifiedDiff(
+                                                readFile(cr.getAnswerFile()),
+                                                readFile(resultFile),
+                                                "answer",
+                                                "actual"));
+            }
             if (payload.length() == 0) {
                 return "";
             }
