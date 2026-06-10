@@ -79,11 +79,53 @@ public class ShellHelper {
 
 		/*
 		 * NOTE: the SSH read deadline is intentionally NOT set here. This factory is
-		 * shared by discovery (Dispatch's one-time ~17k-file find) and monitor
-		 * connections, where a per-testcase deadline would be wrong (it could abort
-		 * the whole run or stall the monitor). The deadline is applied only to the
-		 * worker's own connection, in Test.applyReadDeadline().
+		 * shared by discovery (Dispatch's one-time ~17k-file find), where a per-test
+		 * deadline would wrongly abort the whole run. Callers that need a backstop
+		 * apply one explicitly via applyTestcaseReadDeadline (worker main exec) or
+		 * applySecondaryReadTimeout (related-host / monitor / cleanup exec).
 		 */
 		return ssh;
+	}
+
+	/*
+	 * Shorter read timeout (seconds) for secondary/cleanup exec — related-host
+	 * checks and the monitor's cleanup/trace exec. These are quick operations, so a
+	 * tight bound lets the worker and the (single) monitor thread recover from a
+	 * reachable-but-wedged node quickly instead of blocking for the full
+	 * per-testcase deadline. Kept >= the keepalive window (60s x 10 = 600s).
+	 */
+	public static final int SECONDARY_READ_TIMEOUT_SECS = 600;
+
+	/*
+	 * Apply the per-testcase read deadline (testCaseTimeout + margin) to the
+	 * worker's MAIN connection, the one that runs the test case. This is the hard
+	 * backstop guaranteeing a hung case cannot block the worker forever.
+	 * testCaseTimeout <= 0 keeps the legacy unbounded behavior.
+	 */
+	public final static void applyTestcaseReadDeadline(SSHConnect conn, Context context) {
+		if (conn == null) {
+			return;
+		}
+		try {
+			int testCaseTimeout = Integer.parseInt(context.getTestCaseTimeout());
+			if (testCaseTimeout > 0) {
+				conn.setReadTimeoutSecs(testCaseTimeout + 300);
+			}
+		} catch (Exception e) {
+			// leave default (-1, disabled)
+		}
+	}
+
+	/*
+	 * Apply the shorter secondary read timeout to a related-host / monitor /
+	 * cleanup connection so every blocking SSH exec on a worker/monitor thread is
+	 * bounded (not just the worker's main connection). Discovery connections are
+	 * deliberately left unbounded.
+	 */
+	public final static void applySecondaryReadTimeout(SSHConnect conn) {
+		if (conn == null) {
+			return;
+		}
+		conn.setReadTimeoutSecs(SECONDARY_READ_TIMEOUT_SECS);
 	}
 }

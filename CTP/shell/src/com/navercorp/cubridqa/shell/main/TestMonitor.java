@@ -53,6 +53,8 @@ public class TestMonitor {
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "monitor_" + test.getCurrentEnvId() + ".log"), false, context.isContinueMode);
 
 		this.ssh = ShellHelper.createTestNodeConnect(context, test.getCurrentEnvId());
+		/* monitor exec (resetProcess cleanup / trace) must be bounded so a wedged node cannot block the single monitor thread forever */
+		ShellHelper.applySecondaryReadTimeout(this.ssh);
 		this.initRelatedSSH();
 
 		try {
@@ -93,6 +95,7 @@ public class TestMonitor {
 			for (String host : relatedHosts) {
 				try {
 					s = ShellHelper.createTestNodeConnect(context, test.getCurrentEnvId(), host);
+					ShellHelper.applySecondaryReadTimeout(s);
 					this.sshRelateds.add(s);
 				} catch (Exception e) {
 					e.printStackTrace();

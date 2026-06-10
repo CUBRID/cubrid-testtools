@@ -57,8 +57,9 @@ public class Test {
 	volatile boolean timeoutCleanupDone = false;
 	boolean hasCore = false;
 
-	boolean shouldStop = false;
-	boolean isStopped = false;
+	/* written by the worker, read by the monitor/config-monitor threads to detect shutdown, so keep them visible */
+	volatile boolean shouldStop = false;
+	volatile boolean isStopped = false;
 	boolean needDropTestCase = false;
 
 	/* written by the worker, read by the monitor (resolveTimeout) to measure elapsed time, so keep it visible */
@@ -442,6 +443,7 @@ public class Test {
 				sshRelated = null;
 				try {
 					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
+					ShellHelper.applySecondaryReadTimeout(sshRelated);
 					sshRelated.execute(scripts);
 					workerLog.println("[INFO] remove core file successfully on " + h + ".");
 				} catch (Exception e) {
@@ -475,29 +477,8 @@ public class Test {
 			e.printStackTrace();
 		}
 		this.ssh = ShellHelper.createTestNodeConnect(context, currEnvId);
-		applyReadDeadline(this.ssh);
-	}
-
-	/*
-	 * Apply the SSH read deadline only to the worker's own connection so a hung
-	 * test case cannot block the worker forever. The monitor resolves a timeout at
-	 * testCaseTimeout; the read deadline is set slightly larger (testCaseTimeout +
-	 * 300) so the monitor gets the first chance to resolve gracefully and this is
-	 * only the hard backstop. testCaseTimeout <= 0 keeps the legacy unbounded
-	 * behavior. Discovery and monitor connections deliberately get no deadline.
-	 */
-	private void applyReadDeadline(SSHConnect conn) {
-		if (conn == null) {
-			return;
-		}
-		try {
-			int testCaseTimeout = Integer.parseInt(context.getTestCaseTimeout());
-			if (testCaseTimeout > 0) {
-				conn.setReadTimeoutSecs(testCaseTimeout + 300);
-			}
-		} catch (Exception e) {
-			// leave default (-1, disabled)
-		}
+		/* worker's MAIN connection runs the test case -> per-testcase hard deadline */
+		ShellHelper.applyTestcaseReadDeadline(this.ssh, context);
 	}
 
 	public void resetProcess() {
@@ -514,6 +495,7 @@ public class Test {
 			sshRelated = null;
 			try {
 				sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId);
+				ShellHelper.applySecondaryReadTimeout(sshRelated);
 				result = CommonUtils.resetProcess(sshRelated, context.isWindows, context.isExecuteAtLocal());
 				workerLog.println("[INFO] CLEAN PROCESSES(" + h + "): " + result);
 			} catch (Exception e) {
@@ -612,6 +594,7 @@ public class Test {
 				result = null;
 				try {
 					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
+					ShellHelper.applySecondaryReadTimeout(sshRelated);
 					result = sshRelated.execute(scripts);
 					String[] itemArrary = result.split("\n");
 					if (itemArrary != null) {
@@ -659,6 +642,7 @@ public class Test {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
 				sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
+				ShellHelper.applySecondaryReadTimeout(sshRelated);
 				checkDiskSpace(sshRelated, true);
 			}
 		}
@@ -710,6 +694,7 @@ public class Test {
 				sshRelated = null;
 				try {
 					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
+					ShellHelper.applySecondaryReadTimeout(sshRelated);
 					sshRelated.execute(scripts);
 					sb.append("[INFO] Normal error log locations on related server:" + result).append(Constants.LINE_SEPARATOR);
 					workerLog.println("[INFO] finish save log successfully on " + h + ".");

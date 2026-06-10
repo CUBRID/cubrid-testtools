@@ -240,11 +240,26 @@ public class SSHConnect {
 
 		try {
 			try {
+				/*
+				 * Detect COMP_FLAG incrementally instead of re-decoding the whole
+				 * buffer every chunk (which was O(n^2)). The raw bytes still go to
+				 * `out` (decoded once at the end for the returned result); the flag
+				 * search runs over a small rolling tail decoded as ISO-8859-1, a
+				 * byte-exact 1:1 mapping that is safe because COMP_FLAG is ASCII and
+				 * cannot be corrupted by a multi-byte char split at a chunk boundary.
+				 */
+				final int flagLen = ScriptInput.COMP_FLAG.length();
+				StringBuilder tail = new StringBuilder();
 				int len = 0;
 				while ((len = in.read(b)) > 0) {
 					out.write(b, 0, len);
-					if (out.toString().indexOf(ScriptInput.COMP_FLAG) > 0) {
+					tail.append(new String(b, 0, len, "ISO-8859-1"));
+					if (tail.indexOf(ScriptInput.COMP_FLAG) >= 0) {
 						break;
+					}
+					/* keep only the last (flagLen-1) chars so a flag split across chunks is still found */
+					if (tail.length() > flagLen - 1) {
+						tail.delete(0, tail.length() - (flagLen - 1));
 					}
 				}
 			} catch (Exception readEx) {
