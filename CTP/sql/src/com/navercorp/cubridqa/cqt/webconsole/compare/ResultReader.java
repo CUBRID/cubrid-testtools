@@ -57,6 +57,16 @@ public class ResultReader {
         }
     }
 
+    public void close() {
+        isEOF = true;
+        if (reader1 != null) {
+            try {
+                reader1.close();
+            } catch (IOException ignore) {
+            }
+        }
+    }
+
     public ArrayList<String> getNextBlockText() throws IOException {
 
         if (isEOF) return null;
