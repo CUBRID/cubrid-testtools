@@ -53,6 +53,8 @@ public class TestMonitor {
 		this.log = new Log(CommonUtils.concatFile(context.getCurrentLogDir(), "monitor_" + test.getCurrentEnvId() + ".log"), false, context.isContinueMode);
 
 		this.ssh = ShellHelper.createTestNodeConnect(context, test.getCurrentEnvId());
+        /* monitor exec (resetProcess cleanup / trace) must be bounded so a wedged node cannot block the single monitor thread forever */
+        ShellHelper.applySecondaryReadTimeout(this.ssh);
 		this.initRelatedSSH();
 
 		try {
@@ -93,6 +95,7 @@ public class TestMonitor {
 			for (String host : relatedHosts) {
 				try {
 					s = ShellHelper.createTestNodeConnect(context, test.getCurrentEnvId(), host);
+                    ShellHelper.applySecondaryReadTimeout(s);
 					this.sshRelateds.add(s);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -201,6 +204,12 @@ public class TestMonitor {
 
 	private void resolveTimeout() {
 
+        long elapse_time;
+        String tcName;
+        String envId;
+        long detectedStartTime;
+        boolean justDetected = false;
+
 		synchronized (test) {
 			if (testCaseTimeout < 0 || test.startTime <= 0)
 				return;
@@ -211,26 +220,79 @@ public class TestMonitor {
 				return;
 			}
 
-			long elapse_time = (endTime - test.startTime) / 1000;
+            elapse_time = (endTime - test.startTime) / 1000;
+            tcName = test.testCaseFullName;
+            envId = test.envIdentify;
+            detectedStartTime = test.startTime;
 
-			String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
+            /*
+             * Record the timeout result exactly once (the result list is shared
+             * with the worker thread). isTimeOut tracks ONLY "timeout detected /
+             * result recorded"; it is reset for each new case in Test.runAll().
+             */
+            if (test.isTimeOut == false) {
+                test.testCaseSuccess = false;
+                test.addResultItem("NOK", "timeout");
+                test.isTimeOut = true;
+                justDetected = true;
+            }
 
-			test.testCaseSuccess = false;
-			test.addResultItem("NOK", "timeout");
-			test.isTimeOut = true;
-			if (elapse_time > 120 && context.isWindows()) {
-				this.log.println("Try to restart remote aganet to resovle timeout problem.");
-				try {
-					ssh.restartRemoteAgent();
-					this.log.println("Restart done");
-				} catch (Exception e) {
-					this.log.println("Restart fail: " + e.getMessage());
-				}
+            /*
+             * Cleanup completion is tracked separately (timeoutCleanupDone) so a
+             * failed cleanup is retried on the next monitor cycle instead of being
+             * permanently skipped by the detection guard. Once cleanup has
+             * succeeded there is nothing more to do for this case.
+             */
+            if (test.timeoutCleanupDone) {
+                return;
+            }
+        }
+
+        if (justDetected) {
+            this.log.println("[RESOLVE] " + testCaseTimeout + " timeout detected (actual: " + elapse_time + " seconds) for " + tcName + ", cleaning up processes...");
+        }
+
+        /*
+         * Do the slow work OUTSIDE the lock so the worker is never blocked on the
+         * monitor's remote calls. resetProcess() returns an error string (it does
+         * not throw) on SSH/RMI failure; treat null/blank output or the failure
+         * marker as a failed cleanup (a wedged channel can return empty output with
+         * no kill evidence) and leave timeoutCleanupDone false so the next cycle
+         * retries while the worker is still stuck on this case.
+         */
+        String result = CommonUtils.resetProcess(ssh, context.isWindows, context.isExecuteAtLocal());
+        boolean cleanupFailed = (result == null) || (result.trim().length() == 0) || result.startsWith(CommonUtils.RESET_PROCESS_FAIL_PREFIX);
+
+        if (cleanupFailed) {
+            this.log.println("[RESOLVE] process cleanup failed, will retry next cycle: " + result);
+            return;
+        }
+
+        if (elapse_time > 120 && context.isWindows()) {
+            this.log.println("Try to restart remote aganet to resovle timeout problem.");
+            try {
+                ssh.restartRemoteAgent();
+                this.log.println("Restart done");
+            } catch (Exception e) {
+                this.log.println("Restart fail: " + e.getMessage());
 			}
-			context.getFeedback().onTestCaseMonitor(test.testCaseFullName,
-					"[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
-					test.envIdentify);
 		}
+
+        /*
+         * Mark cleanup done under the lock, but only if the worker is still on the
+         * SAME timed-out case (startTime unchanged). If it has advanced to the next
+         * case (which resets timeoutCleanupDone), stamping it now would wrongly skip
+         * cleanup for that new case.
+         */
+        synchronized (test) {
+            if (test.startTime == detectedStartTime && test.isTimeOut) {
+                test.timeoutCleanupDone = true;
+            }
+        }
+
+        context.getFeedback().onTestCaseMonitor(tcName,
+                "[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
+                envId);
 	}
 
 	public void close() {

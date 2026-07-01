@@ -6,7 +6,7 @@ CTP is a testing tool for an open source project CUBRID. It is written in Java a
 
 ## Requirements
 * It supports Linux and Windows (Cygwin is required)
-* Install Java 6 or higher version, and you also need to set ``JAVA_HOME`` environment variable to point to the installation directory
+* Install Java 8 or higher version, and you also need to set ``JAVA_HOME`` environment variable to point to the installation directory
 * CUBRID and CUBRID_DATABASES environment variables should be configured before executing testing, please refer to http://www.cubrid.org/ for configuration guides
 
 ## Quick Start
