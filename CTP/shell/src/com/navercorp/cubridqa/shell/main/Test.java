@@ -35,6 +35,7 @@ import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
+import com.navercorp.cubridqa.shell.common.SSHTimeoutException;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
 import com.navercorp.cubridqa.shell.dispatch.Dispatch;
 
@@ -49,15 +50,20 @@ public class Test {
 	Log dispatchLog;
 	Log workerLog;
 
-	boolean testCaseSuccess;
-	boolean isTimeOut = false;
+    /* written by the monitor thread (resolveTimeout) and read by the worker thread, so keep them visible */
+    volatile boolean testCaseSuccess;
+    volatile boolean isTimeOut = false;
+    /* set by the monitor once it has successfully cleaned up a timed-out case; lets a failed cleanup be retried */
+    volatile boolean timeoutCleanupDone = false;
 	boolean hasCore = false;
 
-	boolean shouldStop = false;
-	boolean isStopped = false;
+    /* written by the worker, read by the monitor/config-monitor threads to detect shutdown, so keep them visible */
+    volatile boolean shouldStop = false;
+    volatile boolean isStopped = false;
 	boolean needDropTestCase = false;
 
-	long startTime = 0;
+    /* written by the worker, read by the monitor (resolveTimeout) to measure elapsed time, so keep it visible */
+    volatile long startTime = 0;
 	int maxRetryCount = 0;
 
 	ArrayList<String> resultItemList = new ArrayList<String>();
@@ -67,6 +73,7 @@ public class Test {
 		this.shouldStop = false;
 		this.isStopped = false;
 		this.isTimeOut = false;
+        this.timeoutCleanupDone = false;
 		this.hasCore = false;
 		this.context = context;
 		this.currEnvId = currEnvId;
@@ -107,10 +114,11 @@ public class Test {
 				}
 			}
 
-			testCase = Dispatch.getInstance().nextTestFile();
-			if (testCase == null) {
+			Dispatch.DispatchTicket dispatchTicket = Dispatch.getInstance().claimNext();
+			if (dispatchTicket == null) {
 				break;
 			}
+			testCase = dispatchTicket.getTestCase();
 
 			consoleOutput = "";
 			this.testCaseFullName = testCase;
@@ -122,113 +130,120 @@ public class Test {
 			context.getFeedback().onTestCaseStartEvent(this.testCaseFullName, envIdentify);
 
 			workerLog.println("[TESTCASE] " + this.testCaseFullName);
-			
-			// Get current retry count for this test case
-			int currentRetryCount = Dispatch.getInstance().getRetryCount(this.testCaseFullName);
-
-			/*
-			 * Reset test environment Kill CUBRID process, clear SSH and
-			 * clear result item list
-			 */
-			resetProcess();
-			resetCUBRID();
-			resetSSH();
-			startTime = -1;
-			if (this.context.enableCheckDiskSpace()) {
-				checkDiskSpace();
-			}
 
 			resultItemList.clear();
-			startTime = System.currentTimeMillis();
 			this.isTimeOut = false;
+            this.timeoutCleanupDone = false;
 			this.testCaseSuccess = true;
 			this.hasCore = false;
+			int retryCount = dispatchTicket.getRetryCount();
 
 			try {
+				resetProcess();
+				resetCUBRID();
+				resetSSH();
+				if (this.context.enableCheckDiskSpace()) {
+					checkDiskSpace();
+				}
+
+				startTime = System.currentTimeMillis();
 				consoleOutput = runTestCase();
 				doFinalCheck();
 				collectGeneralResult();
 			} catch (Exception e) {
-				this.addResultItem("NOK", "Runtime error (" + e.getMessage() + ")");
+                /* a hung case that escaped via the SSH read watchdog is a timeout, not a generic failure */
+                if (e instanceof SSHTimeoutException) {
+                    this.isTimeOut = true;
+                    /* classify as "timeout" (consistent with the monitor path), not a generic runtime error */
+                    this.addResultItem("NOK", "timeout (" + e.getMessage() + ")");
+                } else {
+                    this.addResultItem("NOK", "Runtime error (" + e.getMessage() + ")");
+                }
 			} finally {
-				endTime = System.currentTimeMillis();
+				try {
+					endTime = System.currentTimeMillis();
+					long elapseTime = startTime > 0 ? endTime - startTime : 0;
 
-				StringBuffer resultCont = new StringBuffer();
-				for (String item : this.resultItemList) {
-					if (testCaseSuccess) {
-						if (item.indexOf("NOK") != -1) {
-							this.testCaseSuccess = false;
+					StringBuffer resultCont = new StringBuffer();
+                    /*
+                     * Snapshot the result list under the lock (the monitor thread may add a
+                     * timeout item concurrently), then do the blocking file I/O OUTSIDE the
+                     * lock so slow disk/NFS cannot delay the monitor's timeout detection.
+                     */
+                    ArrayList<String> resultSnapshot;
+                    synchronized (this) {
+                        resultSnapshot = new ArrayList<String>(this.resultItemList);
+                    }
+                    for (String item : resultSnapshot) {
+						if (testCaseSuccess) {
+							if (item.indexOf("NOK") != -1) {
+								this.testCaseSuccess = false;
+							}
 						}
-					}
-					if (hasCore == false) {
-						if (item.indexOf("NOK found core file") != -1 || item.indexOf("NOK found fatal error") != -1) {
-							this.hasCore = true;
+						if (hasCore == false) {
+							if (item.indexOf("NOK found core file") != -1 || item.indexOf("NOK found fatal error") != -1) {
+								this.hasCore = true;
+							}
 						}
+
+						workerLog.println(item);
+						resultCont.append(item).append(Constants.LINE_SEPARATOR);
 					}
 
-					workerLog.println(item);
-					resultCont.append(item).append(Constants.LINE_SEPARATOR);
-				}
+                    /* exclude timeouts from retry: a hung case would simply hang again for another deadline */
+                    boolean needRetry = Dispatch.getInstance().complete(dispatchTicket, testCaseSuccess, hasCore, isTimeOut);
 
-				if (testCaseSuccess == false && hasCore == false && context.getEnableSaveNormalErrorLog() == true) {
-					String saveErrorLogResult = doSaveNormalErrorLog();
-					resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
-				}
-				
-				// Determine if this case needs retry
-				boolean needRetry = false;
-				if (testCaseSuccess == false) {
-					if (hasCore) {
-						needRetry = false;
+					if (testCaseSuccess == false && hasCore == false && context.getEnableSaveNormalErrorLog() == true) {
+						String saveErrorLogResult = doSaveNormalErrorLog();
+						resultCont.append(saveErrorLogResult).append(Constants.LINE_SEPARATOR);
+					}
+					if (testCaseSuccess == false) {
+						resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
+						resultCont.append(consoleOutput);
+					}
+
+					String resultContString = resultCont.toString();
+					String lastPassResultCont = buildLastPassResultCont(resultContString, consoleOutput, testCaseSuccess);
+
+					if (needRetry) {
+						context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, elapseTime, resultContString, envIdentify, isTimeOut, hasCore,
+								Constants.SKIP_TYPE_NO, retryCount);
 					} else {
-						needRetry = true;
+						context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, elapseTime, resultContString, lastPassResultCont, envIdentify, isTimeOut, hasCore,
+								Constants.SKIP_TYPE_NO, retryCount);
+						System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
+								+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + retryCount : "")));
+						if (needDropTestCase) {
+							dropTestCaseAfterTest();
+						}
+						dispatchLog.println(this.testCaseFullName);
 					}
-					
-					// Add console output for failed cases
-					resultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
-					resultCont.append(consoleOutput);
-				}
-				
-				// If retryCount already reach the maxRetryCount, tool need stop retry
-				if (currentRetryCount >= maxRetryCount) {
-					needRetry = false;
-				}
-				
-				// Send appropriate feedback based on retry status
-				if (needRetry) {
-					// This is a retry case (doesn't count in statistics)
-					context.getFeedback().onTestCaseStopEventForRetry(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
-							Constants.SKIP_TYPE_NO, currentRetryCount);
-				} else {
-					// This is the final result (counts in statistics)
-					context.getFeedback().onTestCaseStopEvent(this.testCaseFullName, testCaseSuccess, endTime - startTime, resultCont.toString(), envIdentify, isTimeOut, hasCore,
-							Constants.SKIP_TYPE_NO, currentRetryCount);
-					System.out.println("[TESTCASE] " + this.testCaseFullName + " EnvId=" + this.currEnvId + " "
-							+ (testCaseSuccess ? "[OK]" : "[NOK]" + (this.maxRetryCount != 0 ? ", " + Constants.RETRY_FLAG + currentRetryCount : "")));
-				}
-				
-				// Handle retry queue management
-				if (needRetry && this.maxRetryCount > 0) {
-					// Add failed test case to retry queue
-					Dispatch.getInstance().addFailedTestCaseForRetry(this.testCaseFullName);
-				} else if (currentRetryCount > 0) {
-					// Remove completed retry case from queue
-					Dispatch.getInstance().removeFromRetryQueue(this.testCaseFullName);
-				}
 
-				workerLog.println("");
+					workerLog.println("");
+				} finally {
+					startTime = -1;
+				}
 			}
-
-			if (needDropTestCase) {
-				dropTestCaseAfterTest();
-			}
-			dispatchLog.println(this.testCaseFullName);
 		}
 
 		close();
 		context.getFeedback().onStopEnvEvent(currEnvId);
 		System.out.println("[ENV STOP] " + currEnvId);
 		isStopped = true;
+	}
+
+	private String buildLastPassResultCont(String resultCont, String consoleOutput, boolean testCaseSuccess) {
+		if (testCaseSuccess == false || consoleOutput == null || consoleOutput.length() == 0) {
+			return resultCont;
+		}
+
+		StringBuffer fullResultCont = new StringBuffer();
+		if (resultCont != null) {
+			fullResultCont.append(resultCont);
+		}
+		fullResultCont.append("============================= CONSOLE OUTPUT =============================").append(Constants.LINE_SEPARATOR);
+		fullResultCont.append(consoleOutput);
+		return fullResultCont.toString();
 	}
 
 	public String runTestCase() throws Exception {
@@ -428,6 +443,7 @@ public class Test {
 				sshRelated = null;
 				try {
 					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
+                    ShellHelper.applySecondaryReadTimeout(sshRelated);
 					sshRelated.execute(scripts);
 					workerLog.println("[INFO] remove core file successfully on " + h + ".");
 				} catch (Exception e) {
@@ -461,6 +477,8 @@ public class Test {
 			e.printStackTrace();
 		}
 		this.ssh = ShellHelper.createTestNodeConnect(context, currEnvId);
+        /* worker's MAIN connection runs the test case -> per-testcase hard deadline */
+        ShellHelper.applyTestcaseReadDeadline(this.ssh, context);
 	}
 
 	public void resetProcess() {
@@ -477,6 +495,7 @@ public class Test {
 			sshRelated = null;
 			try {
 				sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId);
+                ShellHelper.applySecondaryReadTimeout(sshRelated);
 				result = CommonUtils.resetProcess(sshRelated, context.isWindows, context.isExecuteAtLocal());
 				workerLog.println("[INFO] CLEAN PROCESSES(" + h + "): " + result);
 			} catch (Exception e) {
@@ -575,6 +594,7 @@ public class Test {
 				result = null;
 				try {
 					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
+                    ShellHelper.applySecondaryReadTimeout(sshRelated);
 					result = sshRelated.execute(scripts);
 					String[] itemArrary = result.split("\n");
 					if (itemArrary != null) {
@@ -595,7 +615,7 @@ public class Test {
 		}
 	}
 
-	public void addResultItem(String flag, String message) {
+    public synchronized void addResultItem(String flag, String message) {
 		if (flag == null)
 			this.resultItemList.add(message);
 		else
@@ -622,6 +642,7 @@ public class Test {
 			SSHConnect sshRelated;
 			for (String h : relatedHosts) {
 				sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
+                ShellHelper.applySecondaryReadTimeout(sshRelated);
 				checkDiskSpace(sshRelated, true);
 			}
 		}
@@ -673,6 +694,7 @@ public class Test {
 				sshRelated = null;
 				try {
 					sshRelated = ShellHelper.createTestNodeConnect(context, currEnvId, h);
+                    ShellHelper.applySecondaryReadTimeout(sshRelated);
 					sshRelated.execute(scripts);
 					sb.append("[INFO] Normal error log locations on related server:" + result).append(Constants.LINE_SEPARATOR);
 					workerLog.println("[INFO] finish save log successfully on " + h + ".");
