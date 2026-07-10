@@ -57,10 +57,13 @@ typedef struct SqlStateStruct
   char *sql;
   // query plan
   struct {
-    bool hasqp; 
+    bool hasqp;
     bool onlyjg; /*join graph without queryplan */
     bool hasfullp;
   };
+
+  /* print NUMERIC values as-is without trimming/scientific notation */
+  bool isplain;
 
   bool iscallwithoutvalue;
 } SqlStateStruce;
@@ -990,7 +993,7 @@ readFile (char *fileName)
   int ascii1 = 0, ascii2 = 0;
   char line[MAX_SQL_LEN];
   char sql_buf[MAXLINELENGH];
-  bool hasqp = 0, hasjg = 0, hasfullp = 0;
+  bool hasqp = 0, hasjg = 0, hasfullp = 0, isplain = 0;
 
   //initial the total sql count.
   total_sql = 0;
@@ -1022,6 +1025,10 @@ readFile (char *fileName)
 		  hasfullp = 1;
 		  hasqp = 1;
 		}
+	      else if (startswith (line, "--@plainnumeric"))
+		{
+		  isplain = 1;
+		}
 	      else if (startswithCI (line, "--+ server-message") ||
 		       startswithCI (line, "--+server-message") ||
 		       startswithCI (line, "--+ holdcas") || startswithCI (line, "--+holdcas"))
@@ -1031,6 +1038,7 @@ readFile (char *fileName)
 		  sqlstate[total_sql].hasqp = 0;
 		  sqlstate[total_sql].onlyjg = 0;
 		  sqlstate[total_sql].hasfullp = 0;
+		  sqlstate[total_sql].isplain = 0;
 		  //if script like "? = call"
 		  sqlstate[total_sql].iscallwithoutvalue = 0;
 
@@ -1064,6 +1072,7 @@ readFile (char *fileName)
 		  sqlstate[total_sql].hasqp = hasqp;
 		  sqlstate[total_sql].onlyjg = hasjg;
 		  sqlstate[total_sql].hasfullp = hasfullp;
+		  sqlstate[total_sql].isplain = isplain;
 		  //if script like "? = call"
 		  sqlstate[total_sql].iscallwithoutvalue = startswith (line, "?");
 
@@ -1074,6 +1083,7 @@ readFile (char *fileName)
 		  hasqp = 0;
 		  hasjg = 0;
 		  hasfullp = 0;
+		  isplain = 0;
 		}
 
 	      if (is_statement_end ())
@@ -1400,7 +1410,7 @@ formatfullplan (FILE * fp, char *queryPlan)
 
 
 int
-dumptable (FILE * fp, int req, char con, bool hasqueryplan, bool onlyjoingraph, bool hasfullplan)
+dumptable (FILE * fp, int req, char con, bool hasqueryplan, bool onlyjoingraph, bool hasfullplan, bool isplainnumeric)
 {
   int res = 0;
   int ind = 0, index_count = 0, col_count = 0, setsize = -1, index_set = 0;
@@ -1600,7 +1610,14 @@ _NEXT_MULTIPLE_LINE_SQL:
 		    }
 		  if (itemp == CCI_U_TYPE_NUMERIC)
 		    {
-		      trimnumeric (fp, (char *) buffer);
+		      if (isplainnumeric)
+			{
+			  fprintf (fp, "%s", (char *) buffer);
+			}
+		      else
+			{
+			  trimnumeric (fp, (char *) buffer);
+			}
 		    }
 		  else if (itemp == CCI_U_TYPE_DATETIME)
 		    {
@@ -1984,6 +2001,7 @@ execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
   bool hasqueryplan = pSqlState->hasqp;
   bool onlyjoingraph = pSqlState->onlyjg;
   bool hasfullplan = pSqlState->hasfullp;
+  bool isplainnumeric = pSqlState->isplain;
   bool executed = false;
 
   fprintf (fp, "===================================================\n");
@@ -2030,7 +2048,7 @@ execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
   if (cmd_type == CUBRID_STMT_SELECT || cmd_type == CUBRID_STMT_CALL || cmd_type == CUBRID_STMT_EVALUATE
       || cmd_type == CUBRID_STMT_GET_STATS)
     {
-      dumptable (fp, req, conn, hasqueryplan, onlyjoingraph, hasfullplan);
+      dumptable (fp, req, conn, hasqueryplan, onlyjoingraph, hasfullplan, isplainnumeric);
       goto _END;
     }
   else if (cmd_type == CUBRID_STMT_UPDATE || cmd_type == CUBRID_STMT_DELETE)
@@ -2083,7 +2101,7 @@ execute (FILE * fp, char conn, const SqlStateStruce *pSqlState)
       res_col_info = cci_get_result_info (req, &cmd_type, &col_count);
       if (cmd_type == CUBRID_STMT_SELECT || cmd_type == CUBRID_STMT_CALL)
 	{
-	  dumptable (fp, req, conn, hasqueryplan, onlyjoingraph, hasfullplan);
+	  dumptable (fp, req, conn, hasqueryplan, onlyjoingraph, hasfullplan, isplainnumeric);
 	}
       else
 	{
@@ -2126,6 +2144,7 @@ executebind (FILE * fp, char conn, char *param, const SqlStateStruce *pSqlState)
   bool hasqueryplan = pSqlState->hasqp;
   bool onlyjoingraph = pSqlState->onlyjg;
   bool hasfullplan = pSqlState->hasfullp;
+  bool isplainnumeric = pSqlState->isplain;
   bool iscall = pSqlState->iscallwithoutvalue;
   bool executed = false;
 
@@ -2249,7 +2268,7 @@ executebind (FILE * fp, char conn, char *param, const SqlStateStruce *pSqlState)
   res_col_info = cci_get_result_info (req, &cmd_type, &col_count);
   if (cmd_type == CUBRID_STMT_SELECT || cmd_type == CUBRID_STMT_CALL)
     {
-      dumptable (fp, req, conn, hasqueryplan, onlyjoingraph, hasfullplan);
+      dumptable (fp, req, conn, hasqueryplan, onlyjoingraph, hasfullplan, isplainnumeric);
     }
   else
     {
@@ -2269,7 +2288,7 @@ executebind (FILE * fp, char conn, char *param, const SqlStateStruce *pSqlState)
 	  res_col_info = cci_get_result_info (req, &cmd_type, &col_count);
 	  if (cmd_type == CUBRID_STMT_SELECT || cmd_type == CUBRID_STMT_CALL)
 	    {
-	      dumptable (fp, req, conn, hasqueryplan, onlyjoingraph, hasfullplan);
+	      dumptable (fp, req, conn, hasqueryplan, onlyjoingraph, hasfullplan, isplainnumeric);
 	    }
 	  else
 	    {
