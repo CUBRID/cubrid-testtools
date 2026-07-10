@@ -45,6 +45,7 @@ import com.navercorp.cubridqa.cqt.console.util.XstreamHelper;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.net.URLClassLoader;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -896,7 +897,14 @@ public class ConsoleDAO extends Executor {
                          (columnType == Types.OTHER && isNumeric(data != null ? data.toString() : "")))) {
                         value = rs.getString(index);
                     } else {
-                        value = getColumnValue(columnType, columnTypeName, data, rs, index);
+                        value =
+                                getColumnValue(
+                                        columnType,
+                                        columnTypeName,
+                                        data,
+                                        rs,
+                                        index,
+                                        sql.isPlainNumeric());
                     }
                     ret.append(value + "     ");
                 }
@@ -955,7 +963,12 @@ public class ConsoleDAO extends Executor {
      * @throws
      */
     private String getColumnValue(
-            int colType, String colTypeName, Object value, ResultSet rs, int index) {
+            int colType,
+            String colTypeName,
+            Object value,
+            ResultSet rs,
+            int index,
+            boolean isPlainNumeric) {
         if (value == null) {
             return null;
         }
@@ -1010,7 +1023,11 @@ public class ConsoleDAO extends Executor {
                     }
                 }
             } else {
-                sb.append(value.toString());
+                if (isPlainNumeric && value instanceof BigDecimal) {
+                    sb.append(((BigDecimal) value).toPlainString());
+                } else {
+                    sb.append(value.toString());
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

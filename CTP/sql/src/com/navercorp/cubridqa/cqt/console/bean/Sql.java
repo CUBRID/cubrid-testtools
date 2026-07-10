@@ -47,6 +47,9 @@ public class Sql {
     // Adds both join graph and query plan
     private boolean isFullplan = false;
 
+    // Print NUMERIC/DECIMAL values without scientific notation (BigDecimal.toPlainString)
+    private boolean isPlainNumeric = false;
+
     private int type;
 
     private String result = "";
@@ -181,5 +184,13 @@ public class Sql {
 
     public void setFullplan(boolean isFullplan) {
         this.isFullplan = isFullplan;
+    }
+
+    public boolean isPlainNumeric() {
+        return isPlainNumeric;
+    }
+
+    public void setPlainNumeric(boolean isPlainNumeric) {
+        this.isPlainNumeric = isPlainNumeric;
     }
 }
