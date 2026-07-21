@@ -41,6 +41,17 @@ else
 fi
 CFLAGS="-O0 -g -W -Wall"
 
+# numeric : A global version variable is set to produce different outputs based on the regression test version.
+# (outputting 10 to 15 decimal places) CUBRIDQA-1431
+build_ver=`cubrid_rel|grep "CUBRID"|awk -F '(' '{print $2}'|sed 's/)//g'`
+cubrid_major=${build_ver%%.*}
+cubrid_minor=`echo $build_ver|awk -F '.' '{print $2}'`
+if [ "$cubrid_major" -gt 11 ] || { [ "$cubrid_major" -eq 11 ] && [ "$cubrid_minor" -ge 5 ]; }; then
+	NUMERIC_MACRO_OPTION="-D NUMERIC_TRUNC_GE_11_5=1"
+else
+	NUMERIC_MACRO_OPTION="-D NUMERIC_TRUNC_GE_11_5=0"
+fi
+
 bits=`cubrid_rel|grep 64bit|grep -v grep|wc -l`
 if [ $bits -eq 1 ];then
      CFLAGS="$CFLAGS -m64"
@@ -60,7 +71,8 @@ fi
 #Do compile
 echo ""
 echo "======Start Compile======"
-gcc $MACRO_OPTION -o execute execute.c line_scanner.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
+# CUBRIDQA-1431 : Add $NUMERIC_MACRO_OPTION
+gcc $MACRO_OPTION $NUMERIC_MACRO_OPTION -o execute execute.c line_scanner.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
 statOfExecute=$?
 gcc -o ccqt ccqt.c $CFLAGS
 statOfCcqt=$?

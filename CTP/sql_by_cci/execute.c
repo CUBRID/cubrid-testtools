@@ -52,6 +52,13 @@
 #define MAX_SQL_LEN 1024*200
 #define MAX_LEN 1024
 
+// Add definition of the declaration.(CUBRIDQA-1431)
+#if NUMERIC_TRUNC_GE_11_5 == 1
+#define NUMERIC_TRUNC_LEN 16
+#else
+#define NUMERIC_TRUNC_LEN 11
+#endif
+
 typedef struct SqlStateStruct
 {
   char *sql;
@@ -367,9 +374,9 @@ trimnumeric (FILE * fp, char *buffer)
     }
   else
     {
-      if ((length - dot_position - 1) > 11)
+      if ((length - dot_position - 1) > NUMERIC_TRUNC_LEN)
 	{
-	  p[dot_position + 11] = 0;
+	  p[dot_position + NUMERIC_TRUNC_LEN] = 0;
 	}
     }
   fprintf (fp, "%s", p);
