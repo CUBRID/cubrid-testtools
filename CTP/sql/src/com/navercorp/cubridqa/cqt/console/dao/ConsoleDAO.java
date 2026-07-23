@@ -68,8 +68,6 @@ import org.apache.commons.dbcp.BasicDataSource;
 public class ConsoleDAO extends Executor {
     private static final String driver = "cubrid.jdbc.driver.CUBRIDDriver";
 
-    private static Boolean cubrid115OrAbove = null;
-
     private String url = null;
 
     private String user = null;
@@ -945,14 +943,13 @@ public class ConsoleDAO extends Executor {
             }
      }
 
-    private boolean isCubrid115OrAbove() {
-        if (cubrid115OrAbove == null) {
-            cubrid115OrAbove = checkCubrid115OrAbove();
-        }
-        return cubrid115OrAbove;
-    }
-
-    private static boolean checkCubrid115OrAbove() {
+    /**
+     * Whether the currently connected server is CUBRID 11.5 or above. The
+     * version is read live from {@link MyDriverManager#getDatabaseVersion()},
+     * which is refreshed on every connection, so this always reflects the
+     * server that produced the result being formatted (no cached state).
+     */
+    private static boolean isCubrid115OrAbove() {
         try {
             String ver = MyDriverManager.getDatabaseVersion();
             if (ver == null) return false;
