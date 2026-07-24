@@ -47,9 +47,9 @@ build_ver=`cubrid_rel|grep "CUBRID"|awk -F '(' '{print $2}'|sed 's/)//g'`
 cubrid_major=${build_ver%%.*}
 cubrid_minor=`echo $build_ver|awk -F '.' '{print $2}'`
 if [ "$cubrid_major" -gt 11 ] || { [ "$cubrid_major" -eq 11 ] && [ "$cubrid_minor" -ge 5 ]; }; then
-	NUMERIC_MACRO_OPTION="-D NUMERIC_TRUNC_GE_11_5=1"
+	MACRO_OPTION="$MACRO_OPTION -D NUMERIC_TRUNC_LEN=16"
 else
-	NUMERIC_MACRO_OPTION="-D NUMERIC_TRUNC_GE_11_5=0"
+	MACRO_OPTION="$MACRO_OPTION -D NUMERIC_TRUNC_LEN=11"
 fi
 
 bits=`cubrid_rel|grep 64bit|grep -v grep|wc -l`
@@ -72,7 +72,7 @@ fi
 echo ""
 echo "======Start Compile======"
 # CUBRIDQA-1431 : Add $NUMERIC_MACRO_OPTION
-gcc $MACRO_OPTION $NUMERIC_MACRO_OPTION -o execute execute.c line_scanner.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
+gcc $MACRO_OPTION -o execute execute.c line_scanner.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
 statOfExecute=$?
 gcc -o ccqt ccqt.c $CFLAGS
 statOfCcqt=$?
