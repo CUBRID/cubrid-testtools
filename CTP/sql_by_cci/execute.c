@@ -92,11 +92,6 @@ static SqlStateStruce sqlstate[MAX_SQL_NUM];
 
 static bool is_server_message_on = 0;
 
-/* CUBRID server version flag: -1 unknown, 0 below 11.5, 1 is 11.5 or above.
-   On 11.5+, NUMERIC values are printed as-is (plain) instead of being
-   trimmed to scientific notation, matching the JDBC runner (CBRD-26006). */
-static int cubrid_115_or_above = -1;
-
 char *
 get_err_msg (int err_code)
 {
@@ -322,63 +317,6 @@ formatdatetime (FILE * fp, char *buffer)
     {
       fprintf (fp, "%s", buffer);
     }
-}
-
-void
-trimnumeric (FILE * fp, char *buffer)
-{
-  int dot_position = chrindex (buffer, ".");
-  int length = strlen (buffer);
-  int allzero = 1;
-  int i;
-  char *p;
-
-  p = (char *) malloc ((length + 1) * sizeof (char));
-  memcpy (p, buffer, (length + 1) * sizeof (char));
-
-  if (!isdouble (p))
-    {
-      printf ("wrong date %s", p);
-    }
-
-  if (dot_position < 1)
-    {
-      fprintf (fp, "%s", p);
-      free (p);
-      return;
-    }
-
-  for (i = dot_position + 1; i < length; i++)
-    {
-      if (buffer[i] != '0')
-	{
-	  allzero = 0;
-	  break;
-	}
-    }
-
-  if (allzero && length < 20)
-    {
-      p[dot_position + 1] = '0';
-      p[dot_position + 2] = 0;
-      fprintf (fp, "%s", p);
-      free (p);
-      return;
-    }
-
-  if (length > 19)
-    {
-      sprintf (p, "%le", atof (buffer));
-    }
-  else
-    {
-      if ((length - dot_position - 1) > 11)
-	{
-	  p[dot_position + 11] = 0;
-	}
-    }
-  fprintf (fp, "%s", p);
-  free (p);
 }
 
 void
@@ -1605,14 +1543,7 @@ _NEXT_MULTIPLE_LINE_SQL:
 		    }
 		  if (itemp == CCI_U_TYPE_NUMERIC)
 		    {
-		      if (cubrid_115_or_above == 1)
-			{
-			  fprintf (fp, "%s", (char *) buffer);
-			}
-		      else
-			{
-			  trimnumeric (fp, (char *) buffer);
-			}
+		      fprintf (fp, "%s", (char *) buffer);
 		    }
 		  else if (itemp == CCI_U_TYPE_DATETIME)
 		    {
@@ -2311,37 +2242,6 @@ _END:
   return ret;
 }
 
-/* Query the connected server version once and cache whether it is 11.5+. */
-static void
-set_cubrid_version_flag (int conn)
-{
-  char ver[64];
-  char *p;
-
-  cubrid_115_or_above = 0;
-  ver[0] = '\0';
-  if (cci_get_db_version (conn, ver, sizeof (ver)) < 0)
-    {
-      return;
-    }
-
-  /* skip any leading non-digit prefix (e.g. "CUBRID ") before major.minor */
-  for (p = ver; *p != '\0' && (*p < '0' || *p > '9'); p++)
-    ;
-
-  if (*p != '\0')
-    {
-      int major = 0, minor = 0;
-      if (sscanf (p, "%d.%d", &major, &minor) >= 2)
-	{
-	  if (major > 11 || (major == 11 && minor >= 5))
-	    {
-	      cubrid_115_or_above = 1;
-	    }
-	}
-    }
-}
-
 int
 test (FILE * fp)
 {
@@ -2372,8 +2272,6 @@ test (FILE * fp)
 
       count++;
     }
-
-  set_cubrid_version_flag (conn);
 
   for (sql_count = 0; sql_count < total_sql; sql_count++)
     {
