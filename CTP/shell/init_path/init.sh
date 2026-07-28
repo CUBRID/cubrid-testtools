@@ -891,7 +891,7 @@ function change_parameter
     parameter=$2
 
     key=${parameter%%=*}
-    value=${paramter##*=}
+    value=${parameter##*=}
     key=`echo $key|sed 's/^ *//g'`
     key=`echo $key|sed 's/ *$//g'`
 
