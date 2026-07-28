@@ -317,30 +317,67 @@ function diff_ignore_lineno
    local op=$3
    local tmp1="${f1}_temp_diff"
    local tmp2="${f2}_temp_diff"
-   cp -rf ${f1} ${tmp1}
-   cp -rf ${f2} ${tmp2}
+   cp -f "${f1}" "${tmp1}"
+   cp -f "${f2}" "${tmp2}"
 
-   local reg="s/In[\t ]*line[\t 0-9]*,[\t ]*column[\t 0-9]*/In      line    ?,      column  ?/g"
-   sed -i "$reg" ${tmp1}
-   sed -i "$reg" ${tmp2}
+   # Mask the line/column numbers that csql and loaddb print in their messages,
+   # so that only the message content is compared. Moving a statement inside a
+   # script shifts every following line number, which would show up as a diff
+   # even though the tested behaviour did not change.
+   #
+   # Both English and Korean messages are masked. i18n test cases run csql with
+   # CUBRID_MSG_LANG=ko_KR, and CUBRID translates part of these messages
+   # (csql.msg 47, 48 and 62), so the English patterns alone leave them
+   # unmasked. Each Korean pattern is listed twice, in UTF-8 and in EUC-KR,
+   # because both ko_KR.utf8 and ko_KR.euckr are in use; the EUC-KR patterns
+   # are written as byte escapes to keep this file itself UTF-8. sed runs under
+   # LC_ALL=C so that either encoding is matched byte-wise instead of failing
+   # on an invalid multibyte sequence.
+   #
+   # The order of the expressions matters: the Korean text for "In the command
+   # from line N," is "라인 N,", which is a prefix of the "라인 N, 열 N," used
+   # for "In line N, column N,". The longer form has to be masked first.
+   #
+   # Messages hardcoded in English in the CUBRID source (csql.c "Commit
+   # transaction at line", load_db.c "In <file> line") have no Korean form and
+   # are masked only once.
+   local -a mask_exprs=(
+      # csql "=== <Result of SELECT Command in Line N> ==="
+      -e "s/Command in Line[[:space:]]*[0-9][0-9]*/Command in Line ?/g"
+      # csql "=== <SELECT의 결과, 명령어 라인 N> ==="
+      -e "s/의[[:space:]]*결과,[[:space:]]*명령어[[:space:]]*라인[[:space:]]*[0-9][0-9]*/의 결과, 명령어 라인 ?/g"
+      -e $'s/\xc0\xc7[[:space:]]*\xb0\xe1\xb0\xfa,[[:space:]]*\xb8\xed\xb7\xc9\xbe\xee[[:space:]]*\xb6\xf3\xc0\xce[[:space:]]*[0-9][0-9]*/\xc0\xc7 \xb0\xe1\xb0\xfa, \xb8\xed\xb7\xc9\xbe\xee \xb6\xf3\xc0\xce ?/g'
 
-   reg="s/In the command from line[ 0-9]*/In the command from line ?/g"
-   sed -i "$reg" ${tmp1}
-   sed -i "$reg" ${tmp2}
+      # csql "In line N, column N," and "라인 N, 열 N,"
+      -e "s/In[\t ]*line[\t 0-9]*,[\t ]*column[\t 0-9]*/In      line    ?,      column  ?/g"
+      -e "s/라인[[:space:]]*[0-9][0-9]*,[[:space:]]*열[[:space:]]*[0-9][0-9]*,/라인 ?, 열 ?,/g"
+      -e $'s/\xb6\xf3\xc0\xce[[:space:]]*[0-9][0-9]*,[[:space:]]*\xbf\xad[[:space:]]*[0-9][0-9]*,/\xb6\xf3\xc0\xce ?, \xbf\xad ?,/g'
 
-   reg="s/Commit transaction at line[ 0-9]*/Commit transaction at line ?/g"
-   sed -i "$reg" ${tmp1}
-   sed -i "$reg" ${tmp2}
+      # csql "In the command from line N," and "라인 N,". The Korean text is
+      # only the word "라인" plus the number, so the trailing comma is required
+      # to keep it apart from the other messages that mention a "라인 N"
+      # (loaddb "라인 N:", "라인 N에서", ...).
+      -e "s/In the command from line[ 0-9]*/In the command from line ?/g"
+      -e "s/라인[[:space:]]*[0-9][0-9]*,/라인 ?,/g"
+      -e $'s/\xb6\xf3\xc0\xce[[:space:]]*[0-9][0-9]*,/\xb6\xf3\xc0\xce ?,/g'
 
-   reg="s/In schema[0-9]* line [0-9]*/In schema? line ?/g"
-   sed -i "$reg" ${tmp1}
-   sed -i "$reg" ${tmp2}
+      # csql/loaddb, hardcoded in English
+      -e "s/Commit transaction at line[ 0-9]*/Commit transaction at line ?/g"
+      -e "s/In schema[0-9]* line [0-9]*/In schema? line ?/g"
+      -e "s/In indexes[0-9]* line [0-9]*/In indexes? line ?/g"
+   )
 
-   reg="s/In indexes[0-9]* line [0-9]*/In indexes? line ?/g"
-   sed -i "$reg" ${tmp1}
-   sed -i "$reg" ${tmp2}
+   LC_ALL=C sed -i "${mask_exprs[@]}" "${tmp1}"
+   LC_ALL=C sed -i "${mask_exprs[@]}" "${tmp2}"
 
-   diff ${tmp1} ${tmp2} ${op}
+   # ${op} is left unquoted on purpose: it carries the diff options and has to
+   # disappear when the caller passes none.
+   # '|| rc=$?' keeps the exit code of diff without tripping 'set -e', so that
+   # the temporary files are removed on both the equal and the differing path.
+   local rc=0
+   diff "${tmp1}" "${tmp2}" ${op} || rc=$?
+   rm -f "${tmp1}" "${tmp2}"
+   return $rc
 }
 
 # After comparing two files, This function write the result int result files.
@@ -854,7 +891,7 @@ function change_parameter
     parameter=$2
 
     key=${parameter%%=*}
-    value=${paramter##*=}
+    value=${parameter##*=}
     key=`echo $key|sed 's/^ *//g'`
     key=`echo $key|sed 's/ *$//g'`
 
