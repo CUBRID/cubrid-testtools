@@ -372,12 +372,17 @@ function diff_ignore_lineno
 
    # ${op} is left unquoted on purpose: it carries the diff options and has to
    # disappear when the caller passes none.
-   # '|| rc=$?' keeps the exit code of diff without tripping 'set -e', so that
-   # the temporary files are removed on both the equal and the differing path.
-   local rc=0
-   diff "${tmp1}" "${tmp2}" ${op} || rc=$?
-   rm -f "${tmp1}" "${tmp2}"
-   return $rc
+   #
+   # ${tmp1} and ${tmp2} are deliberately left behind. Deleting them here looks
+   # like the tidier thing to do, but the test cases own that cleanup and one of
+   # them asserts on the file: shell/_38_fig/cbrd_24478/deduplicate case #7 is
+   # 'if [ -f create_table_data.answer_temp_diff ]', which turns into a NOK as
+   # soon as this function removes it. The other 42 references are the test
+   # cases deleting '*_temp_diff' at the end of the script, 13 of them with a
+   # bare 'rm' that also fails once the glob matches nothing.
+   #
+   # Keep diff as the last command so its exit code stays the return value.
+   diff "${tmp1}" "${tmp2}" ${op}
 }
 
 # After comparing two files, This function write the result int result files.
