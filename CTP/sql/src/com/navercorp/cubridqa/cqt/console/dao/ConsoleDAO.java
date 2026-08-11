@@ -963,7 +963,13 @@ public class ConsoleDAO extends Executor {
 
         StringBuilder sb = new StringBuilder();
         try {
-            if (colType == Types.VARBINARY && colTypeName.equalsIgnoreCase("BIT VARYING")) {
+            if (value instanceof BigDecimal) {
+                // NUMERIC/DECIMAL values always print in plain form. Host-variable
+                // (PREPARE/EXECUTE USING) results are reported as OTHER with an empty
+                // type name but still arrive as BigDecimal, so this check must come
+                // before the column-type branching to avoid the OTHER/OID fallback.
+                sb.append(((BigDecimal) value).toPlainString());
+            } else if (colType == Types.VARBINARY && colTypeName.equalsIgnoreCase("BIT VARYING")) {
                 byte[] bytes = (byte[]) value;
                 sb.append(StringUtil.toHexString(bytes));
             } else if (colType == Types.BINARY && colTypeName.equalsIgnoreCase("BIT")) {
@@ -1011,11 +1017,7 @@ public class ConsoleDAO extends Executor {
                     }
                 }
             } else {
-                if (value instanceof BigDecimal) {
-                    sb.append(((BigDecimal) value).toPlainString());
-                } else {
-                    sb.append(value.toString());
-                }
+                sb.append(value.toString());
             }
         } catch (Exception e) {
             e.printStackTrace();
