@@ -71,7 +71,7 @@ fi
 #Do compile
 echo ""
 echo "======Start Compile======"
-# CUBRIDQA-1431 : Add $NUMERIC_MACRO_OPTION
+# CUBRIDQA-1431 : Add $MACRO_OPTION
 gcc $MACRO_OPTION -o execute execute.c line_scanner.c $CUBRID_INCLUDE $CUBRID_LDFLAGS $CFLAGS
 statOfExecute=$?
 gcc -o ccqt ccqt.c $CFLAGS
