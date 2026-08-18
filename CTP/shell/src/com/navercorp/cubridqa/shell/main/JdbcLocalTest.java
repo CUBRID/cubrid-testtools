@@ -226,6 +226,10 @@ public class JdbcLocalTest {
 				if (methods == null || methods.length <= 0)
 					continue;
 				for (Method m : methods) {
+					// a lambda in testX() compiles to lambda$testX$0, which matches the name check below
+					if (m.isSynthetic())
+						continue;
+
 					String methodName = m.getName();
 					boolean isTestAnnotationMethod = m.isAnnotationPresent(org.junit.Test.class);
 					boolean isIgnoreTestAnnotationMethod = m.isAnnotationPresent(org.junit.Ignore.class);
