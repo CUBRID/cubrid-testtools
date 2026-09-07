@@ -1662,6 +1662,23 @@ _ctp_template_restore()
     local key=$1 db=$2 dir origin
     dir=`_ctp_template_dir`/$key
     [ -f "$dir/.origin" ] || return 1
+
+    # A database of this name is already here, and copying over it is not what
+    # createdb does.  `createdb --replace` deletes the old one first, and that
+    # takes the backup volumes with it -- so a template restored on top leaves
+    # <db>_bkvinf and <db>_bk0v000 behind, and the case's next level-0 backup
+    # finds one already there and asks whether to overwrite it.  Under CTP the
+    # case's standard input is a pipe nobody writes to, so it waits for an
+    # answer that never comes: _15_backupdb/itrack_10002 sat on that question
+    # for eighteen minutes before this check existed.  Without --replace the
+    # divergence is the other way round and just as wrong -- createdb refuses a
+    # database that exists, and the cache would quietly succeed.
+    #
+    # Reproducing the deletion here would mean reimplementing deletedb from a
+    # guess at which files belong to the database, and a wrong guess deletes a
+    # case's own data.  Standing aside costs one real createdb in the one
+    # situation where the two are not the same thing.
+    [ -e "${db}_vinf" ] && return 1
     origin=`cat "$dir/.origin"`
     cp -a --sparse=always "$dir/$db" "$dir/$db"_* "$dir/lob" . 2>/dev/null || return 1
     sed -i "s#$origin#$PWD#g" "${db}_vinf" "${db}_lginf" 2>/dev/null || return 1
