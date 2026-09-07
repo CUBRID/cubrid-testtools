@@ -1611,16 +1611,104 @@ function format_cubrid_version()
 	sed -i "/$cubrid_ver/d" $1
 }
 
+# A database that has been built once can be copied instead of built again.
+#
+# Creating one costs about 6 seconds of which half a second is CPU -- the rest is
+# waiting -- and 94% of the shell corpus creates one, so it is most of what a
+# short case costs. Copying a prepared database into place costs about 0.2.
+#
+# The key is what decides whether this is safe, and it is the parameters
+# themselves: the same name, the same volume-shaping options, the same charset
+# and the same engine binary produce the same database, so a hit cannot be the
+# wrong database. Options the key does not understand are not guessed at -- they
+# make it fall through to a real createdb.
+#
+# Parameters a case sets in cubrid.conf before calling this are deliberately not
+# in the key. supplemental_log, unicode_input_normalization, dont_reuse_heap_file,
+# isolation_level and lock_timeout_in_secs were each measured and none of them
+# changes what createdb writes; the server reads them when it starts, which is
+# after the copy, so the case's edit still takes effect. db_page_size and
+# db_volume_size do change it, and they arrive as options.
+#
+# Off unless CTP_DB_TEMPLATE_CACHE=1. It is a change to what every case sees.
+_ctp_template_dir()
+{
+    echo "${CTP_DB_TEMPLATE_DIR:-$HOME/.ctp_db_templates}"
+}
+
+_ctp_template_key()
+{
+    local name="" opts="" a
+    for a in "$@"
+    do
+        case "$a" in
+            -r) ;;
+            -*) opts="$opts $(echo $a | tr 'A-Z' 'a-z')" ;;
+            *)  if [ -z "$name" ]; then name=$a; else opts="$opts $(echo $a | tr 'A-Z' 'a-z')"; fi ;;
+        esac
+    done
+    [ -n "$name" ] || return 1
+    opts=`echo $opts | tr ' ' '\n' | sort | tr '\n' ' '`
+    echo "$name|$opts|${CUBRID_CHARSET}|`stat -c %s%Y $CUBRID/bin/cub_server 2>/dev/null`" \
+        | sha1sum | cut -c1-16
+}
+
+# The database name is part of the key, so nothing has to be renamed -- renaming
+# costs 3 seconds and would take back half of what this saves. What a copy does
+# have to fix is the two ASCII info files, which hold absolute paths, and the
+# databases.txt entry, which a file copy does not create.
+_ctp_template_restore()
+{
+    local key=$1 db=$2 dir origin
+    dir=`_ctp_template_dir`/$key
+    [ -f "$dir/.origin" ] || return 1
+    origin=`cat "$dir/.origin"`
+    cp -a --sparse=always "$dir/$db" "$dir/$db"_* "$dir/lob" . 2>/dev/null || return 1
+    sed -i "s#$origin#$PWD#g" "${db}_vinf" "${db}_lginf" 2>/dev/null || return 1
+    grep -v "^$db[[:space:]]" $CUBRID_DATABASES/databases.txt > $CUBRID_DATABASES/.ctp_dbt 2>/dev/null
+    mv $CUBRID_DATABASES/.ctp_dbt $CUBRID_DATABASES/databases.txt
+    printf '%s\t\t%s\tlocalhost\t%s\tfile:%s/lob\n' "$db" "$PWD" "$PWD" "$PWD" \
+        >> $CUBRID_DATABASES/databases.txt
+    return 0
+}
+
+_ctp_template_save()
+{
+    local key=$1 db=$2 dir
+    dir=`_ctp_template_dir`/$key
+    rm -rf "$dir"
+    mkdir -p "$dir" 2>/dev/null || return 1
+    cp -a --sparse=always "$db" "$db"_* lob "$dir/" 2>/dev/null || { rm -rf "$dir"; return 1; }
+    echo "$PWD" > "$dir/.origin"
+}
+
 function cubrid_createdb()
 {
     ##parse build version
     parse_build_version
+
+    local _ctp_key="" _ctp_db=""
+    if [ "$CTP_DB_TEMPLATE_CACHE" = "1" ]
+    then
+        _ctp_key=`_ctp_template_key "$@"`
+        for _ctp_db in "$@"; do case "$_ctp_db" in -*) ;; *) break ;; esac; done
+        if [ -n "$_ctp_key" ] && _ctp_template_restore "$_ctp_key" "$_ctp_db"
+        then
+            return 0
+        fi
+    fi
+
     if [ $cubrid_major -ge 9 -a $cubrid_minor -gt 1 ] || [ $cubrid_major -ge 10 ]
     then
 	cubrid createdb $* $CUBRID_CHARSET
     else
 	cubrid createdb $*
-    fi 
+    fi
+
+    if [ -n "$_ctp_key" ] && [ -n "$_ctp_db" ]
+    then
+        _ctp_template_save "$_ctp_key" "$_ctp_db"
+    fi
 }
 
 function search_in_upper_path {
