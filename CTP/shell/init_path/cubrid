@@ -150,14 +150,20 @@ _ctp_start_nowait() {
 
     if [ "$mode" = "verify" ]; then
         wait $bg
-        local rc=$?
-        if [ $rc -ne 0 ] || ! diff -q "$tmp.out" cubrid_failure_stdout.txt >/dev/null 2>&1            || [ -s "$tmp.err" ]; then
-            {
-                echo "=== $(date '+%F %T') $(pwd) : server start $db (jsp=$jsp master=$master exit=$rc)"
+        local rc=$? verdict="same"
+        if [ $rc -ne 0 ] || [ -s "$tmp.err" ] || ! diff -q "$tmp.out" cubrid_failure_stdout.txt >/dev/null 2>&1; then
+            verdict="DIFFERS"
+        fi
+        # Every fast path is recorded, not only the ones that differ: a log
+        # that stays empty otherwise means either that nothing differed or
+        # that nothing was taken, and those are not the same evidence.
+        {
+            echo "$verdict `date '+%F %T'` `pwd` : server start $db (jsp=$jsp master=$master exit=$rc)"
+            if [ "$verdict" != "same" ]; then
                 diff "$tmp.out" cubrid_failure_stdout.txt 2>&1 | sed 's/^/  out /'
                 sed 's/^/  err /' "$tmp.err"
-            } >> "${CTP_NOWAIT_AUDIT:-${CUBRID}/tmp/nowait-audit.log}" 2>/dev/null
-        fi
+            fi
+        } >> "${CTP_NOWAIT_AUDIT:-${CUBRID}/tmp/nowait-audit.log}" 2>/dev/null
         rm -f "$tmp" "$tmp.out" "$tmp.err"
     else
         # The utility is still running and still writing to these; unlinking
