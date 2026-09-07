@@ -1669,17 +1669,104 @@ _ctp_template_restore()
     mv $CUBRID_DATABASES/.ctp_dbt $CUBRID_DATABASES/databases.txt
     printf '%s\t\t%s\tlocalhost\t%s\tfile:%s/lob\n' "$db" "$PWD" "$PWD" "$PWD" \
         >> $CUBRID_DATABASES/databases.txt
+    # One more case has found this template worth having.
+    local refs
+    refs=`cat "$dir/.refs" 2>/dev/null`
+    [ -n "$refs" ] || refs=0
+    echo $((refs + 1)) > "$dir/.refs" 2>/dev/null
+    return 0
+}
+
+# The store has a ceiling, and it is not optional.  Measured over a 25-case
+# sample the templates reached 6.7 GB across 16 keys; the corpus has 129 argument
+# shapes, so an uncapped store fills the disk of a machine whose whole job is to
+# tell you whether something failed.  A run that dies because the disk is full
+# reports the same way a real failure does, which is the worst kind of wrong
+# answer a test harness can give.
+#
+# Eviction is by reference count: how many cases have used a template is the only
+# evidence available about which one is worth keeping, and the corpus is heavily
+# skewed -- three argument shapes cover 88% of the calls.  A template counts as
+# used once when it is created, so a new one is not the first thing thrown away.
+_ctp_template_cap_mb()
+{
+    echo "${CTP_DB_TEMPLATE_MAX_MB:-10240}"
+}
+
+_ctp_template_store_mb()
+{
+    du -sm "`_ctp_template_dir`" 2>/dev/null | awk '{print $1+0}'
+}
+
+_ctp_template_free_mb()
+{
+    df -Pm "`_ctp_template_dir`" 2>/dev/null | awk 'NR==2 {print $4+0}'
+}
+
+# _ctp_template_evict -- bring the store back under the cap.
+#
+# It takes no size, because the candidate is already inside the store by the time
+# this runs and the store's own measurement therefore includes it. Passing a size
+# as well counted it twice, which is how an 800 MB cap held one 356 MB template.
+_ctp_template_evict()
+{
+    local store cap used d refs
+    store=`_ctp_template_dir`
+    cap=`_ctp_template_cap_mb`
+    used=`_ctp_template_store_mb`
+    [ -n "$used" ] || used=0
+
+    while [ $used -gt $cap ]
+    do
+        d=`for x in "$store"/*/; do
+               [ -d "$x" ] || continue
+               refs=\`cat "$x/.refs" 2>/dev/null\`
+               [ -n "$refs" ] || refs=0
+               echo "$refs $x"
+           done | sort -n | head -1 | cut -d' ' -f2-`
+        [ -n "$d" ] || return 1          # nothing left to give up
+        rm -rf "$d"
+        used=`_ctp_template_store_mb`
+        [ -n "$used" ] || used=0
+    done
     return 0
 }
 
 _ctp_template_save()
 {
-    local key=$1 db=$2 dir
+    local key=$1 db=$2 dir tmp size
     dir=`_ctp_template_dir`/$key
+    mkdir -p "`_ctp_template_dir`" 2>/dev/null || return 1
+
+    # Copy first, then measure what was actually stored.  A template is kept
+    # sparse and is half the size of the database it came from, so measuring the
+    # source and comparing against the store is how the first two versions of
+    # this got the arithmetic wrong in both directions.
+    # Dot-prefixed so the eviction loop's glob does not see it as a candidate and
+    # throw away the template it is in the middle of building.
+    tmp=`_ctp_template_dir`/.tmp.$$
+    rm -rf "$tmp"
+    mkdir -p "$tmp" 2>/dev/null || return 1
+    cp -a --sparse=always "$db" "$db"_* lob "$tmp/" 2>/dev/null || { rm -rf "$tmp"; return 1; }
+    size=`du -sm "$tmp" 2>/dev/null | awk '{print $1+0}'`
+    [ -n "$size" ] || size=0
+
+    # Never take the last of the disk, whatever the cap says.  The cap is a
+    # policy; this is the machine saying no.
+    local free
+    free=`_ctp_template_free_mb`
+    if [ -n "$free" ] && [ "$free" -lt "$size" ]; then rm -rf "$tmp"; return 1; fi
+
+    echo "$PWD" > "$tmp/.origin"
+    echo 1 > "$tmp/.refs"
+    # Moved into place, so a reader never sees half a template and two runs
+    # sharing the store cannot interleave. Eviction comes after the move, when
+    # the new template is a candidate like any other and its single reference is
+    # what keeps it -- briefly -- ahead of one nothing has used.
     rm -rf "$dir"
-    mkdir -p "$dir" 2>/dev/null || return 1
-    cp -a --sparse=always "$db" "$db"_* lob "$dir/" 2>/dev/null || { rm -rf "$dir"; return 1; }
-    echo "$PWD" > "$dir/.origin"
+    mv "$tmp" "$dir" 2>/dev/null || { rm -rf "$tmp"; return 1; }
+    _ctp_template_evict
+    return 0
 }
 
 function cubrid_createdb()
