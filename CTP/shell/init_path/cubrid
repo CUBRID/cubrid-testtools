@@ -32,11 +32,151 @@ cub_util=$(echo $1|tr "[A-Z]" "[a-z]") >/dev/null 2>&1
 
 export PATH=$CUBRID/bin:$PATH >/dev/null
 
+# --- server start, without waiting for the utility to finish -----------------
+#
+# `cubrid server start` answers the network about two seconds before it returns.
+# The server is registered with the master and accepting csql connections at
+# 1.16s; the utility exits at 3.02s, and the difference is util_service.c
+# sleeping and then polling. 2589 of the 3452 shell cases start a server, so the
+# difference is hours.
+#
+# What the fast path costs is that the output has to be produced here rather
+# than read from the utility, because the utility buffers everything and flushes
+# it at exit -- at the moment the server becomes usable, nothing has been
+# printed yet. 150 cases compare that output, so it is written from the grammar
+# below, which was measured rather than guessed:
+#
+#   [jsp=n]        java_stored_procedure system parameter is not enabled
+#   [master down]  @ cubrid master start
+#   [master down]  ++ cubrid master start: success
+#                  @ cubrid server start: <db>
+#                  ++ cubrid server start: success
+#   [jsp=y]        Calling java stored procedure is allowed
+#   [jsp=n]        Calling java stored procedure is not allowed
+#
+# all on stdout, stderr empty, exit 0. Anything the grammar does not cover --
+# a flag, a server already up, a parameter this cannot read, a start that fails
+# -- falls back to the wait, so the synthesised text is only ever the one shape
+# it was measured against.
+#
+#   CTP_SERVER_START_NOWAIT=1        take the fast path
+#   CTP_SERVER_START_NOWAIT=verify   take it, then wait anyway and record any
+#                                    difference in $CTP_NOWAIT_AUDIT; no faster
+#                                    than before, and the way to earn the 1
+#   unset, or anything else          wait, as before
+
+# The effective java_stored_procedure for a database: [@db] overrides [common],
+# and printing nothing means it could not be read, which sends the caller back
+# to the wait.
+_ctp_jsp_value() {
+    awk -v db="$1" '
+        /^[[:space:]]*\[/ { s=$0; gsub(/[][[:space:]]/,"",s); next }
+        /^[[:space:]]*java_stored_procedure[[:space:]]*=/ {
+            v=$0; sub(/^[^=]*=[[:space:]]*/,"",v); gsub(/[[:space:]\r]/,"",v); v=tolower(v)
+            if (v=="yes"||v=="1"||v=="true")  v="y"
+            if (v=="no" ||v=="0"||v=="false") v="n"
+            if (v!="y" && v!="n") { bad=1; next }
+            if (s=="@" db) d=v; else if (s=="" || s=="common") c=v
+        }
+        END { if (bad) exit 1; if (d!="") print d; else if (c!="") print c }
+    ' "$CUBRID/conf/cubrid.conf" 2>/dev/null
+}
+
+_ctp_start_output() {   # $1 db, $2 jsp y|n, $3 master was running yes|no
+    if [ "$2" = "n" ]; then
+        echo "java_stored_procedure system parameter is not enabled"
+    fi
+    if [ "$3" = "no" ]; then
+        echo "@ cubrid master start"
+        echo "++ cubrid master start: success"
+    fi
+    echo "@ cubrid server start: $1"
+    echo "++ cubrid server start: success"
+    if [ "$2" = "n" ]; then
+        echo "Calling java stored procedure is not allowed"
+    else
+        echo "Calling java stored procedure is allowed"
+    fi
+}
+
+# Writes cubrid_failure_stdout.txt and cubrid_failure_stderr.txt and sets
+# _ctp_nowait_exit, or returns non-zero to say the caller should run the
+# utility itself.
+_ctp_start_nowait() {
+    local mode db jsp master ready tmp bg
+    case "${CTP_SERVER_START_NOWAIT}" in 1|verify) mode="${CTP_SERVER_START_NOWAIT}" ;; *) return 1 ;; esac
+    [ $# -eq 3 ] || return 1
+    [ "$(echo "$2" | tr 'A-Z' 'a-z')" = "start" ] || return 1
+    db="$3"
+    case "$db" in -*|*@*|"") return 1 ;; esac
+
+    jsp=$(_ctp_jsp_value "$db")
+    [ "$jsp" = "y" -o "$jsp" = "n" ] || return 1
+
+    if cub_commdb -P >/dev/null 2>&1; then
+        master="yes"
+        # A server already up prints something else and costs nothing to start.
+        cub_commdb -P 2>/dev/null | grep -q "Server ${db} " && return 1
+    else
+        master="no"
+    fi
+
+    tmp=$(mktemp "${TMPDIR:-/tmp}/.ctp_nowait.XXXXXX") || return 1
+    cubrid server start "$db" >"$tmp.out" 2>"$tmp.err" &
+    bg=$!
+
+    # cub_commdb -P listing the database and csql connecting to it happen at the
+    # same instant, so this is the server being usable and not a registration
+    # that precedes it.
+    ready="no"
+    while kill -0 $bg 2>/dev/null; do
+        if cub_commdb -P 2>/dev/null | grep -q "Server ${db} "; then ready="yes"; break; fi
+        sleep 0.05
+    done
+
+    if [ "$ready" != "yes" ]; then
+        # It finished first, or it failed. Either way its own output is better
+        # than anything written here.
+        wait $bg; _ctp_nowait_exit=$?
+        cat "$tmp.out" > cubrid_failure_stdout.txt
+        cat "$tmp.err" > cubrid_failure_stderr.txt
+        rm -f "$tmp" "$tmp.out" "$tmp.err"
+        return 0
+    fi
+
+    _ctp_start_output "$db" "$jsp" "$master" > cubrid_failure_stdout.txt
+    : > cubrid_failure_stderr.txt
+    _ctp_nowait_exit=0
+
+    if [ "$mode" = "verify" ]; then
+        wait $bg
+        local rc=$?
+        if [ $rc -ne 0 ] || ! diff -q "$tmp.out" cubrid_failure_stdout.txt >/dev/null 2>&1            || [ -s "$tmp.err" ]; then
+            {
+                echo "=== $(date '+%F %T') $(pwd) : server start $db (jsp=$jsp master=$master exit=$rc)"
+                diff "$tmp.out" cubrid_failure_stdout.txt 2>&1 | sed 's/^/  out /'
+                sed 's/^/  err /' "$tmp.err"
+            } >> "${CTP_NOWAIT_AUDIT:-${CUBRID}/tmp/nowait-audit.log}" 2>/dev/null
+        fi
+        rm -f "$tmp" "$tmp.out" "$tmp.err"
+    else
+        # The utility is still running and still writing to these; unlinking
+        # them now hands the inode to it and reclaims it when it exits.
+        rm -f "$tmp" "$tmp.out" "$tmp.err"
+    fi
+    return 0
+}
+
+
 if [ "$OS" != "Windows_NT" -a "$cub_util" == "deletedb" ]; then
     do_check_more_errors "`pwd`" >/dev/null 2>&1
 elif [ "$cub_util" == "server" -o "$cub_util" == "checkdb" ]; then
-    cubrid "$@" >cubrid_failure_stdout.txt 2>cubrid_failure_stderr.txt
-    exit_value=$?
+    if _ctp_start_nowait "$@"; then
+        exit_value=${_ctp_nowait_exit}
+    else
+        cubrid "$@" >cubrid_failure_stdout.txt 2>cubrid_failure_stderr.txt
+        exit_value=$?
+    fi
     cat cubrid_failure_stdout.txt > cubrid_failure_desc.txt
     cat cubrid_failure_stderr.txt >> cubrid_failure_desc.txt
     cat cubrid_failure_stdout.txt >&1
