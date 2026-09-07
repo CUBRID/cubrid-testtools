@@ -37,14 +37,14 @@ export PATH=$CUBRID/bin:$PATH >/dev/null
 # `cubrid server start` answers the network about two seconds before it returns.
 # The server is registered with the master and accepting csql connections at
 # 1.16s; the utility exits at 3.02s, and the difference is util_service.c
-# sleeping and then polling. 2589 of the 3452 shell cases start a server, so the
-# difference is hours.
+# sleeping and then polling. 2590 of the 3452 shell case scripts start a server,
+# so the difference is hours.
 #
 # What the fast path costs is that the output has to be produced here rather
 # than read from the utility, because the utility buffers everything and flushes
 # it at exit -- at the moment the server becomes usable, nothing has been
-# printed yet. 150 cases compare that output, so it is written from the grammar
-# below, which was measured rather than guessed:
+# printed yet. 14 cases hold that output in an answer file, so it is written from
+# the grammar below, which was measured rather than guessed:
 #
 #   [jsp=n]        java_stored_procedure system parameter is not enabled
 #   [master down]  @ cubrid master start
@@ -116,13 +116,13 @@ _ctp_start_nowait() {
     if cub_commdb -P >/dev/null 2>&1; then
         master="yes"
         # A server already up prints something else and costs nothing to start.
-        cub_commdb -P 2>/dev/null | grep -q "Server ${db} " && return 1
+        cub_commdb -P 2>/dev/null | grep -qF "Server ${db} " && return 1
     else
         master="no"
     fi
 
     tmp=$(mktemp "${TMPDIR:-/tmp}/.ctp_nowait.XXXXXX") || return 1
-    cubrid server start "$db" >"$tmp.out" 2>"$tmp.err" &
+    cubrid server start "$db" </dev/null >"$tmp.out" 2>"$tmp.err" &
     bg=$!
 
     # cub_commdb -P listing the database and csql connecting to it happen at the
@@ -130,7 +130,7 @@ _ctp_start_nowait() {
     # that precedes it.
     ready="no"
     while kill -0 $bg 2>/dev/null; do
-        if cub_commdb -P 2>/dev/null | grep -q "Server ${db} "; then ready="yes"; break; fi
+        if cub_commdb -P 2>/dev/null | grep -qF "Server ${db} "; then ready="yes"; break; fi
         sleep 0.05
     done
 
