@@ -1929,17 +1929,37 @@ function cubrid_createdb()
         fi
     fi
 
+    local _ctp_rc
     if [ $cubrid_major -ge 9 -a $cubrid_minor -gt 1 ] || [ $cubrid_major -ge 10 ]
     then
 	cubrid createdb $* $CUBRID_CHARSET
     else
 	cubrid createdb $*
     fi
+    _ctp_rc=$?
 
-    if [ -n "$_ctp_key" ] && [ -n "$_ctp_db" ]
+    # The status is captured before anything else runs, and returned at the end.
+    #
+    # Without this the function's status is the *save* block's, and a shell `if`
+    # whose condition is false exits 0 -- so with the cache off, where _ctp_key
+    # is empty, cubrid_createdb returned success whatever createdb did. Upstream
+    # ends the function with `cubrid createdb $*` and therefore returns its
+    # status; adding a statement after it silently took that away.
+    #
+    # Measured: _06_createdb/itrack_10005 creates a database under a
+    # CUBRID_DATABASES that does not exist and requires it to fail. The engine
+    # fails it correctly -- "Could not obtain write access to database file" --
+    # and the wrapper reported success, so the case wrote "DB exist!" and failed.
+    # Four _06_createdb cases and others behaved the same way.
+    #
+    # And the save is gated on success too: a template built from a database
+    # createdb did not finish is a template that poisons every later restore of
+    # that key.
+    if [ -n "$_ctp_key" ] && [ -n "$_ctp_db" ] && [ "$_ctp_rc" -eq 0 ]
     then
         _ctp_template_save "$_ctp_key" "$_ctp_db"
     fi
+    return $_ctp_rc
 }
 
 function search_in_upper_path {
