@@ -113,6 +113,19 @@ _ctp_start_nowait() {
     jsp=$(_ctp_jsp_value "$db")
     [ "$jsp" = "y" -o "$jsp" = "n" ] || return 1
 
+    # "Calling java stored procedure is..." is printed by cub_javasp itself, and
+    # process_javasp_start does not spawn it when a javasp server for this
+    # database is already up -- so the line is simply absent, and writing it
+    # would be writing something the engine did not say. Three of 173 fast paths
+    # over the 217-case corpus were exactly this.
+    #
+    # Only "is not running" earns the fast path. A javasp that is up, a status
+    # that errors, a status that says something unrecognised: all of them wait.
+    case "`cubrid javasp status \"$db\" 2>&1`" in
+        *"is not running"*) ;;
+        *) return 1 ;;
+    esac
+
     if cub_commdb -P >/dev/null 2>&1; then
         master="yes"
         # A server already up prints something else and costs nothing to start.

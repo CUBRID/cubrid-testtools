@@ -1649,7 +1649,19 @@ _ctp_template_key()
     done
     [ -n "$name" ] || return 1
     opts=`echo $opts | tr ' ' '\n' | sort | tr '\n' ' '`
-    echo "$name|$opts|${CUBRID_CHARSET}|`stat -c %s%Y $CUBRID/bin/cub_server 2>/dev/null`" \
+
+    # The volume sizes decide how big the database is, and only 67% of the cases
+    # that create one say --db-volume-size while 40% say --log-volume-size: for
+    # the rest the size comes from cubrid.conf, so it belongs in the key.  It was
+    # not there, and the difference is not small -- a log volume of 512M against
+    # 20M is 707 MB on disk against 215.  Without this a run that lowers the
+    # defaults restores templates the old ones built, at the old size.
+    local vols
+    vols=`awk -F= '/^[[:space:]]*(db|log)_volume_size[[:space:]]*=/ {
+              k=$1; v=$2; gsub(/[[:space:]]/,"",k); gsub(/[[:space:]\r]/,"",v)
+              print k "=" v }' "$CUBRID/conf/cubrid.conf" 2>/dev/null | sort | tr '\n' ','`
+
+    echo "$name|$opts|${CUBRID_CHARSET}|$vols|`stat -c %s%Y $CUBRID/bin/cub_server 2>/dev/null`" \
         | sha1sum | cut -c1-16
 }
 
@@ -1679,18 +1691,29 @@ _ctp_template_restore()
     # case's own data.  Standing aside costs one real createdb in the one
     # situation where the two are not the same thing.
     [ -e "${db}_vinf" ] && return 1
-    origin=`cat "$dir/.origin"`
-    cp -a --sparse=always "$dir/$db" "$dir/$db"_* "$dir/lob" . 2>/dev/null || return 1
-    sed -i "s#$origin#$PWD#g" "${db}_vinf" "${db}_lginf" 2>/dev/null || return 1
+    # Slots share this store, so the copy has to be protected from the eviction
+    # that would otherwise delete its source halfway through.  A shared lock:
+    # any number of slots may restore the same template at once, and save and
+    # eviction take the same lock exclusively.  Everything that reads $dir is
+    # inside it, because a template read outside the lock may already be a
+    # different template.
+    #
+    # A missing flock fails the subshell, which falls through to a real
+    # createdb.  Slower, never wrong, and no special case to write.
+    ( flock -s 9 || exit 1
+      origin=`cat "$dir/.origin" 2>/dev/null` || exit 1
+      [ -n "$origin" ] || exit 1
+      cp -a --sparse=always "$dir/$db" "$dir/$db"_* "$dir/lob" . 2>/dev/null || exit 1
+      sed -i "s#$origin#$PWD#g" "${db}_vinf" "${db}_lginf" 2>/dev/null || exit 1
+      # One more case has found this template worth having.
+      refs=`cat "$dir/.refs" 2>/dev/null`
+      [ -n "$refs" ] || refs=0
+      echo $((refs + 1)) > "$dir/.refs" 2>/dev/null
+    ) 9>"`_ctp_template_dir`/.lk.$key" || return 1
     grep -v "^$db[[:space:]]" $CUBRID_DATABASES/databases.txt > $CUBRID_DATABASES/.ctp_dbt 2>/dev/null
     mv $CUBRID_DATABASES/.ctp_dbt $CUBRID_DATABASES/databases.txt
     printf '%s\t\t%s\tlocalhost\t%s\tfile:%s/lob\n' "$db" "$PWD" "$PWD" "$PWD" \
         >> $CUBRID_DATABASES/databases.txt
-    # One more case has found this template worth having.
-    local refs
-    refs=`cat "$dir/.refs" 2>/dev/null`
-    [ -n "$refs" ] || refs=0
-    echo $((refs + 1)) > "$dir/.refs" 2>/dev/null
     return 0
 }
 
@@ -1727,24 +1750,35 @@ _ctp_template_free_mb()
 # as well counted it twice, which is how an 800 MB cap held one 356 MB template.
 _ctp_template_evict()
 {
-    local store cap used d refs
+    local store cap used d refs k
     store=`_ctp_template_dir`
     cap=`_ctp_template_cap_mb`
     used=`_ctp_template_store_mb`
     [ -n "$used" ] || used=0
 
+    # Templates another slot is restoring from are skipped rather than waited
+    # for: the lock is what keeps a copy from losing its source, and blocking
+    # here would stall the case that wanted the space.  A skipped template stays
+    # a candidate for the next run, and if every one of them is in use this
+    # gives up rather than spinning.
+    local busy=" "
     while [ $used -gt $cap ]
     do
         d=`for x in "$store"/*/; do
                [ -d "$x" ] || continue
+               case "$busy" in *" \`basename "$x"\` "*) continue ;; esac
                refs=\`cat "$x/.refs" 2>/dev/null\`
                [ -n "$refs" ] || refs=0
                echo "$refs $x"
            done | sort -n | head -1 | cut -d' ' -f2-`
         [ -n "$d" ] || return 1          # nothing left to give up
-        rm -rf "$d"
-        used=`_ctp_template_store_mb`
-        [ -n "$used" ] || used=0
+        k=`basename "$d"`
+        if ( flock -n -x 9 || exit 1; rm -rf "$d" ) 9>"$store/.lk.$k"; then
+            used=`_ctp_template_store_mb`
+            [ -n "$used" ] || used=0
+        else
+            busy="$busy$k "
+        fi
     done
     return 0
 }
@@ -1780,8 +1814,10 @@ _ctp_template_save()
     # sharing the store cannot interleave. Eviction comes after the move, when
     # the new template is a candidate like any other and its single reference is
     # what keeps it -- briefly -- ahead of one nothing has used.
-    rm -rf "$dir"
-    mv "$tmp" "$dir" 2>/dev/null || { rm -rf "$tmp"; return 1; }
+    ( flock -x 9 || exit 1
+      rm -rf "$dir"
+      mv "$tmp" "$dir" 2>/dev/null || exit 1
+    ) 9>"`_ctp_template_dir`/.lk.$key" || { rm -rf "$tmp"; return 1; }
     _ctp_template_evict
     return 0
 }
