@@ -1705,11 +1705,14 @@ _ctp_template_restore()
       [ -n "$origin" ] || exit 1
       cp -a --sparse=always "$dir/$db" "$dir/$db"_* "$dir/lob" . 2>/dev/null || exit 1
       sed -i "s#$origin#$PWD#g" "${db}_vinf" "${db}_lginf" 2>/dev/null || exit 1
-      # One more case has found this template worth having.
-      refs=`cat "$dir/.refs" 2>/dev/null`
-      [ -n "$refs" ] || refs=0
-      echo $((refs + 1)) > "$dir/.refs" 2>/dev/null
     ) 9>"`_ctp_template_dir`/.lk.$key" || return 1
+
+    # One more case has found this template worth having.  Recorded as an append
+    # to this process's own tally rather than a read-modify-write of a shared
+    # counter: N slots restoring at once lose increments that way, and the
+    # counter is only ever read when the store is over its cap.  Eviction folds
+    # the tallies in when it needs them.
+    echo "$key" >> "`_ctp_template_dir`/.used.$$" 2>/dev/null
     grep -v "^$db[[:space:]]" $CUBRID_DATABASES/databases.txt > $CUBRID_DATABASES/.ctp_dbt 2>/dev/null
     mv $CUBRID_DATABASES/.ctp_dbt $CUBRID_DATABASES/databases.txt
     printf '%s\t\t%s\tlocalhost\t%s\tfile:%s/lob\n' "$db" "$PWD" "$PWD" "$PWD" \
@@ -1748,6 +1751,98 @@ _ctp_template_free_mb()
 # It takes no size, because the candidate is already inside the store by the time
 # this runs and the store's own measurement therefore includes it. Passing a size
 # as well counted it twice, which is how an 800 MB cap held one 356 MB template.
+
+# The plan is what a previous run recorded: the keys the cases will ask for, in
+# the order they will ask.  With it, eviction stops guessing.
+#
+# Cache replacement has a known optimum when the reference order is known --
+# discard the entry whose next use is furthest away -- and it is normally
+# unusable because the future is not known.  Here the ranked queue *is* the
+# future, so the two ways a reference count is wrong both disappear: a template
+# used ten times early and never again scores infinity and goes first, and one
+# about to be used, which a count would rate lowest because it was just built,
+# is protected.
+#
+# Without a plan this falls back to the reference count, which is what the first
+# run of a corpus has and all a legacy CTP has.  A stale plan costs a miss and a
+# real createdb; it cannot cost correctness.
+_ctp_template_plan() { echo "${CTP_DB_TEMPLATE_PLAN:-`_ctp_template_dir`/.plan}"; }
+
+# Fold each process's tally into the shared counts.  Only eviction reads them,
+# so this is the only place that has to pay for it.  A tally older than the plan
+# belongs to a previous run: it counts towards .refs, which is cumulative, but
+# not towards this run's position in the plan.
+_ctp_template_fold_tallies()
+{
+    local store plan t k n r
+    store=`_ctp_template_dir`
+    plan=`_ctp_template_plan`
+    for t in "$store"/.used.*; do
+        [ -f "$t" ] || continue
+        [ -s "$t" ] || { rm -f "$t"; continue; }
+        # A tally this run is still writing is the plan's cursor -- how far
+        # through it each key has got -- so it is left alone.  Folding it would
+        # also double-count it the next time eviction runs.  Everything else is
+        # a previous run's, and belongs in the cumulative count that the
+        # fallback uses.
+        if [ -f "$plan" ] && [ ! "$t" -ot "$plan" ]; then continue; fi
+        awk '{c[$0]++} END {for (k in c) print k, c[k]}' "$t" |
+        while read -r k n; do
+            [ -d "$store/$k" ] || continue
+            r=`cat "$store/$k/.refs" 2>/dev/null`; [ -n "$r" ] || r=0
+            echo $((r + n)) > "$store/$k/.refs" 2>/dev/null
+        done
+        rm -f "$t"
+    done
+}
+
+# Print the template to give up next, or nothing.  $1 is a space-delimited list
+# of keys another slot is using.
+_ctp_template_worst()
+{
+    local store plan busy=$1
+    store=`_ctp_template_dir`
+    plan=`_ctp_template_plan`
+
+    if [ ! -f "$plan" ]; then
+        for x in "$store"/*/; do
+            [ -d "$x" ] || continue
+            case "$busy" in *" `basename "$x"` "*) continue ;; esac
+            local r; r=`cat "$x/.refs" 2>/dev/null`; [ -n "$r" ] || r=0
+            echo "$r $x"
+        done | sort -n | head -1 | cut -d' ' -f2-
+        return
+    fi
+
+    # used[k] is how many times this run has already taken k, so the next use is
+    # the (used+1)-th time the plan mentions it.  A key the plan does not mention
+    # again scores infinity and is given up first.
+    local live=""
+    for t in "$store"/.used.*; do
+        [ -f "$t" ] && [ ! "$t" -ot "$plan" ] && live="$live $t"
+    done
+    { [ -n "$live" ] && cat $live 2>/dev/null | sed 's/^/U /'
+      sed 's/^/P /' "$plan"
+      for x in "$store"/*/; do
+          [ -d "$x" ] || continue
+          case "$busy" in *" `basename "$x"` "*) continue ;; esac
+          echo "C `basename "$x"` $x"
+      done
+    } | awk '
+        $1=="U" { used[$2]++; next }
+        $1=="P" { pos[$2 "|" (seen[$2]++)] = ++n; next }
+        $1=="C" { cand[$2] = $3 }
+        END {
+            best=""; bestscore=-1
+            for (k in cand) {
+                p = pos[k "|" (used[k]+0)]
+                score = (p ? p : 1e18)
+                if (score > bestscore) { bestscore = score; best = cand[k] }
+            }
+            if (best != "") print best
+        }'
+}
+
 _ctp_template_evict()
 {
     local store cap used d refs k
@@ -1755,6 +1850,8 @@ _ctp_template_evict()
     cap=`_ctp_template_cap_mb`
     used=`_ctp_template_store_mb`
     [ -n "$used" ] || used=0
+
+    _ctp_template_fold_tallies
 
     # Templates another slot is restoring from are skipped rather than waited
     # for: the lock is what keeps a copy from losing its source, and blocking
@@ -1764,13 +1861,7 @@ _ctp_template_evict()
     local busy=" "
     while [ $used -gt $cap ]
     do
-        d=`for x in "$store"/*/; do
-               [ -d "$x" ] || continue
-               case "$busy" in *" \`basename "$x"\` "*) continue ;; esac
-               refs=\`cat "$x/.refs" 2>/dev/null\`
-               [ -n "$refs" ] || refs=0
-               echo "$refs $x"
-           done | sort -n | head -1 | cut -d' ' -f2-`
+        d=`_ctp_template_worst "$busy"`
         [ -n "$d" ] || return 1          # nothing left to give up
         k=`basename "$d"`
         if ( flock -n -x 9 || exit 1; rm -rf "$d" ) 9>"$store/.lk.$k"; then
