@@ -24,6 +24,37 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
+# Where a failure snapshot goes, and whether one is taken at all.
+#
+# A snapshot is a copy of the whole $CUBRID install plus the case directory,
+# tarred -- 618 MB of install per failing case on the build this was written
+# against. A run with seventy failures therefore writes tens of gigabytes into
+# the home directory, which is both a full disk and a wall-clock cost inside the
+# measurement. Neither is visible from the run's own output.
+#
+# The path was ~/ERROR_BACKUP in three places and could not be moved. It still
+# defaults there, so nothing changes for a run that sets nothing.
+#
+#   CTP_ERROR_BACKUP_DIR=/somewhere   put them somewhere else
+#   CTP_ERROR_BACKUP=off              take none at all
+#
+# The existing SKIP_CHECK_FATAL_ERROR and SKIP_CHECK_RECOVERY_ERROR stay as they
+# were, and neither covers this: SKIP_CHECK_FATAL_ERROR is one arm of an `||`
+# whose other arm fires whenever a core file exists, so a core is snapshotted
+# whatever it says.
+_ctp_error_backup_dir()
+{
+    echo "${CTP_ERROR_BACKUP_DIR:-$HOME/ERROR_BACKUP}"
+}
+
+_ctp_error_backup_off()
+{
+    case "${CTP_ERROR_BACKUP:-}" in
+        off|OFF|no|NO|0|false|FALSE) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 function generage_readme {
     test_case_dir=$1
     backup_dir=$2
@@ -119,7 +150,7 @@ function do_check_more_errors {
     cub_build_id=`cubrid_rel | grep CUBRID | awk -F ')' '{print $1}' | awk -F '(' '{print $NF}'`
     current_datetime=`date "+%Y%m%d_%H%M%S"`
     backup_name=AUTO_${cub_build_id}_${current_datetime}
-    backup_dir=~/ERROR_BACKUP/${backup_name}
+    backup_dir=`_ctp_error_backup_dir`/${backup_name}
     host_ip="${TEST_SSH_HOST}"
     if [ "${host_ip}" = "" ]; then
         host_ip=`hostname -i`
@@ -127,7 +158,9 @@ function do_check_more_errors {
     export TEST_INFO_ENV="ssh -p ${TEST_SSH_PORT} ${USER}@${host_ip}"
     export TEST_INFO_BUILD_ID=${cub_build_id}
 
-    if [ $core_dump_cnt -gt 0 ] || [ $fatal_err_cnt -gt $old_fatal_err_cnt -a "$SKIP_CHECK_FATAL_ERROR" != "TRUE" ]; then
+    if _ctp_error_backup_off; then
+        : # asked for none
+    elif [ $core_dump_cnt -gt 0 ] || [ $fatal_err_cnt -gt $old_fatal_err_cnt -a "$SKIP_CHECK_FATAL_ERROR" != "TRUE" ]; then
         mkdir -p $backup_dir
 
         generage_readme ${test_case_dir} ${backup_dir}
@@ -181,7 +214,7 @@ function do_check_more_errors {
         cp -rfp $CUBRID $backup_dir/CUBRID
         cp -rfp $test_case_dir $backup_dir
         cp -rfp $init_path $backup_dir/init_path
-        cd ~/ERROR_BACKUP
+        cd `_ctp_error_backup_dir`
         tar zcvf AUTO_${cub_build_id}_${current_datetime}.tar.gz AUTO_${cub_build_id}_${current_datetime}
         rm -rf AUTO_${cub_build_id}_${current_datetime}
         cd -
@@ -206,6 +239,11 @@ function should_save_snapshot_for_recovery {
 }
 
 function do_save_snapshot_by_type {
+    # One switch covers both places a snapshot is taken, so that turning it off
+    # actually turns it off.
+    if _ctp_error_backup_off; then
+        return 0
+    fi
     test_case_dir=$1
     kind=$2
     test_case_dir=${test_case_dir%/cases*}
@@ -215,7 +253,7 @@ function do_save_snapshot_by_type {
     current_datetime=`date "+%Y%m%d_%H%M%S"`
 
     backup_fname=AUTO_${kind}_${cub_build_id}_${current_datetime}
-    backup_dir=~/ERROR_BACKUP/${backup_fname}
+    backup_dir=`_ctp_error_backup_dir`/${backup_fname}
 
     mkdir -p ${backup_dir}
     cp -rfp $CUBRID ${backup_dir}
