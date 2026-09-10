@@ -1661,7 +1661,41 @@ _ctp_template_key()
               k=$1; v=$2; gsub(/[[:space:]]/,"",k); gsub(/[[:space:]\r]/,"",v)
               print k "=" v }' "$CUBRID/conf/cubrid.conf" 2>/dev/null | sort | tr '\n' ','`
 
-    echo "$name|$opts|${CUBRID_CHARSET}|$vols|`stat -c %s%Y $CUBRID/bin/cub_server 2>/dev/null`" \
+    # The name is in the key so that a hit needs no rename -- but that is what
+    # holds the hit rate down. Measured over the corpus: 1,695 distinct database
+    # names in 2,440 literal `db=` assignments, and 1,487 of them are used once,
+    # so each is a guaranteed miss however ordinary its options are. Only 39% of
+    # creations land on a name that repeats at all.
+    #
+    # CTP_DB_TEMPLATE_RENAME=1 takes the name out and pays `cubrid renamedb` on
+    # the hit instead: about 3 s against createdb's 6, so a name that never
+    # repeats goes from a 6 s miss to a 3.2 s hit while a repeated one gives up
+    # 3 s. Off by default, because which way that trade lands is a measurement
+    # and not an argument.
+    if [ "$CTP_DB_TEMPLATE_RENAME" = "1" ]; then name=""; fi
+
+    # createdb does not depend only on its arguments and the server binary. It
+    # reads the locale library and the timezone library, and a case is entitled
+    # to change either before creating a database -- some exist to do exactly
+    # that. Without them in the key the cache answers for a createdb that would
+    # not have happened:
+    #
+    #   _24_apricot/_08_I18N/_02_msg_lang/_01_createdb_01 runs `do_make_locale
+    #   force` and then creates; a template from before the rebuild carries the
+    #   old locale data.
+    #
+    #   _30_banana_qa/issue_14183_make_tz/issues/bug_bts_15940 moves
+    #   libcubrid_timezones.so aside and its own comment says "should fail
+    #   because of timezone lib error" -- and a cache hit makes it succeed,
+    #   because no createdb runs to fail.
+    #
+    # Both showed up as cases that fail only with the cache on. A missing file
+    # stats to nothing, which is itself a different key, so removing a library
+    # is as distinguishing as replacing one.
+    local libs
+    libs=`stat -c %n%s%Y "$CUBRID/lib/libcubrid_all_locales.so" \
+                         "$CUBRID/lib/libcubrid_timezones.so" 2>/dev/null | tr '\n' ','`
+    echo "$name|$opts|${CUBRID_CHARSET}|$vols|`stat -c %s%Y $CUBRID/bin/cub_server 2>/dev/null`|$libs" \
         | sha1sum | cut -c1-16
 }
 
@@ -1700,12 +1734,37 @@ _ctp_template_restore()
     #
     # A missing flock fails the subshell, which falls through to a real
     # createdb.  Slower, never wrong, and no special case to write.
+    # The name the template's files carry, which is the requested one unless the
+    # key left the name out -- see CTP_DB_TEMPLATE_RENAME in _ctp_template_key.
+    local tname
+    tname=`cat "$dir/.dbname" 2>/dev/null`
+    [ -n "$tname" ] || tname=$db
+    # Renaming into a name something else already occupies is not what createdb
+    # does, and the check above only looked at the requested name.
+    [ "$tname" = "$db" ] || [ ! -e "${tname}_vinf" ] || return 1
+
     ( flock -s 9 || exit 1
       origin=`cat "$dir/.origin" 2>/dev/null` || exit 1
       [ -n "$origin" ] || exit 1
-      cp -a --sparse=always "$dir/$db" "$dir/$db"_* "$dir/lob" . 2>/dev/null || exit 1
-      sed -i "s#$origin#$PWD#g" "${db}_vinf" "${db}_lginf" 2>/dev/null || exit 1
+      cp -a --sparse=always "$dir/$tname" "$dir/$tname"_* "$dir/lob" . 2>/dev/null || exit 1
+      sed -i "s#$origin#$PWD#g" "${tname}_vinf" "${tname}_lginf" 2>/dev/null || exit 1
     ) 9>"`_ctp_template_dir`/.lk.$key" || return 1
+
+    # A template built under another name has to become this one. renamedb wants
+    # the database in databases.txt first, and it costs about 3 s -- which is the
+    # whole trade this mode exists to measure. A failure here leaves files behind
+    # that are not this case's database, so they go before falling back.
+    if [ "$tname" != "$db" ]; then
+        grep -v "^$tname[[:space:]]" $CUBRID_DATABASES/databases.txt > $CUBRID_DATABASES/.ctp_dbt 2>/dev/null
+        mv $CUBRID_DATABASES/.ctp_dbt $CUBRID_DATABASES/databases.txt
+        echo "$tname	$PWD	$PWD	$CUBRID_DATABASES/databases.txt" >> $CUBRID_DATABASES/databases.txt
+        if ! $CUBRID/bin/cubrid renamedb "$tname" "$db" >/dev/null 2>&1; then
+            rm -f "$tname" "$tname"_* 2>/dev/null
+            grep -v "^$tname[[:space:]]" $CUBRID_DATABASES/databases.txt > $CUBRID_DATABASES/.ctp_dbt 2>/dev/null
+            mv $CUBRID_DATABASES/.ctp_dbt $CUBRID_DATABASES/databases.txt
+            return 1
+        fi
+    fi
 
     # One more case has found this template worth having.  Recorded as an append
     # to this process's own tally rather than a read-modify-write of a shared
@@ -1900,6 +1959,9 @@ _ctp_template_save()
     if [ -n "$free" ] && [ "$free" -lt "$size" ]; then rm -rf "$tmp"; return 1; fi
 
     echo "$PWD" > "$tmp/.origin"
+    # Which name these files carry. Without the name in the key a template is
+    # restored under some other name, and renamedb needs to know what to rename.
+    echo "$db" > "$tmp/.dbname"
     echo 1 > "$tmp/.refs"
     # Moved into place, so a reader never sees half a template and two runs
     # sharing the store cannot interleave. Eviction comes after the move, when
