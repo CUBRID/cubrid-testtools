@@ -1639,10 +1639,27 @@ _ctp_template_dir()
 _ctp_template_key()
 {
     local name="" opts="" a
+    # The sizing options are pulled out of the option string and resolved to a
+    # number, because the same database is described several ways.
+    #
+    #   cubrid_createdb db                            (conf says 20M)
+    #   cubrid_createdb db --db-volume-size=20m
+    #   cubrid_createdb db --db-volume-size=20M
+    #
+    # all make the same thing, and all had different keys: the raw option text
+    # went into the key beside the conf value, so an explicit size never matched
+    # the identical default and 20m never matched 20M. It is not a corner:
+    # 2,706 of the corpus's 4,066 creations name --db-volume-size, and 2,505 of
+    # those name 20M -- the same value the tuned conf carries.
+    local _dbv="" _logv="" _dbp="" _logp=""
     for a in "$@"
     do
         case "$a" in
             -r) ;;
+            --db-volume-size=*)  _dbv=${a#*=} ;;
+            --log-volume-size=*) _logv=${a#*=} ;;
+            --db-page-size=*)    _dbp=${a#*=} ;;
+            --log-page-size=*)   _logp=${a#*=} ;;
             -*) opts="$opts $(echo $a | tr 'A-Z' 'a-z')" ;;
             *)  if [ -z "$name" ]; then name=$a; else opts="$opts $(echo $a | tr 'A-Z' 'a-z')"; fi ;;
         esac
@@ -1656,10 +1673,36 @@ _ctp_template_key()
     # not there, and the difference is not small -- a log volume of 512M against
     # 20M is 707 MB on disk against 215.  Without this a run that lowers the
     # defaults restores templates the old ones built, at the old size.
+    # The effective sizes: what the command asked for, or what cubrid.conf says
+    # when it asked for nothing -- resolved to bytes, so 20m, 20M and 20971520
+    # are one key rather than three.
+    _ctp_bytes()
+    {
+        local v n u
+        v=`echo "$1" | tr -d '[:space:]'`
+        n=`echo "$v" | sed -n 's/^\([0-9][0-9]*\).*$/\1/p'`
+        [ -n "$n" ] || { echo ""; return; }
+        u=`echo "$v" | sed -n 's/^[0-9][0-9]*\(.\).*$/\1/p' | tr 'A-Z' 'a-z'`
+        case "$u" in
+            k) echo $((n*1024)) ;;
+            m) echo $((n*1024*1024)) ;;
+            g) echo $((n*1024*1024*1024)) ;;
+            *) echo "$n" ;;
+        esac
+    }
+    _ctp_conf_val()
+    {
+        awk -F= -v k="$1" '$0 ~ "^[[:space:]]*"k"[[:space:]]*=" {
+            v=$2; gsub(/[[:space:]\r]/,"",v); print v; exit }' \
+            "$CUBRID/conf/cubrid.conf" 2>/dev/null
+    }
+    [ -n "$_dbv" ]  || _dbv=`_ctp_conf_val db_volume_size`
+    [ -n "$_logv" ] || _logv=`_ctp_conf_val log_volume_size`
+    [ -n "$_dbp" ]  || _dbp=`_ctp_conf_val db_page_size`
+    [ -n "$_logp" ] || _logp=`_ctp_conf_val log_page_size`
+
     local vols
-    vols=`awk -F= '/^[[:space:]]*(db|log)_volume_size[[:space:]]*=/ {
-              k=$1; v=$2; gsub(/[[:space:]]/,"",k); gsub(/[[:space:]\r]/,"",v)
-              print k "=" v }' "$CUBRID/conf/cubrid.conf" 2>/dev/null | sort | tr '\n' ','`
+    vols="dbv=`_ctp_bytes "$_dbv"`,logv=`_ctp_bytes "$_logv"`,dbp=`_ctp_bytes "$_dbp"`,logp=`_ctp_bytes "$_logp"`"
 
     # The name is in the key so that a hit needs no rename -- but that is what
     # holds the hit rate down. Measured over the corpus: 1,695 distinct database
@@ -1980,8 +2023,29 @@ function cubrid_createdb()
     ##parse build version
     parse_build_version
 
+    # A case that captures this command's output wants the command to run.
+    #
+    # A restore copies files and prints nothing, so a case that does
+    # `cubrid_createdb db > log1.log` and then compares log1.log gets an empty
+    # file and fails -- and nothing about that is a cache miss the key could
+    # have predicted. It is not about what createdb *makes*; it is about the
+    # case needing createdb to *happen*.
+    #
+    # 264 calls in 150 cases send this output to a file.
+    # _24_apricot/_08_I18N/_02_msg_lang/_01_createdb_01 does it six times and
+    # was one of the cases that failed only with the cache on.
+    #
+    # Detected rather than declared. A list of "cases that must not use a
+    # template" is a list that goes stale the moment somebody writes case 151,
+    # and it goes stale silently. Redirection is the signal itself: under the
+    # harness a case's own stdout is a pipe, and it is a regular file exactly
+    # when the caller redirected it. A case that captures output and never reads
+    # it loses a cache hit, which costs time and not correctness.
+    local _ctp_captured=0
+    [ -f /proc/self/fd/1 ] && _ctp_captured=1
+
     local _ctp_key="" _ctp_db=""
-    if [ "$CTP_DB_TEMPLATE_CACHE" = "1" ]
+    if [ "$CTP_DB_TEMPLATE_CACHE" = "1" ] && [ "$_ctp_captured" = "0" ]
     then
         _ctp_key=`_ctp_template_key "$@"`
         for _ctp_db in "$@"; do case "$_ctp_db" in -*) ;; *) break ;; esac; done
