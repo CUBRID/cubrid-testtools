@@ -36,6 +36,28 @@ key=`date '+%Y%m%d%H%M%s'`
 file_output=${CTP_HOME}/.output_${key}.log
 file_script=${CTP_HOME}/.script_cont_${key}.sh
 [ ! "${JAVA_HOME}" ] && echo "Please confirm JAVA_HOME is configured!" && exit 1
+
+# --- the cubrid.conf this run will read, stated once ------------------------
+#
+# The engine's parameters reach a case through $CUBRID/conf/cubrid.conf, and
+# every step between the repository that ships that file and the process that
+# reads it -- the build's install, the published artifact, an overlay mount,
+# CTP's own `ini.sh -s common -u` at deploy -- is a place a value can be lost.
+# Tracing those steps is not the same as seeing the file, and a run whose
+# environment is the variable under test has to say what its environment was.
+#
+# Sections are printed with the values because a [@db] section overrides
+# [common], so the last one above a value is what decides it.
+_ctp_conf="$CUBRID/conf/cubrid.conf"
+echo "[CONF] CUBRID=${CUBRID:-(unset)}"
+if [ -r "$_ctp_conf" ]; then
+	echo "[CONF] $_ctp_conf ($(wc -c < "$_ctp_conf" | tr -d ' ') bytes, mtime $(date -r "$_ctp_conf" -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null))"
+	grep -nE '^[[:space:]]*(\[|db_volume_size|log_volume_size|db_page_size|log_page_size|data_buffer_size|log_buffer_size)[[:space:]]*' "$_ctp_conf" \
+		| sed 's/^/[CONF]   /'
+else
+	echo "[CONF] $_ctp_conf is not readable"
+fi
+
 "$JAVA_HOME/bin/java" -cp "$JAVA_CPS" com.navercorp.cubridqa.ctp.CTP "$@" 2>&1 | tee ${file_output}
 java_exit_code=${PIPESTATUS[0]}
 cat ${file_output} | grep SCRIPTCONT > ${file_script} 
