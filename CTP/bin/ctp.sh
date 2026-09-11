@@ -63,4 +63,43 @@ java_exit_code=${PIPESTATUS[0]}
 cat ${file_output} | grep SCRIPTCONT > ${file_script} 
 sh ${file_script} 
 rm -rf ${file_output} ${file_script} >/dev/null 2>&1
+
+# --- what the run cost, per case, and what it left behind -------------------
+#
+# feedback.log is the only per-case duration a run produces, and it does not
+# leave the node: collect reads it to update the split's timing file and drops
+# the per-run copy, so afterwards two runs can be compared by their medians and
+# by nothing finer. Printed here it is in the job log, which survives, and a
+# diff of two runs then says which cases moved rather than which median did.
+_ctp_fb="$CTP_HOME/result/shell/current_runtime_logs/feedback.log"
+if [ -r "$_ctp_fb" ]; then
+	_ctp_dur=/tmp/.ctp_dur_$$
+	# Same scan as collect: the number before EnvId= is the case's milliseconds.
+	awk '/^\[(OK|NOK)\]/ {
+		ms = ""; p = ""
+		for (i = NF; i > 1; i--) if ($i ~ /^EnvId=/) { ms = $(i-1); p = $(i-2); break }
+		if (ms ~ /^[0-9]+$/ && p != "") printf "%.1f\t%s\n", ms / 1000, p
+	}' "$_ctp_fb" > "$_ctp_dur"
+	if [ -s "$_ctp_dur" ]; then
+		echo "[SLOW] $(wc -l < "$_ctp_dur" | tr -d ' ') cases, $(awk -F'\t' '{s+=$1} END {printf "%.0f", s}' "$_ctp_dur")s inside CTP"
+		sort -rn "$_ctp_dur" | awk -F'\t' '{printf "[DUR] %8.1f  %s\n", $1, $2}'
+	else
+		echo "[SLOW] feedback.log carried no durations"
+	fi
+	rm -f "$_ctp_dur"
+fi
+
+# A failure snapshot is the whole $CUBRID install plus the case directory,
+# tarred, and it is written inside the measurement -- the wall clock carries it
+# and nothing in the run's output says so. It is taken only for a core file or a
+# new FATAL ERROR, so a run of answer mismatches should take none. That is a
+# prediction; this is the line that checks it, and it also says which filesystem
+# would have paid, since a tmpfs is charged to the pod's memory.
+_ctp_bk="${CTP_ERROR_BACKUP_DIR:-$HOME/ERROR_BACKUP}"
+if [ -d "$_ctp_bk" ]; then
+	echo "[BACKUP] $_ctp_bk: $(find "$_ctp_bk" -mindepth 1 -maxdepth 1 2>/dev/null | wc -l | tr -d ' ') entries, $(du -sm "$_ctp_bk" 2>/dev/null | cut -f1)MB, fs $(stat -f -c %T "$_ctp_bk" 2>/dev/null)"
+else
+	echo "[BACKUP] $_ctp_bk: none taken, fs $(stat -f -c %T "$(dirname "$_ctp_bk")" 2>/dev/null)"
+fi
+
 exit $java_exit_code
