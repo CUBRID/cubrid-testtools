@@ -59,15 +59,21 @@ export PATH=$CUBRID/bin:$PATH >/dev/null
 # -- falls back to the wait, so the synthesised text is only ever the one shape
 # it was measured against.
 #
-#   unset, or =1                     take the fast path. On this branch that is
-#                                    the default, because gha-ci passes CTP no
-#                                    environment: a run can ask for the branch
-#                                    and nothing else, so the branch is the only
-#                                    place the fast path can be asked for
+#   CTP_SERVER_START_NOWAIT=1        take the fast path
 #   CTP_SERVER_START_NOWAIT=verify   take it, then wait anyway and record any
 #                                    difference in $CTP_NOWAIT_AUDIT; no faster
 #                                    than before, and the way to earn the 1
-#   anything else, e.g. =off         wait, as upstream does
+#   unset, or anything else          wait, as before
+#
+# Defaulted on once, on a CI branch, and taken back. The full corpus at
+# parallelism 50: the median shard went 26.2m to 25.8m, and shard 00 went 30.6m
+# to 39.5m -- _37_elderberry/cbrd_23842_cdc/bug/cbrd_27022 failed, was retried,
+# and spent the 720s timeout twice over. In a pod-per-shard run the wall clock
+# is the slowest pod, so 0.4m of median cost 8.9m of run. The case reports
+# "0 successful runs ... connect/find_lsa kept failing", which is what a CDC
+# client sees when it connects before the server is ready for it -- the 1.9s the
+# real utility is still running. `verify` exists to record exactly that, and it
+# is where the default has to be earned.
 
 # The effective java_stored_procedure for a database: [@db] overrides [common],
 # and printing nothing means it could not be read, which sends the caller back
@@ -108,7 +114,7 @@ _ctp_start_output() {   # $1 db, $2 jsp y|n, $3 master was running yes|no
 # utility itself.
 _ctp_start_nowait() {
     local mode db jsp master ready tmp bg
-    case "${CTP_SERVER_START_NOWAIT:-1}" in 1|verify) mode="${CTP_SERVER_START_NOWAIT:-1}" ;; *) return 1 ;; esac
+    case "${CTP_SERVER_START_NOWAIT}" in 1|verify) mode="${CTP_SERVER_START_NOWAIT}" ;; *) return 1 ;; esac
     [ $# -eq 3 ] || return 1
     [ "$(echo "$2" | tr 'A-Z' 'a-z')" = "start" ] || return 1
     db="$3"
