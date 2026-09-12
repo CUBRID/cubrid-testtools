@@ -49,6 +49,38 @@ file_script=${CTP_HOME}/.script_cont_${key}.sh
 # Sections are printed with the values because a [@db] section overrides
 # [common], so the last one above a value is what decides it.
 _ctp_conf="$CUBRID/conf/cubrid.conf"
+# --- what this machine gave the run ----------------------------------------
+#
+# A run's own log says what it used and never what it was allowed: gha-ci prints
+# the cgroup's memory.peak when the suite finishes, and nothing prints the limit
+# that peak is a fraction of, or the size of the machine underneath. So the one
+# question an operator has -- can this host take another one of these -- cannot
+# be answered from the logs it already keeps.
+#
+# All four are readable unprivileged, from inside the container. MemTotal is the
+# node's, not the container's, which is the point: the limit is the share and
+# MemTotal is what the shares are cut from.
+_ctp_res() {
+	local lim cur cpu d sub
+	# In a container /sys/fs/cgroup is the container's own cgroup, so the files are
+	# at the root; on a host they are one subtree down, where /proc/self/cgroup says.
+	sub=$(awk -F: '$1 == "0" { print $3 }' /proc/self/cgroup 2>/dev/null)
+	d=/sys/fs/cgroup
+	[ -r "$d/memory.max" ] || [ -z "$sub" ] || d="/sys/fs/cgroup$sub"
+	if [ -r "$d/memory.max" ]; then
+		lim=$(cat "$d/memory.max" 2>/dev/null)
+		cur=$(cat "$d/memory.current" 2>/dev/null)
+		cpu=$(cat "$d/cpu.max" 2>/dev/null)
+	elif [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+		lim=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null)
+		cur=$(cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null)
+		cpu=$(cat /sys/fs/cgroup/cpu/cpu.cfs_quota_us 2>/dev/null)/$(cat /sys/fs/cgroup/cpu/cpu.cfs_period_us 2>/dev/null)
+	fi
+	echo "[RES] cgroup memory.max=${lim:-?} current=${cur:-?} cpu=${cpu:-?} nproc=$(nproc 2>/dev/null)"
+	awk '/^MemTotal:|^MemAvailable:/ {printf "[RES] node %s %.1f GiB\n", $1, $2/1048576}' /proc/meminfo 2>/dev/null
+}
+_ctp_res
+
 echo "[CONF] CUBRID=${CUBRID:-(unset)}"
 if [ -r "$_ctp_conf" ]; then
 	echo "[CONF] $_ctp_conf ($(wc -c < "$_ctp_conf" | tr -d ' ') bytes, mtime $(date -r "$_ctp_conf" -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null))"
