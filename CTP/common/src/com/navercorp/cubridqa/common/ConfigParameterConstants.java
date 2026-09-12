@@ -67,6 +67,12 @@ public class ConfigParameterConstants {
 	public static final String TESTCASE_UPDATE_YES_OR_NO = "testcase_update_yn";
 	public static final String TESTCASE_WORKSPACE_DIR = "testcase_workspace_dir";
 	public static final String TESTCASE_TIMEOUT_IN_SECS = "testcase_timeout_in_secs";
+	// The ceiling a case may raise its own timeout to. A case that needs more than
+	// this is a case for another lane, not a longer wait. Unset means four times
+	// the global, which is a bound and not a measurement.
+	public static final String TESTCASE_TIMEOUT_MAX_IN_SECS = "testcase_timeout_max_in_secs";
+	// What a case writes to ask for its own: #CTP_TIMEOUT_IN_SECS=1800
+	public static final String TESTCASE_TIMEOUT_MACRO = "CTP_TIMEOUT_IN_SECS";
 	public static final String TESTCASE_RETRY_NUM = "testcase_retry_num";
 	public static final String TESTCASE_ADDITIONAL_ANSWER = "testcase_additional_answer";
 	

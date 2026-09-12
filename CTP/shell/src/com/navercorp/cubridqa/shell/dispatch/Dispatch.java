@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
@@ -88,6 +89,8 @@ public class Dispatch {
 	private HashSet<String> inFlightRetrySet;
 	private int maxRetryCount;
 	private int normalCompletedCount;
+	// What each case asked for, in seconds. Read once, from the corpus.
+	private HashMap<String, Integer> caseTimeoutMap;
 
 	private Dispatch(Context context) throws Exception {
 		this.context = context;
@@ -102,6 +105,7 @@ public class Dispatch {
 		this.maxRetryCount = context.getMaxRetryCount();
 		this.normalCompletedCount = 0;
 		load();
+		loadCaseTimeouts();
 	}
 
 	public static void init(Context context) throws Exception {
@@ -312,6 +316,113 @@ public class Dispatch {
 		}
 		return testCaseList;
 
+	}
+
+	// A case may ask for its own timeout by writing, anywhere in its script:
+	//
+	//     #CTP_TIMEOUT_IN_SECS=1800
+	//
+	// It is read here, once, with one grep over the corpus -- the same shape
+	// findSkippedTestCases uses for LINUX_NOT_SUPPORTED. Per-case it would be one
+	// more ssh round trip per case, on a path that already pays several.
+	//
+	// The declaration lives in the case because that is the only place it cannot
+	// go stale on its own: a central list outlives the case it names, silently. And
+	// it is forward-compatible both ways -- a CTP without this reader sees a
+	// comment, and a case without the macro takes the global.
+	//
+	// Three rules, because a timeout that can be waived is a hang that can hide:
+	//   - upward only. Below the global is ignored, so a case cannot fail faster
+	//     than the suite allows and call it a pass.
+	//   - capped, at testcase_timeout_max_in_secs or four times the global. Over
+	//     that is clamped, and said out loud.
+	//   - a macro that does not parse stops the run here, rather than falling back
+	//     to the global and running 3,000 cases under a silent typo.
+	private void loadCaseTimeouts() throws Exception {
+		this.caseTimeoutMap = new HashMap<String, Integer>();
+
+		int global = toSeconds(context.getTestCaseTimeout(), -1);
+		if (global <= 0) {
+			return; // no global timeout means no timeout at all; nothing to raise
+		}
+		int max = toSeconds(context.getTestCaseTimeoutMax(), -1);
+		if (max <= 0) {
+			max = global * 4;
+		}
+
+		String envId = context.getEnvList().get(0);
+		SSHConnect ssh = ShellHelper.createTestNodeConnect(context, envId);
+		String result;
+		try {
+			ShellScriptInput script = new ShellScriptInput();
+			script.addCommand("cd ");
+			script.addCommand("grep \"" + ConfigParameterConstants.TESTCASE_TIMEOUT_MACRO + "\" ` "
+					+ getAllTestCaseScripts(context.getTestCaseWorkspace()) + " `");
+			result = ssh.execute(script);
+		} finally {
+			if (ssh != null)
+				ssh.close();
+		}
+
+		result = result.replace('\r', '\n');
+		for (String line : result.split("\n")) {
+			int p = line.indexOf(':');
+			if (p <= 0) {
+				continue;
+			}
+			String tc = line.substring(0, p).trim();
+			String text = CommonUtils.replace(line.substring(p + 1).replace('\t', ' '), " ", "");
+			int eq = text.indexOf(ConfigParameterConstants.TESTCASE_TIMEOUT_MACRO + "=");
+			if (eq < 0) {
+				continue; // the name in prose, not a declaration
+			}
+			String value = text.substring(eq + ConfigParameterConstants.TESTCASE_TIMEOUT_MACRO.length() + 1);
+			// Digits, then the end of the line or a comment. Spaces are already gone, so
+			// a trailing note starts with '#' -- and 180O, which a "stop at the first
+			// non-digit" rule would read as 180, stops the run instead.
+			int end = 0;
+			while (end < value.length() && value.charAt(end) >= '0' && value.charAt(end) <= '9') {
+				end++;
+			}
+			if (end < value.length() && value.charAt(end) != '#') {
+				end = 0; // trailing junk: not a number this file is willing to guess at
+			}
+			int want = toSeconds(value.substring(0, end), -1);
+			if (want <= 0) {
+				throw new Exception("bad " + ConfigParameterConstants.TESTCASE_TIMEOUT_MACRO + " in " + tc + ": '" + value + "'");
+			}
+			if (want <= global) {
+				System.out.println("Case timeout ignored (not above the global " + global + "s): " + tc + " asked " + want + "s");
+				continue;
+			}
+			if (want > max) {
+				System.out.println("Case timeout clamped to " + max + "s (cap): " + tc + " asked " + want + "s");
+				want = max;
+			}
+			caseTimeoutMap.put(tc, Integer.valueOf(want));
+		}
+
+		for (String tc : caseTimeoutMap.keySet()) {
+			System.out.println("Case timeout: " + caseTimeoutMap.get(tc) + "s (global " + global + "s) " + tc);
+		}
+	}
+
+	// The timeout this case runs under: its own if it asked and was allowed one.
+	public int timeoutFor(String testCase) {
+		int global = toSeconds(context.getTestCaseTimeout(), -1);
+		if (caseTimeoutMap == null) {
+			return global;
+		}
+		Integer own = caseTimeoutMap.get(testCase);
+		return own == null ? global : own.intValue();
+	}
+
+	private static int toSeconds(String s, int dflt) {
+		try {
+			return Integer.parseInt(s.trim());
+		} catch (Exception e) {
+			return dflt;
+		}
 	}
 
 	private ArrayList<String> findSkippedTestCases() throws Exception {

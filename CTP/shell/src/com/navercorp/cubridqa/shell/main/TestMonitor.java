@@ -202,12 +202,16 @@ public class TestMonitor {
 	private void resolveTimeout() {
 
 		synchronized (test) {
-			if (testCaseTimeout < 0 || test.startTime <= 0)
+			// The case's own if it asked for one, and the suite's otherwise. Read
+			// here rather than in the constructor because it differs per case.
+			int limit = test.caseTimeout > 0 ? test.caseTimeout : testCaseTimeout;
+
+			if (limit < 0 || test.startTime <= 0)
 				return;
 
 			long endTime = System.currentTimeMillis();
 
-			if (endTime - test.startTime < testCaseTimeout * 1000) {
+			if (endTime - test.startTime < limit * 1000L) {
 				return;
 			}
 
@@ -228,7 +232,7 @@ public class TestMonitor {
 				}
 			}
 			context.getFeedback().onTestCaseMonitor(test.testCaseFullName,
-					"[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
+					"[RESOLVE] " + limit + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
 					test.envIdentify);
 		}
 	}

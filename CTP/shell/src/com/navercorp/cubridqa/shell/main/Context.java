@@ -289,6 +289,10 @@ public class Context {
 		return getProperty(ConfigParameterConstants.TESTCASE_TIMEOUT_IN_SECS, "-1");
 	}
 
+	public String getTestCaseTimeoutMax() {
+		return getProperty(ConfigParameterConstants.TESTCASE_TIMEOUT_MAX_IN_SECS, "-1");
+	}
+
 	public boolean needEnableMonitorTrace() {
 		return com.navercorp.cubridqa.common.CommonUtils.convertBoolean(getProperty(ConfigParameterConstants.ENABLE_STATUS_TRACE_YES_OR_NO, "false"));
 	}

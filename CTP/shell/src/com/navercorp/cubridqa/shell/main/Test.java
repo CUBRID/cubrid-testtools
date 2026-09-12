@@ -58,6 +58,9 @@ public class Test {
 	boolean needDropTestCase = false;
 
 	long startTime = 0;
+	// The timeout this case runs under. Set beside startTime so the monitor,
+	// which reads both under synchronized(test), never sees one without the other.
+	int caseTimeout = -1;
 	int maxRetryCount = 0;
 
 	ArrayList<String> resultItemList = new ArrayList<String>();
@@ -138,6 +141,7 @@ public class Test {
 					checkDiskSpace();
 				}
 
+				caseTimeout = Dispatch.getInstance().timeoutFor(testCase);
 				startTime = System.currentTimeMillis();
 				consoleOutput = runTestCase();
 				doFinalCheck();
