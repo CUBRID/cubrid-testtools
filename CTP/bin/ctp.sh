@@ -78,6 +78,11 @@ _ctp_res() {
 	fi
 	echo "[RES] cgroup memory.max=${lim:-?} current=${cur:-?} cpu=${cpu:-?} nproc=$(nproc 2>/dev/null)"
 	awk '/^MemTotal:|^MemAvailable:/ {printf "[RES] node %s %.1f GiB\n", $1, $2/1048576}' /proc/meminfo 2>/dev/null
+	# Kept for the reading at the end: a pod is fresh, so the counter is the run's.
+	_CTP_CGDIR="$d"
+	_CTP_T0=$(date +%s)
+	_CTP_CPU0=$(awk '$1 == "usage_usec" { print $2 }' "$d/cpu.stat" 2>/dev/null)
+	_CTP_QUOTA=$(awk '{ if ($1 == "max") print 0; else print $1 / $2 }' "$d/cpu.max" 2>/dev/null)
 }
 _ctp_res
 
@@ -127,6 +132,24 @@ fi
 # new FATAL ERROR, so a run of answer mismatches should take none. That is a
 # prediction; this is the line that checks it, and it also says which filesystem
 # would have paid, since a tmpfs is charged to the pod's memory.
+# What the run did with the CPUs it was given. The suite runs one case at a time
+# against one server, so the interesting number is not how long it took but how
+# much of the allowance it could ever have used -- a request sized well above
+# that is what decides how many of these fit on a node.
+if [ -n "${_CTP_CPU0:-}" ] && [ -r "${_CTP_CGDIR:-/nonexistent}/cpu.stat" ]; then
+	_ctp_cpu1=$(awk '$1 == "usage_usec" { print $2 }' "$_CTP_CGDIR/cpu.stat" 2>/dev/null)
+	_ctp_el=$(( $(date +%s) - _CTP_T0 ))
+	awk -v u0="$_CTP_CPU0" -v u1="$_ctp_cpu1" -v el="$_ctp_el" -v q="${_CTP_QUOTA:-0}" '
+		BEGIN {
+			if (el <= 0 || u1 <= u0) { print "[RES] cpu: not measurable"; exit }
+			cpu = (u1 - u0) / 1000000 / el
+			if (q > 0)
+				printf "[RES] cpu used %.2f of %g allowed (%.0f%%), over %ds\n", cpu, q, 100 * cpu / q, el
+			else
+				printf "[RES] cpu used %.2f cores, over %ds\n", cpu, el
+		}'
+fi
+
 _ctp_bk="${CTP_ERROR_BACKUP_DIR:-$HOME/ERROR_BACKUP}"
 if [ -d "$_ctp_bk" ]; then
 	echo "[BACKUP] $_ctp_bk: $(find "$_ctp_bk" -mindepth 1 -maxdepth 1 2>/dev/null | wc -l | tr -d ' ') entries, $(du -sm "$_ctp_bk" 2>/dev/null | cut -f1)MB, fs $(stat -f -c %T "$_ctp_bk" 2>/dev/null)"
