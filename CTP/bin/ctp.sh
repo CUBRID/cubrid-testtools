@@ -136,12 +136,24 @@ fi
 # against one server, so the interesting number is not how long it took but how
 # much of the allowance it could ever have used -- a request sized well above
 # that is what decides how many of these fit on a node.
-if [ -n "${_CTP_CPU0:-}" ] && [ -r "${_CTP_CGDIR:-/nonexistent}/cpu.stat" ]; then
+# Written to always say something. The first version of this was the one line in
+# [RES] that could vanish: the condition was false on all 100 shards of a run and
+# the log simply had no cpu line, which is indistinguishable from "the change was
+# not deployed". [CONF] and [BACKUP] both report their own failure; this now does
+# too, and names what it found instead of what it wanted.
+if [ -z "${_CTP_CGDIR:-}" ]; then
+	echo "[RES] cpu: no cgroup directory was resolved"
+elif [ ! -r "$_CTP_CGDIR/cpu.stat" ]; then
+	echo "[RES] cpu: $_CTP_CGDIR/cpu.stat not readable; cpu files present: $(ls "$_CTP_CGDIR" 2>/dev/null | grep '^cpu' | tr '\n' ' ')"
+elif [ -z "${_CTP_CPU0:-}" ]; then
+	echo "[RES] cpu: cpu.stat carried no usage_usec at start; it has: $(cut -d' ' -f1 "$_CTP_CGDIR/cpu.stat" 2>/dev/null | tr '\n' ' ')"
+else
 	_ctp_cpu1=$(awk '$1 == "usage_usec" { print $2 }' "$_CTP_CGDIR/cpu.stat" 2>/dev/null)
 	_ctp_el=$(( $(date +%s) - _CTP_T0 ))
-	awk -v u0="$_CTP_CPU0" -v u1="$_ctp_cpu1" -v el="$_ctp_el" -v q="${_CTP_QUOTA:-0}" '
+	awk -v u0="$_CTP_CPU0" -v u1="${_ctp_cpu1:-0}" -v el="$_ctp_el" -v q="${_CTP_QUOTA:-0}" '
 		BEGIN {
-			if (el <= 0 || u1 <= u0) { print "[RES] cpu: not measurable"; exit }
+			if (el <= 0)   { print "[RES] cpu: elapsed was " el "s"; exit }
+			if (u1 <= u0)  { printf "[RES] cpu: counter did not advance (%s -> %s)\n", u0, u1; exit }
 			cpu = (u1 - u0) / 1000000 / el
 			if (q > 0)
 				printf "[RES] cpu used %.2f of %g allowed (%.0f%%), over %ds\n", cpu, q, 100 * cpu / q, el
