@@ -79,10 +79,29 @@ _ctp_res() {
 	echo "[RES] cgroup memory.max=${lim:-?} current=${cur:-?} cpu=${cpu:-?} nproc=$(nproc 2>/dev/null)"
 	awk '/^MemTotal:|^MemAvailable:/ {printf "[RES] node %s %.1f GiB\n", $1, $2/1048576}' /proc/meminfo 2>/dev/null
 	# Kept for the reading at the end: a pod is fresh, so the counter is the run's.
-	_CTP_CGDIR="$d"
+	#
+	# Two places to read it, because the two cgroup versions keep it in different
+	# files and different units. Measured: this image is v1 -- /sys/fs/cgroup holds
+	# cpu, cpuacct, cpu,cpuacct and cpuset as directories, and the first version of
+	# this looked only for v2's cpu.stat and found nothing. Both are normalised to
+	# microseconds here so the reading at the end does not have to care.
 	_CTP_T0=$(date +%s)
-	_CTP_CPU0=$(awk '$1 == "usage_usec" { print $2 }' "$d/cpu.stat" 2>/dev/null)
+	_CTP_CPUSRC=""
+	if [ -r "$d/cpu.stat" ]; then
+		_CTP_CPU0=$(awk '$1 == "usage_usec" { print $2 }' "$d/cpu.stat" 2>/dev/null)
+		[ -n "$_CTP_CPU0" ] && _CTP_CPUSRC="$d/cpu.stat"
+	fi
+	if [ -z "$_CTP_CPUSRC" ] && [ -r /sys/fs/cgroup/cpuacct/cpuacct.usage ]; then
+		# v1 counts nanoseconds.
+		_CTP_CPU0=$(awk '{ printf "%d", $1 / 1000 }' /sys/fs/cgroup/cpuacct/cpuacct.usage 2>/dev/null)
+		[ -n "$_CTP_CPU0" ] && _CTP_CPUSRC=/sys/fs/cgroup/cpuacct/cpuacct.usage
+	fi
+	_CTP_CGDIR="$d"
 	_CTP_QUOTA=$(awk '{ if ($1 == "max") print 0; else print $1 / $2 }' "$d/cpu.max" 2>/dev/null)
+	if [ -z "$_CTP_QUOTA" ] && [ -r /sys/fs/cgroup/cpu/cpu.cfs_quota_us ]; then
+		_CTP_QUOTA=$(awk -v p="$(cat /sys/fs/cgroup/cpu/cpu.cfs_period_us 2>/dev/null)" \
+			'{ if ($1 <= 0 || p <= 0) print 0; else print $1 / p }' /sys/fs/cgroup/cpu/cpu.cfs_quota_us 2>/dev/null)
+	fi
 }
 _ctp_res
 
@@ -141,14 +160,13 @@ fi
 # the log simply had no cpu line, which is indistinguishable from "the change was
 # not deployed". [CONF] and [BACKUP] both report their own failure; this now does
 # too, and names what it found instead of what it wanted.
-if [ -z "${_CTP_CGDIR:-}" ]; then
-	echo "[RES] cpu: no cgroup directory was resolved"
-elif [ ! -r "$_CTP_CGDIR/cpu.stat" ]; then
-	echo "[RES] cpu: $_CTP_CGDIR/cpu.stat not readable; cpu files present: $(ls "$_CTP_CGDIR" 2>/dev/null | grep '^cpu' | tr '\n' ' ')"
-elif [ -z "${_CTP_CPU0:-}" ]; then
-	echo "[RES] cpu: cpu.stat carried no usage_usec at start; it has: $(cut -d' ' -f1 "$_CTP_CGDIR/cpu.stat" 2>/dev/null | tr '\n' ' ')"
+if [ -z "${_CTP_CPUSRC:-}" ]; then
+	echo "[RES] cpu: no usable counter; ${_CTP_CGDIR:-/sys/fs/cgroup} has: $(ls "${_CTP_CGDIR:-/sys/fs/cgroup}" 2>/dev/null | grep '^cpu' | tr '\n' ' ')"
 else
-	_ctp_cpu1=$(awk '$1 == "usage_usec" { print $2 }' "$_CTP_CGDIR/cpu.stat" 2>/dev/null)
+	case "$_CTP_CPUSRC" in
+	*cpuacct.usage) _ctp_cpu1=$(awk '{ printf "%d", $1 / 1000 }' "$_CTP_CPUSRC" 2>/dev/null) ;;
+	*)              _ctp_cpu1=$(awk '$1 == "usage_usec" { print $2 }' "$_CTP_CPUSRC" 2>/dev/null) ;;
+	esac
 	_ctp_el=$(( $(date +%s) - _CTP_T0 ))
 	awk -v u0="$_CTP_CPU0" -v u1="${_ctp_cpu1:-0}" -v el="$_ctp_el" -v q="${_CTP_QUOTA:-0}" '
 		BEGIN {
