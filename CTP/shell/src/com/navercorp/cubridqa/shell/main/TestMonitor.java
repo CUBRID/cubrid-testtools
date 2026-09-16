@@ -308,7 +308,9 @@ public class TestMonitor {
             return "testcase kill is linux only";
         }
         try {
-            return ssh.execute(Constants.createLinKillTestCaseScripts(CommonUtils.getExactFilename(tcName)));
+            String path = tcName.replace('\\', '/');
+            int p = path.lastIndexOf('/');
+            return ssh.execute(Constants.createLinKillTestCaseScripts(path.substring(0, p), path.substring(p + 1)));
         } catch (Exception e) {
             return "fail to kill testcase process tree: " + e.getMessage();
         }

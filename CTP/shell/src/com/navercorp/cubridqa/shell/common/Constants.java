@@ -195,25 +195,26 @@ public class Constants {
 	}
 
 	/*
-	 * Kill ONLY the timed-out case: the shell CTP started as "sh <case>.sh", and its
-	 * descendants. createLinKillScripts() leaves .sh alone when CTP runs on the test
-	 * machine itself, because a blanket .sh kill would take down CTP's own wrapper
-	 * shells - so nothing targeted the case and it kept its worker. Seeds are matched
-	 * on the FULL argv, so the cleanup shell, whose command line carries the case name
-	 * as script text, is never a seed.
+	 * Kill the timed-out case and its descendants. createLinKillScripts() leaves .sh
+	 * alone when CTP runs on the test machine itself, because a blanket .sh kill would
+	 * take down CTP's own wrapper shells - so nothing targeted the case and it kept its
+	 * worker. A seed must match the FULL argv, which keeps the cleanup shell (whose
+	 * command line carries the case name as script text) out, AND its PARENT's cwd,
+	 * because case basenames repeat across the scenario tree (itrack_10001.sh occurs 28
+	 * times) while the case's own cwd is not usable - 43% of cases cd elsewhere, but the
+	 * wrapper that launched them stays in the case directory.
 	 */
-	public static ShellScriptInput createLinKillTestCaseScripts(String testCaseFileName) {
+	public static ShellScriptInput createLinKillTestCaseScripts(String testCaseDir, String testCaseFileName) {
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("ctp_tc_queue=`ps -u $USER -o pid=,args= | awk -v tc='sh " + testCaseFileName + "' '{ pid=$1; $1=\"\"; sub(/^[ \\t]+/, \"\"); if ($0 == tc) print pid }'`");
-		scripts.addCommand("ctp_tc_tree=\"\"");
-		scripts.addCommand("while [ -n \"$ctp_tc_queue\" ]; do");
-		scripts.addCommand("  ctp_tc_next=\"\"");
-		scripts.addCommand("  for p in $ctp_tc_queue; do");
-		scripts.addCommand("    ctp_tc_tree=\"$ctp_tc_tree $p\"");
-		scripts.addCommand("    ctp_tc_next=\"$ctp_tc_next `ps -o pid= --ppid $p 2>/dev/null`\"");
-		scripts.addCommand("  done");
-		scripts.addCommand("  ctp_tc_queue=\"$ctp_tc_next\"");
+		scripts.addCommand("ctp_tc_dir=`cd " + testCaseDir + " 2>/dev/null && pwd`");
+		scripts.addCommand("ctp_tc_seeds=\"\"");
+		scripts.addCommand("for p in `ps -u $USER -o pid=,args= | awk -v tc='sh " + testCaseFileName + "' '{ pid=$1; $1=\"\"; sub(/^[ \\t]+/, \"\"); if ($0 == tc) print pid }'`; do");
+		scripts.addCommand("  ctp_tc_ppid=`ps -o ppid= -p $p 2>/dev/null | tr -d ' '`");
+		scripts.addCommand("  if [ \"`readlink /proc/$ctp_tc_ppid/cwd 2>/dev/null`\" = \"$ctp_tc_dir\" ]; then");
+		scripts.addCommand("    ctp_tc_seeds=\"$ctp_tc_seeds $p\"");
+		scripts.addCommand("  fi");
 		scripts.addCommand("done");
+		scripts.addCommand("ctp_tc_tree=`ps -u $USER -o pid=,ppid= | awk -v seeds=\"$ctp_tc_seeds\" 'BEGIN { n = split(seeds, s); for (i = 1; i <= n; i++) tree[s[i]] = 1 } { pid[NR] = $1; ppid[NR] = $2 } END { more = 1; while (more) { more = 0; for (i = 1; i <= NR; i++) if (!(pid[i] in tree) && (ppid[i] in tree)) { tree[pid[i]] = 1; more = 1 } } for (k in tree) print k }' | tr '\\n' ' '`");
 		scripts.addCommand("echo \"KILL TESTCASE TREE (" + testCaseFileName + "):$ctp_tc_tree\"");
 		scripts.addCommand("for p in $ctp_tc_tree; do kill -9 $p 2>/dev/null; done");
 		return scripts;
