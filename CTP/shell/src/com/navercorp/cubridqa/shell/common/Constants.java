@@ -195,14 +195,11 @@ public class Constants {
 	}
 
 	/*
-	 * Kill the timed-out case and its descendants. createLinKillScripts() leaves .sh
-	 * alone when CTP runs on the test machine itself, because a blanket .sh kill would
-	 * take down CTP's own wrapper shells - so nothing targeted the case and it kept its
-	 * worker. A seed must match the FULL argv, which keeps the cleanup shell (whose
-	 * command line carries the case name as script text) out, AND its PARENT's cwd,
-	 * because case basenames repeat across the scenario tree (itrack_10001.sh occurs 28
-	 * times) while the case's own cwd is not usable - 43% of cases cd elsewhere, but the
-	 * wrapper that launched them stays in the case directory.
+	 * The blanket ".sh" kill above is fenced off when CTP runs on the test machine
+	 * itself, where it would also take down CTP's own wrapper shells, so nothing there
+	 * ever targets a timed-out case. Seeds match the parent wrapper's cwd rather than
+	 * the case's own: case file names repeat across the scenario tree, and a running
+	 * case often cd's elsewhere while the wrapper that launched it does not.
 	 */
 	public static ShellScriptInput createLinKillTestCaseScripts(String testCaseDir, String testCaseFileName) {
 		ShellScriptInput scripts = new ShellScriptInput();

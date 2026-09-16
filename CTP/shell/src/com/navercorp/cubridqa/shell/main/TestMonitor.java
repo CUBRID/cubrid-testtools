@@ -206,6 +206,8 @@ public class TestMonitor {
 
         long elapse_time;
         String tcName;
+        String tcDir;
+        String tcFile;
         String envId;
         long detectedStartTime;
         boolean justDetected = false;
@@ -222,6 +224,8 @@ public class TestMonitor {
 
             elapse_time = (endTime - test.startTime) / 1000;
             tcName = test.testCaseFullName;
+            tcDir = test.testCaseDir;
+            tcFile = test.testCaseName;
             envId = test.envIdentify;
             detectedStartTime = test.startTime;
 
@@ -252,7 +256,8 @@ public class TestMonitor {
             this.log.println("[RESOLVE] " + testCaseTimeout + " timeout detected (actual: " + elapse_time + " seconds) for " + tcName + ", cleaning up processes...");
         }
 
-        this.log.println("[RESOLVE] " + killTestCaseTree(tcName));
+        /* kill the case before the service cleanup, so it cannot restart what that cleanup stops */
+        this.log.println("[RESOLVE] " + killTestCase(tcDir, tcFile));
 
         /*
          * Do the slow work OUTSIDE the lock so the worker is never blocked on the
@@ -297,20 +302,12 @@ public class TestMonitor {
                 envId);
 	}
 
-    /*
-     * resetProcess() only stops CUBRID services, so on its own it leaves the case
-     * shell running: it keeps spawning children and holds the worker until the shard
-     * runs out of time. Kill the case tree first, before the service cleanup, so the
-     * case cannot restart what that cleanup is about to stop.
-     */
-    private String killTestCaseTree(String tcName) {
+    private String killTestCase(String tcDir, String tcFile) {
         if (context.isWindows) {
             return "testcase kill is linux only";
         }
         try {
-            String path = tcName.replace('\\', '/');
-            int p = path.lastIndexOf('/');
-            return ssh.execute(Constants.createLinKillTestCaseScripts(path.substring(0, p), path.substring(p + 1)));
+            return ssh.execute(Constants.createLinKillTestCaseScripts(tcDir, tcFile));
         } catch (Exception e) {
             return "fail to kill testcase process tree: " + e.getMessage();
         }
