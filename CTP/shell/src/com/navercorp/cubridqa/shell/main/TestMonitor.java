@@ -252,6 +252,8 @@ public class TestMonitor {
             this.log.println("[RESOLVE] " + testCaseTimeout + " timeout detected (actual: " + elapse_time + " seconds) for " + tcName + ", cleaning up processes...");
         }
 
+        this.log.println("[RESOLVE] " + killTestCaseTree(tcName));
+
         /*
          * Do the slow work OUTSIDE the lock so the worker is never blocked on the
          * monitor's remote calls. resetProcess() returns an error string (it does
@@ -294,6 +296,23 @@ public class TestMonitor {
                 "[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
                 envId);
 	}
+
+    /*
+     * resetProcess() only stops CUBRID services, so on its own it leaves the case
+     * shell running: it keeps spawning children and holds the worker until the shard
+     * runs out of time. Kill the case tree first, before the service cleanup, so the
+     * case cannot restart what that cleanup is about to stop.
+     */
+    private String killTestCaseTree(String tcName) {
+        if (context.isWindows) {
+            return "testcase kill is linux only";
+        }
+        try {
+            return ssh.execute(Constants.createLinKillTestCaseScripts(CommonUtils.getExactFilename(tcName)));
+        } catch (Exception e) {
+            return "fail to kill testcase process tree: " + e.getMessage();
+        }
+    }
 
 	public void close() {
 		this.ssh.close();
