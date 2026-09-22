@@ -45,18 +45,9 @@ public class CheckDiff {
 		scripts.append("    echo PASS BASE\n");
 		scripts.append("else\n");
 		scripts.append("    if [ -f '"+ master_slaveOrReplicaDiffFile +"' ]; then\n");
-		// master and slave run the same build, so a system-catalog change is identical
-		// on both nodes and only shifts the diff hunk line numbers (e.g. 2873c2873 ->
-		// 2877c2877) without changing the divergent content. Normalize the hunk headers
-		// (NcN, N,NcN,N, NaN, N,NdN ...) to the bare operation letter before comparing so
-		// a line-number shift alone is not a failure, while any real change in the
-		// '<'/'>' content lines is still detected.
-		// The .norm files are throwaway and are used only for the PASS/FAIL decision; on
-		// failure the original line-numbered diff is printed so the offending lines can
-		// still be located in the (large) dump files, and the .temp file (the full
-		// 'diff master slave') is left intact for analysis. If normalization itself fails
-		// (e.g. sed missing/incompatible), the chain falls through to FAIL PATCH so a real
-		// difference is never masked as PASS by two empty .norm files.
+		// Normalize diff hunk headers (line numbers -> a/c/d) before comparing: a same-build
+		// catalog change only shifts line numbers, not the divergent '<'/'>' content, so it
+		// must not FAIL; real content changes still do. Details/safety notes: CUBRIDQA-1607.
 		String normHeaderCmd = "sed -E 's/^[0-9]+(,[0-9]+)?([acd])[0-9]+(,[0-9]+)?$/\\2/'";
 		scripts.append("        if " + normHeaderCmd + " '" + master_slaveOrReplicaDiffFile + "' > '" + master_slaveOrReplicaDiffFile + ".norm' && " + normHeaderCmd + " '" + master_slaveOrReplicaDiffFileTemp + "' > '" + master_slaveOrReplicaDiffFileTemp + ".norm' && diff '" + master_slaveOrReplicaDiffFile + ".norm' '" + master_slaveOrReplicaDiffFileTemp + ".norm' > /dev/null; then\n");
 		scripts.append("            echo PASS PATCH\n");
