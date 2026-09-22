@@ -51,14 +51,18 @@ public class CheckDiff {
 		// (NcN, N,NcN,N, NaN, N,NdN ...) to the bare operation letter before comparing so
 		// a line-number shift alone is not a failure, while any real change in the
 		// '<'/'>' content lines is still detected.
+		// The .norm files are throwaway and are used only for the PASS/FAIL decision; on
+		// failure the original line-numbered diff is printed so the offending lines can
+		// still be located in the (large) dump files, and the .temp file (the full
+		// 'diff master slave') is left intact for analysis. If normalization itself fails
+		// (e.g. sed missing/incompatible), the chain falls through to FAIL PATCH so a real
+		// difference is never masked as PASS by two empty .norm files.
 		String normHeaderCmd = "sed -E 's/^[0-9]+(,[0-9]+)?([acd])[0-9]+(,[0-9]+)?$/\\2/'";
-		scripts.append("        " + normHeaderCmd + " '" + master_slaveOrReplicaDiffFile + "' > '" + master_slaveOrReplicaDiffFile + ".norm'\n");
-		scripts.append("        " + normHeaderCmd + " '" + master_slaveOrReplicaDiffFileTemp + "' > '" + master_slaveOrReplicaDiffFileTemp + ".norm'\n");
-		scripts.append("        diff '" + master_slaveOrReplicaDiffFile + ".norm' '" + master_slaveOrReplicaDiffFileTemp + ".norm'\n");
-		scripts.append("        if [ $? -eq 0 ]; then\n");
+		scripts.append("        if " + normHeaderCmd + " '" + master_slaveOrReplicaDiffFile + "' > '" + master_slaveOrReplicaDiffFile + ".norm' && " + normHeaderCmd + " '" + master_slaveOrReplicaDiffFileTemp + "' > '" + master_slaveOrReplicaDiffFileTemp + ".norm' && diff '" + master_slaveOrReplicaDiffFile + ".norm' '" + master_slaveOrReplicaDiffFileTemp + ".norm' > /dev/null; then\n");
 		scripts.append("            echo PASS PATCH\n");
 		scripts.append("        else\n");
 		scripts.append("            echo FAIL PATCH\n");
+		scripts.append("            diff '" + master_slaveOrReplicaDiffFile + "' '" + master_slaveOrReplicaDiffFileTemp + "'\n");
 		scripts.append("        fi\n");
 		scripts.append("        rm -f '" + master_slaveOrReplicaDiffFile + ".norm' '" + master_slaveOrReplicaDiffFileTemp + ".norm'\n");
 		scripts.append("    else\n");
