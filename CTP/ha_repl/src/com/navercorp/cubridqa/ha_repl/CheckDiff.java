@@ -44,13 +44,23 @@ public class CheckDiff {
 		scripts.append("if [ $? -eq 0 ]; then\n");
 		scripts.append("    echo PASS BASE\n");
 		scripts.append("else\n");
-		scripts.append("    if [ -f '"+ master_slaveOrReplicaDiffFile +"' ]; then");
-		scripts.append("        diff '" + master_slaveOrReplicaDiffFile + "' '" + master_slaveOrReplicaDiffFileTemp + "'\n");
+		scripts.append("    if [ -f '"+ master_slaveOrReplicaDiffFile +"' ]; then\n");
+		// master and slave run the same build, so a system-catalog change is identical
+		// on both nodes and only shifts the diff hunk line numbers (e.g. 2873c2873 ->
+		// 2877c2877) without changing the divergent content. Normalize the hunk headers
+		// (NcN, N,NcN,N, NaN, N,NdN ...) to the bare operation letter before comparing so
+		// a line-number shift alone is not a failure, while any real change in the
+		// '<'/'>' content lines is still detected.
+		String normHeaderCmd = "sed -E 's/^[0-9]+(,[0-9]+)?([acd])[0-9]+(,[0-9]+)?$/\\2/'";
+		scripts.append("        " + normHeaderCmd + " '" + master_slaveOrReplicaDiffFile + "' > '" + master_slaveOrReplicaDiffFile + ".norm'\n");
+		scripts.append("        " + normHeaderCmd + " '" + master_slaveOrReplicaDiffFileTemp + "' > '" + master_slaveOrReplicaDiffFileTemp + ".norm'\n");
+		scripts.append("        diff '" + master_slaveOrReplicaDiffFile + ".norm' '" + master_slaveOrReplicaDiffFileTemp + ".norm'\n");
 		scripts.append("        if [ $? -eq 0 ]; then\n");
 		scripts.append("            echo PASS PATCH\n");
 		scripts.append("        else\n");
 		scripts.append("            echo FAIL PATCH\n");
 		scripts.append("        fi\n");
+		scripts.append("        rm -f '" + master_slaveOrReplicaDiffFile + ".norm' '" + master_slaveOrReplicaDiffFileTemp + ".norm'\n");
 		scripts.append("    else\n");
 		scripts.append("        echo FAIL BASE\n");
 		scripts.append("    fi\n");
