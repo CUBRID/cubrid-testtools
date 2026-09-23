@@ -188,51 +188,56 @@ function config_cci_test_environment()
         the3st=${main_v}"."${miner_v}
 
         #CBRD-23843 (dblink) : The current version of libcascci.so should not be removed because the libcubridsa has to link it. 
-	cd ${CUBRID}_${dirver_bk}/lib
-        exactfile=`find . -type f -name "libcascci.so.*" |uniq|sort -r| head -n 1`
-	
-	if [ ! -e libcascci.so ]
+        #server binaries (cub_server, cub_cas, ...) are linked to the server's own libcascci,
+        #so keep it and only point libcascci.so (link time) and the driver's soname (run time) to the driver.
+        #resolve the driver library to the real file, since libcascci in lib/ may be a relative link to ../cci/lib.
+        drv_lib=`find ${CUBRID}_${dirver_bk}/lib ${CUBRID}_${dirver_bk}/cci/lib -name "libcascci.so*" 2>/dev/null | xargs -r readlink -f | sort -u | head -n 1`
+        if [ ! -f "$drv_lib" ]
         then
-          ln -s $exactfile libcascci.so
+          echo "[ERROR]: cannot find cci driver library under ${CUBRID}_${dirver_bk}"
+        else
+          drv_dir=$CUBRID/cci/driver
+          rm -rf $drv_dir
+          mkdir -p $drv_dir
+          cp $drv_lib $drv_dir/
+          drv_file=$drv_dir/${drv_lib##*/}
+          drv_soname=`readelf -d $drv_file | grep SONAME | sed 's/.*\[\(.*\)\]/\1/'`
+
+          #config file in lib folder
+          cd $CUBRID/lib
+          ln -sfn $drv_file libcascci.so
+          if [ "$drv_soname" ] && [ "$drv_soname" != "libcascci.so" ]
+          then
+            if [ -e $drv_soname ]
+            then
+              echo "[WARN]: driver soname $drv_soname is the same as server's, server will use driver's libcascci"
+            fi
+            ln -sfn $drv_file $drv_soname
+          fi
         fi
 
-        if [ ! -e libcascci.so.${the1st} ]
-        then
-          ln -s $exactfile libcascci.so.${the1st}
-        fi
-
-        if [ ! -e libcascci.so.${the2nd} ]
-        then
-          ln -s $exactfile libcascci.so.${the2nd}
-        fi
-
-        if [ ! -e libcascci.so.${the3st} ]
-        then
-          ln -s $exactfile libcascci.so.${the3st}
-        fi
-
-
-        #config file in lib folder
-        cd $CUBRID/lib
-        cp -d ${CUBRID}_${dirver_bk}/lib/libcascci*.* .
-        
         #config include file
+        #copy cas_cci.h with the local headers it includes recursively (e.g. compat_dbtran_def.h, broker_cas_error.h since 11.x)
         cd $CUBRID/include
         rm -f cas_cci.h cas_error.h
-        cp ${CUBRID}_${dirver_bk}/include/cas_cci.h .
-        cp ${CUBRID}_${dirver_bk}/include/cas_error.h .
-        if [ -e ${CUBRID}_${dirver_bk}/include/dbtran_def.h ]
-        then
-             cp ${CUBRID}_${dirver_bk}/include/dbtran_def.h . 
-        fi
-        if [ -e ${CUBRID}_${dirver_bk}/include/broker_cas_error.h ]
-        then
-             cp ${CUBRID}_${dirver_bk}/include/broker_cas_error.h .
-        fi
-        if [ -e ${CUBRID}_${dirver_bk}/include/compat_dbtran_def.h ]
-        then
-             cp ${CUBRID}_${dirver_bk}/include/compat_dbtran_def.h .
-        fi  
+        drv_inc=${CUBRID}_${dirver_bk}/include
+        hdrs="cas_cci.h cas_error.h"
+        copied=" "
+        while [ "$hdrs" ]
+        do
+          next_hdrs=""
+          for h in $hdrs
+          do
+            [ -f $drv_inc/$h ] || continue
+            case "$copied" in *" $h "*) continue ;; esac
+            rm -f $h
+            cp -L $drv_inc/$h .
+            copied="$copied$h "
+            next_hdrs="$next_hdrs `grep '^#include *"' $drv_inc/$h | sed 's/.*"\(.*\)".*/\1/'`"
+          done
+          hdrs=$next_hdrs
+        done
+        echo "copied driver headers:$copied"
 	
         #save driver and server info
         echo "CCI_Version=${the1st}" >$CUBRID/qa.conf
