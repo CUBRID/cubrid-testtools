@@ -44,13 +44,18 @@ public class CheckDiff {
 		scripts.append("if [ $? -eq 0 ]; then\n");
 		scripts.append("    echo PASS BASE\n");
 		scripts.append("else\n");
-		scripts.append("    if [ -f '"+ master_slaveOrReplicaDiffFile +"' ]; then");
-		scripts.append("        diff '" + master_slaveOrReplicaDiffFile + "' '" + master_slaveOrReplicaDiffFileTemp + "'\n");
-		scripts.append("        if [ $? -eq 0 ]; then\n");
+		scripts.append("    if [ -f '"+ master_slaveOrReplicaDiffFile +"' ]; then\n");
+		// Normalize diff hunk headers (line numbers -> a/c/d) before comparing: a same-build
+		// catalog change only shifts line numbers, not the divergent '<'/'>' content, so it
+		// must not FAIL; real content changes still do. Details/safety notes: CUBRIDQA-1607.
+		String normHeaderCmd = "sed -E 's/^[0-9]+(,[0-9]+)?([acd])[0-9]+(,[0-9]+)?$/\\2/'";
+		scripts.append("        if " + normHeaderCmd + " '" + master_slaveOrReplicaDiffFile + "' > '" + master_slaveOrReplicaDiffFile + ".norm' && " + normHeaderCmd + " '" + master_slaveOrReplicaDiffFileTemp + "' > '" + master_slaveOrReplicaDiffFileTemp + ".norm' && diff '" + master_slaveOrReplicaDiffFile + ".norm' '" + master_slaveOrReplicaDiffFileTemp + ".norm' > /dev/null; then\n");
 		scripts.append("            echo PASS PATCH\n");
 		scripts.append("        else\n");
 		scripts.append("            echo FAIL PATCH\n");
+		scripts.append("            diff '" + master_slaveOrReplicaDiffFile + "' '" + master_slaveOrReplicaDiffFileTemp + "'\n");
 		scripts.append("        fi\n");
+		scripts.append("        rm -f '" + master_slaveOrReplicaDiffFile + ".norm' '" + master_slaveOrReplicaDiffFileTemp + ".norm'\n");
 		scripts.append("    else\n");
 		scripts.append("        echo FAIL BASE\n");
 		scripts.append("    fi\n");
