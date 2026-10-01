@@ -195,13 +195,23 @@ function config_cci_test_environment()
         if [ ! -f "$drv_lib" ]
         then
           echo "[ERROR]: cannot find cci driver library under ${CUBRID}_${dirver_bk}"
+          cd $curDir
+          return 1
         else
           drv_dir=$CUBRID/cci/driver
           rm -rf $drv_dir
           mkdir -p $drv_dir
           cp $drv_lib $drv_dir/
           drv_file=$drv_dir/${drv_lib##*/}
-          drv_soname=`readelf -d $drv_file | grep SONAME | sed 's/.*\[\(.*\)\]/\1/'`
+          #readelf (binutils) fails if it is missing; a library without SONAME is still valid since it is linked as libcascci.so
+          drv_dyn=`readelf -d $drv_file 2>&1`
+          if [ $? -ne 0 ]
+          then
+            echo "[ERROR]: cannot read dynamic section of $drv_file (readelf missing or failed): $drv_dyn"
+            cd $curDir
+            return 1
+          fi
+          drv_soname=`echo "$drv_dyn" | grep SONAME | sed 's/.*\[\(.*\)\]/\1/'`
 
           #config file in lib folder
           cd $CUBRID/lib
@@ -589,7 +599,7 @@ function close_shard_service()
 
 function config_test_environment()
 {
-       config_cci_test_environment $1
+       config_cci_test_environment $1 || return 1
        config_jdbc_test_environment $1
 }
 
