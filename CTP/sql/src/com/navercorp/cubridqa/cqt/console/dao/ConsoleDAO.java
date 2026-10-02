@@ -43,6 +43,7 @@ import com.navercorp.cubridqa.cqt.console.util.SystemUtil;
 import com.navercorp.cubridqa.cqt.console.util.TestUtil;
 import com.navercorp.cubridqa.cqt.console.util.XstreamHelper;
 import java.io.File;
+import java.math.BigDecimal;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
@@ -962,7 +963,13 @@ public class ConsoleDAO extends Executor {
 
         StringBuilder sb = new StringBuilder();
         try {
-            if (colType == Types.VARBINARY && colTypeName.equalsIgnoreCase("BIT VARYING")) {
+            if (value instanceof BigDecimal) {
+                // NUMERIC/DECIMAL values always print in plain form. Host-variable
+                // (PREPARE/EXECUTE USING) results are reported as OTHER with an empty
+                // type name but still arrive as BigDecimal, so this check must come
+                // before the column-type branching to avoid the OTHER/OID fallback.
+                sb.append(((BigDecimal) value).toPlainString());
+            } else if (colType == Types.VARBINARY && colTypeName.equalsIgnoreCase("BIT VARYING")) {
                 byte[] bytes = (byte[]) value;
                 sb.append(StringUtil.toHexString(bytes));
             } else if (colType == Types.BINARY && colTypeName.equalsIgnoreCase("BIT")) {

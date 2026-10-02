@@ -320,63 +320,6 @@ formatdatetime (FILE * fp, char *buffer)
 }
 
 void
-trimnumeric (FILE * fp, char *buffer)
-{
-  int dot_position = chrindex (buffer, ".");
-  int length = strlen (buffer);
-  int allzero = 1;
-  int i;
-  char *p;
-
-  p = (char *) malloc ((length + 1) * sizeof (char));
-  memcpy (p, buffer, (length + 1) * sizeof (char));
-
-  if (!isdouble (p))
-    {
-      printf ("wrong date %s", p);
-    }
-
-  if (dot_position < 1)
-    {
-      fprintf (fp, "%s", p);
-      free (p);
-      return;
-    }
-
-  for (i = dot_position + 1; i < length; i++)
-    {
-      if (buffer[i] != '0')
-	{
-	  allzero = 0;
-	  break;
-	}
-    }
-
-  if (allzero && length < 20)
-    {
-      p[dot_position + 1] = '0';
-      p[dot_position + 2] = 0;
-      fprintf (fp, "%s", p);
-      free (p);
-      return;
-    }
-
-  if (length > 19)
-    {
-      sprintf (p, "%le", atof (buffer));
-    }
-  else
-    {
-      if ((length - dot_position - 1) > 11)
-	{
-	  p[dot_position + 11] = 0;
-	}
-    }
-  fprintf (fp, "%s", p);
-  free (p);
-}
-
-void
 trimdouble (FILE * fp, char *buffer)
 {
   int dot_position = chrindex (buffer, ".");
@@ -1600,7 +1543,7 @@ _NEXT_MULTIPLE_LINE_SQL:
 		    }
 		  if (itemp == CCI_U_TYPE_NUMERIC)
 		    {
-		      trimnumeric (fp, (char *) buffer);
+		      fprintf (fp, "%s", (char *) buffer);
 		    }
 		  else if (itemp == CCI_U_TYPE_DATETIME)
 		    {
