@@ -94,12 +94,40 @@ The section guides users to quickly start SQL test with CTP, for the more catego
 	    $ bin/ctp.sh sql_by_cci -c ./conf/sql.conf
 	    ``` 
 
-	* Use interactive mode to debug your **SQL/MEDIUM** case (this feature does not support SQL_BY_CCI)          
+	* Use interactive mode to debug your **SQL/MEDIUM** case (this feature does not support SQL_BY_CCI)
 	    ```
 	    $ bin/ctp.sh sql --interactive
 	    ```
 
-    
+	* Use `run_sql.sh` to run a **single SQL test file** without a conf file or interactive mode:
+	    ```
+	    $ bin/run_sql.sh <sql_file> [db_name]
+	    ```
+	    - `sql_file`: path to the `.sql` test case file
+	    - `db_name`: database name to use (default: `basic`). The suffix `_qa` is appended automatically.
+	    - Requires `JAVA_HOME`, `CUBRID`, and `CTP_HOME` environment variables
+	    - This is useful for quick single-case validation and AI-driven automated bug detection, providing a middle ground between `ctp.sh sql -c conf` (full batch run) and `ctp.sh sql --interactive` (manual interactive mode)
+	    - **Custom database**: To use a database other than `basic`, you must create a corresponding XML config file at `$CTP_HOME/sql/configuration/Function_Db/<db_name>_qa.xml`. For example, to use `testdb`:
+	      ```xml
+	      <!-- $CTP_HOME/sql/configuration/Function_Db/testdb_qa.xml -->
+	      <DefaultTestDB>
+	        <id>testdb_for_Linux</id>
+	        <name>testdb</name>
+	        <dbaPwd></dbaPwd>
+	        <pubPwd></pubPwd>
+	        <dburl>jdbc:cubrid:localhost:33000:testdb:::</dburl>
+	        <dbuser>dba</dbuser>
+	        <dbpassword></dbpassword>
+	        <connectionType>DriverManager</connectionType>
+	        <charSet>UTF-8</charSet>
+	        <version>Main</version>
+	        <script>
+	      </script>
+	      </DefaultTestDB>
+	      ```
+	      Pre-configured databases: `basic` (default), `kcc`, `mdb`, `neis05`, `neis08`, `shell`
+
+
   - Examine the results
 
 	* When the test is completed, CTP will print the summary result message, please see the example of SQL result for reference
