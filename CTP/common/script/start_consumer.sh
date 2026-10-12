@@ -58,6 +58,8 @@ qlist=""
 isWin=""
 onlyMax=""
 withoutSync=0
+withoutRerun=0
+rerunQueuePrefix=RERUN_
 clspath="$CLASSPATH"
 msgId=""
 branchName=master
@@ -88,6 +90,9 @@ while [ $# -ne 0 ];do
                         shift
                 withoutSync=1
                 ;;
+                --without-rerun)
+                withoutRerun=1
+                ;;
 	esac
 	shift
 done
@@ -107,13 +112,14 @@ function usage()
 {
 	exec_name=$(basename $0)
 		cat<<EOF
-		Usage:$exec_name <-q queue_name> <-exec script> [--debug] [--only-max] [-s china|kor] [--without-sync]
+		Usage:$exec_name <-q queue_name> <-exec script> [--debug] [--only-max] [-s china|kor] [--without-sync] [--without-rerun]
 		-q <queue name>      | this option represents queue name what you want to consume
 		-exec <script.sh>    | script name you will run
                 -s                   | this option represents what build site you will use, such as 'china', 'kor'
 		--debug              | this option represents you just want to debug test environement,so message will be dequeued
 		--only-max           | this option represents you only need max version in this queue, old ones will be deleted
                 --without-sync       | do not update codes
+                --without-rerun      | do not take QAHome rerun requests from the RERUN_<queue> queues
 	    
 EOF
 
@@ -192,6 +198,48 @@ function startAgent()
 	queueName=$1
 	(cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $queueName $isDebug $onlyMax > ${CTP_HOME}/common/sched/result/$fileName)
     msgId=`cat ${CTP_HOME}/common/sched/result/$fileName |grep MSG_ID|awk -F ':' '{print $2}'`
+}
+
+# QAHome failed-case rerun (CUBRIDQA-1632): the producer clones a queue's original message onto
+# ${rerunQueuePrefix}<queue>. Taking it without --only-max keeps every request; old versions are not
+# superseded the way daily builds are.
+function startRerunAgent()
+{
+	rm -rf ${CTP_HOME}/common/sched/result/*
+	(cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $1 > ${CTP_HOME}/common/sched/result/$fileName)
+	msgId=`cat ${CTP_HOME}/common/sched/result/$fileName |grep MSG_ID|awk -F ':' '{print $2}'`
+}
+
+# Runs at most one rerun message of <queue> before the queue's regular poll, so a rerun waits only for
+# the run already in progress on this node. Only STATUS.TXT is written (QAHome's queue monitor and cancel
+# read it); the per-queue status file is not, so an interrupted rerun is never resumed in continue mode.
+function processRerunQueue()
+{
+	regularQueue=$1
+	regularExec=$2
+	rerunQueue=${rerunQueuePrefix}${regularQueue}
+	startRerunAgent $rerunQueue
+	hasTestBuild
+	if [ "$hasBuild" != "true" ]
+	then
+		return
+	fi
+	if [ ! -f ${CTP_HOME}/common/ext/run_rerun.sh ]
+	then
+		echo "Rerun message on $rerunQueue, but common/ext/run_rerun.sh is missing"
+		return
+	fi
+	echo "Action: $rerunQueue, run_rerun.sh ${regularExec}, RERUN"
+	rm -f $statFile
+	mkdir -p ${CTP_HOME}/common/sched/status
+	rerunStartTime=`getTimeStamp`
+	echo "QUEUE:${rerunQueue}" > $statFile
+	echo "START_TIME:${rerunStartTime}" >> $statFile
+	consumerTimer $msgId "start"
+	(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/run_rerun.sh ${regularExec})
+	consumerTimer $msgId "stop"
+	rm -f $statFile
+	echo "END_RERUN_TIME:`getTimeStamp`"
 }
 
 function runagent()
@@ -376,6 +424,11 @@ do
 			echo "END_CONTINUE_TIME:${contimeENDTIME}"
 			echo '' > ${CTP_HOME}/common/sched/status/${x}
 			echo
+		fi
+
+		if [ $withoutRerun -ne 1 -a "$isDebug" != "--debug" ]
+		then
+			processRerunQueue $x ${q_exec[$count]}
 		fi
 
 		startAgent $x 
