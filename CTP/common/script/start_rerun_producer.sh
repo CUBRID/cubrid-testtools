@@ -27,22 +27,65 @@
 # writes to qaresu.verify_rerun_batch as messages on RERUN_<queue> (see RerunProducer).
 #
 # Usage: start_rerun_producer.sh              # loop in the background, PID in conf/rerun_producer_PID
-#        start_rerun_producer.sh --once       # one pass in the foreground (cron)
+#        start_rerun_producer.sh --once       # one pass in the foreground (cron); exit status 1 if it failed
 #        start_rerun_producer.sh --dry-run --once
+#        start_rerun_producer.sh --stop       # stop the background loop
 # Reads conf/common.conf, conf/producer.conf and the optional conf/rerun.conf of this CTP.
 
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
+pidFile=${CTP_HOME}/conf/rerun_producer_PID
+
+for arg in "$@"; do
+    case "$arg" in
+        --once|--dry-run|--stop) ;;
+        *)
+            echo "Usage: $(basename $0) [--once] [--dry-run] | --stop"
+            exit 1
+            ;;
+    esac
+done
+
+# PID of the running background loop, if any
+function runningPid() {
+    local pid=$(cat "$pidFile" 2>/dev/null)
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && ps -o args= -p "$pid" | grep -q RerunProducer; then
+        echo "$pid"
+    fi
+}
 
 case " $* " in
+    *" --stop "*)
+        pid=$(runningPid)
+        if [ -z "$pid" ]; then
+            echo "RerunProducer is not running"
+            rm -f "$pidFile"
+            exit 0
+        fi
+        kill "$pid"
+        for i in $(seq 30); do
+            kill -0 "$pid" 2>/dev/null || break
+            sleep 1
+        done
+        kill -9 "$pid" 2>/dev/null
+        rm -f "$pidFile"
+        echo "RerunProducer stopped (PID $pid)"
+        ;;
     *" --once "*|*" --dry-run "*)
-        (cd ${CTP_HOME}/common/sched; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.producer.RerunProducer "$@")
+        cd ${CTP_HOME}/common/sched && "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.producer.RerunProducer "$@"
+        exit $?
         ;;
     *)
+        pid=$(runningPid)
+        if [ -n "$pid" ]; then
+            echo "RerunProducer is already running (PID $pid); stop it first with --stop"
+            exit 1
+        fi
         (
             cd ${CTP_HOME}/common/sched
             "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.producer.RerunProducer "$@" &
-            echo $! > ${CTP_HOME}/conf/rerun_producer_PID
+            echo $! > "$pidFile"
             wait
+            rm -f "$pidFile"
         )
         ;;
 esac
