@@ -424,6 +424,8 @@ do
 		if [ $rerunOnly -eq 1 ]
 		then
 			processRerunQueue $x ${q_exec[$count]}
+			# nothing runs here now: clear a status a crashed run left, as the regular loop does below
+			rm -f $statFile
 			let "count=count+1"
 			continue
 		fi
