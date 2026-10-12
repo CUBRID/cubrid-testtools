@@ -49,6 +49,8 @@ export RERUN_LOG_ROOT=${RERUN_WORK}/logs
 export RERUN_CASES_FILE=${RERUN_WORK}/cases.tsv
 export RERUN_RESULTS_FILE=${RERUN_WORK}/results.tsv
 export RERUN_TC_COMMIT_FILE=${RERUN_WORK}/tc_commit
+# Process groups of the steps the runner runs under timeout(1) (rerun_timeout); a cancel stops them too.
+export RERUN_PGID_FILE=${RERUN_WORK}/pgids
 RERUN_FINISHED=0
 # How often a running rerun asks QAHome whether it was cancelled (rerun.nhn?m=rerunPoll).
 RERUN_POLL_SECONDS=${RERUN_POLL_SECONDS:-60}
@@ -147,12 +149,22 @@ if [ -n "$family" -a -f "$runner" ]; then
         case "$poll" in
             CANCEL*)
                 echo "[RERUN] batch ${RERUN_BATCH_ID}: ${poll}; stopping the harness"
-                kill -TERM -- -$runner_pid 2>/dev/null
+                # the runner's group and the groups timeout(1) made under it (it leads a new group per step)
+                groups="$(cat "$RERUN_PGID_FILE" 2>/dev/null) $runner_pid"
+                for g in $groups; do
+                    kill -TERM -- -$g 2>/dev/null
+                done
                 for i in $(seq 30); do
-                    kill -0 $runner_pid 2>/dev/null || break
+                    alive=0
+                    for g in $groups; do
+                        kill -0 -- -$g 2>/dev/null && alive=1
+                    done
+                    [ $alive -eq 0 ] && break
                     sleep 1
                 done
-                kill -KILL -- -$runner_pid 2>/dev/null
+                for g in $groups $(cat "$RERUN_PGID_FILE" 2>/dev/null); do
+                    kill -KILL -- -$g 2>/dev/null
+                done
                 wait $runner_pid 2>/dev/null
                 cat "$RERUN_LOG_ROOT/runner.log"
                 # The cancel already closed the batch and its cases in QAHome: nothing to upload or report.

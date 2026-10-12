@@ -246,7 +246,8 @@ function processRerunQueue()
 	echo "QUEUE:${rerunQueue}" > $statFile
 	echo "START_TIME:${rerunStartTime}" >> $statFile
 	consumerTimer $msgId "start"
-	(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/run_rerun.sh ${regularExec})
+	# init.sh exports the message keys; tracing stays off meanwhile so MKEY_RERUN_TOKEN never reaches nohup.out.
+	(cd ${CTP_HOME}; { set +x; } 2>/dev/null; source ${CTP_HOME}/common/sched/init.sh $ser_site; set -x; sh common/ext/run_rerun.sh ${regularExec})
 	consumerTimer $msgId "stop"
 	rm -f $statFile
 	echo "END_RERUN_TIME:`getTimeStamp`"
