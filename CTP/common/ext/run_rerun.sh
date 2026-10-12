@@ -40,9 +40,20 @@ RERUN_BATCH_ID=$MKEY_RERUN_BATCH_ID
 RERUN_FEEDBACK_URL=$MKEY_RERUN_FEEDBACK_URL
 RERUN_LOG_DIR=${MKEY_RERUN_LOG_DIR:-./qaresult_en/web/test_error/rerun}
 # Keep the batch token out of the environment: harnesses paste MKEY_* values into scripts they ship
-# to worker nodes, and the consumer runs with 'set -x'.
+# to worker nodes, and the consumer runs with 'set -x'. It never goes on a command line either (rerun_call).
 RERUN_TOKEN=$MKEY_RERUN_TOKEN
 unset MKEY_RERUN_TOKEN
+
+if [ -z "$RERUN_BATCH_ID" -o -z "$RERUN_TOKEN" -o -z "$RERUN_FEEDBACK_URL" ]; then
+    echo "[RERUN] The message has no MKEY_RERUN_BATCH_ID/TOKEN/FEEDBACK_URL; nothing to rerun."
+    exit 0
+fi
+# Both end up in paths (rm -rf here, the upload destination on the QAHome host): accept plain values only.
+if ! [[ "$RERUN_BATCH_ID" =~ ^[0-9]+$ ]] || ! [[ "$RERUN_LOG_DIR" =~ ^[A-Za-z0-9._/-]+$ ]] || [[ "$RERUN_LOG_DIR" == *..* ]] ||
+    ! [[ "$RERUN_FEEDBACK_URL" =~ ^https?://[A-Za-z0-9._:/-]+$ ]]; then
+    echo "[RERUN] The message has an invalid MKEY_RERUN_BATCH_ID, MKEY_RERUN_LOG_DIR or MKEY_RERUN_FEEDBACK_URL; nothing to rerun."
+    exit 0
+fi
 
 export RERUN_WORK=${CTP_HOME}/result/rerun/batch_${RERUN_BATCH_ID}
 export RERUN_LOG_ROOT=${RERUN_WORK}/logs
@@ -52,8 +63,12 @@ export RERUN_TC_COMMIT_FILE=${RERUN_WORK}/tc_commit
 # Process groups of the steps the runner runs under timeout(1) (rerun_timeout); a cancel stops them too.
 export RERUN_PGID_FILE=${RERUN_WORK}/pgids
 RERUN_FINISHED=0
+runner_pid=""
+family=""
 # How often a running rerun asks QAHome whether it was cancelled (rerun.nhn?m=rerunPoll).
 RERUN_POLL_SECONDS=${RERUN_POLL_SECONDS:-60}
+# Batches whose work dir (case list, verdicts, scrubbed logs) is kept on this node.
+RERUN_KEEP_BATCHES=${RERUN_KEEP_BATCHES:-20}
 
 # rerun_result <rerunId> <PASS|FAIL|ERROR> <log file relative to RERUN_LOG_ROOT, may be empty> <message>
 function rerun_result() {
@@ -61,14 +76,64 @@ function rerun_result() {
 }
 export -f rerun_result
 
-# rerun_call <method> [curl --data-urlencode args...]; tracing is off so the token never reaches a log.
+# rerun_call <method> [curl --data-urlencode args...]: the QAHome answer on stdout, status 1 when QAHome could
+# not be reached. Transport failures (no connection, timeout, HTTP error, empty or unexpected answer) are
+# retried with a backoff, so a QAHome restart does not lose a rerun. The token goes on stdin, not on the
+# command line where ps would show it; tracing is off.
 function rerun_call() {
-    local method=$1
+    local method=$1 answer attempt delay=10
     shift
     { set +x; } 2>/dev/null
-    curl -s -S --max-time 120 --retry 3 -X POST "$RERUN_FEEDBACK_URL" \
-        --data-urlencode "m=$method" --data-urlencode "batchId=$RERUN_BATCH_ID" \
-        --data-urlencode "token=$RERUN_TOKEN" "$@"
+    for attempt in 1 2 3 4 5 6; do
+        answer=$(printf '%s' "$RERUN_TOKEN" | curl -s -S -f --connect-timeout 20 --max-time 120 -X POST "$RERUN_FEEDBACK_URL" \
+            --data-urlencode "m=$method" --data-urlencode "batchId=$RERUN_BATCH_ID" --data-urlencode "token@-" "$@" 2>&1)
+        case "$answer" in
+            OK*|ERROR*|CANCEL*)
+                printf '%s\n' "$answer"
+                return 0
+                ;;
+        esac
+        echo "[RERUN] $method: QAHome did not answer (attempt $attempt): $(echo "$answer" | head -1 | cut -c1-200)" >&2
+        [ $attempt -lt 6 ] && sleep $delay
+        delay=$((delay * 2))
+    done
+    return 1
+}
+
+# Process groups of the runner and everything under it, collected while the tree is still whole: timeout(1)
+# and the harnesses start new groups (also nested ones rerun_timeout cannot record).
+function rerun_tree_groups() {
+    local own=$(ps -o pgid= -p $$ | tr -d ' ')
+    ps -u "$USER" -o pid=,ppid=,pgid= | awk -v root="$1" -v own="$own" '
+        { ppid[$1] = $2; pgid[$1] = $3; pids[NR] = $1 }
+        END {
+            tree[root] = 1; more = 1
+            while (more) { more = 0; for (i = 1; i <= NR; i++) { p = pids[i]; if (!(p in tree) && (ppid[p] in tree)) { tree[p] = 1; more = 1 } } }
+            for (p in tree) if (pgid[p] != "" && pgid[p] != own && !(pgid[p] in seen)) { seen[pgid[p]] = 1; print pgid[p] }
+        }'
+}
+
+# Stop the runner and every process group under it: TERM, then KILL after 30 s.
+function rerun_stop_runner() {
+    local groups g i alive
+    [ -n "$runner_pid" ] || return 0
+    groups="$(rerun_tree_groups $runner_pid) $(cat "$RERUN_PGID_FILE" 2>/dev/null) $runner_pid"
+    for g in $groups; do
+        kill -TERM -- -$g 2>/dev/null
+    done
+    for i in $(seq 30); do
+        alive=0
+        for g in $groups; do
+            kill -0 -- -$g 2>/dev/null && alive=1
+        done
+        [ $alive -eq 0 ] && break
+        sleep 1
+    done
+    for g in $groups $(cat "$RERUN_PGID_FILE" 2>/dev/null); do
+        kill -KILL -- -$g 2>/dev/null
+    done
+    wait $runner_pid 2>/dev/null
+    runner_pid=""
 }
 
 function rerun_finish() {
@@ -76,7 +141,38 @@ function rerun_finish() {
         return
     fi
     RERUN_FINISHED=1
-    echo "[RERUN] finish batch ${RERUN_BATCH_ID}: $(rerun_call rerunFinish --data-urlencode "message=$1")"
+    echo "[RERUN] finish batch ${RERUN_BATCH_ID}: $(rerun_call rerunFinish --data-urlencode "message=$1" || echo "QAHome unreachable")"
+}
+
+# Publish the runner's console output with the secrets the runner collected masked.
+function rerun_publish_runner_log() {
+    local secrets=${RERUN_WORK}/${family}/.secrets
+    [ -f "$RERUN_WORK/runner.raw.log" ] || return 0
+    if [ -n "$family" -a -f "$secrets" ] && type rerun_scrub_stream >/dev/null 2>&1; then
+        RERUN_SECRETS=$secrets rerun_scrub_stream "" < "$RERUN_WORK/runner.raw.log" > "$RERUN_LOG_ROOT/runner.log"
+    else
+        # nothing to scrub with: publish only the [RERUN] progress lines
+        grep '^\[RERUN' "$RERUN_WORK/runner.raw.log" > "$RERUN_LOG_ROOT/runner.log"
+    fi
+}
+
+# The family work dir holds raw harness logs, conf copies with passwords and the secrets list: drop it, and
+# keep only the newest RERUN_KEEP_BATCHES batch dirs.
+function rerun_tidy() {
+    [ -n "$family" ] && rm -rf "${RERUN_WORK:?}/${family}"
+    rm -f "$RERUN_WORK/runner.raw.log" "$RERUN_PGID_FILE"
+    ls -dt "${CTP_HOME}"/result/rerun/batch_* 2>/dev/null | tail -n +$((RERUN_KEEP_BATCHES + 1)) | while read -r old; do
+        rm -rf "$old"
+    done
+}
+
+function rerun_main_exit() {
+    if [ -n "$runner_pid" ]; then
+        # killed before the runner ended (TERM/INT/HUP, or an error): stop the harness before closing the batch
+        rerun_stop_runner
+    fi
+    rerun_finish "rerun runner on ${USER}@$(hostname) exited before reporting every case"
+    rerun_tidy
 }
 
 # category -> family runner (common/ext/rerun/rerun_<family>.sh)
@@ -93,17 +189,19 @@ function rerun_family_of() {
     esac
 }
 
-if [ -z "$RERUN_BATCH_ID" -o -z "$RERUN_TOKEN" -o -z "$RERUN_FEEDBACK_URL" ]; then
-    echo "[RERUN] The message has no MKEY_RERUN_BATCH_ID/TOKEN/FEEDBACK_URL; nothing to rerun."
-    exit 0
-fi
-trap 'rerun_finish "rerun runner on ${USER}@$(hostname) exited before reporting every case"' EXIT
+trap 'rerun_main_exit' EXIT
+trap 'exit 143' TERM INT HUP
 
 rm -rf "$RERUN_WORK"
 mkdir -p "$RERUN_LOG_ROOT"
 : > "$RERUN_RESULTS_FILE"
 
-rerun_call rerunCases --data-urlencode "node=${USER}@$(hostname)" > "$RERUN_WORK/cases.out" 2>&1
+if ! rerun_call rerunCases --data-urlencode "node=${USER}@$(hostname)" > "$RERUN_WORK/cases.out"; then
+    # The message is off the queue, but QAHome is unreachable: the batch times out in QAHome.
+    echo "[RERUN] QAHome is unreachable; batch ${RERUN_BATCH_ID} is not run"
+    RERUN_FINISHED=1
+    exit 0
+fi
 first_line=$(head -1 "$RERUN_WORK/cases.out")
 case "$first_line" in
     OK*) ;;
@@ -123,6 +221,8 @@ echo "[RERUN] batch ${RERUN_BATCH_ID}: $(wc -l < "$RERUN_CASES_FILE") case(s) of
 family=$(rerun_family_of "$BUILD_SCENARIOS")
 runner=${CTP_HOME}/common/ext/rerun/rerun_${family}.sh
 if [ -n "$family" -a -f "$runner" ]; then
+    # for rerun_scrub_stream (runner.log) and the shared helpers
+    source ${CTP_HOME}/common/ext/rerun/rerun_common.sh
     # A subshell, so a runner that exits early cannot skip the reporting below; in its own process group
     # (set -m), so a cancel from QAHome can stop the whole harness under it.
     set -m
@@ -130,12 +230,9 @@ if [ -n "$family" -a -f "$runner" ]; then
         # Back to no job control inside, so background jobs a harness starts stay in this process group.
         set +m
         cd ${CTP_HOME}
-        if [ -f ${CTP_HOME}/common/ext/rerun/rerun_common.sh ]; then
-            source ${CTP_HOME}/common/ext/rerun/rerun_common.sh
-        fi
         source "$runner"
         rerun_${family}
-    ) > "$RERUN_LOG_ROOT/runner.log" 2>&1 &
+    ) > "$RERUN_WORK/runner.raw.log" 2>&1 &
     runner_pid=$!
     set +m
     waited=0
@@ -145,35 +242,22 @@ if [ -n "$family" -a -f "$runner" ]; then
         if [ $((waited % RERUN_POLL_SECONDS)) -ne 0 ]; then
             continue
         fi
-        poll=$(rerun_call rerunPoll 2>/dev/null | head -1)
+        poll=$(rerun_call rerunPoll | head -1)
         case "$poll" in
             CANCEL*)
                 echo "[RERUN] batch ${RERUN_BATCH_ID}: ${poll}; stopping the harness"
-                # the runner's group and the groups timeout(1) made under it (it leads a new group per step)
-                groups="$(cat "$RERUN_PGID_FILE" 2>/dev/null) $runner_pid"
-                for g in $groups; do
-                    kill -TERM -- -$g 2>/dev/null
-                done
-                for i in $(seq 30); do
-                    alive=0
-                    for g in $groups; do
-                        kill -0 -- -$g 2>/dev/null && alive=1
-                    done
-                    [ $alive -eq 0 ] && break
-                    sleep 1
-                done
-                for g in $groups $(cat "$RERUN_PGID_FILE" 2>/dev/null); do
-                    kill -KILL -- -$g 2>/dev/null
-                done
-                wait $runner_pid 2>/dev/null
+                rerun_stop_runner
+                rerun_publish_runner_log
                 cat "$RERUN_LOG_ROOT/runner.log"
-                # The cancel already closed the batch and its cases in QAHome: nothing to upload or report.
+                # The cancel (or timeout) already closed the batch and its cases in QAHome: nothing to report.
                 RERUN_FINISHED=1
                 exit 0
                 ;;
         esac
     done
     wait $runner_pid 2>/dev/null
+    runner_pid=""
+    rerun_publish_runner_log
     cat "$RERUN_LOG_ROOT/runner.log"
 else
     while IFS=$'\t' read -r rerun_id sce_id; do
@@ -188,8 +272,14 @@ while IFS=$'\t' read -r rerun_id sce_id; do
     fi
 done < "$RERUN_CASES_FILE"
 
+logs_uploaded=1
 if [ -n "$(ls -A "$RERUN_LOG_ROOT" 2>/dev/null)" ]; then
-    upload_to_dailysrv "$RERUN_LOG_ROOT" "${RERUN_LOG_DIR}/${RERUN_BATCH_ID}" || echo "[RERUN] log upload failed"
+    # under a timeout: the upload tool retries for minutes and has no ssh timeout of its own
+    upload_out=$(timeout -k 30 1800 bash -c 'upload_to_dailysrv "$1" "$2"' rerun_upload "$RERUN_LOG_ROOT" "${RERUN_LOG_DIR}/${RERUN_BATCH_ID}" 2>&1)
+    if ! echo "$upload_out" | grep -q '\[INFO\] upload done'; then
+        logs_uploaded=0
+        echo "[RERUN] log upload failed: $(echo "$upload_out" | grep -m1 -iE 'error|fail|exception' | cut -c1-200)"
+    fi
 fi
 
 tc_commit=$(cat "$RERUN_TC_COMMIT_FILE" 2>/dev/null)
@@ -205,8 +295,15 @@ while IFS= read -r line; do
     fi
     case " $reported " in *" $rerun_id "*) continue ;; esac
     reported="$reported $rerun_id"
-    answer=$(rerun_call rerunReport --data-urlencode "rerunId=$rerun_id" --data-urlencode "result=$result" \
-        --data-urlencode "logFile=$log_file" --data-urlencode "message=$message" --data-urlencode "tcCommit=$tc_commit")
+    # without the upload the link would point at nothing
+    [ $logs_uploaded -eq 1 ] || log_file=""
+    if ! answer=$(rerun_call rerunReport --data-urlencode "rerunId=$rerun_id" --data-urlencode "result=$result" \
+        --data-urlencode "logFile=$log_file" --data-urlencode "message=$message" --data-urlencode "tcCommit=$tc_commit"); then
+        # QAHome is unreachable: the remaining verdicts stay in results.tsv; QAHome times the batch out.
+        echo "[RERUN] QAHome is unreachable; stopped reporting at case ${rerun_id} (verdicts kept in ${RERUN_RESULTS_FILE})"
+        RERUN_FINISHED=1
+        exit 0
+    fi
     echo "[RERUN] case ${rerun_id}: ${result} -> ${answer}"
 done < "$RERUN_RESULTS_FILE"
 

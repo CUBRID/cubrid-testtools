@@ -116,11 +116,12 @@ function rerun_isolation() {
     # update, pin and stage on every node
     for id in $envs; do
         rerun_on_exit "$(rerun_env_cleanup_cmd "$conf" "$id" "$RERUN_NODE_STAGE/$RERUN_TAG")"
-        if ! c=$(rerun_env_git_update "$conf" "$id" "$scen_raw" "$RERUN_TC_COMMIT"); then
+        if ! rerun_env_git_update "$conf" "$id" "$scen_raw" "$RERUN_TC_COMMIT"; then
             last_err=$RERUN_LAST_ERROR
             rerun_log "node ${id} dropped: ${RERUN_LAST_ERROR}"
             continue
         fi
+        c=$RERUN_GIT_COMMIT
         [ -z "$RERUN_TC_COMMIT" ] && rerun_set_tc_commit "$c"
         if ! rerun_env_push_file "$conf" "$id" "$req" requested.txt; then
             last_err="cannot copy the case list to node ${id}"
