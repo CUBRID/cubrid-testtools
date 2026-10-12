@@ -341,8 +341,9 @@ public class RerunProducer {
 			log("cannot check the build store for " + fileName + " (no local path, " + url + " unreachable)");
 			return;
 		}
+		// name what was asked last: the URL the consumers would download, else the store path
 		throw new IllegalStateException("The build package is no longer in the build store: "
-				+ (candidates.isEmpty() ? url : candidates.get(0).getPath()) + (httpStatus > 0 ? " (HTTP " + httpStatus + ")" : ""));
+				+ (httpStatus > 0 ? url + " (HTTP " + httpStatus + ")" : candidates.get(0).getPath()));
 	}
 
 	/** HTTP status of a HEAD request to the package URL, or -1 when it cannot be asked. */
