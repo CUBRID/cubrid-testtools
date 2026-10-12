@@ -59,6 +59,7 @@ isWin=""
 onlyMax=""
 withoutSync=0
 withoutRerun=0
+rerunOnly=0
 rerunQueuePrefix=RERUN_
 clspath="$CLASSPATH"
 msgId=""
@@ -93,6 +94,13 @@ while [ $# -ne 0 ];do
                 --without-rerun)
                 withoutRerun=1
                 ;;
+                --rerun-only)
+                rerunOnly=1
+                ;;
+                --rerun-prefix)
+                        shift
+                rerunQueuePrefix=$1
+                ;;
 	esac
 	shift
 done
@@ -112,7 +120,7 @@ function usage()
 {
 	exec_name=$(basename $0)
 		cat<<EOF
-		Usage:$exec_name <-q queue_name> <-exec script> [--debug] [--only-max] [-s china|kor] [--without-sync] [--without-rerun]
+		Usage:$exec_name <-q queue_name> <-exec script> [--debug] [--only-max] [-s china|kor] [--without-sync] [--without-rerun] [--rerun-only] [--rerun-prefix <prefix>]
 		-q <queue name>      | this option represents queue name what you want to consume
 		-exec <script.sh>    | script name you will run
                 -s                   | this option represents what build site you will use, such as 'china', 'kor'
@@ -120,6 +128,8 @@ function usage()
 		--only-max           | this option represents you only need max version in this queue, old ones will be deleted
                 --without-sync       | do not update codes
                 --without-rerun      | do not take QAHome rerun requests from the RERUN_<queue> queues
+                --rerun-only         | take only rerun requests; never the regular queues (dedicated or test rerun node)
+                --rerun-prefix       | rerun queue prefix (default RERUN_), e.g. RERUNTEST_ for a staging test
 	    
 EOF
 
@@ -407,6 +417,14 @@ do
         if [ $withoutSync -ne 1 ]
 		then
  			updateCodes $branchName
+		fi
+
+		# A rerun-only node never touches the regular queue nor its continue mode.
+		if [ $rerunOnly -eq 1 ]
+		then
+			processRerunQueue $x ${q_exec[$count]}
+			let "count=count+1"
+			continue
 		fi
 	
 		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
