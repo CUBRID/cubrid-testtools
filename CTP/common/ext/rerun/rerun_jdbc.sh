@@ -99,10 +99,11 @@ function rerun_jdbc() {
     fi
     repo_dir=$RERUN_REPO_RAW
     scen_rel=$RERUN_SCEN_REL
-    if ! commit=$(rerun_git_update_local "$repo_dir"); then
+    if ! rerun_git_update_local "$repo_dir"; then
         rerun_error_all "$RERUN_LAST_ERROR"
         return 0
     fi
+    commit=$RERUN_GIT_COMMIT
     rerun_set_tc_commit "$commit"
 
     # sce_id "<scen_rel>/src/<pkg>/<Class>.java => <method>()" -> key "src/<pkg>/<Class>.java => <method>()"
