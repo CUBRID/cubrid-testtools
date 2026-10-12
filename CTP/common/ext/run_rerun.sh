@@ -50,6 +50,8 @@ export RERUN_CASES_FILE=${RERUN_WORK}/cases.tsv
 export RERUN_RESULTS_FILE=${RERUN_WORK}/results.tsv
 export RERUN_TC_COMMIT_FILE=${RERUN_WORK}/tc_commit
 RERUN_FINISHED=0
+# How often a running rerun asks QAHome whether it was cancelled (rerun.nhn?m=rerunPoll).
+RERUN_POLL_SECONDS=${RERUN_POLL_SECONDS:-60}
 
 # rerun_result <rerunId> <PASS|FAIL|ERROR> <log file relative to RERUN_LOG_ROOT, may be empty> <message>
 function rerun_result() {
@@ -119,15 +121,48 @@ echo "[RERUN] batch ${RERUN_BATCH_ID}: $(wc -l < "$RERUN_CASES_FILE") case(s) of
 family=$(rerun_family_of "$BUILD_SCENARIOS")
 runner=${CTP_HOME}/common/ext/rerun/rerun_${family}.sh
 if [ -n "$family" -a -f "$runner" ]; then
-    # A subshell, so a runner that exits early cannot skip the reporting below.
+    # A subshell, so a runner that exits early cannot skip the reporting below; in its own process group
+    # (set -m), so a cancel from QAHome can stop the whole harness under it.
+    set -m
     (
+        # Back to no job control inside, so background jobs a harness starts stay in this process group.
+        set +m
         cd ${CTP_HOME}
         if [ -f ${CTP_HOME}/common/ext/rerun/rerun_common.sh ]; then
             source ${CTP_HOME}/common/ext/rerun/rerun_common.sh
         fi
         source "$runner"
         rerun_${family}
-    ) 2>&1 | tee "$RERUN_LOG_ROOT/runner.log"
+    ) > "$RERUN_LOG_ROOT/runner.log" 2>&1 &
+    runner_pid=$!
+    set +m
+    waited=0
+    while kill -0 $runner_pid 2>/dev/null; do
+        sleep 5
+        waited=$((waited + 5))
+        if [ $((waited % RERUN_POLL_SECONDS)) -ne 0 ]; then
+            continue
+        fi
+        poll=$(rerun_call rerunPoll 2>/dev/null | head -1)
+        case "$poll" in
+            CANCEL*)
+                echo "[RERUN] batch ${RERUN_BATCH_ID}: ${poll}; stopping the harness"
+                kill -TERM -- -$runner_pid 2>/dev/null
+                for i in $(seq 30); do
+                    kill -0 $runner_pid 2>/dev/null || break
+                    sleep 1
+                done
+                kill -KILL -- -$runner_pid 2>/dev/null
+                wait $runner_pid 2>/dev/null
+                cat "$RERUN_LOG_ROOT/runner.log"
+                # The cancel already closed the batch and its cases in QAHome: nothing to upload or report.
+                RERUN_FINISHED=1
+                exit 0
+                ;;
+        esac
+    done
+    wait $runner_pid 2>/dev/null
+    cat "$RERUN_LOG_ROOT/runner.log"
 else
     while IFS=$'\t' read -r rerun_id sce_id; do
         rerun_result "$rerun_id" ERROR "" "rerun is not supported for category ${BUILD_SCENARIOS}"

@@ -407,7 +407,9 @@ public class RerunProducer {
 		String message = reason.length() > MAX_ERROR ? reason.substring(0, MAX_ERROR) : reason;
 		PreparedStatement ps = null;
 		try {
-			ps = db.prepareStatement("UPDATE verify_rerun_batch SET status = 'ERROR', error_message = ?, finished_at = SYS_DATETIME WHERE id = ?");
+			// Only a batch this producer still owns: a cancel from QAHome (CANCELLED) must not be overwritten.
+			ps = db.prepareStatement("UPDATE verify_rerun_batch SET status = 'ERROR', error_message = ?, finished_at = SYS_DATETIME"
+					+ " WHERE id = ? AND status IN ('REQUESTED', 'SENDING')");
 			ps.setString(1, message);
 			ps.setInt(2, batchId);
 			ps.executeUpdate();
