@@ -28,6 +28,10 @@ start_consumer.sh (every consumer of the original queue)
   `MKEY_RERUN_CASE_COUNT`.
 * A rerun never feeds the normal result paths (no DB feedback, no `*ImportAction.nhn` call, no upload
   to `qa_repository/function`): importing a partial run would hide the original run's fail list.
+* A rerun can be cancelled from QAHome (the `in progress` cell opens its details). While the harness
+  runs, `run_rerun.sh` asks `rerun.nhn?m=rerunPoll` every `RERUN_POLL_SECONDS` (60); on `CANCEL` it
+  kills the runner's process group (TERM, then KILL after 30 s) and exits without reporting. Processes
+  already started on remote worker nodes may outlive it until the harness's next cleanup.
 * A consumer takes at most one rerun message of a queue before that queue's regular poll, so a
   rerun waits only for the run already in progress on the node. An interrupted rerun is not resumed
   (no continue mode); QAHome turns it into `error` after 24 hours.
