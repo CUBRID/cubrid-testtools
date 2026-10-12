@@ -54,6 +54,9 @@ Start it in the background (PID in `conf/rerun_producer_PID`):
 $ cd ~/CTP/common/script
 $ nohup sh start_rerun_producer.sh > ~/rerun_producer.log 2>&1 &
 ```
+Off the producer node (e.g. a staging producer), the build-store check falls back to an HTTP HEAD
+request on `BUILD_URLS`.
+
 Check what it would send without changing anything:
 ```
 $ sh start_rerun_producer.sh --dry-run --once
@@ -64,6 +67,11 @@ Nothing to configure: `start_consumer.sh` polls `RERUN_<queue>` for every queue 
 node out of reruns, start it with `--without-rerun`:
 ```
 $ nohup sh start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_LINUX -exec run_shell --without-rerun &
+```
+A node can also serve reruns only — it never takes a regular message nor resumes a regular run — and
+use another queue prefix, which is how a staging test borrows a node without touching daily QA:
+```
+$ nohup sh start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_LINUX -exec run_shell --rerun-only --rerun-prefix RERUNTEST_ --without-sync &
 ```
 The consumer must be able to reach QAHome's `rerun.nhn` over HTTP (`MKEY_RERUN_FEEDBACK_URL`, set by
 QAHome's `rerun.feedback.url`).
