@@ -318,13 +318,27 @@ function rerun_precheck_message() {
     return 0
 }
 
+# rerun_timeout <timeout(1) arguments...>: timeout(1) with its process group on record. timeout makes itself the
+# leader of a new process group, out of reach of a cancel that stops the runner's group, so run_rerun.sh also
+# stops every group listed in RERUN_PGID_FILE. Use it for every local command that runs under a timeout.
+function rerun_timeout() {
+    local pid rc
+    timeout "$@" &
+    pid=$!
+    echo "$pid" >> "$RERUN_PGID_FILE"
+    wait $pid
+    rc=$?
+    sed -i "/^${pid}\$/d" "$RERUN_PGID_FILE" 2>/dev/null
+    return $rc
+}
+
 # rerun_step <name> <timeout secs> <command...>: run a script (not a shell function) with its output in
 # RERUN_FAM_WORK/<name>.log and a scrubbed copy in setup/<name>.log; returns the command's status.
 function rerun_step() {
     local name=$1 secs=$2 rc
     shift 2
     rerun_log "step ${name}: start"
-    timeout -k 60 "$secs" "$@" > "$RERUN_FAM_WORK/$name.log" 2>&1 < /dev/null
+    rerun_timeout -k 60 "$secs" "$@" > "$RERUN_FAM_WORK/$name.log" 2>&1 < /dev/null
     rc=$?
     rerun_save_log "$RERUN_FAM_WORK/$name.log" "setup/$name.log"
     if [ $rc -eq 124 -o $rc -eq 137 ]; then
@@ -351,7 +365,7 @@ function rerun_run_action() {
 function rerun_check_installed() {
     local rel ver
     RERUN_LAST_ERROR=""
-    rel=$(timeout 120 cubrid_rel 2>&1 < /dev/null | grep CUBRID | head -1)
+    rel=$(rerun_timeout 120 cubrid_rel 2>&1 < /dev/null | grep CUBRID | head -1)
     if [ -z "$rel" ]; then
         RERUN_LAST_ERROR="build install failed: cubrid_rel does not answer after installing ${url##*/} (see setup/install.log)"
         return 1
@@ -516,7 +530,7 @@ function rerun_bad_path() {
 function rerun_run_harness() {
     local type=$1 conf=$2 log=$3 secs=$4 rc reason
     rerun_log "harness: ctp.sh ${type} (timeout ${secs}s)"
-    (cd "${CTP_HOME}" && timeout -k 120 "$secs" "${CTP_HOME}/bin/ctp.sh" "$type" -c "$conf" > "$log" 2>&1 < /dev/null)
+    (cd "${CTP_HOME}" && rerun_timeout -k 120 "$secs" "${CTP_HOME}/bin/ctp.sh" "$type" -c "$conf" > "$log" 2>&1 < /dev/null)
     rc=$?
     RERUN_HARNESS_NOTE=""
     if [ $rc -eq 124 -o $rc -eq 137 ]; then
@@ -709,7 +723,7 @@ function rerun_ssh_exec() {
     local host=$1 port=$2 user=$3 pwd=$4 secs=$5 script=$6 b64 rfile
     { set +x; } 2>/dev/null
     if [ "$host" == "local" ]; then
-        (cd "$HOME" && timeout -k 30 "$secs" bash "$script" 2>&1 < /dev/null)
+        (cd "$HOME" && rerun_timeout -k 30 "$secs" bash "$script" 2>&1 < /dev/null)
         return 0
     fi
     b64=$(base64 < "$script" | tr -d '\n')
@@ -718,7 +732,7 @@ function rerun_ssh_exec() {
         return 1
     fi
     rfile="\$HOME/.ctp_rerun_${RERUN_TAG}_\$\$.sh"
-    timeout -k 30 "$secs" run_remote_script -host "$host" -port "${port:-22}" -user "$user" -password "$pwd" \
+    rerun_timeout -k 30 "$secs" run_remote_script -host "$host" -port "${port:-22}" -user "$user" -password "$pwd" \
         -c "echo $b64 | base64 -d > $rfile; bash $rfile 2>&1; rm -f $rfile" < /dev/null 2>&1
 }
 
@@ -895,7 +909,7 @@ function rerun_backup_cores() {
         n=$((n + 1))
         if [ $n -le 5 ]; then
             echo "==================== $core ====================" >> "$out"
-            timeout 600 analyzer.sh "$core" >> "$out" 2>&1 < /dev/null
+            rerun_timeout 600 analyzer.sh "$core" >> "$out" 2>&1 < /dev/null
         fi
         mv -f "$core" "$backup/" 2>/dev/null
     done 3< "$RERUN_FAM_WORK/cores.lst"

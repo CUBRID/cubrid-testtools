@@ -150,7 +150,7 @@ function rerun_jdbc() {
         cp_jars=$cp_jars:$jar
     done
     rerun_log "compiling $(wc -l < "$srclist") JDBC source(s) of ${scen_rel}"
-    (cd "$scenario" && timeout 1800 javac -nowarn -d "$RERUN_FAM_WORK/classes" -cp ".:$cp_jars" @"$srclist") \
+    (cd "$scenario" && rerun_timeout 1800 javac -nowarn -d "$RERUN_FAM_WORK/classes" -cp ".:$cp_jars" @"$srclist") \
         > "$RERUN_FAM_WORK/jdbc_compile.log" 2>&1 < /dev/null
     rc=$?
     rerun_save_log "$RERUN_FAM_WORK/jdbc_compile.log" setup/jdbc_compile.log
