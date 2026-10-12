@@ -306,7 +306,11 @@ public class RerunProducer {
 		return props;
 	}
 
-	/** The package must still be in the build store, or every consumer would fail to install it. */
+	/**
+	 * The package must still be in the build store, or every consumer would fail to install it. The
+	 * producer node sees the store on disk; elsewhere (a staging producer) the package URL is asked with
+	 * an HTTP HEAD instead.
+	 */
 	private void checkBuildPackage(Properties props) {
 		String url = props.getProperty(Constants.MSG_BUILD_URLS, "");
 		String fileName = url.substring(url.lastIndexOf('/') + 1);
@@ -324,16 +328,39 @@ public class RerunProducer {
 		if (repoRoot != null && repoRoot.trim().length() > 0 && store != null && buildId != null) {
 			candidates.add(new File(repoRoot.trim() + File.separator + store + File.separator + buildId + File.separator + "drop", fileName));
 		}
-		if (candidates.isEmpty()) {
-			log("cannot check the build store for " + fileName + " (no BUILD_ABSOLUTE_PATH, no build.repository.root)");
-			return;
-		}
 		for (File candidate : candidates) {
 			if (candidate.exists()) {
 				return;
 			}
 		}
-		throw new IllegalStateException("The build package is no longer in the build store: " + candidates.get(0).getPath());
+		int httpStatus = headStatus(url);
+		if (httpStatus == 200) {
+			return;
+		}
+		if (candidates.isEmpty() && httpStatus < 0) {
+			log("cannot check the build store for " + fileName + " (no local path, " + url + " unreachable)");
+			return;
+		}
+		throw new IllegalStateException("The build package is no longer in the build store: "
+				+ (candidates.isEmpty() ? url : candidates.get(0).getPath()) + (httpStatus > 0 ? " (HTTP " + httpStatus + ")" : ""));
+	}
+
+	/** HTTP status of a HEAD request to the package URL, or -1 when it cannot be asked. */
+	private static int headStatus(String url) {
+		java.net.HttpURLConnection connection = null;
+		try {
+			connection = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+			connection.setRequestMethod("HEAD");
+			connection.setConnectTimeout(10000);
+			connection.setReadTimeout(10000);
+			return connection.getResponseCode();
+		} catch (Exception e) {
+			return -1;
+		} finally {
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
 	}
 
 	private void sendToQueue(Message message) throws Exception {
