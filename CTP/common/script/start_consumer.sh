@@ -88,7 +88,6 @@ while [ $# -ne 0 ];do
                 ser_site=$1
                 ;;
                 --without-sync)
-                        shift
                 withoutSync=1
                 ;;
                 --without-rerun)
@@ -101,9 +100,24 @@ while [ $# -ne 0 ];do
                         shift
                 rerunQueuePrefix=$1
                 ;;
+		*)
+		echo "Ignoring unknown option: $1"
+		;;
 	esac
 	shift
 done
+
+# An empty prefix would make the "rerun queue" the regular queue, and run_rerun.sh would drop its messages.
+if ! [[ "$rerunQueuePrefix" =~ ^[A-Za-z0-9_]+_$ ]]
+then
+	echo "--rerun-prefix needs a value such as RERUN_ or RERUNTEST_ (letters, digits and _, ending with _): '$rerunQueuePrefix'"
+	exit 1
+fi
+if [ $rerunOnly -eq 1 ] && [ $withoutRerun -eq 1 -o "$isDebug" == "--debug" ]
+then
+	echo "--rerun-only cannot be combined with --without-rerun or --debug"
+	exit 1
+fi
 
 if [ "$os" == "Linux" -o "$os" = "AIX" ]
 then
@@ -216,7 +230,8 @@ function startAgent()
 function startRerunAgent()
 {
 	rm -rf ${CTP_HOME}/common/sched/result/*
-	(cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $1 > ${CTP_HOME}/common/sched/result/$fileName)
+	# umask 077: a rerun message carries the batch token
+	(umask 077; cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $1 > ${CTP_HOME}/common/sched/result/$fileName)
 	msgId=`cat ${CTP_HOME}/common/sched/result/$fileName |grep MSG_ID|awk -F ':' '{print $2}'`
 }
 
@@ -232,6 +247,15 @@ function processRerunQueue()
 	hasTestBuild
 	if [ "$hasBuild" != "true" ]
 	then
+		if [ -n "$msgId" ]
+		then
+			echo "Rerun message $msgId on $rerunQueue has no build to test; ignored"
+		fi
+		return
+	fi
+	if ! grep -q '^BUILD_GENERATE_MSG_WAY:RERUN' ${CTP_HOME}/common/sched/result/$fileName
+	then
+		echo "Message $msgId on $rerunQueue is not a rerun request (BUILD_GENERATE_MSG_WAY is not RERUN); ignored"
 		return
 	fi
 	if [ ! -f ${CTP_HOME}/common/ext/run_rerun.sh ]

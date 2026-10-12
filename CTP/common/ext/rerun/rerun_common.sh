@@ -85,8 +85,8 @@ function rerun_init() {
     RERUN_HARNESS_NOTE=""
     rm -rf "$RERUN_FAM_WORK"
     mkdir -p "$RERUN_FAM_WORK" "$RERUN_LOG_ROOT/setup" "$RERUN_LOG_ROOT/harness"
+    # run_rerun.sh scrubs runner.log with it after the runner ends, then removes the whole family work dir
     (umask 077; : > "$RERUN_SECRETS")
-    rerun_on_exit "rm -f '$RERUN_SECRETS'"
     trap 'rerun_cleanup' EXIT
     rerun_secrets_init
     rerun_log "category ${BUILD_SCENARIOS}, build ${BUILD_ID}, testcase branch ${RERUN_BRANCH}, $(rerun_case_count) case(s), runner ${RERUN_FAMILY}"
@@ -260,7 +260,13 @@ function rerun_secrets_init() {
 # '<..pwd..>=x' values masked, and ctp.sh's configuration dump removed. Lines matching <drop ERE> are dropped.
 function rerun_scrub_stream() {
     RERUN_AWK_DROP=$1 awk -v sf="$RERUN_SECRETS" '
-        BEGIN { drop = ENVIRON["RERUN_AWK_DROP"]; n = 0; while ((getline s < sf) > 0) if (length(s) >= 4) sec[++n] = s; close(sf) }
+        BEGIN {
+            drop = ENVIRON["RERUN_AWK_DROP"]; n = 0
+            while ((getline s < sf) > 0) if (length(s) >= 4 && !(s in seen)) { seen[s] = 1; sec[++n] = s }
+            close(sf)
+            # longest first: a short secret inside a longer one must not break the longer match
+            for (i = 2; i <= n; i++) { v = sec[i]; for (j = i - 1; j >= 1 && length(sec[j]) < length(v); j--) sec[j + 1] = sec[j]; sec[j + 1] = v }
+        }
         incfg { if ($0 ~ /^----------END OF FILE----------/) incfg = 0; next }
         /\] CONFIG FILE: / { print; print "[RERUN] (configuration dump removed: it holds passwords)"; incfg = 1; next }
         drop != "" && $0 ~ drop { next }
@@ -276,7 +282,7 @@ function rerun_scrub_stream() {
             }
             print line
         }' | sed -E \
-        -e 's#(://)[^/@[:space:]]+:[^/@[:space:]]+@#\1****:****@#g' \
+        -e 's#(://)[^/@:[:space:]]+:[^/[:space:]]*@#\1****:****@#g' \
         -e 's#(-password|-pwd|--password)([[:space:]]+)[^[:space:]]+#\1\2****#g' \
         -e 's#([A-Za-z0-9_.]*([Pp][Ww][Dd]|[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]|[Pp][Aa][Ss][Ss][Ww][Dd])[A-Za-z0-9_.]*[[:space:]]*[=:][[:space:]]*)[^[:space:]]+#\1****#g'
 }
@@ -353,7 +359,8 @@ function rerun_step() {
 function rerun_run_action() {
     if [ -f "${CTP_HOME}/conf/$1" ]; then
         rerun_log "runAction $1"
-        runAction "$1" > "$RERUN_FAM_WORK/action_$1.log" 2>&1 < /dev/null
+        # runAction is exported by sched/init.sh; under a timeout so a hung cleanup cannot hold the consumer
+        rerun_timeout 1800 bash -c 'runAction "$1"' rerun_action "$1" > "$RERUN_FAM_WORK/action_$1.log" 2>&1 < /dev/null
         rerun_save_log "$RERUN_FAM_WORK/action_$1.log" "setup/action_$1.log"
     else
         rerun_log "conf/$1 not found, skip it (as the regular runner does)"
@@ -387,11 +394,12 @@ function rerun_set_tc_commit() {
 }
 
 # rerun_git_update_local <dir>: update a local checkout to the head of BUILD_SCENARIO_BRANCH_GIT with the
-# daily command (run_git_update) under a timeout, verify the branch and print the commit. On failure:
-# status 1 and the reason in RERUN_LAST_ERROR.
+# daily command (run_git_update) under a timeout, verify the branch and set RERUN_GIT_COMMIT. On failure:
+# status 1 and the reason in RERUN_LAST_ERROR. Call it directly, not in $(...), or the reason is lost.
 function rerun_git_update_local() {
     local dir=$1 rc branch head
     RERUN_LAST_ERROR=""
+    RERUN_GIT_COMMIT=""
     if [ ! -d "$dir" ]; then
         RERUN_LAST_ERROR="testcase checkout $dir does not exist on ${USER}@$(hostname)"
         return 1
@@ -412,7 +420,7 @@ function rerun_git_update_local() {
         RERUN_LAST_ERROR="cannot read the testcase commit of $dir"
         return 1
     fi
-    echo "$head"
+    RERUN_GIT_COMMIT=$head
 }
 
 # rerun_conf_get <conf> <key>: raw value (no ${HOME} expansion, last definition wins) of a key in a
@@ -536,7 +544,7 @@ function rerun_run_harness() {
     if [ $rc -eq 124 -o $rc -eq 137 ]; then
         RERUN_HARNESS_NOTE="harness timed out after ${secs}s"
     else
-        reason=$(grep -E '^\[ERROR\]|^QUIT$|NO TEST CASE TO TEST|compile fail|Not found any|^Error: ' "$log" 2>/dev/null | tail -1 | cut -c1-300)
+        reason=$(grep -E '^\[ERROR\]|^QUIT$|NO TEST CASE TO TEST|compile fail|Not found any|^Error: ' "$log" 2>/dev/null | tail -1 | cut -c1-300 | rerun_scrub_stream "")
         [ -n "$reason" ] && RERUN_HARNESS_NOTE="harness said: ${reason}"
     fi
     rerun_log "harness: exit status ${rc}${RERUN_HARNESS_NOTE:+ (${RERUN_HARNESS_NOTE})}"
@@ -836,17 +844,22 @@ function rerun_env_push_file() {
 
 # rerun_env_git_update <conf> <envId> <scenario dir, raw> <pin commit or "">: run_git_update on the node
 # (timeout on both sides), then optionally pin the checkout to the commit another env got, verify the
-# branch and print the commit. Status 1 and RERUN_LAST_ERROR on failure.
+# branch and set RERUN_GIT_COMMIT. Status 1 and RERUN_LAST_ERROR on failure (call it directly, not in $(...)).
+# The node records the update's process group in $W/git.pgid, so the env cleanup can stop a running update.
 function rerun_env_git_update() {
     local conf=$1 id=$2 dir=$3 pin=$4 f out branch head
     RERUN_LAST_ERROR=""
+    RERUN_GIT_COMMIT=""
     f=$(rerun_script git_update)
     cat >> "$f" <<EOF
 mkdir -p "\$W"
 d=$dir
 if [ ! -d "\$d" ]; then echo "RERUN_ERROR=testcase checkout \$d does not exist"; exit 0; fi
-timeout -k 60 $RERUN_GIT_TIMEOUT run_git_update -f "\$d" -b "$RERUN_BRANCH" > "\$W/git_update.log" 2>&1 < /dev/null
+timeout -k 60 $RERUN_GIT_TIMEOUT run_git_update -f "\$d" -b "$RERUN_BRANCH" > "\$W/git_update.log" 2>&1 < /dev/null &
+echo \$! > "\$W/git.pgid"
+wait \$!
 rc=\$?
+rm -f "\$W/git.pgid"
 tail -n 40 "\$W/git_update.log"
 if [ \$rc -eq 124 ] || [ \$rc -eq 137 ]; then echo "RERUN_ERROR=testcase update timed out after ${RERUN_GIT_TIMEOUT}s"; fi
 pin="$pin"
@@ -878,17 +891,22 @@ EOF
         RERUN_LAST_ERROR="env $id cannot be pinned to testcase commit $pin (it is at $head)"
         return 1
     fi
-    echo "$head"
+    RERUN_GIT_COMMIT=$head
 }
 
 # rerun_env_cleanup_cmd <conf> <envId> [extra node dir, relative to $HOME]: a command string for
 # rerun_on_exit that removes the batch dirs on the node.
 function rerun_env_cleanup_cmd() {
-    local f
+    local f frozen
     f=$(rerun_script cleanup_$2)
+    # a testcase update still running there (cancel): stop its process group first
+    echo "[ -s \"\$W/git.pgid\" ] && kill -TERM -- -\$(cat \"\$W/git.pgid\") 2>/dev/null" >> "$f"
     echo "rm -rf \"\$W\"${3:+ \"\$HOME/$3\"}" >> "$f"
     echo "rmdir \"\$HOME/$RERUN_NODE_DIR\" \"\$HOME/$RERUN_NODE_STAGE\" 2>/dev/null" >> "$f"
-    echo "rerun_env_exec '$1' '$2' '' 300 '$f'"
+    # The runner later prunes dropped envs from the conf; keep a copy so this env can still be reached.
+    frozen=$RERUN_FAM_WORK/.cleanup_env_$2.conf
+    (umask 077; cp -f "$1" "$frozen")
+    echo "rerun_env_exec '$frozen' '$2' '' 300 '$f'"
 }
 
 #######################################################################################################

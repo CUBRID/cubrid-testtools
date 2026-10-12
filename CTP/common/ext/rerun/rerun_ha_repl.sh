@@ -92,10 +92,11 @@ function rerun_repl_family() {
 
     # testcases at the branch head (the controller's checkout, as run_<fam>.sh)
     testcase_path=$HOME/$repo/sql
-    if ! commit=$(rerun_git_update_local "$testcase_path"); then
+    if ! rerun_git_update_local "$testcase_path"; then
         rerun_error_all "$RERUN_LAST_ERROR"
         return 0
     fi
+    commit=$RERUN_GIT_COMMIT
     rerun_set_tc_commit "$commit"
 
     # stage <base>.sql + known-diff patches of the requested cases
@@ -150,15 +151,17 @@ function rerun_repl_family() {
     # rerun conf (as run_<fam>.sh, plus the rerun overrides)
     rerun_conf_keep_envs "$conf" $envs
     rerun_conf_drop_keys "$conf" scenario testcase_exclude_from_file ha_sync_failure_resolve_mode test_category \
-        testcase_git_branch cubrid_download_url
+        testcase_git_branch cubrid_download_url test_rebuild_env_yn
     ini.sh "$conf" scenario "$stage_root/$repo/sql"
     ini.sh "$conf" ha_sync_failure_resolve_mode continue
+    # deploy the message's build: with 'no' the harness would test whatever build the HA nodes already have
+    ini.sh "$conf" test_rebuild_env_yn true
     ini.sh "$conf" test_category "$BUILD_SCENARIOS"
     ini.sh "$conf" testcase_git_branch "$RERUN_BRANCH"
     ini.sh "$conf" cubrid_download_url "$url"
     if ! rerun_conf_silence "$conf" || ! rerun_conf_assert "$conf" scenario "$stage_root/$repo/sql" ||
         ! rerun_conf_assert "$conf" testcase_exclude_from_file "" || ! rerun_conf_assert "$conf" ha_sync_failure_resolve_mode continue ||
-        ! rerun_conf_assert "$conf" cubrid_download_url "$url"; then
+        ! rerun_conf_assert "$conf" cubrid_download_url "$url" || ! rerun_conf_assert "$conf" test_rebuild_env_yn true; then
         rerun_error_all "$RERUN_LAST_ERROR"
         return 0
     fi

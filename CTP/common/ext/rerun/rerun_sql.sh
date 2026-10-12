@@ -137,10 +137,11 @@ function rerun_sql_family() {
         rerun_error_all "testcase checkout ${CTP_HOME}/../${repo} does not exist on ${USER}@$(hostname)"
         return 0
     fi
-    if ! commit=$(rerun_git_update_local "$repo_dir"); then
+    if ! rerun_git_update_local "$repo_dir"; then
         rerun_error_all "$RERUN_LAST_ERROR"
         return 0
     fi
+    commit=$RERUN_GIT_COMMIT
     rerun_set_tc_commit "$commit"
 
     # STEP 3: stage the requested cases only
