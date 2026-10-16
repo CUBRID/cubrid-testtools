@@ -839,6 +839,16 @@ Only process id can be used as a parameter.
 xkill_pid $pid
 ```
 
+### wait_until
+Used to wait until a command succeeds, instead of a fixed `sleep`.  
+It runs the command in the current shell every second (or every `-i` seconds) and returns 0 as soon as the command returns 0. It returns 1 when `max_seconds` of wall-clock time have passed.  
+Wrap a pipeline, `!` or `&&` in `eval '...'`. Inside `eval`, `$1`, `$2`, ... are the arguments of `wait_until`, not of the caller, so expand them before the call.  
+```
+wait_until 60 grep -q "Shard proxy started" $CUBRID/log/broker/proxy_log/$proxy.log
+wait_until -i 0.5 60 eval '! kill -0 $pid 2>/dev/null'
+wait_until 120 eval 'cubrid server status | grep -qw $db' || write_nok "server $db did not start"
+```
+
 ### format_csql_output
 Used to remove the time related lines in csql output file.  
 ```

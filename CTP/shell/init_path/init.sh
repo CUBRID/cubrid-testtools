@@ -130,6 +130,22 @@ function get_curr_hour
         echo $(($str))
 }
 
+# Inside eval '...', $1.. are this function's arguments, not the caller's.
+function wait_until
+{
+	local _wu_interval=1
+	if [ "$1" = "-i" ]; then
+		_wu_interval=$2
+		shift 2
+	fi
+	local _wu_deadline=$((SECONDS + $1))
+	shift
+	until "$@"; do
+		[ $SECONDS -gt $_wu_deadline ] && return 1
+		sleep $_wu_interval
+	done
+}
+
 
 function make_answer_or_compare_result
 {
