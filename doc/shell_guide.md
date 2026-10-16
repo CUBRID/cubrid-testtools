@@ -847,7 +847,7 @@ wait_until [-i interval] max_seconds command [args...]
 It runs the command in the current shell every second (or every `-i` seconds) and returns 0 as soon as the command returns 0. A variable or a file that the command writes keeps its last value after the call.  
 It checks the time only between two runs of the command: it returns 1 at the first failed run after `max_seconds` of wall-clock time, so it can return up to the duration of one run plus one interval plus one second late. A run that hangs is not interrupted. A call without a command returns 2.  
 Set `max_seconds` well above the normal time; it costs time only when something is already wrong. Use `sleep` only when time itself is what the case tests, for example a lock or query timeout.  
-Wrap a pipeline, `!` or `&&` in `eval '...'` with single quotes, so the variables are read again at each run. Inside `eval`, `$1`, `$2`, ... are the arguments of `wait_until`, not of the caller, so copy them to a variable first.  
+Wrap a condition with a pipeline, `!`, `&&`, `||`, `;`, `$(...)` or backticks in `eval '...'` with single quotes, so it is evaluated again at each run. Without `eval`, `$(...)` runs only once, before the first run: `wait_until 60 [ $(wc -l < f) -gt 0 ]` tests a constant. Inside `eval`, `$1`, `$2`, ... are the arguments of `wait_until`, not of the caller, so copy them to a variable first.  
 It is a function of `init.sh`, so a child shell does not have it: `bash -c '...'`, `timeout ... bash -c '...'` and the `;shell_cmd` of csql.  
 ```
 # a line in a log
@@ -868,7 +868,7 @@ wait_until 120 eval 'grep -q "^started$" debug.info || ! kill -0 $java_pid 2>/de
 # an argument of the case function
 function wait_started {
     local want=$1
-    wait_until 120 eval '[ $(grep -c "^started$" debug.info) -ge $want ]'
+    wait_until 120 eval 'n=$(grep -c "^started$" debug.info 2>/dev/null); [ "${n:-0}" -ge $want ]'
 }
 ```
 
