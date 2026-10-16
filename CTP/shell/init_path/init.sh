@@ -138,6 +138,7 @@ function wait_until
 		_wu_interval=$2
 		shift 2
 	fi
+	[ $# -ge 2 ] || { echo "usage: wait_until [-i interval] max_seconds command [args...]" >&2; return 2; }
 	local _wu_deadline=$((SECONDS + $1))
 	shift
 	until "$@"; do

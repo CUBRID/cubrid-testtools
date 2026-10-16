@@ -841,7 +841,8 @@ xkill_pid $pid
 
 ### wait_until
 Used to wait until a command succeeds, instead of a fixed `sleep`.  
-It runs the command in the current shell every second (or every `-i` seconds) and returns 0 as soon as the command returns 0. It returns 1 when `max_seconds` of wall-clock time have passed.  
+It runs the command in the current shell every second (or every `-i` seconds) and returns 0 as soon as the command returns 0.  
+It checks the time only between two runs of the command: it returns 1 at the first failed run after `max_seconds` of wall-clock time, so it can return up to the duration of one run plus one interval plus one second late. A run that hangs is not interrupted. A call without a command returns 2.  
 Wrap a pipeline, `!` or `&&` in `eval '...'`. Inside `eval`, `$1`, `$2`, ... are the arguments of `wait_until`, not of the caller, so expand them before the call.  
 ```
 wait_until 60 grep -q "Shard proxy started" $CUBRID/log/broker/proxy_log/$proxy.log
