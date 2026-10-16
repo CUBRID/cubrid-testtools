@@ -858,11 +858,8 @@ wait_until 120 eval 'cubrid server status | grep -qw $db' || write_nok "server $
 wait_until 60 eval '! cubrid server status 2>&1 | grep -q "Server $db "'
 wait_until 60 eval 'cubrid tranlist $db 2>/dev/null | grep -qw csql'
 wait_until 60 eval 'cnt=$(ls lob | wc -l); [ $cnt -ge 3 ]'
-# kill the process if it does not exit in time
 wait_until 600 eval '! kill -0 $pid 2>/dev/null' || kill -9 $pid
-# stop early when the process that should make it happen died
-wait_until 120 eval 'grep -q "^started$" debug.info || ! kill -0 $java_pid 2>/dev/null'
-# an argument of the case function
+wait_until 120 eval 'grep -q "^started$" debug.info 2>/dev/null || ! kill -0 $java_pid 2>/dev/null'
 function wait_started {
     local want=$1
     wait_until 120 eval 'n=$(grep -c "^started$" debug.info 2>/dev/null); [ "${n:-0}" -ge $want ]'

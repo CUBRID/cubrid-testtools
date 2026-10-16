@@ -130,8 +130,7 @@ function get_curr_hour
         echo $(($str))
 }
 
-# The command runs in this shell and sees these locals, so the _wu_ prefix
-# keeps them from hiding the caller's variables of the same name.
+# The command runs in this shell, so _wu_ keeps these locals from hiding its variables.
 function wait_until
 {
 	local _wu_interval=1
