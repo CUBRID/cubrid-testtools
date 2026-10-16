@@ -130,7 +130,8 @@ function get_curr_hour
         echo $(($str))
 }
 
-# Inside eval '...', $1.. are this function's arguments, not the caller's.
+# The command runs in this shell and sees these locals, so the _wu_ prefix
+# keeps them from hiding the caller's variables of the same name.
 function wait_until
 {
 	local _wu_interval=1
@@ -145,6 +146,7 @@ function wait_until
 		[ $SECONDS -gt $_wu_deadline ] && return 1
 		sleep $_wu_interval
 	done
+	return 0
 }
 
 

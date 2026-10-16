@@ -846,23 +846,20 @@ wait_until [-i interval] max_seconds command [args...]
 ```
 It runs the command in the current shell every second (or every `-i` seconds) and returns 0 as soon as the command returns 0. A variable or a file that the command writes keeps its last value after the call.  
 It checks the time only between two runs of the command: it returns 1 at the first failed run after `max_seconds` of wall-clock time, so it can return up to the duration of one run plus one interval plus one second late. A run that hangs is not interrupted. A call without a command returns 2.  
+`max_seconds` must be a whole number; a fraction such as `1.5` stops the case with a syntax error. `interval` can be a fraction such as `0.5`.  
 Set `max_seconds` well above the normal time; it costs time only when something is already wrong. Use `sleep` only when time itself is what the case tests, for example a lock or query timeout.  
 Wrap a condition with a pipeline, `!`, `&&`, `||`, `;`, `$(...)` or backticks in `eval '...'` with single quotes, so it is evaluated again at each run. Without `eval`, `$(...)` runs only once, before the first run: `wait_until 60 [ $(wc -l < f) -gt 0 ]` tests a constant. Inside `eval`, `$1`, `$2`, ... are the arguments of `wait_until`, not of the caller, so copy them to a variable first.  
 It is a function of `init.sh`, so a child shell does not have it: `bash -c '...'`, `timeout ... bash -c '...'` and the `;shell_cmd` of csql.  
+Examples:  
 ```
-# a line in a log
 wait_until 60 grep -q "Shard proxy started" $CUBRID/log/broker/proxy_log/$proxy.log
-# a file
 wait_until -i 0.5 120 [ -f tx1_inserted.flag ]
-# a process exits; kill it on timeout
-wait_until 600 eval '! kill -0 $pid 2>/dev/null' || kill -9 $pid
-# a server is registered, or gone
 wait_until 120 eval 'cubrid server status | grep -qw $db' || write_nok "server $db did not start"
 wait_until 60 eval '! cubrid server status 2>&1 | grep -q "Server $db "'
-# a transaction is visible
 wait_until 60 eval 'cubrid tranlist $db 2>/dev/null | grep -qw csql'
-# a count; cnt keeps the last checked value after the call
 wait_until 60 eval 'cnt=$(ls lob | wc -l); [ $cnt -ge 3 ]'
+# kill the process if it does not exit in time
+wait_until 600 eval '! kill -0 $pid 2>/dev/null' || kill -9 $pid
 # stop early when the process that should make it happen died
 wait_until 120 eval 'grep -q "^started$" debug.info || ! kill -0 $java_pid 2>/dev/null'
 # an argument of the case function
