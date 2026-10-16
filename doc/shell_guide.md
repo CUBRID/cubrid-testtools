@@ -886,3 +886,44 @@ Used to format query plan.
 ### format_path_output
 Used to format CUBRID installation path.
 
+## 5.5 Waiting for a Process or a Result
+A case often waits for something that happens in the background: a server that starts or stops, a process that exits, a line in a log, a file, a transaction.  
+* Do not wait with a fixed `sleep N`. On a slow or busy machine the time is too short and the case fails now and then. On a fast machine it only wastes time.  
+* Wait for the condition itself with `wait_until` (see 5.4). Use `sleep` only when time itself is what the case tests (for example a lock or query timeout), or to space out steps.  
+* Set `max_seconds` well above the normal time. It costs time only when something is already wrong. Use 60 for a server or a process, 120 or more for heavy work.  
+* Keep the default interval of 1 second. Use `-i 0.5` or `-i 0.1` only when the state you wait for lasts a short time.  
+* Decide what a timeout means. If the check after the wait already fails on a timeout, ignore the return code. Otherwise add `|| write_nok ...` or the cleanup the case needs.  
+
+Common waits:  
+```
+# a line in a log
+wait_until 60 grep -q "Shard proxy started" $CUBRID/log/broker/proxy_log/$proxy.log
+# a file
+wait_until -i 0.5 120 [ -f tx1_inserted.flag ]
+# a process exits
+wait_until 60 eval '! kill -0 $pid 2>/dev/null'
+# a server is registered, or gone
+wait_until 120 eval 'cubrid server status | grep -qw $db'
+wait_until 60 eval '! cubrid server status 2>&1 | grep -q "Server $db "'
+# a transaction is visible
+wait_until 60 eval 'cubrid tranlist $db 2>/dev/null | grep -qw csql'
+# a count; cnt keeps the last checked value after the call
+wait_until 60 eval 'cnt=$(ls lob | wc -l); [ $cnt -ge 3 ]'
+# stop early when the process that should make it happen died
+wait_until 120 eval 'grep -q "^started$" debug.info || ! kill -0 $java_pid 2>/dev/null'
+# an action on timeout
+wait_until 600 eval '! kill -0 $pid 2>/dev/null' || kill -9 $pid
+```
+
+Things to remember:  
+* `wait_until` runs the command in the shell of the case. A variable or a file that the command writes keeps its last value after the call.  
+* Put the condition after `eval` in single quotes, so the variables are read again at each check.  
+* Inside `eval '...'`, `$1`, `$2` and `$#` are the arguments of `wait_until`. In a function of the case, copy them first:  
+```
+function wait_started {
+    local want=$1
+    wait_until 120 eval '[ $(grep -c "^started$" debug.info) -ge $want ]'
+}
+```
+* `wait_until` is a function of `init.sh`. A child shell does not have it: `bash -c '...'`, `timeout ... bash -c '...'` and the `;shell_cmd` of csql. Call it from the case script.  
+* A command that hangs is not interrupted. Give a check that can hang its own limit, for example `timeout 30 csql ...`.  
