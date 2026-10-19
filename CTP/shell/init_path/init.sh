@@ -130,6 +130,24 @@ function get_curr_hour
         echo $(($str))
 }
 
+# The command runs in this shell, so _wu_ keeps these locals from hiding its variables.
+function wait_until
+{
+	local _wu_interval=1
+	if [ "$1" = "-i" ]; then
+		_wu_interval=$2
+		shift 2
+	fi
+	[ $# -ge 2 ] || { echo "usage: wait_until [-i interval] max_seconds command [args...]" >&2; return 2; }
+	local _wu_deadline=$((SECONDS + $1))
+	shift
+	until "$@"; do
+		[ $SECONDS -gt $_wu_deadline ] && return 1
+		sleep $_wu_interval
+	done
+	return 0
+}
+
 
 function make_answer_or_compare_result
 {
