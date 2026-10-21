@@ -33,6 +33,20 @@ local_git_source_home=
 branch_name=
 curDir=`pwd`
 
+# Only these branches may be fetched, to limit network traffic. Shell patterns are allowed.
+allowed_branch_patterns=("develop" "release/*")
+
+function is_allowed_branch()
+{
+    local pattern
+    for pattern in "${allowed_branch_patterns[@]}"; do
+        case "$1" in
+            $pattern) return 0 ;;
+        esac
+    done
+    return 1
+}
+
 
 function usage()
 {
@@ -65,6 +79,10 @@ done
 
 [ ! -d "$local_git_source_home" ] && echo "please confirm your scenario $local_git_source_home is correct or not!" && exit 1
 [ -z "$branch_name" ] && echo "please branch_name parameter!" && exit 1
+if ! is_allowed_branch "$branch_name"; then
+    echo "ERROR: branch '$branch_name' is not allowed to fetch. (allowed: ${allowed_branch_patterns[*]})"
+    exit 1
+fi
 [ ! -f ${CTP_HOME}/conf/common.conf ] && echo "please confirm ${CTP_HOME}/conf/common.conf exist or not!" && exit 1
 
 gitUser=`ini ${CTP_HOME}/conf/common.conf 'git_user'|tr -d '\r'`
@@ -113,7 +131,7 @@ fi
 git branch -D $local_branch_name
 while true
 do
-    timeout 600s git fetch auto_update_url
+    timeout 600s git fetch auto_update_url "+refs/heads/${branch_name}:refs/remotes/auto_update_url/${branch_name}"
     if [ $? -eq 0 ];then
          break
     fi
