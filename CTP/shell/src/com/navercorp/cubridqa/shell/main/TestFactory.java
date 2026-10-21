@@ -27,7 +27,6 @@
 package com.navercorp.cubridqa.shell.main;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -35,6 +34,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
@@ -294,10 +294,9 @@ public class TestFactory {
 		deployPool.shutdown();
 	}
 
-	private List<String> concurrentSVNUpdate(final ArrayList<String> envList) throws InterruptedException {
+	private List<String> concurrentSVNUpdate(final ArrayList<String> envList) throws Exception {
 		ExecutorService pool = Executors.newCachedThreadPool();
 		ArrayList<Callable<Boolean>> callers = new ArrayList<Callable<Boolean>>();
-		final List<String> failedEnvList = Collections.synchronizedList(new ArrayList<String>());
 
 		for (final String envId : envList) {
 			callers.add(new Callable<Boolean>() {
@@ -308,9 +307,7 @@ public class TestFactory {
 					try {
 						if (context.isScenarioInGit()) {
 							git = new TestCaseGithub(context, envId);
-							if (!git.update()) {
-								failedEnvList.add(envId);
-							}
+							return git.update();
 
 						} else {
 							svn = new TestCaseSVN(context, envId);
@@ -329,8 +326,14 @@ public class TestFactory {
 				}
 			});
 		}
-		pool.invokeAll(callers);
+		List<Future<Boolean>> results = pool.invokeAll(callers);
 		pool.shutdown();
+		List<String> failedEnvList = new ArrayList<String>();
+		for (int i = 0; i < results.size(); i++) {
+			if (!results.get(i).get()) {
+				failedEnvList.add(envList.get(i));
+			}
+		}
 		return failedEnvList;
 	}
 

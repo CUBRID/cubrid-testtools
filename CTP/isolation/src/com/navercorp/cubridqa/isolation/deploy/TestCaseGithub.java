@@ -48,13 +48,13 @@ public class TestCaseGithub {
 
 	}
 
-	public void update() {
+	public boolean update() {
 		context.getFeedback().onTestCaseUpdateStart(envIdentify);
 		if (!doUpdate()) {
-			System.out.println("QUIT");
-			System.exit(-1);
+			return false;
 		}
 		context.getFeedback().onTestCaseUpdateStop(envIdentify);
+		return true;
 	}
 
 	public boolean doUpdate() {
