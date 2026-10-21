@@ -58,6 +58,9 @@ qlist=""
 isWin=""
 onlyMax=""
 withoutSync=0
+withoutRerun=0
+rerunOnly=0
+rerunQueuePrefix=RERUN_
 clspath="$CLASSPATH"
 msgId=""
 branchName=master
@@ -85,12 +88,36 @@ while [ $# -ne 0 ];do
                 ser_site=$1
                 ;;
                 --without-sync)
-                        shift
                 withoutSync=1
                 ;;
+                --without-rerun)
+                withoutRerun=1
+                ;;
+                --rerun-only)
+                rerunOnly=1
+                ;;
+                --rerun-prefix)
+                        shift
+                rerunQueuePrefix=$1
+                ;;
+		*)
+		echo "Ignoring unknown option: $1"
+		;;
 	esac
 	shift
 done
+
+# An empty prefix would make the "rerun queue" the regular queue, and run_rerun.sh would drop its messages.
+if ! [[ "$rerunQueuePrefix" =~ ^[A-Za-z0-9_]+_$ ]]
+then
+	echo "--rerun-prefix needs a value such as RERUN_ or RERUNTEST_ (letters, digits and _, ending with _): '$rerunQueuePrefix'"
+	exit 1
+fi
+if [ $rerunOnly -eq 1 ] && [ $withoutRerun -eq 1 -o "$isDebug" == "--debug" ]
+then
+	echo "--rerun-only cannot be combined with --without-rerun or --debug"
+	exit 1
+fi
 
 if [ "$os" == "Linux" -o "$os" = "AIX" ]
 then
@@ -107,13 +134,16 @@ function usage()
 {
 	exec_name=$(basename $0)
 		cat<<EOF
-		Usage:$exec_name <-q queue_name> <-exec script> [--debug] [--only-max] [-s china|kor] [--without-sync]
+		Usage:$exec_name <-q queue_name> <-exec script> [--debug] [--only-max] [-s china|kor] [--without-sync] [--without-rerun] [--rerun-only] [--rerun-prefix <prefix>]
 		-q <queue name>      | this option represents queue name what you want to consume
 		-exec <script.sh>    | script name you will run
                 -s                   | this option represents what build site you will use, such as 'china', 'kor'
 		--debug              | this option represents you just want to debug test environement,so message will be dequeued
 		--only-max           | this option represents you only need max version in this queue, old ones will be deleted
                 --without-sync       | do not update codes
+                --without-rerun      | do not take QAHome rerun requests from the RERUN_<queue> queues
+                --rerun-only         | take only rerun requests; never the regular queues (dedicated or test rerun node)
+                --rerun-prefix       | rerun queue prefix (default RERUN_), e.g. RERUNTEST_ for a staging test
 	    
 EOF
 
@@ -192,6 +222,59 @@ function startAgent()
 	queueName=$1
 	(cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $queueName $isDebug $onlyMax > ${CTP_HOME}/common/sched/result/$fileName)
     msgId=`cat ${CTP_HOME}/common/sched/result/$fileName |grep MSG_ID|awk -F ':' '{print $2}'`
+}
+
+# QAHome failed-case rerun (CUBRIDQA-1632): the producer clones a queue's original message onto
+# ${rerunQueuePrefix}<queue>. Taking it without --only-max keeps every request; old versions are not
+# superseded the way daily builds are.
+function startRerunAgent()
+{
+	rm -rf ${CTP_HOME}/common/sched/result/*
+	# umask 077: a rerun message carries the batch token
+	(umask 077; cd ${CURRENT_TOOL_HOME}; "$JAVA_HOME/bin/java" -cp "./lib/cubridqa-scheduler.jar" com.navercorp.cubridqa.scheduler.consumer.ConsumerAgent $1 > ${CTP_HOME}/common/sched/result/$fileName)
+	msgId=`cat ${CTP_HOME}/common/sched/result/$fileName |grep MSG_ID|awk -F ':' '{print $2}'`
+}
+
+# Runs at most one rerun message of <queue> before the queue's regular poll, so a rerun waits only for
+# the run already in progress on this node. Only STATUS.TXT is written (QAHome's queue monitor and cancel
+# read it); the per-queue status file is not, so an interrupted rerun is never resumed in continue mode.
+function processRerunQueue()
+{
+	regularQueue=$1
+	regularExec=$2
+	rerunQueue=${rerunQueuePrefix}${regularQueue}
+	startRerunAgent $rerunQueue
+	hasTestBuild
+	if [ "$hasBuild" != "true" ]
+	then
+		if [ -n "$msgId" ]
+		then
+			echo "Rerun message $msgId on $rerunQueue has no build to test; ignored"
+		fi
+		return
+	fi
+	if ! grep -q '^BUILD_GENERATE_MSG_WAY:RERUN' ${CTP_HOME}/common/sched/result/$fileName
+	then
+		echo "Message $msgId on $rerunQueue is not a rerun request (BUILD_GENERATE_MSG_WAY is not RERUN); ignored"
+		return
+	fi
+	if [ ! -f ${CTP_HOME}/common/ext/run_rerun.sh ]
+	then
+		echo "Rerun message on $rerunQueue, but common/ext/run_rerun.sh is missing"
+		return
+	fi
+	echo "Action: $rerunQueue, run_rerun.sh ${regularExec}, RERUN"
+	rm -f $statFile
+	mkdir -p ${CTP_HOME}/common/sched/status
+	rerunStartTime=`getTimeStamp`
+	echo "QUEUE:${rerunQueue}" > $statFile
+	echo "START_TIME:${rerunStartTime}" >> $statFile
+	consumerTimer $msgId "start"
+	# init.sh exports the message keys; tracing stays off meanwhile so MKEY_RERUN_TOKEN never reaches nohup.out.
+	(cd ${CTP_HOME}; { set +x; } 2>/dev/null; source ${CTP_HOME}/common/sched/init.sh $ser_site; set -x; sh common/ext/run_rerun.sh ${regularExec})
+	consumerTimer $msgId "stop"
+	rm -f $statFile
+	echo "END_RERUN_TIME:`getTimeStamp`"
 }
 
 function runagent()
@@ -360,6 +443,16 @@ do
 		then
  			updateCodes $branchName
 		fi
+
+		# A rerun-only node never touches the regular queue nor its continue mode.
+		if [ $rerunOnly -eq 1 ]
+		then
+			processRerunQueue $x ${q_exec[$count]}
+			# nothing runs here now: clear a status a crashed run left, as the regular loop does below
+			rm -f $statFile
+			let "count=count+1"
+			continue
+		fi
 	
 		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
 		isFromGit=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep BUILD_IS_FROM_GIT|awk -F ':' '{print $2}'`
@@ -376,6 +469,11 @@ do
 			echo "END_CONTINUE_TIME:${contimeENDTIME}"
 			echo '' > ${CTP_HOME}/common/sched/status/${x}
 			echo
+		fi
+
+		if [ $withoutRerun -ne 1 -a "$isDebug" != "--debug" ]
+		then
+			processRerunQueue $x ${q_exec[$count]}
 		fi
 
 		startAgent $x 
