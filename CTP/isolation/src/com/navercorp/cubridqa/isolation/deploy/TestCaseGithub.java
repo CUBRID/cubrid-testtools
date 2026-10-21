@@ -50,13 +50,9 @@ public class TestCaseGithub {
 
 	public void update() {
 		context.getFeedback().onTestCaseUpdateStart(envIdentify);
-		while (true) {
-			if (doUpdate()) {
-				break;
-			}
-
-			System.out.println("==>Retry to do case update after 5 seconds!");
-			CommonUtils.sleep(5);
+		if (!doUpdate()) {
+			System.out.println("QUIT");
+			System.exit(-1);
 		}
 		context.getFeedback().onTestCaseUpdateStop(envIdentify);
 	}
@@ -90,6 +86,10 @@ public class TestCaseGithub {
 		scripts.addCommand("./upgrade.sh");
 		if (needUpdateScenario) {
 			scripts.addCommand("cd ");
+			String buildCommitTime = System.getenv("BUILD_COMMIT_TIME");
+			if (!CommonUtils.isEmpty(buildCommitTime)) {
+				scripts.addCommand("export BUILD_COMMIT_TIME=" + buildCommitTime);
+			}
 			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
 		}
 		scripts.addCommand("cd ${CTP_HOME}/isolation/ctltool");

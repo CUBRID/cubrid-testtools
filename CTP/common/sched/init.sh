@@ -70,6 +70,28 @@ function analyzeMessageInfo() {
  	fi 
 }
 
+# TC is merged just before its engine change, so the engine commit time of the build
+# separates the TC of the engine changes in the build from the TC of the ones not yet merged.
+function exportBuildCommitTime() {
+    local hash=${BUILD_ID##*-}
+    local commit_date="" commit_time="" i
+    local auth=()
+    [ -n "$DAILYQA_GIT_USER" ] && auth=(--auth-no-challenge --user="$DAILYQA_GIT_USER" --password="$DAILYQA_GIT_PWD")
+    if [[ "$hash" =~ ^[0-9a-f]{7,40}$ ]]; then
+        for i in 1 2 3; do
+            commit_date=`wget -q -t 1 -T 30 "${auth[@]}" -O - "https://api.github.com/repos/CUBRID/cubrid/commits?sha=${hash}&per_page=1" | grep -o '"date": *"[^"]*"' | sed -n 2p | cut -d '"' -f 4`
+            [ -n "$commit_date" ] && break
+            sleep 3
+        done
+    fi
+    [ -n "$commit_date" ] && commit_time=`date -d "$commit_date" +%s`
+    if ! [[ "$commit_time" =~ ^[0-9]+$ ]]; then
+        echo "ERROR: cannot get the engine commit time of BUILD_ID=$BUILD_ID from GitHub"
+        exit 1
+    fi
+    export BUILD_COMMIT_TIME=$commit_time
+}
+
 function getMsgValue() {
     echo $1
 }
@@ -109,6 +131,7 @@ export DAILYQA_SSH_PWD_DEFAULT=`ini.sh conf/common.conf default_ssh_pwd`
 export DAILYQA_SSH_PORT_DEFAULT=`ini.sh conf/common.conf default_ssh_port`
 
 analyzeMessageInfo $1
+exportBuildCommitTime
 export -f getMsgValue
 export -f runAction
 export -f upload_to_dailysrv

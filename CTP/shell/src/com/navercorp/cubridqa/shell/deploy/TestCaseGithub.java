@@ -51,16 +51,11 @@ public class TestCaseGithub {
 		}
 	}
 
-	public void update() throws Exception {
+	public boolean update() throws Exception {
 		context.getFeedback().onSvnUpdateStart(envIdentify);
 
-		while (true) {
-			if (doUpdate()) {
-				break;
-			}
-
-			System.out.println("==>Retry to do case update after 5 seconds!");
-			CommonUtils.sleep(5);
+		if (!doUpdate()) {
+			return false;
 		}
 
 		if (!context.getTestCaseWorkspace().equals(context.getTestCaseRoot())) {
@@ -86,6 +81,7 @@ public class TestCaseGithub {
 		}
 
 		context.getFeedback().onSvnUpdateStop(envIdentify);
+		return true;
 	}
 
 	private boolean doUpdate() {
@@ -93,6 +89,10 @@ public class TestCaseGithub {
 		cleanProcess();
 		if (context.needCleanTestCase()) {
 			ShellScriptInput scripts = new ShellScriptInput();
+			String buildCommitTime = System.getenv("BUILD_COMMIT_TIME");
+			if (!CommonUtils.isEmpty(buildCommitTime)) {
+				scripts.addCommand("export BUILD_COMMIT_TIME=" + buildCommitTime);
+			}
 			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch() + "  2>&1");
 			String result;
 			try {
