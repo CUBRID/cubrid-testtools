@@ -79,6 +79,7 @@ function exportBuildCommitTime() {
     [ -n "$DAILYQA_GIT_USER" ] && auth=(--auth-no-challenge --user="$DAILYQA_GIT_USER" --password="$DAILYQA_GIT_PWD")
     if [[ "$hash" =~ ^[0-9a-f]{7,40}$ ]]; then
         for i in 1 2 3; do
+            # the 1st "date" is commit.author.date, the 2nd is commit.committer.date, the time it was merged
             commit_date=`wget -q -t 1 -T 30 "${auth[@]}" -O - "https://api.github.com/repos/CUBRID/cubrid/commits?sha=${hash}&per_page=1" | grep -o '"date": *"[^"]*"' | sed -n 2p | cut -d '"' -f 4`
             [ -n "$commit_date" ] && break
             sleep 3
