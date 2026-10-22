@@ -70,9 +70,13 @@ function analyzeMessageInfo() {
  	fi 
 }
 
-# TC is merged just before its engine change, so the engine commit time of the build
+# On develop, TC is merged just before its engine change, so the engine commit time of the build
 # separates the TC of the engine changes in the build from the TC of the ones not yet merged.
+# Release branches merge TC backports after the engine, and store_99 holds manual builds,
+# so those take the latest TC.
 function exportBuildCommitTime() {
+    unset BUILD_COMMIT_TIME
+    [ "$BUILD_STORE_ID" == "store_01" ] && [ "$BUILD_SCENARIO_BRANCH_GIT" == "develop" ] || return 0
     local hash=${BUILD_ID##*-}
     local commit_date="" commit_time="" i
     local auth=()
