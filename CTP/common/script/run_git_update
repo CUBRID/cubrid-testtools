@@ -33,41 +33,12 @@ local_git_source_home=
 branch_name=
 curDir=`pwd`
 
-# Only these branches may be fetched, to limit network traffic.
-# Each pattern is used both as a shell pattern and as a git refspec, so use at most one '*'.
-allowed_branch_patterns=("develop" "release/*")
-
-function is_allowed_branch()
-{
-    local pattern
-    for pattern in "${allowed_branch_patterns[@]}"; do
-        case "$1" in
-            $pattern) return 0 ;;
-        esac
-    done
-    return 1
-}
-
-function fetch_with_retry()
-{
-    while true
-    do
-        timeout 600s git fetch auto_update_url "$@"
-        if [ $? -eq 0 ];then
-             break
-        fi
-        sleep 3
-    done
-}
-
 
 function usage()
 {
     echo ""
     echo "Usage: $0 -f <from source path>
-          [-b <branch name>]"
-    echo "  -b given    : fetch only <branch name> and check it out"
-    echo "  -b omitted  : fetch only allowed branches (${allowed_branch_patterns[*]}) without checkout"
+          -b <branch name>"
     echo ""
 }
 
@@ -93,10 +64,7 @@ while getopts "f:b:t:h:" opt; do
 done
 
 [ ! -d "$local_git_source_home" ] && echo "please confirm your scenario $local_git_source_home is correct or not!" && exit 1
-if [ -n "$branch_name" ] && ! is_allowed_branch "$branch_name"; then
-    echo "ERROR: branch '$branch_name' is not allowed to fetch. (allowed: ${allowed_branch_patterns[*]})"
-    exit 1
-fi
+[ -z "$branch_name" ] && echo "please branch_name parameter!" && exit 1
 [ ! -f ${CTP_HOME}/conf/common.conf ] && echo "please confirm ${CTP_HOME}/conf/common.conf exist or not!" && exit 1
 
 gitUser=`ini ${CTP_HOME}/conf/common.conf 'git_user'|tr -d '\r'`
@@ -115,25 +83,6 @@ urlWithAuthen="https://${gitUser}:${gitPwd}@github.com${urlSuffer}"
 echo "====Start to do update!===="
 git remote rm auto_update_url 2>/dev/null
 git remote add auto_update_url ${urlWithAuthen}
-
-if [ -z "$branch_name" ];then
-    # Fetch into origin's remote-tracking refs, since auto_update_url's refs are removed with the remote.
-    fetch_refspecs=()
-    for pattern in "${allowed_branch_patterns[@]}"; do
-        fetch_refspecs+=("+refs/heads/${pattern}:refs/remotes/origin/${pattern}")
-    done
-    echo git fetch auto_update_url "${fetch_refspecs[@]}"
-    fetch_with_retry "${fetch_refspecs[@]}"
-
-    echo "GIT REPO STATUS:"
-    git branch
-    git status -s
-    echo "====End to do update!===="
-
-    git remote rm auto_update_url 2>/dev/null
-    cd $curDir
-    exit 0
-fi
 
 temp_branch_name=temp_branch_`date '+%Y%m%d%H%M%s'`
 git branch ${temp_branch_name}
@@ -162,7 +111,14 @@ else
 fi
 
 git branch -D $local_branch_name
-fetch_with_retry "+refs/heads/${branch_name}:refs/remotes/auto_update_url/${branch_name}"
+while true
+do
+    timeout 600s git fetch auto_update_url "+refs/heads/${branch_name}:refs/remotes/auto_update_url/${branch_name}"
+    if [ $? -eq 0 ];then
+         break
+    fi
+    sleep 3
+done
 
 echo Begin to check out test cases:
 echo git checkout -f -b $local_branch_name -t auto_update_url/$branch_name
