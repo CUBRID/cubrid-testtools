@@ -146,6 +146,8 @@ function run_sql() {
            exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
            exclude_file_dir=$HOME/${compat_config_repo_name}/${ctp_scenario}/config/daily_regression_test_exclude_list_compatibility
            run_git_update -f $HOME/${compat_config_repo_name} -b $exclude_branch || exit 1
+           # the TC of the old server's branch is a release branch's: take the latest
+           unset BUILD_COMMIT_TIME
         elif [ "$BUILD_IS_FROM_GIT" == "0" ];then
            exclude_branch=$BUILD_SVN_BRANCH_NEW
            exclude_file_dir=$HOME/dailyqa/$BUILD_SVN_BRANCH_NEW/config
@@ -281,6 +283,8 @@ function run_sql_legacy() {
            exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
            exclude_file_dir=$HOME/${exclude_git_repo_name}/${cqt_scenario}/config/daily_regression_test_exclude_list_compatibility
            run_git_update -f $HOME/${exclude_git_repo_name} -b $exclude_branch || exit 1
+           # the TC of the old server's branch is a release branch's: take the latest
+           unset BUILD_COMMIT_TIME
         elif [ "$BUILD_IS_FROM_GIT" == "0" ];then
            exclude_file_dir=$HOME/dailyqa/$BUILD_SVN_BRANCH_NEW/config
            run_svn_update -f $exclude_file_dir
