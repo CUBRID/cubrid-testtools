@@ -86,13 +86,15 @@ function exportBuildCommitTime() {
             # the 1st "date" is commit.author.date, the 2nd is commit.committer.date, the time it was merged
             commit_date=`wget -q -t 1 -T 30 "${auth[@]}" -O - "https://api.github.com/repos/CUBRID/cubrid/commits?sha=${hash}&per_page=1" | grep -o '"date": *"[^"]*"' | sed -n 2p | cut -d '"' -f 4`
             [ -n "$commit_date" ] && break
-            sleep 3
+            [ $i -lt 3 ] && sleep 30
         done
     fi
     [ -n "$commit_date" ] && commit_time=`date -d "$commit_date" +%s`
     if ! [[ "$commit_time" =~ ^[0-9]+$ ]]; then
-        echo "ERROR: cannot get the engine commit time of BUILD_ID=$BUILD_ID from GitHub"
-        exit 1
+        echo "ERROR: engine commit time lookup failed: BUILD_ID=$BUILD_ID"
+        # run_git_update stops on this value, so tests that take no TC still run
+        export BUILD_COMMIT_TIME=lookup_failed
+        return 0
     fi
     export BUILD_COMMIT_TIME=$commit_time
 }
