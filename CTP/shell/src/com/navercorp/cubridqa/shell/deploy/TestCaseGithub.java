@@ -77,6 +77,7 @@ public class TestCaseGithub {
 				System.out.println(result);
 			} catch (Exception e) {
 				System.out.print("[ERROR] " + e.getMessage());
+				return false;
 			}
 		}
 
