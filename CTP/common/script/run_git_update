@@ -168,6 +168,7 @@ done
 
 rm -f checkout.log >/dev/null 2>&1
 
+# shell and isolation TestCaseGithub take the "TC pin time:" line as the sign of success
 if [ -n "$BUILD_COMMIT_TIME" ]; then
     echo "TC pin time: `TZ=Asia/Seoul date -d @$BUILD_COMMIT_TIME '+%F %T %Z'` -> `git rev-parse --short HEAD`"
 else

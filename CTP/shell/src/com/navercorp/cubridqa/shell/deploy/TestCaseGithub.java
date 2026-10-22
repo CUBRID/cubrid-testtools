@@ -89,6 +89,8 @@ public class TestCaseGithub {
 		cleanProcess();
 		if (context.needCleanTestCase()) {
 			ShellScriptInput scripts = new ShellScriptInput();
+			// the run_git_update of the Worker's CTP applies BUILD_COMMIT_TIME, so the CTP goes first
+			DeployOneNode.addUpgradeCtpCommands(context, scripts);
 			String buildCommitTime = System.getenv("BUILD_COMMIT_TIME");
 			if (!CommonUtils.isEmpty(buildCommitTime)) {
 				scripts.addCommand("export BUILD_COMMIT_TIME=" + buildCommitTime);
@@ -97,7 +99,8 @@ public class TestCaseGithub {
 			String result;
 			try {
 				result = ssh.execute(scripts);
-				if (result != null && result.indexOf("ERROR") != -1) {
+				// run_git_update prints this line only after the checkout succeeds; an old CTP never prints it
+				if (result == null || result.indexOf("TC pin time:") == -1) {
 					isSucc = false;
 				}
 				System.out.println("Test cases updated results on " + ssh.toString() + ":\n" + result);

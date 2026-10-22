@@ -99,7 +99,10 @@ public class TestCaseGithub {
 		String result;
 		try {
 			result = ssh.execute(scripts);
-			if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && result.indexOf("ERROR") != -1) {
+			if (needUpdateScenario) {
+				// run_git_update prints this line only after the checkout succeeds; an old CTP never prints it
+				isSucc = result != null && result.indexOf("TC pin time:") != -1;
+			} else if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && result.indexOf("ERROR") != -1) {
 				isSucc = false;
 			}
 			System.out.println(result);
