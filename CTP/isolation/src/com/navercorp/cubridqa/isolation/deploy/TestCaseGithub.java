@@ -48,17 +48,13 @@ public class TestCaseGithub {
 
 	}
 
-	public void update() {
+	public boolean update() {
 		context.getFeedback().onTestCaseUpdateStart(envIdentify);
-		while (true) {
-			if (doUpdate()) {
-				break;
-			}
-
-			System.out.println("==>Retry to do case update after 5 seconds!");
-			CommonUtils.sleep(5);
+		if (!doUpdate()) {
+			return false;
 		}
 		context.getFeedback().onTestCaseUpdateStop(envIdentify);
+		return true;
 	}
 
 	public boolean doUpdate() {
@@ -90,6 +86,10 @@ public class TestCaseGithub {
 		scripts.addCommand("./upgrade.sh");
 		if (needUpdateScenario) {
 			scripts.addCommand("cd ");
+			String buildCommitTime = System.getenv("BUILD_COMMIT_TIME");
+			if (!CommonUtils.isEmpty(buildCommitTime)) {
+				scripts.addCommand("export BUILD_COMMIT_TIME=" + buildCommitTime);
+			}
 			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch());
 		}
 		scripts.addCommand("cd ${CTP_HOME}/isolation/ctltool");
@@ -99,7 +99,10 @@ public class TestCaseGithub {
 		String result;
 		try {
 			result = ssh.execute(scripts);
-			if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && result.indexOf("ERROR") != -1) {
+			if (needUpdateScenario) {
+				// run_git_update prints this line only after the checkout succeeds; an old CTP never prints it
+				isSucc = result != null && result.indexOf("TC pin time:") != -1;
+			} else if (!com.navercorp.cubridqa.common.CommonUtils.isEmpty(result) && result.indexOf("ERROR") != -1) {
 				isSucc = false;
 			}
 			System.out.println(result);
