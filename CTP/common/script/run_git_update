@@ -128,7 +128,7 @@ git branch -D $local_branch_name
 retry_idx=1
 while true
 do
-    timeout 600s git fetch -q auto_update_url
+    timeout 600s git fetch -q auto_update_url "+refs/heads/${branch_name}:refs/remotes/auto_update_url/${branch_name}"
     if [ $? -eq 0 ];then
          break
     fi
