@@ -113,7 +113,7 @@ fi
 git branch -D $local_branch_name
 while true
 do
-    timeout 600s git fetch auto_update_url
+    timeout 600s git fetch auto_update_url "+refs/heads/${branch_name}:refs/remotes/auto_update_url/${branch_name}"
     if [ $? -eq 0 ];then
          break
     fi
