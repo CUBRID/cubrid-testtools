@@ -138,7 +138,11 @@ export DAILYQA_SSH_PWD_DEFAULT=`ini.sh conf/common.conf default_ssh_pwd`
 export DAILYQA_SSH_PORT_DEFAULT=`ini.sh conf/common.conf default_ssh_port`
 
 analyzeMessageInfo $1
-exportBuildCommitTime
+# the message keeps the first lookup for continue mode, and sender.sh PROPS can set it
+if ! grep -q "^BUILD_COMMIT_TIME:" $result; then
+    exportBuildCommitTime
+    [[ "$BUILD_COMMIT_TIME" =~ ^[0-9]+$ ]] && echo "BUILD_COMMIT_TIME:$BUILD_COMMIT_TIME" >> $result
+fi
 export -f getMsgValue
 export -f runAction
 export -f upload_to_dailysrv
