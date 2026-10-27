@@ -131,7 +131,7 @@ function rerun_sql_family() {
     rerun_on_exit "rm -f '$conf'"
     rerun_secrets_from_conf "$conf"
 
-    # STEP 2: testcases at the branch head
+    # STEP 2: testcases of the original run (or of the pull request)
     repo_dir=$(cd "${CTP_HOME}/../${repo}" 2>/dev/null && pwd)
     if [ -z "$repo_dir" ]; then
         rerun_error_all "testcase checkout ${CTP_HOME}/../${repo} does not exist on ${USER}@$(hostname)"
@@ -166,16 +166,16 @@ function rerun_sql_family() {
             continue
         fi
         if [ ! -f "$repo_dir/$sce" ]; then
-            rerun_verdict "$id" ERROR "" "case not found at ${RERUN_BRANCH} HEAD (${commit:0:10})"
+            rerun_verdict "$id" ERROR "" "case not found at $(rerun_tc_where) (${commit:0:10})"
             continue
         fi
         if [ "$mode" == "cci" ]; then
             if [ ! -f "$repo_dir/$grp/answers/$n.answer" -a ! -f "$repo_dir/$grp/answers/$n.answer_cci" ]; then
-                rerun_verdict "$id" ERROR "" "answer file ${grp}/answers/${n}.answer[_cci] not found at ${RERUN_BRANCH} HEAD (${commit:0:10})"
+                rerun_verdict "$id" ERROR "" "answer file ${grp}/answers/${n}.answer[_cci] not found at $(rerun_tc_where) (${commit:0:10})"
                 continue
             fi
         elif [ ! -f "$repo_dir/$grp/answers/$n.answer" ]; then
-            rerun_verdict "$id" ERROR "" "answer file ${grp}/answers/${n}.answer not found at ${RERUN_BRANCH} HEAD (${commit:0:10})"
+            rerun_verdict "$id" ERROR "" "answer file ${grp}/answers/${n}.answer not found at $(rerun_tc_where) (${commit:0:10})"
             continue
         fi
         if [ ! -f "$stage_repo/$sce" ]; then

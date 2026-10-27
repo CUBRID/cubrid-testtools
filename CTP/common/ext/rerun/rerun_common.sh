@@ -35,8 +35,11 @@
 # What every runner keeps to:
 #   - install the same build the regular run_<family>.sh installs, but never call run_<family>.sh and never
 #     write conf/*_runtime.conf (the daily continue mode reuses them): rerun confs live in RERUN_WORK;
-#   - update the testcase checkout to the head of BUILD_SCENARIO_BRANCH_GIT under a timeout (run_git_update
-#     retries its fetch forever) and verify the branch before trusting the commit;
+#   - update the testcase checkout of BUILD_SCENARIO_BRANCH_GIT under a timeout with run_git_update, which takes
+#     the testcases the original run took: a develop build's are pinned to its engine commit time
+#     (BUILD_COMMIT_TIME, CUBRIDQA-1667), other builds take the branch head. A pull request rerun
+#     (MKEY_RERUN_TC_REF) then checks out the pull request's head instead. Verify the branch before trusting
+#     the commit; run_git_update gives up after 3 failed fetches or checkouts with an "ERROR: <reason>" line;
 #   - no DB feedback, no QAHome notice/import, no upload to qa_repository or any other normal result path,
 #     no in-harness retry, no memory-leak mode;
 #   - verdicts come from the harness result files, never from the ctp.sh exit code;
@@ -60,6 +63,8 @@ RERUN_LOG_MAX_BYTES=${RERUN_LOG_MAX_BYTES:-20000000}
 # Directory used on test nodes (and on the consumer for local runs), relative to the node user's $HOME.
 RERUN_NODE_DIR=ctp_rerun_work
 RERUN_NODE_STAGE=ctp_rerun_stage
+# Local branch a pull request rerun leaves its testcase checkout on (run_git_update moves it back next time).
+RERUN_PR_BRANCH=rerun_tc_pr
 
 #######################################################################################################
 # Life cycle
@@ -76,6 +81,16 @@ function rerun_init() {
     RERUN_FAMILY=$1
     RERUN_BRANCH=$BUILD_SCENARIO_BRANCH_GIT
     RERUN_LOCAL_BRANCH=${RERUN_BRANCH//\//_}
+    # A pull request rerun runs the cases from the pull request's head: the build's testcase pin (and a failed
+    # lookup of it) does not apply, and the checkout ends on RERUN_PR_BRANCH.
+    RERUN_TC_REF=$MKEY_RERUN_TC_REF
+    RERUN_TC_SHA=$MKEY_RERUN_TC_SHA
+    if [ -n "$RERUN_TC_REF" ]; then
+        unset BUILD_COMMIT_TIME
+        RERUN_CHECKOUT_BRANCH=$RERUN_PR_BRANCH
+    else
+        RERUN_CHECKOUT_BRANCH=$RERUN_LOCAL_BRANCH
+    fi
     RERUN_TC_COMMIT=""
     RERUN_TAG=$(basename "$RERUN_WORK")
     RERUN_FAM_WORK=$RERUN_WORK/$RERUN_FAMILY
@@ -89,7 +104,29 @@ function rerun_init() {
     (umask 077; : > "$RERUN_SECRETS")
     trap 'rerun_cleanup' EXIT
     rerun_secrets_init
-    rerun_log "category ${BUILD_SCENARIOS}, build ${BUILD_ID}, testcase branch ${RERUN_BRANCH}, $(rerun_case_count) case(s), runner ${RERUN_FAMILY}"
+    rerun_log "category ${BUILD_SCENARIOS}, build ${BUILD_ID}, testcase branch ${RERUN_BRANCH} ($(rerun_tc_source)), $(rerun_case_count) case(s), runner ${RERUN_FAMILY}"
+}
+
+# rerun_tc_where: where the testcases come from, in "case not found at ..." messages.
+function rerun_tc_where() {
+    if [ -n "$RERUN_TC_REF" ]; then
+        echo "pull request #$(echo "$RERUN_TC_REF" | cut -d/ -f3)"
+    elif [[ "$BUILD_COMMIT_TIME" =~ ^[0-9]+$ ]]; then
+        echo "${RERUN_BRANCH} as of the build"
+    else
+        echo "${RERUN_BRANCH} HEAD"
+    fi
+}
+
+# rerun_tc_source: which testcases the rerun takes, for the logs.
+function rerun_tc_source() {
+    if [ -n "$RERUN_TC_REF" ]; then
+        echo "pull request ${RERUN_TC_REF}"
+    elif [[ "$BUILD_COMMIT_TIME" =~ ^[0-9]+$ ]]; then
+        echo "as of the build's engine commit time $(TZ=Asia/Seoul date -d @"$BUILD_COMMIT_TIME" '+%F %T %Z')"
+    else
+        echo "branch head"
+    fi
 }
 
 function rerun_log() {
@@ -185,6 +222,7 @@ function rerun_case_log_begin() {
         echo "Build           : ${BUILD_ID}"
         echo "Testcase branch : ${RERUN_BRANCH}"
         echo "Testcase commit : ${RERUN_TC_COMMIT}"
+        echo "Testcases from  : $(rerun_tc_source)"
         echo "Consumer        : ${USER}@$(hostname)"
         echo "Batch logs      : ../runner.log, ../setup/, ../harness/"
         echo
@@ -321,6 +359,20 @@ function rerun_precheck_message() {
         rerun_error_all "the original message has no BUILD_SCENARIO_BRANCH_GIT"
         return 1
     fi
+    if [ -n "$RERUN_TC_REF" ] && ! [[ "$RERUN_TC_REF" =~ ^refs/pull/[1-9][0-9]*/head$ ]]; then
+        rerun_error_all "unsupported testcase ref ${RERUN_TC_REF} (refs/pull/<number>/head only)"
+        return 1
+    fi
+    if [ -n "$RERUN_TC_SHA" ] && ! [[ "$RERUN_TC_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+        rerun_error_all "bad testcase commit ${RERUN_TC_SHA}"
+        return 1
+    fi
+    # init.sh could not read the engine commit time on GitHub: run_git_update would refuse to update the
+    # testcases, so the original run's testcases cannot be taken now
+    if [ "$BUILD_COMMIT_TIME" == "lookup_failed" ]; then
+        rerun_error_all "could not read the engine commit time of ${BUILD_ID} on GitHub, so the testcases of the original run cannot be taken; request the rerun again later"
+        return 1
+    fi
     return 0
 }
 
@@ -393,11 +445,47 @@ function rerun_set_tc_commit() {
     rerun_log "testcase commit ${RERUN_BRANCH} = $1"
 }
 
-# rerun_git_update_local <dir>: update a local checkout to the head of BUILD_SCENARIO_BRANCH_GIT with the
-# daily command (run_git_update) under a timeout, verify the branch and set RERUN_GIT_COMMIT. On failure:
-# status 1 and the reason in RERUN_LAST_ERROR. Call it directly, not in $(...), or the reason is lost.
+# rerun_tc_checkout_script <file>: append the shell lines that finish a testcase update in "$d" after
+# run_git_update: they check run_git_update's own report (its "ERROR:" line, and the "TC pin time:" line when
+# the build's testcases are pinned), then for a pull request rerun fetch RERUN_TC_REF through the remote
+# run_git_update left behind (auto_update_url: the testcase repository with the daily credentials) and check
+# out its head. Every failure prints RERUN_ERROR=<reason> and exits 0. Expects $W, $d and $rc (run_git_update's
+# status, its output in $W/git_update.log); used locally and on the test nodes.
+function rerun_tc_checkout_script() {
+    cat >> "$1" <<RERUN_EOF
+if [ \$rc -eq 124 ] || [ \$rc -eq 137 ]; then echo "RERUN_ERROR=testcase update timed out after ${RERUN_GIT_TIMEOUT}s"; exit 0; fi
+if [ \$rc -ne 0 ]; then
+    e=\$(grep -m1 '^ERROR: ' "\$W/git_update.log" | cut -c8-240)
+    echo "RERUN_ERROR=testcase update failed: \${e:-run_git_update exit status \$rc}"; exit 0
+fi
+if [ -n "${BUILD_COMMIT_TIME}" ] && ! grep '^TC pin time: ' "\$W/git_update.log" | grep -qv '^TC pin time: none'; then
+    echo "RERUN_ERROR=run_git_update did not pin the testcases to the build's engine commit time: the CTP there predates CUBRIDQA-1667"; exit 0
+fi
+RERUN_EOF
+    [ -n "$RERUN_TC_REF" ] || return 0
+    cat >> "$1" <<RERUN_EOF
+cd "\$d" || exit 0
+if ! timeout -k 60 600 git fetch -q auto_update_url "+${RERUN_TC_REF}:refs/remotes/auto_update_url/${RERUN_PR_BRANCH}" < /dev/null; then
+    echo "RERUN_ERROR=cannot fetch ${RERUN_TC_REF} of the testcase repository"; exit 0
+fi
+tip=\$(git rev-parse "refs/remotes/auto_update_url/${RERUN_PR_BRANCH}")
+sha="${RERUN_TC_SHA}"
+if [ -n "\$sha" ] && ! git merge-base --is-ancestor "\$sha" "\$tip" 2>/dev/null; then
+    echo "RERUN_ERROR=${RERUN_TC_REF} no longer contains commit \$sha (its head is \$tip)"; exit 0
+fi
+if ! git checkout -q -f -B ${RERUN_PR_BRANCH} "\$tip" 2> "\$W/pr_checkout.log"; then
+    echo "RERUN_ERROR=cannot check out \$tip of ${RERUN_TC_REF}: \$(head -1 "\$W/pr_checkout.log" | cut -c1-200)"; exit 0
+fi
+echo "Testcases from ${RERUN_TC_REF} at \$tip"
+RERUN_EOF
+}
+
+# rerun_git_update_local <dir>: update a local checkout of BUILD_SCENARIO_BRANCH_GIT with the daily command
+# (run_git_update, pinned like the original run) under a timeout, or to a pull request's head, verify the
+# branch and set RERUN_GIT_COMMIT. On failure: status 1 and the reason in RERUN_LAST_ERROR. Call it directly,
+# not in $(...), or the reason is lost.
 function rerun_git_update_local() {
-    local dir=$1 rc branch head
+    local dir=$1 rc f out branch head
     RERUN_LAST_ERROR=""
     RERUN_GIT_COMMIT=""
     if [ ! -d "$dir" ]; then
@@ -406,14 +494,19 @@ function rerun_git_update_local() {
     fi
     rerun_step git_update "$RERUN_GIT_TIMEOUT" run_git_update -f "$dir" -b "$RERUN_BRANCH" >&2
     rc=$?
-    if [ $rc -eq 124 -o $rc -eq 137 ]; then
-        RERUN_LAST_ERROR="testcase update of $dir timed out after ${RERUN_GIT_TIMEOUT}s"
+    f=$RERUN_FAM_WORK/tc_checkout.sh
+    { echo "W=$RERUN_FAM_WORK"; echo "d=$dir"; echo "rc=$rc"; } > "$f"
+    rerun_tc_checkout_script "$f"
+    out=$(rerun_timeout -k 60 900 bash "$f" 2>&1 < /dev/null)
+    if echo "$out" | grep -q '^RERUN_ERROR='; then
+        RERUN_LAST_ERROR="$(echo "$out" | sed -n 's/^RERUN_ERROR=//p' | head -1) (see setup/git_update.log)"
         return 1
     fi
+    [ -n "$out" ] && rerun_log "$out"
     branch=$(cd "$dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null)
     head=$(cd "$dir" && git rev-parse HEAD 2>/dev/null)
-    if [ "$branch" != "$RERUN_LOCAL_BRANCH" ]; then
-        RERUN_LAST_ERROR="testcase update failed: $dir is on '${branch}' instead of ${RERUN_LOCAL_BRANCH} (see setup/git_update.log)"
+    if [ "$branch" != "$RERUN_CHECKOUT_BRANCH" ]; then
+        RERUN_LAST_ERROR="testcase update failed: $dir is on '${branch}' instead of ${RERUN_CHECKOUT_BRANCH} (see setup/git_update.log)"
         return 1
     fi
     if ! [[ "$head" =~ ^[0-9a-f]{40}$ ]]; then
@@ -843,8 +936,9 @@ function rerun_env_push_file() {
 }
 
 # rerun_env_git_update <conf> <envId> <scenario dir, raw> <pin commit or "">: run_git_update on the node
-# (timeout on both sides), then optionally pin the checkout to the commit another env got, verify the
-# branch and set RERUN_GIT_COMMIT. Status 1 and RERUN_LAST_ERROR on failure (call it directly, not in $(...)).
+# (timeout on both sides) with the build's BUILD_COMMIT_TIME as in the original run, then the pull request's
+# head for a pull request rerun, optionally pin the checkout to the commit another env got, verify the branch
+# and set RERUN_GIT_COMMIT. Status 1 and RERUN_LAST_ERROR on failure (call it directly, not in $(...)).
 # The node records the update's process group in $W/git.pgid, so the env cleanup can stop a running update.
 function rerun_env_git_update() {
     local conf=$1 id=$2 dir=$3 pin=$4 f out branch head
@@ -855,13 +949,16 @@ function rerun_env_git_update() {
 mkdir -p "\$W"
 d=$dir
 if [ ! -d "\$d" ]; then echo "RERUN_ERROR=testcase checkout \$d does not exist"; exit 0; fi
+$( [[ "$BUILD_COMMIT_TIME" =~ ^[0-9]+$ ]] && echo "export BUILD_COMMIT_TIME=$BUILD_COMMIT_TIME" || echo "unset BUILD_COMMIT_TIME" )
 timeout -k 60 $RERUN_GIT_TIMEOUT run_git_update -f "\$d" -b "$RERUN_BRANCH" > "\$W/git_update.log" 2>&1 < /dev/null &
 echo \$! > "\$W/git.pgid"
 wait \$!
 rc=\$?
 rm -f "\$W/git.pgid"
 tail -n 40 "\$W/git_update.log"
-if [ \$rc -eq 124 ] || [ \$rc -eq 137 ]; then echo "RERUN_ERROR=testcase update timed out after ${RERUN_GIT_TIMEOUT}s"; fi
+EOF
+    rerun_tc_checkout_script "$f"
+    cat >> "$f" <<EOF
 pin="$pin"
 if [ -n "\$pin" ]; then (cd "\$d" && git cat-file -e "\$pin^{commit}" 2>/dev/null && git reset -q --hard "\$pin"); fi
 cd "\$d" && echo "RERUN_BRANCH=\$(git rev-parse --abbrev-ref HEAD)" && echo "RERUN_HEAD=\$(git rev-parse HEAD)"
@@ -879,8 +976,8 @@ EOF
         RERUN_LAST_ERROR="testcase update on env $id gave no answer: $(echo "$out" | grep -m1 '^ERROR' | cut -c1-200)"
         return 1
     fi
-    if [ "$branch" != "$RERUN_LOCAL_BRANCH" ]; then
-        RERUN_LAST_ERROR="testcase update failed on env $id: checkout is on '${branch}' instead of ${RERUN_LOCAL_BRANCH}"
+    if [ "$branch" != "$RERUN_CHECKOUT_BRANCH" ]; then
+        RERUN_LAST_ERROR="testcase update failed on env $id: checkout is on '${branch}' instead of ${RERUN_CHECKOUT_BRANCH}"
         return 1
     fi
     if ! [[ "$head" =~ ^[0-9a-f]{40}$ ]]; then
