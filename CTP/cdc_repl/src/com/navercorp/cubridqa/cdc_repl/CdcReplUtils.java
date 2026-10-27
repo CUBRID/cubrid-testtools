@@ -130,7 +130,9 @@ System.out.println(result);
 		s = new StringBuffer();
 		s.append("cd ${CTP_HOME}/cdc_repl/cdc_test_helper;");
 		s.append("sh build.sh;");
-		s.append("./cdc_test_helper ");
+		// run in log/ so that the helper output, cci logs and tracelog are kept together (cleared per test case, backed up on failure)
+		s.append("mkdir -p log;cd log;");
+		s.append("../cdc_test_helper ");
 		if (master.getHost() != null && !"".equals(master.getHost())) {
 			s.append(" --cdc-server-ip=").append(master.getHost());
 			s.append(" --broker-ip=").append(master.getHost());
@@ -154,7 +156,10 @@ System.out.println(result);
 			throw new Exception("fail to get broker port");
 		}
 		s.append(" --target-database-name=").append(hostManager.getTestDb());
-		s.append(" ").append(hostManager.getTestDb()).append(" &");
+		// redirect output: otherwise stdout stays bound to the ssh channel, which is closed right after this command,
+		// and the helper is killed silently by SIGPIPE on its first flush. use append mode so that truncating the file
+		// per test case does not leave a hole.
+		s.append(" ").append(hostManager.getTestDb()).append(" >> cdc_test_helper.out 2>&1 &");
 		
 		System.out.println(s.toString());
 		script = new GeneralScriptInput(s.toString());
