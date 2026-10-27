@@ -88,6 +88,10 @@ public class RerunProducer {
 	static final String KEY_FEEDBACK_URL = "MKEY_RERUN_FEEDBACK_URL";
 	static final String KEY_LOG_DIR = "MKEY_RERUN_LOG_DIR";
 	static final String KEY_CASE_COUNT = "MKEY_RERUN_CASE_COUNT";
+	/** Set for a pull request rerun: the consumer runs the cases from this ref of the testcase repository. */
+	static final String KEY_TC_REF = "MKEY_RERUN_TC_REF";
+	/** The commit QAHome knows on that ref; the consumer refuses a ref that no longer contains it. */
+	static final String KEY_TC_SHA = "MKEY_RERUN_TC_SHA";
 	private static final int MAX_MSG_CONT = 4096;
 	private static final int MAX_ERROR = 2000;
 	/** Keys a consumer needs to take the message (start_consumer.sh hasTestBuild) and the runners to run it. */
@@ -101,6 +105,8 @@ public class RerunProducer {
 	 */
 	private static final Pattern SAFE_VALUE = Pattern.compile("[A-Za-z0-9._:/@%+,=~{}!-]*");
 	private static final Pattern MSG_ID = Pattern.compile("\\d{6}-\\d{6}-\\d{3}-\\d{6}");
+	private static final Pattern TC_REF = Pattern.compile("refs/pull/[1-9][0-9]*/head");
+	private static final Pattern TC_SHA = Pattern.compile("[0-9a-f]{40}");
 	private static final Pattern SECRET_KEY = Pattern.compile(".*(PWD|PASSWORD|PASSWD|TOKEN).*");
 	private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -196,12 +202,18 @@ public class RerunProducer {
 	}
 
 	private void send(Connection db, javax.jms.Connection broker, Batch batch) throws Exception {
+		if (batch.tcRef != null && !TC_REF.matcher(batch.tcRef).matches()) {
+			throw new IllegalStateException("Unsupported testcase ref " + batch.tcRef + " (refs/pull/<number>/head only).");
+		}
+		if (batch.tcSha != null && (batch.tcRef == null || !TC_SHA.matcher(batch.tcSha).matches())) {
+			throw new IllegalStateException("Bad testcase commit " + batch.tcSha + " for ref " + batch.tcRef + ".");
+		}
 		Original original = findOriginalMessage(db, batch);
 		checkBuildPackage(original.props);
 
 		String queue = queuePrefix + original.queue;
-		Message message = new Message(queue, "Rerun of failed " + batch.category + " cases of build " + batch.buildId
-				+ " requested from QAHome");
+		Message message = new Message(queue, (batch.tcRef == null ? "Rerun of failed " : "Rerun with " + batch.tcRef + " of ")
+				+ batch.category + " cases of build " + batch.buildId + " requested from QAHome");
 		message.putAll(original.props);
 		message.setProperty(Constants.MSG_BUILD_GENERATE_MSG_WAY, WAY_RERUN);
 		message.setProperty(Constants.MSG_BUILD_SEND_TIME, String.valueOf(System.currentTimeMillis()));
@@ -211,6 +223,12 @@ public class RerunProducer {
 		message.setProperty(KEY_FEEDBACK_URL, batch.feedbackUrl);
 		message.setProperty(KEY_LOG_DIR, batch.logDir);
 		message.setProperty(KEY_CASE_COUNT, String.valueOf(batch.caseCount));
+		if (batch.tcRef != null) {
+			message.setProperty(KEY_TC_REF, batch.tcRef);
+			if (batch.tcSha != null) {
+				message.setProperty(KEY_TC_SHA, batch.tcSha);
+			}
+		}
 		message.setPriority(4);
 		for (Object key : message.getPropertyKeys()) {
 			String value = message.getProperty((String) key);
@@ -274,7 +292,7 @@ public class RerunProducer {
 	private List<Batch> findRequestedBatches(Connection db) throws SQLException {
 		List<Batch> batches = new ArrayList<Batch>();
 		PreparedStatement ps = db.prepareStatement("SELECT b.id, b.build_id, b.sce_cat, b.env_os, b.verify_main_id, b.feedback_url, b.log_dir,"
-				+ " (SELECT count(*) FROM verify_rerun r WHERE r.batch_id = b.id), b.src_tb, b.src_id"
+				+ " (SELECT count(*) FROM verify_rerun r WHERE r.batch_id = b.id), b.src_tb, b.src_id, b.tc_ref, b.tc_sha"
 				+ " FROM verify_rerun_batch b WHERE b.status = 'REQUESTED'");
 		try {
 			ResultSet rs = ps.executeQuery();
@@ -290,6 +308,8 @@ public class RerunProducer {
 				batch.caseCount = rs.getInt(8);
 				batch.srcTb = rs.getString(9);
 				batch.srcId = rs.getInt(10);
+				batch.tcRef = emptyToNull(rs.getString(11));
+				batch.tcSha = emptyToNull(rs.getString(12));
 				batches.add(batch);
 			}
 			rs.close();
@@ -723,6 +743,10 @@ public class RerunProducer {
 		System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + " [RERUN] " + message);
 	}
 
+	private static String emptyToNull(String value) {
+		return value == null || value.trim().length() == 0 ? null : value.trim();
+	}
+
 	static class Batch {
 		int id;
 		String buildId;
@@ -735,6 +759,9 @@ public class RerunProducer {
 		String feedbackUrl;
 		String logDir;
 		int caseCount;
+		/** A pull request rerun: refs/pull/<n>/head and the commit QAHome knows on it (null for a normal rerun). */
+		String tcRef;
+		String tcSha;
 	}
 
 	static class Original {
