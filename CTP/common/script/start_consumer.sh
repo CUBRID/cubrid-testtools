@@ -456,11 +456,13 @@ do
 	
 		existsMsgId=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep MSG_ID|awk -F ':' '{print $2}'`
 		isFromGit=`cat ${CTP_HOME}/common/sched/status/${x} 2> /dev/null | grep BUILD_IS_FROM_GIT|awk -F ':' '{print $2}'`
+		commitTimeLine=`grep "^BUILD_COMMIT_TIME:" ${CTP_HOME}/common/sched/status/${x} 2> /dev/null`
 		isStartByData=`echo $existsMsgId|grep "[^0-9]"|wc -l`
 		if [ "$existsMsgId" -a  ${isStartByData} -gt 0 ]
 		then
 			echo "Action: $x, ${q_exec[$count]}.sh, CONTINUE"
-			(cd ${CTP_HOME}; export BUILD_IS_FROM_GIT=$isFromGit ;source ${CTP_HOME}/common/sched/init.sh $ser_site;sh common/ext/${q_exec[$count]}.sh YES)
+			# consumerMsg.info may hold the message of another queue by now, so take the time saved at the start
+			(cd ${CTP_HOME}; export BUILD_IS_FROM_GIT=$isFromGit ;source ${CTP_HOME}/common/sched/init.sh $ser_site;[ -n "$commitTimeLine" ] && export BUILD_COMMIT_TIME=${commitTimeLine#*:};sh common/ext/${q_exec[$count]}.sh YES)
 			
 			echo
             echo "End continue mode test!"
@@ -511,7 +513,7 @@ do
 
 				consumerTimer $msgId "start"
 			
-				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; sh common/ext/${q_exec[$count]}.sh)
+				(cd ${CTP_HOME}; source ${CTP_HOME}/common/sched/init.sh $ser_site; echo "BUILD_COMMIT_TIME:$BUILD_COMMIT_TIME" >> ${CTP_HOME}/common/sched/status/$x; sh common/ext/${q_exec[$count]}.sh)
 			
 				consumerTimer $msgId "stop"
 

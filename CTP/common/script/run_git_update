@@ -42,8 +42,18 @@ function usage()
     echo ""
 }
 
+function quit_update()
+{
+    echo "ERROR: $1"
+    rm -f checkout.log >/dev/null 2>&1
+    git remote rm auto_update_url 2>/dev/null
+    cd $curDir
+    exit 1
+}
+
 
 if [ $# -eq 0 ];then
+    echo "ERROR: no arguments"
     usage
     exit 1
 fi
@@ -57,15 +67,19 @@ while getopts "f:b:t:h:" opt; do
          branch_name="$OPTARG"
          ;;
       \?)
+         echo "ERROR: unknown option"
          usage
          exit 1
          ;;
       esac
 done
+# init.sh sets lookup_failed when it cannot get the engine commit time
+[ "$BUILD_COMMIT_TIME" == "lookup_failed" ] && echo "ERROR: engine commit time lookup failed: the consumer log has the reason" && exit 1
 
-[ ! -d "$local_git_source_home" ] && echo "please confirm your scenario $local_git_source_home is correct or not!" && exit 1
-[ -z "$branch_name" ] && echo "please branch_name parameter!" && exit 1
-[ ! -f ${CTP_HOME}/conf/common.conf ] && echo "please confirm ${CTP_HOME}/conf/common.conf exist or not!" && exit 1
+[ ! -d "$local_git_source_home" ] && echo "ERROR: test case directory not found: $local_git_source_home" && exit 1
+[ -z "$branch_name" ] && echo "ERROR: no branch name (-b)" && exit 1
+[ ! -f ${CTP_HOME}/conf/common.conf ] && echo "ERROR: file not found: ${CTP_HOME}/conf/common.conf" && exit 1
+[ -n "$BUILD_COMMIT_TIME" ] && ! [[ "$BUILD_COMMIT_TIME" =~ ^[0-9]+$ ]] && echo "ERROR: BUILD_COMMIT_TIME is not epoch seconds: $BUILD_COMMIT_TIME" && exit 1
 
 gitUser=`ini ${CTP_HOME}/conf/common.conf 'git_user'|tr -d '\r'`
 gitPwd=`ini ${CTP_HOME}/conf/common.conf 'git_pwd'|tr -d '\r'`
@@ -111,28 +125,41 @@ else
 fi
 
 git branch -D $local_branch_name
+retry_idx=1
 while true
 do
-    timeout 600s git fetch auto_update_url
+    timeout 600s git fetch -q auto_update_url "+refs/heads/${branch_name}:refs/remotes/auto_update_url/${branch_name}"
     if [ $? -eq 0 ];then
          break
     fi
+    [ $retry_idx -ge 3 ] && quit_update "git fetch failed 3 times: $branch_name"
+    let retry_idx++
     sleep 3
 done
 
-echo Begin to check out test cases:
-echo git checkout -f -b $local_branch_name -t auto_update_url/$branch_name
+start_point=auto_update_url/$branch_name
+if [ -n "$BUILD_COMMIT_TIME" ]; then
+    start_point=`git rev-list -n 1 --first-parent --before="@$BUILD_COMMIT_TIME +0000" auto_update_url/$branch_name`
+    [ -z "$start_point" ] && quit_update "no commit of $branch_name before BUILD_COMMIT_TIME=$BUILD_COMMIT_TIME"
+fi
 
+echo Begin to check out test cases:
+echo git checkout -f -B $local_branch_name $start_point
+
+retry_idx=1
 while true
 do
-    git checkout -f -b $local_branch_name -t auto_update_url/$branch_name 2>checkout.log
-    fail=`cat checkout.log|grep "^error" | grep "not uptodate. Cannot merge" | head -n 1 | awk -F "'" '{print $2}'`
-    if [ "$fail" == "" ]; then
+    git checkout -f -B $local_branch_name $start_point 2>checkout.log
+    if [ $? -eq 0 ]; then
         break
-    else
+    fi
+    cat checkout.log
+    [ $retry_idx -ge 3 ] && quit_update "git checkout failed 3 times: $branch_name"
+    let retry_idx++
+    fail=`cat checkout.log|grep "^error" | grep "not uptodate. Cannot merge" | head -n 1 | awk -F "'" '{print $2}'`
+    if [ "$fail" != "" ]; then
         fail="`git rev-parse --show-toplevel`/$fail"
         if [ -f "$fail" ]; then
-            cat checkout.log
             echo =\> attempt to fix by deleting $fail.
             rm -f "$fail"
         fi
@@ -140,6 +167,13 @@ do
 done
 
 rm -f checkout.log >/dev/null 2>&1
+
+# shell and isolation TestCaseGithub take the "TC pin time:" line as the sign of success
+if [ -n "$BUILD_COMMIT_TIME" ]; then
+    echo "TC pin time: `TZ=Asia/Seoul date -d @$BUILD_COMMIT_TIME '+%F %T %Z'` -> `git rev-parse --short HEAD`"
+else
+    echo "TC pin time: none -> branch tip `git rev-parse --short HEAD`"
+fi
 
 git branch | grep  temp_branch | xargs -i git branch -D {}
 

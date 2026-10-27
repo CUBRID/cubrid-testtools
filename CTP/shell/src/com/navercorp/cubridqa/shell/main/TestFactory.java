@@ -29,10 +29,12 @@ package com.navercorp.cubridqa.shell.main;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
@@ -83,7 +85,10 @@ public class TestFactory {
 			feedback.onTaskContinueEvent();
 
 			System.out.println("============= UPDATE TEST CASES ==================");
-			concurrentSVNUpdate(stableEnvList);
+			if (!concurrentSVNUpdate(stableEnvList).isEmpty()) {
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
 			System.out.println("DONE");
 
 		} else {
@@ -91,7 +96,10 @@ public class TestFactory {
 
 			feedback.onTaskStartEvent(context.getCubridPackageUrl());
 			System.out.println("============= UPDATE TEST CASES ==================");
-			concurrentSVNUpdate(stableEnvList);
+			if (!concurrentSVNUpdate(stableEnvList).isEmpty()) {
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
 			System.out.println("DONE");
 
 			System.out.println("============= FETCH TEST CASES ==================");
@@ -134,7 +142,10 @@ public class TestFactory {
 	private void joinTest(ArrayList<String> envList) throws Exception {
 
 		ArrayList<String> stableEnvList = (ArrayList<String>) envList.clone();
-		concurrentSVNUpdate(stableEnvList);
+		for (String envId : concurrentSVNUpdate(stableEnvList)) {
+			stableEnvList.remove(envId);
+			System.out.println("[ENV ADD] " + envId + " REMOVE");
+		}
 
 		System.out.println("============= DEPLOY ==================");
 		concurrentDeploy(stableEnvList, true); // later join
@@ -283,7 +294,7 @@ public class TestFactory {
 		deployPool.shutdown();
 	}
 
-	private void concurrentSVNUpdate(final ArrayList<String> envList) throws InterruptedException {
+	private List<String> concurrentSVNUpdate(final ArrayList<String> envList) throws Exception {
 		ExecutorService pool = Executors.newCachedThreadPool();
 		ArrayList<Callable<Boolean>> callers = new ArrayList<Callable<Boolean>>();
 
@@ -296,7 +307,7 @@ public class TestFactory {
 					try {
 						if (context.isScenarioInGit()) {
 							git = new TestCaseGithub(context, envId);
-							git.update();
+							return git.update();
 
 						} else {
 							svn = new TestCaseSVN(context, envId);
@@ -315,8 +326,15 @@ public class TestFactory {
 				}
 			});
 		}
-		pool.invokeAll(callers);
+		List<Future<Boolean>> results = pool.invokeAll(callers);
 		pool.shutdown();
+		List<String> failedEnvList = new ArrayList<String>();
+		for (int i = 0; i < results.size(); i++) {
+			if (!results.get(i).get()) {
+				failedEnvList.add(envList.get(i));
+			}
+		}
+		return failedEnvList;
 	}
 
 	private boolean isAllTestsFinished() {
