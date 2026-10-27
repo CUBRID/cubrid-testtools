@@ -447,9 +447,9 @@ function rerun_set_tc_commit() {
 
 # rerun_tc_checkout_script <file>: append the shell lines that finish a testcase update in "$d" after
 # run_git_update: they check run_git_update's own report (its "ERROR:" line, and the "TC pin time:" line when
-# the build's testcases are pinned), then for a pull request rerun fetch RERUN_TC_REF through the remote
-# run_git_update left behind (auto_update_url: the testcase repository with the daily credentials) and check
-# out its head. Every failure prints RERUN_ERROR=<reason> and exits 0. Expects $W, $d and $rc (run_git_update's
+# the build's testcases are pinned), then for a pull request rerun fetch RERUN_TC_REF from the testcase
+# repository (a temporary remote made the way run_git_update makes auto_update_url: the checkout's origin
+# with conf/common.conf's git_user / git_pwd; removed again, and the URL never printed) and check out its head. Every failure prints RERUN_ERROR=<reason> and exits 0. Expects $W, $d and $rc (run_git_update's
 # status, its output in $W/git_update.log); used locally and on the test nodes.
 function rerun_tc_checkout_script() {
     cat >> "$1" <<RERUN_EOF
@@ -465,10 +465,18 @@ RERUN_EOF
     [ -n "$RERUN_TC_REF" ] || return 0
     cat >> "$1" <<RERUN_EOF
 cd "\$d" || exit 0
-if ! timeout -k 60 600 git fetch -q auto_update_url "+${RERUN_TC_REF}:refs/remotes/auto_update_url/${RERUN_PR_BRANCH}" < /dev/null; then
-    echo "RERUN_ERROR=cannot fetch ${RERUN_TC_REF} of the testcase repository"; exit 0
+origin_url=\$(git config --get remote.origin.url)
+gu=\$(sh "\${CTP_HOME}/bin/ini.sh" "\${CTP_HOME}/conf/common.conf" git_user | tr -d '\r')
+gp=\$(sh "\${CTP_HOME}/bin/ini.sh" "\${CTP_HOME}/conf/common.conf" git_pwd | tr -d '\r')
+git remote rm rerun_tc_url 2>/dev/null
+git remote add rerun_tc_url "https://\${gu}:\${gp}@github.com\${origin_url#*github.com}"
+timeout -k 60 600 git fetch -q rerun_tc_url "+${RERUN_TC_REF}:refs/rerun/${RERUN_PR_BRANCH}" < /dev/null > "\$W/pr_fetch.log" 2>&1
+fetch_rc=\$?
+git remote rm rerun_tc_url 2>/dev/null
+if [ \$fetch_rc -ne 0 ]; then
+    echo "RERUN_ERROR=cannot fetch ${RERUN_TC_REF} from \${origin_url#*github.com/}: \$(grep -m1 -iE 'fatal|error' "\$W/pr_fetch.log" | sed 's#https://[^ ]*#<url>#g' | cut -c1-160)"; exit 0
 fi
-tip=\$(git rev-parse "refs/remotes/auto_update_url/${RERUN_PR_BRANCH}")
+tip=\$(git rev-parse "refs/rerun/${RERUN_PR_BRANCH}")
 sha="${RERUN_TC_SHA}"
 if [ -n "\$sha" ] && ! git merge-base --is-ancestor "\$sha" "\$tip" 2>/dev/null; then
     echo "RERUN_ERROR=${RERUN_TC_REF} no longer contains commit \$sha (its head is \$tip)"; exit 0
