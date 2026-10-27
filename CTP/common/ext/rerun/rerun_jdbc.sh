@@ -42,7 +42,7 @@
 #      run under a timeout;
 #   5. verdict per requested method from result/jdbc/current_runtime_logs/test-<cat>.xml (<testcase file="<stage>/src/
 #      ...java => m()">: no child = PASS, <failure> = FAIL), else the console line "[TESTCASE]: <file> => m() =>
-#      OK|NOK"; neither = ERROR. A class or method absent at HEAD is ERROR "case not found at <branch> HEAD".
+#      OK|NOK"; neither = ERROR. A class or method absent is ERROR "case not found at <where> (<commit>)".
 #
 # Known limits:
 #   - every test method of a requested class runs (only the requested ones are reported), in one JVM and on one fresh
@@ -90,7 +90,7 @@ function rerun_jdbc() {
         return 0
     fi
 
-    # STEP 3: testcases at the branch head
+    # STEP 3: testcases of the original run (or of the pull request)
     scenario=$(ini.sh -s common "$conf" scenario)
     scenario=${scenario%/}
     if ! rerun_split_scenario "$scenario" || [ ! -d "$scenario" ]; then
@@ -123,11 +123,11 @@ function rerun_jdbc() {
         fi
         java=$repo_dir/$file
         if [ ! -f "$java" ]; then
-            rerun_verdict "$id" ERROR "" "case not found at ${RERUN_BRANCH} HEAD (${commit:0:10}): no ${file##*/}"
+            rerun_verdict "$id" ERROR "" "case not found at $(rerun_tc_where) (${commit:0:10}): no ${file##*/}"
             continue
         fi
         if ! grep -q "[^A-Za-z0-9_\$]${meth}[[:space:]]*(" "$java"; then
-            rerun_verdict "$id" ERROR "" "case not found at ${RERUN_BRANCH} HEAD (${commit:0:10}): no method ${meth}() in ${file##*/}"
+            rerun_verdict "$id" ERROR "" "case not found at $(rerun_tc_where) (${commit:0:10}): no method ${meth}() in ${file##*/}"
             continue
         fi
         key=${file#"$scen_rel"/}" => ${meth}()"
@@ -156,7 +156,7 @@ function rerun_jdbc() {
     rc=$?
     rerun_save_log "$RERUN_FAM_WORK/jdbc_compile.log" setup/jdbc_compile.log
     if [ $rc -ne 0 ]; then
-        rerun_error_all "the JDBC sources at ${RERUN_BRANCH} HEAD (${commit:0:10}) do not compile (see setup/jdbc_compile.log)"
+        rerun_error_all "the JDBC sources at $(rerun_tc_where) (${commit:0:10}) do not compile (see setup/jdbc_compile.log)"
         return 0
     fi
 

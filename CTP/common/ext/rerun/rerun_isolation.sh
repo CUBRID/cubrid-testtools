@@ -178,10 +178,10 @@ EOF
 
     awk -F'\t' 'FILENAME == ARGV[1] { miss[$0] = 1; next } ($3 in miss) { print $1 }' "$RERUN_FAM_WORK/missing.txt" "$map" > "$RERUN_FAM_WORK/missing_ids.txt"
     while IFS= read -r id <&3; do
-        rerun_verdict "$id" ERROR "" "case not found at ${RERUN_BRANCH} HEAD (${RERUN_TC_COMMIT:0:10})"
+        rerun_verdict "$id" ERROR "" "case not found at $(rerun_tc_where) (${RERUN_TC_COMMIT:0:10})"
     done 3< "$RERUN_FAM_WORK/missing_ids.txt"
     if [ ! -s "$RERUN_FAM_WORK/found.txt" ]; then
-        rerun_log "no requested case exists at the branch head; the harness is not started"
+        rerun_log "no requested case exists in the testcases taken; the harness is not started"
         return 0
     fi
 

@@ -2,9 +2,10 @@
 
 # 1. Objective
 QAHome's per-run fail table has a **Rerun** column. A QA engineer can rerun one failed case, or every
-failed case of a run, on the same build with the latest testcase and answer of that build's testcase
-branch. The verdict (pass / fail / error) is shown next to the case, and a pass verifies the case as
-`[unknown] Passed on rerun`.
+failed case of a run, on the same build with the testcases the original run took. The verdict (pass /
+fail / error) is shown next to the case, and a pass verifies the case as `[unknown] Passed on rerun`.
+The AI fix page can also rerun the cases of an AI revise / stabilize pull request with the pull request's
+testcases, on the newest build of its branch or on the failed build (no auto-verify).
 
 Supported categories (Linux): sql, sql_debug, medium, medium_debug, sql_ext, sql_by_cci, shell,
 shell_debug, shell_heavy, shell_long, ha_shell, isolation, isolation_debug, cci, cci_debug, jdbc,
@@ -30,6 +31,16 @@ start_consumer.sh (every consumer of the original queue)
   `MKEY_RERUN_CASE_COUNT`. The producer makes the token when it claims the request; qaresu keeps only
   its SHA-256 and the `msg_sended` copy has it masked. The consumer passes it to QAHome on curl's stdin,
   never on a command line.
+* Testcases: `run_git_update` takes what the original run took (CUBRIDQA-1667): a develop build's testcases
+  as of its engine commit time (`BUILD_COMMIT_TIME`, also passed to the shell / isolation test nodes),
+  other builds the branch head. When `init.sh` cannot read that time on GitHub, the rerun ends at once
+  with an error. The case log names the source (`Testcases from`), and a missing case reads
+  `case not found at develop as of the build (<commit>)`.
+* A pull request rerun (`MKEY_RERUN_TC_REF=refs/pull/<n>/head`, `MKEY_RERUN_TC_SHA`) updates the checkout
+  as above, then fetches the pull request's head from the testcase repository (the `auto_update_url`
+  remote `run_git_update` sets up, so a fork's branch needs no other access) and checks it out on the local
+  branch `rerun_tc_pr`; the next `run_git_update` moves the checkout back. It refuses a head that no
+  longer contains the commit QAHome knows. The build pin does not apply.
 * A rerun never feeds the normal result paths (no DB feedback, no `*ImportAction.nhn` call, no upload
   to `qa_repository/function`): importing a partial run would hide the original run's fail list.
 * A rerun can be cancelled from QAHome (the `in progress` cell opens its details). While the harness

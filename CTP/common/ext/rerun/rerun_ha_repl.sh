@@ -90,7 +90,7 @@ function rerun_repl_family() {
         rerun_run_action "${fam}.act"
     fi
 
-    # testcases at the branch head (the controller's checkout, as run_<fam>.sh)
+    # testcases of the original run or of the pull request (the controller's checkout, as run_<fam>.sh)
     testcase_path=$HOME/$repo/sql
     if ! rerun_git_update_local "$testcase_path"; then
         rerun_error_all "$RERUN_LAST_ERROR"
@@ -116,7 +116,7 @@ function rerun_repl_family() {
         fi
         base=${rel%.test}
         if [ ! -f "$HOME/$repo/$base.sql" ]; then
-            rerun_verdict "$id" ERROR "" "case not found at ${RERUN_BRANCH} HEAD (${commit:0:10}): no ${base}.sql"
+            rerun_verdict "$id" ERROR "" "case not found at $(rerun_tc_where) (${commit:0:10}): no ${base}.sql"
             continue
         fi
         dir=$(dirname "$base")
