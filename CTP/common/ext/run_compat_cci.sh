@@ -79,7 +79,9 @@ function run_shell() {
         if [ "$BUILD_IS_FROM_GIT" == "1" ];then
            exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
            exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
-           run_git_update -f $HOME/cubrid-testcases-private -b $exclude_branch
+           run_git_update -f $HOME/cubrid-testcases-private -b $exclude_branch || exit 1
+           # the TC of the old server's branch is a release branch's: take the latest
+           unset BUILD_COMMIT_TIME
            get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
            fileName=${exclude_file##*/}
            cp -f $exclude_file ${TEST_RESULT_DIR}/$fileName
@@ -93,7 +95,7 @@ function run_shell() {
     elif [ "${COMPAT_TEST_CATAGORY##*_}" == "D64" ]; then
         branch=$BUILD_SCENARIO_BRANCH_GIT
         exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
-        run_git_update -f $HOME/cubrid-testcases-private -b $branch
+        run_git_update -f $HOME/cubrid-testcases-private -b $branch || exit 1
         get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
     fi
 
@@ -116,6 +118,7 @@ function run_shell_continue() {
     install_cubrid
 
     ini.sh -u "test_continue_yn=true" ${TEST_RUNTIME_CONF}
+    [ "${COMPAT_TEST_CATAGORY##*_}" == "S64" ] && unset BUILD_COMMIT_TIME
     ctp.sh shell -c ${TEST_RUNTIME_CONF} 2>&1 | tee -a ${result_dir}/runtime.log
 }
 
@@ -146,7 +149,9 @@ function run_shell_legacy() {
         if [ "$BUILD_IS_FROM_GIT" == "1" ];then
            exclude_branch=$BUILD_SCENARIO_BRANCH_GIT
            exclude_file_dir=$HOME/cubrid-testcases-private/interface/CCI/shell/config/daily_regression_test_exclude_list_compatibility
-           run_git_update -f $HOME/cubrid-testcases-private -b $exclude_branch
+           run_git_update -f $HOME/cubrid-testcases-private -b $exclude_branch || exit 1
+           # the TC of the old server's branch is a release branch's: take the latest
+           unset BUILD_COMMIT_TIME
            get_best_version_for_exclude_file "${exclude_file_dir}" "$COMPAT_TEST_CATAGORY"
            fileName=${exclude_file##*/}
            cp -f $exclude_file ${TEST_RESULT_DIR}/$fileName
