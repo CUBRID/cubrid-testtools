@@ -46,6 +46,8 @@ import com.navercorp.cubridqa.shell.common.SyncException;
 public class Test {
 	public final static int FAIL_MAX_STAT = 100;
 	public final static String SQL_UPDATE_STATS_CLASSES = "update statistics on catalog classes";
+	// cdc_test_helper output, cci logs and tracelog (on the master node only)
+	public final static String HELPER_LOG_DIR = "${CTP_HOME}/cdc_repl/cdc_test_helper/log";
 
 	InstanceManager hostManager;
 	Log mlog;
@@ -427,7 +429,8 @@ public class Test {
 
 	private void clearDatabaseLog() {
 		ArrayList<SSHConnect> allNodeList = hostManager.getAllNodeList();
-		String cmd = "find ${CUBRID}/log -type f -print | xargs -i sh -c 'cat /dev/null > {}'";
+		String cmd = "find ${CUBRID}/log -type f -print | xargs -i sh -c 'cat /dev/null > {}';"
+				+ "if [ -d " + HELPER_LOG_DIR + " ]; then rm -f " + HELPER_LOG_DIR + "/core.*; find " + HELPER_LOG_DIR + " -type f -print | xargs -i sh -c 'cat /dev/null > {}'; fi";
 		for (SSHConnect ssh : allNodeList) {
 			try {
 				mlog.print("clear database log on " + ssh.toString() + " ... ");
@@ -559,7 +562,8 @@ public class Test {
 		script.addCommand("echo 9.LOGGED >> $freadme");
 		script.addCommand("who >> $freadme");
 		script.addCommand("cd ${backup_dir_root}");
-		script.addCommand("tar czvf " + resultId + ".tar.gz ../CUBRID readme.txt");
+		script.addCommand("helper_log=; if [ -d " + HELPER_LOG_DIR + " ]; then helper_log=" + HELPER_LOG_DIR + "; fi");
+		script.addCommand("tar czvf " + resultId + ".tar.gz ../CUBRID readme.txt ${helper_log}");
 		return script;
 	}
 
@@ -594,15 +598,16 @@ public class Test {
 			this.fail100List.add(info);
 	}
 
+	// unlike ha_repl, CDC also extracts tables without a primary key, so verify all user tables
 	private ArrayList<String> getCheckSQLForDML() throws Exception {
 		SSHConnect ssh = hostManager.getHost("master");
 		String script = "cd $CUBRID;";
 		script += "csql -u dba "
 				+ hostManager.getTestDb()
-				+ " -c \"select 'FIND'||'_'||'PK_CLASS', class_name, count(*) from db_attribute where class_name in (select distinct class_name from db_index where is_primary_key='YES' and class_name in (select class_name from db_class where is_system_class='NO' and lower(class_name)<>'qa_system_tb_flag')) group by class_name;\" | grep 'FIND_PK_CLASS' ";
+				+ " -c \"select 'FIND'||'_'||'CLASS', class_name, count(*) from db_attribute where class_name in (select class_name from db_class where is_system_class='NO' and lower(class_name)<>'qa_system_tb_flag') group by class_name;\" | grep 'FIND_CLASS' ";
 		GeneralScriptInput csql = new GeneralScriptInput(script);
 		String tablesResult = ssh.execute(csql);
-		ArrayList<String[]> tablesToBeVerified = CdcReplUtils.extractTableToBeVerified(tablesResult, "FIND_PK_CLASS");
+		ArrayList<String[]> tablesToBeVerified = CdcReplUtils.extractTableToBeVerified(tablesResult, "FIND_CLASS");
 		ArrayList<String> result = new ArrayList<String>();
 		if (tablesToBeVerified.size() == 0) {
 			return result;

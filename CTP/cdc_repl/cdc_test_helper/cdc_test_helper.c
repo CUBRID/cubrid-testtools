@@ -1328,7 +1328,7 @@ process_changed_column (CUBRID_DATA_ITEM * data_item, int col_idx,
 	    memcpy (&value, data_item->dml.changed_column_data[col_idx],
 		    data_item->dml.changed_column_data_len[col_idx]);
 
-	    sprintf (sql_buf + strlen (sql_buf), "%f", value);
+	    sprintf (sql_buf + strlen (sql_buf), "%.9g", value);
 	  }
 
 	  break;
@@ -1342,7 +1342,7 @@ process_changed_column (CUBRID_DATA_ITEM * data_item, int col_idx,
 	    memcpy (&value, data_item->dml.changed_column_data[col_idx],
 		    data_item->dml.changed_column_data_len[col_idx]);
 
-	    sprintf (sql_buf + strlen (sql_buf), "%lf", value);
+	    sprintf (sql_buf + strlen (sql_buf), "%.17g", value);
 	  }
 
 	  break;
@@ -1534,7 +1534,7 @@ process_cond_column (CUBRID_DATA_ITEM * data_item, int col_idx,
 
 	    memcpy (&value, data_item->dml.cond_column_data[col_idx], data_item->dml.cond_column_data_len[col_idx]);
 
-	    sprintf (sql_buf + strlen (sql_buf), "%f", value);
+	    sprintf (sql_buf + strlen (sql_buf), "%.9g", value);
 	  }
 
 	  break;
@@ -1547,7 +1547,7 @@ process_cond_column (CUBRID_DATA_ITEM * data_item, int col_idx,
 
 	    memcpy (&value, data_item->dml.cond_column_data[col_idx], data_item->dml.cond_column_data_len[col_idx]);
 
-	    sprintf (sql_buf + strlen (sql_buf), "%lf", value);
+	    sprintf (sql_buf + strlen (sql_buf), "%.17g", value);
 	  }
 
 	  break;
@@ -2776,6 +2776,18 @@ error:
   return YES_ERROR;
 }
 
+/* 'dba.aaa' -> 'aaa' : CDC DDL statement has owner-qualified names, but class_info has class_name of _db_class */
+void
+strip_owner_name (char *name)
+{
+  char *dot = strrchr (name, '.');
+
+  if (dot != NULL)
+    {
+      memmove (name, dot + 1, strlen (dot + 1) + 1);
+    }
+}
+
 int
 change_table_name_at_class_info (CUBRID_DATA_ITEM * data_item)
 {
@@ -2800,6 +2812,9 @@ change_table_name_at_class_info (CUBRID_DATA_ITEM * data_item)
     {
       PRINT_ERRMSG_GOTO_ERR (error_code);
     }
+
+  strip_owner_name (old_table_name);
+  strip_owner_name (new_table_name);
 
 #if 0
   printf ("old_table_name: %s, new_table_name: %s\n", old_table_name, new_table_name);
@@ -3252,6 +3267,9 @@ int
 main (int argc, char *argv[])
 {
   int error_code;
+
+  /* line buffered: keep the last output when the helper aborts (stdout is redirected to a file) */
+  setvbuf (stdout, NULL, _IOLBF, 0);
 
   error_code = process_command_line_option (argc, argv);
   if (error_code != NO_ERROR)
