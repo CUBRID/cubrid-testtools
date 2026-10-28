@@ -41,6 +41,13 @@ start_consumer.sh (every consumer of the original queue)
   remote `run_git_update` sets up, so a fork's branch needs no other access) and checks it out on the local
   branch `rerun_tc_pr`; the next `run_git_update` moves the checkout back. It refuses a head that no
   longer contains the commit QAHome knows. The build pin does not apply.
+* Log capture (shell family, for QAHome's AI analysis): each requested case script gets one more command in
+  front of its first line in the rerun's checkout (the line count does not change). It sources
+  `~/ctp_rerun_work/<batch>/capture.sh` on the test node, which shadows `rm` so that every text file the
+  case or `finish` removes is copied first, then removed by the real `rm`, and which copies `$CUBRID/log`
+  and the files the case left when the script exits (2 MB per file, 30 MB per case; tunables
+  `RERUN_CAPTURE_FILE_MAX`, `RERUN_CAPTURE_CASE_MAX`). The scripts are put back after the harness; the
+  copies are published under `<rerunId>/capture/` with `INDEX.tsv`. `init.sh` and daily runs are unchanged.
 * A rerun never feeds the normal result paths (no DB feedback, no `*ImportAction.nhn` call, no upload
   to `qa_repository/function`): importing a partial run would hide the original run's fail list.
 * A rerun can be cancelled from QAHome (the `in progress` cell opens its details). While the harness
