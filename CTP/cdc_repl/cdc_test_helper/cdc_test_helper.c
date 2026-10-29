@@ -1877,7 +1877,15 @@ make_update_stmt (CUBRID_DATA_ITEM * data_item, char **sql)
 	  PRINT_ERRMSG_GOTO_ERR (error_code);
 	}
 
-      sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+      /* "col = NULL" matches no row, so use "col is NULL" for a NULL value */
+      if (data_item->dml.cond_column_data[i] == NULL && data_item->dml.cond_column_data_len[i] == 0)
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s is ", attr_info->attr_name);
+	}
+      else
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+	}
 
       error_code = process_cond_column (data_item, i, attr_info, sql_buf, &cant_make_sql);
       if (error_code != NO_ERROR)
@@ -1952,7 +1960,15 @@ make_delete_stmt (CUBRID_DATA_ITEM * data_item, char **sql)
 	  PRINT_ERRMSG_GOTO_ERR (error_code);
 	}
 
-      sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+      /* "col = NULL" matches no row, so use "col is NULL" for a NULL value */
+      if (data_item->dml.cond_column_data[i] == NULL && data_item->dml.cond_column_data_len[i] == 0)
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s is ", attr_info->attr_name);
+	}
+      else
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+	}
 
       error_code = process_cond_column (data_item, i, attr_info, sql_buf, &cant_make_sql);
       if (error_code != NO_ERROR)
