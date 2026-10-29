@@ -205,8 +205,12 @@ public class RerunProducer {
 		if (batch.tcRef != null && !TC_REF.matcher(batch.tcRef).matches()) {
 			throw new IllegalStateException("Unsupported testcase ref " + batch.tcRef + " (refs/pull/<number>/head only).");
 		}
-		if (batch.tcSha != null && (batch.tcRef == null || !TC_SHA.matcher(batch.tcSha).matches())) {
-			throw new IllegalStateException("Bad testcase commit " + batch.tcSha + " for ref " + batch.tcRef + ".");
+		if (batch.tcRef != null && (batch.tcSha == null || !TC_SHA.matcher(batch.tcSha).matches())) {
+			// a pull request number alone could name a pull request of another testcase repository
+			throw new IllegalStateException("A pull request rerun needs the commit QAHome knows on " + batch.tcRef + ".");
+		}
+		if (batch.tcSha != null && batch.tcRef == null) {
+			throw new IllegalStateException("A testcase commit without a pull request ref.");
 		}
 		Original original = findOriginalMessage(db, batch);
 		checkBuildPackage(original.props);

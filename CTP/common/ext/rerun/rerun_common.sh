@@ -363,8 +363,9 @@ function rerun_precheck_message() {
         rerun_error_all "unsupported testcase ref ${RERUN_TC_REF} (refs/pull/<number>/head only)"
         return 1
     fi
-    if [ -n "$RERUN_TC_SHA" ] && ! [[ "$RERUN_TC_SHA" =~ ^[0-9a-f]{40}$ ]]; then
-        rerun_error_all "bad testcase commit ${RERUN_TC_SHA}"
+    if [ -n "$RERUN_TC_REF" ] && ! [[ "$RERUN_TC_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+        # without it a pull request of the same number in another testcase repository would run unnoticed
+        rerun_error_all "a pull request rerun needs the commit QAHome knows on it (MKEY_RERUN_TC_SHA)"
         return 1
     fi
     # init.sh could not read the engine commit time on GitHub: run_git_update would refuse to update the
@@ -1047,7 +1048,8 @@ EOF
     cat <<'EOF'
 mkdir -p "$RERUN_CAP_DIR/files" 2>/dev/null
 [ -f "$RERUN_CAP_DIR/case_dir" ] || pwd > "$RERUN_CAP_DIR/case_dir"
-# rerun_cap_one <file> <how>: one copy and one index line (how, time, size, copy or -, original path)
+# rerun_cap_one <file> <how>: one copy and one index line (how, time, size, copy or -, original path). init.sh
+# turns on set -x, so the callers turn tracing off: these lines must not flood the case's console output.
 rerun_cap_one() {
     local f=$1 how=$2 size rel dest n used keep
     case "$f" in /*) ;; *) f="$(pwd)/$f" ;; esac
@@ -1063,9 +1065,13 @@ rerun_cap_one() {
     esac
     keep=$size
     [ "$keep" -gt "$RERUN_CAP_FILE_MAX" ] && keep=$RERUN_CAP_FILE_MAX
-    used=$(du -sb "$RERUN_CAP_DIR/files" 2>/dev/null | awk '{ print $1 }')
+    used=0
+    [ -f "$RERUN_CAP_DIR/bytes" ] && read -r used < "$RERUN_CAP_DIR/bytes"
     if [ $((${used:-0} + keep)) -gt "$RERUN_CAP_CASE_MAX" ]; then
-        printf '%s\t%s\t%s\t-\t%s\n' "$how" "$(date +%H:%M:%S)" "$size" "$f" >> "$RERUN_CAP_DIR/index"
+        n=0
+        [ -f "$RERUN_CAP_DIR/skipped" ] && read -r n < "$RERUN_CAP_DIR/skipped"
+        echo $((${n:-0} + 1)) > "$RERUN_CAP_DIR/skipped"
+        [ "${n:-0}" -lt 100 ] && printf '%s\t%s\t%s\t-\t%s\n' "$how" "$(date +%H:%M:%S)" "$size" "$f" >> "$RERUN_CAP_DIR/index"
         return 0
     fi
     dest=$RERUN_CAP_DIR/files/$rel
@@ -1073,30 +1079,37 @@ rerun_cap_one() {
     while [ -e "$dest" ]; do dest=$RERUN_CAP_DIR/files/$rel.$n; n=$((n + 1)); done
     mkdir -p "${dest%/*}" 2>/dev/null
     if [ "$size" -gt "$keep" ]; then tail -c "$keep" "$f" > "$dest" 2>/dev/null; else cp -p "$f" "$dest" 2>/dev/null; fi
+    echo $((${used:-0} + keep)) > "$RERUN_CAP_DIR/bytes"
     printf '%s\t%s\t%s\t%s\t%s\n' "$how" "$(date +%H:%M:%S)" "$size" "${dest#"$RERUN_CAP_DIR"/files/}" "$f" >> "$RERUN_CAP_DIR/index"
     return 0
 }
 rm() {
+    { rerun_cap_x=$-; set +x; } 2>/dev/null
     local a opts=1
     for a in "$@"; do
         if [ $opts -eq 1 ]; then
             case "$a" in --) opts=0; continue ;; -*) continue ;; esac
         fi
         if [ -d "$a" ] && [ ! -L "$a" ]; then
-            find "$a" -type f 2>/dev/null | while IFS= read -r rerun_cap_f; do rerun_cap_one "$rerun_cap_f" "rm -r"; done
+            find "$a" -type f 2>/dev/null | head -200 | while IFS= read -r rerun_cap_f; do rerun_cap_one "$rerun_cap_f" "rm -r"; done
         else
             rerun_cap_one "$a" rm
         fi
     done
+    case "$rerun_cap_x" in *x*) set -x ;; esac
     command rm "$@"
 }
 rerun_cap_exit() {
+    { set +x; } 2>/dev/null
     if [ -n "${CUBRID:-}" ] && [ -d "$CUBRID/log" ]; then
         find "$CUBRID/log" -type f 2>/dev/null | while IFS= read -r rerun_cap_f; do rerun_cap_one "$rerun_cap_f" "at exit"; done
     fi
     (cd "$RERUN_CAP_TOP" 2>/dev/null && git ls-files --others --modified . 2>/dev/null) | sort -u | while IFS= read -r rerun_cap_f; do
         [ "$rerun_cap_f" = "$RERUN_CAP_SELF" ] || rerun_cap_one "$RERUN_CAP_TOP/$rerun_cap_f" left
     done
+    if [ -f "$RERUN_CAP_DIR/skipped" ]; then
+        printf 'budget spent\t%s\t%s\t-\t(files not kept)\n' "$(date +%H:%M:%S)" "$(cat "$RERUN_CAP_DIR/skipped")" >> "$RERUN_CAP_DIR/index"
+    fi
 }
 trap rerun_cap_exit EXIT
 EOF
@@ -1117,24 +1130,30 @@ function rerun_capture_install() {
         echo "line=\"[ -f \\\"\\\$HOME/$RERUN_NODE_DIR/$RERUN_TAG/capture.sh\\\" ] && . \\\"\\\$HOME/$RERUN_NODE_DIR/$RERUN_TAG/capture.sh\\\"; \""
         cat <<'EOF'
 n=0
-: > "$W/capture_patched.txt"
+touch "$W/capture_patched.txt"
 while IFS= read -r p; do
     [ -f "$p" ] || continue
-    head -1 "$p" | grep -qF "capture.sh" && continue
+    # left patched by a batch that could not put it back: take the committed script first
+    if head -1 "$p" | grep -qF "ctp_rerun_work/"; then
+        (cd "$(dirname "$p")" && git checkout -q -- "$(basename "$p")") || continue
+    fi
     n=$((n + 1))
     cp -p "$p" "$W/capture_orig/$n" || continue
     printf '%s\t%s\n' "$n" "$p" >> "$W/capture_patched.txt"
-    awk -v l="$line" 'NR == 1 { print l $0; next } { print }' "$W/capture_orig/$n" > "$p"
+    # a new file moved into place: a shell still reading the old one is not disturbed
+    awk -v l="$line" 'NR == 1 { print l $0; next } { print }' "$W/capture_orig/$n" > "$p.rerun_tmp" &&
+        chmod --reference="$W/capture_orig/$n" "$p.rerun_tmp" && mv -f "$p.rerun_tmp" "$p"
 done < "$W/requested_full.txt"
 echo "RERUN_CAPTURE_PATCHED=$n"
 EOF
     } >> "$f"
+    # registered first: a run stopped while the scripts are being patched still puts them back
+    rerun_on_exit "$(rerun_capture_restore_cmd "$conf" "$id")"
     out=$(rerun_env_exec "$conf" "$id" "" "$RERUN_REMOTE_TIMEOUT" "$f")
     if ! echo "$out" | grep -q '^RERUN_CAPTURE_PATCHED='; then
         rerun_log "env ${id}: log capture not set up: $(echo "$out" | grep -m1 -iE 'error|denied|no such' | cut -c1-200)"
         return 1
     fi
-    rerun_on_exit "$(rerun_capture_restore_cmd "$conf" "$id")"
     rerun_log "env ${id}: log capture on for $(echo "$out" | sed -n 's/^RERUN_CAPTURE_PATCHED=//p') case script(s)"
 }
 
@@ -1142,10 +1161,15 @@ EOF
 function rerun_capture_restore_lines() {
     cat <<'EOF'
 if [ -f "$W/capture_patched.txt" ]; then
+    : > "$W/capture_patched.left"
     while IFS=$'\t' read -r n p; do
-        [ -f "$W/capture_orig/$n" ] && cp -p "$W/capture_orig/$n" "$p"
+        if [ -f "$W/capture_orig/$n" ] && cp -p "$W/capture_orig/$n" "$p.rerun_tmp" && mv -f "$p.rerun_tmp" "$p"; then
+            continue
+        fi
+        printf '%s\t%s\n' "$n" "$p" >> "$W/capture_patched.left"
     done < "$W/capture_patched.txt"
-    rm -f "$W/capture_patched.txt"
+    mv -f "$W/capture_patched.left" "$W/capture_patched.txt"
+    [ -s "$W/capture_patched.txt" ] || rm -f "$W/capture_patched.txt"
 fi
 EOF
 }
@@ -1194,7 +1218,9 @@ EOF
             "$RERUN_NODE_DIR/$RERUN_TAG/capture.tgz" "$dir"
     fi
     if [ -s "$dir/capture.tgz" ]; then
-        tar xzf "$dir/capture.tgz" -C "$dir" && rm -f "$dir/capture.tgz"
+        # what a case wrote comes back: no links, nothing outside the dir (rerun_capture_publish checks paths too)
+        tar xzf "$dir/capture.tgz" -C "$dir" --no-same-owner && rm -f "$dir/capture.tgz"
+        find "$dir" -type l -delete 2>/dev/null
     else
         rerun_log "env ${id}: the captured logs could not be copied back"
     fi
@@ -1213,8 +1239,9 @@ EOF
         out=$(rerun_ssh_exec "$h" "$port" "$user" "$pwd" "$RERUN_REMOTE_TIMEOUT" "$f")
         echo "$out" | grep -q RERUN_RELATED_TGZ || continue
         rerun_ssh_download "$h" "$port" "$user" "$pwd" "$RERUN_NODE_DIR/$RERUN_TAG/related_log.tgz" "$dir/related_$h"
-        [ -s "$dir/related_$h/related_log.tgz" ] && tar xzf "$dir/related_$h/related_log.tgz" -C "$dir/related_$h" &&
+        [ -s "$dir/related_$h/related_log.tgz" ] && tar xzf "$dir/related_$h/related_log.tgz" -C "$dir/related_$h" --no-same-owner &&
             rm -f "$dir/related_$h/related_log.tgz"
+        find "$dir/related_$h" -type l -delete 2>/dev/null
     done
 }
 
@@ -1245,7 +1272,14 @@ function rerun_capture_publish() {
     mkdir -p "$RERUN_LOG_ROOT/$rid/capture"
     : > "$RERUN_LOG_ROOT/$rid/capture/INDEX.tsv"
     while IFS=$'\t' read -r how t size path orig; do
-        if [ "$path" != "-" ] && rerun_save_log "$cdir/files/$path" "$rid/capture/$path"; then
+        # the index comes from the node and the case could write to it: a path must stay under files/
+        case "$path" in
+            -) ;;
+            /* | *..* | "") path=- ;;
+            *) case "$(readlink -f "$cdir/files/$path" 2>/dev/null)" in "$(readlink -f "$cdir/files")"/*) ;; *) path=- ;; esac ;;
+        esac
+        if [ "$path" != "-" ] && [ -f "$cdir/files/$path" ] && [ ! -L "$cdir/files/$path" ] &&
+            rerun_save_log "$cdir/files/$path" "$rid/capture/$path"; then
             n=$((n + 1))
         else
             path=-
