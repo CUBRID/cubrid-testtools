@@ -1026,9 +1026,12 @@ function rerun_env_cleanup_cmd() {
 # text file of the script's own cases/ directory it is about to remove, then runs the real rm with the same
 # arguments and status, and on exit copies the untracked or modified text files the case left in that
 # directory. Only files directly in the cases/ directory: not its subdirectories, not $CUBRID/log (whoever
-# needs those looks on the node). Each file is cut to its last RERUN_CAPTURE_FILE_MAX bytes, at most
-# RERUN_CAPTURE_CASE_MAX bytes per case. The scripts are put back right after the harness (and on exit), the
-# copies come back to the consumer and each case's are published under <rerunId>/capture/ with an INDEX.tsv.
+# needs those looks on the node). Only files the script wrote or changed: one last modified before the script
+# started is an input (a checked-out file, or data unpacked from the case's archives - init extracts <case>.tar,
+# cases untar loaddb inputs - which keep the archive's dates) and is not kept. Each file is cut to its last
+# RERUN_CAPTURE_FILE_MAX bytes, at most RERUN_CAPTURE_CASE_MAX bytes per case. The scripts are put back right
+# after the harness (and on exit), the copies come back to the consumer and each case's are published under
+# <rerunId>/capture/ with an INDEX.tsv.
 # Not seen: files removed by another program (find -delete, xargs rm, a child script), and the exit copy of a
 # case killed by the harness timeout or that sets its own EXIT trap.
 
@@ -1039,7 +1042,7 @@ RERUN_CAPTURE_CASE_MAX=${RERUN_CAPTURE_CASE_MAX:-30000000}
 function rerun_capture_script() {
     cat <<EOF
 # Sourced by the first line of a case script during a QAHome rerun (CUBRIDQA-1630): copies of the text files
-# of the script's cases/ directory that the case removes with rm, and of those it left when it exits.
+# the script writes in its cases/ directory, those it removes with rm and those it left when it exits.
 RERUN_CAP_CASES=\$(pwd)
 RERUN_CAP_DIR="\$HOME/$RERUN_NODE_DIR/$RERUN_TAG/capture/\$(pwd | tr '/' '_')"
 RERUN_CAP_SELF="\${0##*/}"
@@ -1049,9 +1052,12 @@ EOF
     cat <<'EOF'
 mkdir -p "$RERUN_CAP_DIR/files" 2>/dev/null
 [ -f "$RERUN_CAP_DIR/case_dir" ] || pwd > "$RERUN_CAP_DIR/case_dir"
+# the script's start: a file last modified before it is an input of the case, not something it wrote
+RERUN_CAP_START=$RERUN_CAP_DIR/start
+: > "$RERUN_CAP_START"
 # rerun_cap_one <file> <how>: one copy and one index line (how, time, size, copy or -, file name) when the file is
-# a text file directly in the cases/ directory. init.sh turns on set -x, so the callers turn tracing off: these
-# lines must not flood the case's console output.
+# a text file directly in the cases/ directory that the script wrote. init.sh turns on set -x, so the callers turn
+# tracing off: these lines must not flood the case's console output.
 rerun_cap_one() {
     local f=$1 how=$2 name size dest n used keep
     case "$f" in /*) ;; *) f="$(pwd)/$f" ;; esac
@@ -1059,6 +1065,7 @@ rerun_cap_one() {
     name=${f##*/}
     [ "$name" = "$RERUN_CAP_SELF" ] && return 0
     [ -f "$f" ] && [ ! -L "$f" ] || return 0
+    [ "$f" -ot "$RERUN_CAP_START" ] && return 0
     size=$(stat -c %s "$f" 2>/dev/null) || return 0
     [ "${size:-0}" -gt 0 ] || return 0
     grep -Iq . "$f" 2>/dev/null || return 0
