@@ -1019,17 +1019,18 @@ function rerun_env_cleanup_cmd() {
 # Log capture for the AI analysis (shell family)
 #######################################################################################################
 #
-# A daily run keeps almost nothing of a case: the case removes its own files after its last check
-# (rm -f *.log, as the rulebook asks), finish removes the client error logs, and both init test and the
-# harness's reset before the next case empty $CUBRID/log. A rerun therefore runs each requested case script
-# with one more command in front of its first line (the line count does not change): it sources
-# $W/capture.sh, which shadows rm with a shell function that first copies every text file it is about to
-# remove, then runs the real rm with the same arguments and status, and on exit copies $CUBRID/log and the
-# untracked or modified files the case left. Text files only, each cut to its last RERUN_CAPTURE_FILE_MAX
-# bytes, at most RERUN_CAPTURE_CASE_MAX bytes per case. The scripts are put back right after the harness
-# (and on exit), the copies come back to the consumer and each case's are published under
-# <rerunId>/capture/ with an INDEX.tsv. Not seen: files removed by another program (find -delete, xargs rm,
-# a child script), and the exit copy of a case killed by the harness timeout or that sets its own EXIT trap.
+# A daily run keeps almost nothing of what a case script writes: the case removes its own output files after
+# its last check (rm -f *.log, as the rulebook asks) and finish removes the client error logs. A rerun
+# therefore runs each requested case script with one more command in front of its first line (the line count
+# does not change): it sources $W/capture.sh, which shadows rm with a shell function that first copies each
+# text file of the script's own cases/ directory it is about to remove, then runs the real rm with the same
+# arguments and status, and on exit copies the untracked or modified text files the case left in that
+# directory. Only files directly in the cases/ directory: not its subdirectories, not $CUBRID/log (whoever
+# needs those looks on the node). Each file is cut to its last RERUN_CAPTURE_FILE_MAX bytes, at most
+# RERUN_CAPTURE_CASE_MAX bytes per case. The scripts are put back right after the harness (and on exit), the
+# copies come back to the consumer and each case's are published under <rerunId>/capture/ with an INDEX.tsv.
+# Not seen: files removed by another program (find -delete, xargs rm, a child script), and the exit copy of a
+# case killed by the harness timeout or that sets its own EXIT trap.
 
 RERUN_CAPTURE_FILE_MAX=${RERUN_CAPTURE_FILE_MAX:-2000000}
 RERUN_CAPTURE_CASE_MAX=${RERUN_CAPTURE_CASE_MAX:-30000000}
@@ -1037,32 +1038,30 @@ RERUN_CAPTURE_CASE_MAX=${RERUN_CAPTURE_CASE_MAX:-30000000}
 # rerun_capture_script: the capture.sh a case script sources (stdout).
 function rerun_capture_script() {
     cat <<EOF
-# Sourced by the first line of a case script during a QAHome rerun (CUBRIDQA-1630): copies of the text
-# files the case removes with rm, and of \$CUBRID/log and the files it left when it exits.
-RERUN_CAP_TOP=\$(cd .. 2>/dev/null && pwd)
+# Sourced by the first line of a case script during a QAHome rerun (CUBRIDQA-1630): copies of the text files
+# of the script's cases/ directory that the case removes with rm, and of those it left when it exits.
+RERUN_CAP_CASES=\$(pwd)
 RERUN_CAP_DIR="\$HOME/$RERUN_NODE_DIR/$RERUN_TAG/capture/\$(pwd | tr '/' '_')"
-RERUN_CAP_SELF="\$(basename "\$(pwd)")/\${0##*/}"
+RERUN_CAP_SELF="\${0##*/}"
 RERUN_CAP_FILE_MAX=$RERUN_CAPTURE_FILE_MAX
 RERUN_CAP_CASE_MAX=$RERUN_CAPTURE_CASE_MAX
 EOF
     cat <<'EOF'
 mkdir -p "$RERUN_CAP_DIR/files" 2>/dev/null
 [ -f "$RERUN_CAP_DIR/case_dir" ] || pwd > "$RERUN_CAP_DIR/case_dir"
-# rerun_cap_one <file> <how>: one copy and one index line (how, time, size, copy or -, original path). init.sh
-# turns on set -x, so the callers turn tracing off: these lines must not flood the case's console output.
+# rerun_cap_one <file> <how>: one copy and one index line (how, time, size, copy or -, file name) when the file is
+# a text file directly in the cases/ directory. init.sh turns on set -x, so the callers turn tracing off: these
+# lines must not flood the case's console output.
 rerun_cap_one() {
-    local f=$1 how=$2 size rel dest n used keep
+    local f=$1 how=$2 name size dest n used keep
     case "$f" in /*) ;; *) f="$(pwd)/$f" ;; esac
+    case "$f" in "$RERUN_CAP_CASES"/*/*) return 0 ;; "$RERUN_CAP_CASES"/*) ;; *) return 0 ;; esac
+    name=${f##*/}
+    [ "$name" = "$RERUN_CAP_SELF" ] && return 0
     [ -f "$f" ] && [ ! -L "$f" ] || return 0
-    case "$f" in "$RERUN_CAP_DIR"/*) return 0 ;; esac
     size=$(stat -c %s "$f" 2>/dev/null) || return 0
     [ "${size:-0}" -gt 0 ] || return 0
     grep -Iq . "$f" 2>/dev/null || return 0
-    case "$f" in
-        "$RERUN_CAP_TOP"/*) rel=case/${f#"$RERUN_CAP_TOP"/} ;;
-        "${CUBRID:-/nonexistent}"/log/*) rel=CUBRID_log/${f#"$CUBRID"/log/} ;;
-        *) rel=other$f ;;
-    esac
     keep=$size
     [ "$keep" -gt "$RERUN_CAP_FILE_MAX" ] && keep=$RERUN_CAP_FILE_MAX
     used=0
@@ -1071,16 +1070,15 @@ rerun_cap_one() {
         n=0
         [ -f "$RERUN_CAP_DIR/skipped" ] && read -r n < "$RERUN_CAP_DIR/skipped"
         echo $((${n:-0} + 1)) > "$RERUN_CAP_DIR/skipped"
-        [ "${n:-0}" -lt 100 ] && printf '%s\t%s\t%s\t-\t%s\n' "$how" "$(date +%H:%M:%S)" "$size" "$f" >> "$RERUN_CAP_DIR/index"
+        [ "${n:-0}" -lt 100 ] && printf '%s\t%s\t%s\t-\t%s\n' "$how" "$(date +%H:%M:%S)" "$size" "$name" >> "$RERUN_CAP_DIR/index"
         return 0
     fi
-    dest=$RERUN_CAP_DIR/files/$rel
+    dest=$RERUN_CAP_DIR/files/$name
     n=1
-    while [ -e "$dest" ]; do dest=$RERUN_CAP_DIR/files/$rel.$n; n=$((n + 1)); done
-    mkdir -p "${dest%/*}" 2>/dev/null
+    while [ -e "$dest" ]; do dest=$RERUN_CAP_DIR/files/$name.$n; n=$((n + 1)); done
     if [ "$size" -gt "$keep" ]; then tail -c "$keep" "$f" > "$dest" 2>/dev/null; else cp -p "$f" "$dest" 2>/dev/null; fi
     echo $((${used:-0} + keep)) > "$RERUN_CAP_DIR/bytes"
-    printf '%s\t%s\t%s\t%s\t%s\n' "$how" "$(date +%H:%M:%S)" "$size" "${dest#"$RERUN_CAP_DIR"/files/}" "$f" >> "$RERUN_CAP_DIR/index"
+    printf '%s\t%s\t%s\t%s\t%s\n' "$how" "$(date +%H:%M:%S)" "$size" "${dest##*/}" "$name" >> "$RERUN_CAP_DIR/index"
     return 0
 }
 rm() {
@@ -1090,22 +1088,15 @@ rm() {
         if [ $opts -eq 1 ]; then
             case "$a" in --) opts=0; continue ;; -*) continue ;; esac
         fi
-        if [ -d "$a" ] && [ ! -L "$a" ]; then
-            find "$a" -type f 2>/dev/null | head -200 | while IFS= read -r rerun_cap_f; do rerun_cap_one "$rerun_cap_f" "rm -r"; done
-        else
-            rerun_cap_one "$a" rm
-        fi
+        rerun_cap_one "$a" rm
     done
     case "$rerun_cap_x" in *x*) set -x ;; esac
     command rm "$@"
 }
 rerun_cap_exit() {
     { set +x; } 2>/dev/null
-    if [ -n "${CUBRID:-}" ] && [ -d "$CUBRID/log" ]; then
-        find "$CUBRID/log" -type f 2>/dev/null | while IFS= read -r rerun_cap_f; do rerun_cap_one "$rerun_cap_f" "at exit"; done
-    fi
-    (cd "$RERUN_CAP_TOP" 2>/dev/null && git ls-files --others --modified . 2>/dev/null) | sort -u | while IFS= read -r rerun_cap_f; do
-        [ "$rerun_cap_f" = "$RERUN_CAP_SELF" ] || rerun_cap_one "$RERUN_CAP_TOP/$rerun_cap_f" left
+    (cd "$RERUN_CAP_CASES" 2>/dev/null && git ls-files --others --modified . 2>/dev/null) | sort -u | while IFS= read -r rerun_cap_f; do
+        rerun_cap_one "$RERUN_CAP_CASES/$rerun_cap_f" left
     done
     if [ -f "$RERUN_CAP_DIR/skipped" ]; then
         printf 'budget spent\t%s\t%s\t-\t(files not kept)\n' "$(date +%H:%M:%S)" "$(cat "$RERUN_CAP_DIR/skipped")" >> "$RERUN_CAP_DIR/index"
@@ -1197,11 +1188,9 @@ function rerun_ssh_download() {
         -from "$from" -to "$to" < /dev/null > /dev/null 2>&1
 }
 
-# rerun_capture_collect <conf> <envId> <1 when the batch has one case>: put the scripts back, bring the copies
-# to RERUN_FAM_WORK/capture_env_<id>/ and, for a one-case batch, the $CUBRID/log of the env's related hosts
-# (an HA slave: its logs are those of that case).
+# rerun_capture_collect <conf> <envId>: put the scripts back and bring the copies to RERUN_FAM_WORK/capture_env_<id>/.
 function rerun_capture_collect() {
-    local conf=$1 id=$2 single=$3 f out dir=$RERUN_FAM_WORK/capture_env_$2 h port user pwd
+    local conf=$1 id=$2 f out dir=$RERUN_FAM_WORK/capture_env_$2
     f=$(rerun_script capture_collect)
     rerun_capture_restore_lines >> "$f"
     cat >> "$f" <<'EOF'
@@ -1224,44 +1213,14 @@ EOF
     else
         rerun_log "env ${id}: the captured logs could not be copied back"
     fi
-    [ "$single" == "1" -a "$id" != "local" ] || return 0
-    port=$(rerun_env_prop "$conf" "$id" "" ssh.port)
-    user=$(rerun_env_prop "$conf" "$id" "" ssh.user)
-    pwd=$(rerun_env_prop "$conf" "$id" "" ssh.pwd)
-    for h in $(rerun_conf_get "$conf" "env.$id.ssh.relatedhosts" | tr ',' ' '); do
-        rerun_on_exit "$(rerun_related_cleanup_cmd "$conf" "$id" "$h")"
-        f=$(rerun_script capture_related)
-        cat >> "$f" <<'EOF'
-[ -n "$CUBRID" ] && [ -d "$CUBRID/log" ] || exit 0
-mkdir -p "$W" && cd "$CUBRID" && find log -type f -size -2000k 2>/dev/null | while IFS= read -r l; do grep -Iq . "$l" 2>/dev/null && echo "$l"; done > "$W/related_logs.txt"
-[ -s "$W/related_logs.txt" ] && tar czf "$W/related_log.tgz" -T "$W/related_logs.txt" && echo RERUN_RELATED_TGZ
-EOF
-        out=$(rerun_ssh_exec "$h" "$port" "$user" "$pwd" "$RERUN_REMOTE_TIMEOUT" "$f")
-        echo "$out" | grep -q RERUN_RELATED_TGZ || continue
-        rerun_ssh_download "$h" "$port" "$user" "$pwd" "$RERUN_NODE_DIR/$RERUN_TAG/related_log.tgz" "$dir/related_$h"
-        [ -s "$dir/related_$h/related_log.tgz" ] && tar xzf "$dir/related_$h/related_log.tgz" -C "$dir/related_$h" --no-same-owner &&
-            rm -f "$dir/related_$h/related_log.tgz"
-        find "$dir/related_$h" -type l -delete 2>/dev/null
-    done
-}
-
-# rerun_related_cleanup_cmd <conf> <envId> <related host>: a command string for rerun_on_exit that removes the batch
-# dir on a related host (credentials read from a frozen copy of the conf, as rerun_env_cleanup_cmd does).
-function rerun_related_cleanup_cmd() {
-    local f frozen
-    f=$(rerun_script related_cleanup_$(echo "$3" | tr -c 'A-Za-z0-9.\n' '_'))
-    echo 'rm -rf "$W"' >> "$f"
-    frozen=$RERUN_FAM_WORK/.related_env_$2.conf
-    (umask 077; cp -f "$1" "$frozen")
-    echo "rerun_ssh_exec '$3' \"\$(rerun_env_prop '$frozen' '$2' '' ssh.port)\" \"\$(rerun_env_prop '$frozen' '$2' '' ssh.user)\" \"\$(rerun_env_prop '$frozen' '$2' '' ssh.pwd)\" 120 '$f'"
 }
 
 # rerun_capture_publish <rerunId> <case dir: relative to the node user's $HOME, or absolute>: publish the copies of
 # one case under <rerunId>/capture/ (scrubbed like every published log) with INDEX.tsv (how, time, size,
-# published path or "-" when the case budget was spent, original path), and print a short listing for the
-# case log. Prints nothing when no copy of this case came back.
+# published file or "-" when the case budget was spent, file name), and print a short listing for the case
+# log. Prints nothing when no copy of this case came back.
 function rerun_capture_publish() {
-    local rid=$1 casedir=${2#./} d cdir="" line how t size path orig n=0 skipped=0 rel h
+    local rid=$1 casedir=${2#./} d cdir="" how t size path name n=0 skipped=0
     for d in "$RERUN_FAM_WORK"/capture_env_*/capture/*/; do
         [ -f "$d/case_dir" ] || continue
         case "$(cat "$d/case_dir")" in
@@ -1271,12 +1230,11 @@ function rerun_capture_publish() {
     [ -n "$cdir" ] || return 0
     mkdir -p "$RERUN_LOG_ROOT/$rid/capture"
     : > "$RERUN_LOG_ROOT/$rid/capture/INDEX.tsv"
-    while IFS=$'\t' read -r how t size path orig; do
-        # the index comes from the node and the case could write to it: a path must stay under files/
+    while IFS=$'\t' read -r how t size path name; do
+        # the index comes from the node and the case could write to it: a kept file is a plain name under files/
         case "$path" in
             -) ;;
-            /* | *..* | "") path=- ;;
-            *) case "$(readlink -f "$cdir/files/$path" 2>/dev/null)" in "$(readlink -f "$cdir/files")"/*) ;; *) path=- ;; esac ;;
+            "" | */* | .*) path=- ;;
         esac
         if [ "$path" != "-" ] && [ -f "$cdir/files/$path" ] && [ ! -L "$cdir/files/$path" ] &&
             rerun_save_log "$cdir/files/$path" "$rid/capture/$path"; then
@@ -1285,24 +1243,10 @@ function rerun_capture_publish() {
             path=-
             skipped=$((skipped + 1))
         fi
-        printf '%s\t%s\t%s\t%s\t%s\n' "$how" "$t" "$size" "$path" "$orig" | rerun_scrub_stream >> "$RERUN_LOG_ROOT/$rid/capture/INDEX.tsv"
+        printf '%s\t%s\t%s\t%s\t%s\n' "$how" "$t" "$size" "$path" "$name" | rerun_scrub_stream >> "$RERUN_LOG_ROOT/$rid/capture/INDEX.tsv"
     done < "$cdir/index"
-    # the HA slave of a one-case batch
-    for d in "${cdir%/capture/*}"/related_*/log; do
-        [ -d "$d" ] || continue
-        h=${d%/log}; h=${h##*/related_}
-        while IFS= read -r line; do
-            rel=related_$h/CUBRID_log/${line#"$d"/}
-            rerun_save_log "$line" "$rid/capture/$rel" || continue
-            n=$((n + 1))
-            printf '%s\t%s\t%s\t%s\t%s\n' "related host $h at the end" "-" "$(wc -c < "$line")" "$rel" "\$CUBRID/${line#"${d%/log}"/}" \
-                >> "$RERUN_LOG_ROOT/$rid/capture/INDEX.tsv"
-        done <<EOF
-$(find "$d" -type f | sort)
-EOF
-    done
-    echo "${n} file(s) under capture/ (list: capture/INDEX.tsv)$([ $skipped -gt 0 ] && echo ", ${skipped} left out: the ${RERUN_CAPTURE_CASE_MAX}-byte case budget was spent")"
-    awk -F'\t' '{ printf "  %-8s %-10s %10s  %s\n", $2, $1, $3, ($4 == "-" ? "(not kept) " $5 : $4) }' "$RERUN_LOG_ROOT/$rid/capture/INDEX.tsv"
+    echo "${n} file(s) of the cases directory under capture/ (list: capture/INDEX.tsv)$([ $skipped -gt 0 ] && echo ", ${skipped} not kept: the ${RERUN_CAPTURE_CASE_MAX}-byte case budget was spent")"
+    awk -F'\t' '{ printf "  %-8s %-12s %10s  %s\n", $2, $1, $3, ($4 == "-" ? "(not kept) " $5 : $4) }' "$RERUN_LOG_ROOT/$rid/capture/INDEX.tsv"
 }
 
 #######################################################################################################
