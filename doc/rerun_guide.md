@@ -33,14 +33,17 @@ start_consumer.sh (every consumer of the original queue)
   never on a command line.
 * Testcases: `run_git_update` takes what the original run took (CUBRIDQA-1667): a develop build's testcases
   as of its engine commit time (`BUILD_COMMIT_TIME`, also passed to the shell / isolation test nodes),
-  other builds the branch head. When `init.sh` cannot read that time on GitHub, the rerun ends at once
+  other builds the branch head. A develop run from before that change (2026-10-23) took the branch head of its
+  day; its rerun is pinned all the same. When `init.sh` cannot read that time on GitHub, the rerun ends at once
   with an error. The case log names the source (`Testcases from`), and a missing case reads
   `case not found at develop as of the build (<commit>)`.
 * A pull request rerun (`MKEY_RERUN_TC_REF=refs/pull/<n>/head`, `MKEY_RERUN_TC_SHA`) updates the checkout
-  as above, then fetches the pull request's head from the testcase repository (the `auto_update_url`
-  remote `run_git_update` sets up, so a fork's branch needs no other access) and checks it out on the local
-  branch `rerun_tc_pr`; the next `run_git_update` moves the checkout back. It refuses a head that no
-  longer contains the commit QAHome knows. The build pin does not apply.
+  as above, then fetches the pull request's head from the testcase repository through a temporary remote made
+  the way `run_git_update` makes `auto_update_url` (the checkout's origin with `conf/common.conf`'s
+  `git_user` / `git_pwd`, so a fork's branch needs no other access; removed right after, the URL never
+  printed) and checks it out on the local branch `rerun_tc_pr`; the next `run_git_update` moves the checkout
+  back. The commit QAHome knows is required, and a head that no longer contains it is refused. The build pin
+  does not apply.
 * Log capture (shell family, for QAHome's AI analysis): each requested case script gets one more command in
   front of its first line in the rerun's checkout (the line count does not change). It sources
   `~/ctp_rerun_work/<batch>/capture.sh` on the test node, which shadows `rm` so that every text file the
