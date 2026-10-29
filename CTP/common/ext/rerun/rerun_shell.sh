@@ -44,8 +44,9 @@
 #      testcase_workspace_dir removed (it would copy the cases elsewhere), feedback_type=file, no notice URL, no
 #      feedback DB keys, testcase_retry_num=0, test_continue_yn=false, delete_testcase_after_each_execution_yn=false;
 #   4b. each requested case script sources $W/capture.sh from its first line (log capture for the AI analysis,
-#      rerun_common.sh): copies of the text files of its cases/ directory that it removes, and of those it left
-#      at exit, come back under <rerunId>/capture/; the scripts are put back right after the harness;
+#      rerun_common.sh): copies of the text files it writes in its cases/ directory (those it removes, and those
+#      it left at exit; inputs older than the script are skipped) come back under <rerunId>/capture/; the scripts
+#      are put back right after the harness;
 #   5. verdict per case from result/shell/current_runtime_logs/test-<cat>.xml (<testcase file=...>: no child =
 #      PASS, <failure> = FAIL, <skipped> = ERROR "skipped at HEAD", <error> = ERROR); when the XML has no element
 #      (harness killed before it closed the file) the console line "[TESTCASE] <file> EnvId=<id> [OK|NOK]" is used;

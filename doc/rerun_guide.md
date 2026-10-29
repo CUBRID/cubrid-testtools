@@ -44,6 +44,11 @@ start_consumer.sh (every consumer of the original queue)
   printed) and checks it out on the local branch `rerun_tc_pr`; the next `run_git_update` moves the checkout
   back. The commit QAHome knows is required, and a head that no longer contains it is refused. The build pin
   does not apply.
+* sql family: only the requested cases are staged and run, on a new database. The cases that ran before one in
+  the daily run do not run, so a failure caused by what they left (tables, users, parameters) may not reproduce;
+  each case log says so. A medium file of an order-dependent directory (`_07_mc_dep`, `_08_mc_ind`:
+  `<letter><3 digits>_<name>.sql`, run in name order, each reading what the earlier ones committed) runs after
+  the earlier files of its directory, and its case log lists them with their results.
 * Log capture (shell family, for QAHome's AI analysis): each requested case script gets one more command in
   front of its first line in the rerun's checkout (the line count does not change). It sources
   `~/ctp_rerun_work/<batch>/capture.sh` on the test node, which shadows `rm` so that each text file of the
@@ -51,7 +56,9 @@ start_consumer.sh (every consumer of the original queue)
   real `rm`, and which copies the text files the case left in that directory when the script exits (2 MB
   per file, 30 MB per case; tunables `RERUN_CAPTURE_FILE_MAX`, `RERUN_CAPTURE_CASE_MAX`). Only files
   directly in `cases/`: not its subdirectories and not `$CUBRID/log`, which whoever needs them looks up on
-  the node. The scripts are put back after the harness; the copies are published under
+  the node. Only files the script wrote or changed: one last modified before the script started is an input (a
+  checked-out file, or data the case unpacks from its archives, which keeps the archive's dates) and is not
+  kept. The scripts are put back after the harness; the copies are published under
   `<rerunId>/capture/` with `INDEX.tsv`. `init.sh` and daily runs are unchanged.
 * A rerun never feeds the normal result paths (no DB feedback, no `*ImportAction.nhn` call, no upload
   to `qa_repository/function`): importing a partial run would hide the original run's fail list.

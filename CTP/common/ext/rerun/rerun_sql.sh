@@ -34,7 +34,10 @@
 #   2. the category's repo (../cubrid-testcases or ../cubrid-testcases-private) is updated with run_git_update
 #      under a timeout, the branch is checked and the commit recorded;
 #   3. only the requested cases are staged - <grp>/cases/<n>.sql (+ <n>.queryPlan) and <grp>/answers/<n>.answer*
-#      - under RERUN_WORK/<runner>/stage/<repo>/<sql|medium>/, a path that keeps the /cubrid-testcases[-private]/
+#      - plus, for a medium file of an order-dependent directory (_07_mc_dep, _08_mc_ind:
+#      <letter><3 digits>_<name>.sql, run in name order, a file reads what earlier ones committed), the earlier
+#      files of that directory (JDBC only: it sorts, ccqt follows readdir) - under
+#      RERUN_WORK/<runner>/stage/<repo>/<sql|medium>/, a path that keeps the /cubrid-testcases[-private]/
 #      marker ccqt needs; [sql] scenario points there, data_file stays on the real checkout (medium's
 #      mdb.tar.gz), the exclude list is removed, enable_memory_leak is forced off and the cubrid.conf /
 #      cubrid_ha.conf parameters are filtered exactly as run_sql.sh does;
@@ -46,9 +49,9 @@
 #
 # Known limits:
 #   - the batch runs on one fresh database without the cases that ran before it in the daily run, so a
-#     failure caused by state an earlier case left (medium mutates mdb) may not reproduce, and a case may
-#     fail only because a predecessor it relies on did not run; the order also differs (JDBC sorts, ccqt
-#     follows readdir);
+#     failure caused by state an earlier case left (objects, users, parameters outside test_default.xml's reset
+#     list) may not reproduce; the case log says so. Medium's order-dependent directories are the exception
+#     (step 3). The order also differs (JDBC sorts, ccqt follows readdir);
 #   - MKEY_SPARSECHECKOUT is not applied (it deletes files of the shared checkout; staging does not need it);
 #     coverage builds and legacy (non-git) builds are refused;
 #   - core files found after the run are stack-analysed into harness/core_stacks.txt and moved to
@@ -56,6 +59,29 @@
 
 function rerun_sql() {
     rerun_sql_family jdbc
+}
+
+# Medium's order-dependent files: <letter><3 digits>_<name>.sql, run in name order (Arrays.sort), each reading what
+# the earlier ones committed (I018_qset0 counts the rows I004_bulkinsco inserted).
+RERUN_SQL_ORDERED_RE='^[A-Z][0-9]{3}_[^/]*[.]sql$'
+
+# rerun_sql_predecessors <cases dir> <name>.sql: the order-dependent files of the directory that run before it.
+function rerun_sql_predecessors() {
+    echo "$2" | grep -qE "$RERUN_SQL_ORDERED_RE" || return 0
+    ls "$1" 2>/dev/null | grep -E "$RERUN_SQL_ORDERED_RE" | LC_ALL=C sort | LC_ALL=C awk -v b="$2" '$0 < b'
+}
+
+# rerun_sql_stage <checkout> <stage repo> <grp> <name>: copy <name>.sql, its .queryPlan and answers once.
+function rerun_sql_stage() {
+    local src=$1/$3 dst=$2/$3
+    [ -f "$dst/cases/$4.sql" ] && return 0
+    mkdir -p "$dst/cases" "$dst/answers"
+    cp -p "$src/cases/$4.sql" "$dst/cases/"
+    if [ -f "$src/cases/$4.queryPlan" ]; then
+        cp -p "$src/cases/$4.queryPlan" "$dst/cases/"
+    fi
+    cp -p "$src/answers/$4".answer* "$dst/answers/" 2>/dev/null
+    return 0
 }
 
 function rerun_sql_close_shard_service() {
@@ -69,7 +95,7 @@ function rerun_sql_close_shard_service() {
 # rerun_sql_family <jdbc|cci>
 function rerun_sql_family() {
     local mode=$1 ctp_type repo scen template conf role commit repo_dir stage_repo stage_root map vfile
-    local id sce grp n tmptxt log resdir testlog core_note rc
+    local id sce grp n tmptxt log resdir testlog core_note rc pre p
 
     if [ "$mode" == "cci" ]; then
         rerun_init sql_by_cci
@@ -178,14 +204,16 @@ function rerun_sql_family() {
             rerun_verdict "$id" ERROR "" "answer file ${grp}/answers/${n}.answer not found at $(rerun_tc_where) (${commit:0:10})"
             continue
         fi
-        if [ ! -f "$stage_repo/$sce" ]; then
-            mkdir -p "$stage_repo/$grp/cases" "$stage_repo/$grp/answers"
-            cp -p "$repo_dir/$sce" "$stage_repo/$grp/cases/"
-            if [ -f "$repo_dir/$grp/cases/$n.queryPlan" ]; then
-                cp -p "$repo_dir/$grp/cases/$n.queryPlan" "$stage_repo/$grp/cases/"
+        if [ "$mode" == "jdbc" -a "$scen" == "medium" ]; then
+            pre=$(rerun_sql_predecessors "$repo_dir/$grp/cases" "$n.sql")
+            if [ -n "$pre" ]; then
+                for p in $pre; do
+                    rerun_sql_stage "$repo_dir" "$stage_repo" "$grp" "${p%.sql}"
+                done
+                rerun_log "${sce}: the $(echo "$pre" | wc -l) earlier file(s) of its order-dependent directory are staged to run first"
             fi
-            cp -p "$repo_dir/$grp/answers/$n".answer* "$stage_repo/$grp/answers/"
         fi
+        rerun_sql_stage "$repo_dir" "$stage_repo" "$grp" "$n"
         printf '%s\t%s\t%s\n' "$id" "$sce" "$sce" >> "$map"
     done 3< "$RERUN_CASES_FILE"
     if [ ! -s "$map" ]; then
@@ -239,6 +267,8 @@ function rerun_sql_family() {
         rerun_sql_jdbc_verdicts "$resdir/summary.xml" "$core_note" > "$vfile"
     fi
     RERUN_SQL_MODE=$mode
+    RERUN_SQL_SCEN=$scen
+    RERUN_SQL_VERDICTS=$vfile
     RERUN_SQL_LOG=$log
     RERUN_SQL_RESDIR=$resdir
     RERUN_SQL_STAGE_REPO=$stage_repo
@@ -279,12 +309,27 @@ function rerun_sql_cci_verdicts() {
         }' "$1"
 }
 
-# rerun_sql_case_log <rerunId> <sce> <key> <status> <note>: console lines, result, answer, diff, core info.
+# rerun_sql_case_log <rerunId> <sce> <key> <status> <note>: how it ran, console lines, result, answer, diff, core info.
 function rerun_sql_case_log() {
-    local sce=$2 status=$4 grp n stage_case result answer
+    local sce=$2 status=$4 grp n stage_case result answer pre p
     grp=${sce%/cases/*}
     n=$(basename "$sce" .sql)
     stage_case=$RERUN_SQL_STAGE_REPO/$grp/cases
+    {
+        echo "Only the requested cases of this rerun ran, on a new database. The cases that ran before this one in"
+        echo "the daily run did not, so a failure caused by what they left behind (tables, users, parameters) does"
+        echo "not show here, and a pass does not rule that out."
+        if [ "$RERUN_SQL_MODE" == "jdbc" -a "$RERUN_SQL_SCEN" == "medium" ]; then
+            pre=$(rerun_sql_predecessors "$stage_case" "$n.sql")
+        fi
+        if [ -n "$pre" ]; then
+            echo
+            echo "The files of its directory read what the earlier ones commit, so these ran before it, in this order:"
+            for p in $pre; do
+                printf '  %-40s %s\n' "$p" "$(awk -F'\t' -v c="$grp/cases/$p" '$1 == c { print $2; f = 1; exit } END { if (!f) print "no result" }' "$RERUN_SQL_VERDICTS" 2>/dev/null)"
+            done
+        fi
+    } | rerun_case_log_section "how the case ran"
     grep -F -- "$sce" "$RERUN_SQL_LOG" 2>/dev/null | grep -v 'CONFIG FILE' | rerun_case_log_section "harness console lines"
     result=$stage_case/$n.result
     if [ "$RERUN_SQL_MODE" == "cci" ]; then
