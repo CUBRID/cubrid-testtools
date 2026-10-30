@@ -599,12 +599,13 @@ public class Test {
 	}
 
 	// unlike ha_repl, CDC also extracts tables without a primary key, so verify all user tables
+	// CLASS attributes are not in "select <table>.*", so they are not counted for "order by"
 	private ArrayList<String> getCheckSQLForDML() throws Exception {
 		SSHConnect ssh = hostManager.getHost("master");
 		String script = "cd $CUBRID;";
 		script += "csql -u dba "
 				+ hostManager.getTestDb()
-				+ " -c \"select 'FIND'||'_'||'CLASS', class_name, count(*) from db_attribute where class_name in (select class_name from db_class where is_system_class='NO' and lower(class_name)<>'qa_system_tb_flag') group by class_name;\" | grep 'FIND_CLASS' ";
+				+ " -c \"select 'FIND'||'_'||'CLASS', class_name, count(*) from db_attribute where attr_type <> 'CLASS' and class_name in (select class_name from db_class where is_system_class='NO' and lower(class_name)<>'qa_system_tb_flag') group by class_name;\" | grep 'FIND_CLASS' ";
 		GeneralScriptInput csql = new GeneralScriptInput(script);
 		String tablesResult = ssh.execute(csql);
 		ArrayList<String[]> tablesToBeVerified = CdcReplUtils.extractTableToBeVerified(tablesResult, "FIND_CLASS");
