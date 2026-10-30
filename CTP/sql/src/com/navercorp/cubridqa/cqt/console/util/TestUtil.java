@@ -497,15 +497,14 @@ public class TestUtil {
             currentLayer.put(SUMMARY_KEY, summary);
             summary.setCatPath(catPath);
             String category = catPath.substring(catPath.lastIndexOf('/') + 1);
-            summary.setSiteRunTimes(
-                    category.equalsIgnoreCase("site")
-                            ? test.getSiteRunTimes()
-                            : (catPath.length() == 0 ? 0 : 1));
+            summary.setSiteRunTimes(category.equalsIgnoreCase("site") ? test.getSiteRunTimes() : 1);
         }
 
         String resultDir = test.getResult_dir();
-        if (catPath.length() > 0) {
-            resultDir += File.separator + catPath;
+        String resultCatPath =
+                summary.getType() == Summary.TYPE_BOTTOM ? summary.getCatPath() : catPath;
+        if (resultCatPath.length() > 0) {
+            resultDir += File.separator + resultCatPath;
         }
         resultDir = StringUtil.replaceSlashBasedSystem(resultDir);
         if (test.getRunMode() == Test.MODE_NO_RESULT) {
@@ -540,10 +539,7 @@ public class TestUtil {
             if (SUMMARY_KEY.equals(key)) {
                 continue;
             }
-            String childPath =
-                    key.length() == 0
-                            ? catPath
-                            : (catPath.length() == 0 ? key : catPath + "/" + key);
+            String childPath = catPath.length() == 0 ? key : catPath + "/" + key;
             Summary child = makeSummary(test, (Map) currentLayer.get(key), childPath);
             summary.getChildSummaryMap().put(child.getResultDir(), child);
             summary.setTotalCount(summary.getTotalCount() + child.getTotalCount());
@@ -979,7 +975,7 @@ public class TestUtil {
     private static String[] getCatPath(String file, Test test) {
         String path = getTestCatPath(file, test);
         String standardPath = StringUtil.replaceSlash(path);
-        String[] keys = standardPath.split("/");
+        String[] keys = standardPath.split("/+");
         return keys;
     }
 
