@@ -40,7 +40,8 @@ public class SqlSummaryTest {
 
     private static Map<String, Integer> multiset(List<String> values) {
         Map<String, Integer> result = new TreeMap<String, Integer>();
-        for (String value : values) result.put(value, result.containsKey(value) ? result.get(value) + 1 : 1);
+        for (String value : values)
+            result.put(value, result.containsKey(value) ? result.get(value) + 1 : 1);
         return result;
     }
 
@@ -94,7 +95,8 @@ public class SqlSummaryTest {
         void summarize() throws Exception {
             TestUtil.makeSummary(test, test.getCatMap());
             if (test.getRunMode() == Test.MODE_RESULT) {
-                for (String path : paths.values()) Files.createDirectories(Paths.get(TestUtil.getResultDir(test, path)));
+                for (String path : paths.values())
+                    Files.createDirectories(Paths.get(TestUtil.getResultDir(test, path)));
                 TestUtil.makeSummaryInfo(test, test.getCatMap(), null);
                 TestUtil.saveResultSummary(test, test.getCatMap());
             }
@@ -109,39 +111,59 @@ public class SqlSummaryTest {
         void assertRows() throws Exception {
             Map<String, Integer> found = new TreeMap<String, Integer>();
             try (Stream<Path> files = Files.walk(result)) {
-                for (Path file : (Iterable<Path>) files.filter(p -> p.getFileName().toString().equals("summary_info"))::iterator) {
+                for (Path file :
+                        (Iterable<Path>)
+                                files.filter(p -> p.getFileName().toString().equals("summary_info"))
+                                        ::iterator) {
                     for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
                         for (String path : paths.values()) {
                             if (line.startsWith(path + ":")) {
                                 String expectedDir = TestUtil.getResultDir(test, path);
-                                equal(Paths.get(expectedDir), file.getParent(), "row directory for " + path);
+                                equal(
+                                        Paths.get(expectedDir),
+                                        file.getParent(),
+                                        "row directory for " + path);
                                 CaseResult cr = test.getCaseResultFromMap(path);
-                                String verdict = cr.isShouldRun() ? (cr.isSuccessFul() ? "ok" : "nok") : "";
-                                equal(path + ":" + verdict + "    " + cr.getTotalTime() + "ms", line, "row verdict for " + path);
+                                String verdict =
+                                        cr.isShouldRun() ? (cr.isSuccessFul() ? "ok" : "nok") : "";
+                                equal(
+                                        path + ":" + verdict + "    " + cr.getTotalTime() + "ms",
+                                        line,
+                                        "row verdict for " + path);
                                 found.put(path, found.containsKey(path) ? found.get(path) + 1 : 1);
                             }
                         }
                     }
                 }
             }
-            equal(multiset(new ArrayList<String>(paths.values())), found, "unique physical summary rows");
+            equal(
+                    multiset(new ArrayList<String>(paths.values())),
+                    found,
+                    "unique physical summary rows");
         }
 
         void assertJunit(String... expected) throws Exception {
             Path file = result.resolve("linux_sql_64bit.xml");
             check(Files.exists(file), "JUnit exists " + file);
             if (!Files.exists(file)) return;
-            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file.toFile());
+            Document doc =
+                    DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file.toFile());
             NodeList nodes = doc.getElementsByTagName("testcase");
             List<String> actual = new ArrayList<String>();
-            for (int i = 0; i < nodes.getLength(); i++) actual.add(((Element) nodes.item(i)).getAttribute("name"));
+            for (int i = 0; i < nodes.getLength(); i++)
+                actual.add(((Element) nodes.item(i)).getAttribute("name"));
             List<String> wanted = new ArrayList<String>();
             for (String name : expected) wanted.add(paths.get(name));
             equal(multiset(wanted), multiset(actual), "JUnit case identities");
             int expectedFailures = 0;
-            for (String name : expected) if (!test.getCaseResultFromMap(paths.get(name)).isSuccessFul()) expectedFailures++;
-            equal(expectedFailures, doc.getElementsByTagName("failure").getLength(), "JUnit failures");
-            System.out.println("JUnit expected=" + expected.length + " actual=" + nodes.getLength());
+            for (String name : expected)
+                if (!test.getCaseResultFromMap(paths.get(name)).isSuccessFul()) expectedFailures++;
+            equal(
+                    expectedFailures,
+                    doc.getElementsByTagName("failure").getLength(),
+                    "JUnit failures");
+            System.out.println(
+                    "JUnit expected=" + expected.length + " actual=" + nodes.getLength());
         }
     }
 
@@ -151,8 +173,12 @@ public class SqlSummaryTest {
         f.assertRows();
         f.assertJunit(cases);
         equal(cases.length, f.test.getSummary().getTotalCount(), label + " total");
-        equal(multiset(new ArrayList<String>(f.paths.values())), multiset(names(f.test.getSummary().getCaseList())), label + " group aggregate cases");
-        System.out.println(label + " rows=" + cases.length + " total=" + f.test.getSummary().getTotalCount());
+        equal(
+                multiset(new ArrayList<String>(f.paths.values())),
+                multiset(names(f.test.getSummary().getCaseList())),
+                label + " group aggregate cases");
+        System.out.println(
+                label + " rows=" + cases.length + " total=" + f.test.getSummary().getTotalCount());
     }
 
     private static void mixed(String label, String... cases) throws Exception {
@@ -162,18 +188,34 @@ public class SqlSummaryTest {
         f.verdict("parent/child/grand/cases/c.sql", false, false, 99);
         f.summarize();
         f.assertRows();
-        f.assertJunit("parent/cases/a.sql", "parent/cases/a2.sql", "parent/child/cases/b.sql", "other/cases/d.sql");
+        f.assertJunit(
+                "parent/cases/a.sql",
+                "parent/cases/a2.sql",
+                "parent/child/cases/b.sql",
+                "other/cases/d.sql");
         Summary rootSummary = f.test.getSummary();
         equal(5, rootSummary.getTotalCount(), label + " total");
         equal(3, rootSummary.getSuccessCount(), label + " success");
         equal(1, rootSummary.getFailCount(), label + " fail");
         equal(18L, rootSummary.getTotalTime(), label + " time");
-        equal(multiset(new ArrayList<String>(f.paths.values())), multiset(names(rootSummary.getCaseList())), label + " group aggregate cases");
+        equal(
+                multiset(new ArrayList<String>(f.paths.values())),
+                multiset(names(rootSummary.getCaseList())),
+                label + " group aggregate cases");
         Summary parent = f.owner("parent/cases/a.sql");
         Summary child = f.owner("parent/child/cases/b.sql");
         Summary grand = f.owner("parent/child/grand/cases/c.sql");
-        equal(multiset(Arrays.asList(f.paths.get("parent/cases/a.sql"), f.paths.get("parent/cases/a2.sql"))), multiset(names(parent.getCaseList())), label + " parent ownership");
-        equal(multiset(Collections.singletonList(f.paths.get("parent/child/cases/b.sql"))), multiset(names(child.getCaseList())), label + " child ownership");
+        equal(
+                multiset(
+                        Arrays.asList(
+                                f.paths.get("parent/cases/a.sql"),
+                                f.paths.get("parent/cases/a2.sql"))),
+                multiset(names(parent.getCaseList())),
+                label + " parent ownership");
+        equal(
+                multiset(Collections.singletonList(f.paths.get("parent/child/cases/b.sql"))),
+                multiset(names(child.getCaseList())),
+                label + " child ownership");
         equal(4, parent.getTotalCount(), label + " parent total");
         equal(2, child.getTotalCount(), label + " child total");
         equal(1, grand.getTotalCount(), label + " grandchild total");
@@ -185,39 +227,136 @@ public class SqlSummaryTest {
         equal(1, childInfo.getNokList().size(), label + " failing SummaryInfo");
         SummaryInfo info = f.test.getSummaryInfoFromMap(grand.getResultDir());
         equal(1, info.getNotRunList().size(), label + " skipped SummaryInfo");
-        String first = new String(Files.readAllBytes(f.result.resolve("linux_sql_64bit.xml")), StandardCharsets.UTF_8);
+        String first =
+                new String(
+                        Files.readAllBytes(f.result.resolve("linux_sql_64bit.xml")),
+                        StandardCharsets.UTF_8);
         f.summarize();
         equal(5, f.test.getSummary().getTotalCount(), label + " repeated total");
+        equal(
+                multiset(new ArrayList<String>(f.paths.values())),
+                multiset(names(f.test.getSummary().getCaseList())),
+                label + " repeated aggregate");
+        equal(
+                multiset(
+                        Arrays.asList(
+                                f.paths.get("parent/cases/a.sql"),
+                                f.paths.get("parent/cases/a2.sql"))),
+                multiset(names(parent.getCaseList())),
+                label + " repeated ownership");
         f.assertRows();
-        f.assertJunit("parent/cases/a.sql", "parent/cases/a2.sql", "parent/child/cases/b.sql", "other/cases/d.sql");
-        equal(first, new String(Files.readAllBytes(f.result.resolve("linux_sql_64bit.xml")), StandardCharsets.UTF_8), label + " repeated JUnit");
+        f.assertJunit(
+                "parent/cases/a.sql",
+                "parent/cases/a2.sql",
+                "parent/child/cases/b.sql",
+                "other/cases/d.sql");
+        equal(
+                first,
+                new String(
+                        Files.readAllBytes(f.result.resolve("linux_sql_64bit.xml")),
+                        StandardCharsets.UTF_8),
+                label + " repeated JUnit");
     }
 
     private static void noResult() throws Exception {
-        Fixture f = new Fixture("no-result", Test.MODE_NO_RESULT, "parent/cases/a.sql", "parent/child/cases/b.sql");
+        Fixture f =
+                new Fixture(
+                        "no-result",
+                        Test.MODE_NO_RESULT,
+                        "parent/cases/a.sql",
+                        "parent/child/cases/b.sql");
         f.summarize();
         equal(2, f.test.getSummary().getTotalCount(), "no-result total");
         for (String name : f.paths.keySet()) {
             String category = name.substring(0, name.indexOf("/cases/"));
             Path expected = f.scenario.resolve("result/run-id/sql").resolve(category).normalize();
-            equal(expected, Paths.get(f.owner(name).getResultDir()).normalize(), "no-result path " + name);
+            equal(
+                    expected,
+                    Paths.get(f.owner(name).getResultDir()).normalize(),
+                    "no-result path " + name);
         }
+        check(
+                f.owner("parent/cases/a.sql")
+                        .getChildSummaryMap()
+                        .containsValue(f.owner("parent/child/cases/b.sql")),
+                "no-result child link");
+        f.summarize();
+        equal(2, f.test.getSummary().getTotalCount(), "no-result repeated total");
         check(!Files.exists(f.result.resolve("linux_sql_64bit.xml")), "no-result emits no JUnit");
+    }
+
+    private static Summary findCategory(Summary current, String catPath) {
+        if (catPath.equals(current.getCatPath())) return current;
+        for (Summary child : current.getChildSummaryMap().values()) {
+            Summary match = findCategory(child, catPath);
+            if (match != null) return match;
+        }
+        return null;
+    }
+
+    private static void siteGroup() throws Exception {
+        Fixture f = new Fixture("site-group", Test.MODE_RESULT, "region/SITE/branch/cases/x.sql");
+        f.test.setSiteRunTimes(3);
+        f.summarize();
+        Summary group = findCategory(f.test.getSummary(), "sql/region/SITE");
+        check(group != null, "site group exists");
+        if (group != null) {
+            equal(3, group.getSiteRunTimes(), "site group run times");
+            equal(
+                    multiset(
+                            Collections.singletonList(
+                                    f.paths.get("region/SITE/branch/cases/x.sql"))),
+                    multiset(names(group.getCaseList())),
+                    "site group aggregate");
+            equal(
+                    f.result.resolve("sql/region/SITE").normalize(),
+                    Paths.get(group.getResultDir()).normalize(),
+                    "site group path");
+        }
+        f.assertRows();
+        f.assertJunit("region/SITE/branch/cases/x.sql");
     }
 
     public static void main(String[] args) throws Exception {
         root = Paths.get(args[0]);
-        for (Class<?> type : new Class<?>[] {ConsoleBO.class, TestUtil.class, Summary.class, SummaryInfo.class, CaseResult.class, Test.class, JunitXmlWriter.class}) {
+        for (Class<?> type :
+                new Class<?>[] {
+                    ConsoleBO.class,
+                    TestUtil.class,
+                    Summary.class,
+                    SummaryInfo.class,
+                    CaseResult.class,
+                    Test.class,
+                    JunitXmlWriter.class
+                }) {
             String location = type.getProtectionDomain().getCodeSource().getLocation().toString();
-            check(Paths.get(type.getProtectionDomain().getCodeSource().getLocation().toURI()).equals(root.resolve("classes")), type.getSimpleName() + " loaded from " + location);
+            check(
+                    Paths.get(type.getProtectionDomain().getCodeSource().getLocation().toURI())
+                            .equals(Paths.get(args[1])),
+                    type.getSimpleName() + " loaded from " + location);
         }
-        System.out.println("Production classes: " + TestUtil.class.getProtectionDomain().getCodeSource().getLocation());
+        System.out.println(
+                "Production classes: "
+                        + TestUtil.class.getProtectionDomain().getCodeSource().getLocation());
         simple("one", "parent/child/cases/b.sql");
         simple("disjoint", "parent/cases/a.sql", "other/cases/b.sql");
         simple("nested", "parent/cases/a.sql", "parent/child/cases/b.sql");
-        mixed("mixed", "parent/cases/a.sql", "parent/cases/a2.sql", "parent/child/cases/b.sql", "parent/child/grand/cases/c.sql", "other/cases/d.sql");
-        mixed("mixed-reversed", "other/cases/d.sql", "parent/child/grand/cases/c.sql", "parent/child/cases/b.sql", "parent/cases/a2.sql", "parent/cases/a.sql");
+        mixed(
+                "mixed",
+                "parent/cases/a.sql",
+                "parent/cases/a2.sql",
+                "parent/child/cases/b.sql",
+                "parent/child/grand/cases/c.sql",
+                "other/cases/d.sql");
+        mixed(
+                "mixed-reversed",
+                "other/cases/d.sql",
+                "parent/child/grand/cases/c.sql",
+                "parent/child/cases/b.sql",
+                "parent/cases/a2.sql",
+                "parent/cases/a.sql");
         noResult();
+        siteGroup();
         if (failures != 0) throw new AssertionError(failures + " checks failed");
         System.out.println("All SQL summary checks passed");
     }

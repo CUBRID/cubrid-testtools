@@ -11,9 +11,16 @@ chmod +x "$tmp/bin/cubrid_rel"
 export CTP_HOME="$tmp/ctp" PATH="$tmp/bin:$PATH"
 classpath="$repo/CTP/sql/lib/*:$repo/CTP/common/lib/*"
 src="$repo/CTP/sql/src/com/navercorp/cubridqa/cqt/console"
-javac -cp "$classpath" -sourcepath "$repo/CTP/sql/src" -d "$tmp/classes" \
-    "$src/bo/ConsoleBO.java" "$src/util/TestUtil.java" "$src/util/JunitXmlWriter.java" \
-    "$src/bean/Summary.java" "$src/bean/SummaryInfo.java" "$src/bean/CaseResult.java" \
-    "$src/bean/Test.java" "$repo/tests/sql-summary/SqlSummaryTest.java"
+if [[ -n ${CTP_SQL_RUNTIME_JAR:-} ]]; then
+    runtime=$(cd "$(dirname "$CTP_SQL_RUNTIME_JAR")" && pwd)/$(basename "$CTP_SQL_RUNTIME_JAR")
+    classpath="$runtime:$classpath"
+    javac -cp "$classpath" -d "$tmp/classes" "$repo/tests/sql-summary/SqlSummaryTest.java"
+else
+    runtime="$tmp/classes"
+    javac -cp "$classpath" -sourcepath "$repo/CTP/sql/src" -d "$tmp/classes" \
+        "$src/bo/ConsoleBO.java" "$src/util/TestUtil.java" "$src/util/JunitXmlWriter.java" \
+        "$src/bean/Summary.java" "$src/bean/SummaryInfo.java" "$src/bean/CaseResult.java" \
+        "$src/bean/Test.java" "$repo/tests/sql-summary/SqlSummaryTest.java"
+fi
 cd "$tmp"
-java -cp "$tmp/classes:$classpath" SqlSummaryTest "$tmp"
+java -cp "$tmp/classes:$classpath" SqlSummaryTest "$tmp" "$runtime"
