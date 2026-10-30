@@ -725,7 +725,7 @@ fetch_schema_info (char *query)
 
 	req_handle_2 =
 	  cci_prepare (conn_handle,
-		       "select distinct a.attr_name, a.def_order, a.data_type, (select prec from _db_domain d where d in a.domains) as prec, a.is_nullable, max((case when a.attr_name in (select key_attr_name from _db_index_key k where k in b.key_attrs) and b.is_primary_key = 1 then 1 else 0 end)) as is_primary_key from _db_attribute a left outer join _db_index b on a.class_of = b.class_of where a.class_of.is_system_class != 1 and a.class_of.class_name = ? group by a.attr_name order by def_order",
+		       "select distinct a.attr_name, a.def_order, a.data_type, (select prec from _db_domain d where d in a.domains) as prec, a.is_nullable, max((case when a.attr_name in (select key_attr_name from _db_index_key k where k in b.key_attrs) and b.is_primary_key = 1 then 1 else 0 end)) as is_primary_key from _db_attribute a left outer join _db_index b on a.class_of = b.class_of where a.class_of.is_system_class != 1 and a.attr_type = 0 and a.class_of.class_name = ? group by a.attr_name order by def_order",
 		       0, &err_buf);
 	if (req_handle_2 < 0)
 	  {
@@ -1877,7 +1877,15 @@ make_update_stmt (CUBRID_DATA_ITEM * data_item, char **sql)
 	  PRINT_ERRMSG_GOTO_ERR (error_code);
 	}
 
-      sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+      /* "col = NULL" matches no row, so use "col is NULL" for a NULL value */
+      if (data_item->dml.cond_column_data[i] == NULL && data_item->dml.cond_column_data_len[i] == 0)
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s is ", attr_info->attr_name);
+	}
+      else
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+	}
 
       error_code = process_cond_column (data_item, i, attr_info, sql_buf, &cant_make_sql);
       if (error_code != NO_ERROR)
@@ -1952,7 +1960,15 @@ make_delete_stmt (CUBRID_DATA_ITEM * data_item, char **sql)
 	  PRINT_ERRMSG_GOTO_ERR (error_code);
 	}
 
-      sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+      /* "col = NULL" matches no row, so use "col is NULL" for a NULL value */
+      if (data_item->dml.cond_column_data[i] == NULL && data_item->dml.cond_column_data_len[i] == 0)
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s is ", attr_info->attr_name);
+	}
+      else
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+	}
 
       error_code = process_cond_column (data_item, i, attr_info, sql_buf, &cant_make_sql);
       if (error_code != NO_ERROR)
