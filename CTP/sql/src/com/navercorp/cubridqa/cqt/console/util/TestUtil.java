@@ -47,7 +47,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.StringTokenizer;
 
 public class TestUtil {
 
@@ -488,118 +487,83 @@ public class TestUtil {
      * @param currentLayer
      */
     public static void makeSummary(Test test, Map currentLayer) {
-        List<String> dirPath = test.getDirPath();
+        test.setSummary(makeSummary(test, currentLayer, ""));
+    }
 
+    private static Summary makeSummary(Test test, Map currentLayer, String catPath) {
         Summary summary = (Summary) currentLayer.get(SUMMARY_KEY);
-
         if (summary == null) {
-            Iterator iter = currentLayer.keySet().iterator();
-            while (iter.hasNext()) {
-                String key = (String) iter.next();
-                Map nextLayer = (Map) currentLayer.get(key);
-                dirPath.add(key);
-                makeSummary(test, nextLayer);
-            }
-            if (dirPath.size() > 0) {
-                dirPath.remove(dirPath.size() - 1);
-            }
-
-            StringBuilder currentDir = new StringBuilder();
-            for (int i = 0; i < dirPath.size(); i++) {
-                currentDir.append(dirPath.get(i).toString() + "/");
-            }
-            String resultDir = currentDir.toString();
-
-            if (test.getRunMode() == Test.MODE_NO_RESULT) {
-                resultDir = TestUtil.resultDirToScenarioDir(resultDir);
-            }
-            if (resultDir.endsWith("/")) {
-                resultDir = resultDir.substring(0, resultDir.length() - 1);
-            }
-            if (SystemUtil.getOS().indexOf("window") == -1) {
-                resultDir = "/" + resultDir;
-            }
-
-            if (resultDir.indexOf(test.getTestId()) == -1) {
-                return;
-            }
-
             summary = new Summary();
             currentLayer.put(SUMMARY_KEY, summary);
-            summary.setResultDir(resultDir);
-            if (resultDir.equalsIgnoreCase("")) {
-
-            } else {
-
-            }
-            if (dirPath.size() > 0) {
-                if (dirPath.get(dirPath.size() - 1).equalsIgnoreCase("site")) {
-                    summary.setSiteRunTimes(test.getSiteRunTimes());
-                } else {
-                    summary.setSiteRunTimes(1);
-                }
-            }
-
-            String catPath = TestUtil.getTestCatBasedOnResultDir(resultDir, test);
             summary.setCatPath(catPath);
-            iter = currentLayer.keySet().iterator();
-            while (iter.hasNext()) {
-                String key = (String) iter.next();
-                if (SUMMARY_KEY.equals(key)) {
+            String category = catPath.substring(catPath.lastIndexOf('/') + 1);
+            summary.setSiteRunTimes(
+                    category.equalsIgnoreCase("site")
+                            ? test.getSiteRunTimes()
+                            : (catPath.length() == 0 ? 0 : 1));
+        }
+
+        String resultDir = test.getResult_dir();
+        if (catPath.length() > 0) {
+            resultDir += File.separator + catPath;
+        }
+        resultDir = StringUtil.replaceSlashBasedSystem(resultDir);
+        if (test.getRunMode() == Test.MODE_NO_RESULT) {
+            resultDir = TestUtil.resultDirToScenarioDir(resultDir);
+        }
+        summary.setResultDir(resultDir);
+        summary.setTotalCount(0);
+        summary.setSuccessCount(0);
+        summary.setFailCount(0);
+        summary.setTotalTime(0);
+        summary.getChildSummaryMap().clear();
+
+        if (summary.getType() == Summary.TYPE_BOTTOM) {
+            for (CaseResult caseResult : summary.getCaseList()) {
+                summary.setTotalCount(summary.getTotalCount() + 1);
+                if (!caseResult.isShouldRun()) {
                     continue;
                 }
-
-                Object nextLayer = currentLayer.get(key);
-                Summary childSummary = (Summary) ((Map) nextLayer).get(SUMMARY_KEY);
-                if (dirPath.size() > 0) {
-                    if (dirPath.get(dirPath.size() - 1).equalsIgnoreCase("site")) {
-                        summary.setSiteRunTimes(test.getSiteRunTimes());
-                    } else {
-                        summary.setSiteRunTimes(1);
-                    }
+                if (caseResult.isSuccessFul()) {
+                    summary.setSuccessCount(summary.getSuccessCount() + 1);
+                } else {
+                    summary.setFailCount(summary.getFailCount() + 1);
                 }
-                summary.setTotalCount(summary.getTotalCount() + childSummary.getTotalCount());
-                summary.setSuccessCount(summary.getSuccessCount() + childSummary.getSuccessCount());
-                summary.setFailCount(summary.getFailCount() + childSummary.getFailCount());
-                summary.setTotalTime(summary.getTotalTime() + childSummary.getTotalTime());
-                summary.getChildSummaryMap().put(childSummary.getResultDir(), childSummary);
-
-                summary.getCaseList().addAll(childSummary.getCaseList());
+                summary.setTotalTime(summary.getTotalTime() + caseResult.getTotalTime());
             }
-
-            test.setSummary(summary);
         } else {
-            dirPath.clear();
-            if (summary != null) {
-                test.setSummary(summary);
-                List<CaseResult> caseList = summary.getCaseList();
-                for (int i = 0; i < caseList.size(); i++) {
-                    CaseResult caseResult = (CaseResult) caseList.get(i);
-                    summary.setTotalCount(summary.getTotalCount() + 1);
-                    if (!caseResult.isShouldRun()) {
-                        continue;
-                    }
-                    if (!caseResult.isSuccessFul()) {
-                        summary.setFailCount(summary.getFailCount() + 1);
-                    } else {
-                        summary.setSuccessCount(summary.getSuccessCount() + 1);
-                    }
-                    summary.setTotalTime(summary.getTotalTime() + caseResult.getTotalTime());
-                }
-                String resultDir = summary.getResultDir();
-                if (test.getRunMode() == Test.MODE_NO_RESULT) {
-                    resultDir = TestUtil.resultDirToScenarioDir(resultDir);
-                }
-                summary.setResultDir(resultDir);
-                if (resultDir != null) {
-                    StringTokenizer token =
-                            new StringTokenizer(StringUtil.replaceSlash(resultDir), "/");
-                    while (token.hasMoreTokens()) {
-                        String dir = token.nextToken();
-                        dirPath.add(dir);
-                    }
-                }
+            summary.getCaseList().clear();
+        }
+
+        for (Object item : currentLayer.keySet()) {
+            String key = (String) item;
+            if (SUMMARY_KEY.equals(key)) {
+                continue;
             }
+            String childPath =
+                    key.length() == 0
+                            ? catPath
+                            : (catPath.length() == 0 ? key : catPath + "/" + key);
+            Summary child = makeSummary(test, (Map) currentLayer.get(key), childPath);
+            summary.getChildSummaryMap().put(child.getResultDir(), child);
+            summary.setTotalCount(summary.getTotalCount() + child.getTotalCount());
+            summary.setSuccessCount(summary.getSuccessCount() + child.getSuccessCount());
+            summary.setFailCount(summary.getFailCount() + child.getFailCount());
+            summary.setTotalTime(summary.getTotalTime() + child.getTotalTime());
+        }
+
+        if (summary.getType() != Summary.TYPE_BOTTOM) {
+            collectOwnedCases(summary, summary.getCaseList());
+        }
+        return summary;
+    }
+
+    private static void collectOwnedCases(Summary summary, List<CaseResult> cases) {
+        if (summary.getType() == Summary.TYPE_BOTTOM) {
+            cases.addAll(summary.getCaseList());
+        }
+        for (Summary child : summary.getChildSummaryMap().values()) {
+            collectOwnedCases(child, cases);
         }
     }
 
