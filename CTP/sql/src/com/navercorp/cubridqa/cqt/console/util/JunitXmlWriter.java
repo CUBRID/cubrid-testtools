@@ -161,10 +161,9 @@ public final class JunitXmlWriter {
                 }
                 out.add(cr);
             }
-        } else {
-            for (Summary child : s.getChildSummaryMap().values()) {
-                walk(child, out);
-            }
+        }
+        for (Summary child : s.getChildSummaryMap().values()) {
+            walk(child, out);
         }
     }
 
