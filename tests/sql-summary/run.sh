@@ -4,7 +4,7 @@ repo=$(cd "$(dirname "$0")/../.." && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/ctp-sql-summary.XXXXXXXX")
 trap 'rm -rf -- "$tmp"' EXIT
 mkdir -p "$tmp/classes" "$tmp/bin" "$tmp/ctp/sql/configuration"
-printf "scenariontypes=sql(.sql)\n" > "$tmp/ctp/sql/configuration/local.properties"
+printf "scenariontypes=sql(.sql),medium(.sh)\n" > "$tmp/ctp/sql/configuration/local.properties"
 cp "$repo/CTP/sql/configuration/System.xml" "$tmp/ctp/sql/configuration/System.xml"
 printf '#!/bin/sh\nprintf "release\\n"\n' > "$tmp/bin/cubrid_rel"
 chmod +x "$tmp/bin/cubrid_rel"

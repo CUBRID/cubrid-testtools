@@ -55,16 +55,22 @@ public class SqlSummaryTest {
         final Test test = new Test("run-id");
         final Path scenario;
         final Path result;
+        final String type;
         final Map<String, String> paths = new HashMap<String, String>();
 
         Fixture(String name, int mode, String... cases) throws Exception {
+            this(name, mode, "sql", cases);
+        }
+
+        Fixture(String name, int mode, String type, String[] cases) throws Exception {
+            this.type = type;
             Path base = root.resolve(name);
-            scenario = base.resolve("scenario/sql");
+            scenario = base.resolve("scenario/" + type);
             result = base.resolve("sql/result/run-id");
             test.setScenarioRootPath(scenario.toString());
             test.setResult_dir(result.toString());
-            test.setTestType("sql");
-            test.setTestTypeAlias("sql");
+            test.setTestType(type);
+            test.setTestTypeAlias(type);
             test.setTestBit("64bit");
             test.setRunMode(mode);
             test.setSiteRunTimes(1);
@@ -142,8 +148,48 @@ public class SqlSummaryTest {
                     "unique physical summary rows");
         }
 
+        void assertSerializedHierarchy(String... ownerCategories) throws Exception {
+            Document doc =
+                    DocumentBuilderFactory.newInstance()
+                            .newDocumentBuilder()
+                            .parse(result.resolve("summary.info").toFile());
+            Element summary = doc.getDocumentElement();
+            equal("1", childText(summary, "siteRunTimes"), type + " root site run times");
+            List<Element> types = childSummaries(summary);
+            equal(1, types.size(), type + " root category count");
+            if (types.size() == 1) {
+                Element typed = types.get(0);
+                equal(type, childText(typed, "catPath"), type + " root category");
+                List<String> categories = new ArrayList<String>();
+                for (Element child : childSummaries(typed)) {
+                    String category = childText(child, "catPath");
+                    categories.add(category);
+                    equal(
+                            result.toString() + "/" + category,
+                            childText(child, "resultDir"),
+                            type + " serialized owner directory");
+                }
+                equal(
+                        multiset(Arrays.asList(ownerCategories)),
+                        multiset(categories),
+                        type + " direct owner categories");
+            }
+            assertDistinctDirectories(summary);
+        }
+
+        void assertDistinctDirectories(Element parent) {
+            String dir = childText(parent, "resultDir");
+            for (Element child : childSummaries(parent)) {
+                String childDir = childText(child, "resultDir");
+                check(
+                        !Paths.get(dir).normalize().equals(Paths.get(childDir).normalize()),
+                        type + " parent and child share result directory " + childDir);
+                assertDistinctDirectories(child);
+            }
+        }
+
         void assertJunit(String... expected) throws Exception {
-            Path file = result.resolve("linux_sql_64bit.xml");
+            Path file = result.resolve("linux_" + type + "_64bit.xml");
             check(Files.exists(file), "JUnit exists " + file);
             if (!Files.exists(file)) return;
             Document doc =
@@ -165,6 +211,58 @@ public class SqlSummaryTest {
             System.out.println(
                     "JUnit expected=" + expected.length + " actual=" + nodes.getLength());
         }
+    }
+
+    private static String childText(Element parent, String name) {
+        NodeList nodes = parent.getElementsByTagName(name);
+        for (int i = 0; i < nodes.getLength(); i++)
+            if (nodes.item(i).getParentNode() == parent) return nodes.item(i).getTextContent();
+        throw new AssertionError("Missing " + name);
+    }
+
+    private static List<Element> childSummaries(Element parent) {
+        List<Element> result = new ArrayList<Element>();
+        NodeList lists = parent.getElementsByTagName("childList");
+        for (int i = 0; i < lists.getLength(); i++) {
+            if (lists.item(i).getParentNode() != parent) continue;
+            NodeList children = lists.item(i).getChildNodes();
+            for (int j = 0; j < children.getLength(); j++) {
+                if (children.item(j) instanceof Element
+                        && ((Element) children.item(j)).getTagName().equals("summary"))
+                    result.add((Element) children.item(j));
+            }
+        }
+        return result;
+    }
+
+    private static void reportingCompatibility(String type) throws Exception {
+        Fixture disjoint =
+                new Fixture(
+                        type + "-compat",
+                        Test.MODE_RESULT,
+                        type,
+                        new String[] {"parent/cases/a.sql", "other/cases/b.sql"});
+        disjoint.summarize();
+        disjoint.assertSerializedHierarchy(type + "//parent", type + "//other");
+        disjoint.assertRows();
+        disjoint.assertJunit("parent/cases/a.sql", "other/cases/b.sql");
+
+        Fixture rootOwner =
+                new Fixture(
+                        type + "-root-owner",
+                        Test.MODE_RESULT,
+                        type,
+                        new String[] {"cases/a.sql", "parent/cases/b.sql"});
+        rootOwner.summarize();
+        rootOwner.assertSerializedHierarchy(type + "//parent");
+        rootOwner.assertRows();
+        rootOwner.assertJunit("cases/a.sql", "parent/cases/b.sql");
+        equal(2, rootOwner.test.getSummary().getTotalCount(), type + " root owner total");
+        equal(1, rootOwner.owner("cases/a.sql").getCaseList().size(), type + " root ownership");
+        equal(
+                1,
+                rootOwner.owner("parent/cases/b.sql").getCaseList().size(),
+                type + " child ownership");
     }
 
     private static void simple(String label, String... cases) throws Exception {
@@ -338,6 +436,8 @@ public class SqlSummaryTest {
         System.out.println(
                 "Production classes: "
                         + TestUtil.class.getProtectionDomain().getCodeSource().getLocation());
+        reportingCompatibility("sql");
+        reportingCompatibility("medium");
         simple("one", "parent/child/cases/b.sql");
         simple("disjoint", "parent/cases/a.sql", "other/cases/b.sql");
         simple("nested", "parent/cases/a.sql", "parent/child/cases/b.sql");
