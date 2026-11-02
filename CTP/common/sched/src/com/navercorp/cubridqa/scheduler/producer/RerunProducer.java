@@ -352,83 +352,141 @@ public class RerunProducer {
 	 * <li>the newest consumed message, then the newest one.</li>
 	 * </ol>
 	 * No ORDER BY: sorting on id would let CUBRID walk the primary key instead of idx_msg_sended_build_id_queue_id.
+	 * The run's own message is read by its indexed msg_id, and the other candidates are ranked before any message
+	 * text is read: a reference build such as 10.1.3.7765 (sql_ext, compat) has tens of thousands of messages.
 	 */
 	private Original findOriginalMessage(Connection db, Batch batch) throws SQLException {
+		boolean linux = batch.os == null || batch.os.toLowerCase().indexOf("win") < 0;
+		String runMsgId = runMessageId(db, batch);
+		if (runMsgId != null) {
+			Original own = messageByMsgId(db, batch, runMsgId, linux);
+			if (own != null) {
+				own.how = "the run's own message";
+				return own;
+			}
+		}
+
 		List<Original> candidates = new ArrayList<Original>();
-		int unusable = 0;
-		PreparedStatement ps = db.prepareStatement("SELECT id, msg_id, queue_id, msg_cont, build_type, consume_flag, consume_start_time"
+		PreparedStatement ps = db.prepareStatement("SELECT id, msg_id, queue_id, build_type, consume_flag, consume_start_time"
 				+ " FROM msg_sended WHERE build_id = ? AND build_scenarios = ? AND is_filtered_out = 'N' AND build_generate_msg_way <> ?");
 		try {
 			ps.setString(1, batch.buildId);
 			ps.setString(2, batch.category);
 			ps.setString(3, WAY_RERUN);
 			ResultSet rs = ps.executeQuery();
-			boolean linux = batch.os == null || batch.os.toLowerCase().indexOf("win") < 0;
 			while (rs.next()) {
 				String queue = rs.getString(3);
-				if (queue == null || queue.startsWith(queuePrefix)) {
-					continue;
-				}
-				if (linux && queue.toUpperCase().indexOf("WIN") >= 0) {
-					continue;
-				}
-				if ("coverage".equalsIgnoreCase(rs.getString(5)) || isExcludedQueue(queue)) {
-					continue;
-				}
-				String content = rs.getString(4);
-				Properties props = parseMessageContent(content);
-				if (content == null || content.length() >= MAX_MSG_CONT || !hasRequiredKeys(props)) {
-					unusable++; // cut off at the column size, or not a message this producer can clone
+				if (!isCandidateQueue(queue, rs.getString(4), linux)) {
 					continue;
 				}
 				Original candidate = new Original();
 				candidate.id = rs.getInt(1);
 				candidate.msgId = rs.getString(2);
 				candidate.queue = queue;
-				candidate.props = props;
-				candidate.consumed = "FINISHED".equalsIgnoreCase(rs.getString(6));
-				candidate.consumeStart = rs.getTimestamp(7);
+				candidate.consumed = "FINISHED".equalsIgnoreCase(rs.getString(5));
+				candidate.consumeStart = rs.getTimestamp(6);
 				candidates.add(candidate);
 			}
 			rs.close();
 		} finally {
 			ps.close();
 		}
-		if (candidates.isEmpty()) {
-			throw new IllegalStateException("No usable original test message for build " + batch.buildId + " and category "
-					+ batch.category + " in msg_sended" + (unusable > 0 ? " (" + unusable + " incomplete)" : "")
-					+ ", so the rerun cannot reuse its build package and settings.");
-		}
-		String runMsgId = runMessageId(db, batch);
-		if (runMsgId != null) {
-			for (Original candidate : candidates) {
-				if (runMsgId.equals(candidate.msgId)) {
-					candidate.how = "the run's own message";
-					return candidate;
-				}
-			}
-		}
-		Timestamp runEnd = runTime(db, batch);
-		Original best = null;
-		if (runEnd != null) {
-			for (Original candidate : candidates) {
-				if (candidate.consumeStart != null && !candidate.consumeStart.after(runEnd)
-						&& (best == null || candidate.consumeStart.after(best.consumeStart))) {
-					best = candidate;
-				}
-			}
-			if (best != null) {
-				best.how = "consumed last before the run ended";
-				return best;
-			}
-		}
+
+		// preference order, then the first one whose message can be cloned
+		final Timestamp runEnd = runTime(db, batch);
+		List<Original> beforeEnd = new ArrayList<Original>();
+		List<Original> others = new ArrayList<Original>();
 		for (Original candidate : candidates) {
-			if (best == null || (candidate.consumed && !best.consumed) || (candidate.consumed == best.consumed && candidate.id > best.id)) {
-				best = candidate;
+			if (runEnd != null && candidate.consumeStart != null && !candidate.consumeStart.after(runEnd)) {
+				candidate.how = "consumed last before the run ended";
+				beforeEnd.add(candidate);
+			} else {
+				candidate.how = candidate.consumed ? "newest consumed message" : "newest message";
+				others.add(candidate);
 			}
 		}
-		best.how = best.consumed ? "newest consumed message" : "newest message";
-		return best;
+		java.util.Collections.sort(beforeEnd, new java.util.Comparator<Original>() {
+			public int compare(Original a, Original b) {
+				return b.consumeStart.compareTo(a.consumeStart);
+			}
+		});
+		java.util.Collections.sort(others, new java.util.Comparator<Original>() {
+			public int compare(Original a, Original b) {
+				if (a.consumed != b.consumed) {
+					return a.consumed ? -1 : 1;
+				}
+				return b.id - a.id;
+			}
+		});
+		beforeEnd.addAll(others);
+		int unusable = 0;
+		for (Original candidate : beforeEnd) {
+			if (loadMessage(db, candidate)) {
+				return candidate;
+			}
+			unusable++; // cut off at the column size, or not a message this producer can clone
+		}
+		throw new IllegalStateException("No usable original test message for build " + batch.buildId + " and category "
+				+ batch.category + " in msg_sended" + (unusable > 0 ? " (" + unusable + " incomplete)" : "")
+				+ ", so the rerun cannot reuse its build package and settings.");
+	}
+
+	/** A queue whose messages can be the original run's: not a rerun queue, not Windows for Linux, not excluded. */
+	private boolean isCandidateQueue(String queue, String buildType, boolean linux) {
+		if (queue == null || queue.startsWith(queuePrefix)) {
+			return false;
+		}
+		if (linux && queue.toUpperCase().indexOf("WIN") >= 0) {
+			return false;
+		}
+		return !"coverage".equalsIgnoreCase(buildType) && !isExcludedQueue(queue);
+	}
+
+	/** The run's own message by its msg_id (one indexed row), when it is a usable candidate of this batch; else null. */
+	private Original messageByMsgId(Connection db, Batch batch, String msgId, boolean linux) throws SQLException {
+		PreparedStatement ps = db.prepareStatement("SELECT id, msg_id, queue_id, build_type, consume_flag, consume_start_time,"
+				+ " build_id, build_scenarios, is_filtered_out, build_generate_msg_way FROM msg_sended WHERE msg_id = ?");
+		try {
+			ps.setString(1, msgId);
+			ResultSet rs = ps.executeQuery();
+			Original own = null;
+			while (own == null && rs.next()) {
+				if (!batch.buildId.equals(rs.getString(7)) || !batch.category.equals(rs.getString(8))
+						|| !"N".equals(rs.getString(9)) || WAY_RERUN.equals(rs.getString(10))
+						|| !isCandidateQueue(rs.getString(3), rs.getString(4), linux)) {
+					continue;
+				}
+				own = new Original();
+				own.id = rs.getInt(1);
+				own.msgId = rs.getString(2);
+				own.queue = rs.getString(3);
+				own.consumed = "FINISHED".equalsIgnoreCase(rs.getString(5));
+				own.consumeStart = rs.getTimestamp(6);
+			}
+			rs.close();
+			return own != null && loadMessage(db, own) ? own : null;
+		} finally {
+			ps.close();
+		}
+	}
+
+	/** Reads and parses the candidate's message; false when it was cut off at the column size or lacks a key. */
+	private boolean loadMessage(Connection db, Original candidate) throws SQLException {
+		PreparedStatement ps = db.prepareStatement("SELECT msg_cont FROM msg_sended WHERE id = ?");
+		try {
+			ps.setInt(1, candidate.id);
+			ResultSet rs = ps.executeQuery();
+			String content = rs.next() ? rs.getString(1) : null;
+			rs.close();
+			Properties props = parseMessageContent(content);
+			if (content == null || content.length() >= MAX_MSG_CONT || !hasRequiredKeys(props)) {
+				return false;
+			}
+			candidate.props = props;
+			return true;
+		} finally {
+			ps.close();
+		}
 	}
 
 	private static boolean hasRequiredKeys(Properties props) {
