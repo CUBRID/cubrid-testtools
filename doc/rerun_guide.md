@@ -70,13 +70,15 @@ start_consumer.sh (every consumer of the original queue)
   KILL after 30 s), uploads only its runner log (`<batch id>/runner.log`, which QAHome's rerun details link)
   and exits without reporting. CUBRID servers the harness started, and processes already
   started on remote worker nodes, are left to the harness's next cleanup, as after a daily run.
-* Killing `run_rerun.sh` itself (TERM, INT or HUP) stops the harness the same way, closes the request
-  in QAHome with its unreported cases as `error`, and uploads its runner log.
+* Killing `run_rerun.sh` itself (TERM, INT or HUP) closes the request in QAHome with its unreported cases
+  as `error`; while the harness runs, it first stops the harness the same way, and uploads its runner log
+  after.
 * A consumer takes at most one rerun message of a queue before that queue's regular poll, so a
   rerun waits only for the run already in progress on the node. An interrupted rerun is not resumed
-  (no continue mode). A request not started within QAHome's `rerun.timeout.hours` (24), or running longer
-  than that, becomes `error` / `timed out`; its message expires from the queue, a consumer that takes it
-  anyway is refused, and a running one is told to stop on its next `rerunPoll`.
+  (no continue mode). A request that stays in one stage longer than QAHome's `rerun.timeout.hours` (24) - not
+  sent (from the request), not taken from the queue (from the send, when its message expires from the queue),
+  or running (from the start) - becomes `error`, `timed out: <stage>`; a consumer that takes it anyway is
+  refused, and a running one is told to stop on its next `rerunPoll`.
 * Calls to QAHome are retried with a backoff (about 5 minutes in all) when it cannot be reached, so a
   QAHome restart does not lose a rerun. `${CTP_HOME}/result/rerun/` keeps the newest 20 batches
   (`RERUN_KEEP_BATCHES`); the raw harness logs and conf copies of a batch are removed once it is reported.
