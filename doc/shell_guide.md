@@ -7,7 +7,7 @@ Shell test suite is used to execute CUBRID functional test in a very flexible wa
 * check a specific cubrid parameter works
 
 Shell test case path is located in [https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell](https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell).
-Shell test is contained by daily regression test. The test cases are run on both Linux platform and Windows platform. This guide will introduce linux shell test in detail. Additionally, shell test is also an important part of code coverage test. 
+Shell test is contained by daily regression test. The test cases are run on Linux platform. Windows tests have stopped. The Jenkins build of develop stopped building CUBRID for Windows in July 2025 (CBRD-26051). From the 11.4.6 and 11.3.6 patch releases, CUBRID ships CUBRID-For-WSL instead of a Windows build. This guide will introduce linux shell test in detail. Additionally, shell test is also an important part of code coverage test. 
 
 
 # 2 Shell Test via CTP
@@ -468,11 +468,9 @@ Both of the tests are started automatically when the controller receives a test 
 ## 4.1 Verify Regression Test Results
 * ### Result Overview
   Open ['QA homepage'](http://qahome.cubrid.org) in browser, then select the build number. `'Function Result'` page will be displayed.  
-  Find `shell` and `shell_debug` in linux part, and find `shell` in windows part.  
+  Find `shell` and `shell_debug` in linux part.  
 
   ![shell_linux](./shell_image/image1.png)  
-
-  ![shell_windows](./shell_image/image2.png)  
 
   If there are crash failures, an alarm icon will appear in the `'Total'` column, like this:  
 
@@ -592,6 +590,8 @@ The result will be uploaded to qahome automatically. To check the result, please
 
 
 # 5 Shell Case Standards
+The current rules for writing a shell test case are in [`shell/rules/`](https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell/rules) of `CUBRID/cubrid-testcases-private-ex`. Where this section differs from those rules, follow those rules.
+
 ## 5.1 Case Path Standard
 A shell test case should follow the following structure:   
 ```
@@ -623,7 +623,7 @@ with naming rules:
 ```
 cbrd_xxxxx/cases/cbrd_xxxxx.sh
 cbrd_xxxxx_1/cases/cbrd_xxxxx_1.sh
-cbrd_xxxxx_{issue_key}/cases/cbrd_xxxxx_{issue_keyword}.sh
+cbrd_xxxxx_{keyword}/cases/cbrd_xxxxx_{keyword}.sh
 ```
 Example:
 ```
