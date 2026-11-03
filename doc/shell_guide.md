@@ -7,7 +7,7 @@ Shell test suite is used to execute CUBRID functional test in a very flexible wa
 * check a specific cubrid parameter works
 
 Shell test case path is located in [https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell](https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell).
-Shell test is contained by daily regression test. The test cases are run on Linux platform. Windows tests have stopped: from the 11.4.6 and 11.3.6 patch releases, CUBRID ships CUBRID-For-WSL instead of a Windows build. This guide will introduce linux shell test in detail. Additionally, shell test is also an important part of code coverage test. 
+Shell test is contained by daily regression test. The test cases are run on Linux platform. Windows tests have stopped. The Jenkins build of develop stopped building CUBRID for Windows in July 2025 (CBRD-26051). From the 11.4.6 and 11.3.6 patch releases, CUBRID ships CUBRID-For-WSL instead of a Windows build. This guide will introduce linux shell test in detail. Additionally, shell test is also an important part of code coverage test. 
 
 
 # 2 Shell Test via CTP
