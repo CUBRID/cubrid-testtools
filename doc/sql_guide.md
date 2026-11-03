@@ -333,6 +333,8 @@ Revise required issues: It is link to a jira issue which lead to change in test 
 	There is a coverage rate by line.  Acceptable code coverage rate of SQL is nearly greater than 59%. For MEDIUM, it is 31%.  
 	![coverage_result](./sql_image/coverage_result.png)
 # 5. How to make a SQL test case  
+The current rules for writing SQL and MEDIUM test cases are in the rulebook of `cubrid-testcases`: [sql/rules/](https://github.com/CUBRID/cubrid-testcases/tree/develop/sql/rules) and [medium/rules/](https://github.com/CUBRID/cubrid-testcases/tree/develop/medium/rules). Where this section or [6. Test Case Specification](#6-test-case-specification) differs from the rulebook, follow the rulebook.
+
 * A SQL test cases follows following basic structure:  
 	any_testcase_folder/cases/case_file.sql  
 	any_testcase_folder/answers/case_file.answer  
