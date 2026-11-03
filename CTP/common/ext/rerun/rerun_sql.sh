@@ -319,15 +319,21 @@ function rerun_sql_case_log() {
         echo "Only the requested cases of this rerun ran, on a new database. The cases that ran before this one in"
         echo "the daily run did not, so a failure caused by what they left behind (tables, users, parameters) does"
         echo "not show here, and a pass does not rule that out."
-        if [ "$RERUN_SQL_MODE" == "jdbc" -a "$RERUN_SQL_SCEN" == "medium" ]; then
+        if [ "$RERUN_SQL_SCEN" == "medium" ]; then
             pre=$(rerun_sql_predecessors "$stage_case" "$n.sql")
         fi
-        if [ -n "$pre" ]; then
+        if [ -n "$pre" -a "$RERUN_SQL_MODE" == "jdbc" ]; then
             echo
             echo "The files of its directory read what the earlier ones commit, so these ran before it, in this order:"
             for p in $pre; do
-                printf '  %-40s %s\n' "$p" "$(awk -F'\t' -v c="$grp/cases/$p" '$1 == c { print $2; f = 1; exit } END { if (!f) print "no result" }' "$RERUN_SQL_VERDICTS" 2>/dev/null)"
+                v=$(rerun_verdict_lookup "$RERUN_SQL_VERDICTS" "$grp/cases/$p" 2>/dev/null)
+                v=${v%%$'\t'*}
+                printf '  %-40s %s\n' "$p" "${v:-no result}"
             done
+        elif echo "$n.sql" | grep -qE "$RERUN_SQL_ORDERED_RE" && [ "$RERUN_SQL_SCEN" == "medium" ]; then
+            echo
+            echo "The files of its directory read what the earlier ones commit, but this harness (ccqt, readdir order)"
+            echo "ran this file without them, so a failure may only mean their data was missing."
         fi
     } | rerun_case_log_section "how the case ran"
     grep -F -- "$sce" "$RERUN_SQL_LOG" 2>/dev/null | grep -v 'CONFIG FILE' | rerun_case_log_section "harness console lines"
