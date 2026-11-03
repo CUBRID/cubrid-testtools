@@ -188,13 +188,16 @@ function rerun_main_exit() {
         # killed before the runner ended (TERM/INT/HUP, or an error): stop the harness before closing the batch
         rerun_stop_runner
         killed=1
+        # masked with the secrets list, which rerun_tidy removes
+        rerun_publish_runner_log
     fi
+    # before the calls that can take minutes: a second signal ends this trap at once, and must not leave the
+    # secrets behind
+    rerun_tidy
     rerun_finish "rerun runner on ${USER}@$(hostname) exited before reporting every case"
     if [ $killed -eq 1 ]; then
-        rerun_publish_runner_log
         rerun_upload_runner_log
     fi
-    rerun_tidy
 }
 
 # category -> family runner (common/ext/rerun/rerun_<family>.sh)
@@ -273,8 +276,8 @@ if [ -n "$family" -a -f "$runner" ]; then
                 cat "$RERUN_LOG_ROOT/runner.log"
                 # The cancel (or timeout) already closed the batch and its cases in QAHome: nothing to report,
                 # but its runner log shows how far it got.
-                rerun_upload_runner_log
                 RERUN_FINISHED=1
+                rerun_upload_runner_log
                 exit 0
                 ;;
         esac
