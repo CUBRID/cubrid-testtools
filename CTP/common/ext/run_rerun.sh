@@ -156,6 +156,22 @@ function rerun_publish_runner_log() {
     fi
 }
 
+# A rerun stopped before it reported (a cancel or timeout from QAHome, or this script killed) publishes only its
+# runner log, at the top of the batch's log directory where QAHome's details link "Runner log" points: the case
+# logs of a stopped harness are partial. Bounded, so a stopping consumer is not held long.
+function rerun_upload_runner_log() {
+    local dir=$RERUN_WORK/runner_log_upload out
+    [ -f "$RERUN_LOG_ROOT/runner.log" ] || return 0
+    rm -rf "$dir" && mkdir -p "$dir" && cp "$RERUN_LOG_ROOT/runner.log" "$dir/" || return 0
+    out=$(timeout -k 10 300 bash -c 'upload_to_dailysrv "$1" "$2"' rerun_upload "$dir" "${RERUN_LOG_DIR}/${RERUN_BATCH_ID}" 2>&1)
+    if echo "$out" | grep -q '\[INFO\] upload done'; then
+        echo "[RERUN] runner log uploaded"
+    else
+        echo "[RERUN] runner log upload failed: $(echo "$out" | grep -m1 -iE 'error|fail|exception' | cut -c1-200)"
+    fi
+    rm -rf "$dir"
+}
+
 # The family work dir holds raw harness logs, conf copies with passwords and the secrets list: drop it, and
 # keep only the newest RERUN_KEEP_BATCHES batch dirs.
 function rerun_tidy() {
@@ -167,11 +183,17 @@ function rerun_tidy() {
 }
 
 function rerun_main_exit() {
+    local killed=0
     if [ -n "$runner_pid" ]; then
         # killed before the runner ended (TERM/INT/HUP, or an error): stop the harness before closing the batch
         rerun_stop_runner
+        killed=1
     fi
     rerun_finish "rerun runner on ${USER}@$(hostname) exited before reporting every case"
+    if [ $killed -eq 1 ]; then
+        rerun_publish_runner_log
+        rerun_upload_runner_log
+    fi
     rerun_tidy
 }
 
@@ -249,7 +271,9 @@ if [ -n "$family" -a -f "$runner" ]; then
                 rerun_stop_runner
                 rerun_publish_runner_log
                 cat "$RERUN_LOG_ROOT/runner.log"
-                # The cancel (or timeout) already closed the batch and its cases in QAHome: nothing to report.
+                # The cancel (or timeout) already closed the batch and its cases in QAHome: nothing to report,
+                # but its runner log shows how far it got.
+                rerun_upload_runner_log
                 RERUN_FINISHED=1
                 exit 0
                 ;;

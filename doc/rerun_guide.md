@@ -67,10 +67,11 @@ start_consumer.sh (every consumer of the original queue)
 * A rerun can be cancelled from QAHome (the `in progress` cell opens its details). While the harness
   runs, `run_rerun.sh` asks `rerun.nhn?m=rerunPoll` every `RERUN_POLL_SECONDS` (60); on `CANCEL` it
   kills the runner's process group and the process groups of the steps it runs under `timeout` (TERM, then
-  KILL after 30 s) and exits without reporting. CUBRID servers the harness started, and processes already
+  KILL after 30 s), uploads only its runner log (`<batch id>/runner.log`, which QAHome's rerun details link)
+  and exits without reporting. CUBRID servers the harness started, and processes already
   started on remote worker nodes, are left to the harness's next cleanup, as after a daily run.
-* Killing `run_rerun.sh` itself (TERM, INT or HUP) stops the harness the same way and closes the request
-  in QAHome with its unreported cases as `error`.
+* Killing `run_rerun.sh` itself (TERM, INT or HUP) stops the harness the same way, closes the request
+  in QAHome with its unreported cases as `error`, and uploads its runner log.
 * A consumer takes at most one rerun message of a queue before that queue's regular poll, so a
   rerun waits only for the run already in progress on the node. An interrupted rerun is not resumed
   (no continue mode). A request not started within QAHome's `rerun.timeout.hours` (24), or running longer
