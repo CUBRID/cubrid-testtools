@@ -592,6 +592,8 @@ The result will be uploaded to qahome automatically. To check the result, please
 
 
 # 5 Shell Case Standards
+The current rules for writing a shell test case are in [`shell/rules/`](https://github.com/CUBRID/cubrid-testcases-private-ex/tree/develop/shell/rules) of `CUBRID/cubrid-testcases-private-ex`. Where this section differs from those rules, follow those rules.
+
 ## 5.1 Case Path Standard
 A shell test case should follow the following structure:   
 ```
