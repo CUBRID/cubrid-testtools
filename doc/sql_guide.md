@@ -3,7 +3,7 @@
 # 1. Test Objective
 SQL is basic but important feature of one RDBMS product. CUBRID as a comprehensive relational database management system supports not only standard SQL but also native extension.  
 In order to test SQL feature, we designed two suites SQL and MEDIUM which include all kinds of DDL, DML and so on.  
-Typically, SQL and MEDIUM perform tests via JDBC interface on both Linux and Windows platform as regression test. And we also introduce SQL_BY_CCI suite which execute SQL test cases via CCI interface. In this guide, I would introduce SQL, MEDIUM and SQL_BY_CCI tests.  
+Typically, SQL and MEDIUM perform tests via JDBC interface on Linux platform as regression test. Their Windows tests stopped in 2026-05 (see [2.4](#24-sql-and-medium-tests-on-windows-platform)). And we also introduce SQL_BY_CCI suite which execute SQL test cases via CCI interface. In this guide, I would introduce SQL, MEDIUM and SQL_BY_CCI tests.  
   
 # 2. General SQL Test  
 ## 2.1 SQL Test  
@@ -189,6 +189,7 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   ```
   Other steps are same as SQL test.
 ## 2.4 SQL and MEDIUM tests on Windows platform
+  Windows tests of SQL and MEDIUM stopped in 2026-05. From the 11.4.6 and 11.3.6 patch releases, CUBRID ships CUBRID-For-WSL instead of a Windows build. The steps below are kept for reference.  
   Windows test is similar to [SQL test](#21-sql-test).  
   Change parameters as below: 
   ```
@@ -338,7 +339,7 @@ The current rules for writing SQL and MEDIUM test cases are in the rulebook of `
 * A SQL test cases follows following basic structure:  
 	any_testcase_folder/cases/case_file.sql  
 	any_testcase_folder/answers/case_file.answer  
-	any_testcase_folder/answers/case_file.answer_WIN (If the answers are different in Windows)  
+	any_testcase_folder/answers/case_file.answer_win (An old answer for Windows. No run compares output with it since Windows tests stopped, so do not add or update one.)  
 	any_testcase_folder/answers/case_file.answer_cci (If the answers are different in CCI)    
 	A SQL file goes to 'cases' folder, an answer file goes to 'answers' folder, and they should be in the same folder.  
   The test case and answer should have the same name.  
@@ -374,10 +375,7 @@ please confirm query results one by one in sql file. Never submit incorrect answ
     ```
     cp cbrd_22696.result ../answers/cbrd_22696.answer_cci
     ```
-  * step 8/9: You also need to execute above steps in a Windows OS to check the test case is pass. If it has different result and it is expected, then add a windows answer as well.  
-    ```
-    cp cbrd_22696.result ../answers/cbrd_22696.answer_WIN 
-    ```
+  * step 8/9: Skip this step. It ran the test case on Windows and added a Windows answer, and Windows tests stopped in 2026-05 (see [2.4](#24-sql-and-medium-tests-on-windows-platform)).  
   * step 9/9: commit the sql file and answer files to git repository.   
  
 # 6. Test Case Specification  
