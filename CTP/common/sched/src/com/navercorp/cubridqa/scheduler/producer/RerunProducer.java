@@ -93,6 +93,8 @@ public class RerunProducer {
 	/** The commit QAHome knows on that ref; the consumer refuses a ref that no longer contains it. */
 	static final String KEY_TC_SHA = "MKEY_RERUN_TC_SHA";
 	private static final int MAX_MSG_CONT = 4096;
+	/** Unusable candidates read before giving up: a reference build has tens of thousands of messages. */
+	private static final int MAX_UNUSABLE_CANDIDATES = 200;
 	private static final int MAX_ERROR = 2000;
 	/** Keys a consumer needs to take the message (start_consumer.sh hasTestBuild) and the runners to run it. */
 	private static final String[] REQUIRED_KEYS = { Constants.MSG_BUILD_ID, Constants.MSG_BUILD_SCENARIOS, "BUILD_SVN_BRANCH",
@@ -420,11 +422,22 @@ public class RerunProducer {
 		});
 		beforeEnd.addAll(others);
 		int unusable = 0;
-		for (Original candidate : beforeEnd) {
-			if (loadMessage(db, candidate)) {
-				return candidate;
+		PreparedStatement content = db.prepareStatement("SELECT msg_cont FROM msg_sended WHERE id = ?");
+		try {
+			for (Original candidate : beforeEnd) {
+				if (runMsgId != null && runMsgId.equals(candidate.msgId)) {
+					continue; // read above, and it could not be cloned
+				}
+				if (loadMessage(content, candidate)) {
+					return candidate;
+				}
+				unusable++; // cut off at the column size, or not a message this producer can clone
+				if (unusable >= MAX_UNUSABLE_CANDIDATES) {
+					break;
+				}
 			}
-			unusable++; // cut off at the column size, or not a message this producer can clone
+		} finally {
+			content.close();
 		}
 		throw new IllegalStateException("No usable original test message for build " + batch.buildId + " and category "
 				+ batch.category + " in msg_sended" + (unusable > 0 ? " (" + unusable + " incomplete)" : "")
@@ -444,15 +457,17 @@ public class RerunProducer {
 
 	/** The run's own message by its msg_id (one indexed row), when it is a usable candidate of this batch; else null. */
 	private Original messageByMsgId(Connection db, Batch batch, String msgId, boolean linux) throws SQLException {
+		Original own = null;
 		PreparedStatement ps = db.prepareStatement("SELECT id, msg_id, queue_id, build_type, consume_flag, consume_start_time,"
 				+ " build_id, build_scenarios, is_filtered_out, build_generate_msg_way FROM msg_sended WHERE msg_id = ?");
 		try {
 			ps.setString(1, msgId);
 			ResultSet rs = ps.executeQuery();
-			Original own = null;
 			while (own == null && rs.next()) {
+				// the candidate query's own filter: build_generate_msg_way <> 'RERUN' leaves out NULL as well
+				String way = rs.getString(10);
 				if (!batch.buildId.equals(rs.getString(7)) || !batch.category.equals(rs.getString(8))
-						|| !"N".equals(rs.getString(9)) || WAY_RERUN.equals(rs.getString(10))
+						|| !"N".equals(rs.getString(9)) || way == null || WAY_RERUN.equals(way)
 						|| !isCandidateQueue(rs.getString(3), rs.getString(4), linux)) {
 					continue;
 				}
@@ -464,29 +479,35 @@ public class RerunProducer {
 				own.consumeStart = rs.getTimestamp(6);
 			}
 			rs.close();
-			return own != null && loadMessage(db, own) ? own : null;
 		} finally {
 			ps.close();
+		}
+		if (own == null) {
+			return null;
+		}
+		PreparedStatement content = db.prepareStatement("SELECT msg_cont FROM msg_sended WHERE id = ?");
+		try {
+			return loadMessage(content, own) ? own : null;
+		} finally {
+			content.close();
 		}
 	}
 
-	/** Reads and parses the candidate's message; false when it was cut off at the column size or lacks a key. */
-	private boolean loadMessage(Connection db, Original candidate) throws SQLException {
-		PreparedStatement ps = db.prepareStatement("SELECT msg_cont FROM msg_sended WHERE id = ?");
-		try {
-			ps.setInt(1, candidate.id);
-			ResultSet rs = ps.executeQuery();
-			String content = rs.next() ? rs.getString(1) : null;
-			rs.close();
-			Properties props = parseMessageContent(content);
-			if (content == null || content.length() >= MAX_MSG_CONT || !hasRequiredKeys(props)) {
-				return false;
-			}
-			candidate.props = props;
-			return true;
-		} finally {
-			ps.close();
+	/**
+	 * Reads and parses the candidate's message with {@code ps} ({@code SELECT msg_cont FROM msg_sended WHERE id = ?});
+	 * false when it was cut off at the column size or lacks a key.
+	 */
+	private static boolean loadMessage(PreparedStatement ps, Original candidate) throws SQLException {
+		ps.setInt(1, candidate.id);
+		ResultSet rs = ps.executeQuery();
+		String content = rs.next() ? rs.getString(1) : null;
+		rs.close();
+		Properties props = parseMessageContent(content);
+		if (content == null || content.length() >= MAX_MSG_CONT || !hasRequiredKeys(props)) {
+			return false;
 		}
+		candidate.props = props;
+		return true;
 	}
 
 	private static boolean hasRequiredKeys(Properties props) {

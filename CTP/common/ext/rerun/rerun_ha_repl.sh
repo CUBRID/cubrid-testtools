@@ -213,7 +213,16 @@ function rerun_repl_case_log() {
     for f in "$RERUN_REPL_STAGE/$base".*; do
         [ -f "$f" ] || continue
         case "$f" in
-            *.dump|*.temp|*.diff_*)
+            *.dump)
+                # from the head: the diff's line numbers must still point into the copy (QAHome excerpts around them)
+                head -c "$RERUN_LOG_MAX_BYTES" "$f" | rerun_scrub_stream > "$RERUN_CASE_DIR/${f##*/}"
+                if [ "$(stat -c %s "$f" 2>/dev/null || echo 0)" -gt "$RERUN_LOG_MAX_BYTES" ]; then
+                    echo "copied: ${f##*/} (first $RERUN_LOG_MAX_BYTES bytes)" >> "$RERUN_CASE_LOG"
+                else
+                    echo "copied: ${f##*/}" >> "$RERUN_CASE_LOG"
+                fi
+                ;;
+            *.temp|*.diff_*)
                 rerun_case_copy "$f"
                 echo "copied: ${f##*/}" >> "$RERUN_CASE_LOG"
                 ;;
