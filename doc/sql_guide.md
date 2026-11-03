@@ -3,7 +3,7 @@
 # 1. Test Objective
 SQL is basic but important feature of one RDBMS product. CUBRID as a comprehensive relational database management system supports not only standard SQL but also native extension.  
 In order to test SQL feature, we designed two suites SQL and MEDIUM which include all kinds of DDL, DML and so on.  
-Typically, SQL and MEDIUM perform tests via JDBC interface on Linux platform as regression test. Their Windows tests stopped in 2026-05 (see [2.4](#24-sql-and-medium-tests-on-windows-platform)). And we also introduce SQL_BY_CCI suite which execute SQL test cases via CCI interface. In this guide, I would introduce SQL, MEDIUM and SQL_BY_CCI tests.  
+Typically, SQL and MEDIUM perform tests via JDBC interface on Linux platform as regression test. Their Windows tests have stopped (see [2.4](#24-sql-and-medium-tests-on-windows-platform)). And we also introduce SQL_BY_CCI suite which execute SQL test cases via CCI interface. In this guide, I would introduce SQL, MEDIUM and SQL_BY_CCI tests.  
   
 # 2. General SQL Test  
 ## 2.1 SQL Test  
@@ -189,7 +189,7 @@ Please follow guides to [install CTP on Linux platform](https://github.com/CUBRI
   ```
   Other steps are same as SQL test.
 ## 2.4 SQL and MEDIUM tests on Windows platform
-  Windows tests of SQL and MEDIUM stopped in 2026-05. From the 11.4.6 and 11.3.6 patch releases, CUBRID ships CUBRID-For-WSL instead of a Windows build. The steps below are kept for reference.  
+  Windows tests of SQL and MEDIUM have stopped. The Jenkins build of develop stopped building CUBRID for Windows in July 2025 (CBRD-26051). From the 11.4.6 and 11.3.6 patch releases, CUBRID ships CUBRID-For-WSL instead of a Windows build. The steps below are kept for reference.  
   Windows test is similar to [SQL test](#21-sql-test).  
   Change parameters as below: 
   ```
@@ -375,7 +375,7 @@ please confirm query results one by one in sql file. Never submit incorrect answ
     ```
     cp cbrd_22696.result ../answers/cbrd_22696.answer_cci
     ```
-  * step 8/9: Skip this step. It ran the test case on Windows and added a Windows answer, and Windows tests stopped in 2026-05 (see [2.4](#24-sql-and-medium-tests-on-windows-platform)).  
+  * step 8/9: Skip this step. It ran the test case on Windows and added a Windows answer, and Windows tests have stopped (see [2.4](#24-sql-and-medium-tests-on-windows-platform)).  
   * step 9/9: commit the sql file and answer files to git repository.   
  
 # 6. Test Case Specification  
