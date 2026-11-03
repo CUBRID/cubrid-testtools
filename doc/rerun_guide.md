@@ -48,7 +48,9 @@ start_consumer.sh (every consumer of the original queue)
   the daily run do not run, so a failure caused by what they left (tables, users, parameters) may not reproduce;
   each case log says so. A medium file of an order-dependent directory (`_07_mc_dep`, `_08_mc_ind`:
   `<letter><3 digits>_<name>.sql`, run in name order, each reading what the earlier ones committed) runs after
-  the earlier files of its directory, and its case log lists them with their results.
+  the earlier files of its directory, and its case log lists them with their results. That holds for the JDBC
+  harness (medium, medium_debug); the CCI harness runs files in directory order, so a medium file it reruns runs
+  alone and its case log says so.
 * Log capture (shell family, for QAHome's AI analysis): each requested case script gets one more command in
   front of its first line in the rerun's checkout (the line count does not change). It sources
   `~/ctp_rerun_work/<batch>/capture.sh` on the test node, which shadows `rm` so that each text file of the
