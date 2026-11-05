@@ -633,6 +633,15 @@ public class CommonUtils {
 		return version;
 	}
 
+	// cubrid_rel prints "(<bits>bit <build type> build for <os>)", e.g. "(64bit optdebug build for Linux)".
+	private static final Pattern CUBRID_REL_BUILD = Pattern.compile("\\((\\d+)bit (.+?) build for ");
+
+	// {bits, build type} from cubrid_rel output, e.g. {"64bit", "optdebug"}, a space in the build type turned into '-' ("coverage-debug"). null when the output has no such part.
+	public static String[] parseCubridRel(String cubridRel) {
+		Matcher m = CUBRID_REL_BUILD.matcher(cubridRel == null ? "" : cubridRel);
+		return m.find() ? new String[] { m.group(1) + "bit", m.group(2).replace(' ', '-') } : null;
+	}
+
 	public static boolean containToken(String filename, String token) throws IOException {
 
 		File file = new File(filename);

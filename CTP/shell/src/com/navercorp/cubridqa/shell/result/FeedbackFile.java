@@ -33,8 +33,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -79,17 +77,14 @@ public class FeedbackFile implements Feedback {
 		xmlLogName = CommonUtils.concatFile(context.getCurrentLogDir(), xmlFileName(null));
 	}
 
-	// cubrid_rel prints "(<bits>bit <build type> build for <os>)", e.g. "(64bit optdebug build for Linux)".
-	private static final Pattern CUBRID_REL_BUILD = Pattern.compile("\\((\\d+)bit (.+?) build for ");
-
 	// <os>_<category>_<bits>_<build type>.xml (e.g. linux_shell_64bit_optdebug.xml), the name form of the SQL runner's report.
 	// Bits and build type come only from cubrid_rel of the tested build; without them the name is <os>_<category>.xml.
 	private String xmlFileName(String cubridRel) {
 		StringBuilder sb = new StringBuilder(context.isWindows() ? "windows" : "linux");
 		sb.append('_').append(context.getTestCategory());
-		Matcher m = CUBRID_REL_BUILD.matcher(cubridRel == null ? "" : cubridRel);
-		if (m.find()) {
-			sb.append('_').append(m.group(1)).append("bit_").append(m.group(2).replace(' ', '-'));
+		String[] build = com.navercorp.cubridqa.common.CommonUtils.parseCubridRel(cubridRel);
+		if (build != null) {
+			sb.append('_').append(build[0]).append('_').append(build[1]);
 		}
 		return sb.append(".xml").toString();
 	}

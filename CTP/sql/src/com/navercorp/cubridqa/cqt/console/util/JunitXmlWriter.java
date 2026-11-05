@@ -25,6 +25,7 @@
  */
 package com.navercorp.cubridqa.cqt.console.util;
 
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.Summary;
 import com.navercorp.cubridqa.cqt.console.bean.Test;
@@ -43,8 +44,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -99,11 +98,6 @@ public final class JunitXmlWriter {
     // Cached "<remote-url>/blob/<HEAD-hash>" per testcases repo root. A null value is cached
     // too: it means git metadata was unavailable and the URL header is skipped for that repo.
     private static final Map<String, String> BASE_URL_CACHE = new HashMap<String, String>();
-
-    // cubrid_rel prints "(<bits>bit <build type> build for <os>)", e.g. "(64bit optdebug build for
-    // Linux)"; the build type is release, debug, optdebug, "coverage debug" or "profile debug".
-    private static final Pattern CUBRID_REL_BUILD =
-            Pattern.compile("\\((\\d+)bit (.+?) build for ");
 
     // Cached build type from cubrid_rel. Guarded by detectBuildType().
     private static String BUILD_TYPE;
@@ -350,11 +344,11 @@ public final class JunitXmlWriter {
         if (out == null) {
             throw new RuntimeException("cubrid_rel invocation failed");
         }
-        Matcher m = CUBRID_REL_BUILD.matcher(out);
-        if (!m.find()) {
+        String[] build = CommonUtils.parseCubridRel(out);
+        if (build == null) {
             throw new RuntimeException("cubrid_rel output has no build type: " + out);
         }
-        BUILD_TYPE = m.group(2).replace(' ', '-');
+        BUILD_TYPE = build[1];
         return BUILD_TYPE;
     }
 
