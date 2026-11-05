@@ -67,7 +67,7 @@ public class FeedbackFile implements Feedback {
 	int totalSkipNum = 0;
 	
 	JunitSuite xmlSuite;
-	JunitXml.Appender xmlAppender;
+	JunitXml xml;
 	long xmlStartTime;
 	Map<String, List<JunitCase>> earlierRuns = new HashMap<String, List<JunitCase>>();
 
@@ -364,7 +364,7 @@ public class FeedbackFile implements Feedback {
 		xmlSuite.addProperty("bits", context.getVersion());
 		xmlSuite.addProperty("testcase_branch", context.getTestCaseBranch());
 		try {
-			xmlAppender = new JunitXml.Appender(new File(xmlLogName), xmlSuite);
+			xml = new JunitXml(new File(xmlLogName), xmlSuite);
 		} catch (Exception e) {
 			System.err.println("Error creating XML file: " + e.getMessage());
 			e.printStackTrace();
@@ -395,31 +395,19 @@ public class FeedbackFile implements Feedback {
 		runs.add(run);
 	}
 
-	// Surefire's rerun form: a case that passed lists its failed runs as flaky; a case that never
-	// passed is its first failed run, with the later runs as reruns.
+	// The last run is the case, earlier failed runs its flaky or rerun elements. Surefire makes the
+	// first failed run the case; the last is kept so gha-ci's summary shows the log of the run that
+	// decided the result.
 	private synchronized void recordCase(String testCase, JunitCase lastRun) {
-		JunitCase c = lastRun;
 		List<JunitCase> earlier = earlierRuns.remove(testCase);
 		if (earlier != null) {
-			if (lastRun.getResult() == JunitCase.Result.PASSED) {
-				for (JunitCase run : earlier) {
-					c.addRerun(run);
-				}
-			} else {
-				c = earlier.get(0);
-				for (JunitCase run : earlier.subList(1, earlier.size())) {
-					c.addRerun(run);
-				}
-				c.addRerun(lastRun);
+			for (JunitCase run : earlier) {
+				lastRun.addRerun(run);
 			}
 		}
-		if (xmlSuite == null) {
-			return;
-		}
-		xmlSuite.add(c);
-		if (xmlAppender != null) {
+		if (xml != null) {
 			try {
-				xmlAppender.append(c);
+				xml.add(lastRun);
 			} catch (Exception e) {
 				System.err.println("Error writing testcase: " + e.getMessage());
 				e.printStackTrace();
@@ -428,27 +416,19 @@ public class FeedbackFile implements Feedback {
 	}
 
 	private void finalizeXmlWriter() {
-		if (xmlSuite == null) {
+		if (xml == null) {
 			return;
 		}
 
 		try {
-			if (xmlAppender != null) {
-				xmlAppender.close();
-			}
-		} catch (Exception e) {
-			System.err.println("Error closing XML file: " + e.getMessage());
-			e.printStackTrace();
-		}
-		try {
 			xmlSuite.setMillis(System.currentTimeMillis() - xmlStartTime);
-			JunitXml.write(new File(xmlLogName), xmlSuite);
+			xml.close();
 		} catch (Exception e) {
 			System.err.println("Error writing XML file: " + e.getMessage());
 			e.printStackTrace();
 		} finally {
+			xml = null;
 			xmlSuite = null;
-			xmlAppender = null;
 		}
 	}
 

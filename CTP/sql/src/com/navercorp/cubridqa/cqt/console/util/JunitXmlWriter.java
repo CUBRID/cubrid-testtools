@@ -112,12 +112,20 @@ public final class JunitXmlWriter {
             suite.addProperty("os", SystemUtil.getOS());
             suite.addProperty("bits", test.getTestBit());
             suite.addProperty("build_mode", buildMode);
-            for (CaseResult cr : emitted) {
-                suite.add(toCase(cr, logId));
-            }
-
             File outFile = new File(resultDir, target + ".xml");
-            JunitXml.write(outFile, suite);
+            JunitXml xml = new JunitXml(outFile, suite);
+            boolean closed = false;
+            try {
+                for (CaseResult cr : emitted) {
+                    xml.add(toCase(cr, logId));
+                }
+                xml.close();
+                closed = true;
+            } finally {
+                if (!closed) {
+                    xml.discard();
+                }
+            }
             LogUtil.log(
                     logId,
                     "[JunitXmlWriter] wrote "

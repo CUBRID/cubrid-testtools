@@ -25,10 +25,9 @@
  */
 package com.navercorp.cubridqa.common.junit;
 
-import java.net.InetAddress;
-import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /** The test suite of one CTP run, as a JUnit XML report holds it. Runners only fill in values. */
@@ -39,7 +38,6 @@ public final class JunitSuite {
     final String hostname;
     long millis;
     final Map<String, String> properties = new LinkedHashMap<String, String>();
-    private final List<JunitCase> cases = new ArrayList<JunitCase>();
 
     public JunitSuite(String name, long startMillis) {
         this.name = name;
@@ -58,20 +56,33 @@ public final class JunitSuite {
         }
     }
 
-    public synchronized void add(JunitCase c) {
-        cases.add(c);
-    }
-
-    synchronized List<JunitCase> cases() {
-        return new ArrayList<JunitCase>(cases);
-    }
-
+    // No InetAddress.getLocalHost(): it asks DNS, and stalls when the name does not resolve.
     private static String localHostname() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (Exception e) {
-            // the windyroad JUnit schema asks for "localhost" when the name cannot be found
-            return "localhost";
+        String name = System.getenv("HOSTNAME");
+        if (isEmpty(name)) {
+            name = firstLine("/proc/sys/kernel/hostname");
         }
+        if (isEmpty(name)) {
+            name = System.getenv("COMPUTERNAME");
+        }
+        // the windyroad JUnit schema asks for "localhost" when the name cannot be found
+        return isEmpty(name) ? "localhost" : name.trim();
+    }
+
+    private static String firstLine(String path) {
+        try {
+            BufferedReader r = new BufferedReader(new FileReader(path));
+            try {
+                return r.readLine();
+            } finally {
+                r.close();
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static boolean isEmpty(String s) {
+        return s == null || s.trim().length() == 0;
     }
 }

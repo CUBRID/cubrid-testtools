@@ -28,8 +28,10 @@ package com.navercorp.cubridqa.common.junit;
 import com.navercorp.cubridqa.common.junit.JunitCase.Result;
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -43,7 +45,11 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 /**
- * Writes a {@link JunitSuite} as JUnit XML.
+ * Writes a {@link JunitSuite} and its cases as JUnit XML.
+ *
+ * <p>Each case goes to the file as it is added, so a run that dies still leaves the cases it
+ * finished, and no case is held in memory. {@link #close} writes the file again with the suite's
+ * counts and time: the counts are attributes of the start tags, known only at the end.
  *
  * <p>Readers depend on the form: gha-ci's collect awk takes the case name from {@code name="} after
  * a space and the case log from the result element's CDATA; CircleCI splits shell tests by the
@@ -51,28 +57,67 @@ import javax.xml.stream.XMLStreamWriter;
  */
 public final class JunitXml {
 
-    private JunitXml() {}
+    private final File file;
+    private final JunitSuite suite;
+    private final FileOutputStream out;
+    private final XMLStreamWriter w;
+    private final long casesStart;
+    private int tests;
+    private int failures;
+    private int errors;
+    private int skipped;
 
-    /** Writes the whole report through a temporary file, so a reader never sees half of it. */
-    public static void write(File file, JunitSuite suite) throws IOException, XMLStreamException {
-        File tmp = new File(file.getPath() + ".tmp");
-        FileOutputStream out = new FileOutputStream(tmp);
-        boolean written = false;
+    public JunitXml(File file, JunitSuite suite) throws IOException, XMLStreamException {
+        this.file = file;
+        this.suite = suite;
+        out = new FileOutputStream(file);
+        w = open(out);
+        w.writeStartElement("testsuites");
+        writeSuiteStart(w, false);
+        w.flush();
+        casesStart = out.getChannel().position();
+    }
+
+    public synchronized void add(JunitCase c) throws XMLStreamException {
+        writeCase(w, c);
+        w.flush();
+        tests++;
+        if (c.result == Result.FAILURE) {
+            failures++;
+        } else if (c.result == Result.ERROR) {
+            errors++;
+        } else if (c.result == Result.SKIPPED) {
+            skipped++;
+        }
+    }
+
+    /**
+     * Writes the report again with the counts, through a temporary file, so a reader never sees
+     * half of it. The cases are copied as written: the same writer indents them at the same depth.
+     */
+    public synchronized void close() throws IOException, XMLStreamException {
         try {
-            XMLStreamWriter w = open(out);
-            w.writeStartElement("testsuites");
-            writeCounts(w, suite);
-            writeSuiteStart(w, suite, true);
-            for (JunitCase c : suite.cases()) {
-                writeCase(w, c);
-            }
-            w.writeEndElement();
-            w.writeEndElement();
-            w.writeEndDocument();
             w.close();
-            written = true;
         } finally {
             out.close();
+        }
+        File tmp = new File(file.getPath() + ".tmp");
+        FileOutputStream to = new FileOutputStream(tmp);
+        boolean written = false;
+        try {
+            XMLStreamWriter f = open(to);
+            f.writeStartElement("testsuites");
+            writeCounts(f);
+            writeSuiteStart(f, true);
+            f.flush();
+            copyCases(to);
+            f.writeEndElement();
+            f.writeEndElement();
+            f.writeEndDocument();
+            f.close();
+            written = true;
+        } finally {
+            to.close();
             if (!written) {
                 tmp.delete();
             }
@@ -84,33 +129,37 @@ public final class JunitXml {
                 StandardCopyOption.ATOMIC_MOVE);
     }
 
-    /**
-     * Appends cases as they finish, so a run that dies still leaves the cases it finished. The file
-     * is never closed as XML: {@link #write} replaces it when the run ends.
-     */
-    public static final class Appender {
-        private final FileOutputStream out;
-        private final XMLStreamWriter w;
-
-        public Appender(File file, JunitSuite suite) throws IOException, XMLStreamException {
-            out = new FileOutputStream(file);
-            w = open(out);
-            w.writeStartElement("testsuites");
-            writeSuiteStart(w, suite, false);
-            w.flush();
+    /** Closes without a report: the half-written file is deleted. */
+    public synchronized void discard() {
+        try {
+            w.close();
+        } catch (XMLStreamException ignore) {
         }
-
-        public void append(JunitCase c) throws XMLStreamException {
-            writeCase(w, c);
-            w.flush();
+        try {
+            out.close();
+        } catch (IOException ignore) {
         }
+        file.delete();
+    }
 
-        public void close() throws IOException, XMLStreamException {
-            try {
-                w.close();
-            } finally {
-                out.close();
+    private void copyCases(OutputStream to) throws IOException {
+        InputStream in = new FileInputStream(file);
+        try {
+            long skip = casesStart;
+            while (skip > 0) {
+                long n = in.skip(skip);
+                if (n <= 0) {
+                    throw new IOException("cannot skip to the cases of " + file);
+                }
+                skip -= n;
             }
+            byte[] buf = new byte[65536];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                to.write(buf, 0, n);
+            }
+        } finally {
+            in.close();
         }
     }
 
@@ -122,21 +171,7 @@ public final class JunitXml {
         return w;
     }
 
-    private static void writeCounts(XMLStreamWriter w, JunitSuite suite) throws XMLStreamException {
-        int failures = 0;
-        int errors = 0;
-        int skipped = 0;
-        int tests = 0;
-        for (JunitCase c : suite.cases()) {
-            tests++;
-            if (c.result == Result.FAILURE) {
-                failures++;
-            } else if (c.result == Result.ERROR) {
-                errors++;
-            } else if (c.result == Result.SKIPPED) {
-                skipped++;
-            }
-        }
+    private void writeCounts(XMLStreamWriter w) throws XMLStreamException {
         w.writeAttribute("tests", String.valueOf(tests));
         w.writeAttribute("failures", String.valueOf(failures));
         w.writeAttribute("errors", String.valueOf(errors));
@@ -144,12 +179,11 @@ public final class JunitXml {
         w.writeAttribute("time", seconds(suite.millis));
     }
 
-    private static void writeSuiteStart(XMLStreamWriter w, JunitSuite suite, boolean complete)
-            throws XMLStreamException {
+    private void writeSuiteStart(XMLStreamWriter w, boolean complete) throws XMLStreamException {
         w.writeStartElement("testsuite");
         w.writeAttribute("name", suite.name);
         if (complete) {
-            writeCounts(w, suite);
+            writeCounts(w);
         }
         w.writeAttribute("timestamp", timestamp(suite.startMillis));
         w.writeAttribute("hostname", suite.hostname);

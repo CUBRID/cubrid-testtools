@@ -85,10 +85,6 @@ public final class JunitCase {
         return this;
     }
 
-    public Result getResult() {
-        return result;
-    }
-
     static String directoryOf(String path) {
         if (path == null) {
             return "";
