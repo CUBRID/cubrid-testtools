@@ -25,6 +25,7 @@
  */
 package com.navercorp.cubridqa.common.junit;
 
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.ctp.Version;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -51,7 +52,7 @@ public final class JunitSuite {
     }
 
     public void addProperty(String name, String value) {
-        if (value != null && value.trim().length() > 0) {
+        if (!CommonUtils.isEmpty(value)) {
             properties.put(name, value.trim());
         }
     }
@@ -59,14 +60,14 @@ public final class JunitSuite {
     // No InetAddress.getLocalHost(): it asks DNS, and stalls when the name does not resolve.
     private static String localHostname() {
         String name = System.getenv("HOSTNAME");
-        if (isEmpty(name)) {
+        if (CommonUtils.isEmpty(name)) {
             name = firstLine("/proc/sys/kernel/hostname");
         }
-        if (isEmpty(name)) {
+        if (CommonUtils.isEmpty(name)) {
             name = System.getenv("COMPUTERNAME");
         }
         // the windyroad JUnit schema asks for "localhost" when the name cannot be found
-        return isEmpty(name) ? "localhost" : name.trim();
+        return CommonUtils.isEmpty(name) ? "localhost" : name.trim();
     }
 
     private static String firstLine(String path) {
@@ -80,9 +81,5 @@ public final class JunitSuite {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private static boolean isEmpty(String s) {
-        return s == null || s.trim().length() == 0;
     }
 }

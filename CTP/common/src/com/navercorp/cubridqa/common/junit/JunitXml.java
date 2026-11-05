@@ -69,15 +69,19 @@ public final class JunitXml {
             parent.mkdirs();
         }
         out = new FileOutputStream(file);
+        boolean started = false;
         try {
             caseWriter = open(out);
             caseWriter.writeStartElement("testsuites");
             writeSuiteStart(caseWriter, false);
             caseWriter.flush();
             casesStart = out.getChannel().position();
-        } catch (IOException | XMLStreamException e) {
-            out.close();
-            throw e;
+            started = true;
+        } finally {
+            if (!started) {
+                out.close();
+                file.delete();
+            }
         }
     }
 

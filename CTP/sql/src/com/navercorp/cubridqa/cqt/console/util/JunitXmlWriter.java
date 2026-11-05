@@ -25,6 +25,7 @@
  */
 package com.navercorp.cubridqa.cqt.console.util;
 
+import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.junit.JunitCase;
 import com.navercorp.cubridqa.common.junit.JunitSuite;
 import com.navercorp.cubridqa.common.junit.JunitXml;
@@ -110,7 +111,12 @@ public final class JunitXmlWriter {
             suite.addProperty("os", SystemUtil.getOS());
             suite.addProperty("bits", test.getTestBit());
             suite.addProperty("build_mode", buildMode);
-            suite.addProperty("cubrid_build", test.getDbBuild());
+            String version = test.getDbVersion();
+            String build = test.getDbBuild();
+            // run.sh splits cubrid_rel's version in two; joined, they equal shell's cubrid_build
+            if (!CommonUtils.isEmpty(version) && !CommonUtils.isEmpty(build)) {
+                suite.addProperty("cubrid_build", version + "." + build);
+            }
             File outFile = new File(resultDir, target + ".xml");
             JunitXml xml = new JunitXml(outFile, suite);
             boolean closed = false;

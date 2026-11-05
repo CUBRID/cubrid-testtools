@@ -438,13 +438,11 @@ public class FeedbackFile implements Feedback {
 		for (JunitCase run : c.earlierRuns.values()) {
 			c.lastRun.addRerun(run);
 		}
-		if (xml != null) {
-			try {
-				xml.add(c.lastRun);
-			} catch (Exception e) {
-				System.err.println("Error writing testcase: " + e.getMessage());
-				e.printStackTrace();
-			}
+		try {
+			xml.add(c.lastRun);
+		} catch (Exception e) {
+			System.err.println("Error writing testcase: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
