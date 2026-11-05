@@ -43,6 +43,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -50,8 +52,8 @@ import name.fraser.neil.plaintext.UnifiedDiffUtil;
 
 /**
  * Writes a CircleCI-compatible JUnit-style XML at {@code <result dir>/<suite>.xml}, where {@code
- * <suite>} is {@code <os>_<testType>_<testBit>_<release|debug>} (e.g. {@code
- * linux_sql_64bit_debug}) — the suite label the legacy entrypoint produced. The build mode is in
+ * <suite>} is {@code <os>_<testType>_<testBit>_<build type>} (e.g. {@code
+ * linux_sql_64bit_optdebug}), the build type as {@code cubrid_rel} prints it. The build type is in
  * the file name too, so a report read on its own still says which build it judged. The CCI runner
  * reaches it through {@link CciJunitXml}.
  *
@@ -98,8 +100,13 @@ public final class JunitXmlWriter {
     // too: it means git metadata was unavailable and the URL header is skipped for that repo.
     private static final Map<String, String> BASE_URL_CACHE = new HashMap<String, String>();
 
-    // Cached cubrid_rel build mode ("release"|"debug"). Guarded by detectBuildMode().
-    private static String BUILD_MODE;
+    // cubrid_rel prints "(<bits>bit <build type> build for <os>)", e.g. "(64bit optdebug build for
+    // Linux)"; the build type is release, debug, optdebug, "coverage debug" or "profile debug".
+    private static final Pattern CUBRID_REL_BUILD =
+            Pattern.compile("\\((\\d+)bit (.+?) build for ");
+
+    // Cached build type from cubrid_rel. Guarded by detectBuildType().
+    private static String BUILD_TYPE;
 
     private JunitXmlWriter() {}
 
@@ -154,7 +161,7 @@ public final class JunitXmlWriter {
                 return;
             }
             String target = pickTarget(testType, testBit);
-            String suiteName = target + "_" + detectBuildMode();
+            String suiteName = target + "_" + detectBuildType();
 
             int tests = cases.size();
             int failures = countFailures(cases);
@@ -328,29 +335,27 @@ public final class JunitXmlWriter {
     }
 
     /**
-     * Current CUBRID build mode ("release"|"debug") from {@code cubrid_rel} output — the same check
-     * as the legacy entrypoint's {@code cubrid_rel | grep -oe 'release\|debug'}. The exit code is
-     * deliberately not checked: cubrid_rel may exit non-zero in some environments while still
-     * printing a valid banner, and the content check is what matters.
+     * Current CUBRID build type from {@code cubrid_rel} output, a space turned into '-' (e.g.
+     * "optdebug", "coverage-debug"). The exit code is deliberately not checked: cubrid_rel may exit
+     * non-zero in some environments while still printing a valid banner, and the content check is
+     * what matters.
      *
-     * @throws RuntimeException if cubrid_rel cannot be invoked or names neither mode.
+     * @throws RuntimeException if cubrid_rel cannot be invoked or prints no build type.
      */
-    private static synchronized String detectBuildMode() {
-        if (BUILD_MODE != null) {
-            return BUILD_MODE;
+    private static synchronized String detectBuildType() {
+        if (BUILD_TYPE != null) {
+            return BUILD_TYPE;
         }
         String out = runCommand(false, "cubrid_rel");
         if (out == null) {
             throw new RuntimeException("cubrid_rel invocation failed");
         }
-        String lower = out.toLowerCase(Locale.ROOT);
-        boolean debug = lower.contains("debug");
-        if (!debug && !lower.contains("release")) {
-            throw new RuntimeException(
-                    "cubrid_rel output contained neither 'release' nor 'debug': " + out);
+        Matcher m = CUBRID_REL_BUILD.matcher(out);
+        if (!m.find()) {
+            throw new RuntimeException("cubrid_rel output has no build type: " + out);
         }
-        BUILD_MODE = debug ? "debug" : "release";
-        return BUILD_MODE;
+        BUILD_TYPE = m.group(2).replace(' ', '-');
+        return BUILD_TYPE;
     }
 
     /** Entire UTF-8 content of the file. Errors propagate to buildFailureCdata's guard. */
