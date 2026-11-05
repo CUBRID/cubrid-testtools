@@ -79,19 +79,24 @@ public class FeedbackFile implements Feedback {
 
 	// <os>_<category>_<bits>_<release|debug>.xml (e.g. linux_shell_64bit_debug.xml), the name form of the SQL runner's report. An unknown part is left out.
 	private String xmlFileName() {
-		StringBuilder sb = new StringBuilder(context.isWindows() ? "windows" : "linux");
-		sb.append('_').append(context.getTestCategory());
 		String bits = context.getVersion();
-		if (!CommonUtils.isEmpty(bits)) {
-			sb.append('_').append(bits.trim().replaceFirst("bits$", "bit"));
-		}
 		String mode = context.getBuildMode();
-		if (mode == null) {
-			// Only Main sets it, from the test node's build. jdbc, unittest and general feedback run where the build is installed.
+		if (CommonUtils.isEmpty(bits) || mode == null) {
+			// Main sets both from the test node's build. jdbc, unittest and general feedback run where the build is installed and may lack them.
 			String rel = LocalInvoker.exec("$CUBRID/bin/cubrid_rel 2>/dev/null", false, false);
 			if (rel != null && rel.indexOf("CUBRID") != -1) {
-				mode = com.navercorp.cubridqa.common.CommonUtils.getBuildMode(rel);
+				if (CommonUtils.isEmpty(bits)) {
+					bits = com.navercorp.cubridqa.common.CommonUtils.getBuildBits(rel);
+				}
+				if (mode == null) {
+					mode = com.navercorp.cubridqa.common.CommonUtils.getBuildMode(rel);
+				}
 			}
+		}
+		StringBuilder sb = new StringBuilder(context.isWindows() ? "windows" : "linux");
+		sb.append('_').append(context.getTestCategory());
+		if (!CommonUtils.isEmpty(bits)) {
+			sb.append('_').append(bits.trim().replaceFirst("bits$", "bit"));
 		}
 		if (mode != null) {
 			sb.append('_').append(mode);

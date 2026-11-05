@@ -123,7 +123,7 @@ public final class JunitXmlWriter {
         }
     }
 
-    /** Writes {@code <resultDir>/<target>.xml} for the given cases. Never throws. */
+    /** Writes {@code <resultDir>/<suite>.xml} for the given cases. Never throws. */
     public static void write(
             String resultDir,
             String testType,
