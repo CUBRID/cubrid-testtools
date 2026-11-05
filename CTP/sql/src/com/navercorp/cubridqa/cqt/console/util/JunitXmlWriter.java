@@ -46,10 +46,11 @@ import javax.xml.stream.XMLStreamWriter;
 import name.fraser.neil.plaintext.UnifiedDiffUtil;
 
 /**
- * Writes a CircleCI-compatible JUnit-style XML at {@code <result dir>/<target>.xml}, where {@code
- * <target>} is {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}) — the same file
- * name and suite label the legacy entrypoint produced. The CCI runner reaches it through {@link
- * CciJunitXml}.
+ * Writes a CircleCI-compatible JUnit-style XML at {@code <result dir>/<suite>.xml}, where {@code
+ * <suite>} is {@code <os>_<testType>_<testBit>_<release|debug>} (e.g. {@code
+ * linux_sql_64bit_debug}) — the suite label the legacy entrypoint produced. The build mode is in
+ * the file name too, so a report read on its own still says which build it judged. The CCI runner
+ * reaches it through {@link CciJunitXml}.
  *
  * <p>Schema mirrors the existing {@code cubridci/docker/ci/docker-entrypoint.sh xsltproc} output
  * (so the entrypoint cleanup PR can simply remove that XSLT step):
@@ -142,7 +143,7 @@ public final class JunitXmlWriter {
             int tests = cases.size();
             int failures = countFailures(cases);
 
-            File outFile = new File(resultDir, target + ".xml");
+            File outFile = new File(resultDir, suiteName + ".xml");
             writeXml(outFile, suiteName, tests, failures, cases, logId);
             LogUtil.log(
                     logId,
@@ -197,7 +198,7 @@ public final class JunitXmlWriter {
     }
 
     /**
-     * Suite/file label identical to the one the legacy entrypoint derived from the schedule
+     * Suite label prefix identical to the one the legacy entrypoint derived from the schedule
      * result-directory name: {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}).
      * Built from the same values {@code TestUtil.getTestId} uses to compose that directory name. An
      * unset testBit is skipped (defensive; the CQT agent entry points always set it).
