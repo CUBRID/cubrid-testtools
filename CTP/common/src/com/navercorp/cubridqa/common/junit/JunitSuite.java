@@ -30,7 +30,6 @@ import java.io.FileReader;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** The test suite of one CTP run, as a JUnit XML report holds it. Runners only fill in values. */
 public final class JunitSuite {
 
     final String name;
@@ -49,7 +48,6 @@ public final class JunitSuite {
         this.millis = millis;
     }
 
-    /** Skips an empty value: the report leaves out what the runner does not know. */
     public void addProperty(String name, String value) {
         if (value != null && value.trim().length() > 0) {
             properties.put(name, value.trim());

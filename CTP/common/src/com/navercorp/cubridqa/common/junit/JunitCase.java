@@ -33,7 +33,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-/** One test case of a JUnit XML report: its outcome and the failed runs before the last one. */
 public final class JunitCase {
 
     public enum Result {
@@ -54,11 +53,6 @@ public final class JunitCase {
     private File bodyFile;
     final List<JunitCase> reruns = new ArrayList<JunitCase>();
 
-    /**
-     * @param name the case path, e.g. {@code sql/_01_object/cases/t1.sql}; its directory becomes
-     *     the classname, the nearest thing to the class a JUnit test method is in
-     * @param body text of the result element; written as CDATA
-     */
     public JunitCase(
             String name,
             String file,
@@ -67,6 +61,7 @@ public final class JunitCase {
             String message,
             String type,
             String body) {
+        // a case's directory is the nearest thing to the class a JUnit test method is in
         this.classname = directoryOf(name);
         this.name = name;
         this.file = file;
@@ -81,20 +76,12 @@ public final class JunitCase {
         return new JunitCase(name, file, millis, Result.PASSED, null, null, null);
     }
 
-    /**
-     * Adds a failed run of this case besides the one this case reports. Written as Surefire's
-     * {@code flakyFailure}/{@code flakyError} when this case passed, {@code rerunFailure}/{@code
-     * rerunError} when it did not.
-     */
     public JunitCase addRerun(JunitCase run) {
         reruns.add(run);
         return this;
     }
 
-    /**
-     * Moves the body to a file in {@code dir}, so a run kept until its case is written holds no log
-     * in memory. The writer reads the file back and deletes it.
-     */
+    /** So a run kept until its case is written holds no log in memory. */
     public JunitCase moveBodyTo(File dir) throws IOException {
         if (body == null || body.length() == 0) {
             return this;

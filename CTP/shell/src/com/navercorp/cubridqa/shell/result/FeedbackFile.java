@@ -418,9 +418,7 @@ public class FeedbackFile implements Feedback {
 		writeCase(testCase, lastRun);
 	}
 
-	// The last run is the case, earlier failed runs its flaky or rerun elements. Surefire makes the
-	// first failed run the case; the last is kept so gha-ci's summary shows the log of the run that
-	// decided the result.
+	// Surefire makes the first failed run the case; the last is kept so gha-ci shows the log of the run that decided it.
 	private void writeCase(String testCase, JunitCase lastRun) {
 		earlierRunsExpected.remove(testCase);
 		List<JunitCase> earlier = earlierRuns.remove(testCase);

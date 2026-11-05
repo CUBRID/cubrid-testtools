@@ -45,15 +45,9 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 /**
- * Writes a {@link JunitSuite} and its cases as JUnit XML.
- *
- * <p>Each case goes to the file as it is added, so a run that dies still leaves the cases it
- * finished, and no case is held in memory. {@link #close} writes the file again with the suite's
- * counts and time: the counts are attributes of the start tags, known only at the end.
- *
- * <p>Readers depend on the form: gha-ci's collect awk takes the case name from {@code name="} after
- * a space and the case log from the result element's CDATA; CircleCI splits shell tests by the
- * {@code file} attribute. Keep the {@code testcase} attribute names and order.
+ * Readers depend on the form: gha-ci's collect awk takes the case name from {@code name="} after a
+ * space and the case log from the result element's CDATA; CircleCI splits shell tests by the {@code
+ * file} attribute. Keep the {@code testcase} attribute names and order.
  */
 public final class JunitXml {
 
@@ -96,8 +90,9 @@ public final class JunitXml {
     }
 
     /**
-     * Writes the report again with the counts, through a temporary file, so a reader never sees
-     * half of it. The cases are copied as written: the same writer indents them at the same depth.
+     * The counts are attributes of the start tags, known only now, so the report is written again
+     * through a temporary file. The case bytes are copied as written: the same writer indents them
+     * at the same depth.
      */
     public synchronized void close() throws IOException, XMLStreamException {
         try {
@@ -133,7 +128,6 @@ public final class JunitXml {
                 StandardCopyOption.ATOMIC_MOVE);
     }
 
-    /** Closes without a report: the half-written file is deleted. */
     public synchronized void discard() {
         try {
             w.close();
