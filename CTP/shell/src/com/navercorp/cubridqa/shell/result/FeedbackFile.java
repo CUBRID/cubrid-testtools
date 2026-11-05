@@ -26,6 +26,7 @@
 
 package com.navercorp.cubridqa.shell.result;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -42,7 +43,6 @@ import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
-import com.navercorp.cubridqa.shell.common.LocalInvoker;
 import com.navercorp.cubridqa.shell.common.Log;
 import com.navercorp.cubridqa.shell.common.SSHConnect;
 import com.navercorp.cubridqa.shell.common.ShellScriptInput;
@@ -74,34 +74,43 @@ public class FeedbackFile implements Feedback {
 		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
 		statusLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test_status.data");
 		this.context = context;
-		xmlLogName = CommonUtils.concatFile(context.getCurrentLogDir(), xmlFileName());
+		xmlLogName = CommonUtils.concatFile(context.getCurrentLogDir(), xmlFileName(null));
 	}
 
-	// <os>_<category>_<bits>_<release|debug>.xml (e.g. linux_shell_64bit_debug.xml), the name form of the SQL runner's report. An unknown part is left out.
-	private String xmlFileName() {
-		String bits = context.getVersion();
-		String mode = context.getBuildMode();
-		if (CommonUtils.isEmpty(bits) || mode == null) {
-			// Main sets both from the test node's build. jdbc, unittest and general feedback run where the build is installed and may lack them.
-			String rel = LocalInvoker.exec("$CUBRID/bin/cubrid_rel 2>/dev/null", false, false);
-			if (rel != null && rel.indexOf("CUBRID") != -1) {
-				if (CommonUtils.isEmpty(bits)) {
-					bits = com.navercorp.cubridqa.common.CommonUtils.getBuildBits(rel);
-				}
-				if (mode == null) {
-					mode = com.navercorp.cubridqa.common.CommonUtils.getBuildMode(rel);
-				}
-			}
-		}
+	// <os>_<category>_<bits>_<release|debug>.xml (e.g. linux_shell_64bit_debug.xml), the name form of the SQL runner's report.
+	// Bits and mode come only from cubrid_rel of the tested build; a part it does not give is left out.
+	private String xmlFileName(String cubridRel) {
 		StringBuilder sb = new StringBuilder(context.isWindows() ? "windows" : "linux");
 		sb.append('_').append(context.getTestCategory());
-		if (!CommonUtils.isEmpty(bits)) {
-			sb.append('_').append(bits.trim().replaceFirst("bits$", "bit"));
-		}
-		if (mode != null) {
-			sb.append('_').append(mode);
+		if (cubridRel != null && cubridRel.indexOf("CUBRID") != -1) {
+			sb.append('_').append(com.navercorp.cubridqa.common.CommonUtils.getBuildBits(cubridRel).replaceFirst("bits$", "bit"));
+			String rel = cubridRel.toLowerCase();
+			if (rel.indexOf("debug") != -1) {
+				sb.append("_debug");
+			} else if (rel.indexOf("release") != -1) {
+				sb.append("_release");
+			}
 		}
 		return sb.append(".xml").toString();
+	}
+
+	// The file opens before TestFactory installs the test build, so the name is settled when it closes.
+	private void nameXmlByTestedBuild() {
+		SSHConnect ssh = null;
+		try {
+			ssh = ShellHelper.createFirstTestNodeConnect(context);
+			File named = new File(context.getCurrentLogDir(), xmlFileName(ssh.execute(new ShellScriptInput("cubrid_rel"))));
+			File current = new File(xmlLogName);
+			if (!named.getAbsolutePath().equals(current.getAbsolutePath()) && current.renameTo(named)) {
+				xmlLogName = named.getPath();
+			}
+		} catch (Exception e) {
+			System.err.println("Error naming XML file by cubrid_rel: " + e.getMessage());
+		} finally {
+			if (ssh != null) {
+				ssh.close();
+			}
+		}
 	}
 
 	@Override
@@ -476,6 +485,7 @@ public class FeedbackFile implements Feedback {
 		} finally {
 			xmlInitialized = false;
 		}
+		nameXmlByTestedBuild();
 	}
 	
 	private String extractRelativePath(String testCase, String type) {

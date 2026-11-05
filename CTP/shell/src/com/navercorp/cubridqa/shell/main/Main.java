@@ -72,7 +72,6 @@ public class Main {
 			System.out.println("Test Build: " + cubridPackageUrl);
 			context.setTestBuild(CommonUtils.getBuildId(context.getCubridPackageUrl()));
 			context.setVersion(CommonUtils.getBuildBits(context.getCubridPackageUrl()));
-			context.setBuildMode(CommonUtils.getBuildMode(context.getCubridPackageUrl()));
 			context.setIsNewBuildNumberSystem(CommonUtils.isNewBuildNumberSystem(context.getTestBuild()));
 			context.setReInstallTestBuildYn(true);
 		} else {
@@ -87,7 +86,6 @@ public class Main {
 			}
 			context.setTestBuild(CommonUtils.getBuildId(buildInfo));
 			context.setVersion(CommonUtils.getBuildBits(buildInfo));
-			context.setBuildMode(CommonUtils.getBuildMode(buildInfo));
 			context.setIsNewBuildNumberSystem(CommonUtils.isNewBuildNumberSystem(context.getTestBuild()));
 			context.setReInstallTestBuildYn(false);
 

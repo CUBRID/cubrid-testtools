@@ -633,11 +633,6 @@ public class CommonUtils {
 		return version;
 	}
 
-	// A release package name carries no mode (CUBRID-11.4.0.1778-b6a3c4d-Linux.x86_64.sh), so only "debug" is looked for.
-	public static String getBuildMode(String cubridPackageUrl) {
-		return cubridPackageUrl.toLowerCase().indexOf("debug") == -1 ? "release" : "debug";
-	}
-
 	public static boolean containToken(String filename, String token) throws IOException {
 
 		File file = new File(filename);
