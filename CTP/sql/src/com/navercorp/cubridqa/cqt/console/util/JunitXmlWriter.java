@@ -47,8 +47,7 @@ import name.fraser.neil.plaintext.UnifiedDiffUtil;
  * Writes a CircleCI-compatible JUnit-style XML at {@code <result dir>/<suite>.xml}, where {@code
  * <suite>} is {@code <os>_<testType>_<testBit>_<build type>} (e.g. {@code
  * linux_sql_64bit_optdebug}), the build type as {@code cubrid_rel} prints it. The build type is in
- * the file name too, so a report read on its own still says which build it judged. The CCI runner
- * reaches it through {@link CciJunitXml}.
+ * the file name too, so a report read on its own still says which build it judged.
  *
  * <p>A case with no answer file did not run, so it is {@code skipped}.
  *
@@ -123,8 +122,7 @@ public final class JunitXmlWriter {
 
     /**
      * Writes {@code <resultDir>/<suite>.xml} for the given cases. The suite ran {@code suiteMillis}
-     * from {@code suiteStart} (epoch ms). A null {@code cubridBuild} leaves that property out.
-     * Never throws.
+     * from {@code suiteStart} (epoch ms). Never throws.
      */
     public static void write(
             String resultDir,
@@ -150,7 +148,7 @@ public final class JunitXmlWriter {
             suite.addProperty("category", testType);
             suite.addProperty("os", SystemUtil.getOS());
             suite.addProperty("bits", testBit);
-            suite.addProperty("build_mode", buildType);
+            suite.addProperty("build_type", buildType);
             if (!CommonUtils.isEmpty(cubridBuild)) {
                 suite.addProperty("cubrid_build", cubridBuild);
             }
@@ -356,10 +354,9 @@ public final class JunitXmlWriter {
     }
 
     /**
-     * Current CUBRID build type from {@code cubrid_rel} output, a space turned into '-' (e.g.
-     * "optdebug", "coverage-debug"). The exit code is deliberately not checked: cubrid_rel may exit
-     * non-zero in some environments while still printing a valid banner, and the content check is
-     * what matters.
+     * Current CUBRID build type from {@code cubrid_rel} output (e.g. "optdebug", "coverage-debug").
+     * The exit code is deliberately not checked: cubrid_rel may exit non-zero in some environments
+     * while still printing a valid banner, and the content check is what matters.
      *
      * @throws RuntimeException if cubrid_rel cannot be invoked or prints no build type.
      */

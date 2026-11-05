@@ -81,7 +81,7 @@ public final class CciJunitXml {
         }
     }
 
-    static List<CaseResult> read(String resultDir, String scenario) throws IOException {
+    private static List<CaseResult> read(String resultDir, String scenario) throws IOException {
         String root = repoRoot(scenario);
         if (root == null) {
             throw new IOException("no testcases root in " + scenario);

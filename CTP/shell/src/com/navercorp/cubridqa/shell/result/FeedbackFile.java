@@ -35,6 +35,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
@@ -87,7 +90,7 @@ public class FeedbackFile implements Feedback {
 	}
 
 	// <os>_<category>_<bits>_<build type>.xml (e.g. linux_shell_64bit_optdebug.xml), the name form of the SQL runner's report.
-	// Bits and build type come only from cubrid_rel of the tested build; without them the name is <os>_<category>.xml.
+	// Bits and build type come only from cubrid_rel of the tested build.
 	private String xmlFileName(String cubridRel) {
 		StringBuilder sb = new StringBuilder(context.isWindows() ? "windows" : "linux");
 		sb.append('_').append(context.getTestCategory());
@@ -99,21 +102,35 @@ public class FeedbackFile implements Feedback {
 	}
 
 	// The file opens before TestFactory installs the test build, so the name is settled when it closes.
+	// A test node that does not answer must not hold up the end of the task: after a minute the name stays as it is.
 	private void nameXmlByTestedBuild() {
-		SSHConnect ssh = null;
+		FutureTask<String> cubridRel = new FutureTask<String>(new Callable<String>() {
+			public String call() throws Exception {
+				SSHConnect ssh = ShellHelper.createFirstTestNodeConnect(context);
+				try {
+					return ssh.execute(new ShellScriptInput("cubrid_rel"));
+				} finally {
+					ssh.close();
+				}
+			}
+		});
+		Thread lookup = new Thread(cubridRel, "xml-name-lookup");
+		lookup.setDaemon(true);
+		lookup.start();
 		try {
-			ssh = ShellHelper.createFirstTestNodeConnect(context);
-			File named = new File(context.getCurrentLogDir(), xmlFileName(ssh.execute(new ShellScriptInput("cubrid_rel"))));
+			File named = new File(context.getCurrentLogDir(), xmlFileName(cubridRel.get(60, TimeUnit.SECONDS)));
 			File current = new File(xmlLogName);
-			if (!named.getAbsolutePath().equals(current.getAbsolutePath()) && current.renameTo(named)) {
+			if (named.getAbsolutePath().equals(current.getAbsolutePath())) {
+				return;
+			}
+			if (current.renameTo(named)) {
 				xmlLogName = named.getPath();
+			} else {
+				System.err.println("Error naming XML file by cubrid_rel: cannot rename " + current + " to " + named);
 			}
 		} catch (Exception e) {
-			System.err.println("Error naming XML file by cubrid_rel: " + e.getMessage());
-		} finally {
-			if (ssh != null) {
-				ssh.close();
-			}
+			cubridRel.cancel(true);
+			System.err.println("Error naming XML file by cubrid_rel: " + e);
 		}
 	}
 
