@@ -81,7 +81,7 @@ public final class UnifiedDiffUtil extends diff_match_patch {
         LinesToCharsResult lc = dmp.diff_linesToChars(safe(oldText), safe(newText));
         LinkedList<Diff> diffs = dmp.diff_main(lc.chars1, lc.chars2, false);
         dmp.diff_charsToLines(diffs, lc.lineArray);
-        dmp.diff_cleanupSemantic(diffs);
+        // No diff_cleanupSemantic: it is character-level and split abc -> Zabc into +Z, " abc".
         List<Diff> ops = explode(diffs);
         return groupHunks(ops, CONTEXT);
     }
