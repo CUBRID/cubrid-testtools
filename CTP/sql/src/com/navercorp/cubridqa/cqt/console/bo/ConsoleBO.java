@@ -182,10 +182,12 @@ public class ConsoleBO extends Executor {
             }
 
             startTime = System.currentTimeMillis();
+            long suiteStart = startTime;
 
             System.out.println("---------------execute begin--------------------");
             execute(test);
             System.out.println("---------------execute end  --------------------");
+            long suiteMillis = System.currentTimeMillis() - suiteStart;
 
             if (this.processMonitor.getCurrentstate() == this.processMonitor.Status_Stoping) {
                 this.processMonitor.setCurrentstate(this.processMonitor.Status_Stoped);
@@ -229,7 +231,7 @@ public class ConsoleBO extends Executor {
             }
             onMessage("*******results saved.");
             try {
-                JunitXmlWriter.write(test, logId);
+                JunitXmlWriter.write(test, logId, suiteStart, suiteMillis);
             } catch (Throwable t) {
                 LogUtil.log(logId, "[JunitXmlWriter] outer guard: " + t.getMessage());
             }

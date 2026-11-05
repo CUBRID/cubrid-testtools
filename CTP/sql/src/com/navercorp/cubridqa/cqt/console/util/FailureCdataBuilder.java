@@ -65,7 +65,7 @@ public final class FailureCdataBuilder {
      * @param caseFilePath original .sql case file
      * @param answerFilePath expected output file (.answer)
      * @param resultFilePath actual output file (.result, written by TestUtil.saveResult)
-     * @return CDATA-safe string suitable to embed inside {@code <![CDATA[...]]>}
+     * @return the payload text; {@code JunitXml} makes it safe for CDATA
      * @throws Exception if any of the input files cannot be read or parsed
      */
     public static String build(String caseFilePath, String answerFilePath, String resultFilePath)
@@ -75,7 +75,7 @@ public final class FailureCdataBuilder {
         if (failing.isEmpty()) {
             return "";
         }
-        return cdataSafe(renderLayout(failing));
+        return renderLayout(failing);
     }
 
     private static final class FailingStatement {
@@ -178,44 +178,5 @@ public final class FailureCdataBuilder {
             sb.append('\n');
         }
         return sb.toString();
-    }
-
-    /**
-     * Make the string safe to embed verbatim inside a CDATA section.
-     *
-     * <ol>
-     *   <li>Strips XML 1.0-illegal C0 control characters (U+0000-U+0008, U+000B, U+000C,
-     *       U+000E-U+001F), replacing each with {@code '?'}.
-     *   <li>Strips bare CR ({@code \r}) from line endings so they don't round-trip as {@code &#xD;}
-     *       in parsed XML.
-     *   <li>Splits any {@code "]]>"} sequence so it doesn't terminate the CDATA prematurely.
-     * </ol>
-     */
-    public static String cdataSafe(String s) {
-        if (s == null) {
-            return "";
-        }
-        // Replace XML-illegal C0 control chars with '?' and strip \r.
-        // XML 1.0 legal chars: #x9 | #xA | #xD | [#x20-#xD7FF] | ...
-        // Illegal C0 range: 0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F.
-        // \t (0x09) and \n (0x0A) are legal and preserved.
-        // \r (0x0D) is legal in XML but we strip it to avoid &#xD; round-trip.
-        StringBuilder sb = new StringBuilder(s.length());
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c == '\r') {
-                // strip bare CR
-                continue;
-            }
-            if (c <= '\u001F') {
-                // Allow TAB (0x09) and LF (0x0A); replace everything else <= 0x1F
-                if (c != '\t' && c != '\n') {
-                    sb.append('?');
-                    continue;
-                }
-            }
-            sb.append(c);
-        }
-        return sb.toString().replace("]]>", "]]]]><![CDATA[>");
     }
 }
