@@ -65,6 +65,8 @@ public class Context {
 
 	String version;
 
+	String buildMode;
+
 	Integer taskId;
 
 	boolean isNewBuildNumberSystem = true;
@@ -420,6 +422,14 @@ public class Context {
 
 	public String getVersion() {
 		return this.version;
+	}
+
+	public void setBuildMode(String buildMode) {
+		this.buildMode = buildMode;
+	}
+
+	public String getBuildMode() {
+		return this.buildMode;
 	}
 
 	public Properties getProperties() {
