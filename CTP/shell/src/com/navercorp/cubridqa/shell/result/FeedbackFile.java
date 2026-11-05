@@ -26,20 +26,21 @@
 
 package com.navercorp.cubridqa.shell.result;
 
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
-
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
-import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
+import com.navercorp.cubridqa.common.junit.JunitCase;
+import com.navercorp.cubridqa.common.junit.JunitSuite;
+import com.navercorp.cubridqa.common.junit.JunitXml;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
 import com.navercorp.cubridqa.shell.common.Constants;
 import com.navercorp.cubridqa.shell.common.Log;
@@ -65,9 +66,10 @@ public class FeedbackFile implements Feedback {
 	int totalFailNum = 0;
 	int totalSkipNum = 0;
 	
-	XMLStreamWriter xmlWriter;
-	FileOutputStream xmlFileStream;
-	boolean xmlInitialized = false;
+	JunitSuite xmlSuite;
+	JunitXml.Appender xmlAppender;
+	long xmlStartTime;
+	Map<String, List<JunitCase>> earlierRuns = new HashMap<String, List<JunitCase>>();
 
 	public FeedbackFile(Context context) {
 		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
@@ -135,8 +137,6 @@ public class FeedbackFile implements Feedback {
 		System.out.println("Test Category:" + context.getTestCategory());
 		println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
 		System.out.println("The Number of Test Cases: " + tbdNum + " (macro skipped: " + macroSkippedNum + ", bug skipped: " + tempSkippedNum + ")");
-		
-		writeTestSuiteStart();
 
 		updateTestingStatistics();				
 	}
@@ -206,26 +206,26 @@ public class FeedbackFile implements Feedback {
 	@Override
 	public void onTestCaseStopEvent(String testCase, boolean flag, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore, String skippedType, int retryCount) {
 		String head;
-		double timeInSeconds = elapseTime / 1000.0;
-		
+		String name = extractRelativePath(testCase);
+
 		if (skippedType.equals(Constants.SKIP_TYPE_NO)) {
 			head = flag ? "[OK]: " : "[NOK]: " + Constants.RETRY_FLAG + " = " + retryCount;
 			if (flag) {
 				this.totalSuccNum++;
-				writeTestCase(testCase, envIdentify, timeInSeconds, null, null, null);
+				recordCase(testCase, JunitCase.passed(name, testCase, elapseTime));
 			} else {
 				this.totalFailNum++;
-				writeTestCase(testCase, envIdentify, timeInSeconds, "failure", "Test failed", resultCont);
+				recordCase(testCase, failedRun(testCase, elapseTime, resultCont, envIdentify, isTimeOut, hasCore));
 			}
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_MACRO)) {
 			head = "[SKIP_BY_MACRO]";
-			writeTestCase(testCase, envIdentify, 0.0, "skipped", "Skipped by macro", null);
+			recordCase(testCase, new JunitCase(name, testCase, 0, JunitCase.Result.SKIPPED, "Skipped by macro", null, null));
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_TEMP)) {
 			head = "[SKIP_BY_BUG]";
-			writeTestCase(testCase, envIdentify, 0.0, "skipped", "Skipped by bug", null);
+			recordCase(testCase, new JunitCase(name, testCase, 0, JunitCase.Result.SKIPPED, "Skipped by bug", null, null));
 		} else {
 			head = "[UNKNOWN]";
-			writeTestCase(testCase, envIdentify, timeInSeconds, "error", "Unknown test status", null);
+			recordCase(testCase, new JunitCase(name, testCase, elapseTime, JunitCase.Result.ERROR, "Unknown test status", "UnknownStatus", null));
 		}
 
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
@@ -243,9 +243,10 @@ public class FeedbackFile implements Feedback {
 			int retryCount) {
 		String head;
 		head = flag ? "[OK]: " : "[NOK]: ";
-		
-		// Do not write retry attempts to XML - only log to feedback.log
-		
+		if (!flag) {
+			addEarlierRun(testCase, failedRun(testCase, elapseTime, resultCont, envIdentify, isTimeOut, hasCore));
+		}
+
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, " (" + Constants.RETRY_FLAG + " = " + retryCount + ")");
 	}
 
@@ -351,125 +352,116 @@ public class FeedbackFile implements Feedback {
 	}
 	
 	private void initializeXmlWriter() {
-		if (xmlInitialized) {
+		if (xmlSuite != null) {
 			return;
 		}
 
+		xmlStartTime = System.currentTimeMillis();
+		xmlSuite = new JunitSuite(context.getTestCategory(), xmlStartTime);
+		xmlSuite.addProperty("category", context.getTestCategory());
+		xmlSuite.addProperty("os", context.isWindows() ? "windows" : "linux");
+		xmlSuite.addProperty("build", context.getTestBuild());
+		xmlSuite.addProperty("bits", context.getVersion());
+		xmlSuite.addProperty("testcase_branch", context.getTestCaseBranch());
 		try {
-			xmlFileStream = new FileOutputStream(xmlLogName);
-			XMLOutputFactory factory = XMLOutputFactory.newInstance();
-			XMLStreamWriter baseWriter = factory.createXMLStreamWriter(xmlFileStream, "UTF-8");
-			xmlWriter = new IndentingXMLStreamWriter(baseWriter);
-			xmlWriter.writeStartDocument("UTF-8", "1.0");
-			xmlWriter.writeStartElement("testsuites");
-			xmlInitialized = true;
-		} catch (XMLStreamException e) {
-			System.err.println("Error initializing XML writer: " + e.getMessage());
-			e.printStackTrace();
-		} catch (IOException e) {
+			xmlAppender = new JunitXml.Appender(new File(xmlLogName), xmlSuite);
+		} catch (Exception e) {
 			System.err.println("Error creating XML file: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
-	
-	private void writeTestSuiteStart() {
-		if (!xmlInitialized || xmlWriter == null) {
-			return;
-		}
 
-		try {
-			xmlWriter.writeStartElement("testsuite");
-			xmlWriter.writeAttribute("name", context.getTestCategory());
-			xmlWriter.writeAttribute("tests", String.valueOf(this.totalCaseNum));
-			xmlWriter.writeAttribute("skipped", String.valueOf(this.totalSkipNum));
-			xmlWriter.writeAttribute("timestamp", new Date().toString());
-		} catch (XMLStreamException e) {
-			System.err.println("Error writing testsuite start: " + e.getMessage());
-			e.printStackTrace();
+	private JunitCase failedRun(String testCase, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore) {
+		String name = extractRelativePath(testCase);
+		String body = null;
+		if (resultCont != null && !resultCont.trim().isEmpty()) {
+			body = "\nEnvIdentify: " + envIdentify + "\nHostname: " + System.getenv("HOSTNAME") + "\n" + resultCont + "\n";
 		}
+		if (hasCore) {
+			return new JunitCase(name, testCase, elapseTime, JunitCase.Result.ERROR, "core file or fatal error found", "CoreDump", body);
+		}
+		if (isTimeOut) {
+			return new JunitCase(name, testCase, elapseTime, JunitCase.Result.ERROR, "timeout", "Timeout", body);
+		}
+		return new JunitCase(name, testCase, elapseTime, JunitCase.Result.FAILURE, "Test failed", "TestFailure", body);
 	}
-	
-	private void writeTestCase(String testCase, String envIdentify, double timeInSeconds, String resultType, String message, String details) {
-		if (!xmlInitialized || xmlWriter == null) {
-			return;
+
+	private synchronized void addEarlierRun(String testCase, JunitCase run) {
+		List<JunitCase> runs = earlierRuns.get(testCase);
+		if (runs == null) {
+			runs = new ArrayList<JunitCase>();
+			earlierRuns.put(testCase, runs);
 		}
+		runs.add(run);
+	}
 
-		try {
-			xmlWriter.writeStartElement("testcase");
-			xmlWriter.writeAttribute("classname", extractRelativePath(testCase, "url"));
-			xmlWriter.writeAttribute("name", extractRelativePath(testCase, "name"));
-			xmlWriter.writeAttribute("file", testCase);
-			xmlWriter.writeAttribute("time", String.valueOf(timeInSeconds));
-
-			if (resultType != null) {
-				xmlWriter.writeStartElement(resultType);
-				if (message != null) {
-					xmlWriter.writeAttribute("message", message);
+	// Surefire's rerun form: a case that passed lists its failed runs as flaky; a case that never
+	// passed is its first failed run, with the later runs as reruns.
+	private synchronized void recordCase(String testCase, JunitCase lastRun) {
+		JunitCase c = lastRun;
+		List<JunitCase> earlier = earlierRuns.remove(testCase);
+		if (earlier != null) {
+			if (lastRun.getResult() == JunitCase.Result.PASSED) {
+				for (JunitCase run : earlier) {
+					c.addRerun(run);
 				}
-				if ("failure".equals(resultType)) {
-					xmlWriter.writeAttribute("type", "TestFailure");
-				} else if ("error".equals(resultType)) {
-					xmlWriter.writeAttribute("type", "UnknownStatus");
+			} else {
+				c = earlier.get(0);
+				for (JunitCase run : earlier.subList(1, earlier.size())) {
+					c.addRerun(run);
 				}
-
-				if (details != null && !details.trim().isEmpty()) {
-					String hostname = System.getenv("HOSTNAME");
-					details = "EnvIdentify: " + envIdentify + "\nHostname: " + hostname + "\n" + details;
-					xmlWriter.writeCData("\n" + details + "\n");
-				}
-				xmlWriter.writeEndElement(); // End result element
+				c.addRerun(lastRun);
 			}
-			xmlWriter.writeEndElement(); // End testcase element
-			
-		} catch (XMLStreamException e) {
-			System.err.println("Error writing testcase: " + e.getMessage());
-			e.printStackTrace();
+		}
+		if (xmlSuite == null) {
+			return;
+		}
+		xmlSuite.add(c);
+		if (xmlAppender != null) {
+			try {
+				xmlAppender.append(c);
+			} catch (Exception e) {
+				System.err.println("Error writing testcase: " + e.getMessage());
+				e.printStackTrace();
+			}
 		}
 	}
-		
+
 	private void finalizeXmlWriter() {
-		if (!xmlInitialized || xmlWriter == null) {
+		if (xmlSuite == null) {
 			return;
 		}
 
 		try {
-			xmlWriter.writeEndElement(); // End testsuite
-			xmlWriter.writeEndElement(); // End testsuites
-			xmlWriter.writeEndDocument();
-			xmlWriter.flush();
-			xmlWriter.close();
-			xmlFileStream.close();
-		} catch (XMLStreamException e) {
-			System.err.println("Error finalizing XML writer: " + e.getMessage());
-			e.printStackTrace();
-		} catch (IOException e) {
+			if (xmlAppender != null) {
+				xmlAppender.close();
+			}
+		} catch (Exception e) {
 			System.err.println("Error closing XML file: " + e.getMessage());
 			e.printStackTrace();
+		}
+		try {
+			xmlSuite.setMillis(System.currentTimeMillis() - xmlStartTime);
+			JunitXml.write(new File(xmlLogName), xmlSuite);
+		} catch (Exception e) {
+			System.err.println("Error writing XML file: " + e.getMessage());
+			e.printStackTrace();
 		} finally {
-			xmlInitialized = false;
+			xmlSuite = null;
+			xmlAppender = null;
 		}
 	}
-	
-	private String extractRelativePath(String testCase, String type) {
+
+	private String extractRelativePath(String testCase) {
 		if (testCase == null || context.getTestCategory() == null) {
 			return testCase == null ? "" : testCase;
 		}
 
 		String testCategory = context.getTestCategory();
-		String relativePath = testCase;
-
-		// Find testCategory in path and extract relative path
 		int categoryIndex = testCase.indexOf("/" + testCategory + "/");
 		if (categoryIndex != -1) {
-			relativePath = testCase.substring(categoryIndex + 1);
-		} else if (!testCase.startsWith(testCategory + "/")) {
-			return testCase; // Cannot extract relative path
+			return testCase.substring(categoryIndex + 1);
 		}
-
-		// Return GitHub URL or relative path based on type
-		if ("url".equals(type)) {
-			return "https://github.com/CUBRID/cubrid-testcases-private-ex/blob/develop/" + relativePath;
-		}
-		return relativePath;
+		return testCase;
 	}
 }
