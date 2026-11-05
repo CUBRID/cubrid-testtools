@@ -46,9 +46,10 @@ import javax.xml.stream.XMLStreamWriter;
 import name.fraser.neil.plaintext.UnifiedDiffUtil;
 
 /**
- * Writes a CircleCI-compatible JUnit-style XML at {@code ${test.getResult_dir()}/<target>.xml},
- * where {@code <target>} is {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}) — the
- * same file name and suite label the legacy entrypoint produced.
+ * Writes a CircleCI-compatible JUnit-style XML at {@code <result dir>/<target>.xml}, where {@code
+ * <target>} is {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}) — the same file
+ * name and suite label the legacy entrypoint produced. The CCI runner reaches it through {@link
+ * CciJunitXml}.
  *
  * <p>Schema mirrors the existing {@code cubridci/docker/ci/docker-entrypoint.sh xsltproc} output
  * (so the entrypoint cleanup PR can simply remove that XSLT step):
@@ -97,18 +98,10 @@ public final class JunitXmlWriter {
 
     private JunitXmlWriter() {}
 
-    /** Single entry point. Never throws — all exceptions are caught and logged. */
+    /** Entry point of the JDBC runner. Never throws — all exceptions are caught and logged. */
     public static void write(Test test, String logId) {
         try {
             if (test == null) {
-                return;
-            }
-            String resultDir = test.getResult_dir();
-            if (resultDir == null || resultDir.length() == 0) {
-                return;
-            }
-            String testType = test.getTestType();
-            if (testType == null || testType.length() == 0) {
                 return;
             }
             if (test.getRunMode() != Test.MODE_RESULT) {
@@ -116,16 +109,41 @@ public final class JunitXmlWriter {
                 // report from MODE_MAKE_ANSWER/MODE_RUN would show every case as passed.
                 return;
             }
-            String target = pickTarget(test);
-            String suiteName = target + "_" + detectBuildMode();
-
             List<CaseResult> emitted = new ArrayList<CaseResult>();
             walk(test.getSummary(), emitted);
-            int tests = emitted.size();
-            int failures = countFailures(emitted);
+            write(test.getResult_dir(), test.getTestType(), test.getTestBit(), emitted, logId);
+        } catch (Throwable t) {
+            LogUtil.log(
+                    logId,
+                    "[JunitXmlWriter] write failed: "
+                            + t.getClass().getName()
+                            + ": "
+                            + t.getMessage());
+        }
+    }
+
+    /** Writes {@code <resultDir>/<target>.xml} for the given cases. Never throws. */
+    public static void write(
+            String resultDir,
+            String testType,
+            String testBit,
+            List<CaseResult> cases,
+            String logId) {
+        try {
+            if (resultDir == null || resultDir.length() == 0) {
+                return;
+            }
+            if (testType == null || testType.length() == 0) {
+                return;
+            }
+            String target = pickTarget(testType, testBit);
+            String suiteName = target + "_" + detectBuildMode();
+
+            int tests = cases.size();
+            int failures = countFailures(cases);
 
             File outFile = new File(resultDir, target + ".xml");
-            writeXml(outFile, suiteName, tests, failures, emitted, logId);
+            writeXml(outFile, suiteName, tests, failures, cases, logId);
             LogUtil.log(
                     logId,
                     "[JunitXmlWriter] wrote "
@@ -184,10 +202,9 @@ public final class JunitXmlWriter {
      * Built from the same values {@code TestUtil.getTestId} uses to compose that directory name. An
      * unset testBit is skipped (defensive; the CQT agent entry points always set it).
      */
-    private static String pickTarget(Test test) {
+    private static String pickTarget(String testType, String bit) {
         StringBuilder sb = new StringBuilder(SystemUtil.getOS());
-        sb.append('_').append(test.getTestType());
-        String bit = test.getTestBit();
+        sb.append('_').append(testType);
         if (bit != null && bit.length() > 0) {
             sb.append('_').append(bit);
         }
