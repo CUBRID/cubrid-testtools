@@ -25,14 +25,15 @@
  */
 package com.navercorp.cubridqa.cqt.console.util;
 
+import com.navercorp.cubridqa.common.junit.JunitCase;
+import com.navercorp.cubridqa.common.junit.JunitSuite;
+import com.navercorp.cubridqa.common.junit.JunitXml;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.Summary;
 import com.navercorp.cubridqa.cqt.console.bean.Test;
-import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -40,36 +41,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import name.fraser.neil.plaintext.UnifiedDiffUtil;
 
 /**
- * Writes a CircleCI-compatible JUnit-style XML at {@code ${test.getResult_dir()}/<target>.xml},
- * where {@code <target>} is {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}) — the
- * same file name and suite label the legacy entrypoint produced.
+ * Writes the JUnit XML report of an SQL run at {@code ${test.getResult_dir()}/<target>.xml}, where
+ * {@code <target>} is {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}), through
+ * {@link JunitXml}. The suite is named {@code <target>_<build mode>}.
  *
- * <p>Schema mirrors the existing {@code cubridci/docker/ci/docker-entrypoint.sh xsltproc} output
- * (so the entrypoint cleanup PR can simply remove that XSLT step):
- *
- * <pre>
- *   &lt;testsuites&gt;
- *     &lt;testsuite name="$target_$mode" tests="N" failures="M"&gt;
- *       &lt;testcase classname="$target_$mode"
- *                  name="&lt;case rel path&gt;"
- *                  file="cubrid-testcases/&lt;case rel path&gt;"
- *                  time="&lt;sec&gt;"&gt;
- *         [optional] &lt;failure message="unexpected result"&gt;
- *           &lt;![CDATA[ [Query] ... [Diff] ... ]]&gt;
- *         &lt;/failure&gt;
- *       &lt;/testcase&gt;
- *     &lt;/testsuite&gt;
- *   &lt;/testsuites&gt;
- * </pre>
- *
- * <p>Only TYPE_SQL and TYPE_GROOVY cases that actually ran ({@code shouldRun==true}) are emitted,
- * matching the existing {@code TestUtil.saveResult} / {@code TestUtil.copyCaseAnswerFile} gating.
+ * <p>Only TYPE_SQL and TYPE_GROOVY cases are emitted. A case with no answer file did not run and is
+ * {@code skipped}; a failed case that left a core file is an {@code error}, any other failed case a
+ * {@code failure} with {@code [Query]}/{@code [Diff]} in its CDATA.
  *
  * <p>The failure CDATA is prefixed with commit-pinned GitHub source links for the case and answer
  * files (same {@code ** Testcase : / ** Expected :} format as the legacy entrypoint {@code .report}
@@ -97,8 +78,11 @@ public final class JunitXmlWriter {
 
     private JunitXmlWriter() {}
 
-    /** Single entry point. Never throws — all exceptions are caught and logged. */
-    public static void write(Test test, String logId) {
+    /**
+     * Single entry point. The suite ran {@code suiteMillis} from {@code suiteStart} (epoch ms).
+     * Never throws — all exceptions are caught and logged.
+     */
+    public static void write(Test test, String logId, long suiteStart, long suiteMillis) {
         try {
             if (test == null) {
                 return;
@@ -117,23 +101,29 @@ public final class JunitXmlWriter {
                 return;
             }
             String target = pickTarget(test);
-            String suiteName = target + "_" + detectBuildMode();
+            String buildMode = detectBuildMode();
 
             List<CaseResult> emitted = new ArrayList<CaseResult>();
             walk(test.getSummary(), emitted);
-            int tests = emitted.size();
-            int failures = countFailures(emitted);
+
+            JunitSuite suite = new JunitSuite(target + "_" + buildMode, suiteStart);
+            suite.setMillis(suiteMillis);
+            suite.addProperty("category", testType);
+            suite.addProperty("os", SystemUtil.getOS());
+            suite.addProperty("bits", test.getTestBit());
+            suite.addProperty("build_mode", buildMode);
+            for (CaseResult cr : emitted) {
+                suite.add(toCase(cr, logId));
+            }
 
             File outFile = new File(resultDir, target + ".xml");
-            writeXml(outFile, suiteName, tests, failures, emitted, logId);
+            JunitXml.write(outFile, suite);
             LogUtil.log(
                     logId,
                     "[JunitXmlWriter] wrote "
                             + outFile.getAbsolutePath()
                             + " (tests="
-                            + tests
-                            + ", failures="
-                            + failures
+                            + emitted.size()
                             + ")");
         } catch (Throwable t) {
             LogUtil.log(
@@ -145,14 +135,14 @@ public final class JunitXmlWriter {
         }
     }
 
-    /** Walk Summary tree, collect TYPE_SQL/TYPE_GROOVY cases that were actually run. */
+    /** Walk Summary tree, collect TYPE_SQL/TYPE_GROOVY cases. */
     private static void walk(Summary s, List<CaseResult> out) {
         if (s == null) {
             return;
         }
         if (s.getType() == Summary.TYPE_BOTTOM) {
             for (CaseResult cr : s.getCaseList()) {
-                if (cr == null || !cr.isShouldRun()) {
+                if (cr == null) {
                     continue;
                 }
                 int t = cr.getType();
@@ -168,14 +158,39 @@ public final class JunitXmlWriter {
         }
     }
 
-    private static int countFailures(List<CaseResult> cases) {
-        int n = 0;
-        for (CaseResult cr : cases) {
-            if (!cr.isSuccessFul()) {
-                n++;
-            }
+    private static JunitCase toCase(CaseResult cr, String logId) {
+        String relPath = relativeToTestcasesRoot(cr.getCaseFile());
+        // Without a known repo anchor relPath is the absolute path; prefixing it with a
+        // repo name would yield a bogus "cubrid-testcases//abs/path", so emit it as-is.
+        String fileAttr =
+                findAnchor(cr.getCaseFile()) == null
+                        ? relPath
+                        : testcasesRepoName(cr.getCaseFile()) + "/" + relPath;
+        if (!cr.isShouldRun()) {
+            return new JunitCase(
+                    relPath, fileAttr, 0, JunitCase.Result.SKIPPED, "no answer file", null, null);
         }
-        return n;
+        if (cr.isSuccessFul()) {
+            return JunitCase.passed(relPath, fileAttr, cr.getTotalTime());
+        }
+        if (cr.isHasCore()) {
+            return new JunitCase(
+                    relPath,
+                    fileAttr,
+                    cr.getTotalTime(),
+                    JunitCase.Result.ERROR,
+                    "core file found",
+                    "CoreDump",
+                    buildFailureCdata(cr, logId));
+        }
+        return new JunitCase(
+                relPath,
+                fileAttr,
+                cr.getTotalTime(),
+                JunitCase.Result.FAILURE,
+                "unexpected result",
+                "UnexpectedResult",
+                buildFailureCdata(cr, logId));
     }
 
     /**
@@ -358,87 +373,6 @@ public final class JunitXmlWriter {
         }
     }
 
-    private static void writeXml(
-            File outFile,
-            String suiteName,
-            int tests,
-            int failures,
-            List<CaseResult> cases,
-            String logId)
-            throws IOException, XMLStreamException {
-        File parent = outFile.getParentFile();
-        if (parent != null) {
-            // If this fails, the FileOutputStream below throws with the path in its message.
-            parent.mkdirs();
-        }
-        FileOutputStream fos = new FileOutputStream(outFile);
-        IndentingXMLStreamWriter w = null;
-        boolean success = false;
-        try {
-            XMLOutputFactory factory = XMLOutputFactory.newInstance();
-            w = new IndentingXMLStreamWriter(factory.createXMLStreamWriter(fos, "UTF-8"));
-            w.writeStartDocument("UTF-8", "1.0");
-            w.writeStartElement("testsuites");
-            w.writeStartElement("testsuite");
-            w.writeAttribute("name", suiteName);
-            w.writeAttribute("tests", String.valueOf(tests));
-            w.writeAttribute("failures", String.valueOf(failures));
-
-            for (CaseResult cr : cases) {
-                writeOneTestcase(w, suiteName, cr, logId);
-            }
-
-            w.writeEndElement(); // testsuite
-            w.writeEndElement(); // testsuites
-            w.writeEndDocument();
-            w.flush();
-            success = true;
-        } finally {
-            if (w != null) {
-                try {
-                    w.close();
-                } catch (XMLStreamException ignore) {
-                }
-            }
-            try {
-                fos.close();
-            } catch (IOException ignore) {
-            }
-            if (!success) {
-                // do not leave a malformed half-written report for CI to ingest
-                outFile.delete();
-            }
-        }
-    }
-
-    private static void writeOneTestcase(
-            XMLStreamWriter w, String suiteName, CaseResult cr, String logId)
-            throws XMLStreamException {
-        String relPath = relativeToTestcasesRoot(cr.getCaseFile());
-        // Without a known repo anchor relPath is the absolute path; prefixing it with a
-        // repo name would yield a bogus "cubrid-testcases//abs/path", so emit it as-is.
-        String fileAttr =
-                findAnchor(cr.getCaseFile()) == null
-                        ? relPath
-                        : testcasesRepoName(cr.getCaseFile()) + "/" + relPath;
-        String time = String.format(Locale.ROOT, "%.3f", cr.getTotalTime() / 1000.0);
-        w.writeStartElement("testcase");
-        w.writeAttribute("classname", suiteName);
-        w.writeAttribute("name", relPath);
-        w.writeAttribute("file", fileAttr);
-        w.writeAttribute("time", time);
-        if (!cr.isSuccessFul()) {
-            w.writeStartElement("failure");
-            w.writeAttribute("message", "unexpected result");
-            String cdata = buildFailureCdata(cr, logId);
-            if (cdata.length() > 0) {
-                w.writeCData(cdata);
-            }
-            w.writeEndElement(); // failure
-        }
-        w.writeEndElement(); // testcase
-    }
-
     private static String buildFailureCdata(CaseResult cr, String logId) {
         try {
             if (cr.getCaseFile() == null
@@ -459,13 +393,12 @@ public final class JunitXmlWriter {
                 // Groovy cases have no SQL statement/block structure for the lockstep walk;
                 // fall back to the whole-file diff the legacy entrypoint produced.
                 payload =
-                        FailureCdataBuilder.cdataSafe(
-                                "[Diff]\n"
-                                        + UnifiedDiffUtil.unifiedDiff(
-                                                readFile(cr.getAnswerFile()),
-                                                readFile(resultFile),
-                                                "answer",
-                                                "actual"));
+                        "[Diff]\n"
+                                + UnifiedDiffUtil.unifiedDiff(
+                                        readFile(cr.getAnswerFile()),
+                                        readFile(resultFile),
+                                        "answer",
+                                        "actual");
             }
             if (payload.length() == 0) {
                 return "";
@@ -474,7 +407,7 @@ public final class JunitXmlWriter {
             if (header.length() == 0) {
                 return payload;
             }
-            return FailureCdataBuilder.cdataSafe(header) + payload;
+            return header + payload;
         } catch (Throwable t) {
             LogUtil.log(
                     logId,
