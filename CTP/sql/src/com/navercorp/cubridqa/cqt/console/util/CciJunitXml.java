@@ -48,7 +48,7 @@ public final class CciJunitXml {
 
     // getRelativeCasePath in sql_by_cci/execute.c cuts the case paths of summary.info at the
     // first of these, in this order.
-    private static final String[] ANCHORS = {
+    private static final String[] CCQT_CUT_POINTS = {
         "/scenario/", "/cubrid-testcases-private/", "/cubrid-testcases/"
     };
 
@@ -136,7 +136,7 @@ public final class CciJunitXml {
 
     private static String repoRoot(String scenario) {
         String s = scenario.endsWith("/") ? scenario : scenario + "/";
-        for (String a : ANCHORS) {
+        for (String a : CCQT_CUT_POINTS) {
             int i = s.indexOf(a);
             if (i >= 0) {
                 return s.substring(0, i + a.length());
