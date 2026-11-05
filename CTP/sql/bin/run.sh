@@ -794,7 +794,7 @@ function do_test()
 	  ccqt_start_ms=$(date +%s%3N)
 	  $CTP_HOME/sql_by_cci/ccqt $port $db_name ${scenario_alias} ${resultFolder} ${scenario_repo_root} $CTP_HOME ${cci_urlproperty} 2>&1 | tee -a $log_filename 
 	  ccqt_end_ms=$(date +%s%3N)
-	  "$JAVA_HOME/bin/java" -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.util.CciJunitXml "$CTP_HOME/result/sql_by_cci/${resultFolder}" "${scenario_repo_root}" ${scenario_category} ${cubrid_bits}bit "${log_filename%.log}" $ccqt_start_ms $ccqt_end_ms 2>&1 | tee -a $log_filename
+	  "$JAVA_HOME/bin/java" -classpath "${CLASSPATH}${separator}${CPCLASSES}" com.navercorp.cubridqa.cqt.console.util.CciJunitXml "$CTP_HOME/result/sql_by_cci/${resultFolder}" "${scenario_repo_root}" ${scenario_category} ${cubrid_bits}bit "${cubrid_ver}" "${log_filename%.log}" $ccqt_start_ms $ccqt_end_ms 2>&1 | tee -a $log_filename
 	  cd $curDir
 	  
      else   

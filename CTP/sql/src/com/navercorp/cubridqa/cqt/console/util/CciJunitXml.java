@@ -41,7 +41,8 @@ import java.util.regex.Pattern;
  * The C runner {@code sql_by_cci/ccqt} leaves only {@code summary.info}; this reads it back into
  * {@link CaseResult}s for {@link JunitXmlWriter}, so the report has the JDBC runner's form.
  *
- * <p>Usage: {@code CciJunitXml <result dir> <scenario> <test type> <test bit> <log id>}
+ * <p>Usage: {@code CciJunitXml <result dir> <scenario> <test type> <test bit> <cubrid build> <log
+ * id> <ccqt start ms> <ccqt end ms>}
  */
 public final class CciJunitXml {
 
@@ -57,23 +58,24 @@ public final class CciJunitXml {
     private CciJunitXml() {}
 
     public static void main(String[] args) {
-        if (args.length != 7) {
+        if (args.length != 8) {
             System.out.println(
-                    "usage: CciJunitXml <result dir> <scenario> <test type> <test bit> <log id>"
-                            + " <ccqt start ms> <ccqt end ms>");
+                    "usage: CciJunitXml <result dir> <scenario> <test type> <test bit>"
+                            + " <cubrid build> <log id> <ccqt start ms> <ccqt end ms>");
             return;
         }
-        String logId = args[4];
+        String logId = args[5];
         try {
-            long start = Long.parseLong(args[5]);
+            long start = Long.parseLong(args[6]);
             JunitXmlWriter.write(
                     args[0],
                     args[2],
                     args[3],
+                    args[4],
                     read(args[0], args[1]),
                     logId,
                     start,
-                    Long.parseLong(args[6]) - start);
+                    Long.parseLong(args[7]) - start);
         } catch (Throwable t) {
             LogUtil.log(logId, "[CciJunitXml] " + t.getClass().getName() + ": " + t.getMessage());
         }
