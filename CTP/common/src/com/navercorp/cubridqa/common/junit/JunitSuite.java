@@ -25,6 +25,7 @@
  */
 package com.navercorp.cubridqa.common.junit;
 
+import com.navercorp.cubridqa.ctp.Version;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.LinkedHashMap;
@@ -42,6 +43,7 @@ public final class JunitSuite {
         this.name = name;
         this.startMillis = startMillis;
         this.hostname = localHostname();
+        addProperty("ctp_version", Version.getVersion());
     }
 
     public void setMillis(long millis) {

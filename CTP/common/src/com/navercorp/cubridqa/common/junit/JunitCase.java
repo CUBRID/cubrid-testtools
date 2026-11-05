@@ -26,9 +26,7 @@
 package com.navercorp.cubridqa.common.junit;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,37 +74,44 @@ public final class JunitCase {
         return new JunitCase(name, file, millis, Result.PASSED, null, null, null);
     }
 
-    public JunitCase addRerun(JunitCase run) {
+    public static JunitCase skipped(String name, String file, String message) {
+        return new JunitCase(name, file, 0, Result.SKIPPED, message, null, null);
+    }
+
+    public void addRerun(JunitCase run) {
         reruns.add(run);
-        return this;
     }
 
     /** So a run kept until its case is written holds no log in memory. */
-    public JunitCase moveBodyTo(File dir) throws IOException {
+    public void moveBodyTo(File dir) throws IOException {
         if (body == null || body.length() == 0) {
-            return this;
+            return;
         }
         dir.mkdirs();
         File f = File.createTempFile("body", ".txt", dir);
-        OutputStream out = new FileOutputStream(f);
         try {
-            out.write(body.getBytes("UTF-8"));
-        } finally {
-            out.close();
+            Files.write(f.toPath(), body.getBytes("UTF-8"));
+        } catch (IOException e) {
+            f.delete();
+            throw e;
         }
         bodyFile = f;
         body = null;
-        return this;
     }
 
-    String body() throws IOException {
+    // Throwing here would drop the case from the report, and a failed case must stay listed.
+    String body() {
         if (bodyFile == null) {
             return body;
         }
-        return new String(Files.readAllBytes(bodyFile.toPath()), "UTF-8");
+        try {
+            return new String(Files.readAllBytes(bodyFile.toPath()), "UTF-8");
+        } catch (IOException e) {
+            return "(the log kept in " + bodyFile + " could not be read: " + e + ")";
+        }
     }
 
-    void deleteBodyFiles() {
+    public void deleteBodyFiles() {
         if (bodyFile != null) {
             bodyFile.delete();
         }

@@ -32,9 +32,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
@@ -55,6 +55,7 @@ public class FeedbackFile implements Feedback {
 	String logName;
 	String statusLogName;
 	String xmlLogName;
+	File rerunLogDir;
 	Log feedbackLog;
 	Log statusLog;
 	long taskStartTime;
@@ -69,14 +70,19 @@ public class FeedbackFile implements Feedback {
 	JunitSuite xmlSuite;
 	JunitXml xml;
 	long xmlStartTime;
-	Map<String, List<JunitCase>> earlierRuns = new HashMap<String, List<JunitCase>>();
-	Map<String, JunitCase> lastRunsWaiting = new HashMap<String, JunitCase>();
-	Map<String, Integer> earlierRunsExpected = new HashMap<String, Integer>();
+	Map<String, CaseRuns> caseRuns = new HashMap<String, CaseRuns>();
+
+	private static class CaseRuns {
+		final TreeMap<Integer, JunitCase> earlierRuns = new TreeMap<Integer, JunitCase>();
+		JunitCase lastRun;
+		int earlierRunCount;
+	}
 
 	public FeedbackFile(Context context) {
 		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
 		statusLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test_status.data");
 		xmlLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test-" + context.getTestCategory() + ".xml");
+		rerunLogDir = new File(context.getCurrentLogDir(), "junit_reruns");
 		this.context = context;
 	}
 
@@ -217,14 +223,14 @@ public class FeedbackFile implements Feedback {
 				recordCase(testCase, JunitCase.passed(name, testCase, elapseTime), retryCount);
 			} else {
 				this.totalFailNum++;
-				recordCase(testCase, failedRun(testCase, elapseTime, resultCont, envIdentify, isTimeOut, hasCore), retryCount);
+				recordCase(testCase, failedRun(name, testCase, elapseTime, resultCont, envIdentify, isTimeOut, hasCore), retryCount);
 			}
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_MACRO)) {
 			head = "[SKIP_BY_MACRO]";
-			recordCase(testCase, new JunitCase(name, testCase, 0, JunitCase.Result.SKIPPED, "Skipped by macro", null, null), 0);
+			recordCase(testCase, JunitCase.skipped(name, testCase, "Skipped by macro"), 0);
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_TEMP)) {
 			head = "[SKIP_BY_BUG]";
-			recordCase(testCase, new JunitCase(name, testCase, 0, JunitCase.Result.SKIPPED, "Skipped by bug", null, null), 0);
+			recordCase(testCase, JunitCase.skipped(name, testCase, "Skipped by bug"), 0);
 		} else {
 			head = "[UNKNOWN]";
 			recordCase(testCase, new JunitCase(name, testCase, elapseTime, JunitCase.Result.ERROR, "Unknown test status", "UnknownStatus", null), 0);
@@ -246,7 +252,7 @@ public class FeedbackFile implements Feedback {
 		String head;
 		head = flag ? "[OK]: " : "[NOK]: ";
 		if (!flag) {
-			addEarlierRun(testCase, failedRun(testCase, elapseTime, resultCont, envIdentify, isTimeOut, hasCore));
+			addEarlierRun(testCase, retryCount, failedRun(extractRelativePath(testCase), testCase, elapseTime, resultCont, envIdentify, isTimeOut, hasCore));
 		}
 
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, " (" + Constants.RETRY_FLAG + " = " + retryCount + ")");
@@ -362,7 +368,7 @@ public class FeedbackFile implements Feedback {
 		xmlSuite = new JunitSuite(context.getTestCategory(), xmlStartTime);
 		xmlSuite.addProperty("category", context.getTestCategory());
 		xmlSuite.addProperty("os", context.isWindows() ? "windows" : "linux");
-		xmlSuite.addProperty("build", context.getTestBuild());
+		xmlSuite.addProperty("cubrid_build", context.getTestBuild());
 		xmlSuite.addProperty("bits", context.getVersion());
 		xmlSuite.addProperty("testcase_branch", context.getTestCaseBranch());
 		try {
@@ -373,8 +379,7 @@ public class FeedbackFile implements Feedback {
 		}
 	}
 
-	private JunitCase failedRun(String testCase, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore) {
-		String name = extractRelativePath(testCase);
+	private JunitCase failedRun(String name, String testCase, long elapseTime, String resultCont, String envIdentify, boolean isTimeOut, boolean hasCore) {
 		String body = null;
 		if (resultCont != null && !resultCont.trim().isEmpty()) {
 			body = "\nEnvIdentify: " + envIdentify + "\nHostname: " + System.getenv("HOSTNAME") + "\n" + resultCont + "\n";
@@ -388,48 +393,54 @@ public class FeedbackFile implements Feedback {
 		return new JunitCase(name, testCase, elapseTime, JunitCase.Result.FAILURE, "Test failed", "TestFailure", body);
 	}
 
-	private synchronized void addEarlierRun(String testCase, JunitCase run) {
+	private synchronized void addEarlierRun(String testCase, int retryCount, JunitCase run) {
+		if (xml == null) {
+			return;
+		}
 		try {
-			run.moveBodyTo(new File(context.getCurrentLogDir(), "junit_reruns"));
+			run.moveBodyTo(rerunLogDir);
 		} catch (IOException e) {
 			System.err.println("Error keeping a retried run's log in a file: " + e.getMessage());
 		}
-		List<JunitCase> runs = earlierRuns.get(testCase);
-		if (runs == null) {
-			runs = new ArrayList<JunitCase>();
-			earlierRuns.put(testCase, runs);
-		}
-		runs.add(run);
-		Integer expected = earlierRunsExpected.get(testCase);
-		if (expected != null && runs.size() >= expected) {
-			writeCase(testCase, lastRunsWaiting.remove(testCase));
+		CaseRuns c = runsOf(testCase);
+		c.earlierRuns.put(retryCount, run);
+		if (c.lastRun != null && c.earlierRuns.size() >= c.earlierRunCount) {
+			writeCase(testCase);
 		}
 	}
 
 	// Dispatch hands out a retry before the run that failed reports it, so the last run can arrive
 	// first: it waits here until the earlier runs it counts (retryCount) have come.
 	private synchronized void recordCase(String testCase, JunitCase lastRun, int earlierRunCount) {
-		List<JunitCase> earlier = earlierRuns.get(testCase);
-		if ((earlier == null ? 0 : earlier.size()) < earlierRunCount) {
-			lastRunsWaiting.put(testCase, lastRun);
-			earlierRunsExpected.put(testCase, earlierRunCount);
+		if (xml == null) {
 			return;
 		}
-		writeCase(testCase, lastRun);
+		CaseRuns c = runsOf(testCase);
+		c.lastRun = lastRun;
+		c.earlierRunCount = earlierRunCount;
+		if (c.earlierRuns.size() >= earlierRunCount) {
+			writeCase(testCase);
+		}
+	}
+
+	private CaseRuns runsOf(String testCase) {
+		CaseRuns c = caseRuns.get(testCase);
+		if (c == null) {
+			c = new CaseRuns();
+			caseRuns.put(testCase, c);
+		}
+		return c;
 	}
 
 	// Surefire makes the first failed run the case; the last is kept so gha-ci shows the log of the run that decided it.
-	private void writeCase(String testCase, JunitCase lastRun) {
-		earlierRunsExpected.remove(testCase);
-		List<JunitCase> earlier = earlierRuns.remove(testCase);
-		if (earlier != null) {
-			for (JunitCase run : earlier) {
-				lastRun.addRerun(run);
-			}
+	private void writeCase(String testCase) {
+		CaseRuns c = caseRuns.remove(testCase);
+		for (JunitCase run : c.earlierRuns.values()) {
+			c.lastRun.addRerun(run);
 		}
 		if (xml != null) {
 			try {
-				xml.add(lastRun);
+				xml.add(c.lastRun);
 			} catch (Exception e) {
 				System.err.println("Error writing testcase: " + e.getMessage());
 				e.printStackTrace();
@@ -437,16 +448,23 @@ public class FeedbackFile implements Feedback {
 		}
 	}
 
-	private void finalizeXmlWriter() {
+	private synchronized void finalizeXmlWriter() {
 		if (xml == null) {
 			return;
 		}
-
-		synchronized (this) {
-			for (String testCase : new ArrayList<String>(lastRunsWaiting.keySet())) {
-				writeCase(testCase, lastRunsWaiting.remove(testCase));
+		for (String testCase : new ArrayList<String>(caseRuns.keySet())) {
+			if (caseRuns.get(testCase).lastRun != null) {
+				writeCase(testCase);
 			}
 		}
+		// What is left are earlier runs whose last run never came: the case has no result to write.
+		for (CaseRuns c : caseRuns.values()) {
+			for (JunitCase run : c.earlierRuns.values()) {
+				run.deleteBodyFiles();
+			}
+		}
+		caseRuns.clear();
+		rerunLogDir.delete();
 		try {
 			xmlSuite.setMillis(System.currentTimeMillis() - xmlStartTime);
 			xml.close();

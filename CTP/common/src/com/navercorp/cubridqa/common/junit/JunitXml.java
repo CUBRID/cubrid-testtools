@@ -54,7 +54,7 @@ public final class JunitXml {
     private final File file;
     private final JunitSuite suite;
     private final FileOutputStream out;
-    private final XMLStreamWriter w;
+    private final XMLStreamWriter caseWriter;
     private final long casesStart;
     private int tests;
     private int failures;
@@ -64,21 +64,30 @@ public final class JunitXml {
     public JunitXml(File file, JunitSuite suite) throws IOException, XMLStreamException {
         this.file = file;
         this.suite = suite;
+        File parent = file.getParentFile();
+        if (parent != null) {
+            parent.mkdirs();
+        }
         out = new FileOutputStream(file);
-        w = open(out);
-        w.writeStartElement("testsuites");
-        writeSuiteStart(w, false);
-        w.flush();
-        casesStart = out.getChannel().position();
+        try {
+            caseWriter = open(out);
+            caseWriter.writeStartElement("testsuites");
+            writeSuiteStart(caseWriter, false);
+            caseWriter.flush();
+            casesStart = out.getChannel().position();
+        } catch (IOException | XMLStreamException e) {
+            out.close();
+            throw e;
+        }
     }
 
-    public synchronized void add(JunitCase c) throws IOException, XMLStreamException {
+    public synchronized void add(JunitCase c) throws XMLStreamException {
         try {
-            writeCase(w, c);
+            writeCase(caseWriter, c);
         } finally {
             c.deleteBodyFiles();
         }
-        w.flush();
+        caseWriter.flush();
         tests++;
         if (c.result == Result.FAILURE) {
             failures++;
@@ -96,41 +105,26 @@ public final class JunitXml {
      */
     public synchronized void close() throws IOException, XMLStreamException {
         try {
-            w.close();
+            caseWriter.close();
         } finally {
             out.close();
         }
         File tmp = new File(file.getPath() + ".tmp");
-        FileOutputStream to = new FileOutputStream(tmp);
-        boolean written = false;
         try {
-            XMLStreamWriter f = open(to);
-            f.writeStartElement("testsuites");
-            writeCounts(f);
-            writeSuiteStart(f, true);
-            f.flush();
-            copyCases(to);
-            f.writeEndElement();
-            f.writeEndElement();
-            f.writeEndDocument();
-            f.close();
-            written = true;
+            writeReport(tmp);
+            Files.move(
+                    tmp.toPath(),
+                    file.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING,
+                    StandardCopyOption.ATOMIC_MOVE);
         } finally {
-            to.close();
-            if (!written) {
-                tmp.delete();
-            }
+            tmp.delete(); // already gone when the move succeeded
         }
-        Files.move(
-                tmp.toPath(),
-                file.toPath(),
-                StandardCopyOption.REPLACE_EXISTING,
-                StandardCopyOption.ATOMIC_MOVE);
     }
 
     public synchronized void discard() {
         try {
-            w.close();
+            caseWriter.close();
         } catch (XMLStreamException ignore) {
         }
         try {
@@ -138,6 +132,24 @@ public final class JunitXml {
         } catch (IOException ignore) {
         }
         file.delete();
+    }
+
+    private void writeReport(File tmp) throws IOException, XMLStreamException {
+        FileOutputStream to = new FileOutputStream(tmp);
+        try {
+            XMLStreamWriter report = open(to);
+            report.writeStartElement("testsuites");
+            writeCounts(report);
+            writeSuiteStart(report, true);
+            report.flush();
+            copyCases(to);
+            report.writeEndElement();
+            report.writeEndElement();
+            report.writeEndDocument();
+            report.close();
+        } finally {
+            to.close();
+        }
     }
 
     private void copyCases(OutputStream to) throws IOException {
@@ -177,10 +189,10 @@ public final class JunitXml {
         w.writeAttribute("time", seconds(suite.millis));
     }
 
-    private void writeSuiteStart(XMLStreamWriter w, boolean complete) throws XMLStreamException {
+    private void writeSuiteStart(XMLStreamWriter w, boolean withCounts) throws XMLStreamException {
         w.writeStartElement("testsuite");
         w.writeAttribute("name", suite.name);
-        if (complete) {
+        if (withCounts) {
             writeCounts(w);
         }
         w.writeAttribute("timestamp", timestamp(suite.startMillis));
@@ -194,8 +206,7 @@ public final class JunitXml {
         w.writeEndElement();
     }
 
-    private static void writeCase(XMLStreamWriter w, JunitCase c)
-            throws IOException, XMLStreamException {
+    private static void writeCase(XMLStreamWriter w, JunitCase c) throws XMLStreamException {
         w.writeStartElement("testcase");
         w.writeAttribute("classname", c.classname);
         w.writeAttribute("name", c.name);
@@ -238,9 +249,9 @@ public final class JunitXml {
     }
 
     /**
-     * XML 1.0 allows TAB and LF but no other C0 control character, so those become '?'. CR goes:
-     * written back it would come out as {@code &#xD;}. A {@code ]]>} would end the CDATA, so it is
-     * split across two sections.
+     * XML 1.0 allows TAB, LF and CR but no other C0 control character, so those become '?'. CR is
+     * dropped too: written back it would come out as {@code &#xD;}. A {@code ]]>} would end the
+     * CDATA, so it is split across two sections.
      */
     static String cdataSafe(String s) {
         StringBuilder sb = new StringBuilder(s.length());

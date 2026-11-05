@@ -44,13 +44,11 @@ import java.util.Map;
 import name.fraser.neil.plaintext.UnifiedDiffUtil;
 
 /**
- * Writes the JUnit XML report of an SQL run at {@code ${test.getResult_dir()}/<target>.xml}, where
- * {@code <target>} is {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}), through
- * {@link JunitXml}. The suite is named {@code <target>_<build mode>}.
+ * Writes a CircleCI-compatible JUnit-style XML at {@code ${test.getResult_dir()}/<target>.xml},
+ * where {@code <target>} is {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}) — the
+ * same file name and suite label the legacy entrypoint produced.
  *
- * <p>Only TYPE_SQL and TYPE_GROOVY cases are emitted. A case with no answer file did not run and is
- * {@code skipped}; a failed case that left a core file is an {@code error}, any other failed case a
- * {@code failure} with {@code [Query]}/{@code [Diff]} in its CDATA.
+ * <p>A case with no answer file did not run, so it is {@code skipped}.
  *
  * <p>The failure CDATA is prefixed with commit-pinned GitHub source links for the case and answer
  * files (same {@code ** Testcase : / ** Expected :} format as the legacy entrypoint {@code .report}
@@ -112,6 +110,7 @@ public final class JunitXmlWriter {
             suite.addProperty("os", SystemUtil.getOS());
             suite.addProperty("bits", test.getTestBit());
             suite.addProperty("build_mode", buildMode);
+            suite.addProperty("cubrid_build", test.getDbBuild());
             File outFile = new File(resultDir, target + ".xml");
             JunitXml xml = new JunitXml(outFile, suite);
             boolean closed = false;
@@ -143,7 +142,6 @@ public final class JunitXmlWriter {
         }
     }
 
-    /** Walk Summary tree, collect TYPE_SQL/TYPE_GROOVY cases. */
     private static void walk(Summary s, List<CaseResult> out) {
         if (s == null) {
             return;
@@ -175,8 +173,7 @@ public final class JunitXmlWriter {
                         ? relPath
                         : testcasesRepoName(cr.getCaseFile()) + "/" + relPath;
         if (!cr.isShouldRun()) {
-            return new JunitCase(
-                    relPath, fileAttr, 0, JunitCase.Result.SKIPPED, "no answer file", null, null);
+            return JunitCase.skipped(relPath, fileAttr, "no answer file");
         }
         if (cr.isSuccessFul()) {
             return JunitCase.passed(relPath, fileAttr, cr.getTotalTime());
