@@ -35,11 +35,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -57,7 +60,8 @@ import name.fraser.neil.plaintext.UnifiedDiffUtil;
  *
  * <pre>
  *   &lt;testsuites&gt;
- *     &lt;testsuite name="$target_$mode" tests="N" failures="M"&gt;
+ *     &lt;testsuite name="$target_$mode" tests="N" failures="M" time="&lt;sec&gt;"
+ *                timestamp="&lt;start, GMT yyyy-MM-ddTHH:mm:ss&gt;"&gt;
  *       &lt;testcase classname="$target_$mode"
  *                  name="&lt;case rel path&gt;"
  *                  file="cubrid-testcases/&lt;case rel path&gt;"
@@ -100,7 +104,7 @@ public final class JunitXmlWriter {
     private JunitXmlWriter() {}
 
     /** Entry point of the JDBC runner. Never throws — all exceptions are caught and logged. */
-    public static void write(Test test, String logId) {
+    public static void write(Test test, String logId, long suiteStart, long suiteMillis) {
         try {
             if (test == null) {
                 return;
@@ -112,7 +116,14 @@ public final class JunitXmlWriter {
             }
             List<CaseResult> emitted = new ArrayList<CaseResult>();
             walk(test.getSummary(), emitted);
-            write(test.getResult_dir(), test.getTestType(), test.getTestBit(), emitted, logId);
+            write(
+                    test.getResult_dir(),
+                    test.getTestType(),
+                    test.getTestBit(),
+                    emitted,
+                    logId,
+                    suiteStart,
+                    suiteMillis);
         } catch (Throwable t) {
             LogUtil.log(
                     logId,
@@ -123,13 +134,18 @@ public final class JunitXmlWriter {
         }
     }
 
-    /** Writes {@code <resultDir>/<suite>.xml} for the given cases. Never throws. */
+    /**
+     * Writes {@code <resultDir>/<suite>.xml} for the given cases. The suite ran {@code suiteMillis}
+     * from {@code suiteStart} (epoch ms). Never throws.
+     */
     public static void write(
             String resultDir,
             String testType,
             String testBit,
             List<CaseResult> cases,
-            String logId) {
+            String logId,
+            long suiteStart,
+            long suiteMillis) {
         try {
             if (resultDir == null || resultDir.length() == 0) {
                 return;
@@ -144,7 +160,7 @@ public final class JunitXmlWriter {
             int failures = countFailures(cases);
 
             File outFile = new File(resultDir, suiteName + ".xml");
-            writeXml(outFile, suiteName, tests, failures, cases, logId);
+            writeXml(outFile, suiteName, tests, failures, suiteStart, suiteMillis, cases, logId);
             LogUtil.log(
                     logId,
                     "[JunitXmlWriter] wrote "
@@ -381,6 +397,8 @@ public final class JunitXmlWriter {
             String suiteName,
             int tests,
             int failures,
+            long suiteStart,
+            long suiteMillis,
             List<CaseResult> cases,
             String logId)
             throws IOException, XMLStreamException {
@@ -401,6 +419,11 @@ public final class JunitXmlWriter {
             w.writeAttribute("name", suiteName);
             w.writeAttribute("tests", String.valueOf(tests));
             w.writeAttribute("failures", String.valueOf(failures));
+            w.writeAttribute("time", String.format(Locale.ROOT, "%.3f", suiteMillis / 1000.0));
+            // Ant's XMLJUnitResultFormatter form: the suite's start in GMT, no zone suffix.
+            SimpleDateFormat iso = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT);
+            iso.setTimeZone(TimeZone.getTimeZone("GMT"));
+            w.writeAttribute("timestamp", iso.format(new Date(suiteStart)));
 
             for (CaseResult cr : cases) {
                 writeOneTestcase(w, suiteName, cr, logId);

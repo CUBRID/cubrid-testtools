@@ -57,14 +57,23 @@ public final class CciJunitXml {
     private CciJunitXml() {}
 
     public static void main(String[] args) {
-        if (args.length != 5) {
+        if (args.length != 7) {
             System.out.println(
-                    "usage: CciJunitXml <result dir> <scenario> <test type> <test bit> <log id>");
+                    "usage: CciJunitXml <result dir> <scenario> <test type> <test bit> <log id>"
+                            + " <ccqt start ms> <ccqt end ms>");
             return;
         }
         String logId = args[4];
         try {
-            JunitXmlWriter.write(args[0], args[2], args[3], read(args[0], args[1]), logId);
+            long start = Long.parseLong(args[5]);
+            JunitXmlWriter.write(
+                    args[0],
+                    args[2],
+                    args[3],
+                    read(args[0], args[1]),
+                    logId,
+                    start,
+                    Long.parseLong(args[6]) - start);
         } catch (Throwable t) {
             LogUtil.log(logId, "[CciJunitXml] " + t.getClass().getName() + ": " + t.getMessage());
         }
