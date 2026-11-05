@@ -78,8 +78,12 @@ public final class JunitXml {
         casesStart = out.getChannel().position();
     }
 
-    public synchronized void add(JunitCase c) throws XMLStreamException {
-        writeCase(w, c);
+    public synchronized void add(JunitCase c) throws IOException, XMLStreamException {
+        try {
+            writeCase(w, c);
+        } finally {
+            c.deleteBodyFiles();
+        }
         w.flush();
         tests++;
         if (c.result == Result.FAILURE) {
@@ -196,7 +200,8 @@ public final class JunitXml {
         w.writeEndElement();
     }
 
-    private static void writeCase(XMLStreamWriter w, JunitCase c) throws XMLStreamException {
+    private static void writeCase(XMLStreamWriter w, JunitCase c)
+            throws IOException, XMLStreamException {
         w.writeStartElement("testcase");
         w.writeAttribute("classname", c.classname);
         w.writeAttribute("name", c.name);
@@ -207,7 +212,7 @@ public final class JunitXml {
         if (c.result != Result.PASSED) {
             w.writeStartElement(c.result.name().toLowerCase(Locale.ROOT));
             writeMessageAndType(w, c);
-            writeCData(w, c.body);
+            writeCData(w, c.body());
             w.writeEndElement();
         }
         String prefix = c.result == Result.PASSED ? "flaky" : "rerun";
@@ -215,7 +220,7 @@ public final class JunitXml {
             w.writeStartElement(prefix + (run.result == Result.ERROR ? "Error" : "Failure"));
             writeMessageAndType(w, run);
             w.writeStartElement("stackTrace");
-            writeCData(w, run.body);
+            writeCData(w, run.body());
             w.writeEndElement();
             w.writeEndElement();
         }

@@ -70,6 +70,8 @@ public class FeedbackFile implements Feedback {
 	JunitXml xml;
 	long xmlStartTime;
 	Map<String, List<JunitCase>> earlierRuns = new HashMap<String, List<JunitCase>>();
+	Map<String, JunitCase> lastRunsWaiting = new HashMap<String, JunitCase>();
+	Map<String, Integer> earlierRunsExpected = new HashMap<String, Integer>();
 
 	public FeedbackFile(Context context) {
 		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
@@ -212,20 +214,20 @@ public class FeedbackFile implements Feedback {
 			head = flag ? "[OK]: " : "[NOK]: " + Constants.RETRY_FLAG + " = " + retryCount;
 			if (flag) {
 				this.totalSuccNum++;
-				recordCase(testCase, JunitCase.passed(name, testCase, elapseTime));
+				recordCase(testCase, JunitCase.passed(name, testCase, elapseTime), retryCount);
 			} else {
 				this.totalFailNum++;
-				recordCase(testCase, failedRun(testCase, elapseTime, resultCont, envIdentify, isTimeOut, hasCore));
+				recordCase(testCase, failedRun(testCase, elapseTime, resultCont, envIdentify, isTimeOut, hasCore), retryCount);
 			}
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_MACRO)) {
 			head = "[SKIP_BY_MACRO]";
-			recordCase(testCase, new JunitCase(name, testCase, 0, JunitCase.Result.SKIPPED, "Skipped by macro", null, null));
+			recordCase(testCase, new JunitCase(name, testCase, 0, JunitCase.Result.SKIPPED, "Skipped by macro", null, null), 0);
 		} else if (skippedType.equals(Constants.SKIP_TYPE_BY_TEMP)) {
 			head = "[SKIP_BY_BUG]";
-			recordCase(testCase, new JunitCase(name, testCase, 0, JunitCase.Result.SKIPPED, "Skipped by bug", null, null));
+			recordCase(testCase, new JunitCase(name, testCase, 0, JunitCase.Result.SKIPPED, "Skipped by bug", null, null), 0);
 		} else {
 			head = "[UNKNOWN]";
-			recordCase(testCase, new JunitCase(name, testCase, elapseTime, JunitCase.Result.ERROR, "Unknown test status", "UnknownStatus", null));
+			recordCase(testCase, new JunitCase(name, testCase, elapseTime, JunitCase.Result.ERROR, "Unknown test status", "UnknownStatus", null), 0);
 		}
 
 		println(head + " " + testCase + " " + elapseTime + " " + envIdentify, resultCont, "");
@@ -387,18 +389,40 @@ public class FeedbackFile implements Feedback {
 	}
 
 	private synchronized void addEarlierRun(String testCase, JunitCase run) {
+		try {
+			run.moveBodyTo(new File(context.getCurrentLogDir(), "junit_reruns"));
+		} catch (IOException e) {
+			System.err.println("Error keeping a retried run's log in a file: " + e.getMessage());
+		}
 		List<JunitCase> runs = earlierRuns.get(testCase);
 		if (runs == null) {
 			runs = new ArrayList<JunitCase>();
 			earlierRuns.put(testCase, runs);
 		}
 		runs.add(run);
+		Integer expected = earlierRunsExpected.get(testCase);
+		if (expected != null && runs.size() >= expected) {
+			writeCase(testCase, lastRunsWaiting.remove(testCase));
+		}
+	}
+
+	// Dispatch hands out a retry before the run that failed reports it, so the last run can arrive
+	// first: it waits here until the earlier runs it counts (retryCount) have come.
+	private synchronized void recordCase(String testCase, JunitCase lastRun, int earlierRunCount) {
+		List<JunitCase> earlier = earlierRuns.get(testCase);
+		if ((earlier == null ? 0 : earlier.size()) < earlierRunCount) {
+			lastRunsWaiting.put(testCase, lastRun);
+			earlierRunsExpected.put(testCase, earlierRunCount);
+			return;
+		}
+		writeCase(testCase, lastRun);
 	}
 
 	// The last run is the case, earlier failed runs its flaky or rerun elements. Surefire makes the
 	// first failed run the case; the last is kept so gha-ci's summary shows the log of the run that
 	// decided the result.
-	private synchronized void recordCase(String testCase, JunitCase lastRun) {
+	private void writeCase(String testCase, JunitCase lastRun) {
+		earlierRunsExpected.remove(testCase);
 		List<JunitCase> earlier = earlierRuns.remove(testCase);
 		if (earlier != null) {
 			for (JunitCase run : earlier) {
@@ -420,6 +444,11 @@ public class FeedbackFile implements Feedback {
 			return;
 		}
 
+		synchronized (this) {
+			for (String testCase : new ArrayList<String>(lastRunsWaiting.keySet())) {
+				writeCase(testCase, lastRunsWaiting.remove(testCase));
+			}
+		}
 		try {
 			xmlSuite.setMillis(System.currentTimeMillis() - xmlStartTime);
 			xml.close();

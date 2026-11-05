@@ -25,6 +25,11 @@
  */
 package com.navercorp.cubridqa.common.junit;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +50,8 @@ public final class JunitCase {
     final Result result;
     final String message;
     final String type;
-    final String body;
+    private String body;
+    private File bodyFile;
     final List<JunitCase> reruns = new ArrayList<JunitCase>();
 
     /**
@@ -83,6 +89,43 @@ public final class JunitCase {
     public JunitCase addRerun(JunitCase run) {
         reruns.add(run);
         return this;
+    }
+
+    /**
+     * Moves the body to a file in {@code dir}, so a run kept until its case is written holds no log
+     * in memory. The writer reads the file back and deletes it.
+     */
+    public JunitCase moveBodyTo(File dir) throws IOException {
+        if (body == null || body.length() == 0) {
+            return this;
+        }
+        dir.mkdirs();
+        File f = File.createTempFile("body", ".txt", dir);
+        OutputStream out = new FileOutputStream(f);
+        try {
+            out.write(body.getBytes("UTF-8"));
+        } finally {
+            out.close();
+        }
+        bodyFile = f;
+        body = null;
+        return this;
+    }
+
+    String body() throws IOException {
+        if (bodyFile == null) {
+            return body;
+        }
+        return new String(Files.readAllBytes(bodyFile.toPath()), "UTF-8");
+    }
+
+    void deleteBodyFiles() {
+        if (bodyFile != null) {
+            bodyFile.delete();
+        }
+        for (JunitCase run : reruns) {
+            run.deleteBodyFiles();
+        }
     }
 
     static String directoryOf(String path) {
