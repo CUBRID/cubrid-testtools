@@ -103,13 +103,10 @@ public class FeedbackFile implements Feedback {
 
 	// The file opens before TestFactory installs the test build, so the name is settled when it closes.
 	// A test node that does not answer must not hold up the end of the task: after a minute the name stays as it is.
-	// The watchdog also drops the SSH session, whose JSch thread is not a daemon and would keep the JVM alive.
 	private void nameXmlByTestedBuild() {
-		final int lookupSecs = 60;
 		FutureTask<String> cubridRel = new FutureTask<String>(new Callable<String>() {
 			public String call() throws Exception {
 				SSHConnect ssh = ShellHelper.createFirstTestNodeConnect(context);
-				ssh.setReadTimeoutSecs(lookupSecs);
 				try {
 					return ssh.execute(new ShellScriptInput("cubrid_rel"));
 				} finally {
@@ -121,7 +118,7 @@ public class FeedbackFile implements Feedback {
 		lookup.setDaemon(true);
 		lookup.start();
 		try {
-			File named = new File(context.getCurrentLogDir(), xmlFileName(cubridRel.get(lookupSecs, TimeUnit.SECONDS)));
+			File named = new File(context.getCurrentLogDir(), xmlFileName(cubridRel.get(60, TimeUnit.SECONDS)));
 			File current = new File(xmlLogName);
 			if (named.getAbsolutePath().equals(current.getAbsolutePath())) {
 				return;

@@ -46,8 +46,8 @@ import name.fraser.neil.plaintext.UnifiedDiffUtil;
 /**
  * Writes a CircleCI-compatible JUnit-style XML at {@code <result dir>/<suite>.xml}, where {@code
  * <suite>} is {@code <os>_<testType>_<testBit>_<build type>} (e.g. {@code
- * linux_sql_64bit_optdebug}), the build type as {@code cubrid_rel} prints it. The build type is in
- * the file name too, so a report read on its own still says which build it judged.
+ * linux_sql_64bit_optdebug}), the build type as {@code cubrid_rel} prints it, a space as '-'. The
+ * build type is in the file name too, so a report read on its own still says which build it judged.
  *
  * <p>A case with no answer file did not run, so it is {@code skipped}.
  *
