@@ -38,9 +38,9 @@ import java.util.regex.Pattern;
 
 /**
  * Writes the JUnit XML of a CCI run ({@code sql/bin/run.sh} with {@code sql_interface_type=cci}).
- * The C runner {@code sql_by_cci/ccqt} writes no JUnit XML, only {@code summary.info} and copies of
- * the failed cases; this reads summary.info back into {@link CaseResult}s for {@link
- * JunitXmlWriter}, so the report has the JDBC runner's form.
+ * The C runner {@code sql_by_cci/ccqt} writes no JUnit XML; its result dir gets only {@code
+ * summary.info} and copies of the failed cases. This reads summary.info back into {@link
+ * CaseResult}s for {@link JunitXmlWriter}, so the report has the JDBC runner's form.
  *
  * <p>Usage: {@code CciJunitXml <result dir> <scenario> <test type> <test bit> <cubrid build> <log
  * id> <ccqt start ms> <ccqt end ms>}

@@ -57,8 +57,8 @@ import name.fraser.neil.plaintext.UnifiedDiffUtil;
  * remote.origin.url} + {@code rev-parse HEAD}, cached per repo root) and are silently omitted when
  * that metadata is unavailable.
  *
- * <p>All exceptions inside this writer are swallowed; failures are logged via {@code
- * LogUtil.log("ConsoleBO", ...)} so that the JUnit XML emission cannot break the test pipeline.
+ * <p>All exceptions inside this writer are swallowed; failures are logged to the caller's log via
+ * {@code LogUtil.log(logId, ...)} so that the JUnit XML emission cannot break the test pipeline.
  */
 public final class JunitXmlWriter {
 
