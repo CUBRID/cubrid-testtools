@@ -63,7 +63,7 @@ public class TestReader {
             }
             builder.append(sql);
 
-            // The runners take autocommit in any case and write no result block for it.
+            // The runners take autocommit on/off in any case and write no result block for it.
             if (sql.startsWith("--")
                     || sql.startsWith("$")
                     || sql.regionMatches(true, 0, "autocommit", 0, "autocommit".length())) {
