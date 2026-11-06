@@ -40,14 +40,14 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import name.fraser.neil.plaintext.UnifiedDiffUtil;
 
 /**
- * Writes a CircleCI-compatible JUnit-style XML at {@code ${test.getResult_dir()}/<target>.xml},
- * where {@code <target>} is {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}) — the
- * same file name and suite label the legacy entrypoint produced.
+ * Writes a CircleCI-compatible JUnit-style XML at {@code <result dir>/<suite>.xml}, where {@code
+ * <suite>} is {@code <os>_<testType>_<testBit>_<build type>} (e.g. {@code
+ * linux_sql_64bit_optdebug}), the build type as {@code cubrid_rel} prints it, a space as '-'. The
+ * build type is in the file name too, so a report read on its own still says which build it judged.
  *
  * <p>A case with no answer file did not run, so it is {@code skipped}.
  *
@@ -57,8 +57,8 @@ import name.fraser.neil.plaintext.UnifiedDiffUtil;
  * remote.origin.url} + {@code rev-parse HEAD}, cached per repo root) and are silently omitted when
  * that metadata is unavailable.
  *
- * <p>All exceptions inside this writer are swallowed; failures are logged via {@code
- * LogUtil.log("ConsoleBO", ...)} so that the JUnit XML emission cannot break the test pipeline.
+ * <p>All exceptions inside this writer are swallowed; failures are logged to the caller's log via
+ * {@code LogUtil.log(logId, ...)} so that the JUnit XML emission cannot break the test pipeline.
  */
 public final class JunitXmlWriter {
 
@@ -72,26 +72,18 @@ public final class JunitXmlWriter {
     // too: it means git metadata was unavailable and the URL header is skipped for that repo.
     private static final Map<String, String> BASE_URL_CACHE = new HashMap<String, String>();
 
-    // Cached cubrid_rel build mode ("release"|"debug"). Guarded by detectBuildMode().
-    private static String BUILD_MODE;
+    // Cached build type from cubrid_rel. Guarded by detectBuildType().
+    private static String BUILD_TYPE;
 
     private JunitXmlWriter() {}
 
     /**
-     * Single entry point. The suite ran {@code suiteMillis} from {@code suiteStart} (epoch ms).
-     * Never throws — all exceptions are caught and logged.
+     * Entry point of the JDBC runner. The suite ran {@code suiteMillis} from {@code suiteStart}
+     * (epoch ms). Never throws — all exceptions are caught and logged.
      */
     public static void write(Test test, String logId, long suiteStart, long suiteMillis) {
         try {
             if (test == null) {
-                return;
-            }
-            String resultDir = test.getResult_dir();
-            if (resultDir == null || resultDir.length() == 0) {
-                return;
-            }
-            String testType = test.getTestType();
-            if (testType == null || testType.length() == 0) {
                 return;
             }
             if (test.getRunMode() != Test.MODE_RESULT) {
@@ -99,29 +91,72 @@ public final class JunitXmlWriter {
                 // report from MODE_MAKE_ANSWER/MODE_RUN would show every case as passed.
                 return;
             }
-            String target = pickTarget(test);
-            String buildMode = detectBuildMode();
-
             List<CaseResult> emitted = new ArrayList<CaseResult>();
             walk(test.getSummary(), emitted);
 
-            JunitSuite suite = new JunitSuite(target + "_" + buildMode, suiteStart);
-            suite.setMillis(suiteMillis);
-            suite.addProperty("category", testType);
-            suite.addProperty("os", SystemUtil.getOS());
-            suite.addProperty("bits", test.getTestBit());
-            suite.addProperty("build_mode", buildMode);
             String version = test.getDbVersion();
             String build = test.getDbBuild();
             // run.sh splits cubrid_rel's version in two; joined, they equal shell's cubrid_build
-            if (!CommonUtils.isEmpty(version) && !CommonUtils.isEmpty(build)) {
-                suite.addProperty("cubrid_build", version + "." + build);
+            String cubridBuild =
+                    !CommonUtils.isEmpty(version) && !CommonUtils.isEmpty(build)
+                            ? version + "." + build
+                            : null;
+            write(
+                    test.getResult_dir(),
+                    test.getTestType(),
+                    test.getTestBit(),
+                    cubridBuild,
+                    emitted,
+                    logId,
+                    suiteStart,
+                    suiteMillis);
+        } catch (Throwable t) {
+            LogUtil.log(
+                    logId,
+                    "[JunitXmlWriter] write failed: "
+                            + t.getClass().getName()
+                            + ": "
+                            + t.getMessage());
+        }
+    }
+
+    /**
+     * Writes {@code <resultDir>/<suite>.xml} for the given cases. The suite ran {@code suiteMillis}
+     * from {@code suiteStart} (epoch ms). Never throws.
+     */
+    public static void write(
+            String resultDir,
+            String testType,
+            String testBit,
+            String cubridBuild,
+            List<CaseResult> cases,
+            String logId,
+            long suiteStart,
+            long suiteMillis) {
+        try {
+            if (resultDir == null || resultDir.length() == 0) {
+                return;
             }
-            File outFile = new File(resultDir, target + ".xml");
+            if (testType == null || testType.length() == 0) {
+                return;
+            }
+            String buildType = detectBuildType();
+            String suiteName = pickTarget(testType, testBit) + "_" + buildType;
+
+            JunitSuite suite = new JunitSuite(suiteName, suiteStart);
+            suite.setMillis(suiteMillis);
+            suite.addProperty("category", testType);
+            suite.addProperty("os", SystemUtil.getOS());
+            suite.addProperty("bits", testBit);
+            suite.addProperty("build_type", buildType);
+            if (!CommonUtils.isEmpty(cubridBuild)) {
+                suite.addProperty("cubrid_build", cubridBuild);
+            }
+            File outFile = new File(resultDir, suiteName + ".xml");
             JunitXml xml = new JunitXml(outFile, suite);
             boolean closed = false;
             try {
-                for (CaseResult cr : emitted) {
+                for (CaseResult cr : cases) {
                     xml.add(toCase(cr, logId));
                 }
                 xml.close();
@@ -136,7 +171,7 @@ public final class JunitXmlWriter {
                     "[JunitXmlWriter] wrote "
                             + outFile.getAbsolutePath()
                             + " (tests="
-                            + emitted.size()
+                            + cases.size()
                             + ")");
         } catch (Throwable t) {
             LogUtil.log(
@@ -205,15 +240,14 @@ public final class JunitXmlWriter {
     }
 
     /**
-     * Suite/file label identical to the one the legacy entrypoint derived from the schedule
+     * Suite label prefix identical to the one the legacy entrypoint derived from the schedule
      * result-directory name: {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}).
      * Built from the same values {@code TestUtil.getTestId} uses to compose that directory name. An
      * unset testBit is skipped (defensive; the CQT agent entry points always set it).
      */
-    private static String pickTarget(Test test) {
+    private static String pickTarget(String testType, String bit) {
         StringBuilder sb = new StringBuilder(SystemUtil.getOS());
-        sb.append('_').append(test.getTestType());
-        String bit = test.getTestBit();
+        sb.append('_').append(testType);
         if (bit != null && bit.length() > 0) {
             sb.append('_').append(bit);
         }
@@ -320,29 +354,26 @@ public final class JunitXmlWriter {
     }
 
     /**
-     * Current CUBRID build mode ("release"|"debug") from {@code cubrid_rel} output — the same check
-     * as the legacy entrypoint's {@code cubrid_rel | grep -oe 'release\|debug'}. The exit code is
-     * deliberately not checked: cubrid_rel may exit non-zero in some environments while still
-     * printing a valid banner, and the content check is what matters.
+     * Current CUBRID build type from {@code cubrid_rel} output (e.g. "optdebug", "coverage-debug").
+     * The exit code is deliberately not checked: cubrid_rel may exit non-zero in some environments
+     * while still printing a valid banner, and the content check is what matters.
      *
-     * @throws RuntimeException if cubrid_rel cannot be invoked or names neither mode.
+     * @throws RuntimeException if cubrid_rel cannot be invoked or prints no build type.
      */
-    private static synchronized String detectBuildMode() {
-        if (BUILD_MODE != null) {
-            return BUILD_MODE;
+    private static synchronized String detectBuildType() {
+        if (BUILD_TYPE != null) {
+            return BUILD_TYPE;
         }
         String out = runCommand(false, "cubrid_rel");
         if (out == null) {
             throw new RuntimeException("cubrid_rel invocation failed");
         }
-        String lower = out.toLowerCase(Locale.ROOT);
-        boolean debug = lower.contains("debug");
-        if (!debug && !lower.contains("release")) {
-            throw new RuntimeException(
-                    "cubrid_rel output contained neither 'release' nor 'debug': " + out);
+        String[] build = CommonUtils.parseCubridRel(out);
+        if (build == null) {
+            throw new RuntimeException("cubrid_rel output has no build type: " + out);
         }
-        BUILD_MODE = debug ? "debug" : "release";
-        return BUILD_MODE;
+        BUILD_TYPE = build[1];
+        return BUILD_TYPE;
     }
 
     /** Entire UTF-8 content of the file. Errors propagate to buildFailureCdata's guard. */

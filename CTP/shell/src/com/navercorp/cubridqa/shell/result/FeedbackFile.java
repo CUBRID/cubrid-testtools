@@ -35,6 +35,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 import com.jcraft.jsch.JSchException;
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
@@ -81,9 +84,54 @@ public class FeedbackFile implements Feedback {
 	public FeedbackFile(Context context) {
 		logName = CommonUtils.concatFile(context.getCurrentLogDir(), "feedback.log");
 		statusLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test_status.data");
-		xmlLogName = CommonUtils.concatFile(context.getCurrentLogDir(), "test-" + context.getTestCategory() + ".xml");
 		rerunLogDir = new File(context.getCurrentLogDir(), "junit_reruns");
 		this.context = context;
+		xmlLogName = CommonUtils.concatFile(context.getCurrentLogDir(), xmlFileName(null));
+	}
+
+	// <os>_<category>_<bits>_<build type>.xml (e.g. linux_shell_64bit_optdebug.xml), the name form of the SQL runner's report.
+	// Bits and build type come only from cubrid_rel of the tested build.
+	private String xmlFileName(String cubridRel) {
+		StringBuilder sb = new StringBuilder(context.isWindows() ? "windows" : "linux");
+		sb.append('_').append(context.getTestCategory());
+		String[] build = com.navercorp.cubridqa.common.CommonUtils.parseCubridRel(cubridRel);
+		if (build != null) {
+			sb.append('_').append(build[0]).append('_').append(build[1]);
+		}
+		return sb.append(".xml").toString();
+	}
+
+	// The file opens before TestFactory installs the test build, so the name is settled when it closes.
+	// A test node that does not answer must not hold up the end of the task: after a minute the name stays as it is.
+	private void nameXmlByTestedBuild() {
+		FutureTask<String> cubridRel = new FutureTask<String>(new Callable<String>() {
+			public String call() throws Exception {
+				SSHConnect ssh = ShellHelper.createFirstTestNodeConnect(context);
+				try {
+					return ssh.execute(new ShellScriptInput("cubrid_rel"));
+				} finally {
+					ssh.close();
+				}
+			}
+		});
+		Thread lookup = new Thread(cubridRel, "xml-name-lookup");
+		lookup.setDaemon(true);
+		lookup.start();
+		try {
+			File named = new File(context.getCurrentLogDir(), xmlFileName(cubridRel.get(60, TimeUnit.SECONDS)));
+			File current = new File(xmlLogName);
+			if (named.getAbsolutePath().equals(current.getAbsolutePath())) {
+				return;
+			}
+			if (current.renameTo(named)) {
+				xmlLogName = named.getPath();
+			} else {
+				System.err.println("Error naming XML file by cubrid_rel: cannot rename " + current + " to " + named);
+			}
+		} catch (Exception e) {
+			cubridRel.cancel(true);
+			System.err.println("Error naming XML file by cubrid_rel: " + e);
+		}
 	}
 
 	@Override
@@ -473,6 +521,7 @@ public class FeedbackFile implements Feedback {
 			xml = null;
 			xmlSuite = null;
 		}
+		nameXmlByTestedBuild();
 	}
 
 	private String extractRelativePath(String testCase) {
