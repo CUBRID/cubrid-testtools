@@ -133,10 +133,13 @@ function rerun_log() {
     echo "[RERUN] $(date '+%Y-%m-%d %H:%M:%S') $*"
 }
 
-# rerun_on_exit <command string>: run it when the runner subshell exits (staging and node cleanup).
+# rerun_on_exit <command string>: run it when the runner subshell exits (staging and node cleanup; newest first).
+# It is also kept in on_exit.cmds, so run_rerun.sh can finish it when a cancel kills the runner during its cleanup
+# (rerun_on_exit_leftovers): every command is a single line that can run twice.
 function rerun_on_exit() {
     RERUN_CLEANUP_CMDS="$1
 $RERUN_CLEANUP_CMDS"
+    printf '%s\n' "$1" >> "$RERUN_FAM_WORK/on_exit.cmds"
 }
 
 function rerun_cleanup() {
@@ -148,6 +151,21 @@ function rerun_cleanup() {
 $RERUN_CLEANUP_CMDS
 EOF
     RERUN_CLEANUP_CMDS=""
+    rm -f "$RERUN_FAM_WORK/on_exit.cmds"
+}
+
+# rerun_on_exit_leftovers <family work dir>: run_rerun.sh, after stopping a runner: the cleanup commands it did not
+# finish (put the case scripts back, remove the node dirs), newest first. Each is bounded by its own remote timeout.
+function rerun_on_exit_leftovers() {
+    local f=$1/on_exit.cmds cmd
+    [ -s "$f" ] || return 0
+    { set +x; } 2>/dev/null
+    RERUN_TAG=${RERUN_TAG:-$(basename "$RERUN_WORK")}
+    echo "[RERUN] finishing the cleanup of the stopped runner ($(wc -l < "$f") step(s))"
+    tac "$f" | while IFS= read -r cmd; do
+        [ -n "$cmd" ] && eval "$cmd" >/dev/null 2>&1
+    done
+    rm -f "$f"
 }
 
 #######################################################################################################
@@ -673,80 +691,95 @@ function rerun_save_runtime_logs() {
     done
 }
 
-# rerun_junit_verdicts <junit xml>: "file<TAB>PASS|FAIL|SKIP|ERROR" per <testcase> of a CTP FeedbackFile
-# test-<category>.xml (one child element: none = pass, failure, skipped or error). CDATA is skipped and
-# quoted attribute values may hold '>' (JDBC ids look like 'X.java => m()').
-function rerun_junit_verdicts() {
+# rerun_junit_xml <current_runtime_logs dir>: the harness's JUnit XML there: <os>_<category>_<bits>_<build type>.xml
+# (<os>_<category>.xml while the tested build is unknown), test-<category>.xml from a CTP before that name.
+function rerun_junit_xml() {
+    local f
+    for f in "$1"/linux_${BUILD_SCENARIOS}_[0-9]*bit_*.xml "$1/linux_${BUILD_SCENARIOS}.xml" "$1/test-${BUILD_SCENARIOS}.xml"; do
+        [ -f "$f" ] && { echo "$f"; return; }
+    done
+    echo "$1/linux_${BUILD_SCENARIOS}.xml"
+}
+
+# rerun_junit_scan <junit xml> [file attribute]: without a file, "file<TAB>PASS|FAIL|SKIP|ERROR" per <testcase>
+# of a CTP JUnit XML (its first failure, error or skipped child sets the verdict; flaky/rerun children of earlier
+# attempts do not); with one, that case's raw <testcase> element (evidence). The XML is read as a stream of
+# tags, whatever its line breaks: '<' never appears unescaped in an attribute, so each record of RS="<" starts at
+# a tag, or inside CDATA, which can hold anything (even "<testcase") and is skipped. Quoted attribute values may
+# hold '>' (JDBC ids look like 'X.java => m()').
+function rerun_junit_scan() {
     [ -f "$1" ] || return 0
-    awk '
+    awk -v RS="<" -v want="$2" -v block="${2:+1}" '
         function unesc(v) {
             gsub(/&quot;/, "\"", v); gsub(/&apos;/, "\047", v); gsub(/&lt;/, "<", v); gsub(/&gt;/, ">", v); gsub(/&amp;/, "\\&", v)
             return v
         }
-        function attr(s, name,   p, rest, q) {
+        function attr(s, name,   p, rest) {
             p = index(s, " " name "=\""); if (p == 0) return ""
-            rest = substr(s, p + length(name) + 3); q = index(rest, "\"")
-            return unesc(substr(rest, 1, q - 1))
+            rest = substr(s, p + length(name) + 3)
+            return unesc(substr(rest, 1, index(rest, "\"") - 1))
         }
-        # end of the start tag beginning at s: index of its closing ">" (quotes respected), 0 if not on this line
-        function tag_end(s,   i, c, inq) {
-            inq = 0
-            for (i = 1; i <= length(s); i++) {
-                c = substr(s, i, 1)
+        # the record starts with element "name": "<name " "<name>" "<name/>" (or a line break after the name)
+        function is_el(name,   c) {
+            if (substr($0, 1, length(name)) != name) return 0
+            c = substr($0, length(name) + 1, 1)
+            return c == " " || c == ">" || c == "/" || c == "\t" || c == "\n" || c == "\r"
+        }
+        # end of the tag the record starts with: index of its ">" (quotes respected)
+        function tag_end(   i, c, inq) {
+            for (i = 1; i <= length($0); i++) {
+                c = substr($0, i, 1)
                 if (c == "\"") inq = !inq
                 else if (c == ">" && !inq) return i
             }
-            return 0
+            return length($0)
         }
-        function emit() { if (cur != "") print cur "\t" st; cur = "" }
-        function handle(h,   p, e) {
-            p = index(h, "<testcase ")
-            if (p > 0) {
-                emit()
-                h = substr(h, p); cur = attr(h, "file"); st = "PASS"
-                e = tag_end(h)
-                if (e > 0) {
-                    if (substr(h, e - 1, 1) == "/") { emit(); return }
-                    h = substr(h, e + 1)
-                } else {
-                    return
-                }
+        function done(text) {
+            if (block) {
+                if (cur == want) { printf "%s\n", buf (text == "" ? "" : "<" text); exit }
+            } else if (cur != "") {
+                print cur "\t" st
             }
-            if (cur == "") return
-            if (st == "PASS") {
-                if (index(h, "<failure") > 0) st = "FAIL"
-                else if (index(h, "<skipped") > 0) st = "SKIP"
-                else if (index(h, "<error") > 0) st = "ERROR"
-            }
-            if (index(h, "</testcase>") > 0) emit()
+            incase = 0; buf = ""
         }
+        NR == 1 { next }
+        incdata {
+            if (block && incase) buf = buf "<" $0
+            if (index($0, "]]>") > 0) incdata = 0
+            next
+        }
+        substr($0, 1, 8) == "![CDATA[" {
+            if (block && incase) buf = buf "<" $0
+            if (index(substr($0, 9), "]]>") == 0) incdata = 1
+            next
+        }
+        is_el("testcase") {
+            if (incase) done("")
+            e = tag_end(); tag = substr($0, 1, e)
+            cur = attr(tag, "file"); st = "PASS"; incase = 1; buf = ""
+            if (substr(tag, e - 1, 1) == "/") { done(tag); next }
+            if (block) buf = "<" $0
+            next
+        }
+        !incase { next }
+        substr($0, 1, 10) == "/testcase>" { done("/testcase>"); next }
         {
-            s = $0
-            while (s != "") {
-                if (incdata) {
-                    p = index(s, "]]>"); if (p == 0) { s = ""; break }
-                    s = substr(s, p + 3); incdata = 0; continue
-                }
-                p = index(s, "<![CDATA[")
-                if (p > 0) { head = substr(s, 1, p - 1); s = substr(s, p + 9); incdata = 1 } else { head = s; s = "" }
-                handle(head)
+            if (block) buf = buf "<" $0
+            if (st == "PASS") {
+                if (is_el("failure")) st = "FAIL"
+                else if (is_el("error")) st = "ERROR"
+                else if (is_el("skipped")) st = "SKIP"
             }
-        }' "$1"
+        }
+        END { if (incase && !block) done("") }' "$1"
 }
 
-# rerun_junit_block <junit xml> <file attribute>: the raw <testcase> element of one case (evidence).
+function rerun_junit_verdicts() {
+    rerun_junit_scan "$1"
+}
+
 function rerun_junit_block() {
-    [ -f "$1" ] || return 0
-    awk -v want="$2" '
-        function unesc(v) {
-            gsub(/&quot;/, "\"", v); gsub(/&apos;/, "\047", v); gsub(/&lt;/, "<", v); gsub(/&gt;/, ">", v); gsub(/&amp;/, "\\&", v)
-            return v
-        }
-        !on && index($0, "<testcase ") > 0 {
-            s = substr($0, index($0, " file=\"") + 7); f = unesc(substr(s, 1, index(s, "\"") - 1))
-            if (f == want) { on = 1; print; if (index($0, "</testcase>") > 0 || $0 ~ /\/>[ \t]*$/) exit; next }
-        }
-        on { print; if ($0 ~ /^[ \t]*<\/testcase>/) exit }' "$1"
+    rerun_junit_scan "$1" "$2"
 }
 
 #######################################################################################################
