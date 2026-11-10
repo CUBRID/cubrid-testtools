@@ -40,7 +40,7 @@
 #      discovers and runs only them; the checkout's jdbc.properties and lib/ are left untouched;
 #   4. [common] scenario points at the stage, feedback_type=file, no notice URL, no feedback DB keys; one ctp.sh jdbc
 #      run under a timeout;
-#   5. verdict per requested method from result/jdbc/current_runtime_logs/test-<cat>.xml (<testcase file="<stage>/src/
+#   5. verdict per requested method from the JUnit XML in result/jdbc/current_runtime_logs (rerun_junit_xml) (<testcase file="<stage>/src/
 #      ...java => m()">: no child = PASS, <failure> = FAIL), else the console line "[TESTCASE]: <file> => m() =>
 #      OK|NOK"; neither = ERROR. A class or method absent is ERROR "case not found at <where> (<commit>)".
 #
@@ -196,16 +196,16 @@ function rerun_jdbc() {
     rerun_save_log "$log" harness/harness.log
     rerun_save_runtime_logs jdbc
 
-    # verdicts: test-<cat>.xml, console line as fallback
-    xml=${CTP_HOME}/result/jdbc/current_runtime_logs/test-${BUILD_SCENARIOS}.xml
+    # verdicts: the JUnit XML, console line as fallback
+    xml=$(rerun_junit_xml "${CTP_HOME}/result/jdbc/current_runtime_logs")
     vfile=$RERUN_FAM_WORK/verdicts.tsv
     {
-        grep '^\[TESTCASE\]: ' "$log" | awk -v pre="$stage/" '{
+        grep '^\[TESTCASE\]: ' "$log" | awk -v pre="$stage/" -v xmlname="${xml##*/}" '{
             line = substr($0, 13); p = index(line, pre); if (p != 1) next
             line = substr(line, length(pre) + 1)
             n = split(line, a, " => "); if (n < 3) next
             st = (a[n] == "OK") ? "PASS" : ((a[n] == "NOK") ? "FAIL" : "ERROR")
-            print a[1] " => " a[2] "\t" st "\t" (st == "FAIL" ? "JUnit failure; " : "") "verdict from the harness console (test-xml has none)"
+            print a[1] " => " a[2] "\t" st "\t" (st == "FAIL" ? "JUnit failure; " : "") "verdict from the harness console (" xmlname " has none)"
         }'
         rerun_junit_verdicts "$xml" | awk -F'\t' -v pre="$stage/" '{
             if (index($1, pre) != 1) next

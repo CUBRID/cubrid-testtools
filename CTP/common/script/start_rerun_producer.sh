@@ -27,7 +27,7 @@
 # writes to qaresu.verify_rerun_batch as messages on RERUN_<queue> (see RerunProducer).
 #
 # Usage: start_rerun_producer.sh              # loop in the background, PID in conf/rerun_producer_PID
-#        start_rerun_producer.sh --once       # one pass in the foreground (cron); exit status 1 if it failed
+#        start_rerun_producer.sh --once       # one pass in the foreground (cron); exit status 1 if the pass or a request failed
 #        start_rerun_producer.sh --dry-run --once
 #        start_rerun_producer.sh --stop       # stop the background loop
 # Reads conf/common.conf, conf/producer.conf and the optional conf/rerun.conf of this CTP.

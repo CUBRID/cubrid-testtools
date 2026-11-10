@@ -172,6 +172,13 @@ function rerun_upload_runner_log() {
     rm -rf "$dir"
 }
 
+# The stop gives the runner 30 s, and its own cleanup (putting the case scripts back on each node, removing the node
+# dirs) can take longer: what it did not finish runs here, outside the process groups the stop kills.
+function rerun_finish_runner_cleanup() {
+    [ -n "$family" ] && type rerun_on_exit_leftovers > /dev/null 2>&1 || return 0
+    rerun_on_exit_leftovers "${RERUN_WORK}/${family}"
+}
+
 # The family work dir holds raw harness logs, conf copies with passwords and the secrets list: drop it, and
 # keep only the newest RERUN_KEEP_BATCHES batch dirs.
 function rerun_tidy() {
@@ -184,15 +191,19 @@ function rerun_tidy() {
 
 function rerun_main_exit() {
     local killed=0
+    # a second signal must not cut the steps below short; each of them is bounded
+    trap '' TERM INT HUP
     if [ -n "$runner_pid" ]; then
         # killed before the runner ended (TERM/INT/HUP, or an error): stop the harness before closing the batch
         rerun_stop_runner
         killed=1
+    fi
+    rerun_finish_runner_cleanup
+    if [ $killed -eq 1 ]; then
         # masked with the secrets list, which rerun_tidy removes
         rerun_publish_runner_log
     fi
-    # before the calls that can take minutes: a second signal ends this trap at once, and must not leave the
-    # secrets behind
+    # before the calls that can take minutes, so a KILL there leaves no secrets behind
     rerun_tidy
     rerun_finish "rerun runner on ${USER}@$(hostname) exited before reporting every case"
     if [ $killed -eq 1 ]; then
@@ -272,6 +283,7 @@ if [ -n "$family" -a -f "$runner" ]; then
             CANCEL*)
                 echo "[RERUN] batch ${RERUN_BATCH_ID}: ${poll}; stopping the harness"
                 rerun_stop_runner
+                rerun_finish_runner_cleanup
                 rerun_publish_runner_log
                 cat "$RERUN_LOG_ROOT/runner.log"
                 # The cancel (or timeout) already closed the batch and its cases in QAHome: nothing to report,

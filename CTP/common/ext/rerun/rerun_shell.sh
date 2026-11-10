@@ -38,8 +38,8 @@
 #      updated with run_git_update under a timeout, the branch is verified and the commit read; every further
 #      env is pinned to the first env's commit (git reset --hard), so the batch runs one commit;
 #   4. cases run in place (they source ../../common files and init_path helpers): one harness run with the
-#      template's scenario and testcase_exclude_from_file = every discovered case except the requested ones
-#      (same find as Dispatch, run on the env; the substring match cannot hit a requested case), written to
+#      template's scenario and testcase_exclude_from_file = the highest directories (else cases) that hold no
+#      requested case (same find as Dispatch, run on the env; no entry matches inside a requested path), written to
 #      $HOME/ctp_rerun_work/<batch>/exclude.txt on every kept env. testcase_update_yn=false (already updated),
 #      testcase_workspace_dir removed (it would copy the cases elsewhere), feedback_type=file, no notice URL, no
 #      feedback DB keys, testcase_retry_num=0, test_continue_yn=false, delete_testcase_after_each_execution_yn=false;
@@ -47,7 +47,7 @@
 #      rerun_common.sh): copies of the text files it writes in its cases/ directory (those it removes, and those
 #      it left at exit; inputs older than the script are skipped) come back under <rerunId>/capture/; the scripts
 #      are put back right after the harness;
-#   5. verdict per case from result/shell/current_runtime_logs/test-<cat>.xml (<testcase file=...>: no child =
+#   5. verdict per case from the JUnit XML in result/shell/current_runtime_logs (rerun_junit_xml) (<testcase file=...>: no child =
 #      PASS, <failure> = FAIL, <skipped> = ERROR "skipped at HEAD", <error> = ERROR); when the XML has no element
 #      (harness killed before it closed the file) the console line "[TESTCASE] <file> EnvId=<id> [OK|NOK]" is used;
 #      neither = ERROR. The case log holds the XML element (result items, console output), the worker-log section
@@ -160,7 +160,35 @@ echo "RERUN_REL=$rel"
 cd
 find "$rel" -name "*.sh" -type f -print | xargs -i echo {} | awk -F "/" '{ if( $(NF-2)".sh"== $NF) print }' > "$W/all.txt"
 awk -v rel="$rel" 'NF > 0 { print rel "/" $0 }' "$W/requested.txt" > "$W/requested_full.txt"
-awk 'FILENAME == ARGV[1] { want[$0] = 1; next } !($0 in want)' "$W/requested_full.txt" "$W/all.txt" > "$W/exclude.txt"
+# Exclude the highest directory that holds no requested case, else the case itself: Dispatch matches each entry
+# against every case left, so one line per unrequested case would cost about N*N/2 matches on a large tree. It
+# matches an entry anywhere in a path, so an entry found inside a requested case's path is split further.
+awk '
+    FILENAME == ARGV[1] {
+        if ($0 == "") next
+        req[++nr] = $0 "/"; want[$0] = 1
+        n = split($0, p, "/"); d = p[1]; keep[d] = 1
+        for (i = 2; i < n; i++) { d = d "/" p[i]; keep[d] = 1 }
+        next
+    }
+    $0 != "" && !($0 in want) { all[++na] = $0 }
+    END {
+        do {
+            changed = 0; ne = 0; split("", seen)
+            for (k = 1; k <= na; k++) {
+                n = split(all[k], p, "/"); d = p[1]; e = all[k] "/"
+                if (!(d in keep)) e = d "/"
+                else for (i = 2; i < n; i++) { d = d "/" p[i]; if (!(d in keep)) { e = d "/"; break } }
+                if (!(e in seen)) { seen[e] = 1; ent[++ne] = e }
+            }
+            for (j = 1; j <= ne; j++) for (r = 1; r <= nr; r++) {
+                if (index(req[r], ent[j]) == 0) continue
+                d = substr(ent[j], 1, length(ent[j]) - 1)
+                if (!(d in keep)) { keep[d] = 1; changed = 1 }
+            }
+        } while (changed)
+        for (j = 1; j <= ne; j++) print ent[j]
+    }' "$W/requested_full.txt" "$W/all.txt" > "$W/exclude.txt"
 awk -v rel="$rel" 'FILENAME == ARGV[1] { have[$0] = 1; next } { print (($0 in have) ? "RERUN_FOUND " : "RERUN_MISSING ") substr($0, length(rel) + 2) }' "$W/all.txt" "$W/requested_full.txt"
 echo "RERUN_TOTAL=$(wc -l < "$W/all.txt")"
 echo "RERUN_EXCLUDED=$(wc -l < "$W/exclude.txt")"
@@ -239,8 +267,8 @@ EOF
         rerun_capture_collect "$conf" "$id"
     done
 
-    # verdicts: test-<cat>.xml first, the console line as fallback
-    xml=${CTP_HOME}/result/shell/current_runtime_logs/test-${BUILD_SCENARIOS}.xml
+    # verdicts: the JUnit XML first, the console line as fallback
+    xml=$(rerun_junit_xml "${CTP_HOME}/result/shell/current_runtime_logs")
     raw=$RERUN_FAM_WORK/verdicts_raw.tsv
     vfile=$RERUN_FAM_WORK/verdicts.tsv
     files=$RERUN_FAM_WORK/files.tsv

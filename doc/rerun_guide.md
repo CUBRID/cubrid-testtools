@@ -26,7 +26,8 @@ start_consumer.sh (every consumer of the original queue)
 * The rerun message is a copy of the message that started the original run: same build package,
   build type, `MKEY_CONFIG` and testcase branch. The original is the run's own message when the run
   recorded it (`resultstat.qacomment`, sql family), else the message consumed last before the run ended,
-  so a later manual resend is not taken for it. Its `BUILD_GENERATE_MSG_WAY` is `RERUN` and it carries
+  so a later manual resend is not taken for it. It must come from a queue of the run's platform (a queue
+  name with `WIN` or `AIX` serves that platform, any other Linux); without one the request is an error. Its `BUILD_GENERATE_MSG_WAY` is `RERUN` and it carries
   `MKEY_RERUN_BATCH_ID`, `MKEY_RERUN_TOKEN`, `MKEY_RERUN_FEEDBACK_URL`, `MKEY_RERUN_LOG_DIR`,
   `MKEY_RERUN_CASE_COUNT`. The producer makes the token when it claims the request; qaresu keeps only
   its SHA-256 and the `msg_sended` copy has it masked. The consumer passes it to QAHome on curl's stdin,
@@ -67,12 +68,13 @@ start_consumer.sh (every consumer of the original queue)
 * A rerun can be cancelled from QAHome (the `in progress` cell opens its details). While the harness
   runs, `run_rerun.sh` asks `rerun.nhn?m=rerunPoll` every `RERUN_POLL_SECONDS` (60); on `CANCEL` it
   kills the runner's process group and the process groups of the steps it runs under `timeout` (TERM, then
-  KILL after 30 s), uploads only its runner log (`<batch id>/runner.log`, which QAHome's rerun details link)
-  and exits without reporting. CUBRID servers the harness started, and processes already
+  KILL after 30 s), then finishes the runner's own cleanup that the stop cut short (putting the case scripts
+  back on the nodes, removing the node dirs), uploads only its runner log (`<batch id>/runner.log`, which
+  QAHome's rerun details link) and exits without reporting. CUBRID servers the harness started, and processes already
   started on remote worker nodes, are left to the harness's next cleanup, as after a daily run.
 * Killing `run_rerun.sh` itself (TERM, INT or HUP) closes the request in QAHome with its unreported cases
-  as `error`; while the harness runs, it first stops the harness the same way, and uploads its runner log
-  after.
+  as `error`; while the harness runs, it first stops the harness and finishes its cleanup the same way, and
+  uploads its runner log after. Further TERM / INT / HUP signals are ignored until it is done.
 * A consumer takes at most one rerun message of a queue before that queue's regular poll, so a
   rerun waits only for the run already in progress on the node. An interrupted rerun is not resumed
   (no continue mode). A request that stays in one stage longer than QAHome's `rerun.timeout.hours` (24) - not
