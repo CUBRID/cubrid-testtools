@@ -39,6 +39,8 @@ class LineScanner {
         substate = Substate.INITIAL;
         plcsqlBeginEndBalance = 0;
         plcsqlNestLevel = 0;
+        plcsqlLocalBlockState = LocalBlockState.NORMAL;
+        plcsqlRoutineParamParenBalance = 0;
     }
 
     boolean isStatementEnd() {
@@ -151,6 +153,7 @@ class LineScanner {
                                 substate = Substate.INITIAL;
                                 plcsqlBeginEndBalance = 0;
                                 plcsqlNestLevel = 0;
+                                plcsqlLocalBlockState = LocalBlockState.NORMAL;
                             }
                             break;
 
@@ -253,6 +256,9 @@ class LineScanner {
                             || (d = matchWordCI(line, "function", i)) >= 0) {
                         substate = Substate.EXPECTING_IS_OR_AS;
                         return d;
+                    } else if ((d = matchWordCI(line, "package", i)) >= 0) {
+                        substate = Substate.EXPECTING_IS_OR_AS_OF_PACKAGE;
+                        return d;
                     } else {
                         substate = Substate.INITIAL;
                     }
@@ -273,6 +279,9 @@ class LineScanner {
                             || (d = matchWordCI(line, "function", i)) >= 0) {
                         substate = Substate.EXPECTING_IS_OR_AS;
                         return d;
+                    } else if ((d = matchWordCI(line, "package", i)) >= 0) {
+                        substate = Substate.EXPECTING_IS_OR_AS_OF_PACKAGE;
+                        return d;
                     } else {
                         substate = Substate.INITIAL;
                     }
@@ -288,6 +297,19 @@ class LineScanner {
                     }
                     break;
 
+                case EXPECTING_IS_OR_AS_OF_PACKAGE:
+                    if ((d = matchWordCI(line, "is", i)) >= 0
+                            || (d = matchWordCI(line, "as", i)) >= 0) {
+                        substate = Substate.PLCSQL_TEXT;
+                        plcsqlBeginEndBalance = 0;
+                        plcsqlNestLevel = 0;
+                        plcsqlLocalBlockState = LocalBlockState.NORMAL;
+                        return d;
+                    } else {
+                        // keep the substate Substate.EXPECTING_IS_OR_AS_OF_PACKAGE
+                    }
+                    break;
+
                 case PL_LANG_SPEC:
                     d = matchWordCI(line, "language", i);
                     if (d >= 0) {
@@ -297,6 +319,7 @@ class LineScanner {
                         substate = Substate.PLCSQL_TEXT;
                         plcsqlBeginEndBalance = 0;
                         plcsqlNestLevel = 0;
+                        plcsqlLocalBlockState = LocalBlockState.NORMAL;
                         continue substate_transition; // repeat a substate transition without
                         // increasing i
                     }
@@ -312,6 +335,7 @@ class LineScanner {
                         substate = Substate.PLCSQL_TEXT;
                         plcsqlBeginEndBalance = 0;
                         plcsqlNestLevel = 0;
+                        plcsqlLocalBlockState = LocalBlockState.NORMAL;
                         return d;
                     } else {
                         // syntax error
@@ -323,7 +347,39 @@ class LineScanner {
                     if ((d = matchWordCI(line, "procedure", i)) >= 0
                             || (d = matchWordCI(line, "function", i)) >= 0) {
                         if (plcsqlBeginEndBalance == 0) {
-                            plcsqlNestLevel++;
+                            plcsqlLocalBlockState = LocalBlockState.SEEN_ROUTINE_MARK;
+                            plcsqlRoutineParamParenBalance = 0;
+                        }
+                        return d;
+                    } else if (line.charAt(i) == '(') {
+                        if (plcsqlLocalBlockState == LocalBlockState.SEEN_ROUTINE_MARK) {
+                            plcsqlRoutineParamParenBalance++;
+                        }
+                        return 0;
+                    } else if (line.charAt(i) == ')') {
+                        if (plcsqlLocalBlockState == LocalBlockState.SEEN_ROUTINE_MARK) {
+                            plcsqlRoutineParamParenBalance--;
+                        }
+                        return 0;
+                    } else if (line.charAt(i) == ';') {
+                        if (plcsqlLocalBlockState == LocalBlockState.SEEN_ROUTINE_MARK) {
+                            // consider only semicolons located outside the parameter list.
+                            if (plcsqlRoutineParamParenBalance == 0) {
+                                // ';' before 'is' or 'as'
+                                // do not increase nest level: it has no body
+                                plcsqlLocalBlockState = LocalBlockState.NORMAL;
+                            }
+                        }
+                        return 0;
+                    } else if ((d = matchWordCI(line, "is", i)) >= 0
+                            || (d = matchWordCI(line, "as", i)) >= 0) {
+                        if (plcsqlLocalBlockState == LocalBlockState.SEEN_ROUTINE_MARK) {
+                            // consider only IS and AS located outside the parameter list.
+                            if (plcsqlRoutineParamParenBalance == 0) {
+                                // 'is' or 'as' before ';'
+                                plcsqlNestLevel++;
+                                plcsqlLocalBlockState = LocalBlockState.NORMAL;
+                            }
                         }
                         return d;
                     } else if ((d = matchWordCI(line, "case", i)) >= 0) {
@@ -349,7 +405,8 @@ class LineScanner {
                 case SEEN_END:
                     plcsqlBeginEndBalance--;
                     if (plcsqlBeginEndBalance < 0) {
-                        // syntax error
+                        // package spec/body create statements can have the last 'end' without
+                        // matching 'begin'
                         plcsqlBeginEndBalance = 0;
                     }
                     if (plcsqlBeginEndBalance == 0) {
@@ -407,16 +464,24 @@ class LineScanner {
         SEEN_OR,
         SEEN_REPLACE,
         EXPECTING_IS_OR_AS,
+        EXPECTING_IS_OR_AS_OF_PACKAGE,
         PL_LANG_SPEC,
         SEEN_LANGUAGE,
         PLCSQL_TEXT,
         SEEN_END
     }
 
+    private enum LocalBlockState {
+        NORMAL,
+        SEEN_ROUTINE_MARK
+    }
+
     private State state;
     private Substate substate;
     private int plcsqlBeginEndBalance;
     private int plcsqlNestLevel;
+    private LocalBlockState plcsqlLocalBlockState;
+    private int plcsqlRoutineParamParenBalance;
 
     private boolean isBlankLetter(final char c) {
         switch (c) {
