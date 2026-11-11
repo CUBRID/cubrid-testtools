@@ -39,17 +39,26 @@ typedef enum csql_statement_substate
   CSQL_SUBSTATE_SEEN_OR,
   CSQL_SUBSTATE_SEEN_REPLACE,
   CSQL_SUBSTATE_EXPECTING_IS_OR_AS,
+  CSQL_SUBSTATE_EXPECTING_IS_OR_AS_OF_PACKAGE,
   CSQL_SUBSTATE_PL_LANG_SPEC,
   CSQL_SUBSTATE_SEEN_LANGUAGE,
   CSQL_SUBSTATE_PLCSQL_TEXT,
   CSQL_SUBSTATE_SEEN_END
 } CSQL_STATEMENT_SUBSTATE;
 
+typedef enum local_block_state
+{
+  LBS_NORMAL,
+  LBS_SEEN_ROUTINE_MARK
+} LOCAL_BLOCK_STATE;
+
 static CSQL_STATEMENT_STATE g_state = CSQL_STATE_GENERAL;
 // following three fields are used to identify the beginning and the end of PL/CSQL texts
 static CSQL_STATEMENT_SUBSTATE g_substate = CSQL_SUBSTATE_INITIAL;
 static int g_plcsql_begin_end_balance = 0;
 static int g_plcsql_nest_level = 0;
+static LOCAL_BLOCK_STATE g_plcsql_local_block_state = LBS_NORMAL;
+static int g_plcsql_routine_param_paren_balance = 0;
 
 static int
 is_identifier_letter (const char c)
@@ -93,6 +102,8 @@ clear_line_scanner_state ()
   g_substate = CSQL_SUBSTATE_INITIAL;
   g_plcsql_begin_end_balance = 0;
   g_plcsql_nest_level = 0;
+  g_plcsql_local_block_state = LBS_NORMAL;
+  g_plcsql_routine_param_paren_balance = 0;
 }
 
 void
@@ -162,6 +173,11 @@ scan_line (const char *line)
 		  g_substate = CSQL_SUBSTATE_EXPECTING_IS_OR_AS;
 		  continue;
 		}
+	      else if (match_word_ci ("package", &p))
+		{
+		  g_substate = CSQL_SUBSTATE_EXPECTING_IS_OR_AS_OF_PACKAGE;
+		  continue;
+		}
 	      else
 		{
 		  g_substate = CSQL_SUBSTATE_INITIAL;
@@ -188,6 +204,11 @@ scan_line (const char *line)
 		  g_substate = CSQL_SUBSTATE_EXPECTING_IS_OR_AS;
 		  continue;
 		}
+	      else if (match_word_ci ("package", &p))
+		{
+		  g_substate = CSQL_SUBSTATE_EXPECTING_IS_OR_AS_OF_PACKAGE;
+		  continue;
+		}
 	      else
 		{
 		  g_substate = CSQL_SUBSTATE_INITIAL;
@@ -208,6 +229,22 @@ scan_line (const char *line)
 		}
 	      break;
 
+	    case CSQL_SUBSTATE_EXPECTING_IS_OR_AS_OF_PACKAGE:
+	      if (match_word_ci ("is", &p) || match_word_ci ("as", &p))
+		{
+		  g_substate = CSQL_SUBSTATE_PLCSQL_TEXT;
+		  g_plcsql_begin_end_balance = 0;
+		  g_plcsql_nest_level = 0;
+		  g_plcsql_local_block_state = LBS_NORMAL;
+		  continue;
+		}
+	      else
+		{
+		  // keep the g_substate CSQL_SUBSTATE_EXPECTING_IS_OR_AS_OF_PACKAGE
+		  // break and proceed to the second switch
+		}
+	      break;
+
 	    case CSQL_SUBSTATE_PL_LANG_SPEC:
 	      if (match_word_ci ("language", &p))
 		{
@@ -220,6 +257,7 @@ scan_line (const char *line)
 		  g_substate = CSQL_SUBSTATE_PLCSQL_TEXT;
 		  g_plcsql_begin_end_balance = 0;
 		  g_plcsql_nest_level = 0;
+		  g_plcsql_local_block_state = LBS_NORMAL;
 		  goto substate_transition;	// use goto to repeat a g_substate transition without increasing p
 		}
 	      break;
@@ -236,6 +274,7 @@ scan_line (const char *line)
 		  g_substate = CSQL_SUBSTATE_PLCSQL_TEXT;
 		  g_plcsql_begin_end_balance = 0;
 		  g_plcsql_nest_level = 0;
+		  g_plcsql_local_block_state = LBS_NORMAL;
 		  continue;
 		}
 	      else
@@ -251,7 +290,52 @@ scan_line (const char *line)
 		{
 		  if (g_plcsql_begin_end_balance == 0)
 		    {
-		      g_plcsql_nest_level++;
+		      g_plcsql_local_block_state = LBS_SEEN_ROUTINE_MARK;
+		      g_plcsql_routine_param_paren_balance = 0;
+		    }
+		  continue;
+		}
+	      else if (*p == '(')
+		{
+		  if (g_plcsql_local_block_state == LBS_SEEN_ROUTINE_MARK)
+		    {
+		      g_plcsql_routine_param_paren_balance++;
+		    }
+		  continue;
+		}
+	      else if (*p == ')')
+		{
+		  if (g_plcsql_local_block_state == LBS_SEEN_ROUTINE_MARK)
+		    {
+		      g_plcsql_routine_param_paren_balance--;
+		    }
+		  continue;
+		}
+	      else if (*p == ';')
+		{
+		  if (g_plcsql_local_block_state == LBS_SEEN_ROUTINE_MARK)
+		    {
+		      // consider only semicolons located outside the parameter list.
+		      if (g_plcsql_routine_param_paren_balance == 0)
+			{
+			  // ';' before 'is' or 'as'
+			  // do not increase nest level: it has no body
+			  g_plcsql_local_block_state = LBS_NORMAL;
+			}
+		    }
+		  continue;
+		}
+	      else if (match_word_ci ("is", &p) || match_word_ci ("as", &p))
+		{
+		  if (g_plcsql_local_block_state == LBS_SEEN_ROUTINE_MARK)
+		    {
+		      // consider only IS and AS located outside the parameter list.
+		      if (g_plcsql_routine_param_paren_balance == 0)
+			{
+			  // 'is' or 'as' before ';'
+			  g_plcsql_nest_level++;	// nest level up
+			  g_plcsql_local_block_state = LBS_NORMAL;
+			}
 		    }
 		  continue;
 		}
@@ -286,7 +370,7 @@ scan_line (const char *line)
 	      g_plcsql_begin_end_balance--;
 	      if (g_plcsql_begin_end_balance < 0)
 		{
-		  // syntax error
+		  // package spec/body create statements can have the last 'end' without matching 'begin'
 		  g_plcsql_begin_end_balance = 0;
 		}
 	      if (g_plcsql_begin_end_balance == 0)
@@ -389,6 +473,7 @@ scan_line (const char *line)
 		  g_substate = CSQL_SUBSTATE_INITIAL;
 		  g_plcsql_begin_end_balance = 0;
 		  g_plcsql_nest_level = 0;
+		  g_plcsql_local_block_state = LBS_NORMAL;
 		}
 	      break;
 	    case ' ':
