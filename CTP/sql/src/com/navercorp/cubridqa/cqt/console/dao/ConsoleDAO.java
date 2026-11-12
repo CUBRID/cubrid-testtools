@@ -1011,6 +1011,8 @@ public class ConsoleDAO extends Executor {
                         } else if (o != null && o instanceof byte[]) {
                             byte[] bytes = (byte[]) o;
                             sb.append(StringUtil.toHexString(bytes) + ",");
+                        } else if (o instanceof BigDecimal) {
+                            sb.append(((BigDecimal) o).toPlainString() + ",");
                         } else {
                             sb.append(o + ",");
                         }
