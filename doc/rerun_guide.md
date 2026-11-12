@@ -120,7 +120,10 @@ $ sh start_rerun_producer.sh --dry-run --once
 ```
 
 ## 3.2 Consumers
-Nothing to configure: `start_consumer.sh` polls `RERUN_<queue>` for every queue it serves. To keep a
+Nothing to configure: `start_consumer.sh` polls `RERUN_<queue>` for every queue it serves that the producer can
+send reruns for: a queue whose exec is `run_sql`, `run_sql_by_cci`, `run_shell`, `run_jdbc`, `run_isolation`,
+`run_ha_repl` or `run_cdc_repl`, and not a memory-leak, coverage, Windows or AIX queue. Other queues are not
+polled, and no `RERUN_` queue is made for them on the broker. To keep a
 node out of reruns, start it with `--without-rerun`:
 ```
 $ nohup sh start_consumer.sh -q QUEUE_CUBRID_QA_SHELL_LINUX -exec run_shell --without-rerun &
@@ -134,7 +137,9 @@ The prefix must end with `_` (an empty one would make the rerun queue the regula
 `--rerun-only` cannot be combined with `--without-rerun` or `--debug`; the consumer refuses to start
 otherwise. A message on a rerun queue that is not `BUILD_GENERATE_MSG_WAY=RERUN` is ignored.
 The consumer must be able to reach QAHome's `rerun.nhn` over HTTP (`MKEY_RERUN_FEEDBACK_URL`, set by
-QAHome's `rerun.feedback.url`).
+QAHome's `rerun.feedback.url`). That URL must be a plain `http(s)://` URL (letters, digits and `. _ : / -`) and
+`rerun.log.upload.dir` a plain path (`. _ / -`, no `..`): a consumer drops any other message, so the producer
+fails such a request at once instead.
 
 # 4. Check a Rerun
 * Queue: the `RERUN_*` queues in the ActiveMQ console.

@@ -161,9 +161,12 @@ function rerun_on_exit_leftovers() {
     [ -s "$f" ] || return 0
     { set +x; } 2>/dev/null
     RERUN_TAG=${RERUN_TAG:-$(basename "$RERUN_WORK")}
+    # a last line without its newline was cut off while being written: tac would glue it to the one before
+    [ -n "$(tail -c 1 "$f")" ] && sed -i '$d' "$f"
     echo "[RERUN] finishing the cleanup of the stopped runner ($(wc -l < "$f") step(s))"
+    # each in its own subshell: one that does not parse must not end the others
     tac "$f" | while IFS= read -r cmd; do
-        [ -n "$cmd" ] && eval "$cmd" >/dev/null 2>&1
+        [ -n "$cmd" ] && (eval "$cmd") >/dev/null 2>&1
     done
     rm -f "$f"
 }

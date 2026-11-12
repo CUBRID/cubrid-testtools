@@ -126,6 +126,9 @@ public class RerunProducer {
     private static final Pattern MSG_ID = Pattern.compile("\\d{6}-\\d{6}-\\d{3}-\\d{6}");
     private static final Pattern TC_REF = Pattern.compile("refs/pull/[1-9][0-9]*/head");
     private static final Pattern TC_SHA = Pattern.compile("[0-9a-f]{40}");
+    // what run_rerun.sh accepts; a consumer drops any other message without telling QAHome
+    private static final Pattern FEEDBACK_URL = Pattern.compile("https?://[A-Za-z0-9._:/-]+");
+    private static final Pattern LOG_DIR = Pattern.compile("[A-Za-z0-9._/-]+");
     private static final Pattern SECRET_KEY = Pattern.compile(".*(PWD|PASSWORD|PASSWD|TOKEN).*");
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -256,6 +259,7 @@ public class RerunProducer {
         if (batch.tcSha != null && batch.tcRef == null) {
             throw new IllegalStateException("A testcase commit without a pull request ref.");
         }
+        checkConsumerValues(batch);
         Original original = findOriginalMessage(db, batch);
         checkBuildPackage(original.props);
 
@@ -351,6 +355,28 @@ public class RerunProducer {
                         + " ("
                         + original.how
                         + ")");
+    }
+
+    /**
+     * The feedback URL and log directory as run_rerun.sh accepts them. A consumer would drop the
+     * message and the request would wait for QAHome's queue timeout, so a QAHome setting it cannot
+     * use fails the request now.
+     */
+    static void checkConsumerValues(Batch batch) {
+        if (batch.feedbackUrl == null || !FEEDBACK_URL.matcher(batch.feedbackUrl).matches()) {
+            throw new IllegalStateException(
+                    "QAHome's rerun.feedback.url ("
+                            + batch.feedbackUrl
+                            + ") is not a plain http(s) URL a consumer accepts (letters, digits and . _ : / -).");
+        }
+        if (batch.logDir != null
+                && batch.logDir.length() > 0
+                && (!LOG_DIR.matcher(batch.logDir).matches() || batch.logDir.indexOf("..") >= 0)) {
+            throw new IllegalStateException(
+                    "QAHome's rerun.log.upload.dir ("
+                            + batch.logDir
+                            + ") is not a plain path a consumer accepts (letters, digits and . _ / -, no ..).");
+        }
     }
 
     /** The message text with the token and every password-like key masked, for logs. */
@@ -993,28 +1019,31 @@ public class RerunProducer {
         return updated == 1;
     }
 
+    /**
+     * Closes a batch this producer still owns (REQUESTED or SENDING; a cancel from QAHome must not
+     * be overwritten) with its open cases. The cases close first, under the same condition, so a
+     * failure in between leaves a batch that is still open and that a cancel or QAHome's timeout
+     * closes, rather than open cases under a closed batch.
+     */
     private void fail(Connection db, int batchId, String reason) {
         String message = reason.length() > MAX_ERROR ? reason.substring(0, MAX_ERROR) : reason;
         PreparedStatement ps = null;
         try {
-            // Only a batch this producer still owns: a cancel from QAHome (CANCELLED) must not be
-            // overwritten.
+            ps =
+                    db.prepareStatement(
+                            "UPDATE verify_rerun SET status = 'ERROR', message = ?, finished_at = SYS_DATETIME"
+                                    + " WHERE batch_id = ? AND status IN ('REQUESTED', 'SENT', 'RUNNING')"
+                                    + " AND EXISTS (SELECT 1 FROM verify_rerun_batch b WHERE b.id = ?"
+                                    + " AND b.status IN ('REQUESTED', 'SENDING'))");
+            ps.setString(1, message);
+            ps.setInt(2, batchId);
+            ps.setInt(3, batchId);
+            ps.executeUpdate();
+            close(ps);
             ps =
                     db.prepareStatement(
                             "UPDATE verify_rerun_batch SET status = 'ERROR', error_message = ?, finished_at = SYS_DATETIME"
                                     + " WHERE id = ? AND status IN ('REQUESTED', 'SENDING')");
-            ps.setString(1, message);
-            ps.setInt(2, batchId);
-            int updated = ps.executeUpdate();
-            close(ps);
-            ps = null;
-            if (updated != 1) {
-                return; // cancelled meanwhile: its cases are closed already
-            }
-            ps =
-                    db.prepareStatement(
-                            "UPDATE verify_rerun SET status = 'ERROR', message = ?, finished_at = SYS_DATETIME"
-                                    + " WHERE batch_id = ? AND status IN ('REQUESTED', 'SENT', 'RUNNING')");
             ps.setString(1, message);
             ps.setInt(2, batchId);
             ps.executeUpdate();

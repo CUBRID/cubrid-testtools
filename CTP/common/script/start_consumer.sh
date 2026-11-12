@@ -235,6 +235,20 @@ function startRerunAgent()
 	msgId=`cat ${CTP_HOME}/common/sched/result/$fileName |grep MSG_ID|awk -F ':' '{print $2}'`
 }
 
+# isRerunQueue <queue> <exec>: whether the producer can send reruns for this queue. It sends only for the Linux
+# queues of the families run_rerun.sh runs, and never for the memory-leak and coverage queues (their messages reuse
+# category names), so other queues are not polled: no extra agent per loop, no RERUN_ queue made on the broker.
+function isRerunQueue()
+{
+	case "$1" in
+		*MEMORY_LEAK*|*CODE_COVERAGE*|*WIN*|*AIX*) return 1 ;;
+	esac
+	case "${2%.sh}" in
+		run_sql|run_sql_by_cci|run_shell|run_jdbc|run_isolation|run_ha_repl|run_cdc_repl) return 0 ;;
+	esac
+	return 1
+}
+
 # Runs at most one rerun message of <queue> before the queue's regular poll, so a rerun waits only for
 # the run already in progress on this node. Only STATUS.TXT is written (QAHome's queue monitor and cancel
 # read it); the per-queue status file is not, so an interrupted rerun is never resumed in continue mode.
@@ -447,7 +461,7 @@ do
 		# A rerun-only node never touches the regular queue nor its continue mode.
 		if [ $rerunOnly -eq 1 ]
 		then
-			processRerunQueue $x ${q_exec[$count]}
+			isRerunQueue $x ${q_exec[$count]} && processRerunQueue $x ${q_exec[$count]}
 			# nothing runs here now: clear a status a crashed run left, as the regular loop does below
 			rm -f $statFile
 			let "count=count+1"
@@ -473,7 +487,7 @@ do
 			echo
 		fi
 
-		if [ $withoutRerun -ne 1 -a "$isDebug" != "--debug" ]
+		if [ $withoutRerun -ne 1 -a "$isDebug" != "--debug" ] && isRerunQueue $x ${q_exec[$count]}
 		then
 			processRerunQueue $x ${q_exec[$count]}
 		fi
