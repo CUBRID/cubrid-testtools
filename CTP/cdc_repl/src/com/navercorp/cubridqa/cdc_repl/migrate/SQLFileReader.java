@@ -109,6 +109,10 @@ public class SQLFileReader {
 
 	}
 
+	// HA does not replicate tables without a primary key, so ha_repl adds one to each created table.
+	// CDC extracts them as well, so cdc_repl keeps the original statements.
+	private static final boolean ADD_PRIMARY_KEY = false;
+
 	// Edited by cn15209 20120627
 	// add primary key
 	private EditLine editLineForCreateTableOrClass(String line, boolean isCreateTableOrClass, boolean isEnumType) {
@@ -345,10 +349,12 @@ public class SQLFileReader {
 			}
 
 			// edited by cn15209 20120627
-			editLine = editLineForCreateTableOrClass(line, isCreateTableOrClass, isEnumType);
-			line = editLine.getLine();
-			isCreateTableOrClass = editLine.isCreateTableOrClass();
-			isEnumType = editLine.isEnumType();
+			if (ADD_PRIMARY_KEY) {
+				editLine = editLineForCreateTableOrClass(line, isCreateTableOrClass, isEnumType);
+				line = editLine.getLine();
+				isCreateTableOrClass = editLine.isCreateTableOrClass();
+				isEnumType = editLine.isEnumType();
+			}
 			if (line.endsWith(";")) {
 				if (isMultipleLine) {
 					// last line among multiple lines.

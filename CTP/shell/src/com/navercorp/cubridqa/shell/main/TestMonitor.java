@@ -206,6 +206,8 @@ public class TestMonitor {
 
         long elapse_time;
         String tcName;
+        String tcDir;
+        String tcFile;
         String envId;
         long detectedStartTime;
         boolean justDetected = false;
@@ -222,6 +224,8 @@ public class TestMonitor {
 
             elapse_time = (endTime - test.startTime) / 1000;
             tcName = test.testCaseFullName;
+            tcDir = test.testCaseDir;
+            tcFile = test.testCaseName;
             envId = test.envIdentify;
             detectedStartTime = test.startTime;
 
@@ -251,6 +255,9 @@ public class TestMonitor {
         if (justDetected) {
             this.log.println("[RESOLVE] " + testCaseTimeout + " timeout detected (actual: " + elapse_time + " seconds) for " + tcName + ", cleaning up processes...");
         }
+
+        /* kill the case before the service cleanup, so it cannot restart what that cleanup stops */
+        this.log.println("[RESOLVE] " + killTestCase(tcDir, tcFile));
 
         /*
          * Do the slow work OUTSIDE the lock so the worker is never blocked on the
@@ -294,6 +301,17 @@ public class TestMonitor {
                 "[RESOLVE] " + testCaseTimeout + " + timeout (actual: " + elapse_time + " seconds)" + Constants.LINE_SEPARATOR + "CLEAN PROCESSES: " + Constants.LINE_SEPARATOR + result,
                 envId);
 	}
+
+    private String killTestCase(String tcDir, String tcFile) {
+        if (context.isWindows) {
+            return "testcase kill is linux only";
+        }
+        try {
+            return ssh.execute(Constants.createLinKillTestCaseScripts(tcDir, tcFile));
+        } catch (Exception e) {
+            return "fail to kill testcase process tree: " + e.getMessage();
+        }
+    }
 
 	public void close() {
 		this.ssh.close();

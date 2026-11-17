@@ -26,16 +26,25 @@
 
 package com.navercorp.cubridqa.shell.result;
 
+import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.Properties;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp.ConnectionFactory;
+import org.apache.commons.dbcp.DriverConnectionFactory;
+import org.apache.commons.dbcp.PoolableConnectionFactory;
+import org.apache.commons.dbcp.PoolingDataSource;
+import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.navercorp.cubridqa.common.ConfigParameterConstants;
 import com.navercorp.cubridqa.shell.common.CommonUtils;
@@ -49,6 +58,7 @@ public class FeedbackDB implements Feedback {
 
 	Context context;
 	DataSource ds = null;
+	GenericObjectPool connPool = null;
 	final int MAX_CONTENT_SIZE = 128 * 1024;
 
 	int task_id = 0;
@@ -751,18 +761,32 @@ public class FeedbackDB implements Feedback {
 		String user = context.getFeedbackDbUser();
 		String pwd = context.getFeedbackDbPwd();
 
-		BasicDataSource ds = new BasicDataSource();
-		ds.setDriverClassName("cubrid.jdbc.driver.CUBRIDDriver");
-		ds.setUsername(user);
-		ds.setPassword(pwd);
-		ds.setUrl(url);
-		return ds;
+		try {
+			// The feedback DB may be older than the test build, and the test
+			// build's JDBC driver on the classpath can refuse to connect to it.
+			// So load CTP's own bundled driver in an isolated classloader (the
+			// parent must be null) and inject the driver instance directly,
+			// instead of loading the driver by class name from the classpath.
+			File driverJar = new File(context.getToolHome(), "common/lib/cubrid_jdbc.jar");
+			URLClassLoader driverLoader = new URLClassLoader(new URL[] { driverJar.toURI().toURL() }, null);
+			Driver driver = (Driver) Class.forName("cubrid.jdbc.driver.CUBRIDDriver", true, driverLoader).newInstance();
+
+			Properties props = new Properties();
+			props.put("user", user);
+			props.put("password", pwd);
+
+			ConnectionFactory connFactory = new DriverConnectionFactory(driver, url, props);
+			connPool = new GenericObjectPool();
+			new PoolableConnectionFactory(connFactory, connPool, null, null, false, true);
+			return new PoolingDataSource(connPool);
+		} catch (Exception e) {
+			throw new RuntimeException("fail to create feedback datasource with CTP own JDBC driver", e);
+		}
 	}
 
 	private void shutdownDataSource() {
-		BasicDataSource bds = (BasicDataSource) ds;
 		try {
-			bds.close();
+			connPool.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -725,7 +725,7 @@ fetch_schema_info (char *query)
 
 	req_handle_2 =
 	  cci_prepare (conn_handle,
-		       "select distinct a.attr_name, a.def_order, a.data_type, (select prec from _db_domain d where d in a.domains) as prec, a.is_nullable, max((case when a.attr_name in (select key_attr_name from _db_index_key k where k in b.key_attrs) and b.is_primary_key = 1 then 1 else 0 end)) as is_primary_key from _db_attribute a left outer join _db_index b on a.class_of = b.class_of where a.class_of.is_system_class != 1 and a.class_of.class_name = ? group by a.attr_name order by def_order",
+		       "select distinct a.attr_name, a.def_order, a.data_type, (select prec from _db_domain d where d in a.domains) as prec, a.is_nullable, max((case when a.attr_name in (select key_attr_name from _db_index_key k where k in b.key_attrs) and b.is_primary_key = 1 then 1 else 0 end)) as is_primary_key from _db_attribute a left outer join _db_index b on a.class_of = b.class_of where a.class_of.is_system_class != 1 and a.attr_type = 0 and a.class_of.class_name = ? group by a.attr_name order by def_order",
 		       0, &err_buf);
 	if (req_handle_2 < 0)
 	  {
@@ -1328,7 +1328,7 @@ process_changed_column (CUBRID_DATA_ITEM * data_item, int col_idx,
 	    memcpy (&value, data_item->dml.changed_column_data[col_idx],
 		    data_item->dml.changed_column_data_len[col_idx]);
 
-	    sprintf (sql_buf + strlen (sql_buf), "%f", value);
+	    sprintf (sql_buf + strlen (sql_buf), "%.9g", value);
 	  }
 
 	  break;
@@ -1342,7 +1342,7 @@ process_changed_column (CUBRID_DATA_ITEM * data_item, int col_idx,
 	    memcpy (&value, data_item->dml.changed_column_data[col_idx],
 		    data_item->dml.changed_column_data_len[col_idx]);
 
-	    sprintf (sql_buf + strlen (sql_buf), "%lf", value);
+	    sprintf (sql_buf + strlen (sql_buf), "%.17g", value);
 	  }
 
 	  break;
@@ -1534,7 +1534,7 @@ process_cond_column (CUBRID_DATA_ITEM * data_item, int col_idx,
 
 	    memcpy (&value, data_item->dml.cond_column_data[col_idx], data_item->dml.cond_column_data_len[col_idx]);
 
-	    sprintf (sql_buf + strlen (sql_buf), "%f", value);
+	    sprintf (sql_buf + strlen (sql_buf), "%.9g", value);
 	  }
 
 	  break;
@@ -1547,7 +1547,7 @@ process_cond_column (CUBRID_DATA_ITEM * data_item, int col_idx,
 
 	    memcpy (&value, data_item->dml.cond_column_data[col_idx], data_item->dml.cond_column_data_len[col_idx]);
 
-	    sprintf (sql_buf + strlen (sql_buf), "%lf", value);
+	    sprintf (sql_buf + strlen (sql_buf), "%.17g", value);
 	  }
 
 	  break;
@@ -1877,7 +1877,15 @@ make_update_stmt (CUBRID_DATA_ITEM * data_item, char **sql)
 	  PRINT_ERRMSG_GOTO_ERR (error_code);
 	}
 
-      sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+      /* "col = NULL" matches no row, so use "col is NULL" for a NULL value */
+      if (data_item->dml.cond_column_data[i] == NULL && data_item->dml.cond_column_data_len[i] == 0)
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s is ", attr_info->attr_name);
+	}
+      else
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+	}
 
       error_code = process_cond_column (data_item, i, attr_info, sql_buf, &cant_make_sql);
       if (error_code != NO_ERROR)
@@ -1952,7 +1960,15 @@ make_delete_stmt (CUBRID_DATA_ITEM * data_item, char **sql)
 	  PRINT_ERRMSG_GOTO_ERR (error_code);
 	}
 
-      sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+      /* "col = NULL" matches no row, so use "col is NULL" for a NULL value */
+      if (data_item->dml.cond_column_data[i] == NULL && data_item->dml.cond_column_data_len[i] == 0)
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s is ", attr_info->attr_name);
+	}
+      else
+	{
+	  sprintf (sql_buf + strlen (sql_buf), "%s = ", attr_info->attr_name);
+	}
 
       error_code = process_cond_column (data_item, i, attr_info, sql_buf, &cant_make_sql);
       if (error_code != NO_ERROR)
@@ -2776,6 +2792,18 @@ error:
   return YES_ERROR;
 }
 
+/* 'dba.aaa' -> 'aaa' : CDC DDL statement has owner-qualified names, but class_info has class_name of _db_class */
+void
+strip_owner_name (char *name)
+{
+  char *dot = strrchr (name, '.');
+
+  if (dot != NULL)
+    {
+      memmove (name, dot + 1, strlen (dot + 1) + 1);
+    }
+}
+
 int
 change_table_name_at_class_info (CUBRID_DATA_ITEM * data_item)
 {
@@ -2800,6 +2828,9 @@ change_table_name_at_class_info (CUBRID_DATA_ITEM * data_item)
     {
       PRINT_ERRMSG_GOTO_ERR (error_code);
     }
+
+  strip_owner_name (old_table_name);
+  strip_owner_name (new_table_name);
 
 #if 0
   printf ("old_table_name: %s, new_table_name: %s\n", old_table_name, new_table_name);
@@ -3252,6 +3283,9 @@ int
 main (int argc, char *argv[])
 {
   int error_code;
+
+  /* line buffered: keep the last output when the helper aborts (stdout is redirected to a file) */
+  setvbuf (stdout, NULL, _IOLBF, 0);
 
   error_code = process_command_line_option (argc, argv);
   if (error_code != NO_ERROR)

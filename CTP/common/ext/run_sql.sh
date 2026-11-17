@@ -76,7 +76,7 @@ function run_sql {
         exit
     fi
     
-    run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT}
+    run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT} || exit 1
 
     if [ "$MKEY_SPARSECHECKOUT" != "" ]; then
         (set +H; run_sparsefs "${CTP_HOME}/../${git_repo_name}" "${MKEY_SPARSECHECKOUT}")

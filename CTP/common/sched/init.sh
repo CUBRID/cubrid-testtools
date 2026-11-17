@@ -70,6 +70,35 @@ function analyzeMessageInfo() {
  	fi 
 }
 
+# On develop, TC is merged just before its engine change, so the engine commit time of the build
+# separates the TC of the engine changes in the build from the TC of the ones not yet merged.
+# Release branches merge TC backports after the engine, and store_99 holds manual builds,
+# so those take the latest TC.
+function exportBuildCommitTime() {
+    unset BUILD_COMMIT_TIME
+    [ "$BUILD_STORE_ID" == "store_01" ] && [ "$BUILD_SCENARIO_BRANCH_GIT" == "develop" ] || return 0
+    local hash=${BUILD_ID##*-}
+    local commit_date="" commit_time="" i
+    local auth=()
+    [ -n "$DAILYQA_GIT_USER" ] && auth=(--auth-no-challenge --user="$DAILYQA_GIT_USER" --password="$DAILYQA_GIT_PWD")
+    if [[ "$hash" =~ ^[0-9a-f]{7,40}$ ]]; then
+        for i in 1 2 3; do
+            # the 1st "date" is commit.author.date, the 2nd is commit.committer.date, the time it was merged
+            commit_date=`wget -q -t 1 -T 30 "${auth[@]}" -O - "https://api.github.com/repos/CUBRID/cubrid/commits?sha=${hash}&per_page=1" | grep -o '"date": *"[^"]*"' | sed -n 2p | cut -d '"' -f 4`
+            [ -n "$commit_date" ] && break
+            [ $i -lt 3 ] && sleep 30
+        done
+    fi
+    [ -n "$commit_date" ] && commit_time=`date -d "$commit_date" +%s`
+    if ! [[ "$commit_time" =~ ^[0-9]+$ ]]; then
+        echo "ERROR: engine commit time lookup failed: BUILD_ID=$BUILD_ID"
+        # run_git_update stops on this value, so tests that take no TC still run
+        export BUILD_COMMIT_TIME=lookup_failed
+        return 0
+    fi
+    export BUILD_COMMIT_TIME=$commit_time
+}
+
 function getMsgValue() {
     echo $1
 }
@@ -109,6 +138,11 @@ export DAILYQA_SSH_PWD_DEFAULT=`ini.sh conf/common.conf default_ssh_pwd`
 export DAILYQA_SSH_PORT_DEFAULT=`ini.sh conf/common.conf default_ssh_port`
 
 analyzeMessageInfo $1
+# the message keeps the first lookup for continue mode, and sender.sh PROPS can set it
+if ! grep -q "^BUILD_COMMIT_TIME:" $result; then
+    exportBuildCommitTime
+    [[ "$BUILD_COMMIT_TIME" =~ ^[0-9]+$ ]] && echo "BUILD_COMMIT_TIME:$BUILD_COMMIT_TIME" >> $result
+fi
 export -f getMsgValue
 export -f runAction
 export -f upload_to_dailysrv

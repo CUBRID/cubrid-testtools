@@ -166,23 +166,8 @@ public class DeployOneNode {
 	}
 
 	private void deploy_ctp() {
-		String enableSkipUpgrade = context.getEnableSkipUpdate();
-		String branchName = context.getCtpBranchName();
-
 		ShellScriptInput scripts = new ShellScriptInput();
-		scripts.addCommand("echo 'BEGIN TO UPGRADE CTP'");
-		scripts.addCommand("export CTP_BRANCH_NAME=" + branchName);
-		if (context.isExecuteAtLocal()) {
-			scripts.addCommand("echo 'SKIP CTP UPDATE FOR LOCAL TEST!'");
-			scripts.addCommand("export CTP_SKIP_UPDATE=1");
-		} else {
-			scripts.addCommand("export CTP_SKIP_UPDATE=" + enableSkipUpgrade);
-		}
-		scripts.addCommand("cd ${init_path}/../../");
-		scripts.addCommand("chmod u+x ./common/script/upgrade.sh");
-		scripts.addCommand("chmod u+x ./bin/ini.sh");
-		scripts.addCommand("./common/script/upgrade.sh 2>&1");
-		scripts.addCommand("cd -");
+		addUpgradeCtpCommands(context, scripts);
 
 		String result;
 		try {
@@ -191,6 +176,22 @@ public class DeployOneNode {
 		} catch (Exception e) {
 			log.print("[ERROR] " + e.getMessage());
 		}
+	}
+
+	static void addUpgradeCtpCommands(Context context, ShellScriptInput scripts) {
+		scripts.addCommand("echo 'BEGIN TO UPGRADE CTP'");
+		scripts.addCommand("export CTP_BRANCH_NAME=" + context.getCtpBranchName());
+		if (context.isExecuteAtLocal()) {
+			scripts.addCommand("echo 'SKIP CTP UPDATE FOR LOCAL TEST!'");
+			scripts.addCommand("export CTP_SKIP_UPDATE=1");
+		} else {
+			scripts.addCommand("export CTP_SKIP_UPDATE=" + context.getEnableSkipUpdate());
+		}
+		scripts.addCommand("cd ${init_path}/../../");
+		scripts.addCommand("chmod u+x ./common/script/upgrade.sh");
+		scripts.addCommand("chmod u+x ./bin/ini.sh");
+		scripts.addCommand("./common/script/upgrade.sh 2>&1");
+		scripts.addCommand("cd -");
 	}
 
 	private void updateCUBRIDConfigurations() {

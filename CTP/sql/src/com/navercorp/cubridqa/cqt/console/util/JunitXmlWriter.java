@@ -25,51 +25,31 @@
  */
 package com.navercorp.cubridqa.cqt.console.util;
 
+import com.navercorp.cubridqa.common.CommonUtils;
+import com.navercorp.cubridqa.common.junit.JunitCase;
+import com.navercorp.cubridqa.common.junit.JunitSuite;
+import com.navercorp.cubridqa.common.junit.JunitXml;
 import com.navercorp.cubridqa.cqt.console.bean.CaseResult;
 import com.navercorp.cubridqa.cqt.console.bean.Summary;
 import com.navercorp.cubridqa.cqt.console.bean.Test;
-import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import name.fraser.neil.plaintext.UnifiedDiffUtil;
 
 /**
- * Writes a CircleCI-compatible JUnit-style XML at {@code ${test.getResult_dir()}/<target>.xml},
- * where {@code <target>} is {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}) — the
- * same file name and suite label the legacy entrypoint produced.
+ * Writes a CircleCI-compatible JUnit-style XML at {@code <result dir>/<suite>.xml}, where {@code
+ * <suite>} is {@code <os>_<testType>_<testBit>_<build type>} (e.g. {@code
+ * linux_sql_64bit_optdebug}), the build type as {@code cubrid_rel} prints it, a space as '-'. The
+ * build type is in the file name too, so a report read on its own still says which build it judged.
  *
- * <p>Schema mirrors the existing {@code cubridci/docker/ci/docker-entrypoint.sh xsltproc} output
- * (so the entrypoint cleanup PR can simply remove that XSLT step):
- *
- * <pre>
- *   &lt;testsuites&gt;
- *     &lt;testsuite name="$target_$mode" tests="N" failures="M"&gt;
- *       &lt;testcase classname="$target_$mode"
- *                  name="&lt;case rel path&gt;"
- *                  file="cubrid-testcases/&lt;case rel path&gt;"
- *                  time="&lt;sec&gt;"&gt;
- *         [optional] &lt;failure message="unexpected result"&gt;
- *           &lt;![CDATA[ [Query] ... [Diff] ... ]]&gt;
- *         &lt;/failure&gt;
- *       &lt;/testcase&gt;
- *     &lt;/testsuite&gt;
- *   &lt;/testsuites&gt;
- * </pre>
- *
- * <p>Only TYPE_SQL and TYPE_GROOVY cases that actually ran ({@code shouldRun==true}) are emitted,
- * matching the existing {@code TestUtil.saveResult} / {@code TestUtil.copyCaseAnswerFile} gating.
+ * <p>A case with no answer file did not run, so it is {@code skipped}.
  *
  * <p>The failure CDATA is prefixed with commit-pinned GitHub source links for the case and answer
  * files (same {@code ** Testcase : / ** Expected :} format as the legacy entrypoint {@code .report}
@@ -77,8 +57,8 @@ import name.fraser.neil.plaintext.UnifiedDiffUtil;
  * remote.origin.url} + {@code rev-parse HEAD}, cached per repo root) and are silently omitted when
  * that metadata is unavailable.
  *
- * <p>All exceptions inside this writer are swallowed; failures are logged via {@code
- * LogUtil.log("ConsoleBO", ...)} so that the JUnit XML emission cannot break the test pipeline.
+ * <p>All exceptions inside this writer are swallowed; failures are logged to the caller's log via
+ * {@code LogUtil.log(logId, ...)} so that the JUnit XML emission cannot break the test pipeline.
  */
 public final class JunitXmlWriter {
 
@@ -92,23 +72,18 @@ public final class JunitXmlWriter {
     // too: it means git metadata was unavailable and the URL header is skipped for that repo.
     private static final Map<String, String> BASE_URL_CACHE = new HashMap<String, String>();
 
-    // Cached cubrid_rel build mode ("release"|"debug"). Guarded by detectBuildMode().
-    private static String BUILD_MODE;
+    // Cached build type from cubrid_rel. Guarded by detectBuildType().
+    private static String BUILD_TYPE;
 
     private JunitXmlWriter() {}
 
-    /** Single entry point. Never throws — all exceptions are caught and logged. */
-    public static void write(Test test, String logId) {
+    /**
+     * Entry point of the JDBC runner. The suite ran {@code suiteMillis} from {@code suiteStart}
+     * (epoch ms). Never throws — all exceptions are caught and logged.
+     */
+    public static void write(Test test, String logId, long suiteStart, long suiteMillis) {
         try {
             if (test == null) {
-                return;
-            }
-            String resultDir = test.getResult_dir();
-            if (resultDir == null || resultDir.length() == 0) {
-                return;
-            }
-            String testType = test.getTestType();
-            if (testType == null || testType.length() == 0) {
                 return;
             }
             if (test.getRunMode() != Test.MODE_RESULT) {
@@ -116,24 +91,87 @@ public final class JunitXmlWriter {
                 // report from MODE_MAKE_ANSWER/MODE_RUN would show every case as passed.
                 return;
             }
-            String target = pickTarget(test);
-            String suiteName = target + "_" + detectBuildMode();
-
             List<CaseResult> emitted = new ArrayList<CaseResult>();
             walk(test.getSummary(), emitted);
-            int tests = emitted.size();
-            int failures = countFailures(emitted);
 
-            File outFile = new File(resultDir, target + ".xml");
-            writeXml(outFile, suiteName, tests, failures, emitted, logId);
+            String version = test.getDbVersion();
+            String build = test.getDbBuild();
+            // run.sh splits cubrid_rel's version in two; joined, they equal shell's cubrid_build
+            String cubridBuild =
+                    !CommonUtils.isEmpty(version) && !CommonUtils.isEmpty(build)
+                            ? version + "." + build
+                            : null;
+            write(
+                    test.getResult_dir(),
+                    test.getTestType(),
+                    test.getTestBit(),
+                    cubridBuild,
+                    emitted,
+                    logId,
+                    suiteStart,
+                    suiteMillis);
+        } catch (Throwable t) {
+            LogUtil.log(
+                    logId,
+                    "[JunitXmlWriter] write failed: "
+                            + t.getClass().getName()
+                            + ": "
+                            + t.getMessage());
+        }
+    }
+
+    /**
+     * Writes {@code <resultDir>/<suite>.xml} for the given cases. The suite ran {@code suiteMillis}
+     * from {@code suiteStart} (epoch ms). Never throws.
+     */
+    public static void write(
+            String resultDir,
+            String testType,
+            String testBit,
+            String cubridBuild,
+            List<CaseResult> cases,
+            String logId,
+            long suiteStart,
+            long suiteMillis) {
+        try {
+            if (resultDir == null || resultDir.length() == 0) {
+                return;
+            }
+            if (testType == null || testType.length() == 0) {
+                return;
+            }
+            String buildType = detectBuildType();
+            String suiteName = pickTarget(testType, testBit) + "_" + buildType;
+
+            JunitSuite suite = new JunitSuite(suiteName, suiteStart);
+            suite.setMillis(suiteMillis);
+            suite.addProperty("category", testType);
+            suite.addProperty("os", SystemUtil.getOS());
+            suite.addProperty("bits", testBit);
+            suite.addProperty("build_type", buildType);
+            if (!CommonUtils.isEmpty(cubridBuild)) {
+                suite.addProperty("cubrid_build", cubridBuild);
+            }
+            File outFile = new File(resultDir, suiteName + ".xml");
+            JunitXml xml = new JunitXml(outFile, suite);
+            boolean closed = false;
+            try {
+                for (CaseResult cr : cases) {
+                    xml.add(toCase(cr, logId));
+                }
+                xml.close();
+                closed = true;
+            } finally {
+                if (!closed) {
+                    xml.discard();
+                }
+            }
             LogUtil.log(
                     logId,
                     "[JunitXmlWriter] wrote "
                             + outFile.getAbsolutePath()
                             + " (tests="
-                            + tests
-                            + ", failures="
-                            + failures
+                            + cases.size()
                             + ")");
         } catch (Throwable t) {
             LogUtil.log(
@@ -145,14 +183,13 @@ public final class JunitXmlWriter {
         }
     }
 
-    /** Walk Summary tree, collect TYPE_SQL/TYPE_GROOVY cases that were actually run. */
     private static void walk(Summary s, List<CaseResult> out) {
         if (s == null) {
             return;
         }
         if (s.getType() == Summary.TYPE_BOTTOM) {
             for (CaseResult cr : s.getCaseList()) {
-                if (cr == null || !cr.isShouldRun()) {
+                if (cr == null) {
                     continue;
                 }
                 int t = cr.getType();
@@ -168,26 +205,49 @@ public final class JunitXmlWriter {
         }
     }
 
-    private static int countFailures(List<CaseResult> cases) {
-        int n = 0;
-        for (CaseResult cr : cases) {
-            if (!cr.isSuccessFul()) {
-                n++;
-            }
+    private static JunitCase toCase(CaseResult cr, String logId) {
+        String relPath = relativeToTestcasesRoot(cr.getCaseFile());
+        // Without a known repo anchor relPath is the absolute path; prefixing it with a
+        // repo name would yield a bogus "cubrid-testcases//abs/path", so emit it as-is.
+        String fileAttr =
+                findAnchor(cr.getCaseFile()) == null
+                        ? relPath
+                        : testcasesRepoName(cr.getCaseFile()) + "/" + relPath;
+        if (!cr.isShouldRun()) {
+            return JunitCase.skipped(relPath, fileAttr, "no answer file");
         }
-        return n;
+        if (cr.isSuccessFul()) {
+            return JunitCase.passed(relPath, fileAttr, cr.getTotalTime());
+        }
+        if (cr.isHasCore()) {
+            return new JunitCase(
+                    relPath,
+                    fileAttr,
+                    cr.getTotalTime(),
+                    JunitCase.Result.ERROR,
+                    "core file found",
+                    "CoreDump",
+                    buildFailureCdata(cr, logId));
+        }
+        return new JunitCase(
+                relPath,
+                fileAttr,
+                cr.getTotalTime(),
+                JunitCase.Result.FAILURE,
+                "unexpected result",
+                "UnexpectedResult",
+                buildFailureCdata(cr, logId));
     }
 
     /**
-     * Suite/file label identical to the one the legacy entrypoint derived from the schedule
+     * Suite label prefix identical to the one the legacy entrypoint derived from the schedule
      * result-directory name: {@code <os>_<testType>_<testBit>} (e.g. {@code linux_sql_64bit}).
      * Built from the same values {@code TestUtil.getTestId} uses to compose that directory name. An
      * unset testBit is skipped (defensive; the CQT agent entry points always set it).
      */
-    private static String pickTarget(Test test) {
+    private static String pickTarget(String testType, String bit) {
         StringBuilder sb = new StringBuilder(SystemUtil.getOS());
-        sb.append('_').append(test.getTestType());
-        String bit = test.getTestBit();
+        sb.append('_').append(testType);
         if (bit != null && bit.length() > 0) {
             sb.append('_').append(bit);
         }
@@ -294,29 +354,26 @@ public final class JunitXmlWriter {
     }
 
     /**
-     * Current CUBRID build mode ("release"|"debug") from {@code cubrid_rel} output — the same check
-     * as the legacy entrypoint's {@code cubrid_rel | grep -oe 'release\|debug'}. The exit code is
-     * deliberately not checked: cubrid_rel may exit non-zero in some environments while still
-     * printing a valid banner, and the content check is what matters.
+     * Current CUBRID build type from {@code cubrid_rel} output (e.g. "optdebug", "coverage-debug").
+     * The exit code is deliberately not checked: cubrid_rel may exit non-zero in some environments
+     * while still printing a valid banner, and the content check is what matters.
      *
-     * @throws RuntimeException if cubrid_rel cannot be invoked or names neither mode.
+     * @throws RuntimeException if cubrid_rel cannot be invoked or prints no build type.
      */
-    private static synchronized String detectBuildMode() {
-        if (BUILD_MODE != null) {
-            return BUILD_MODE;
+    private static synchronized String detectBuildType() {
+        if (BUILD_TYPE != null) {
+            return BUILD_TYPE;
         }
         String out = runCommand(false, "cubrid_rel");
         if (out == null) {
             throw new RuntimeException("cubrid_rel invocation failed");
         }
-        String lower = out.toLowerCase(Locale.ROOT);
-        boolean debug = lower.contains("debug");
-        if (!debug && !lower.contains("release")) {
-            throw new RuntimeException(
-                    "cubrid_rel output contained neither 'release' nor 'debug': " + out);
+        String[] build = CommonUtils.parseCubridRel(out);
+        if (build == null) {
+            throw new RuntimeException("cubrid_rel output has no build type: " + out);
         }
-        BUILD_MODE = debug ? "debug" : "release";
-        return BUILD_MODE;
+        BUILD_TYPE = build[1];
+        return BUILD_TYPE;
     }
 
     /** Entire UTF-8 content of the file. Errors propagate to buildFailureCdata's guard. */
@@ -358,87 +415,6 @@ public final class JunitXmlWriter {
         }
     }
 
-    private static void writeXml(
-            File outFile,
-            String suiteName,
-            int tests,
-            int failures,
-            List<CaseResult> cases,
-            String logId)
-            throws IOException, XMLStreamException {
-        File parent = outFile.getParentFile();
-        if (parent != null) {
-            // If this fails, the FileOutputStream below throws with the path in its message.
-            parent.mkdirs();
-        }
-        FileOutputStream fos = new FileOutputStream(outFile);
-        IndentingXMLStreamWriter w = null;
-        boolean success = false;
-        try {
-            XMLOutputFactory factory = XMLOutputFactory.newInstance();
-            w = new IndentingXMLStreamWriter(factory.createXMLStreamWriter(fos, "UTF-8"));
-            w.writeStartDocument("UTF-8", "1.0");
-            w.writeStartElement("testsuites");
-            w.writeStartElement("testsuite");
-            w.writeAttribute("name", suiteName);
-            w.writeAttribute("tests", String.valueOf(tests));
-            w.writeAttribute("failures", String.valueOf(failures));
-
-            for (CaseResult cr : cases) {
-                writeOneTestcase(w, suiteName, cr, logId);
-            }
-
-            w.writeEndElement(); // testsuite
-            w.writeEndElement(); // testsuites
-            w.writeEndDocument();
-            w.flush();
-            success = true;
-        } finally {
-            if (w != null) {
-                try {
-                    w.close();
-                } catch (XMLStreamException ignore) {
-                }
-            }
-            try {
-                fos.close();
-            } catch (IOException ignore) {
-            }
-            if (!success) {
-                // do not leave a malformed half-written report for CI to ingest
-                outFile.delete();
-            }
-        }
-    }
-
-    private static void writeOneTestcase(
-            XMLStreamWriter w, String suiteName, CaseResult cr, String logId)
-            throws XMLStreamException {
-        String relPath = relativeToTestcasesRoot(cr.getCaseFile());
-        // Without a known repo anchor relPath is the absolute path; prefixing it with a
-        // repo name would yield a bogus "cubrid-testcases//abs/path", so emit it as-is.
-        String fileAttr =
-                findAnchor(cr.getCaseFile()) == null
-                        ? relPath
-                        : testcasesRepoName(cr.getCaseFile()) + "/" + relPath;
-        String time = String.format(Locale.ROOT, "%.3f", cr.getTotalTime() / 1000.0);
-        w.writeStartElement("testcase");
-        w.writeAttribute("classname", suiteName);
-        w.writeAttribute("name", relPath);
-        w.writeAttribute("file", fileAttr);
-        w.writeAttribute("time", time);
-        if (!cr.isSuccessFul()) {
-            w.writeStartElement("failure");
-            w.writeAttribute("message", "unexpected result");
-            String cdata = buildFailureCdata(cr, logId);
-            if (cdata.length() > 0) {
-                w.writeCData(cdata);
-            }
-            w.writeEndElement(); // failure
-        }
-        w.writeEndElement(); // testcase
-    }
-
     private static String buildFailureCdata(CaseResult cr, String logId) {
         try {
             if (cr.getCaseFile() == null
@@ -459,13 +435,12 @@ public final class JunitXmlWriter {
                 // Groovy cases have no SQL statement/block structure for the lockstep walk;
                 // fall back to the whole-file diff the legacy entrypoint produced.
                 payload =
-                        FailureCdataBuilder.cdataSafe(
-                                "[Diff]\n"
-                                        + UnifiedDiffUtil.unifiedDiff(
-                                                readFile(cr.getAnswerFile()),
-                                                readFile(resultFile),
-                                                "answer",
-                                                "actual"));
+                        "[Diff]\n"
+                                + UnifiedDiffUtil.unifiedDiff(
+                                        readFile(cr.getAnswerFile()),
+                                        readFile(resultFile),
+                                        "answer",
+                                        "actual");
             }
             if (payload.length() == 0) {
                 return "";
@@ -474,7 +449,7 @@ public final class JunitXmlWriter {
             if (header.length() == 0) {
                 return payload;
             }
-            return FailureCdataBuilder.cdataSafe(header) + payload;
+            return header + payload;
         } catch (Throwable t) {
             LogUtil.log(
                     logId,
