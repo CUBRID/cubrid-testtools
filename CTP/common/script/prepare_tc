@@ -1,0 +1,113 @@
+#!/bin/bash
+# 
+# Copyright (c) 2016, Search Solution Corporation. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# 
+#   * Redistributions of source code must retain the above copyright notice, 
+#     this list of conditions and the following disclaimer.
+# 
+#   * Redistributions in binary form must reproduce the above copyright 
+#     notice, this list of conditions and the following disclaimer in 
+#     the documentation and/or other materials provided with the distribution.
+# 
+#   * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products 
+#     derived from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+#
+
+function usage()
+{
+    cat <<USAGE
+Usage: prepare_tc -r <repo> -d <dir> -b <branch> [-e <engine commit>]
+       prepare_tc -r <repo> -d <dir> -s <commit>
+
+Checks out one test case repository of github.com/CUBRID and prints
+    [checkout] <repo> @ <branch or commit> -> <40-hex HEAD>
+
+  -r  repository name, e.g. cubrid-testcases
+  -d  directory to check out into. An existing clone fetches from its own origin.
+  -b  take the tip of this branch
+  -e  the engine commit (7 to 40 hex) under test; -b is its branch. For now the tip of -b is taken.
+  -s  take this commit (40 hex)
+
+Exit status: 0 checked out, 1 failed, 75 the TC pin table has no row for the engine commit
+USAGE
+}
+
+function fail()
+{
+    echo "ERROR: $*" >&2
+    exit 1
+}
+
+repo=
+dir=
+branch=
+engine=
+sha=
+while getopts "r:d:b:e:s:" opt; do
+    case $opt in
+    r) repo=$OPTARG ;;
+    d) dir=$OPTARG ;;
+    b) branch=$OPTARG ;;
+    e) engine=$OPTARG ;;
+    s) sha=$OPTARG ;;
+    *) usage >&2; exit 1 ;;
+    esac
+done
+
+[ -n "$repo" ] && [ -n "$dir" ] || { usage >&2; exit 1; }
+if [ -n "$sha" ]; then
+    [ -z "$branch$engine" ] || fail "-s takes neither -b nor -e"
+    [[ $sha =~ ^[0-9a-f]{40}$ ]] || fail "-s needs a 40-hex commit: $sha"
+    ref=$sha
+    chosen=$sha
+else
+    [ -n "$branch" ] || fail "give -b <branch> or -s <commit>"
+    # Callers pass the engine commit already, so reading the pin table later changes nothing on their side.
+    [ -z "$engine" ] || [[ $engine =~ ^[0-9a-f]{7,40}$ ]] || fail "-e needs a 7 to 40 hex commit: $engine"
+    ref=refs/heads/$branch
+    chosen=$branch
+fi
+
+if [ ! -e "$dir/.git" ]; then
+    # checkout -f and clean -df below would wipe whatever lies in a directory that is not a clone.
+    [ -z "$(ls -A "$dir" 2>/dev/null)" ] || fail "$dir is not empty and not a git clone"
+    git init -q "$dir" || fail "cannot set up $dir"
+    (cd "$dir" && git remote add origin "https://github.com/CUBRID/$repo.git") || fail "cannot set up $dir"
+fi
+cd "$dir" || fail "cannot enter $dir"
+
+# A full clone stays full: a depth-1 fetch into it makes it shallow.
+depth="--depth 1"
+git rev-parse -q --verify HEAD >/dev/null && [ ! -f "$(git rev-parse --git-dir)/shallow" ] && depth=
+
+i=1
+until git fetch -q --no-tags $depth origin "$ref"; do
+    [ $i -lt 5 ] || fail "fetch of $repo ($chosen) failed 5 times"
+    echo "[warn] fetch of $repo ($chosen) attempt $i/5 failed; retrying in $((i * 10))s" >&2
+    sleep $((i * 10))
+    i=$((i + 1))
+done
+
+want=$(git rev-parse --verify -q "FETCH_HEAD^{commit}") || fail "$repo has no commit for $chosen after fetch"
+if [ -n "$sha" ]; then
+    git checkout -q -f --detach "$want"
+else
+    # A branch, not a detached HEAD: convert_to_git_url.sh puts its name in the link to a failed shell case.
+    git checkout -q -f -B "$branch" "$want"
+fi || fail "checkout of $repo ($chosen) failed"
+git clean -q -df
+
+head=$(git rev-parse --verify -q HEAD) || fail "$repo has no valid HEAD after checkout ($chosen)"
+[ "$head" = "${sha:-$want}" ] || fail "$repo is at $head after checkout, not ${sha:-$want} ($chosen)"
+echo "[checkout] $repo @ $chosen -> $head"
