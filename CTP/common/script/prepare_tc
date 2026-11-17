@@ -106,7 +106,7 @@ else
     # A branch, not a detached HEAD: convert_to_git_url.sh puts its name in the link to a failed shell case.
     git checkout -q -f -B "$branch" "$want"
 fi || fail "checkout of $repo ($chosen) failed"
-git clean -q -df
+git clean -q -df || fail "cleanup of $repo ($chosen) failed"
 
 head=$(git rev-parse --verify -q HEAD) || fail "$repo has no valid HEAD after checkout ($chosen)"
 [ "$head" = "${sha:-$want}" ] || fail "$repo is at $head after checkout, not ${sha:-$want} ($chosen)"
