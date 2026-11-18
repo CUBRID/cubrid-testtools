@@ -61,6 +61,9 @@ public class Test {
 
 	volatile boolean testCompleted;
 	boolean caseRunning = false;
+	volatile boolean caseTimedOut = false;
+	java.util.Timer caseTimer = new java.util.Timer(true);
+	java.util.TimerTask caseTimeoutTask = null;
 	String currentTestFile;
 	Context context;
 
@@ -139,6 +142,7 @@ public class Test {
 			// Without this, the monitor of this env waits for testCompleted forever and the whole task never ends.
 			reportAbnormalStop(t);
 		} finally {
+			caseTimer.cancel();
 			this.testCompleted = true;
 		}
 	}
@@ -173,6 +177,66 @@ public class Test {
 		return this.testCompleted;
 	}
 
+	private void startCaseTimeout() {
+		caseTimedOut = false;
+		final int timeoutSecs = context.getTestCaseTimeoutInSecs();
+		if (timeoutSecs <= 0) {
+			return;
+		}
+		caseTimeoutTask = new java.util.TimerTask() {
+			public void run() {
+				onCaseTimeout(timeoutSecs);
+			}
+		};
+		caseTimer.schedule(caseTimeoutTask, timeoutSecs * 1000L);
+	}
+
+	private void stopCaseTimeout() {
+		if (caseTimeoutTask != null) {
+			caseTimeoutTask.cancel();
+			caseTimeoutTask = null;
+		}
+	}
+
+	/*
+	 * Runs in the timer thread. The test thread is usually blocked in an SSH command that waits for a hung
+	 * process on a node, so stop the CUBRID processes and csql of this env on every node: the blocked command
+	 * then returns, the rest of the test case is skipped, and the next test case rebuilds the database
+	 * because it is dirty. The stacks of the processes are logged first, since they show where it hung.
+	 */
+	private void onCaseTimeout(int timeoutSecs) {
+		caseTimedOut = true;
+		mlog.println("[TIMEOUT] " + currentTestFile + " ran longer than " + timeoutSecs + " seconds. Stop the CUBRID processes on the nodes.");
+
+		String script = "for p in `pgrep -u $USER 'cub_server|cub_pl|csql'`; do echo \"== $p `ps -o args= -p $p`\"; timeout 60 pstack $p; done; "
+				+ "pkill -9 -u $USER -x csql; pkill -9 -u $USER cub; ps -u $USER | grep cub | awk '{print $1}' | grep -v PID | xargs -i kill -9 {}";
+
+		for (SSHConnect ssh : hostManager.getAllNodeList()) {
+			SSHConnect killer = null;
+			try {
+				// a new connection: the connection of the test thread is in use, and it may not answer
+				killer = new SSHConnect(ssh.getHost(), ssh.getPort(), ssh.getUser(), ssh.getPwd(), SSHConnect.SERVICE_TYPE_SSH);
+				killer.setReadTimeoutSecs(300);
+				String result = killer.execute(new GeneralScriptInput(script));
+				mlog.println("[TIMEOUT] stacks and stop on " + ssh.toString() + Constants.LINE_SEPARATOR + result);
+			} catch (Throwable e) {
+				mlog.println("[TIMEOUT] fail to stop the processes on " + ssh.toString() + ": " + e.getMessage());
+			} finally {
+				if (killer != null) {
+					killer.close();
+				}
+			}
+		}
+
+		// if the test thread still waits on a connection that does not answer, closing it makes the command fail
+		for (SSHConnect ssh : hostManager.getAllNodeList()) {
+			try {
+				ssh.close();
+			} catch (Throwable e) {
+			}
+		}
+	}
+
 	public void close() {
 		this.finishedLog.close();
 		this.mlog.close();
@@ -197,6 +261,7 @@ public class Test {
 
 		context.getFeedback().onTestCaseStartEvent(this.currentTestFile, this.hostManager.getEnvId());
 		caseRunning = true;
+		startCaseTimeout();
 
 		failCount = 0;
 		testCount = 0;
@@ -236,6 +301,13 @@ public class Test {
 				stmt = tr.readOneStatement();
 				if (stmt == null)
 					break;
+
+				if (caseTimedOut) {
+					String info = "[NOK]: [" + tr.lineNum + "] TIMEOUT: the test case ran longer than " + context.getTestCaseTimeoutInSecs() + " seconds. The rest of it is skipped.";
+					addFail(info);
+					log(info);
+					break main;
+				}
 
 				stmtCount++;
 				
@@ -345,7 +417,8 @@ public class Test {
 
 		long endTime = System.currentTimeMillis();
 
-		context.getFeedback().onTestCaseStopEvent(currentTestFile, testcasePassed, endTime - startTime, userInfo.toString(), hostManager.getEnvId(), false, hasCore,
+		stopCaseTimeout();
+		context.getFeedback().onTestCaseStopEvent(currentTestFile, testcasePassed, endTime - startTime, userInfo.toString(), hostManager.getEnvId(), caseTimedOut, hasCore,
 				Constants.SKIP_TYPE_NO);
 		caseRunning = false;
 		
@@ -385,6 +458,9 @@ public class Test {
 		ArrayList<String> actualResultList = null;
 		boolean sameData = false;
 		do {
+			if (caseTimedOut) {
+				throw new SyncException();
+			}
 			try {
 				expectResult = executeOnMaster(isSQL, isCMD, stmt, false);
 				
@@ -981,6 +1057,9 @@ public class Test {
 		long end_time;
 
 		while (true) {
+			if (caseTimedOut) {
+				throw new SyncException();
+			}
 			result = ssh.execute(script).trim();
 			mlog.print("  (" + (index++) + ") Wait data replicated ... ");
 			if (result.indexOf("GOOD-" + expectedFlagId) != -1) {

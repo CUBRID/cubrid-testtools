@@ -276,6 +276,18 @@ public class Context {
 		return this.reserveDiskSpaceSize;
 	}
 	
+	/*
+	 * testcase_timeout_in_secs: if a test case runs longer than this, it is stopped and reported as NOK (timeout).
+	 * Default 3600. 0 or less disables it.
+	 */
+	public int getTestCaseTimeoutInSecs() {
+		try {
+			return Integer.parseInt(getProperty(ConfigParameterConstants.TESTCASE_TIMEOUT_IN_SECS, String.valueOf(com.navercorp.cubridqa.ha_repl.common.Constants.TESTCASE_TIMEOUT_IN_SECS_DEFAULT)).trim());
+		} catch (Exception e) {
+			return com.navercorp.cubridqa.ha_repl.common.Constants.TESTCASE_TIMEOUT_IN_SECS_DEFAULT;
+		}
+	}
+
 	public int getHaSyncDetectTimeoutInMs() {
 		return this.haSyncDetectTimeoutInMs;
 	}
