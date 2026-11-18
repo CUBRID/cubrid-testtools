@@ -392,7 +392,11 @@ function InstallBuildForCoverage()
     tar zvxfm $buildFile
     cd -
     mkdir -p build
-    cd build
+    cd build || exit -1
+    # Remove the sources of earlier coverage builds. Only the source of this build is used to collect
+    # the coverage (run_coverage_collect_and_upload), and the earlier ones are never removed: they filled
+    # the disk of the test machines with one copy per build in the home of every test user.
+    rm -rf cubrid-* >/dev/null 2>&1
     cov_source_file_name=${source_url##*/}
     build_src_folder_full_name="${cov_source_file_name%-gcov*}" 
 	
