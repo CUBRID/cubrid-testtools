@@ -38,8 +38,9 @@
 #   - update the testcase checkout of BUILD_SCENARIO_BRANCH_GIT under a timeout with run_git_update, which takes
 #     the testcases the original run took: a develop build's are pinned to its engine commit time
 #     (BUILD_COMMIT_TIME, CUBRIDQA-1667), other builds take the branch head. A pull request rerun
-#     (MKEY_RERUN_TC_REF) then checks out the pull request's head instead. Verify the branch before trusting
-#     the commit; run_git_update gives up after 3 failed fetches or checkouts with an "ERROR: <reason>" line;
+#     (MKEY_RERUN_TC_REF) then checks out the pull request's commit QAHome pinned (MKEY_RERUN_TC_SHA) instead.
+#     Verify the branch before trusting the commit; run_git_update gives up after 3 failed fetches or checkouts
+#     with an "ERROR: <reason>" line;
 #   - no DB feedback, no QAHome notice/import, no upload to qa_repository or any other normal result path,
 #     no in-harness retry, no memory-leak mode;
 #   - verdicts come from the harness result files, never from the ctp.sh exit code;
@@ -81,8 +82,8 @@ function rerun_init() {
     RERUN_FAMILY=$1
     RERUN_BRANCH=$BUILD_SCENARIO_BRANCH_GIT
     RERUN_LOCAL_BRANCH=${RERUN_BRANCH//\//_}
-    # A pull request rerun runs the cases from the pull request's head: the build's testcase pin (and a failed
-    # lookup of it) does not apply, and the checkout ends on RERUN_PR_BRANCH.
+    # A pull request rerun runs the cases from the pull request's commit QAHome pinned (its head at the request):
+    # the build's testcase pin (and a failed lookup of it) does not apply, and the checkout ends on RERUN_PR_BRANCH.
     RERUN_TC_REF=$MKEY_RERUN_TC_REF
     RERUN_TC_SHA=$MKEY_RERUN_TC_SHA
     if [ -n "$RERUN_TC_REF" ]; then
@@ -265,10 +266,12 @@ function rerun_case_log_section() {
     echo >> "$RERUN_CASE_LOG"
 }
 
-# rerun_case_copy <file> [name]: copy one text evidence file into the case dir (scrubbed).
+# rerun_case_copy <file> [name]: copy one text evidence file into the case dir (scrubbed), under
+# rerun_pub_name of its name (RERUN_COPIED_AS).
 function rerun_case_copy() {
     [ -f "$1" ] || return 1
-    tail -c "$RERUN_LOG_MAX_BYTES" "$1" | rerun_scrub_stream > "$RERUN_CASE_DIR/${2:-$(basename "$1")}"
+    RERUN_COPIED_AS=$(rerun_pub_name "${2:-$(basename "$1")}")
+    tail -c "$RERUN_LOG_MAX_BYTES" "$1" | rerun_scrub_stream > "$RERUN_CASE_DIR/$RERUN_COPIED_AS"
 }
 
 # rerun_extract_block <file> <needle> <stop ERE>: from the first line containing <needle> (fixed string)
@@ -346,9 +349,45 @@ function rerun_scrub_stream() {
         -e 's#([A-Za-z0-9_.]*([Pp][Ww][Dd]|[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]|[Pp][Aa][Ss][Ss][Ww][Dd])[A-Za-z0-9_.]*[[:space:]]*[=:][[:space:]]*)[^[:space:]]+#\1****#g'
 }
 
-# rerun_save_log <file> <path relative to RERUN_LOG_ROOT> [drop ERE]: publish a scrubbed, size-capped copy.
+# rerun_pub_name <name> [dir]: the name a file (with "dir": a directory) gets in the uploaded logs. They land in
+# QAHome's web root, where a .jsp runs and a .html, .svg or a name with no known type can open as a page, and
+# cases and testcase repos choose many of the names. So: characters outside [A-Za-z0-9._@+=,~-] become "_", a
+# name starting with another character than [A-Za-z0-9_] gets a "_" in front, a long one is cut, and a file
+# name not ending in .log, .txt or .tsv gets ".txt" (Tomcat serves those as text). Keeps a name it gave.
+function rerun_pub_name() {
+    local n
+    n=$(printf '%s' "$1" | LC_ALL=C tr -c 'A-Za-z0-9._@+=,~-' '_')
+    case "$n" in [A-Za-z0-9_]*) ;; *) n=_$n ;; esac
+    [ ${#n} -gt 250 ] && n=${n:0:240}
+    if [ "$2" != "dir" ]; then
+        case "$n" in *.log | *.txt | *.tsv) ;; *) n=$n.txt ;; esac
+    fi
+    printf '%s' "$n"
+}
+
+# rerun_safe_log_names <dir>: the last check before an upload: only plain files and directories, each under a
+# name rerun_pub_name keeps (one a runner wrote without it is renamed, and the rename logged).
+function rerun_safe_log_names() {
+    local p b n k
+    find "$1" -mindepth 1 ! -type f ! -type d -exec rm -f {} + 2>/dev/null
+    find "$1" -mindepth 1 -depth -print0 | while IFS= read -r -d '' p; do
+        b=${p##*/}
+        if [ -d "$p" ]; then n=$(rerun_pub_name "$b" dir); else n=$(rerun_pub_name "$b"); fi
+        [ "$n" == "$b" ] && continue
+        k=1
+        while [ -e "${p%/*}/$n" ]; do
+            if [ -d "$p" ]; then n=$(rerun_pub_name "$b.$k" dir); else n=$(rerun_pub_name "$b.$k"); fi
+            k=$((k + 1))
+        done
+        mv -f -- "$p" "${p%/*}/$n" && echo "[RERUN] published ${p#$1/} as $n"
+    done
+}
+
+# rerun_save_log <file> <path relative to RERUN_LOG_ROOT> [drop ERE]: publish a scrubbed, size-capped copy (the
+# file under rerun_pub_name of its name).
 function rerun_save_log() {
     local src=$1 dest=$RERUN_LOG_ROOT/$2
+    dest=${dest%/*}/$(rerun_pub_name "${dest##*/}")
     [ -f "$src" ] || return 1
     mkdir -p "$(dirname "$dest")"
     if [ "$(wc -c < "$src")" -gt "$RERUN_LOG_MAX_BYTES" ]; then
@@ -471,8 +510,10 @@ function rerun_set_tc_commit() {
 # run_git_update: they check run_git_update's own report (its "ERROR:" line, and the "TC pin time:" line when
 # the build's testcases are pinned), then for a pull request rerun fetch RERUN_TC_REF from the testcase
 # repository (a temporary remote made the way run_git_update makes auto_update_url: the checkout's origin
-# with conf/common.conf's git_user / git_pwd; removed again, and the URL never printed) and check out its head. Every failure prints RERUN_ERROR=<reason> and exits 0. Expects $W, $d and $rc (run_git_update's
-# status, its output in $W/git_update.log); used locally and on the test nodes.
+# with conf/common.conf's git_user / git_pwd; removed again, and the URL never printed) and check out
+# RERUN_TC_SHA, which must be on it: not the head, which may have moved since the request. Every failure prints
+# RERUN_ERROR=<reason> and exits 0. Expects $W, $d and $rc (run_git_update's status, its output in
+# $W/git_update.log); used locally and on the test nodes.
 function rerun_tc_checkout_script() {
     cat >> "$1" <<RERUN_EOF
 if [ \$rc -eq 124 ] || [ \$rc -eq 137 ]; then echo "RERUN_ERROR=testcase update timed out after ${RERUN_GIT_TIMEOUT}s"; exit 0; fi
@@ -503,15 +544,15 @@ sha="${RERUN_TC_SHA}"
 if [ -n "\$sha" ] && ! git merge-base --is-ancestor "\$sha" "\$tip" 2>/dev/null; then
     echo "RERUN_ERROR=${RERUN_TC_REF} no longer contains commit \$sha (its head is \$tip)"; exit 0
 fi
-if ! git checkout -q -f -B ${RERUN_PR_BRANCH} "\$tip" 2> "\$W/pr_checkout.log"; then
-    echo "RERUN_ERROR=cannot check out \$tip of ${RERUN_TC_REF}: \$(head -1 "\$W/pr_checkout.log" | cut -c1-200)"; exit 0
+if ! git checkout -q -f -B ${RERUN_PR_BRANCH} "\$sha" 2> "\$W/pr_checkout.log"; then
+    echo "RERUN_ERROR=cannot check out \$sha of ${RERUN_TC_REF}: \$(head -1 "\$W/pr_checkout.log" | cut -c1-200)"; exit 0
 fi
-echo "Testcases from ${RERUN_TC_REF} at \$tip"
+echo "Testcases from ${RERUN_TC_REF} at \$sha\$([ "\$sha" != "\$tip" ] && echo " (its head is now \$tip)")"
 RERUN_EOF
 }
 
 # rerun_git_update_local <dir>: update a local checkout of BUILD_SCENARIO_BRANCH_GIT with the daily command
-# (run_git_update, pinned like the original run) under a timeout, or to a pull request's head, verify the
+# (run_git_update, pinned like the original run) under a timeout, or to a pull request's commit, verify the
 # branch and set RERUN_GIT_COMMIT. On failure: status 1 and the reason in RERUN_LAST_ERROR. Call it directly,
 # not in $(...), or the reason is lost.
 function rerun_git_update_local() {
@@ -1259,11 +1300,11 @@ EOF
 }
 
 # rerun_capture_publish <rerunId> <case dir: relative to the node user's $HOME, or absolute>: publish the copies of
-# one case under <rerunId>/capture/ (scrubbed like every published log) with INDEX.tsv (how, time, size,
-# published file or "-" when the case budget was spent, file name), and print a short listing for the case
-# log. Prints nothing when no copy of this case came back.
+# one case under <rerunId>/capture/ (scrubbed like every published log, under rerun_pub_name of the name they
+# were kept as) with INDEX.tsv (how, time, size, published file or "-" when the case budget was spent, file
+# name), and print a short listing for the case log. Prints nothing when no copy of this case came back.
 function rerun_capture_publish() {
-    local rid=$1 casedir=${2#./} d cdir="" how t size path name n=0 skipped=0
+    local rid=$1 casedir=${2#./} d cdir="" how t size path pub name k n=0 skipped=0
     for d in "$RERUN_FAM_WORK"/capture_env_*/capture/*/; do
         [ -f "$d/case_dir" ] || continue
         case "$(cat "$d/case_dir")" in
@@ -1279,14 +1320,23 @@ function rerun_capture_publish() {
             -) ;;
             "" | */* | .*) path=- ;;
         esac
-        if [ "$path" != "-" ] && [ -f "$cdir/files/$path" ] && [ ! -L "$cdir/files/$path" ] &&
-            rerun_save_log "$cdir/files/$path" "$rid/capture/$path"; then
+        pub=-
+        if [ "$path" != "-" ] && [ -f "$cdir/files/$path" ] && [ ! -L "$cdir/files/$path" ]; then
+            # "x.jsp" and a kept "x.jsp.txt" would get one name
+            pub=$(rerun_pub_name "$path")
+            k=1
+            while [ -e "$RERUN_LOG_ROOT/$rid/capture/$pub" ]; do
+                pub=$(rerun_pub_name "$path.$k")
+                k=$((k + 1))
+            done
+            rerun_save_log "$cdir/files/$path" "$rid/capture/$pub" || pub=-
+        fi
+        if [ "$pub" != "-" ]; then
             n=$((n + 1))
         else
-            path=-
             skipped=$((skipped + 1))
         fi
-        printf '%s\t%s\t%s\t%s\t%s\n' "$how" "$t" "$size" "$path" "$name" | rerun_scrub_stream >> "$RERUN_LOG_ROOT/$rid/capture/INDEX.tsv"
+        printf '%s\t%s\t%s\t%s\t%s\n' "$how" "$t" "$size" "$pub" "$name" | rerun_scrub_stream >> "$RERUN_LOG_ROOT/$rid/capture/INDEX.tsv"
     done < "$cdir/index"
     echo "${n} file(s) of the cases directory under capture/ (list: capture/INDEX.tsv)$([ $skipped -gt 0 ] && echo ", ${skipped} not kept: the ${RERUN_CAPTURE_CASE_MAX}-byte case budget was spent")"
     awk -F'\t' '{ printf "  %-8s %-12s %10s  %s\n", $2, $1, $3, ($4 == "-" ? "(not kept) " $5 : $4) }' "$RERUN_LOG_ROOT/$rid/capture/INDEX.tsv"

@@ -42,9 +42,10 @@ start_consumer.sh (every consumer of the original queue)
   as above, then fetches the pull request's head from the testcase repository through a temporary remote made
   the way `run_git_update` makes `auto_update_url` (the checkout's origin with `conf/common.conf`'s
   `git_user` / `git_pwd`, so a fork's branch needs no other access; removed right after, the URL never
-  printed) and checks it out on the local branch `rerun_tc_pr`; the next `run_git_update` moves the checkout
-  back. The commit QAHome knows is required, and a head that no longer contains it is refused. The build pin
-  does not apply.
+  printed) and checks out `MKEY_RERUN_TC_SHA` on the local branch `rerun_tc_pr`; the next `run_git_update`
+  moves the checkout back. That commit is the pull request's head when the rerun was requested (QAHome reads it
+  on GitHub then): a push after the request does not run, and a head that no longer contains the commit (a
+  force push) is refused. The build pin does not apply.
 * sql family: only the requested cases are staged and run, on a new database. The cases that ran before one in
   the daily run do not run, so a failure caused by what they left (tables, users, parameters) may not reproduce;
   each case log says so. A medium file of an order-dependent directory (`_07_mc_dep`, `_08_mc_ind`:
@@ -63,6 +64,12 @@ start_consumer.sh (every consumer of the original queue)
   checked-out file, or data the case unpacks from its archives, which keeps the archive's dates) and is not
   kept. The scripts are put back after the harness; the copies are published under
   `<rerunId>/capture/` with `INDEX.tsv`. `init.sh` and daily runs are unchanged.
+* The logs are uploaded into QAHome's web root, where a `.jsp` would run and a `.html`, `.svg` or a name
+  without a known type could open as a page, and cases and testcase repositories choose many of the names. So
+  every file is published under a plain name: characters outside `[A-Za-z0-9._@+=,~-]` become `_`, and a
+  name not ending in `.log`, `.txt` or `.tsv` gets `.txt` (`x.jsp` -> `x.jsp.txt`, `<base>.master.dump` ->
+  `<base>.master.dump.txt`). `INDEX.tsv` gives each capture copy's published name and its original one. A
+  file a runner wrote under another name is renamed just before the upload, and the runner log says so.
 * A rerun never feeds the normal result paths (no DB feedback, no `*ImportAction.nhn` call, no upload
   to `qa_repository/function`): importing a partial run would hide the original run's fail list.
 * A rerun can be cancelled from QAHome (the `in progress` cell opens its details). While the harness

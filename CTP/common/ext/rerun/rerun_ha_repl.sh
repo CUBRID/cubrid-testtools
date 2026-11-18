@@ -206,7 +206,7 @@ function rerun_repl_family() {
 
 # rerun_repl_case_log <rerunId> <sce> <key> <status> <note>: feedback.log entry, dumps and diffs of the case.
 function rerun_repl_case_log() {
-    local key=$3 base f d=${CTP_HOME}/result/$RERUN_REPL_FAM/current_runtime_logs
+    local key=$3 base f pub d=${CTP_HOME}/result/$RERUN_REPL_FAM/current_runtime_logs
     base=${key%.test}
     rerun_extract_block "$d/feedback.log" " $RERUN_REPL_STAGE/$key " '^[[](OK|NOK|SKIP_BY_MACRO|SKIP_BY_BUG|UNKNOWN)[]] |^=============' |
         rerun_case_log_section "feedback.log"
@@ -215,16 +215,16 @@ function rerun_repl_case_log() {
         case "$f" in
             *.dump)
                 # from the head: the diff's line numbers must still point into the copy (QAHome excerpts around them)
-                head -c "$RERUN_LOG_MAX_BYTES" "$f" | rerun_scrub_stream > "$RERUN_CASE_DIR/${f##*/}"
+                pub=$(rerun_pub_name "${f##*/}")
+                head -c "$RERUN_LOG_MAX_BYTES" "$f" | rerun_scrub_stream > "$RERUN_CASE_DIR/$pub"
                 if [ "$(stat -c %s "$f" 2>/dev/null || echo 0)" -gt "$RERUN_LOG_MAX_BYTES" ]; then
-                    echo "copied: ${f##*/} (first $RERUN_LOG_MAX_BYTES bytes)" >> "$RERUN_CASE_LOG"
+                    echo "copied: $pub (first $RERUN_LOG_MAX_BYTES bytes)" >> "$RERUN_CASE_LOG"
                 else
-                    echo "copied: ${f##*/}" >> "$RERUN_CASE_LOG"
+                    echo "copied: $pub" >> "$RERUN_CASE_LOG"
                 fi
                 ;;
             *.temp|*.diff_*)
-                rerun_case_copy "$f"
-                echo "copied: ${f##*/}" >> "$RERUN_CASE_LOG"
+                rerun_case_copy "$f" && echo "copied: $RERUN_COPIED_AS" >> "$RERUN_CASE_LOG"
                 ;;
         esac
     done

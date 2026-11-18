@@ -311,6 +311,8 @@ while IFS=$'\t' read -r rerun_id sce_id; do
     fi
 done < "$RERUN_CASES_FILE"
 
+# The logs land in QAHome's web root: no name there may run (.jsp) or open as a page (rerun_pub_name).
+type rerun_safe_log_names > /dev/null 2>&1 && rerun_safe_log_names "$RERUN_LOG_ROOT"
 logs_uploaded=1
 if [ -n "$(ls -A "$RERUN_LOG_ROOT" 2>/dev/null)" ]; then
     # under a timeout: the upload tool retries for minutes and has no ssh timeout of its own
