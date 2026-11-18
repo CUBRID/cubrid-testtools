@@ -695,12 +695,16 @@ public class CommonUtils {
 	}
 
 	public static void cleanFilesByDirectory(String dir) {
+		cleanFilesByDirectory(dir, null);
+	}
+
+	public static void cleanFilesByDirectory(String dir, String keepFileName) {
 		if (isEmpty(dir))
 			return;
 
 		File[] subList = new File(dir).listFiles();
 		for (File file : subList) {
-			if (file.isFile())
+			if (file.isFile() && !file.getName().equals(keepFileName))
 				file.delete();
 		}
 	}

@@ -59,7 +59,8 @@ public class Test {
 	boolean hasCore = false;
 	StringBuffer userInfo = null;
 
-	boolean testCompleted;
+	volatile boolean testCompleted;
+	boolean caseRunning = false;
 	String currentTestFile;
 	Context context;
 
@@ -98,40 +99,68 @@ public class Test {
 		boolean haveLeapInLastDB = false;
 		String filename;
 
-		while (true) {
-			filename = dispatch.nextTestFile();
-			this.hostManager.refreshConnection();
-			if (filename == null) {
-				context.getFeedback().onStopEnvEvent(hostManager, mlog);
+		try {
+			while (true) {
+				filename = dispatch.nextTestFile();
+				this.hostManager.refreshConnection();
+				if (filename == null) {
+					context.getFeedback().onStopEnvEvent(hostManager, mlog);
 
-				if (context.shouldCleanupAfterQuit()) {
-					cleanAfterQuit();
+					if (context.shouldCleanupAfterQuit()) {
+						cleanAfterQuit();
+					}
+
+					this.testCompleted = true;
+					break;
 				}
 
-				this.testCompleted = true;
-				break;
-			}
+				try {
+					haveLeapInCurrTestCase = CommonUtils.containToken(filename, "tz_leap_second_support");
+				} catch (Exception e) {
+					haveLeapInCurrTestCase = false;
+				}
 
+				if (isFinalDatabaseDirty() || haveLeapInCurrTestCase != haveLeapInLastDB) {
+					if (haveLeapInCurrTestCase != haveLeapInLastDB) {
+						mlog.println("ERROR: found different tz_leap_second_support (db: " + haveLeapInLastDB + ", case: " + haveLeapInCurrTestCase + ")");
+					}
+					HaReplUtils.rebuildFinalDatabase(context, hostManager, mlog, haveLeapInCurrTestCase ? "tz_leap_second_support=yes" : "");
+				} else {
+					mlog.println("Needn't rebuild database.");
+				}
+
+				haveLeapInLastDB = haveLeapInCurrTestCase;
+				rebuildFinalFlagTable();
+
+				executeTest(new File(filename));
+				this.finishedLog.println(filename);
+			}
+		} catch (Throwable t) {
+			// Without this, the monitor of this env waits for testCompleted forever and the whole task never ends.
+			reportAbnormalStop(t);
+		} finally {
+			this.testCompleted = true;
+		}
+	}
+
+	private void reportAbnormalStop(Throwable t) {
+		java.io.StringWriter sw = new java.io.StringWriter();
+		t.printStackTrace(new java.io.PrintWriter(sw));
+		String info = "[ERROR] test thread of " + hostManager.getEnvId() + " stopped abnormally while running " + currentTestFile + Constants.LINE_SEPARATOR + sw.toString();
+
+		System.err.println(info);
+		try {
+			mlog.println(info);
+		} catch (Throwable ignored) {
+		}
+
+		if (caseRunning) {
+			// report the test case that was running, so that it is shown as NOK instead of being lost
 			try {
-				haveLeapInCurrTestCase = CommonUtils.containToken(filename, "tz_leap_second_support");
-			} catch (Exception e) {
-				haveLeapInCurrTestCase = false;
+				context.getFeedback().onTestCaseStopEvent(currentTestFile, false, 0, info, hostManager.getEnvId(), false, false, Constants.SKIP_TYPE_NO);
+			} catch (Throwable ignored) {
 			}
-
-			if (isFinalDatabaseDirty() || haveLeapInCurrTestCase != haveLeapInLastDB) {
-				if (haveLeapInCurrTestCase != haveLeapInLastDB) {
-					mlog.println("ERROR: found different tz_leap_second_support (db: " + haveLeapInLastDB + ", case: " + haveLeapInCurrTestCase + ")");
-				}
-				HaReplUtils.rebuildFinalDatabase(context, hostManager, mlog, haveLeapInCurrTestCase ? "tz_leap_second_support=yes" : "");
-			} else {
-				mlog.println("Needn't rebuild database.");
-			}
-
-			haveLeapInLastDB = haveLeapInCurrTestCase;
-			rebuildFinalFlagTable();
-
-			executeTest(new File(filename));
-			this.finishedLog.println(filename);
+			caseRunning = false;
 		}
 	}
 
@@ -162,6 +191,7 @@ public class Test {
 		}
 
 		context.getFeedback().onTestCaseStartEvent(this.currentTestFile, this.hostManager.getEnvId());
+		caseRunning = true;
 
 		failCount = 0;
 		testCount = 0;
@@ -312,6 +342,7 @@ public class Test {
 
 		context.getFeedback().onTestCaseStopEvent(currentTestFile, testcasePassed, endTime - startTime, userInfo.toString(), hostManager.getEnvId(), false, hasCore,
 				Constants.SKIP_TYPE_NO);
+		caseRunning = false;
 		
 		System.out.println("[TESTCASE] " + currentTestFile + " " + (endTime - startTime) + "ms " + hostManager.getEnvId() + " " + "[" + resultType + "]");
 		if (hasCore) {

@@ -118,7 +118,8 @@ public class Main {
 		if (context.isContinueMode()) {
 			context.getFeedback().onTaskContinueEvent();
 		} else {
-			com.navercorp.cubridqa.common.CommonUtils.cleanFilesByDirectory(context.getCurrentLogDir());
+			// keep runtime.log: run_ha_repl.sh writes the console output into it through tee before CTP starts
+			com.navercorp.cubridqa.common.CommonUtils.cleanFilesByDirectory(context.getCurrentLogDir(), "runtime.log");
 			context.getFeedback().onTaskStartEvent();
 			context.getFeedback().onConvertEventStart();
 			Convert c = new Convert(testRoot);
