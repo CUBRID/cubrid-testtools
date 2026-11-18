@@ -278,7 +278,7 @@ public class Context {
 	
 	/*
 	 * testcase_timeout_in_secs: if a test case runs longer than this, it is stopped and reported as NOK (timeout).
-	 * Default 1800. 0 or less disables it.
+	 * Default 7200. 0 or less disables it.
 	 */
 	public int getTestCaseTimeoutInSecs() {
 		try {
