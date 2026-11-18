@@ -157,6 +157,11 @@ public class Test {
 		if (caseRunning) {
 			// report the test case that was running, so that it is shown as NOK instead of being lost
 			try {
+				// same line as a normal NOK: backupTestResults() collects the dumps of the test cases with it
+				mlog.println("[NOK] " + currentTestFile);
+			} catch (Throwable ignored) {
+			}
+			try {
 				context.getFeedback().onTestCaseStopEvent(currentTestFile, false, 0, info, hostManager.getEnvId(), false, false, Constants.SKIP_TYPE_NO);
 			} catch (Throwable ignored) {
 			}
