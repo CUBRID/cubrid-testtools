@@ -375,8 +375,9 @@ function rerun_safe_log_names() {
         if [ -d "$p" ]; then n=$(rerun_pub_name "$b" dir); else n=$(rerun_pub_name "$b"); fi
         [ "$n" == "$b" ] && continue
         k=1
+        # numbered from a shortened name: a cut would drop the number (a long name would never get a free one)
         while [ -e "${p%/*}/$n" ]; do
-            if [ -d "$p" ]; then n=$(rerun_pub_name "$b.$k" dir); else n=$(rerun_pub_name "$b.$k"); fi
+            if [ -d "$p" ]; then n=$(rerun_pub_name "${b:0:200}.$k" dir); else n=$(rerun_pub_name "${b:0:200}.$k"); fi
             k=$((k + 1))
         done
         mv -f -- "$p" "${p%/*}/$n" && echo "[RERUN] published ${p#$1/} as $n"
@@ -1322,11 +1323,11 @@ function rerun_capture_publish() {
         esac
         pub=-
         if [ "$path" != "-" ] && [ -f "$cdir/files/$path" ] && [ ! -L "$cdir/files/$path" ]; then
-            # "x.jsp" and a kept "x.jsp.txt" would get one name
+            # "x.jsp" and a kept "x.jsp.txt" would get one name; numbered from a shortened name, which a cut keeps
             pub=$(rerun_pub_name "$path")
             k=1
             while [ -e "$RERUN_LOG_ROOT/$rid/capture/$pub" ]; do
-                pub=$(rerun_pub_name "$path.$k")
+                pub=$(rerun_pub_name "${path:0:200}.$k")
                 k=$((k + 1))
             done
             rerun_save_log "$cdir/files/$path" "$rid/capture/$pub" || pub=-
