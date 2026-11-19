@@ -588,7 +588,8 @@ echo "Testcases from ${RERUN_TC_REF} at \$sha\$([ "\$sha" != "\$tip" ] && echo "
 RERUN_EOF
 }
 
-# rerun_tc_fix_script <file>: the fix part of rerun_tc_checkout_script. In the checkout of the fix's repository
+# rerun_tc_fix_script <file>: the fix part of rerun_tc_checkout_script. It first checks that $W/fix_files.tsv is
+# the consumer's RERUN_FIX_FILES (a push that lost lines must not run part of the fix). In the checkout of the fix's repository
 # (RERUN_FIX_REPO, checked against origin) it checks out RERUN_TC_SHA on RERUN_FIX_BRANCH (on the branch it must
 # be in the updated history; on a pull request the pull request part checked it), writes each file of
 # $W/fix_files.tsv (path, sha256, base64; checked by rerun_fix_check) where no symlink leads, checks its bytes,
@@ -597,6 +598,9 @@ RERUN_EOF
 # it is.
 function rerun_tc_fix_script() {
     cat >> "$1" <<RERUN_EOF
+if [ "\$(sha256sum < "\$W/fix_files.tsv" | cut -d' ' -f1)" != "$(sha256sum < "$RERUN_FIX_FILES" | cut -d' ' -f1)" ]; then
+    echo "RERUN_ERROR=the fix's files reached \$(hostname) incomplete"; exit 0
+fi
 cd "\$d" || exit 0
 top=\$(git rev-parse --show-toplevel 2>/dev/null)
 if [ -z "\$top" ]; then echo "RERUN_ERROR=\$d is not a git checkout"; exit 0; fi
