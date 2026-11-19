@@ -267,7 +267,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    ONE_STAR,			/* STAR */
    IN_C_COMMENT,		/* DASH */
    IN_C_COMMENT,		/* SEMI */
-   IN_C_COMMENT,			/* PLUS */
+   IN_C_COMMENT,		/* PLUS */
    IN_C_COMMENT,		/* OTHER */
    },
 
@@ -282,7 +282,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    ONE_STAR,			/* STAR */
    IN_C_COMMENT,		/* DASH */
    IN_C_COMMENT,		/* SEMI */
-   IN_C_COMMENT,			/* PLUS */
+   IN_C_COMMENT,		/* PLUS */
    IN_C_COMMENT,		/* OTHER */
    },
 
@@ -312,7 +312,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    IN_SQL_COMMENT,		/* STAR */
    IN_SQL_COMMENT,		/* DASH */
    IN_SQL_COMMENT,		/* SEMI */
-   IN_SQL_COMMENT,			/* PLUS */
+   IN_SQL_COMMENT,		/* PLUS */
    IN_SQL_COMMENT,		/* OTHER */
    },
 
@@ -327,7 +327,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    IN_DQ_STRING,		/* STAR */
    IN_DQ_STRING,		/* DASH */
    IN_DQ_STRING,		/* SEMI */
-   IN_DQ_STRING,			/* PLUS */
+   IN_DQ_STRING,		/* PLUS */
    IN_DQ_STRING,		/* OTHER */
    },
 
@@ -342,7 +342,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    IN_DQ_STRING,		/* STAR */
    IN_DQ_STRING,		/* DASH */
    IN_DQ_STRING,		/* SEMI */
-   IN_DQ_STRING,			/* PLUS */
+   IN_DQ_STRING,		/* PLUS */
    IN_DQ_STRING,		/* OTHER */
    },
 
@@ -357,7 +357,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    IN_SQ_STRING,		/* STAR */
    IN_SQ_STRING,		/* DASH */
    IN_SQ_STRING,		/* SEMI */
-   IN_SQ_STRING,			/* PLUS */
+   IN_SQ_STRING,		/* PLUS */
    IN_SQ_STRING,		/* OTHER */
    },
 
@@ -387,7 +387,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    IN_SQ_STRING,		/* STAR */
    IN_SQ_STRING,		/* DASH */
    IN_SQ_STRING,		/* SEMI */
-   IN_SQ_STRING,			/* PLUS */
+   IN_SQ_STRING,		/* PLUS */
    IN_SQ_STRING,		/* OTHER */
    },
 
@@ -480,7 +480,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    SKIP,			/* STAR */
    COPY_HOLD_AND_INPUT,		/* DASH */
    COPY_HOLD_AND_INPUT,		/* SEMI */
-   COPY_HOLD_AND_INPUT,			/* PLUS */
+   COPY_HOLD_AND_INPUT,		/* PLUS */
    COPY_HOLD_AND_INPUT,		/* OTHER */
    },
 
@@ -525,7 +525,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    COPY_HOLD_AND_INPUT,		/* STAR */
    SKIP,			/* DASH */
    COPY_HOLD_AND_INPUT,		/* SEMI */
-   COPY_HOLD_AND_INPUT,			/* PLUS */
+   COPY_HOLD_AND_INPUT,		/* PLUS */
    COPY_HOLD_AND_INPUT,		/* OTHER */
    },
 
@@ -570,7 +570,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    COPY_HOLD_AND_INPUT,		/* STAR */
    COPY_HOLD_AND_INPUT,		/* DASH */
    COPY_HOLD_AND_INPUT,		/* SEMI */
-   COPY_HOLD_AND_INPUT,			/* PLUS */
+   COPY_HOLD_AND_INPUT,		/* PLUS */
    COPY_HOLD_AND_INPUT,		/* OTHER */
    },
 
@@ -615,7 +615,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    COPY_HOLD_AND_INPUT,		/* STAR */
    COPY_HOLD_AND_INPUT,		/* DASH */
    COPY_HOLD_AND_INPUT,		/* SEMI */
-   COPY_HOLD_AND_INPUT,			/* PLUS */
+   COPY_HOLD_AND_INPUT,		/* PLUS */
    COPY_HOLD_AND_INPUT,		/* OTHER */
    },
 
@@ -688,6 +688,7 @@ fsm (void)
   int pending_ws;
   int hold = '?';
   STATE state;
+  ACTION act;
 
 #define DEPOSIT(ch) \
     do { \
@@ -717,14 +718,13 @@ fsm (void)
     {
       /*
        * Set up limit so that we quit the loop when we exhaust either
-       * the raw buffer or the accumulating buffer.  Make sure that
-       * there are at least three characters in the assembly buffer,
-       * since the COPY_HOLD_AND_INPUT action may need to deposit four
-       * characters under the right circumstances (i.e., pending
-       * whitespace preceding a "/;" will require us to deposit " /;\0"
-       * in the buffer).  COPY_HOLD_STAR_AND_INPUT deposits four
-       * characters (" /*+"), and "\0" may follow them at the end of
-       * the input, so keep four free.
+       * the raw buffer or the accumulating buffer.  Keep at least four
+       * free characters in the assembly buffer.  One step of the loop
+       * deposits at most four characters: COPY_HOLD_STAR_AND_INPUT
+       * deposits a pending blank, the held slash, a star and a plus.
+       * The loop stops with at least one free character left, which
+       * is where the terminating NUL goes at the end of a statement
+       * or of the input.
        */
       bp = buf_next;
       rp = raw_next;
@@ -748,8 +748,21 @@ fsm (void)
 	  cc = classify[ch];
 
 	  state = next_state[st][cc];
+	  act = action[st][cc];
 
-	  switch (action[st][cc])
+	  /*
+	   * A hint follows the client prefix of a statement ("C1: select
+	   * slash star plus ..."), so a statement never starts with one.
+	   * At the start of a statement it is a comment, such as a banner,
+	   * and is skipped like any other comment.
+	   */
+	  if (state == IN_HINT && st == SLASH_STAR && bp == buf)
+	    {
+	      state = IN_C_COMMENT;
+	      act = SKIP;
+	    }
+
+	  switch (act)
 	    {
 	    case COPY_INPUT:
 	      DEPOSIT (ch);
@@ -828,10 +841,22 @@ fsm (void)
     }
 
   /*
-   * If we get here we have exhausted the input file.  We either have
-   * something interesting in the accumulation buffer or we don't.  If
-   * we do, terminate it properly and return it.  If we don't, free the
-   * accumulation buffer and return NULL.
+   * If we get here we have exhausted the input file.  A hint that is
+   * not closed has copied everything up to the end of the input into
+   * one statement, which is not a statement anyone wrote and may not
+   * fit the callers' statement buffers.  Report it and return NULL as
+   * at the end of the input.
+   */
+  if (state == IN_HINT || state == IN_HINT_STAR)
+    {
+      fprintf (stderr, "ERROR: SQL hint is not closed before the end of the input (line %d)\n", parse_line_num);
+      buf_next = buf;
+    }
+
+  /*
+   * We either have something interesting in the accumulation buffer or
+   * we don't.  If we do, terminate it properly and return it.  If we
+   * don't, free the accumulation buffer and return NULL.
    */
   if (buf_next > buf)
     {
