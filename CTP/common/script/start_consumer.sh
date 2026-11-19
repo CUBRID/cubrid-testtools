@@ -244,7 +244,7 @@ function isRerunQueue()
 		*MEMORY_LEAK*|*CODE_COVERAGE*|*WIN*|*AIX*) return 1 ;;
 	esac
 	case "${2%.sh}" in
-		run_sql|run_sql_by_cci|run_shell|run_jdbc|run_isolation|run_ha_repl|run_cdc_repl) return 0 ;;
+		run_sql|run_sql_by_cci|run_shell|run_jdbc|run_isolation|run_ha_repl|run_cdc_repl|run_compat_jdbc) return 0 ;;
 	esac
 	return 1
 }

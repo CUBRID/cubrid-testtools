@@ -221,6 +221,8 @@ function rerun_family_of() {
         isolation|isolation_debug) echo isolation ;;
         ha_repl|ha_repl_debug) echo ha_repl ;;
         cdc_repl) echo cdc_repl ;;
+        # the JDBC compat runs (jdbc_sql_<ver>_D / _S64, ...): the category is COMPAT_TEST_CATAGORY
+        compat_jdbc_D|compat_jdbc_S64) echo compat_jdbc ;;
         *) echo "" ;;
     esac
 }
