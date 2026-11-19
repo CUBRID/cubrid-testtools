@@ -163,6 +163,16 @@ typedef enum
   /* if followed by a newline we should */
   /* skip it. */
 
+  SLASH_STAR,			/* We've seen '/' '*' while in the normal */
+  /* state: a C comment, or a SQL hint */
+  /* if a '+' follows */
+
+  IN_HINT,			/* Inside a SQL hint, which is copied */
+
+  IN_HINT_STAR,			/* We've seen a '*' while inside a SQL */
+  /* hint, which may introduce the */
+  /* terminating star-slash sequence */
+
   NUM_STATES
 } STATE;
 
@@ -178,6 +188,7 @@ typedef enum
   STAR,				/* Asterisk: '*' */
   DASH,				/* Dash: '-' */
   SEMI,				/* Semicolon: ';' */
+  PLUS,				/* Plus: '+' */
   OTHER,			/* Anything else */
 
   NUM_CLASSES
@@ -193,6 +204,7 @@ typedef enum
   COPY_HOLD_AND_INPUT,
   COPY_HOLD_AND_INSERT_WS,
   INSERT_WS,
+  COPY_HOLD_STAR_AND_INPUT,
   SKIP,
   QUIT
 } ACTION;
@@ -210,6 +222,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    ACCEPT,			/* STAR */
    ACCEPT,			/* DASH */
    ACCEPT,			/* SEMI */
+   ACCEPT,			/* PLUS */
    ACCEPT,			/* OTHER */
    },
 
@@ -224,6 +237,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    COPY,			/* STAR */
    ONE_DASH,			/* DASH */
    ACCEPT,			/* SEMI */
+   COPY,			/* PLUS */
    COPY,			/* OTHER */
    },
 
@@ -235,9 +249,10 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    COPY,			/* DQ */
    COPY,			/* ESCAPE */
    ONE_SLASH,			/* SLASH */
-   IN_C_COMMENT,		/* STAR */
+   SLASH_STAR,		/* STAR */
    COPY,			/* DASH */
    ACCEPT,			/* SEMI */
+   COPY,			/* PLUS */
    COPY,			/* OTHER */
    },
 
@@ -252,6 +267,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    ONE_STAR,			/* STAR */
    IN_C_COMMENT,		/* DASH */
    IN_C_COMMENT,		/* SEMI */
+   IN_C_COMMENT,			/* PLUS */
    IN_C_COMMENT,		/* OTHER */
    },
 
@@ -266,6 +282,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    ONE_STAR,			/* STAR */
    IN_C_COMMENT,		/* DASH */
    IN_C_COMMENT,		/* SEMI */
+   IN_C_COMMENT,			/* PLUS */
    IN_C_COMMENT,		/* OTHER */
    },
 
@@ -280,6 +297,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    COPY,			/* STAR */
    IN_SQL_COMMENT,		/* DASH */
    ACCEPT,			/* SEMI */
+   COPY,			/* PLUS */
    COPY,			/* OTHER */
    },
 
@@ -294,6 +312,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    IN_SQL_COMMENT,		/* STAR */
    IN_SQL_COMMENT,		/* DASH */
    IN_SQL_COMMENT,		/* SEMI */
+   IN_SQL_COMMENT,			/* PLUS */
    IN_SQL_COMMENT,		/* OTHER */
    },
 
@@ -308,6 +327,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    IN_DQ_STRING,		/* STAR */
    IN_DQ_STRING,		/* DASH */
    IN_DQ_STRING,		/* SEMI */
+   IN_DQ_STRING,			/* PLUS */
    IN_DQ_STRING,		/* OTHER */
    },
 
@@ -322,6 +342,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    IN_DQ_STRING,		/* STAR */
    IN_DQ_STRING,		/* DASH */
    IN_DQ_STRING,		/* SEMI */
+   IN_DQ_STRING,			/* PLUS */
    IN_DQ_STRING,		/* OTHER */
    },
 
@@ -336,6 +357,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    IN_SQ_STRING,		/* STAR */
    IN_SQ_STRING,		/* DASH */
    IN_SQ_STRING,		/* SEMI */
+   IN_SQ_STRING,			/* PLUS */
    IN_SQ_STRING,		/* OTHER */
    },
 
@@ -350,6 +372,7 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    COPY,			/* STAR */
    COPY,			/* DASH */
    ACCEPT,			/* SEMI */
+   COPY,			/* PLUS */
    COPY,			/* OTHER */
    },
 
@@ -364,7 +387,53 @@ static next_state[NUM_STATES][NUM_CLASSES] = {
    IN_SQ_STRING,		/* STAR */
    IN_SQ_STRING,		/* DASH */
    IN_SQ_STRING,		/* SEMI */
+   IN_SQ_STRING,			/* PLUS */
    IN_SQ_STRING,		/* OTHER */
+   },
+
+  /* SLASH_STAR */
+  {
+   IN_C_COMMENT,		/* NL */
+   IN_C_COMMENT,		/* WS */
+   IN_C_COMMENT,		/* SQ */
+   IN_C_COMMENT,		/* DQ */
+   IN_C_COMMENT,		/* ESCAPE */
+   IN_C_COMMENT,		/* SLASH */
+   ONE_STAR,			/* STAR */
+   IN_C_COMMENT,		/* DASH */
+   IN_C_COMMENT,		/* SEMI */
+   IN_HINT,			/* PLUS */
+   IN_C_COMMENT,		/* OTHER */
+   },
+
+  /* IN_HINT */
+  {
+   IN_HINT,			/* NL */
+   IN_HINT,			/* WS */
+   IN_HINT,			/* SQ */
+   IN_HINT,			/* DQ */
+   IN_HINT,			/* ESCAPE */
+   IN_HINT,			/* SLASH */
+   IN_HINT_STAR,		/* STAR */
+   IN_HINT,			/* DASH */
+   IN_HINT,			/* SEMI */
+   IN_HINT,			/* PLUS */
+   IN_HINT,			/* OTHER */
+   },
+
+  /* IN_HINT_STAR */
+  {
+   IN_HINT,			/* NL */
+   IN_HINT,			/* WS */
+   IN_HINT,			/* SQ */
+   IN_HINT,			/* DQ */
+   IN_HINT,			/* ESCAPE */
+   COPY,			/* SLASH */
+   IN_HINT_STAR,		/* STAR */
+   IN_HINT,			/* DASH */
+   IN_HINT,			/* SEMI */
+   IN_HINT,			/* PLUS */
+   IN_HINT,			/* OTHER */
    }
 };
 
@@ -381,6 +450,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    QUIT,			/* STAR */
    QUIT,			/* DASH */
    QUIT,			/* SEMI */
+   QUIT,			/* PLUS */
    QUIT,			/* OTHER */
    },
 
@@ -395,6 +465,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    COPY_INPUT,			/* STAR */
    HOLD,			/* DASH */
    COPY_INPUT,			/* SEMI */
+   COPY_INPUT,			/* PLUS */
    COPY_INPUT,			/* OTHER */
    },
 
@@ -409,6 +480,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    SKIP,			/* STAR */
    COPY_HOLD_AND_INPUT,		/* DASH */
    COPY_HOLD_AND_INPUT,		/* SEMI */
+   COPY_HOLD_AND_INPUT,			/* PLUS */
    COPY_HOLD_AND_INPUT,		/* OTHER */
    },
 
@@ -423,6 +495,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    SKIP,			/* STAR */
    SKIP,			/* DASH */
    SKIP,			/* SEMI */
+   SKIP,			/* PLUS */
    SKIP,			/* OTHER */
    },
 
@@ -437,6 +510,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    SKIP,			/* STAR */
    SKIP,			/* DASH */
    SKIP,			/* SEMI */
+   SKIP,			/* PLUS */
    SKIP,			/* OTHER */
    },
 
@@ -451,6 +525,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    COPY_HOLD_AND_INPUT,		/* STAR */
    SKIP,			/* DASH */
    COPY_HOLD_AND_INPUT,		/* SEMI */
+   COPY_HOLD_AND_INPUT,			/* PLUS */
    COPY_HOLD_AND_INPUT,		/* OTHER */
    },
 
@@ -465,6 +540,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    SKIP,			/* STAR */
    SKIP,			/* DASH */
    SKIP,			/* SEMI */
+   SKIP,			/* PLUS */
    SKIP,			/* OTHER */
    },
 
@@ -479,6 +555,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    COPY_INPUT,			/* STAR */
    COPY_INPUT,			/* DASH */
    COPY_INPUT,			/* SEMI */
+   COPY_INPUT,			/* PLUS */
    COPY_INPUT,			/* OTHER */
    },
 
@@ -493,6 +570,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    COPY_HOLD_AND_INPUT,		/* STAR */
    COPY_HOLD_AND_INPUT,		/* DASH */
    COPY_HOLD_AND_INPUT,		/* SEMI */
+   COPY_HOLD_AND_INPUT,			/* PLUS */
    COPY_HOLD_AND_INPUT,		/* OTHER */
    },
 
@@ -507,6 +585,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    COPY_INPUT,			/* STAR */
    COPY_INPUT,			/* DASH */
    COPY_INPUT,			/* SEMI */
+   COPY_INPUT,			/* PLUS */
    COPY_INPUT,			/* OTHER */
    },
 
@@ -521,6 +600,7 @@ static action[NUM_STATES][NUM_CLASSES] = {
    COPY_INPUT,			/* STAR */
    COPY_INPUT,			/* DASH */
    COPY_INPUT,			/* SEMI */
+   COPY_INPUT,			/* PLUS */
    COPY_INPUT,			/* OTHER */
    },
 
@@ -535,7 +615,53 @@ static action[NUM_STATES][NUM_CLASSES] = {
    COPY_HOLD_AND_INPUT,		/* STAR */
    COPY_HOLD_AND_INPUT,		/* DASH */
    COPY_HOLD_AND_INPUT,		/* SEMI */
+   COPY_HOLD_AND_INPUT,			/* PLUS */
    COPY_HOLD_AND_INPUT,		/* OTHER */
+   },
+
+  /* SLASH_STAR */
+  {
+   SKIP,			/* NL */
+   SKIP,			/* WS */
+   SKIP,			/* SQ */
+   SKIP,			/* DQ */
+   SKIP,			/* ESCAPE */
+   SKIP,			/* SLASH */
+   SKIP,			/* STAR */
+   SKIP,			/* DASH */
+   SKIP,			/* SEMI */
+   COPY_HOLD_STAR_AND_INPUT,	/* PLUS */
+   SKIP,			/* OTHER */
+   },
+
+  /* IN_HINT */
+  {
+   INSERT_WS,			/* NL */
+   INSERT_WS,			/* WS */
+   COPY_INPUT,			/* SQ */
+   COPY_INPUT,			/* DQ */
+   COPY_INPUT,			/* ESCAPE */
+   COPY_INPUT,			/* SLASH */
+   COPY_INPUT,			/* STAR */
+   COPY_INPUT,			/* DASH */
+   COPY_INPUT,			/* SEMI */
+   COPY_INPUT,			/* PLUS */
+   COPY_INPUT,			/* OTHER */
+   },
+
+  /* IN_HINT_STAR */
+  {
+   INSERT_WS,			/* NL */
+   INSERT_WS,			/* WS */
+   COPY_INPUT,			/* SQ */
+   COPY_INPUT,			/* DQ */
+   COPY_INPUT,			/* ESCAPE */
+   COPY_INPUT,			/* SLASH */
+   COPY_INPUT,			/* STAR */
+   COPY_INPUT,			/* DASH */
+   COPY_INPUT,			/* SEMI */
+   COPY_INPUT,			/* PLUS */
+   COPY_INPUT,			/* OTHER */
    }
 };
 
@@ -596,11 +722,13 @@ fsm (void)
        * since the COPY_HOLD_AND_INPUT action may need to deposit four
        * characters under the right circumstances (i.e., pending
        * whitespace preceding a "/;" will require us to deposit " /;\0"
-       * in the buffer).
+       * in the buffer).  COPY_HOLD_STAR_AND_INPUT deposits four
+       * characters (" /*+"), and "\0" may follow them at the end of
+       * the input, so keep four free.
        */
       bp = buf_next;
       rp = raw_next;
-      blimit = buf_limit - 3;	/* Artificially shorten */
+      blimit = buf_limit - 4;	/* Artificially shorten */
       rlimit = raw_limit;
 
       /*
@@ -644,6 +772,12 @@ fsm (void)
 	    case COPY_HOLD_AND_INSERT_WS:
 	      DEPOSIT (hold);
 	      pending_ws++;
+	      break;
+
+	    case COPY_HOLD_STAR_AND_INPUT:
+	      DEPOSIT (hold);
+	      *bp++ = '*';
+	      *bp++ = ch;
 	      break;
 
 	    case INSERT_WS:
@@ -736,6 +870,7 @@ init (void)
   classify['*'] = STAR;
   classify['-'] = DASH;
   classify[';'] = SEMI;
+  classify['+'] = PLUS;
 }
 
 
