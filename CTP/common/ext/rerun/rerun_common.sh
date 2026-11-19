@@ -481,15 +481,16 @@ function rerun_run_action() {
     fi
 }
 
-# rerun_check_installed [build id]: after a local install, cubrid_rel must answer with that build (default BUILD_ID;
-# a JDBC compat run whose server is the other build passes COMPAT_BUILD_ID), parsed as sql/bin/run.sh
-# init_cubrid_version does, so a failed install never reruns cases on the previous build.
+# rerun_check_installed [build id [package]]: after a local install, cubrid_rel must answer with that build (default
+# BUILD_ID, installed from ${url}; a JDBC compat run whose server is the other build passes COMPAT_BUILD_ID and its
+# package), parsed as sql/bin/run.sh init_cubrid_version does, so a failed install never reruns cases on the
+# previous build.
 function rerun_check_installed() {
-    local rel ver want=${1:-$BUILD_ID}
+    local rel ver want=${1:-$BUILD_ID} package=${2:-${url##*/}}
     RERUN_LAST_ERROR=""
     rel=$(rerun_timeout 120 cubrid_rel 2>&1 < /dev/null | grep CUBRID | head -1)
     if [ -z "$rel" ]; then
-        RERUN_LAST_ERROR="build install failed: cubrid_rel does not answer after installing ${url##*/} (see setup/install.log)"
+        RERUN_LAST_ERROR="build install failed: cubrid_rel does not answer after installing ${package} (see setup/install.log)"
         return 1
     fi
     ver=$(echo "$rel" | awk -F'(' '{print $2}' | awk -F')' '{print $1}')
