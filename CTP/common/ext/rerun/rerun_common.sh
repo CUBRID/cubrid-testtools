@@ -105,7 +105,7 @@ function rerun_init() {
     (umask 077; : > "$RERUN_SECRETS")
     trap 'rerun_cleanup' EXIT
     rerun_secrets_init
-    rerun_log "category ${BUILD_SCENARIOS}, build ${BUILD_ID}, testcase branch ${RERUN_BRANCH} ($(rerun_tc_source)), $(rerun_case_count) case(s), runner ${RERUN_FAMILY}"
+    rerun_log "category ${RERUN_CATEGORY:-$BUILD_SCENARIOS}, build ${BUILD_ID}, testcase branch ${RERUN_BRANCH} ($(rerun_tc_source)), $(rerun_case_count) case(s), runner ${RERUN_FAMILY}"
 }
 
 # rerun_tc_where: where the testcases come from, in "case not found at ..." messages.
@@ -240,7 +240,7 @@ function rerun_case_log_begin() {
     {
         echo "Rerun case      : $2"
         echo "Verdict         : $3${4:+ ($4)}"
-        echo "Category        : ${BUILD_SCENARIOS}"
+        echo "Category        : ${RERUN_CATEGORY:-$BUILD_SCENARIOS}"
         echo "Build           : ${BUILD_ID}"
         echo "Testcase branch : ${RERUN_BRANCH}"
         echo "Testcase commit : ${RERUN_TC_COMMIT}"
