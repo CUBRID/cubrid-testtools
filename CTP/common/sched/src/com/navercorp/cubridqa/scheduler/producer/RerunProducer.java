@@ -266,7 +266,8 @@ public class RerunProducer {
         }
         boolean fix = SCOPE_FIX.equals(batch.scope);
         if (fix && (batch.tcSha == null || !TC_SHA.matcher(batch.tcSha).matches())) {
-            throw new IllegalStateException("Rerunning a fix needs the testcase commit QAHome pinned.");
+            throw new IllegalStateException(
+                    "Rerunning a fix needs the testcase commit QAHome pinned.");
         }
         if (!fix && batch.tcSha != null && batch.tcRef == null) {
             throw new IllegalStateException("A testcase commit without a pull request ref.");
@@ -1139,7 +1140,9 @@ public class RerunProducer {
         String tcRef;
 
         String tcSha;
-        /** ONE, ALL, SELECTED, PR or FIX (a fix rerun: the fix's files over the testcases at tcSha). */
+        /**
+         * ONE, ALL, SELECTED, PR or FIX (a fix rerun: the fix's files over the testcases at tcSha).
+         */
         String scope;
     }
 
