@@ -94,8 +94,7 @@ function rerun_sql_close_shard_service() {
 
 # rerun_sql_family <jdbc|cci>
 function rerun_sql_family() {
-    local mode=$1 ctp_type repo scen template conf role commit repo_dir stage_repo stage_root map vfile
-    local id sce grp n tmptxt log resdir testlog core_note rc pre p
+    local mode=$1 ctp_type repo scen template conf role commit repo_dir rc
 
     if [ "$mode" == "cci" ]; then
         rerun_init sql_by_cci
@@ -170,6 +169,18 @@ function rerun_sql_family() {
     commit=$RERUN_GIT_COMMIT
     rerun_set_tc_commit "$commit"
 
+    rerun_sql_run_staged "$mode" "$ctp_type" "$repo" "$scen" "$repo_dir" "$commit" "$conf" "$BUILD_SCENARIOS"
+}
+
+# rerun_sql_run_staged <jdbc|cci> <ctp type> <repo> <scenario dir> <checkout> <commit> <conf> <test_category>:
+# steps 3-6 of rerun_sql_family, once the build is installed, the conf copied and the checkout updated: stage the
+# requested cases, set up the conf, run the harness once and report every case. rerun_compat_jdbc uses it too,
+# with RERUN_SQL_EXCLUDED (a file of excluded paths, the compat exclude list) and RERUN_SQL_HOW_NOTE (a line for
+# the case log); both are empty for the sql family.
+function rerun_sql_run_staged() {
+    local mode=$1 ctp_type=$2 repo=$3 scen=$4 repo_dir=$5 commit=$6 conf=$7 category=$8
+    local stage_repo stage_root map vfile id sce grp n tmptxt log resdir testlog core_note pre p
+
     # STEP 3: stage the requested cases only
     stage_repo=$RERUN_FAM_WORK/stage/$repo
     stage_root=$stage_repo/$scen
@@ -188,7 +199,11 @@ function rerun_sql_family() {
         grp=${sce%/cases/*}
         n=$(basename "$sce" .sql)
         if rerun_bad_path "$sce" || [[ "$sce" != "$scen"/*/cases/*.sql ]] || [ "$(dirname "$sce")" != "$grp/cases" ]; then
-            rerun_verdict "$id" ERROR "" "'${sce}' is not a ${BUILD_SCENARIOS} case path (${scen}/.../cases/<name>.sql)"
+            rerun_verdict "$id" ERROR "" "'${sce}' is not a ${category} case path (${scen}/.../cases/<name>.sql)"
+            continue
+        fi
+        if rerun_sql_excluded "$sce"; then
+            rerun_verdict "$id" ERROR "" "the case is excluded from ${category} runs (${RERUN_SQL_EXCLUDED_BY} in ${RERUN_SQL_EXCLUDED_NAME})"
             continue
         fi
         if [ ! -f "$repo_dir/$sce" ]; then
@@ -208,6 +223,7 @@ function rerun_sql_family() {
             pre=$(rerun_sql_predecessors "$repo_dir/$grp/cases" "$n.sql")
             if [ -n "$pre" ]; then
                 for p in $pre; do
+                    rerun_sql_excluded "$grp/cases/$p" && continue # the regular run removes it too
                     rerun_sql_stage "$repo_dir" "$stage_repo" "$grp" "${p%.sql}"
                 done
                 rerun_log "${sce}: the $(echo "$pre" | wc -l) earlier file(s) of its order-dependent directory are staged to run first"
@@ -225,7 +241,7 @@ function rerun_sql_family() {
     # STEP 4: rerun conf (as run_sql.sh STEP 3, plus the rerun overrides)
     ini.sh -s sql "$conf" scenario "$stage_root"
     ini.sh -s sql "$conf" data_file '${CTP_HOME}'/../${repo}/${scen}/files
-    ini.sh -s sql "$conf" test_category "$BUILD_SCENARIOS"
+    ini.sh -s sql "$conf" test_category "$category"
     ini.sh -s sql "$conf" enable_memory_leak no
     ini.sh -s sql -d testcase_exclude_from_file "$conf"
     tmptxt=$RERUN_FAM_WORK/params.txt
@@ -277,6 +293,24 @@ function rerun_sql_family() {
     else
         rerun_report_cases "$map" "$vfile" rerun_sql_case_log "no verdict: the case is not in ${resdir##*/}/$([ "$mode" == cci ] && echo summary.info || echo summary.xml) (not executed or harness aborted)"
     fi
+}
+
+# rerun_sql_excluded <sce>: whether RERUN_SQL_EXCLUDED lists the case or a directory above it (sets
+# RERUN_SQL_EXCLUDED_BY to that line). The list holds repository paths, one per line, "#" comments.
+function rerun_sql_excluded() {
+    local line
+    RERUN_SQL_EXCLUDED_BY=""
+    [ -n "$RERUN_SQL_EXCLUDED" ] && [ -s "$RERUN_SQL_EXCLUDED" ] || return 1
+    while IFS= read -r line; do
+        line=${line%$'\r'}
+        line=${line%%/}
+        [ -z "$line" ] || [[ "$line" == \#* ]] && continue
+        if [ "$1" == "$line" ] || [[ "$1" == "$line"/* ]]; then
+            RERUN_SQL_EXCLUDED_BY=$line
+            return 0
+        fi
+    done < "$RERUN_SQL_EXCLUDED"
+    return 1
 }
 
 # rerun_sql_jdbc_verdicts <summary.xml> <note for every case>: "sce<TAB>PASS|FAIL<TAB>note"
@@ -334,6 +368,10 @@ function rerun_sql_case_log() {
             echo
             echo "The files of its directory read what the earlier ones commit, but this harness (ccqt, readdir order)"
             echo "ran this file without them, so a failure may only mean their data was missing."
+        fi
+        if [ -n "$RERUN_SQL_HOW_NOTE" ]; then
+            echo
+            echo "$RERUN_SQL_HOW_NOTE"
         fi
     } | rerun_case_log_section "how the case ran"
     grep -F -- "$sce" "$RERUN_SQL_LOG" 2>/dev/null | grep -v 'CONFIG FILE' | rerun_case_log_section "harness console lines"
