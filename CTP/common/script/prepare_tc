@@ -39,7 +39,7 @@ Checks out one test case repository of github.com/CUBRID and prints
   -e  the engine commit (7 to 40 hex) under test; -b is its branch. For now the tip of -b is taken.
   -s  take this commit (40 hex)
 
-Exit status: 0 checked out, 1 failed, 75 the TC pin table has no row for the engine commit
+Exit status: 0 checked out, 1 failed, 75 the TC pin table has no row for the engine commit (reserved, not returned yet)
 USAGE
 }
 
@@ -73,7 +73,6 @@ if [ -n "$sha" ]; then
     chosen=$sha
 else
     [ -n "$branch" ] || fail "give -b <branch> or -s <commit>"
-    # Callers pass the engine commit already, so reading the pin table later changes nothing on their side.
     [ -z "$engine" ] || [[ $engine =~ ^[0-9a-f]{7,40}$ ]] || fail "-e needs a 7 to 40 hex commit: $engine"
     ref=refs/heads/$branch
     chosen=$branch
@@ -86,6 +85,13 @@ if [ ! -e "$dir/.git" ]; then
     (cd "$dir" && git remote add origin "https://github.com/CUBRID/$repo.git") || fail "cannot set up $dir"
 fi
 cd "$dir" || fail "cannot enter $dir"
+
+# The [checkout] line names -r, so a clone of another repository must not pass under that name.
+url=$(git config --get remote.origin.url) || fail "$dir has no origin remote"
+name=${url%/}
+name=${name%.git}
+name=${name##*[/:]}
+[ "$name" = "$repo" ] || fail "$dir is a clone of $name, not $repo"
 
 # A full clone stays full: a depth-1 fetch into it makes it shallow.
 depth="--depth 1"
