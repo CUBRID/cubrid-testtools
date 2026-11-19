@@ -47,7 +47,7 @@ source "${BASH_SOURCE[0]%/*}/rerun_sql.sh"
 
 function rerun_compat_jdbc() {
     local cat=$COMPAT_TEST_CATAGORY kind ctp_type repo scen server driver engine_version template conf role rc
-    local cfg_dir repo_dir commit list_dir name
+    local cfg_dir repo_dir commit list_dir name server_pkg driver_pkg patch_rc=0
 
     RERUN_CATEGORY=$cat
     rerun_init compat_jdbc
@@ -73,9 +73,9 @@ function rerun_compat_jdbc() {
         return 0
     fi
     if [ "$kind" == "D" ]; then
-        role=-s; server=$BUILD_ID; driver=$COMPAT_BUILD_ID
+        role=-s; server=$BUILD_ID; driver=$COMPAT_BUILD_ID; server_pkg=${url##*/}; driver_pkg=${com_url##*/}
     else
-        role=-d; server=$COMPAT_BUILD_ID; driver=$BUILD_ID
+        role=-d; server=$COMPAT_BUILD_ID; driver=$BUILD_ID; server_pkg=${com_url##*/}; driver_pkg=${url##*/}
         if [ -z "$COMPAT_BUILD_SCENARIO_BRANCH_GIT" ]; then
             rerun_error_all "the original message has no COMPAT_BUILD_SCENARIO_BRANCH_GIT, the testcase branch of the ${server} server"
             return 0
@@ -106,8 +106,13 @@ function rerun_compat_jdbc() {
         rerun_error_all "build install timed out after ${RERUN_INSTALL_TIMEOUT}s"
         return 0
     fi
-    if ! rerun_check_installed "$server"; then
+    if ! rerun_check_installed "$server" "$server_pkg"; then
         rerun_error_all "$RERUN_LAST_ERROR"
+        return 0
+    fi
+    # util_compat_test.sh links the driver build's jar here; without it every case would fail for no visible reason
+    if [ ! -s "$CUBRID/jdbc/cubrid_jdbc.jar" ]; then
+        rerun_error_all "driver install failed: ${CUBRID}/jdbc/cubrid_jdbc.jar is missing or empty after installing ${driver_pkg} (see setup/install.log)"
         return 0
     fi
 
@@ -167,15 +172,21 @@ function rerun_compat_jdbc() {
     fi
     rerun_set_tc_commit "$commit"
     if [ -s "$RERUN_FAM_WORK/compat.patch" ]; then
+        # as the regular run: a hunk that does not apply leaves the rest applied and the run goes on
         (cd "$repo_dir/$scen" && patch -p0 -f < "$RERUN_FAM_WORK/compat.patch") > "$RERUN_FAM_WORK/patch.log" 2>&1
-        rc=$?
+        patch_rc=$?
+        echo "patch exit status: ${patch_rc}" >> "$RERUN_FAM_WORK/patch.log"
         rerun_save_log "$RERUN_FAM_WORK/patch.log" setup/patch.log
-        rerun_log "patch ${RERUN_COMPAT_PATCH##*/} applied to ${repo}/${scen}: exit status ${rc} (see setup/patch.log)"
+        rerun_log "patch ${RERUN_COMPAT_PATCH##*/} on ${repo}/${scen}: exit status ${patch_rc} (see setup/patch.log)"
     fi
 
     name=${RERUN_COMPAT_PATCH##*/}
     RERUN_SQL_HOW_NOTE="Compat run ${cat}: server ${server}, JDBC driver of ${driver}, testcases of ${RERUN_BRANCH}"
-    RERUN_SQL_HOW_NOTE+=$([ -s "$RERUN_FAM_WORK/compat.patch" ] && echo " with ${name} applied")
+    if [ -s "$RERUN_FAM_WORK/compat.patch" ] && [ $patch_rc -eq 0 ]; then
+        RERUN_SQL_HOW_NOTE+=" with ${name} applied"
+    elif [ -s "$RERUN_FAM_WORK/compat.patch" ]; then
+        RERUN_SQL_HOW_NOTE+=" with ${name} (did not apply cleanly: exit status ${patch_rc}, see setup/patch.log)"
+    fi
     RERUN_SQL_HOW_NOTE+=", as the regular compat run takes them."
 
     # STEP 4-6: stage the requested cases, run the harness once, report (rerun_sql.sh)
