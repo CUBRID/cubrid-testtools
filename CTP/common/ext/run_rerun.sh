@@ -259,7 +259,8 @@ runner=${CTP_HOME}/common/ext/rerun/rerun_${family}.sh
 if [ -n "$family" -a -f "$runner" ]; then
     # for rerun_scrub_stream (runner.log) and the shared helpers
     source ${CTP_HOME}/common/ext/rerun/rerun_common.sh
-    # A fix rerun: the fix's files come from QAHome before anything runs (QAHome takes no verdict before that).
+    # A fix's rerun: the fix's files come from QAHome before anything runs. Their digest (RERUN_FIX_DIGEST) goes
+    # with every verdict below: QAHome takes a PASS or FAIL of the fix only from a consumer that names the files.
     if [ "$MKEY_RERUN_FIX" == "Y" ] && ! rerun_fix_fetch; then
         echo "[RERUN] batch ${RERUN_BATCH_ID}: ${RERUN_LAST_ERROR}"
         rerun_finish "$RERUN_LAST_ERROR"
@@ -345,7 +346,8 @@ while IFS= read -r line; do
     # without the upload the link would point at nothing
     [ $logs_uploaded -eq 1 ] || log_file=""
     if ! answer=$(rerun_call rerunReport --data-urlencode "rerunId=$rerun_id" --data-urlencode "result=$result" \
-        --data-urlencode "logFile=$log_file" --data-urlencode "message=$message" --data-urlencode "tcCommit=$tc_commit"); then
+        --data-urlencode "logFile=$log_file" --data-urlencode "message=$message" --data-urlencode "tcCommit=$tc_commit" \
+        --data-urlencode "fixFiles=$RERUN_FIX_DIGEST"); then
         # QAHome is unreachable: the remaining verdicts stay in results.tsv; QAHome times the batch out.
         echo "[RERUN] QAHome is unreachable; stopped reporting at case ${rerun_id} (verdicts kept in ${RERUN_RESULTS_FILE})"
         RERUN_FINISHED=1

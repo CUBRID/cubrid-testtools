@@ -6,7 +6,7 @@ failed case of a run, on the same build with the testcases the original run took
 fail / error) is shown next to the case, and a pass verifies the case as `[unknown] Passed on rerun`.
 The AI fix page can also rerun the cases of an AI revise / stabilize pull request with the pull request's
 testcases, on the newest build of its branch or on the failed build (no auto-verify), and rerun a generated fix
-before any pull request exists (a fix rerun: the fix's files over the testcases, no auto-verify).
+before any pull request exists (its **Rerun Fix** row: the fix's files over the testcases, no auto-verify).
 
 Supported categories (Linux): sql, sql_debug, medium, medium_debug, sql_ext, sql_by_cci, shell,
 shell_debug, shell_heavy, shell_long, ha_shell, isolation, isolation_debug, cci, cci_debug, jdbc,
@@ -47,16 +47,19 @@ start_consumer.sh (every consumer of the original queue)
   moves the checkout back. That commit is the pull request's head when the rerun was requested (QAHome reads it
   on GitHub then): a push after the request does not run, and a head that no longer contains the commit (a
   force push) is refused. The build pin does not apply.
-* A fix rerun (`MKEY_RERUN_FIX=Y`, `MKEY_RERUN_TC_SHA`, and `MKEY_RERUN_TC_REF` when the fix was made on a pull
-  request) first fetches the fix's files from QAHome (`rerun.nhn?m=rerunFiles`, with the batch token): at most
-  20 files, 512 KB each and 2 MB in all, each path inside the case's `cases/` directory and checked against
-  its SHA-256. It updates the checkout as above (the build pin does not apply), checks that the checkout's
-  origin is the fix's repository, checks out `MKEY_RERUN_TC_SHA` (the head of the fix's base branch, or of the
-  pull request, when the rerun was requested) on the local branch `rerun_fix`, writes the files where no
-  symlink leads, and commits them with a fixed author, date and message, so every test env of the batch makes
-  the same commit. A fix that changes nothing is an error. The next `run_git_update` moves the checkout back.
-  The case log names the source (`Testcases from: fix files on develop at <commit>`). QAHome takes no verdict
-  of a fix rerun whose files were not fetched, so a consumer with an older CTP cannot report the case as it is.
+* The rerun of a fix (`MKEY_RERUN_FIX=Y`, `MKEY_RERUN_TC_SHA`, and `MKEY_RERUN_TC_REF` when the fix was made on a
+  pull request) first fetches the fix's files from QAHome (`rerun.nhn?m=rerunFiles`, with the batch token): at
+  most 20 files, 512 KB each and 2 MB in all, each path plain ASCII, inside the directory of a case of the batch
+  and checked against its SHA-256. It updates the checkout as above (the build pin does not apply), checks that
+  the checkout's origin is the fix's repository, checks out `MKEY_RERUN_TC_SHA` (the head of the fix's base
+  branch, or of the pull request, when the rerun was requested) on the local branch `rerun_fix`, writes the
+  files where no symlink leads, and commits them with a fixed author, date and message, so every test env of
+  the batch makes the same commit. A fix that changes nothing is an error, and a failure on the way puts the
+  checkout back on `MKEY_RERUN_TC_SHA`. The next `run_git_update` moves the checkout back to the branch. The
+  case log names the source (`Testcases from: fix files on develop at <commit>`). Every verdict goes to QAHome
+  with the SHA-256 of the file lines the consumer fetched (`fixFiles`): QAHome takes a PASS or FAIL of a fix
+  only with the digest of what it handed out, so a consumer with an older CTP cannot report the case as it is
+  (its ERROR, which says nothing about the fix, is taken).
 * sql family: only the requested cases are staged and run, on a new database. The cases that ran before one in
   the daily run do not run, so a failure caused by what they left (tables, users, parameters) may not reproduce;
   each case log says so. A medium file of an order-dependent directory (`_07_mc_dep`, `_08_mc_ind`:
