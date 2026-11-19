@@ -133,6 +133,7 @@ public class RerunProducer {
      */
     private static final Pattern COMPAT_CATEGORY =
             Pattern.compile("jdbc_(sql|medium)(_ext)?_[0-9]+(\\.[0-9]+)*_(D|S64)");
+
     private static final List<String> COMPAT_SCENARIOS =
             java.util.Collections.unmodifiableList(
                     java.util.Arrays.asList("compat_jdbc_D", "compat_jdbc_S64"));
@@ -858,7 +859,8 @@ public class RerunProducer {
             // a compat run installs the other build too (as server or as JDBC driver)
             String url = props.getProperty(Constants.MSG_COMPAT_BUILD_URLS, "");
             String buildId = props.getProperty(Constants.MSG_COMPAT_BUILD_ID, "");
-            checkPackage(url, Constants.MSG_COMPAT_BUILD_URLS, null, storeOf(url, buildId), buildId);
+            checkPackage(
+                    url, Constants.MSG_COMPAT_BUILD_URLS, null, storeOf(url, buildId), buildId);
         }
     }
 
@@ -869,7 +871,8 @@ public class RerunProducer {
         return from < 0 ? null : url.substring(from + 1, at);
     }
 
-    private void checkPackage(String url, String key, String absolutePath, String store, String buildId) {
+    private void checkPackage(
+            String url, String key, String absolutePath, String store, String buildId) {
         String fileName = url.substring(url.lastIndexOf('/') + 1);
         if (fileName.length() == 0) {
             throw new IllegalStateException("The original message has no " + key + ".");
