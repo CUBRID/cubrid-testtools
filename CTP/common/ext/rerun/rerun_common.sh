@@ -448,7 +448,7 @@ function rerun_precheck_message() {
         return 1
     fi
     if [ "$RERUN_FIX" == "Y" ] && ! [[ "$RERUN_TC_SHA" =~ ^[0-9a-f]{40}$ ]]; then
-        rerun_error_all "a fix rerun needs the testcase commit QAHome pinned (MKEY_RERUN_TC_SHA)"
+        rerun_error_all "rerunning a fix needs the testcase commit QAHome pinned (MKEY_RERUN_TC_SHA)"
         return 1
     fi
     if [ "$RERUN_FIX" == "Y" ] && [ ! -s "$RERUN_FIX_FILES" ]; then
@@ -595,7 +595,8 @@ RERUN_EOF
 # $W/fix_files.tsv (path, sha256, base64; checked by rerun_fix_check) where no symlink leads, checks its bytes,
 # and commits them with a fixed author, date (RERUN_FIX_EPOCH) and message: every env of the batch makes the
 # same commit, so the env pin keeps working. A fix that changes nothing is an error, not a run of the case as
-# it is.
+# it is. A failure after the checkout puts the checkout back on RERUN_TC_SHA (fix_fail), so no part of the fix
+# stays written; the last line, "Testcases from fix files", is the proof that the commit was made.
 function rerun_tc_fix_script() {
     cat >> "$1" <<RERUN_EOF
 if [ "\$(sha256sum < "\$W/fix_files.tsv" | cut -d' ' -f1)" != "$(sha256sum < "$RERUN_FIX_FILES" | cut -d' ' -f1)" ]; then
@@ -604,8 +605,7 @@ fi
 cd "\$d" || exit 0
 top=\$(git rev-parse --show-toplevel 2>/dev/null)
 if [ -z "\$top" ]; then echo "RERUN_ERROR=\$d is not a git checkout"; exit 0; fi
-origin=\$(git config --get remote.origin.url | tr 'A-Z' 'a-z')
-origin=\${origin%.git}
+origin=\$(git config --get remote.origin.url | tr 'A-Z' 'a-z' | sed -e 's#/*\$##' -e 's#\.git\$##' -e 's#/*\$##')
 want=\$(echo "${RERUN_FIX_REPO}" | tr 'A-Z' 'a-z')
 case "\$origin" in
     */\$want | *:\$want) ;;
@@ -619,50 +619,70 @@ if ! git checkout -q -f -B ${RERUN_FIX_BRANCH} "\$sha" 2> "\$W/fix_checkout.log"
     echo "RERUN_ERROR=cannot check out \$sha for the fix: \$(head -1 "\$W/fix_checkout.log" | cut -c1-200)"; exit 0
 fi
 cd "\$top" || exit 0
+# fix_fail <reason> [file just written]: back to \$sha with nothing of the fix left, then the error
+fix_fail() {
+    [ -n "\$2" ] && ! git cat-file -e "\$sha:\$2" 2>/dev/null && rm -f -- "\$2"
+    git reset -q --hard "\$sha" 2>/dev/null
+    echo "RERUN_ERROR=\$1"; exit 0
+}
 n=0
 while IFS='	' read -r p s b; do
     [ -n "\$p" ] || continue
     q=.
     for part in \$(echo "\$p" | tr '/' ' '); do
         q=\$q/\$part
-        if [ -L "\$q" ]; then echo "RERUN_ERROR=the fix file \$p goes through the symlink \${q#./}"; exit 0; fi
+        if [ -L "\$q" ]; then fix_fail "the fix file \$p goes through the symlink \${q#./}"; fi
     done
     mkdir -p "\$(dirname "\$p")" && printf '%s' "\$b" | base64 -d > "\$p"
-    if [ "\$(sha256sum < "\$p" | cut -d' ' -f1)" != "\$s" ]; then echo "RERUN_ERROR=cannot write the fix file \$p"; exit 0; fi
-    git -c core.fileMode=false -c core.autocrlf=false add -f -- "\$p" || { echo "RERUN_ERROR=cannot add the fix file \$p"; exit 0; }
+    if [ "\$(sha256sum < "\$p" | cut -d' ' -f1)" != "\$s" ]; then fix_fail "cannot write the fix file \$p" "\$p"; fi
+    git -c core.fileMode=false -c core.autocrlf=false add -f -- "\$p" || fix_fail "cannot add the fix file \$p" "\$p"
     n=\$((n + 1))
 done < "\$W/fix_files.tsv"
-if git diff --cached --quiet; then echo "RERUN_ERROR=the fix changes nothing on \$sha"; exit 0; fi
+if git diff --cached --quiet; then fix_fail "the fix changes nothing on \$sha"; fi
 if ! GIT_AUTHOR_NAME="QAHome rerun" GIT_AUTHOR_EMAIL=rerun@qahome.invalid GIT_COMMITTER_NAME="QAHome rerun" \\
         GIT_COMMITTER_EMAIL=rerun@qahome.invalid GIT_AUTHOR_DATE="@${RERUN_FIX_EPOCH} +0000" \\
         GIT_COMMITTER_DATE="@${RERUN_FIX_EPOCH} +0000" git -c commit.gpgsign=false -c core.autocrlf=false \\
         commit -q --no-verify -m "QAHome rerun batch ${RERUN_BATCH_ID}: fix files" > "\$W/fix_commit.log" 2>&1; then
-    echo "RERUN_ERROR=cannot commit the fix files: \$(head -1 "\$W/fix_commit.log" | cut -c1-200)"; exit 0
+    fix_fail "cannot commit the fix files: \$(head -1 "\$W/fix_commit.log" | cut -c1-200)"
 fi
 echo "Testcases from fix files (\$n) on \$sha"
 RERUN_EOF
 }
 
-# rerun_fix_path_ok <path>: a fix file's path is relative, plain (the characters QAHome allows) and has no
-# empty, ".", ".." or ".git" part.
+# rerun_fix_path_ok <path>: a fix file's path is relative with no ".", ".." or control character
+# (rerun_bad_path), plain (the ASCII characters QAHome allows, whatever this consumer's locale makes of a range)
+# and has no empty or ".git" part.
 function rerun_fix_path_ok() {
-    local part
+    local LC_ALL=C
+    rerun_bad_path "$1" && return 1
     [[ "$1" =~ ^[A-Za-z0-9_][A-Za-z0-9._/@+=,~-]*$ ]] || return 1
-    case "$1" in */ | *//*) return 1 ;; esac
-    for part in $(echo "$1" | tr '/' ' '); do
-        case "$part" in . | .. | .git) return 1 ;; esac
-    done
+    case "/$1/" in *//* | */.git/*) return 1 ;; esac
     return 0
 }
 
+# rerun_fix_in_cases <path>: the path is a case of this batch (RERUN_CASES_FILE: rerunId<TAB>sceId) or lies in
+# the directory of one, the rule QAHome applies to a fix's files. True without a case list (nothing to check).
+function rerun_fix_in_cases() {
+    local id sce
+    [ -s "$RERUN_CASES_FILE" ] || return 0
+    while IFS='	' read -r id sce; do
+        [ "$1" == "$sce" ] && return 0
+        [[ "$sce" == */* ]] && [[ "$1" == "${sce%/*}"/* ]] && return 0
+    done < "$RERUN_CASES_FILE"
+    return 1
+}
+
 # rerun_fix_check <answer> <tsv>: check QAHome's rerunFiles answer ("OK <n> <epoch> <owner/repo>", then one
-# path<TAB>sha256<TAB>base64 line per file) and keep its file lines in <tsv>; sets RERUN_FIX_EPOCH and
-# RERUN_FIX_REPO. Status 1 with the reason in RERUN_LAST_ERROR (call it directly, not in $(...)).
+# path<TAB>sha256<TAB>base64 line per file) and keep its file lines in <tsv>; sets RERUN_FIX_EPOCH,
+# RERUN_FIX_REPO and RERUN_FIX_DIGEST (the sha256 of the lines QAHome sent: run_rerun.sh sends it with every
+# verdict, and QAHome takes a PASS or FAIL of the fix only with it). Status 1 with the reason in
+# RERUN_LAST_ERROR (call it directly, not in $(...)).
 function rerun_fix_check() {
     local answer=$1 tsv=$2 ok n epoch repo count=0 total=0 size path sum data
     RERUN_LAST_ERROR=""
     read -r ok n epoch repo < "$answer"
-    if [ "$ok" != "OK" ] || ! [[ "$n" =~ ^[1-9][0-9]*$ ]] || ! [[ "$epoch" =~ ^[0-9]+$ ]] \
+    # the count in at most four digits, the epoch in at most twelve: numbers the shell can compare
+    if [ "$ok" != "OK" ] || ! [[ "$n" =~ ^[1-9][0-9]{0,3}$ ]] || ! [[ "$epoch" =~ ^[0-9]{1,12}$ ]] \
             || ! [[ "$repo" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
         RERUN_LAST_ERROR="QAHome gave no fix files: $(head -1 "$answer" | cut -c1-200)"
         return 1
@@ -678,6 +698,10 @@ function rerun_fix_check() {
         count=$((count + 1))
         if ! rerun_fix_path_ok "$path"; then
             RERUN_LAST_ERROR="the fix names an unsafe path: $(echo "$path" | cut -c1-200)"
+            break
+        fi
+        if ! rerun_fix_in_cases "$path"; then
+            RERUN_LAST_ERROR="the fix file $path is outside the cases of this batch"
             break
         fi
         if ! [[ "$sum" =~ ^[0-9a-f]{64}$ ]] || ! printf '%s' "$data" | base64 -d > "$tsv.bin" 2> /dev/null; then
@@ -706,6 +730,7 @@ function rerun_fix_check() {
     fi
     RERUN_FIX_EPOCH=$epoch
     RERUN_FIX_REPO=$repo
+    RERUN_FIX_DIGEST=$(sha256sum < "$tsv" | cut -d' ' -f1)
     return 0
 }
 
@@ -748,6 +773,12 @@ function rerun_git_update_local() {
         return 1
     fi
     [ -n "$out" ] && rerun_log "$out"
+    # the fix script switches to its branch before it writes: only its last line says the files were committed
+    # (a script stopped in between, by the timeout above, would otherwise run the cases without the fix)
+    if [ "$RERUN_FIX" == "Y" ] && ! echo "$out" | grep -q '^Testcases from fix files '; then
+        RERUN_LAST_ERROR="the fix's files were not committed in $dir (see setup/git_update.log)"
+        return 1
+    fi
     branch=$(cd "$dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null)
     head=$(cd "$dir" && git rev-parse HEAD 2>/dev/null)
     if [ "$branch" != "$RERUN_CHECKOUT_BRANCH" ]; then
@@ -1167,35 +1198,41 @@ function rerun_pick_envs() {
 }
 
 # rerun_env_push_file <conf> <envId> <local file> <file name in the node batch dir> [bytes]: copy a small text
-# file to the node (in chunks: run_remote_script takes the script as one command-line argument). "bytes" cuts
-# the chunks by size instead of by 200 lines, for a file with long lines (a fix's files, base64 on one line
-# each): 48000 bytes go base64-encoded into a script that rerun_ssh_exec base64-encodes again, within 100000.
+# file to the node (in chunks: run_remote_script takes the script as one command-line argument; the first chunk
+# starts the file, so a small file is one remote call). "bytes" is for a file with long lines (a fix's files,
+# base64 on one line each): it travels gzip-compressed and is cut by size instead of by 200 lines. 48000 bytes
+# go base64-encoded into a script that rerun_ssh_exec base64-encodes again, within 100000.
 function rerun_env_push_file() {
-    local conf=$1 id=$2 src=$3 name=$4 f part out
-    rm -f "$RERUN_FAM_WORK"/push_part_*
+    local conf=$1 id=$2 src=$3 name=$4 f part out target=$4 first=1 last
+    rm -f "$RERUN_FAM_WORK"/push_part_* "$RERUN_FAM_WORK/push_src.gz"
     : > "$RERUN_FAM_WORK/push_empty"
     if [ -s "$src" ] && [ "$5" == "bytes" ]; then
-        split -b 48000 "$src" "$RERUN_FAM_WORK/push_part_"
+        gzip -9 -c "$src" > "$RERUN_FAM_WORK/push_src.gz" || return 1
+        split -b 48000 "$RERUN_FAM_WORK/push_src.gz" "$RERUN_FAM_WORK/push_part_"
+        target=$name.gz
     elif [ -s "$src" ]; then
         split -l 200 "$src" "$RERUN_FAM_WORK/push_part_"
     else
         cp "$RERUN_FAM_WORK/push_empty" "$RERUN_FAM_WORK/push_part_aa"
     fi
-    f=$(rerun_script push)
-    echo "mkdir -p \"\$W\" && : > \"\$W/$name\"" >> "$f"
-    out=$(rerun_env_exec "$conf" "$id" "" "$RERUN_REMOTE_TIMEOUT" "$f")
+    last=$(ls "$RERUN_FAM_WORK"/push_part_* | tail -1)
     for part in "$RERUN_FAM_WORK"/push_part_*; do
         f=$(rerun_script push)
         {
-            echo "base64 -d >> \"\$W/$name\" <<'RERUN_B64_EOF'"
+            [ $first -eq 1 ] && echo "mkdir -p \"\$W\" && : > \"\$W/$target\" || exit 0"
+            echo "base64 -d >> \"\$W/$target\" <<'RERUN_B64_EOF' || exit 0"
             base64 < "$part"
             echo "RERUN_B64_EOF"
+            if [ "$part" == "$last" ] && [ "$target" != "$name" ]; then
+                echo "gzip -dc \"\$W/$target\" > \"\$W/$name\" && rm -f \"\$W/$target\" || exit 0"
+            fi
             echo "echo RERUN_PUSHED"
         } >> "$f"
+        first=0
         out=$(rerun_env_exec "$conf" "$id" "" "$RERUN_REMOTE_TIMEOUT" "$f")
         echo "$out" | grep -q RERUN_PUSHED || return 1
     done
-    rm -f "$RERUN_FAM_WORK"/push_part_*
+    rm -f "$RERUN_FAM_WORK"/push_part_* "$RERUN_FAM_WORK/push_src.gz"
     return 0
 }
 
