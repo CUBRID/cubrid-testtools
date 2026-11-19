@@ -259,6 +259,12 @@ runner=${CTP_HOME}/common/ext/rerun/rerun_${family}.sh
 if [ -n "$family" -a -f "$runner" ]; then
     # for rerun_scrub_stream (runner.log) and the shared helpers
     source ${CTP_HOME}/common/ext/rerun/rerun_common.sh
+    # A fix rerun: the fix's files come from QAHome before anything runs (QAHome takes no verdict before that).
+    if [ "$MKEY_RERUN_FIX" == "Y" ] && ! rerun_fix_fetch; then
+        echo "[RERUN] batch ${RERUN_BATCH_ID}: ${RERUN_LAST_ERROR}"
+        rerun_finish "$RERUN_LAST_ERROR"
+        exit 0
+    fi
     # A subshell, so a runner that exits early cannot skip the reporting below; in its own process group
     # (set -m), so a cancel from QAHome can stop the whole harness under it.
     set -m
