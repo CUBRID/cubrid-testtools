@@ -42,6 +42,7 @@ import com.navercorp.cubridqa.cqt.console.util.CubridUtil;
 import com.navercorp.cubridqa.cqt.console.util.EnvGetter;
 import com.navercorp.cubridqa.cqt.console.util.ErrorInterruptUtil;
 import com.navercorp.cubridqa.cqt.console.util.FileUtil;
+import com.navercorp.cubridqa.cqt.console.util.JunitXmlWriter;
 import com.navercorp.cubridqa.cqt.console.util.LogUtil;
 import com.navercorp.cubridqa.cqt.console.util.RepositoryPathUtil;
 import com.navercorp.cubridqa.cqt.console.util.StringUtil;
@@ -181,10 +182,12 @@ public class ConsoleBO extends Executor {
             }
 
             startTime = System.currentTimeMillis();
+            long suiteStart = startTime;
 
             System.out.println("---------------execute begin--------------------");
             execute(test);
             System.out.println("---------------execute end  --------------------");
+            long suiteMillis = System.currentTimeMillis() - suiteStart;
 
             if (this.processMonitor.getCurrentstate() == this.processMonitor.Status_Stoping) {
                 this.processMonitor.setCurrentstate(this.processMonitor.Status_Stoped);
@@ -227,6 +230,11 @@ public class ConsoleBO extends Executor {
                         "[time]savePerformanceResult:" + (System.currentTimeMillis() - startTime));
             }
             onMessage("*******results saved.");
+            try {
+                JunitXmlWriter.write(test, logId, suiteStart, suiteMillis);
+            } catch (Throwable t) {
+                LogUtil.log(logId, "[JunitXmlWriter] outer guard: " + t.getMessage());
+            }
         } catch (Throwable e) {
             e.printStackTrace();
             onMessage(e.getMessage());

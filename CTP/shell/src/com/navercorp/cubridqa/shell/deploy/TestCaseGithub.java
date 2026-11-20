@@ -51,16 +51,11 @@ public class TestCaseGithub {
 		}
 	}
 
-	public void update() throws Exception {
+	public boolean update() throws Exception {
 		context.getFeedback().onSvnUpdateStart(envIdentify);
 
-		while (true) {
-			if (doUpdate()) {
-				break;
-			}
-
-			System.out.println("==>Retry to do case update after 5 seconds!");
-			CommonUtils.sleep(5);
+		if (!doUpdate()) {
+			return false;
 		}
 
 		if (!context.getTestCaseWorkspace().equals(context.getTestCaseRoot())) {
@@ -82,10 +77,12 @@ public class TestCaseGithub {
 				System.out.println(result);
 			} catch (Exception e) {
 				System.out.print("[ERROR] " + e.getMessage());
+				return false;
 			}
 		}
 
 		context.getFeedback().onSvnUpdateStop(envIdentify);
+		return true;
 	}
 
 	private boolean doUpdate() {
@@ -93,11 +90,18 @@ public class TestCaseGithub {
 		cleanProcess();
 		if (context.needCleanTestCase()) {
 			ShellScriptInput scripts = new ShellScriptInput();
+			// the run_git_update of the Worker's CTP applies BUILD_COMMIT_TIME, so the CTP goes first
+			DeployOneNode.addUpgradeCtpCommands(context, scripts);
+			String buildCommitTime = System.getenv("BUILD_COMMIT_TIME");
+			if (!CommonUtils.isEmpty(buildCommitTime)) {
+				scripts.addCommand("export BUILD_COMMIT_TIME=" + buildCommitTime);
+			}
 			scripts.addCommand("run_git_update -f " + context.getTestCaseRoot() + " -b " + context.getTestCaseBranch() + "  2>&1");
 			String result;
 			try {
 				result = ssh.execute(scripts);
-				if (result != null && result.indexOf("ERROR") != -1) {
+				// run_git_update prints this line only after the checkout succeeds; an old CTP never prints it
+				if (result == null || result.indexOf("TC pin time:") == -1) {
 					isSucc = false;
 				}
 				System.out.println("Test cases updated results on " + ssh.toString() + ":\n" + result);

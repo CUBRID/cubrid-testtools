@@ -62,7 +62,7 @@ function run_jdbc {
     run_cubrid_install $url
 
     #STEP 3: UPDATE CASES 
-    run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT}
+    run_git_update -f ${CTP_HOME}/../${git_repo_name} -b ${BUILD_SCENARIO_BRANCH_GIT} || exit 1
 
     #STEP 4: CONFIG CTP
     ini.sh -s common -u "test_category=${BUILD_SCENARIOS}" $ctp_jdbc_test_conf

@@ -179,7 +179,7 @@ public class Constants {
 		scripts.addCommand("ctp_java_pid_list=`ps -u $USER -o pid,command| grep -v grep | grep -E 'com.navercorp.cubridqa|service.Server' | awk '{print $1}'`");
 		scripts.addCommand("all_java_pid_list=`ps -u $USER -o pid,comm| grep -v grep | grep -i java | awk '{print $1}'`");
 		scripts.addCommand("final_list=\"\"");
-		scripts.addCommand("for x in ${all_java_pid_list};do isExistPid=`echo ${ctp_java_pid_list}|grep -w $x|wc -l`;if [ $isExistPid -eq 0];then final_list=\"${final_list} $x\" ;fi;done");
+        scripts.addCommand("for x in ${all_java_pid_list};do isExistPid=`echo ${ctp_java_pid_list}|grep -w $x|wc -l`;if [ $isExistPid -eq 0 ];then final_list=\"${final_list} $x\" ;fi;done");
 		scripts.addCommand(bothKill("echo ${final_list}"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i sleep | awk '{print $1}'"));
 		scripts.addCommand(bothKill("ps -u $USER -o pid,comm| grep -v grep | grep -i expect | awk '{print $1}'"));
@@ -191,6 +191,29 @@ public class Constants {
 		scripts.addCommand("ps -ef | grep cub ");
 		scripts.addCommand("netstat -n -e -p -a");		
 		scripts.addCommand("ipcs");
+		return scripts;
+	}
+
+	/*
+	 * The blanket ".sh" kill above is fenced off when CTP runs on the test machine
+	 * itself, where it would also take down CTP's own wrapper shells, so nothing there
+	 * ever targets a timed-out case. Seeds match the parent wrapper's cwd rather than
+	 * the case's own: case file names repeat across the scenario tree, and a running
+	 * case often cd's elsewhere while the wrapper that launched it does not.
+	 */
+	public static ShellScriptInput createLinKillTestCaseScripts(String testCaseDir, String testCaseFileName) {
+		ShellScriptInput scripts = new ShellScriptInput();
+		scripts.addCommand("ctp_tc_dir=`cd " + testCaseDir + " 2>/dev/null && pwd`");
+		scripts.addCommand("ctp_tc_seeds=\"\"");
+		scripts.addCommand("for p in `ps -u $USER -o pid=,args= | awk -v tc='sh " + testCaseFileName + "' '{ pid=$1; $1=\"\"; sub(/^[ \\t]+/, \"\"); if ($0 == tc) print pid }'`; do");
+		scripts.addCommand("  ctp_tc_ppid=`ps -o ppid= -p $p 2>/dev/null | tr -d ' '`");
+		scripts.addCommand("  if [ \"`readlink /proc/$ctp_tc_ppid/cwd 2>/dev/null`\" = \"$ctp_tc_dir\" ]; then");
+		scripts.addCommand("    ctp_tc_seeds=\"$ctp_tc_seeds $p\"");
+		scripts.addCommand("  fi");
+		scripts.addCommand("done");
+		scripts.addCommand("ctp_tc_tree=`ps -u $USER -o pid=,ppid= | awk -v seeds=\"$ctp_tc_seeds\" 'BEGIN { n = split(seeds, s); for (i = 1; i <= n; i++) tree[s[i]] = 1 } { pid[NR] = $1; ppid[NR] = $2 } END { more = 1; while (more) { more = 0; for (i = 1; i <= NR; i++) if (!(pid[i] in tree) && (ppid[i] in tree)) { tree[pid[i]] = 1; more = 1 } } for (k in tree) print k }' | tr '\\n' ' '`");
+		scripts.addCommand("echo \"KILL TESTCASE TREE (" + testCaseFileName + "):$ctp_tc_tree\"");
+		scripts.addCommand("for p in $ctp_tc_tree; do kill -9 $p 2>/dev/null; done");
 		return scripts;
 	}
 

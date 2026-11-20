@@ -28,7 +28,7 @@ core_file_name=
 error_msg_keyword=
 pkg_file=
 login_info=""
-fix_backup_dir_name="do_not_delete_core"
+fix_backup_dir_name="ERROR_BACKUP"
 json_create_suffix="_CREATE.json"
 json_comment_suffix="_COMMENT.json"
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
@@ -234,11 +234,6 @@ ISSUEFILDDATA
 
 	#generate comment data file content
 	user_info=`cat readme.txt |grep TEST_INFO_ENV|grep -v export|awk -F '=' '{print $NF}'|sed "s/'//g"`
-	if [ ! "${login_info}" == "" ]; then
-		gateway_ip=`echo ${login_info} | awk -F ":" '{print $1}'`
-		mapping_port=`echo ${login_info} | awk -F ":" '{print $2}'`
-		user_info="ssh -p ${mapping_port} ${USER}@${gateway_ip} or ${user_info}"
-	fi
 
 	related_case=`cat readme.txt |grep "TEST CASE:"|grep -v grep|grep -v freadme|sed 's/^.*TEST CASE://g'|tr -d '[[:space:]]'`
 	is_only_demodb=`find ./ -name "*_vinf"|grep -v "demodb_vinf"|wc -l`

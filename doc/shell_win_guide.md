@@ -1,5 +1,7 @@
 # Shell Test For Windows Guide 
 
+Windows tests have stopped. See [Shell Test Guide §1](shell_guide.md#1-test-objective). This guide describes the test as it was run before.
+
 # 1. Test Objective
 
 Windows Shell test is performed to test CUBRID adaptability on Windows platform. It uses the same test cases as introduced in SHELL test guide for Linux platform. This guide will introduce the different parts between Windows Shell test and Linux Shell test.

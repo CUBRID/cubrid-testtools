@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import com.navercorp.cubridqa.common.CommonUtils;
 import com.navercorp.cubridqa.common.Log;
@@ -76,7 +77,10 @@ public class TestFactory {
 			checkRequirement(context);
 
 			System.out.println("============= UPDATE TEST CASES ==================");
-			concurrentUpdateScenarios(stableEnvList);
+			if (!concurrentUpdateScenarios(stableEnvList)) {
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
 			System.out.println("DONE");
 
 		} else {
@@ -85,7 +89,10 @@ public class TestFactory {
 			checkRequirement(context);
 			feedback.onTaskStartEvent(context.getCubridPackageUrl());
 			System.out.println("============= UPDATE TEST CASES ==================");
-			concurrentUpdateScenarios(stableEnvList);
+			if (!concurrentUpdateScenarios(stableEnvList)) {
+				System.out.println("QUIT");
+				System.exit(-1);
+			}
 			System.out.println("DONE");
 
 			System.out.println("============= FETCH TEST CASES ==================");
@@ -314,7 +321,7 @@ public class TestFactory {
 		}
 	}
 
-	private void concurrentUpdateScenarios(final ArrayList<String> envList) throws InterruptedException {
+	private boolean concurrentUpdateScenarios(final ArrayList<String> envList) throws Exception {
 		ExecutorService pool = Executors.newCachedThreadPool();
 		ArrayList<Callable<Boolean>> callers = new ArrayList<Callable<Boolean>>();
 
@@ -326,19 +333,23 @@ public class TestFactory {
 				public Boolean call() throws Exception {
 					try {
 						testcasegit = new TestCaseGithub(context, envId);
-						testcasegit.update();
+						return testcasegit.update();
 					} catch (Exception e) {
+						e.printStackTrace();
 						return false;
 					} finally {
 						if (testcasegit != null)
 							testcasegit.close();
 					}
-					return true;
 				}
 			});
 		}
-		pool.invokeAll(callers);
+		boolean updated = true;
+		for (Future<Boolean> result : pool.invokeAll(callers)) {
+			updated &= result.get();
+		}
 		pool.shutdown();
+		return updated;
 	}
 
 	private boolean isAllTestsFinished() {

@@ -158,7 +158,7 @@ public class Dispatch {
 		return null;
 	}
 
-	public synchronized boolean complete(DispatchTicket ticket, boolean success, boolean hasCore) {
+    public synchronized boolean complete(DispatchTicket ticket, boolean success, boolean hasCore, boolean isTimeOut) {
 		if (ticket == null) {
 			return false;
 		}
@@ -169,7 +169,8 @@ public class Dispatch {
 			normalCompletedCount++;
 		}
 
-		boolean needRetry = !success && !hasCore && ticket.getRetryCount() < maxRetryCount;
+        /* do not retry a timeout: re-running a hung case would just hang again for another deadline */
+        boolean needRetry = !success && !hasCore && !isTimeOut && ticket.getRetryCount() < maxRetryCount;
 		if (needRetry) {
 			enqueueRetry(ticket.getTestCase(), ticket.getRetryCount() + 1);
 		} else {
