@@ -22,7 +22,7 @@ HC_CHECK_FOR_EACH_STATEMENT_17=select '_db_data_type' TABLE_NAME, _db_data_type.
 HC_CHECK_FOR_EACH_STATEMENT_18=select '_db_query_spec' TABLE_NAME, class_of, spec from _db_query_spec order by 3,1,2;
 HC_CHECK_FOR_EACH_STATEMENT_19=select '_db_meth_arg' TABLE_NAME, _db_meth_arg.* from _db_meth_arg order by 1,2,3,4,5;
 HC_CHECK_FOR_EACH_STATEMENT_20=select '_db_meth_sig' TABLE_NAME, _db_meth_sig.* from _db_meth_sig order by 1,2,3,4,5;
-HC_CHECK_FOR_EACH_STATEMENT_21=select '_db_trigger' TABLE_NAME, unique_name, owner, name, status, priority, event, target_class, target_attribute, target_class_attribute, condition_type, condition, condition_time, action_type, action_definition, action_time, comment from _db_trigger order by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16;
+HC_CHECK_FOR_EACH_STATEMENT_21=select '_db_trigger' TABLE_NAME, unique_name, owner, name, status, priority, event, target_class, target_attribute, target_class_attribute, condition_type, condition, condition_time, action_type, regexp_replace(action_definition, '__trsp_[0-9a-f]{32}', '__trsp_*') action_definition, action_time, comment from _db_trigger order by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16;
 HC_CHECK_FOR_EACH_STATEMENT_22=select '_db_password' TABLE_NAME from _db_password order by 1;
 HC_CHECK_FOR_EACH_STATEMENT_23=select 'db_root' TABLE_NAME, db_root.* from db_root order by 1,2,3,4;
 
