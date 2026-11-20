@@ -369,8 +369,10 @@ check_sql() {
     sed 's/[0-9]\.[0-9]*[0-9]//g' "$RESULT_DIR/test.log" > "$RESULT_DIR/test.log.cmp"
     diff "$SCRIPT_DIR/sql_test.answer" "$RESULT_DIR/test.log.cmp" > "$RESULT_DIR/sql_test.diff" 2>&1
     drc=$?
-    if [ $drc -eq 0 ]; then
+    if [ $drc -eq 0 ] && [ $rc -eq 0 ]; then
         result sql pass ""
+    elif [ $drc -eq 0 ]; then
+        result sql fail "csql 종료 코드 $rc(출력은 답지와 같음, csql.err 참고)"
     else
         log "답지와 차이(sql_test.diff):"
         cat "$RESULT_DIR/sql_test.diff"

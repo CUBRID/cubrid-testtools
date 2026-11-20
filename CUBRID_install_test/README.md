@@ -39,7 +39,7 @@ docker exec -it <남긴 컨테이너 이름> bash
 | 코드 | 경우 |
 |---|---|
 | 0 | 모든 조합 pass (`--images-only`: 모든 이미지 준비 성공, `--check-network`: 네트워크 준비 성공) |
-| 1 | fail/timeout 조합이 있음, 정리 후 실행 전부터 있던 이미지가 없어짐(`오류: 기존 이미지 삭제됨`), `--images-only` 에서 이미지 준비 실패 |
+| 1 | fail/timeout 조합이 있음, 리포트를 저장하지 못함(`오류: 리포트 저장 실패`), 정리 후 실행 전부터 있던 이미지가 없어짐(`오류: 기존 이미지 삭제됨`), `--images-only` 에서 이미지 준비 실패 |
 | 2 | 실행 전 오류(`오류: ...`): 옵션/matrix.conf 오류, 선택된 조합 없음, docker 접근 불가, 다른 install test 실행 중, 네트워크 충돌, 패키지 준비 오류(패키지 없음, 한 종류에 버전 여러 개, 빌드 버전 불명 등) |
 | 130 | Ctrl-C(INT), TERM, HUP 으로 중단. 정리는 하고 끝난다 |
 
@@ -137,7 +137,7 @@ os   ubuntu26  ubuntu:26.04                   # 버전 변경: 태그와 키를 
 rpm/deb 계열이 아닌 OS(alpine, suse 등)는 `images/<OS 키>/Dockerfile` 을 따로 만든다. 규칙:
 `ARG BASE_IMAGE` + `FROM ${BASE_IMAGE}` 로 시작(러너가 matrix.conf의 이미지를 넘기고 그 이미지만 추적/정리),
 `add_openssl.sh` 가 컨텍스트 루트에 복사되므로 실행, 필수 명령(bash, curl, diff, ps, su, tar, gzip, sed, awk, deb 계열이면 rpm) 확인,
-마지막은 `CMD ["sleep", "infinity"]`. `pkill`(procps)이 있으면 `--keep-failed` timeout 조합의 스크립트를 멈출 수 있다.
+마지막은 `CMD ["sleep", "infinity"]`. `--keep-failed` timeout 조합의 테스트 프로세스는 `ps`(procps)로 찾아 멈춘다.
 
 ```dockerfile
 ARG BASE_IMAGE
@@ -162,7 +162,7 @@ CMD ["sleep", "infinity"]
 | 5 | DB 서버 시작 (`server_start`) | `cubrid server start demodb` | 종료 코드 0, `cubrid server status` 에 demodb | Server |
 | 6 | 브로커 (`broker`) | `cubrid broker status -b`, CMS `getbrokerstatus` | broker1 존재, status == success | Broker |
 | 7 | CMS 접속 (`manager`) | `https://localhost:8001/cm_api` login | 비어 있지 않은 token | Manager |
-| 8 | query test (`sql`) | `csql -u dba demodb -i sql_test.sql` | 시간 값을 지운 출력이 `sql_test.answer` 와 같음 | SQL Statement |
+| 8 | query test (`sql`) | `csql -u dba demodb -i sql_test.sql` | 종료 코드 0, 시간 값을 지운 출력이 `sql_test.answer` 와 같음 | SQL Statement |
 | 9 | 서비스 종료 (`stop`) | `cubrid server stop demodb`, `cubrid service stop` | 종료 코드 0, `cub_` 프로세스 0개(최대 30초 대기) | Service, Server |
 | 10 | demodb 삭제 (`deletedb`) | `cubrid deletedb demodb` | 종료 코드 0, databases.txt에 demodb 없음 | Deletedb |
 | 11 | 패키지 제거 (`uninstall`) | `rpm -ev <패키지>` | 종료 코드 0, `rpm -qa` 에 cubrid 없음, `$CUBRID/bin/cubrid` 와 `/etc/profile.d/cubrid.sh` 없음. .sh/.tar.gz는 NA | UnInstall |
@@ -252,6 +252,7 @@ JUnit XML이다. Jenkins(JUnit 플러그인)와 GitLab(`artifacts:reports:junit`
 
 - testsuite는 조합, testcase는 판정 열 하나다. classname은 `<OS 키>.<패키지 키>`(점은 `_`, 예 `rocky8.tar_gz`).
 - `pass` 는 빈 testcase, `fail` 은 `<failure type="fail" message="사유">`, `timeout` 은 `<failure type="timeout">`, `NA` 는 `<skipped message="NA"/>`.
+- 판정 열이 모두 pass/NA인데 조합이 fail/timeout이면(예: 항목 결과를 다 낸 뒤 `install_test.sh` 종료 코드가 0이 아님) testcase `Run` 을 하나 더 넣어 failure로 적는다.
 - `time` 은 초(testsuite, testsuites에만), `timestamp` 는 조합 시작 시각(ISO 8601), `hostname` 은 컨테이너 이름(실행하지 않은 조합은 `not-run`).
 - `testsuites` 에는 `skipped`, `timestamp` 를 쓰지 않는다(junit-10.xsd). UTF-8, BOM 없음, XML에 쓸 수 없는 제어 문자는 지운다.
 
@@ -286,6 +287,8 @@ report.md의 Note와 "실패 조합 상세"에서 사유를 보고, `<OS 키>__<
 | 실행 전부터 있던 이미지, 네트워크, 다른 용도의 컨테이너 | 건드리지 않음 | |
 
 - 실패하거나 끊긴 빌드의 임시 컨테이너와 중간 이미지도 빌드 로그에서 찾아 지운다(베이스 이미지 id와 태그 있는 이미지는 제외).
+- 베이스 이미지를 받는 도중(계열 판별 단계)에 중단해도 그때까지 받은 베이스 이미지는 지운다. 다만 받기가 끊긴 이미지는
+  docker가 태그 없이(`<none>`) 남길 수 있다. 같은 베이스 이미지를 받는 다음 실행이 태그를 붙이고 끝날 때 지운다.
 - 끝에 `정리: 컨테이너 N개 생성, M개 삭제(...), 이미지 K개 삭제(...) / 네트워크 ... / 정리 후 남은 것: 없음` 한 줄을 남긴다.
   실행 전부터 있던 이미지가 없어졌으면 `오류: 기존 이미지 삭제됨` 을 적고 종료 코드 1.
 - 기본 동작은 실행마다 베이스 이미지를 다시 받는다(Docker Hub 익명 한도 주의). 재실행이 잦거나 다른 사람이 같은 이미지를 쓰는 장비에서는 `--keep-images`.
@@ -327,7 +330,8 @@ rm -rf /tmp/cubrid-install-test.XXXXXX                            # 강제 종�
 
 - 조합당 1200초(`--timeout`). 넘으면 `docker exec` 를 끊고 그때까지의 로그를 복사한 뒤 컨테이너를 지운다.
 - 이미지 준비: 베이스 이미지 받기 900초, 계열 판별 120초, 빌드 1800초. 넘으면 그 OS의 조합만 fail이고 Note에 단계가 적힌다.
-- `--keep-failed` 로 남기는 timeout 조합은 컨테이너 안의 `install_test.sh` 를 `pkill` 로 멈춘다(CUBRID 프로세스는 그대로). 결과는 Note에 남는다.
+- `--keep-failed` 로 남기는 timeout 조합은 컨테이너 안의 `install_test.sh` 와 그 하위 프로세스(rpm, setup, `cub_admin` 등)를 SIGKILL로 멈춘다.
+  CUBRID 데몬(cub_master, cub_server, cub_broker, cub_cas, cub_manager 등)은 그대로 둔다. 멈춘 프로세스 목록은 runner.log, 결과는 Note에 남는다.
 
 ## 설정값
 

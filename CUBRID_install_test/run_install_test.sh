@@ -184,6 +184,7 @@ RUN_LOG=$RUN_TMP/run.log
 KEPT_FILE=$RUN_TMP/kept_containers   # 줄마다 "<OS 키> <컨테이너 이름>"
 : > "$KEPT_FILE"
 declare -A BASE_PREEXIST=() IMAGE_PREEXIST=() IMAGE_TAG=() BASE_ID=()
+REPORT_SAVE_ERR=()
 declare -A IMAGE_FAMILY=()   # OS 키 -> 계열(deb|rpm|custom|unknown)
 declare -A IMAGE_DIR=()      # OS 키 -> 실제 쓰는 Dockerfile 디렉터리
 declare -A BUILD_STARTED=()  # 이번 실행이 docker build 를 시작한 OS 키
@@ -456,19 +457,31 @@ cleanup_intermediate_images() {
     done
 }
 
+# 정리 대상 OS: 준비 이미지 태그를 정한 OS(IMAGE_TAG)와 베이스 이미지 유무를 기록한 OS(BASE_PREEXIST)의 합집합.
+# IMAGE_TAG 는 계열 판별(베이스 이미지 받기)이 모두 끝난 뒤에 채워지므로, 그 전에 중단되면 BASE_PREEXIST 에만 있다.
+image_cleanup_oses() {
+    local os
+    declare -A seen=()
+    for os in "${!IMAGE_TAG[@]}" "${!BASE_PREEXIST[@]}"; do
+        [ -n "${seen[$os]+x}" ] && continue
+        seen[$os]=1
+        echo "$os"
+    done
+}
+
 # 이번 실행이 빌드했거나 새로 pull한 이미지만 지운다. 실행 전부터 있던 이미지는 남긴다.
 cleanup_images() {
     local os tag base
     declare -A kept_os=()
     for os in $(awk '{ print $1 }' "$KEPT_FILE" 2>/dev/null); do kept_os[$os]=1; done
-    for os in "${!IMAGE_TAG[@]}"; do
-        tag=${IMAGE_TAG[$os]}
+    for os in $(image_cleanup_oses); do
+        tag=${IMAGE_TAG[$os]:-}
         base=${OS_IMAGE[$os]}
         if [ -n "${kept_os[$os]+x}" ]; then
-            CLEAN_KEPT+=("$tag, $base(--keep-failed 컨테이너가 사용)")
+            CLEAN_KEPT+=("${tag:+$tag, }$base(--keep-failed 컨테이너가 사용)")
             continue
         fi
-        if [ "${IMAGE_PREEXIST[$os]:-1}" = 0 ]; then
+        if [ -n "$tag" ] && [ "${IMAGE_PREEXIST[$os]:-1}" = 0 ]; then
             remove_image "$tag"
             cleanup_intermediate_images "$os"
         fi
@@ -483,10 +496,10 @@ verify_cleanup() {
     n=$((n - $(wc -l < "$KEPT_FILE")))
     [ "$n" -gt 0 ] && left+=("컨테이너 ${n}개")
     if [ "$KEEP_IMAGES" -eq 0 ]; then
-        for os in "${!IMAGE_TAG[@]}"; do
+        for os in $(image_cleanup_oses); do
             awk -v o="$os" '$1 == o { f = 1 } END { exit !f }' "$KEPT_FILE" 2>/dev/null && continue
-            [ "${IMAGE_PREEXIST[$os]:-1}" = 0 ] && docker image inspect "${IMAGE_TAG[$os]}" > /dev/null 2>&1 \
-                && left+=("${IMAGE_TAG[$os]}")
+            [ -n "${IMAGE_TAG[$os]:-}" ] && [ "${IMAGE_PREEXIST[$os]:-1}" = 0 ] \
+                && docker image inspect "${IMAGE_TAG[$os]}" > /dev/null 2>&1 && left+=("${IMAGE_TAG[$os]}")
             [ "${BASE_PREEXIST[$os]:-1}" = 0 ] && docker image inspect "${OS_IMAGE[$os]}" > /dev/null 2>&1 \
                 && left+=("${OS_IMAGE[$os]}")
         done
@@ -494,7 +507,7 @@ verify_cleanup() {
     # 실행 전부터 있던 베이스 이미지가 여전히 있는지 확인 (--keep-images 여부와 관계없이)
     # "No such image" 일 때만 삭제된 것으로 보고 오류(종료 코드 1)로 한다. 그 밖의 확인 실패(docker 접근 오류 등)는 경고만 하고
     # 종료 코드는 바꾸지 않는다. 시작 때 확인에 실패해 "기존 이미지로 간주"한 OS는 끝에 No such image 여도 경고만 한다.
-    for os in "${!IMAGE_TAG[@]}"; do
+    for os in $(image_cleanup_oses); do
         [ "${BASE_PREEXIST[$os]:-0}" = 1 ] || continue
         if out=$(docker image inspect "${OS_IMAGE[$os]}" 2>&1); then
             continue
@@ -1161,23 +1174,71 @@ finalize_combo() {   # <os> <pkg> <cdir> <rc> <start> <cname> <prefail>
     echo "$status"
 }
 
-# timeout 으로 docker exec 클라이언트만 죽으면 컨테이너 안의 install_test.sh 가 계속 돌아 남긴 컨테이너가 계속 변한다
-# (종료, 삭제, 제거 단계까지 진행). 남기기 전에 테스트 스크립트 계열 프로세스만 멈추고 CUBRID 프로세스(cub_*)는 조사를 위해 그대로 둔다.
-# 패턴의 [i] 는 pkill 자신(sh -c 명령줄)이 걸리지 않게 하려는 것이다.
+# timeout 으로 docker exec 클라이언트만 죽으면 컨테이너 안의 install_test.sh 와 그 하위 프로세스(rpm, setup, cubrid, csql 등)가
+# 계속 돌아 남긴 컨테이너가 계속 변한다(종료, 삭제, 제거 단계까지 진행). 남기기 전에 install_test.sh 와 그 하위 프로세스를
+# SIGKILL 로 멈춘다. CUBRID 데몬(cub_master, cub_server, cub_broker, cub_cas*, cub_manager 등)과 그 하위는 조사를 위해 그대로 둔다.
+# cub_admin, cub_commdb 같은 유틸리티는 테스트가 실행한 작업이므로 멈춘다.
+# 아래 스크립트는 컨테이너 안에서 sh -s 로 실행한다(표준 입력으로 넘기므로 명령줄에 install_test.sh 가 나오지 않는다).
+# 종료 코드: 0 = 멈춤(남은 것 없음), 1 = 멈출 프로세스 없음, 3 = ps 없음, 4 = 멈춘 뒤에도 남음
+container_stop_script() {
+    cat <<'EOF'
+command -v ps > /dev/null 2>&1 || exit 3
+# 대상: 명령줄에 /test_script/install_test.sh 가 있는 프로세스와 그 하위. CUBRID 데몬과 그 하위, 좀비는 뺀다.
+targets() {
+    { ps -e -o pid= -o args= | awk '$0 ~ /\/test_script\/install_test\.sh/ { print "R", $1 }'
+      ps -e -o pid= -o ppid= -o stat= -o comm= | awk '{ print "P", $1, $2, $3, $4 }'; } 2>/dev/null |
+    awk -v keep='^cub_(master|server|broker|cas|gateway|proxy|manager|auto|js|javasp|pl|cmhttpd|cmserver)' '
+         $1 == "R" { root[$2] = 1; next }
+         { par[$2] = $3; st[$2] = $4; cm[$2] = $5 }
+         END {
+             for (p in root) if ((p in cm) && cm[p] !~ keep) sel[p] = 1
+             do {
+                 added = 0
+                 for (p in par) if (!(p in sel) && (par[p] in sel) && cm[p] !~ keep) { sel[p] = 1; added = 1 }
+             } while (added)
+             for (p in sel) if (st[p] !~ /^Z/) print p
+         }'
+}
+pids=$(targets)
+[ -n "$pids" ] || exit 1
+for round in 1 2 3; do
+    pids=$(targets)
+    [ -n "$pids" ] || break
+    # 먼저 SIGSTOP 으로 얼려 새 하위 프로세스가 생기지 않게 한 뒤 다시 모아 SIGKILL
+    kill -STOP $pids 2> /dev/null
+    pids=$(targets)
+    [ -n "$pids" ] || break
+    kill -STOP $pids 2> /dev/null
+    ps -o pid= -o args= -p "$(echo $pids | tr ' ' ',')" 2> /dev/null | sed 's/^ */stopped /'
+    kill -KILL $pids 2> /dev/null
+    sleep 1
+done
+left=$(targets)
+if [ -n "$left" ]; then
+    ps -o pid= -o stat= -o args= -p "$(echo $left | tr ' ' ',')" 2> /dev/null | sed 's/^ */left /'
+    exit 4
+fi
+exit 0
+EOF
+}
+
 stop_test_script() {   # stop_test_script <컨테이너> <조합 디렉터리>
-    local cname=$1 cdir=$2 rc msg note
-    # 컨테이너 안 종료 코드: 0 = 멈춘 프로세스 있음, 1 = pkill 매칭 0건, 3 = pkill 명령 없음, 그 밖 = 확인 불가
-    timeout -k 5 30 docker exec -u root "$cname" sh -c 'command -v pkill > /dev/null 2>&1 || exit 3; pkill -f "[i]nstall_test.sh"; exit $?' >> "$cdir/runner.log" 2>&1
+    local cname=$1 cdir=$2 rc out n msg note
+    out=$(timeout -k 5 30 docker exec -i -u root "$cname" sh -s 2>&1 <<< "$(container_stop_script)")
     rc=$?
+    [ -n "$out" ] && printf '%s\n' "$out" >> "$cdir/runner.log"
+    n=$(printf '%s\n' "$out" | grep -c '^stopped ')
     case $rc in
-        0) msg="제한 시간 초과로 컨테이너를 남기기 전에 컨테이너 안 install_test.sh 계열 프로세스를 멈춤(CUBRID 프로세스는 그대로 둠)"
-           note="timeout 후 남긴 컨테이너 안 테스트 스크립트를 멈춤(CUBRID 프로세스는 그대로)" ;;
-        1) msg="제한 시간 초과 후 컨테이너 안에 멈출 install_test.sh 계열 프로세스가 없었음(pkill 매칭 0건, CUBRID 프로세스는 그대로 둠)"
-           note="timeout 후 남긴 컨테이너 안에 멈출 테스트 스크립트 프로세스 없음" ;;
-        3) msg="컨테이너 안에 pkill 이 없어 install_test.sh 를 멈추지 못함: 테스트 스크립트가 계속 돌 수 있음"
-           note="pkill 없음, 테스트 스크립트가 계속 돌 수 있음" ;;
-        *) msg="컨테이너 안 install_test.sh 중지 결과를 확인하지 못함(종료 코드 $rc): 테스트 스크립트가 계속 돌 수 있음"
-           note="테스트 스크립트 중지 확인 불가(종료 코드 $rc), 계속 돌 수 있음" ;;
+        0) msg="제한 시간 초과로 컨테이너를 남기기 전에 컨테이너 안 install_test.sh 와 하위 프로세스 ${n}개를 멈춤(SIGKILL, 목록은 runner.log). 남은 것 없음, CUBRID 데몬은 그대로 둠"
+           note="timeout 후 남긴 컨테이너 안 테스트 프로세스 ${n}개를 멈춤(CUBRID 데몬은 그대로)" ;;
+        1) msg="제한 시간 초과 후 컨테이너 안에 멈출 install_test.sh 계열 프로세스가 없었음(CUBRID 데몬은 그대로 둠)"
+           note="timeout 후 남긴 컨테이너 안에 멈출 테스트 프로세스 없음" ;;
+        3) msg="컨테이너 안에 ps 가 없어 install_test.sh 와 하위 프로세스를 멈추지 못함: 계속 돌 수 있음"
+           note="ps 없음, 테스트 프로세스가 계속 돌 수 있음" ;;
+        4) msg="컨테이너 안 install_test.sh 와 하위 프로세스를 멈췄지만 일부가 남음(runner.log 의 left 줄): 계속 돌 수 있음"
+           note="테스트 프로세스 일부가 멈추지 않음(runner.log), 계속 돌 수 있음" ;;
+        *) msg="컨테이너 안 install_test.sh 중지 결과를 확인하지 못함(종료 코드 $rc): 테스트 프로세스가 계속 돌 수 있음"
+           note="테스트 프로세스 중지 확인 불가(종료 코드 $rc), 계속 돌 수 있음" ;;
     esac
     echo "$msg" >> "$cdir/runner.log"
     say "  $os / $pkg: $msg"
@@ -1387,7 +1448,7 @@ JU_TESTS=0; JU_FAILS=0; JU_SKIPS=0
 junit_suite() {
     local os=$1 pkg=$2 cdir=$3 note=$4
     shift 4
-    local sts=("$@") cls="${os}.${pkg//./_}" i st name it its reason body log host dur start nfail=0 nskip=0
+    local sts=("$@") cls="${os}.${pkg//./_}" i st name it its reason body log host dur start nfail=0 nskip=0 ntests run_st=""
     for st in "${sts[@]}"; do
         case "$st" in
             pass) ;;
@@ -1395,14 +1456,21 @@ junit_suite() {
             *) nfail=$((nfail + 1)) ;;
         esac
     done
-    JU_TESTS=$((JU_TESTS + ${#sts[@]})); JU_FAILS=$((JU_FAILS + nfail)); JU_SKIPS=$((JU_SKIPS + nskip))
+    ntests=${#sts[@]}
+    # 판정 열이 모두 pass/NA 인데 조합은 fail/timeout 인 경우(예: 항목 결과를 모두 낸 뒤 install_test.sh 종료 코드가 0이 아님,
+    # 마지막 항목 뒤 제한 시간 초과)에는 testcase Run 을 하나 더 넣어 report.xml 에도 실패가 나오게 한다.
+    if [ "$nfail" -eq 0 ] && [ "${M[status]:-pass}" != pass ]; then
+        run_st=${M[status]}
+        ntests=$((ntests + 1)); nfail=1
+    fi
+    JU_TESTS=$((JU_TESTS + ntests)); JU_FAILS=$((JU_FAILS + nfail)); JU_SKIPS=$((JU_SKIPS + nskip))
     dur=${M[duration]:-0}; [[ $dur =~ ^[0-9]+$ ]] || dur=0
     start=${M[start]:-$RUN_START}; [[ $start =~ ^[0-9]+$ ]] || start=$RUN_START
     # 컨테이너가 없는(실행하지 않은) 조합은 호스트 이름 대신 not-run (리포트를 밖으로 공유해도 호스트 이름이 나가지 않게)
     host=${M[container]:-}; [ -n "$host" ] || host=not-run
     log="${cdir#"$SCRIPT_DIR"/}/console.log"
     printf '  <testsuite name="%s" tests="%d" failures="%d" errors="0" skipped="%d" time="%s" timestamp="%s" hostname="%s">\n' \
-        "$(xml_attr "$os / $pkg")" "${#sts[@]}" "$nfail" "$nskip" "$dur" \
+        "$(xml_attr "$os / $pkg")" "$ntests" "$nfail" "$nskip" "$dur" \
         "$(date -d "@$start" '+%FT%T%:z')" "$(xml_attr "$host")"
     printf '    <properties>\n'
     local k v
@@ -1447,6 +1515,19 @@ junit_suite() {
                 ;;
         esac
     done
+    if [ -n "$run_st" ]; then
+        reason=${M[note]:-}
+        [ -n "$reason" ] || reason=$note
+        [ -n "$reason" ] || reason="조합 결과 $run_st"
+        body="조합 결과: $run_st"$'\n'"사유: $reason"$'\n'"로그: $log"
+        if [ "$run_st" = timeout ]; then
+            printf '    <testcase classname="%s" name="Run">\n      <failure type="timeout" message="%s">%s</failure>\n    </testcase>\n' \
+                "$(xml_attr "$cls")" "$(xml_attr "timeout(${TIMEOUT_SEC}s)")" "$(xml_escape "$body")"
+        else
+            printf '    <testcase classname="%s" name="Run">\n      <failure type="fail" message="%s">%s</failure>\n    </testcase>\n' \
+                "$(xml_attr "$cls")" "$(xml_attr "$reason")" "$(xml_escape "$body")"
+        fi
+    fi
     printf '  </testsuite>\n'
 }
 
@@ -1463,11 +1544,19 @@ junit_write() {
     } > "$out"
 }
 
+# 리포트 파일 쓰기 실패 기록(같은 경로는 한 번만)
+report_save_fail() {
+    local f
+    for f in "${REPORT_SAVE_ERR[@]}"; do [ "$f" = "$1" ] && return 0; done
+    REPORT_SAVE_ERR+=("$1")
+}
+
 generate_reports() {
-    local run_dir="$RESULT_ROOT/runs/$RUN_ID" csv md c os pkg cdir row note
+    local run_dir="$RESULT_ROOT/runs/$RUN_ID" csv md c os pkg cdir row note f run_ok
     local total=0 npass=0 nfail=0 ntimeout=0 failed_combos=() xml xml_body="$RUN_TMP/xml_body"
     JU_TESTS=0; JU_FAILS=0; JU_SKIPS=0
-    mkdir -p "$run_dir"
+    REPORT_SAVE_ERR=()
+    mkdir -p "$run_dir" || report_save_fail "$run_dir"
     xml="$run_dir/report.xml"
     : > "$xml_body"
     csv="$run_dir/report.csv"
@@ -1475,8 +1564,8 @@ generate_reports() {
     local md_table="$RUN_TMP/md_table" md_fail="$RUN_TMP/md_fail"
     : > "$md_table"; : > "$md_fail"
 
-    printf '\xEF\xBB\xBF' > "$csv"   # Excel에서 한글이 깨지지 않도록 UTF-8 BOM
-    csv_row "${REPORT_HEADER[@]}" >> "$csv"
+    printf '\xEF\xBB\xBF' > "$csv" || report_save_fail "$csv"   # Excel에서 한글이 깨지지 않도록 UTF-8 BOM
+    csv_row "${REPORT_HEADER[@]}" >> "$csv" || report_save_fail "$csv"
     md_row "${REPORT_HEADER[@]}" "실제 OS" >> "$md_table"
     local sep=() i
     for ((i = 0; i <= ${#REPORT_HEADER[@]}; i++)); do sep+=("---"); done
@@ -1509,9 +1598,9 @@ generate_reports() {
             "$(combine "${S[server_start]}" "${S[stop]}")"
             "${S[broker]}" "${S[manager]}" "${S[createdb]}" "${S[deletedb]}" "${S[sql]}"
             "${M[version]:-$BUILD_VER}" "$note")
-        csv_row "${row[@]}" >> "$csv"
+        csv_row "${row[@]}" >> "$csv" || report_save_fail "$csv"
         md_row "${row[@]}" "${M[osinfo]}" >> "$md_table"
-        junit_suite "$os" "$pkg" "$cdir" "$note" "${row[@]:2:10}" >> "$xml_body"
+        junit_suite "$os" "$pkg" "$cdir" "$note" "${row[@]:2:10}" >> "$xml_body" || report_save_fail "$xml"
 
         if [ "${M[status]}" != pass ]; then
             {
@@ -1557,13 +1646,22 @@ generate_reports() {
             echo
             cat "$md_fail"
         fi
-    } > "$md"
+    } > "$md" || report_save_fail "$md"
 
-    junit_write "$xml" "$xml_body" "$BUILD_VER" "$(( $(date +%s) - RUN_START ))"
-    cp -f "$csv" "$RESULT_ROOT/report.csv"
-    cp -f "$xml" "$RESULT_ROOT/report.xml"
-    cp -f "$md" "$RESULT_ROOT/report.md"
+    junit_write "$xml" "$xml_body" "$BUILD_VER" "$(( $(date +%s) - RUN_START ))" || report_save_fail "$xml"
+    # 최상위 리포트 교체. 이번 실행의 리포트를 다 쓰지 못했거나 복사에 실패하면 이전 실행의 리포트를 CI가 읽지 않도록 지운다.
+    run_ok=0; [ ${#REPORT_SAVE_ERR[@]} -eq 0 ] && run_ok=1
+    for f in report.csv report.xml report.md; do
+        [ "$run_ok" -eq 1 ] && cp -f "$run_dir/$f" "$RESULT_ROOT/$f" && continue
+        [ "$run_ok" -eq 1 ] && report_save_fail "$RESULT_ROOT/$f"
+        rm -f "$RESULT_ROOT/$f" 2>/dev/null
+    done
     SUMMARY="전체 $total, pass $npass, fail $nfail (timeout $ntimeout)"
+    if [ ${#REPORT_SAVE_ERR[@]} -gt 0 ]; then
+        say "오류: 리포트 저장 실패: ${REPORT_SAVE_ERR[*]}"
+        SUMMARY+=", 리포트 저장 실패"
+        return 1
+    fi
     [ "$nfail" -eq 0 ]
 }
 
