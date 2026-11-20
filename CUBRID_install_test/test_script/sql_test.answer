@@ -1,0 +1,34 @@
+Execute OK. ( sec) Committed. ( sec) 
+1 row affected. ( sec) Committed. ( sec) 
+1 row affected. ( sec) Committed. ( sec) 
+1 row affected. ( sec) Committed. ( sec) 
+
+=== <Result of SELECT Command in Line 7> ===
+
+            a  b                     c                   
+=========================================================
+            1  'abc  '               'abc'               
+            2  'efghi'               'efghi'             
+            3  'cub  '               'cub'               
+
+3 rows selected. ( sec) Committed. ( sec) 
+1 row affected. ( sec) Committed. ( sec) 
+
+=== <Result of SELECT Command in Line 11> ===
+
+            a  b                     c                   
+=========================================================
+            1  'zzz  '               'abc'               
+
+1 row selected. ( sec) Committed. ( sec) 
+1 row affected. ( sec) Committed. ( sec) 
+
+=== <Result of SELECT Command in Line 15> ===
+
+  c                   
+======================
+  'abc'               
+  'efghi'             
+
+2 rows selected. ( sec) Committed. ( sec) 
+Execute OK. ( sec) Committed. ( sec) 
