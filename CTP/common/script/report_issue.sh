@@ -26,7 +26,7 @@
 
 export CTP_HOME=$(cd $(dirname $(readlink -f $0))/../..; pwd)
 source $CTP_HOME/common/script/process_safe.sh
-jira_home_url="http://jira.cubrid.org/rest/api/2/issue"
+jira_home_url="https://jira.cubrid.org/rest/api/2/issue"
 
 function usage
 {
