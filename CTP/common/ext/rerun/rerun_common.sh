@@ -662,10 +662,17 @@ function rerun_fix_path_ok() {
 
 # rerun_fix_in_cases <path>: the path is a case of this batch (RERUN_CASES_FILE: rerunId<TAB>sceId) or lies in
 # the directory of one, the rule QAHome applies to a fix's files. True without a case list (nothing to check).
+# A ha_repl / cdc_repl sceId is the absolute .test path on the controller: like the repl runner, its part after
+# cubrid-testcases[-private...]/ is the repository path (one that names no such repository matches nothing).
 function rerun_fix_in_cases() {
     local id sce
     [ -s "$RERUN_CASES_FILE" ] || return 0
     while IFS='	' read -r id sce; do
+        sce=${sce%$'\r'}
+        if [[ "$sce" == /* ]]; then
+            [[ "$sce" == */cubrid-testcases*/* ]] || continue
+            sce=${sce#*/cubrid-testcases*/}
+        fi
         [ "$1" == "$sce" ] && return 0
         [[ "$sce" == */* ]] && [[ "$1" == "${sce%/*}"/* ]] && return 0
     done < "$RERUN_CASES_FILE"
