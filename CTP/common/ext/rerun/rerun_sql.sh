@@ -179,7 +179,7 @@ function rerun_sql_family() {
 # the case log); both are empty for the sql family.
 function rerun_sql_run_staged() {
     local mode=$1 ctp_type=$2 repo=$3 scen=$4 repo_dir=$5 commit=$6 conf=$7 category=$8
-    local stage_repo stage_root map vfile id sce grp n tmptxt log resdir testlog core_note pre p
+    local stage_repo stage_root map vfile id sce grp n tmptxt log resdir testlog core_note pre p staged
 
     # STEP 3: stage the requested cases only
     stage_repo=$RERUN_FAM_WORK/stage/$repo
@@ -222,11 +222,13 @@ function rerun_sql_run_staged() {
         if [ "$mode" == "jdbc" -a "$scen" == "medium" ]; then
             pre=$(rerun_sql_predecessors "$repo_dir/$grp/cases" "$n.sql")
             if [ -n "$pre" ]; then
+                staged=0
                 for p in $pre; do
                     rerun_sql_excluded "$grp/cases/$p" && continue # the regular run removes it too
                     rerun_sql_stage "$repo_dir" "$stage_repo" "$grp" "${p%.sql}"
+                    staged=$((staged + 1))
                 done
-                rerun_log "${sce}: the $(echo "$pre" | wc -l) earlier file(s) of its order-dependent directory are staged to run first"
+                [ $staged -gt 0 ] && rerun_log "${sce}: the ${staged} earlier file(s) of its order-dependent directory are staged to run first"
             fi
         fi
         rerun_sql_stage "$repo_dir" "$stage_repo" "$grp" "$n"

@@ -52,6 +52,11 @@ function rerun_compat_jdbc() {
     RERUN_CATEGORY=$cat
     rerun_init compat_jdbc
     rerun_precheck_message || return 0
+    if [ -n "$RERUN_TC_REF" ]; then
+        # the compat run reads two branches (the exclude lists and the cases), a pull request names one repository
+        rerun_error_all "a pull request rerun of a compat category is not supported"
+        return 0
+    fi
 
     # what the regular runner would run (run_compat_jdbc.sh run_sql)
     kind=${cat##*_}
@@ -162,6 +167,7 @@ function rerun_compat_jdbc() {
         RERUN_BRANCH=$COMPAT_BUILD_SCENARIO_BRANCH_GIT
         RERUN_LOCAL_BRANCH=${RERUN_BRANCH//\//_}
         RERUN_CHECKOUT_BRANCH=$RERUN_LOCAL_BRANCH
+        rerun_log "testcases of ${RERUN_BRANCH} at its head (the ${server} server's branch, as the regular compat run)"
     fi
     if [ "$repo_dir" != "$cfg_dir" ] || [ "$kind" == "S64" ]; then
         if ! rerun_git_update_local "$repo_dir"; then
