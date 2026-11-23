@@ -1,14 +1,14 @@
-# deb 계열 공용 이미지 (debian, ubuntu 등) - CUBRID install test
-# BASE_IMAGE(이미지:태그)는 run_install_test.sh가 matrix.conf 값으로 전달한다.
-# OS별로 다르게 해야 하면 images/<OS 키>/Dockerfile 을 따로 두면 그것이 우선 쓰인다.
+# Shared image for the deb family (debian, ubuntu, etc.) - CUBRID install test
+# BASE_IMAGE (image:tag) is passed by run_install_test.sh from matrix.conf.
+# If an OS needs something different, put images/<OS key>/Dockerfile; it takes precedence.
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
-# rpm: rpm 패키지 직접 설치용(ubuntu는 universe 저장소), openssl: /etc/ssl/openssl.cnf 제공, procps: ps
-# libncurses5-dev: 기존 수동 절차의 debian 사전 준비. 실제 설치 후보가 있을 때만 설치한다
-# (apt-cache show 는 ubuntu noble 같은 가상 패키지에도 성공해 libncurses-dev 등이 딸려 설치되므로 쓰지 않는다).
-# 후보가 없거나 (none)이면 건너뛰고 빌드 로그에 남긴다. debian 12 는 설치, ubuntu 24.04 는 미설치.
+# rpm: for installing the rpm package directly (universe repository on ubuntu), openssl: provides /etc/ssl/openssl.cnf, procps: ps
+# libncurses5-dev: debian prerequisite from the earlier manual procedure. Installed only when there is a real install candidate
+# (apt-cache show also succeeds for virtual packages such as on ubuntu noble and pulls in libncurses-dev etc., so it is not used).
+# If there is no candidate or it is (none), skip it and note it in the build log. Installed on debian 12, not on ubuntu 24.04.
 RUN apt-get update \
  && apt-get install -y rpm curl openssl ca-certificates procps \
  && cand=$(LC_ALL=C apt-cache policy libncurses5-dev 2>/dev/null | awk '/Candidate:/ { print $2 }') \
@@ -20,7 +20,7 @@ RUN apt-get update \
     fi \
  && rm -rf /var/lib/apt/lists/*
 
-# CMS 접속용 TLS 설정
+# TLS settings for connecting to CMS
 COPY add_openssl.sh /usr/local/share/cubrid-install-test/add_openssl.sh
 RUN bash /usr/local/share/cubrid-install-test/add_openssl.sh
 

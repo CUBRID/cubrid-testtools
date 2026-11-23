@@ -1,44 +1,44 @@
 #!/bin/bash
 #
-# CUBRID install test 러너 (호스트에서 실행)
+# CUBRID install test runner (runs on the host)
 #
-#   ./run_install_test.sh <빌드 URL | 패키지 디렉터리> [옵션]
+#   ./run_install_test.sh <build URL | package directory> [options]
 #
-# 패키지 준비 -> OS별 이미지 빌드(있으면 건너뜀) -> 조합(OS x 패키지)마다 새 컨테이너에서
-# test_script/install_test.sh 실행 -> 결과/로그 수집 -> 컨테이너 삭제 -> report.csv / report.md 생성.
-# 모든 조합이 pass일 때만 종료 코드 0.
+# Prepare packages -> build an image per OS (skipped if present) -> for each combination (OS x package), in a new container
+# run test_script/install_test.sh -> collect results/logs -> delete the container -> write report.csv / report.md.
+# Exit code 0 only when all combinations pass.
 #
 set -u
 set -o pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 RUNNER_VERSION=v3
-RUNNER_SHA=""        # 이 스크립트의 sha256 앞 12자 (main에서 계산)
-TESTSCRIPT_SHA=""    # test_script/ 전체 파일의 해시 앞 12자 (main에서 계산)
-HOST_INFO="(dry-run)"  # report.md 의 "호스트" 줄 (실행 시 main에서 채움)
+RUNNER_SHA=""        # first 12 chars of this script's sha256 (computed in main)
+TESTSCRIPT_SHA=""    # first 12 chars of the hash of all files in test_script/ (computed in main)
+HOST_INFO="(dry-run)"  # "host" line in report.md (filled in main when running)
 
-# ---------------- 기본값 (한 곳에 모음) ----------------
+# ---------------- defaults (kept in one place) ----------------
 DEFAULT_JOBS=4
 MAX_JOBS=4
-# 조합당 제한 시간(초). 기본 1200. --timeout 으로 변경 가능.
+# Time limit per combination (seconds). Default 1200. Can be changed with --timeout.
 DEFAULT_TIMEOUT_SEC=1200
-# 이미지 준비 단계 제한 시간(초). 넘으면 그 OS만 fail 처리한다.
-PULL_TIMEOUT_SEC=900     # 베이스 이미지 docker pull
-DETECT_TIMEOUT_SEC=120   # 계열 판별 컨테이너(/etc/os-release 읽기)
+# Time limits for the image preparation steps (seconds). Exceeding one fails only that OS.
+PULL_TIMEOUT_SEC=900     # docker pull of the base image
+DETECT_TIMEOUT_SEC=120   # family detection container (reads /etc/os-release)
 BUILD_TIMEOUT_SEC=1800   # docker build
-# 동시 실행 방지용 호스트 공용 잠금 파일(환경변수로 바꿀 수 있음: 시험용)
+# Host-wide lock file to prevent concurrent runs (can be changed with an environment variable: for tests)
 LOCK_FILE=${INSTALL_TEST_LOCK_FILE:-/tmp/cubrid-install-test.lock}
 IMAGE_REPO=cubrid-install-test
 CONTAINER_PREFIX=cit
 LABEL_KEY=cubrid-install-test.run
 CONTAINER_RESULT_DIR=/var/tmp/install_test
-# 이미지 빌드(yum/apt) 시 네트워크. 기본 bridge에서 외부 접속이 안 되는 호스트(ip_forward=0)가 있어 host 사용.
+# Network for image builds (yum/apt). Uses host because some hosts (ip_forward=0) have no outside access from the default bridge.
 BUILD_NETWORK=host
-# 이미지 빌드는 legacy builder로 한다. BuildKit은 이미지와 별도로 빌드 캐시를 남겨
-# 이미지를 지워도 레이어가 남고, 그 캐시는 다른 프로젝트 것과 섞여 있어 골라 지우기 어렵다.
+# Images are built with the legacy builder. BuildKit keeps a build cache separate from images, so
+# layers stay after the images are removed, and that cache is mixed with other projects and hard to remove selectively.
 export DOCKER_BUILDKIT=0
-# 테스트 컨테이너 전용 네트워크. host나 기본 bridge(docker0)에 붙이지 않고, 다른 컨테이너와 분리한다.
-# 없으면 러너가 만들고(이번 실행이 만든 경우에만 끝나면 지움), 있으면 서브넷이 같은지 확인해 재사용한다.
+# Dedicated network for test containers. Not attached to host or the default bridge (docker0), kept apart from other containers.
+# If missing, the runner creates it (and removes it at the end only if this run created it); if present, it is reused after checking the subnet.
 TEST_NETWORK=install_test
 TEST_SUBNET=172.200.255.0/24
 TEST_GATEWAY=172.200.255.1
@@ -89,7 +89,7 @@ EOF
 
 die() { echo "오류: $*" >&2; exit 2; }
 
-# ---------------- 인자 처리 ----------------
+# ---------------- argument handling ----------------
 SRC=""
 JOBS=$DEFAULT_JOBS
 TIMEOUT_SEC=$DEFAULT_TIMEOUT_SEC
@@ -105,26 +105,26 @@ CHECK_NETWORK_ONLY=0
 MATRIX_FILE=$SCRIPT_DIR/matrix.conf
 RESULTS_BASE=$SCRIPT_DIR/results
 
-# URL 의 authority("://" 뒤 첫 "/" 앞) 안의 마지막 "@" 까지(사용자[:암호], 그 안에 "@" 가 있어도)를 *** 로 가린다.
-# 경로의 "@" 는 그대로 둔다. 화면, run.log, report.md, 오류 메시지에 URL을 적을 때 사용(실제 curl 호출에는 원래 URL을 그대로 쓴다).
-# "://" 가 없고 첫 "/" 앞에 "사용자:암호@" 꼴이 있으면(스킴을 빠뜨린 입력) 첫 "/" 앞의 마지막 "@" 까지 가린다.
-# 디렉터리 경로에는 ":" 를 쓸 수 없으므로(README) ":" 를 요구하면 유효한 디렉터리는 가려지지 않는다.
-# 인자 처리 중 die 에서도 쓰므로 가능한 앞쪽에 둔다.
+# Mask with *** everything up to the last "@" in the URL authority (after "://", before the first "/"), i.e. user[:password], even if it contains "@".
+# "@" in the path is kept. Used when writing a URL to the screen, run.log, report.md and error messages (curl itself gets the original URL).
+# Without "://", if there is a "user:password@" form before the first "/" (scheme left out), mask up to the last "@" before the first "/".
+# Directory paths cannot contain ":" (README), so requiring ":" keeps valid directories from being masked.
+# Also used by die during argument handling, so it is defined as early as possible.
 mask_url() { printf '%s' "$1" | sed -E '/:\/\//!s#^[^/:]*:[^/]*@#***@#; s#(://)[^/]*@#\1***@#'; }
 
-# docker 의 name 필터는 정규식이라 컨테이너 이름의 "." 이 아무 글자와도 맞는다. 필터에 넣을 때만 "." 을 "\." 로 바꾼다
-# (실제 rm/inspect 에는 정확한 이름 그대로). 이름에 올 수 있는 문자는 영문/숫자/._- 라 "." 만 처리하면 된다.
+# docker's name filter is a regex, so "." in a container name matches any character. Replace "." with "\." only when putting it in a filter
+# (rm/inspect get the exact name). Names can only contain letters/digits/._-, so only "." needs handling.
 name_re() { printf '%s' "${1//./\\.}"; }
 
-need_arg() {   # need_arg <옵션> <남은 인자 수> <값>
+need_arg() {   # need_arg <option> <remaining arg count> <value>
     [ "$2" -ge 2 ] || die "$1 옵션에 값이 필요합니다"
     case "${3-}" in
         -*) die "$1 의 값이 '-' 로 시작합니다: ${3} (값이 빠졌는지 확인하세요)" ;;
     esac
 }
 split_csv() { local IFS=,; read -r -a SPLIT <<< "$1"; }
-# --os/--pkg 값: 비었거나 앞·뒤·연속 콤마로 빈 항목이 생기면 오류(빈 항목은 모든 키의 접두사라 "전체"로 해석되기 때문)
-split_csv_opt() {   # split_csv_opt <옵션> <값>
+# --os/--pkg value: error if empty or if leading/trailing/consecutive commas make an empty entry (an empty entry is a prefix of every key, so it would mean "all")
+split_csv_opt() {   # split_csv_opt <option> <value>
     local opt=$1 val=$2
     if [ -z "$val" ] || [[ $val == ,* ]] || [[ $val == *, ]] || [[ $val == *,,* ]]; then
         die "$opt 값에 빈 항목이 있습니다: '$val'"
@@ -177,26 +177,26 @@ TIMEOUT_SEC=$((10#$TIMEOUT_SEC))
 mkdir -p "$RESULTS_BASE" || die "결과 디렉터리를 만들 수 없습니다: $RESULTS_BASE"
 RESULTS_BASE=$(cd "$RESULTS_BASE" && pwd)
 
-# ---------------- 실행 상태 ----------------
+# ---------------- run state ----------------
 RUN_ID=$(date +%Y%m%d-%H%M%S)-$$
 RUN_TMP=$(mktemp -d "${TMPDIR:-/tmp}/cubrid-install-test.XXXXXX") || die "임시 디렉터리 생성 실패"
 RUN_LOG=$RUN_TMP/run.log
-KEPT_FILE=$RUN_TMP/kept_containers   # 줄마다 "<OS 키> <컨테이너 이름>"
+KEPT_FILE=$RUN_TMP/kept_containers   # one "<OS key> <container name>" per line
 : > "$KEPT_FILE"
 declare -A BASE_PREEXIST=() IMAGE_PREEXIST=() IMAGE_TAG=() BASE_ID=()
 REPORT_SAVE_ERR=()
-declare -A IMAGE_FAMILY=()   # OS 키 -> 계열(deb|rpm|custom|unknown)
-declare -A IMAGE_DIR=()      # OS 키 -> 실제 쓰는 Dockerfile 디렉터리
-declare -A BUILD_STARTED=()  # 이번 실행이 docker build 를 시작한 OS 키
-declare -A BASE_ASSUMED=()   # 시작 때 베이스 이미지 확인이 실패해 "기존 이미지로 간주"한 OS 키
-CLEANUP_ARMED=0      # 1이면 정리 단계가 docker 를 건드린다(잠금 획득 뒤, dry-run 은 잠금을 건너뛰는 자리에서 1)
-CLEANUP_ERROR=0      # 정리 중 오류(기존 이미지 삭제 등) -> 러너 종료 코드를 0이 아니게
-CREATED_FILE=$RUN_TMP/created_containers   # 이번 실행이 만든 컨테이너(한 줄에 하나)
-REMOVED_FILE=$RUN_TMP/removed_containers   # 조합 종료 시 지운 컨테이너
+declare -A IMAGE_FAMILY=()   # OS key -> family (deb|rpm|custom|unknown)
+declare -A IMAGE_DIR=()      # OS key -> Dockerfile directory actually used
+declare -A BUILD_STARTED=()  # OS keys whose docker build this run started
+declare -A BASE_ASSUMED=()   # OS keys "assumed pre-existing" because the base image check failed at start
+CLEANUP_ARMED=0      # 1 means the cleanup step touches docker (after taking the lock; for dry-run, set where the lock is skipped)
+CLEANUP_ERROR=0      # error during cleanup (pre-existing image removed, etc.) -> make the runner exit code non-zero
+CREATED_FILE=$RUN_TMP/created_containers   # containers this run created (one per line)
+REMOVED_FILE=$RUN_TMP/removed_containers   # containers removed when a combination finished
 : > "$CREATED_FILE"; : > "$REMOVED_FILE"
-HOST_TZ=""           # 컨테이너에 넘길 POSIX TZ 값(예: KST-09:00). 호스트의 현재 UTC 오프셋 기준
-NETWORK_READY=0      # 이번 실행에서 테스트 네트워크를 쓸 준비가 됨
-NETWORK_CREATED=0    # 이번 실행이 테스트 네트워크를 만듦
+HOST_TZ=""           # POSIX TZ value passed to containers (e.g. KST-09:00), from the host's current UTC offset
+NETWORK_READY=0      # the test network is ready for this run
+NETWORK_CREATED=0    # this run created the test network
 CLEANUP_DONE=0
 CLEANUP_SUMMARY=""
 RESULT_ROOT=""
@@ -209,18 +209,18 @@ say() {
     printf '%s\n' "$line" >> "$RUN_LOG"
 }
 
-# 호스트의 현재 시각대를 POSIX TZ 형식으로 만든다(tzdata가 없는 이미지에서도 동작). 예: +0900 -> KST-09:00
+# Turn the host's current time zone into POSIX TZ form (works in images without tzdata). e.g. +0900 -> KST-09:00
 compute_host_tz() {
     local off sign hh mm abbr
     off=$(date +%z) || return 0
     abbr=$(date +%Z)
     sign=${off:0:1}; hh=${off:1:2}; mm=${off:3:2}
     [[ $abbr =~ ^[A-Za-z]{3,6}$ ]] || abbr="HOST"
-    if [ "$sign" = "+" ]; then sign="-"; else sign="+"; fi   # POSIX TZ는 부호가 반대
+    if [ "$sign" = "+" ]; then sign="-"; else sign="+"; fi   # POSIX TZ has the opposite sign
     HOST_TZ="${abbr}${sign}${hh}:${mm}"
 }
 
-# ---------------- 정리 (Ctrl-C 포함) ----------------
+# ---------------- cleanup (including Ctrl-C) ----------------
 collect_tree() {
     local p=$1 c
     echo "$p"
@@ -238,7 +238,7 @@ kill_jobs() {
     sleep 1
 }
 
-# ---------------- 테스트 네트워크 ----------------
+# ---------------- test network ----------------
 ip2int() {
     local IFS=.
     # shellcheck disable=SC2086
@@ -246,7 +246,7 @@ ip2int() {
     echo $(( ($1 << 24) + ($2 << 16) + ($3 << 8) + $4 ))
 }
 
-cidr_range() {   # "a.b.c.d/n" 또는 "a.b.c.d" -> "시작 끝"(정수)
+cidr_range() {   # "a.b.c.d/n" or "a.b.c.d" -> "start end" (integers)
     local ip=${1%/*} len=32 n mask
     [[ $1 == */* ]] && len=${1#*/}
     n=$(ip2int "$ip")
@@ -263,12 +263,12 @@ cidr_overlap() {
 
 is_ipv4_cidr() { [[ $1 =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}(/[0-9]{1,2})?$ ]]; }
 
-network_subnets() {   # 네트워크(이름/ID)의 IPv4 서브넷 목록
+network_subnets() {   # IPv4 subnets of a network (name/ID)
     docker network inspect -f '{{range .IPAM.Config}}{{.Subnet}} {{end}}' "$1" 2>/dev/null \
         | tr ' ' '\n' | while read -r c; do is_ipv4_cidr "$c" && echo "$c"; done
 }
 
-# TEST_SUBNET이 기존 docker 네트워크, 호스트 주소/라우트와 겹치면 그 목록을 출력
+# Print the list if TEST_SUBNET overlaps existing docker networks or host addresses/routes
 subnet_conflicts() {
     local id name c dst
     for id in $(docker network ls -q 2>/dev/null); do
@@ -291,7 +291,7 @@ subnet_conflicts() {
     fi
 }
 
-# 테스트 네트워크 준비: 있으면 서브넷 확인 후 재사용, 없으면 겹침 확인 후 생성. 문제가 있으면 실행 전에 중단.
+# Prepare the test network: if present, check the subnet and reuse it; if not, check for overlaps and create it. Stop before running if there is a problem.
 prepare_network() {
     local subnets conflicts
     if [ "$DRY_RUN" -eq 1 ]; then
@@ -310,7 +310,7 @@ prepare_network() {
             say "  네트워크 생성: $TEST_NETWORK ($TEST_SUBNET, gateway $TEST_GATEWAY) - 이번 실행이 만든 것이라 끝나면 지움"
             return
         fi
-        # 다른 실행이 동시에 만든 경우가 아니면 실패
+        # Fail unless another run created it at the same time
         docker network inspect "$TEST_NETWORK" > /dev/null 2>&1 \
             || die "$TEST_NETWORK 네트워크 생성 실패: $(head -c 300 "$RUN_TMP/network.err")"
     fi
@@ -323,11 +323,11 @@ prepare_network() {
     say "  네트워크 재사용: $TEST_NETWORK ($TEST_SUBNET) - 실행 전부터 있던 것이라 끝나도 남김"
 }
 
-# 이번 실행이 만든 네트워크만, 붙어 있는 컨테이너가 없을 때 지운다
+# Remove only the network this run created, when no containers are attached
 cleanup_network() {
     local n owner
-    # 네트워크 생성 도중 신호가 오면 docker network create 직후 NETWORK_CREATED 를 세우기 전에 트랩이 돌 수 있다.
-    # 변수 대신 네트워크에 붙인 created-by label 로 이번 실행이 만든 것인지 확인한다.
+    # If a signal arrives while creating the network, the trap can run right after docker network create, before NETWORK_CREATED is set.
+    # So use the created-by label on the network instead of the variable to tell whether this run created it.
     if [ "$NETWORK_CREATED" -eq 0 ]; then
         owner=$(docker network inspect -f '{{index .Labels "'"$NETWORK_LABEL"'.created-by"}}' "$TEST_NETWORK" 2>/dev/null)
         if [ -n "$owner" ] && [ "$owner" = "$RUN_ID" ]; then
@@ -369,13 +369,13 @@ cleanup_containers() {
         name=$(docker inspect -f '{{.Name}}' "$id" 2>/dev/null)
         name=${name#/}
         is_kept_container "$name" && continue
-        # 생성 수에 아직 안 센 컨테이너(중단 등)는 세어 두어 "생성 N개, 삭제 M개"가 어긋나지 않게 한다
+        # Count containers not yet counted as created (interrupted, etc.) so that "created N, removed M" stays consistent
         grep -qxF "$name" "$CREATED_FILE" 2>/dev/null || echo "$name" >> "$CREATED_FILE"
         docker rm -f "$id" > /dev/null 2>&1 && CLEAN_RM_CT=$((CLEAN_RM_CT + 1))
     done
 }
 
-remove_image() {   # remove_image <이미지>: 있으면 지우고 결과를 기록
+remove_image() {   # remove_image <image>: remove it if present and record the result
     docker image inspect "$1" > /dev/null 2>&1 || return 0
     if log_cmd "docker rmi $1" docker rmi "$1"; then
         CLEAN_RM_IMG+=("$1")
@@ -384,8 +384,8 @@ remove_image() {   # remove_image <이미지>: 있으면 지우고 결과를 기
     fi
 }
 
-# docker 명령의 결과를 run.log에 남긴다(터미널에는 내지 않음)
-log_cmd() {   # log_cmd <설명> <명령...>: 종료 코드를 그대로 돌려준다
+# Record docker command results in run.log (not shown on the terminal)
+log_cmd() {   # log_cmd <description> <command...>: returns the exit code as is
     local desc=$1 out rc
     shift
     out=$("$@" 2>&1)
@@ -394,8 +394,8 @@ log_cmd() {   # log_cmd <설명> <명령...>: 종료 코드를 그대로 돌려�
     return $rc
 }
 
-# 이번 실행이 쓴 빌드 로그 경로만 돌려준다(이전 실행의 image_build/<os>.log 는 읽지 않는다):
-# 이번 실행이 이 OS의 docker build 를 시작했고(BUILD_STARTED), 로그 수정 시각이 실행 시작 이후일 때.
+# Return only the build log path written by this run (do not read image_build/<os>.log from an earlier run):
+# when this run started the docker build for this OS (BUILD_STARTED) and the log was modified after the run started.
 this_run_build_log() {
     local os=$1 log mt
     [ -n "$RESULT_ROOT" ] || return 1
@@ -407,15 +407,15 @@ this_run_build_log() {
     printf '%s\n' "$log"
 }
 
-# 이번 빌드(로그 원본)의 " ---> Running in <id>" 임시 컨테이너 중 아직 남은 것을 지운다.
-# 조합/판별 컨테이너 집계(CREATED/REMOVED_FILE)와는 섞지 않고 CLEAN_RM_BUILD 와 run.log 에만 기록한다.
+# Remove leftover " ---> Running in <id>" temporary containers of this build (from the original log).
+# Not mixed with the combination/detection container counts (CREATED/REMOVED_FILE); recorded only in CLEAN_RM_BUILD and run.log.
 cleanup_build_containers() {
     local os=$1 log cid full name created cts
     log=$(this_run_build_log "$os") || return 0
     for cid in $(sed -n 's/^ ---> Running in \([0-9a-f]\{12\}\)$/\1/p' "$log" 2>/dev/null | awk '!s[$0]++'); do
         full=$(docker ps -aq --no-trunc --filter "id=$cid" 2>/dev/null | head -n 1)
-        [ -n "$full" ] || continue    # 이미 없음(정상 빌드는 임시 컨테이너를 스스로 지움)
-        # 생성 시각이 이번 실행 시작 이후가 아니면 건너뛴다(접두사 일치 등으로 다른 컨테이너를 잡았을 때의 방어 한 겹)
+        [ -n "$full" ] || continue    # already gone (a normal build removes its temporary containers itself)
+        # Skip if it was not created after this run started (one more guard against matching another container by prefix, etc.)
         created=$(docker inspect -f '{{.Created}}' "$full" 2>/dev/null)
         cts=$(date -d "$created" +%s 2>/dev/null)
         if [ -z "$cts" ] || [ "$cts" -lt "$RUN_START" ]; then
@@ -433,9 +433,9 @@ cleanup_build_containers() {
     done
 }
 
-# 이번 실행의 빌드 로그 원본의 " ---> <id>" 줄에서 태그 없는 중간 이미지만 지운다(실패/중단된 legacy 빌드가 남긴 것).
-# 로그의 " ---> <id>" 에는 FROM 단계의 베이스 이미지 id도 있으므로 반드시 제외한다(정리 시점에 구한 id와 시작 때 기록한 BASE_ID 둘 다).
-# 이미 지워졌거나 태그가 있는 이미지는 건너뛰므로 여러 번 불려도 된다.
+# Remove only untagged intermediate images from the " ---> <id>" lines of this run's original build log (left by failed/interrupted legacy builds).
+# " ---> <id>" in the log also has the base image id from the FROM step, so it must be excluded (both the id found at cleanup and BASE_ID recorded at start).
+# Images already removed or tagged are skipped, so it is safe to call more than once.
 cleanup_intermediate_images() {
     local os=$1 base id base_id full ntags
     base=${OS_IMAGE[$os]}
@@ -447,7 +447,7 @@ cleanup_intermediate_images() {
             printf '[%s]   중간 이미지 정리 건너뜀(베이스 이미지 %s): %s\n' "$(date '+%H:%M:%S')" "$base" "$id" >> "$RUN_LOG"
             continue
         fi
-        full=$(docker image inspect -f '{{.Id}}' "$id" 2>/dev/null) || continue   # 이미 없음
+        full=$(docker image inspect -f '{{.Id}}' "$id" 2>/dev/null) || continue   # already gone
         ntags=$(docker image inspect -f '{{len .RepoTags}}' "$id" 2>/dev/null)
         if [ "${ntags:-1}" != 0 ]; then
             printf '[%s]   중간 이미지 정리 건너뜀(태그 있음 %s개): %s\n' "$(date '+%H:%M:%S')" "$ntags" "$id" >> "$RUN_LOG"
@@ -457,8 +457,8 @@ cleanup_intermediate_images() {
     done
 }
 
-# 정리 대상 OS: 준비 이미지 태그를 정한 OS(IMAGE_TAG)와 베이스 이미지 유무를 기록한 OS(BASE_PREEXIST)의 합집합.
-# IMAGE_TAG 는 계열 판별(베이스 이미지 받기)이 모두 끝난 뒤에 채워지므로, 그 전에 중단되면 BASE_PREEXIST 에만 있다.
+# OSes to clean up: union of the OSes with a prepared image tag (IMAGE_TAG) and those with a recorded base image state (BASE_PREEXIST).
+# IMAGE_TAG is filled only after family detection (pulling base images) finishes, so an interruption before that leaves the OS only in BASE_PREEXIST.
 image_cleanup_oses() {
     local os
     declare -A seen=()
@@ -469,7 +469,7 @@ image_cleanup_oses() {
     done
 }
 
-# 이번 실행이 빌드했거나 새로 pull한 이미지만 지운다. 실행 전부터 있던 이미지는 남긴다.
+# Remove only images this run built or newly pulled. Images that existed before the run are kept.
 cleanup_images() {
     local os tag base
     declare -A kept_os=()
@@ -489,7 +489,7 @@ cleanup_images() {
     done
 }
 
-# 정리 후 남은 것 확인 -> CLEANUP_SUMMARY 한 줄
+# Check what is left after cleanup -> one CLEANUP_SUMMARY line
 verify_cleanup() {
     local os n left=() errs=() warns=() created removed_run out
     n=$(docker ps -aq --filter "label=$LABEL_KEY=$RUN_ID" 2>/dev/null | wc -l)
@@ -504,9 +504,9 @@ verify_cleanup() {
                 && left+=("${OS_IMAGE[$os]}")
         done
     fi
-    # 실행 전부터 있던 베이스 이미지가 여전히 있는지 확인 (--keep-images 여부와 관계없이)
-    # "No such image" 일 때만 삭제된 것으로 보고 오류(종료 코드 1)로 한다. 그 밖의 확인 실패(docker 접근 오류 등)는 경고만 하고
-    # 종료 코드는 바꾸지 않는다. 시작 때 확인에 실패해 "기존 이미지로 간주"한 OS는 끝에 No such image 여도 경고만 한다.
+    # Check that base images present before the run are still there (regardless of --keep-images)
+    # Treat it as removed (error, exit code 1) only on "No such image". Other check failures (docker access errors, etc.) only warn
+    # and do not change the exit code. An OS "assumed pre-existing" because the check failed at start only warns even on No such image at the end.
     for os in $(image_cleanup_oses); do
         [ "${BASE_PREEXIST[$os]:-0}" = 1 ] || continue
         if out=$(docker image inspect "${OS_IMAGE[$os]}" 2>&1); then
@@ -554,10 +554,10 @@ verify_cleanup() {
     fi
 }
 
-# 정리 결과 한 줄을 이번 실행이 쓴 report.md 끝에 덧붙인다.
-# 중단된 실행은 리포트(generate_reports)를 거치지 않아 최상위 report.md 가 이전 실행의 파일이므로 건드리지 않는다
-# (이번 실행 ID 줄 "- 실행 ID: `<RUN_ID>`" 이 있는 파일에만 덧붙임. 정리 결과는 run.log 에는 항상 남는다).
-# 항상 0을 돌려준다(on_exit 에서 호출됨).
+# Append the cleanup result line to the report.md written by this run.
+# An interrupted run skips generate_reports, so the top-level report.md is from an earlier run and is left alone
+# (append only to the file with this run's ID line "- 실행 ID: `<RUN_ID>`". The cleanup result always goes to run.log).
+# Always returns 0 (called from on_exit).
 append_cleanup_summary() {
     local f
     [ -n "${RESULT_ROOT:-}" ] || return 0
@@ -569,15 +569,15 @@ append_cleanup_summary() {
     return 0
 }
 
-# 컨테이너, 이미지 정리 (정상/실패 종료, Ctrl-C 모두). 결과 한 줄을 로그와 리포트에 남긴다.
+# Clean up containers and images (normal/failed exit and Ctrl-C). Write one result line to the log and the report.
 final_cleanup() {
     local os
-    # 정리가 시작되면 INT/TERM/HUP 을 무시해 끝까지 간다(정리 도중 신호로 끊기면 이미지/네트워크/임시 디렉터리가 남음).
-    # 정리 전 실행 중의 신호는 on_signal 이 그대로 조합을 멈추고 이 함수를 부른다.
+    # Once cleanup starts, ignore INT/TERM/HUP and finish (a signal during cleanup would leave images/networks/temp directories).
+    # A signal during the run before cleanup goes to on_signal, which stops the combinations and calls this function.
     trap '' INT TERM HUP
     [ "$CLEANUP_DONE" -eq 1 ] && return
     CLEANUP_DONE=1
-    # 잠금을 잡기 전의 오류(옵션/matrix 오류, 잠금 거부)에서는 docker 를 조회하지 않고 "정리:" 줄도 내지 않는다
+    # On errors before taking the lock (option/matrix errors, lock refused), do not query docker and do not print the "정리:" line
     [ "$CLEANUP_ARMED" -eq 1 ] || return
     if [ "$DRY_RUN" -eq 1 ]; then
         say "(dry-run) 정리 생략: 컨테이너, 이번 실행이 빌드/pull한 이미지, 이번 실행이 만든 $TEST_NETWORK 네트워크"
@@ -587,12 +587,12 @@ final_cleanup() {
     CLEAN_RM_CT=0; CLEAN_RM_BUILD=0; CLEAN_RM_IMG=(); CLEAN_LEFT=(); CLEAN_KEPT=(); CLEAN_NET=""
     cleanup_containers
     sleep 1
-    cleanup_containers   # 중단 직전에 생성 요청된 컨테이너까지 한 번 더
-    # 중단/시간 초과로 클라이언트만 죽으면 이번 빌드의 임시 컨테이너가 남을 수 있다. --keep-images/--images-only 와 무관하게
-    # 이미지 정리 전에 한 번 지운다(이번 실행이 빌드를 시작한 OS의 로그 원본에서 " ---> Running in <id>" 만 대상).
+    cleanup_containers   # once more, for containers requested just before the interruption
+    # If an interruption/timeout kills only the client, temporary containers of this build can be left. Regardless of --keep-images/--images-only,
+    # remove them once before image cleanup (only " ---> Running in <id>" in the original logs of OSes whose build this run started).
     for os in "${!BUILD_STARTED[@]}"; do cleanup_build_containers "$os"; done
-    # 빌드가 실패/중단/시간 초과된 OS의 중간 이미지는 --keep-images/--images-only/--rebuild-images 와 무관하게 지운다
-    # (성공한 빌드의 레이어는 준비 이미지의 부모라 지워지지 않으므로 대상에서 뺀다).
+    # Intermediate images of OSes whose build failed/was interrupted/timed out are removed regardless of --keep-images/--images-only/--rebuild-images
+    # (layers of a successful build are parents of the prepared image and cannot be removed, so they are excluded).
     for os in "${!BUILD_STARTED[@]}"; do image_ok "$os" || cleanup_intermediate_images "$os"; done
     [ "$KEEP_IMAGES" -eq 0 ] && cleanup_images
     cleanup_network
@@ -617,14 +617,14 @@ on_signal() {
 
 on_exit() {
     local rc=$?
-    # 신호가 아닌 비정상 종료(예: set -u 오류)에서 아직 돌고 있는 백그라운드 작업이 있으면 먼저 멈춘다:
-    # 작업이 잠금을 물고 남거나 정리와 겹치지 않게 한다. 정상 종료는 작업을 모두 기다린 뒤라 영향이 없다.
+    # On an abnormal exit that is not a signal (e.g. a set -u error), stop background jobs still running first:
+    # so they do not keep holding the lock or overlap with cleanup. A normal exit has already waited for all jobs, so it is unaffected.
     if [ -n "$(jobs -rp)" ]; then
         kill_jobs
     fi
     final_cleanup
     rm -rf "$RUN_TMP"
-    # 정리 중 오류(기존 이미지 삭제 등)가 있으면 종료 코드를 0이 아니게 한다
+    # If there was an error during cleanup (pre-existing image removed, etc.), make the exit code non-zero
     if [ "$CLEANUP_ERROR" -eq 1 ] && [ "$rc" -eq 0 ]; then
         exit 1
     fi
@@ -654,7 +654,7 @@ load_matrix() {
     [ -r "$MATRIX_FILE" ] || die "matrix 파일을 읽을 수 없습니다: $MATRIX_FILE"
     while IFS= read -r line || [ -n "$line" ]; do
         n=$((n + 1))
-        line=${line%$'\r'}     # CRLF matrix 대응
+        line=${line%$'\r'}     # handle CRLF in matrix
         line=${line%%#*}
         read -r kind a b c extra <<< "$line"
         [ -z "$kind" ] && continue
@@ -687,7 +687,7 @@ load_matrix() {
     done
 }
 
-os_matches() {   # os_matches <os> <필터 토큰>
+os_matches() {   # os_matches <os> <filter token>
     [[ $1 == "$2"* || ${OS_IMAGE[$1]} == "$2"* ]]
 }
 
@@ -734,7 +734,7 @@ build_combos() {
     [ ${#COMBOS[@]} -gt 0 ] || die "선택된 조합이 없습니다"
 }
 
-# ---------------- 패키지 준비 ----------------
+# ---------------- package preparation ----------------
 BUILD_VER=""
 PKG_DIR=""
 declare -A PKG_FILE=() PKG_MISSING=() PKG_VER=()
@@ -752,14 +752,14 @@ selected_pkgs() {
     done
 }
 
-# 패키지 파일의 sha256 을 run.log 에 남긴다(파일이 있을 때만).
+# Record the sha256 of a package file in run.log (only if the file exists).
 log_pkg_sha() {
     local f=$1
     [ -f "$f" ] || return 0
     say "  sha256: $(basename "$f") $(sha256sum "$f" | cut -d' ' -f1)"
 }
 
-# 러너와 test_script 의 해시(앞 12자). test_script 는 파일 경로 순으로 정렬한 sha256 목록을 다시 해시해 재현 가능하게 한다.
+# Hashes (first 12 chars) of the runner and test_script. test_script hashes the sha256 list sorted by file path, so it is reproducible.
 compute_runner_hashes() {
     RUNNER_SHA=$(sha256sum "$SCRIPT_DIR/run_install_test.sh" 2>/dev/null | cut -c1-12)
     TESTSCRIPT_SHA=$(cd "$SCRIPT_DIR/test_script" 2>/dev/null \
@@ -831,7 +831,7 @@ prepare_packages() {
         for pkg in $(selected_pkgs); do
             suffix=${PKG_SUFFIX[$pkg]}
             vers=()
-            # CUBRID-<버전><접미사> 형태만 (예: -Linux.x86_64.sh 는 -debug.sh 와 구분됨)
+            # only the form CUBRID-<version><suffix> (e.g. -Linux.x86_64.sh is distinct from -debug.sh)
             while IFS= read -r f; do
                 v=${f#CUBRID-}
                 v=${v%"$suffix"}
@@ -853,7 +853,7 @@ prepare_packages() {
         [ ${#all_vers[@]} -gt 0 ] \
             || die "$PKG_DIR 에 선택한 패키지(CUBRID-<버전>-Linux*)가 하나도 없습니다${VERSION_FILTER:+ (--version $VERSION_FILTER)}"
         BUILD_VER=$(printf '%s\n' "${all_vers[@]}" "$VERSION_FILTER" | grep . | sort -u | paste -sd+ -)
-        # 없는 패키지는 (버전이 하나면) 그 버전의 파일명으로 표시
+        # show a missing package with the file name of that version (if there is only one version)
         v=$BUILD_VER
         [[ $v == *+* ]] && v="<버전>"
         for pkg in "${missing[@]}"; do
@@ -868,8 +868,8 @@ prepare_packages() {
     fi
 }
 
-# ---------------- 이미지 ----------------
-# 이미지 입력(실제 쓰는 Dockerfile 디렉터리, 계열, 베이스 이미지, add_openssl.sh)이 바뀌면 태그도 바뀌어 자동으로 다시 빌드됨
+# ---------------- images ----------------
+# If the image inputs (Dockerfile directory actually used, family, base image, add_openssl.sh) change, the tag changes and it is rebuilt automatically
 image_tag_for() {
     local os=$1 h
     h=$( { find "${IMAGE_DIR[$os]}" -type f -print0 | sort -z | xargs -0 cat
@@ -879,7 +879,7 @@ image_tag_for() {
     echo "$IMAGE_REPO:$os-$h"
 }
 
-build_image() {   # 백그라운드 작업: 결과를 $RUN_TMP/image-<os>.status 에 기록
+build_image() {   # background job: writes the result to $RUN_TMP/image-<os>.status
     local os=$1 tag=$2 log=$3 ctx
     ctx=$RUN_TMP/ctx-$os
     rm -rf "$ctx"
@@ -903,8 +903,8 @@ build_image() {   # 백그라운드 작업: 결과를 $RUN_TMP/image-<os>.status
     fi
 }
 
-# /etc/os-release 의 ID, ID_LIKE 로 계열 판별: deb | rpm | unknown
-family_from_os_release() {   # $1: os-release 내용
+# Detect the family from ID, ID_LIKE in /etc/os-release: deb | rpm | unknown
+family_from_os_release() {   # $1: os-release contents
     local id like
     id=$(printf '%s\n' "$1" | sed -n 's/^ID=//p' | head -n 1 | tr -d "\"'" | tr 'A-Z' 'a-z')
     like=$(printf '%s\n' "$1" | sed -n 's/^ID_LIKE=//p' | head -n 1 | tr -d "\"'" | tr 'A-Z' 'a-z')
@@ -915,8 +915,8 @@ family_from_os_release() {   # $1: os-release 내용
     esac
 }
 
-# 백그라운드 작업: 베이스 이미지를 확보하고(없으면 pull) 임시 컨테이너(--rm --network none, 실행 ID label)로
-# /etc/os-release 를 읽어 계열을 $RUN_TMP/family-<os> 에 기록한다. 결과: deb | rpm | unknown | pullfail | pulltimeout | detecttimeout | runfail
+# Background job: get the base image (pull if missing) and, in a temporary container (--rm --network none, run ID label),
+# read /etc/os-release and write the family to $RUN_TMP/family-<os>. Result: deb | rpm | unknown | pullfail | pulltimeout | detecttimeout | runfail
 detect_family_job() {
     local os=$1 base cname out rc prc log
     base=${OS_IMAGE[$os]}
@@ -934,12 +934,12 @@ detect_family_job() {
         out=$(timeout -k 5 "$DETECT_TIMEOUT_SEC" docker run --rm --name "$cname" --network none --label "$LABEL_KEY=$RUN_ID" \
               --entrypoint sh "$base" -c 'cat /etc/os-release 2>/dev/null || cat /usr/lib/os-release' 2>&1)
         rc=$?
-        # 생성/삭제 집계(컨테이너가 실제로 만들어졌을 때만 센다):
-        #  - rc 125 는 docker 자체 오류(컨테이너 안 만들어짐) -> 세지 않음
-        #  - 시간 초과(124/137)는 클라이언트만 죽어 만들어졌는지 알 수 없다 -> 이름 필터로 남아 있는 것이 확인될 때만
-        #    rm -f 후 생성·삭제 각 1, 없으면 둘 다 0
-        #  - 그 밖에는 만들어진 것으로 보고 생성 1, 지워졌는지는 docker inspect 실패가 아니라 이름 필터 결과가 비었을 때로 판단
-        #    (데몬 일시 오류로 inspect가 실패해도 이중 집계 없음)
+        # Created/removed counts (counted only when the container was actually created):
+        #  - rc 125 is a docker error (no container created) -> not counted
+        #  - on timeout (124/137) only the client died, so we cannot tell if it was created -> only when the name filter shows it is there,
+        #    rm -f and count 1 created and 1 removed; otherwise 0 for both
+        #  - otherwise treat it as created (1); whether it was removed is decided by an empty name filter result, not by a docker inspect failure
+        #    (no double counting even if inspect fails on a transient daemon error)
         if [ $rc -eq 124 ] || [ $rc -eq 137 ]; then
             if [ -n "$(docker ps -aq --filter "name=^$(name_re "$cname")\$" 2>/dev/null)" ]; then
                 docker rm -f "$cname" > /dev/null 2>&1
@@ -975,11 +975,11 @@ prepare_images() {
         need[$os]=1
     done
     mkdir -p "$RESULT_ROOT/image_build"
-    # 1) 베이스 이미지가 원래 있었는지 기록 (끝나면 이번 실행이 만든/받은 것만 지움)
+    # 1) Record whether the base image was there already (at the end, remove only what this run created/pulled)
     for os in "${OS_KEYS[@]}"; do
         [ -n "${need[$os]+x}" ] || continue
         [ "$DRY_RUN" -eq 1 ] && continue
-        # "No such image" 일 때만 이번 실행이 받는 것(0). 그 밖의 inspect 실패(일시적 오류 등)는 기존 것으로 간주(1)해 지우지 않는다.
+        # Only "No such image" means this run pulls it (0). Other inspect failures (transient errors, etc.) count as pre-existing (1) and are not removed.
         inspect_out=$(docker image inspect "${OS_IMAGE[$os]}" 2>&1); inspect_rc=$?
         if [ $inspect_rc -eq 0 ]; then
             BASE_PREEXIST[$os]=1
@@ -992,8 +992,8 @@ prepare_images() {
         fi
         BASE_ID[$os]=$(docker image inspect -f '{{.Id}}' "${OS_IMAGE[$os]}" 2>/dev/null); BASE_ID[$os]=${BASE_ID[$os]#sha256:}
     done
-    # 2) 계열 결정: images/<OS 키>/Dockerfile 이 있으면 그것을 우선 쓴다(판별 생략). 없으면 베이스 이미지를 받아
-    #    /etc/os-release 로 판별. dry-run 은 판별을 건너뛴다.
+    # 2) Decide the family: images/<OS key>/Dockerfile takes precedence if present (no detection). Otherwise pull the base image
+    #    and detect from /etc/os-release. dry-run skips detection.
     for os in "${OS_KEYS[@]}"; do
         [ -n "${need[$os]+x}" ] || continue
         if [ -f "$SCRIPT_DIR/images/$os/Dockerfile" ]; then
@@ -1047,13 +1047,13 @@ prepare_images() {
                 ;;
         esac
     done
-    # 3) 이미지 태그(실제 쓰는 Dockerfile 디렉터리 + 계열 + 베이스 이미지)와 기존 이미지 여부, 빌드
+    # 3) Image tag (Dockerfile directory actually used + family + base image), whether the image exists, and the build
     for os in "${OS_KEYS[@]}"; do
         [ -n "${need[$os]+x}" ] || continue
         if [ "${IMAGE_FAMILY[$os]}" = unknown ]; then
             IMAGE_DIR[$os]=${IMAGE_DIR[$os]:-$SCRIPT_DIR/images/rpm}
             IMAGE_TAG[$os]="$IMAGE_REPO:$os-unknown"
-            IMAGE_PREEXIST[$os]=1     # 빌드하지 않으므로 지울 이미지 없음
+            IMAGE_PREEXIST[$os]=1     # not built, so no image to remove
             echo fail > "$RUN_TMP/image-$os.status"
             continue
         fi
@@ -1085,14 +1085,14 @@ prepare_images() {
 
 image_ok() { [ "$(cat "$RUN_TMP/image-$1.status" 2>/dev/null)" = ok ]; }
 
-# ---------------- 조합 실행 ----------------
+# ---------------- running combinations ----------------
 item_applicable() {   # item_applicable <pkg> <item>
     [ "$2" != uninstall ] || [ "$(pkg_kind_of "$1")" = rpm ]
 }
 
-# --dry-run 용 가짜 install_test.sh 출력
-#   INSTALL_TEST_DRY_FAIL="os__pkg[:항목],..." 해당 조합(항목)을 fail로
-#   INSTALL_TEST_DRY_HANG="os__pkg,..."        해당 조합을 멈춰서 timeout 유도
+# Fake install_test.sh output for --dry-run
+#   INSTALL_TEST_DRY_FAIL="os__pkg[:item],..." makes that combination (item) fail
+#   INSTALL_TEST_DRY_HANG="os__pkg,..."        makes that combination hang to cause a timeout
 fake_install_test() {
     local os=$1 pkg=$2 fname=$3 id="${1}__${2}" item
     echo "[dry-run] $id: $fname"
@@ -1115,7 +1115,7 @@ fake_install_test() {
     exit 0
 }
 
-# result.txt 작성: META 줄 + 항목별 ITEM 줄
+# Write result.txt: META lines + one ITEM line per item
 finalize_combo() {   # <os> <pkg> <cdir> <rc> <start> <cname> <prefail>
     local os=$1 pkg=$2 cdir=$3 rc=$4 start=$5 cname=$6 prefail=$7
     local dur timed_out=0 tag item st reason status=pass osinfo="" note_rc=""
@@ -1174,16 +1174,16 @@ finalize_combo() {   # <os> <pkg> <cdir> <rc> <start> <cname> <prefail>
     echo "$status"
 }
 
-# timeout 으로 docker exec 클라이언트만 죽으면 컨테이너 안의 install_test.sh 와 그 하위 프로세스(rpm, setup, cubrid, csql 등)가
-# 계속 돌아 남긴 컨테이너가 계속 변한다(종료, 삭제, 제거 단계까지 진행). 남기기 전에 install_test.sh 와 그 하위 프로세스를
-# SIGKILL 로 멈춘다. CUBRID 데몬(cub_master, cub_server, cub_broker, cub_cas*, cub_manager 등)과 그 하위는 조사를 위해 그대로 둔다.
-# cub_admin, cub_commdb 같은 유틸리티는 테스트가 실행한 작업이므로 멈춘다.
-# 아래 스크립트는 컨테이너 안에서 sh -s 로 실행한다(표준 입력으로 넘기므로 명령줄에 install_test.sh 가 나오지 않는다).
-# 종료 코드: 0 = 멈춤(남은 것 없음), 1 = 멈출 프로세스 없음, 3 = ps 없음, 4 = 멈춘 뒤에도 남음
+# When a timeout kills only the docker exec client, install_test.sh and its child processes (rpm, setup, cubrid, csql, etc.) keep running
+# in the container, so the kept container keeps changing (going on to the stop, delete and remove steps). Before keeping it, stop install_test.sh
+# and its children with SIGKILL. CUBRID daemons (cub_master, cub_server, cub_broker, cub_cas*, cub_manager, etc.) and their children are kept for investigation.
+# Utilities such as cub_admin and cub_commdb are work the test started, so they are stopped.
+# The script below runs inside the container with sh -s (passed on stdin, so install_test.sh does not appear in its command line).
+# Exit code: 0 = stopped (nothing left), 1 = nothing to stop, 3 = no ps, 4 = some left after stopping
 container_stop_script() {
     cat <<'EOF'
 command -v ps > /dev/null 2>&1 || exit 3
-# 대상: 명령줄에 /test_script/install_test.sh 가 있는 프로세스와 그 하위. CUBRID 데몬과 그 하위, 좀비는 뺀다.
+# Targets: processes with /test_script/install_test.sh in the command line and their children. Excludes CUBRID daemons and their children, and zombies.
 targets() {
     { ps -e -o pid= -o args= | awk '$0 ~ /\/test_script\/install_test\.sh/ { print "R", $1 }'
       ps -e -o pid= -o ppid= -o stat= -o comm= | awk '{ print "P", $1, $2, $3, $4 }'; } 2>/dev/null |
@@ -1204,7 +1204,7 @@ pids=$(targets)
 for round in 1 2 3; do
     pids=$(targets)
     [ -n "$pids" ] || break
-    # 먼저 SIGSTOP 으로 얼려 새 하위 프로세스가 생기지 않게 한 뒤 다시 모아 SIGKILL
+    # Freeze with SIGSTOP first so no new children appear, collect again, then SIGKILL
     kill -STOP $pids 2> /dev/null
     pids=$(targets)
     [ -n "$pids" ] || break
@@ -1222,7 +1222,7 @@ exit 0
 EOF
 }
 
-stop_test_script() {   # stop_test_script <컨테이너> <조합 디렉터리>
+stop_test_script() {   # stop_test_script <container> <combination directory>
     local cname=$1 cdir=$2 rc out n msg note
     out=$(timeout -k 5 30 docker exec -i -u root "$cname" sh -s 2>&1 <<< "$(container_stop_script)")
     rc=$?
@@ -1242,7 +1242,7 @@ stop_test_script() {   # stop_test_script <컨테이너> <조합 디렉터리>
     esac
     echo "$msg" >> "$cdir/runner.log"
     say "  $os / $pkg: $msg"
-    # 리포트 Note 에 남긴다(result.txt 의 META|note= 뒤에 덧붙임)
+    # Add it to the report Note (appended after META|note= in result.txt)
     awk -v add="$note" \
         'BEGIN{FS=OFS="|"} $1=="META" && $2 ~ /^note=/ { v=substr($2,6); $2="note=" (v=="" ? add : v "; " add) } { print }' \
         "$cdir/result.txt" > "$cdir/result.tmp" && mv "$cdir/result.tmp" "$cdir/result.txt"
@@ -1250,7 +1250,7 @@ stop_test_script() {   # stop_test_script <컨테이너> <조합 디렉터리>
 
 progress() { printf '[%2d/%d]' "$1" "${#COMBOS[@]}"; }
 
-run_combo() {   # 백그라운드 작업
+run_combo() {   # background job
     local os=$1 pkg=$2 idx=$3
     local fname=${PKG_FILE[$pkg]:-} tag=${IMAGE_TAG[$os]:-}
     local cdir="$RESULT_ROOT/${os}__${pkg}"
@@ -1314,8 +1314,8 @@ run_combo() {   # 백그라운드 작업
             docker rm -f "$cname" >> "$cdir/runner.log" 2>&1 && echo "$cname" >> "$REMOVED_FILE"
         fi
     elif [ "$DRY_RUN" -eq 0 ] && [ -n "$prefail" ] && [ -n "$cname" ]; then
-        # docker run -d 가 실패했을 때: 컨테이너가 실제로 있을 때만 지우고 생성·삭제로 센다
-        # (최근 docker 는 없는 컨테이너의 rm -f 도 성공을 돌려주므로 그 성공만으로는 세지 않는다)
+        # When docker run -d failed: remove it and count it as created/removed only if the container actually exists
+        # (recent docker returns success for rm -f of a missing container, so that success alone is not counted)
         if [ -n "$(docker ps -aq --filter "name=^$(name_re "$cname")\$" 2>/dev/null)" ]; then
             docker rm -f "$cname" >> "$cdir/runner.log" 2>&1
             grep -qxF -- "$cname" "$CREATED_FILE" 2>/dev/null || echo "$cname" >> "$CREATED_FILE"
@@ -1335,8 +1335,8 @@ run_queue() {
     wait
 }
 
-# ---------------- 리포트 ----------------
-combine() {   # 여러 항목 상태를 하나로: fail > timeout > pass > NA
+# ---------------- report ----------------
+combine() {   # combine several item states into one: fail > timeout > pass > NA
     local v out=NA
     for v in "$@"; do [ "$v" = fail ] && { echo fail; return; }; done
     for v in "$@"; do [ "$v" = timeout ] && { echo timeout; return; }; done
@@ -1371,7 +1371,7 @@ md_row() {
     printf '%s\n' "$out"
 }
 
-# result.txt 읽기 -> M[], S[], R[] (호출한 함수의 지역 연관 배열)
+# Read result.txt -> M[], S[], R[] (local associative arrays of the caller)
 read_result() {
     local file=$1 kind a b c
     while IFS='|' read -r kind a b c; do
@@ -1382,14 +1382,14 @@ read_result() {
     done < "$file"
 }
 
-# Note: 근본 사유만 적고(같은 사유는 항목을 묶음) 선행 실패 항목은 개수로 요약
+# Note: only the root reasons (items with the same reason are grouped); prerequisite failures are summarized as a count
 make_note() {
     local item reason i found pre=0
     local reasons=() labels=() notes=()
     [ "${M[status]}" = timeout ] && notes+=("timeout(${TIMEOUT_SEC}s)")
     for item in "${ITEMS[@]}"; do
         reason=${R[$item]}
-        # install pass의 사유는 cubrid_rel 버전 (+ 참고 사항) -> 버전은 Note에서 뺌
+        # The install pass reason is the cubrid_rel version (+ notes) -> drop the version from the Note
         if [ "$item" = install ] && [ "${S[$item]}" = pass ]; then
             reason=${reason#"${M[version]:-}"}
             reason=${reason#; }
@@ -1421,8 +1421,8 @@ make_note() {
 }
 
 # ---- JUnit XML (report.xml) ----
-# XML 본문/속성용 이스케이프: UTF-8로 유효하지 않은 바이트와 XML 1.0 에서 허용되지 않는 제어 문자(탭, LF, CR 제외)를 지우고
-# & < > " ' 를 이스케이프한다.
+# Escape for XML text/attributes: remove bytes that are invalid UTF-8 and control characters not allowed in XML 1.0 (except tab, LF, CR),
+# and escape & < > " '.
 xml_escape() {
     local s=$1
     if command -v iconv > /dev/null 2>&1; then
@@ -1433,18 +1433,18 @@ xml_escape() {
     printf '%s' "$s" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/"/\&quot;/g' -e "s/'/\&apos;/g"
 }
 
-# 속성값: 줄바꿈, 탭, CR 은 공백으로 바꾼 뒤 이스케이프
+# Attribute value: replace newline, tab and CR with spaces, then escape
 xml_attr() {
     xml_escape "$(printf '%s' "$1" | tr '\n\r\t' '   ')"
 }
 
-# report.csv 판정 열(Install ~ SQL Statement) 10개에 대응하는 result.txt 항목(여러 개면 첫 fail/timeout 항목의 사유를 쓴다)
+# result.txt items for the 10 result columns (Install ~ SQL Statement) of report.csv (if several, the reason of the first fail/timeout item is used)
 JUNIT_COL_ITEMS=("install" "bash_profile" "uninstall" "service_start stop" "server_start stop"
     "broker" "manager" "createdb" "deletedb" "sql")
 JU_TESTS=0; JU_FAILS=0; JU_SKIPS=0
 
-# testsuite 하나를 표준 출력에 쓴다. 호출한 함수의 M[], S[], R[] 를 읽는다.
-# 사용: junit_suite <OS 키> <패키지 키> <조합 디렉터리> <Note> <report.csv 판정 열 상태 10개>
+# Write one testsuite to stdout. Reads M[], S[], R[] of the caller.
+# Usage: junit_suite <OS key> <package key> <combination directory> <Note> <10 result column states of report.csv>
 junit_suite() {
     local os=$1 pkg=$2 cdir=$3 note=$4
     shift 4
@@ -1457,8 +1457,8 @@ junit_suite() {
         esac
     done
     ntests=${#sts[@]}
-    # 판정 열이 모두 pass/NA 인데 조합은 fail/timeout 인 경우(예: 항목 결과를 모두 낸 뒤 install_test.sh 종료 코드가 0이 아님,
-    # 마지막 항목 뒤 제한 시간 초과)에는 testcase Run 을 하나 더 넣어 report.xml 에도 실패가 나오게 한다.
+    # If every result column is pass/NA but the combination is fail/timeout (e.g. install_test.sh exited non-zero after reporting all items,
+    # or the time limit hit after the last item), add one more testcase Run so the failure shows up in report.xml too.
     if [ "$nfail" -eq 0 ] && [ "${M[status]:-pass}" != pass ]; then
         run_st=${M[status]}
         ntests=$((ntests + 1)); nfail=1
@@ -1466,7 +1466,7 @@ junit_suite() {
     JU_TESTS=$((JU_TESTS + ntests)); JU_FAILS=$((JU_FAILS + nfail)); JU_SKIPS=$((JU_SKIPS + nskip))
     dur=${M[duration]:-0}; [[ $dur =~ ^[0-9]+$ ]] || dur=0
     start=${M[start]:-$RUN_START}; [[ $start =~ ^[0-9]+$ ]] || start=$RUN_START
-    # 컨테이너가 없는(실행하지 않은) 조합은 호스트 이름 대신 not-run (리포트를 밖으로 공유해도 호스트 이름이 나가지 않게)
+    # A combination without a container (not run) gets not-run instead of a host name (so the host name does not leak when the report is shared)
     host=${M[container]:-}; [ -n "$host" ] || host=not-run
     log="${cdir#"$SCRIPT_DIR"/}/console.log"
     printf '  <testsuite name="%s" tests="%d" failures="%d" errors="0" skipped="%d" time="%s" timestamp="%s" hostname="%s">\n' \
@@ -1531,12 +1531,12 @@ junit_suite() {
     printf '  </testsuite>\n'
 }
 
-# 전체 report.xml 작성: junit_write <출력 파일> <본문(testsuite들) 파일> <빌드 버전> <전체 소요 초>
+# Write the whole report.xml: junit_write <output file> <body (testsuites) file> <build version> <total seconds>
 junit_write() {
     local out=$1 body=$2 ver=$3 elapsed=$4
     {
         printf '<?xml version="1.0" encoding="UTF-8"?>\n'
-        # testsuites 에는 skipped, timestamp 속성을 쓰지 않는다(Jenkins xUnit 의 junit-10.xsd 에 없음)
+        # testsuites gets no skipped or timestamp attributes (not in junit-10.xsd used by Jenkins xUnit)
         printf '<testsuites name="%s" tests="%d" failures="%d" errors="0" time="%s">\n' \
             "$(xml_attr "CUBRID install test - $ver")" "$JU_TESTS" "$JU_FAILS" "$elapsed"
         cat "$body"
@@ -1544,7 +1544,7 @@ junit_write() {
     } > "$out"
 }
 
-# 리포트 파일 쓰기 실패 기록(같은 경로는 한 번만)
+# Record a report file write failure (each path once)
 report_save_fail() {
     local f
     for f in "${REPORT_SAVE_ERR[@]}"; do [ "$f" = "$1" ] && return 0; done
@@ -1564,7 +1564,7 @@ generate_reports() {
     local md_table="$RUN_TMP/md_table" md_fail="$RUN_TMP/md_fail"
     : > "$md_table"; : > "$md_fail"
 
-    printf '\xEF\xBB\xBF' > "$csv" || report_save_fail "$csv"   # Excel에서 한글이 깨지지 않도록 UTF-8 BOM
+    printf '\xEF\xBB\xBF' > "$csv" || report_save_fail "$csv"   # UTF-8 BOM so Korean text is not garbled in Excel
     csv_row "${REPORT_HEADER[@]}" >> "$csv" || report_save_fail "$csv"
     md_row "${REPORT_HEADER[@]}" "실제 OS" >> "$md_table"
     local sep=() i
@@ -1649,7 +1649,7 @@ generate_reports() {
     } > "$md" || report_save_fail "$md"
 
     junit_write "$xml" "$xml_body" "$BUILD_VER" "$(( $(date +%s) - RUN_START ))" || report_save_fail "$xml"
-    # 최상위 리포트 교체. 이번 실행의 리포트를 다 쓰지 못했거나 복사에 실패하면 이전 실행의 리포트를 CI가 읽지 않도록 지운다.
+    # Replace the top-level reports. If this run's reports were not fully written or a copy failed, remove the earlier run's reports so CI does not read them.
     run_ok=0; [ ${#REPORT_SAVE_ERR[@]} -eq 0 ] && run_ok=1
     for f in report.csv report.xml report.md; do
         [ "$run_ok" -eq 1 ] && cp -f "$run_dir/$f" "$RESULT_ROOT/$f" && continue
@@ -1665,27 +1665,27 @@ generate_reports() {
     [ "$nfail" -eq 0 ]
 }
 
-# ---------------- 동시 실행 방지 ----------------
-# 호스트 공용 잠금 파일을 flock -n 으로 잡는다. 이미 잡혀 있으면 docker 에 아무것도 하지 않고 종료 코드 2.
-# 잠금 fd(9)는 러너 종료까지 유지한다. 백그라운드 작업(계열 판별, 이미지 빌드, 조합 실행)은 모두 이 fd 를 물려받으므로,
-# 러너 본체가 강제 종료(SIGKILL 등)돼도 남은 작업이 끝날 때까지 잠금이 유지된다(그동안 새 러너는 거부된다).
-# 작업의 하위 프로세스(timeout, docker 클라이언트)도 fd 를 물려받으므로 이들이 끝날 때까지도 유지된다(pgrep 에는 안 보일 수 있어 fuser -v 로 확인).
+# ---------------- preventing concurrent runs ----------------
+# Take the host-wide lock file with flock -n. If it is already held, do nothing to docker and exit with code 2.
+# The lock fd (9) is held until the runner exits. Background jobs (family detection, image builds, combinations) all inherit this fd,
+# so even if the runner itself is killed (SIGKILL, etc.), the lock stays until the remaining jobs finish (new runners are refused meanwhile).
+# Child processes of the jobs (timeout, docker client) also inherit the fd, so it stays until they finish too (they may not show in pgrep; check with fuser -v).
 acquire_lock() {
     command -v flock > /dev/null 2>&1 || die "flock 명령이 필요합니다 (util-linux)"
     if [ ! -e "$LOCK_FILE" ]; then
         ( umask 000; : >> "$LOCK_FILE" ) 2>/dev/null
         chmod 666 "$LOCK_FILE" 2>/dev/null
     fi
-    # 읽기 전용(O_CREAT 없음)으로 열어 flock 한다: fs.protected_regular=1 호스트에서 다른 계정이 만든 /tmp 파일을
-    # O_CREAT 로 열면 거부되는 문제를 피한다(파일은 위에서 없을 때만 만들고 666 권한을 준다).
+    # Open read-only (no O_CREAT) and flock: avoids being refused when opening with O_CREAT a /tmp file created by another account
+    # on hosts with fs.protected_regular=1 (the file is created above only when missing, with mode 666).
     if ! exec 9< "$LOCK_FILE"; then
         die "잠금 파일을 열 수 없습니다: $LOCK_FILE (다른 계정이 만든 파일이면 권한 확인)"
     fi
     if ! flock -n 9; then
         die "다른 install test가 실행 중입니다 (잠금 파일 $LOCK_FILE). 끝난 뒤 다시 실행하세요. 러너가 강제 종료됐다면 남은 작업과 그 하위 프로세스가 끝날 때까지 잠금이 유지됩니다(확인: fuser -v $LOCK_FILE 또는 pgrep -af run_install_test.sh)"
     fi
-    CLEANUP_ARMED=1     # 이 시점부터 정리 단계가 docker 를 조회한다
-    touch -c "$LOCK_FILE" 2>/dev/null || true   # 수정 시각을 갱신해 /tmp 정리 도구가 오래된 파일로 지우지 않게 한다
+    CLEANUP_ARMED=1     # from here on, the cleanup step queries docker
+    touch -c "$LOCK_FILE" 2>/dev/null || true   # update the modification time so /tmp cleaners do not remove it as an old file
 }
 
 # ---------------- main ----------------
@@ -1699,7 +1699,7 @@ main() {
     say "조합 ${#COMBOS[@]}개, 병렬 $JOBS, 조합당 제한 시간 ${TIMEOUT_SEC}초"
 
     if [ "$DRY_RUN" -eq 1 ]; then
-        CLEANUP_ARMED=1     # dry-run 은 잠금을 잡지 않지만 "(dry-run) 정리 생략" 줄은 그대로 낸다
+        CLEANUP_ARMED=1     # dry-run takes no lock but still prints the "(dry-run) 정리 생략" line
     else
         acquire_lock
     fi

@@ -1,37 +1,37 @@
 # shellcheck shell=bash
 #
-# 체크리스트 항목별 함수. install_test.sh가 source 해서 사용한다.
-# 각 함수는 result <항목> <pass|fail|NA> <사유> 를 정확히 한 번 호출한다.
-# 사용하는 전역: PKG_FILE, INSTALL_DIR, RESULT_DIR, SCRIPT_DIR, OS_FAMILY, ST[]
-# PROFILE_D_FILE: 단위 시험 전용(운영 옵션 아님). check_env, check_uninstall 이 보는 /etc/profile.d/cubrid.sh
-#   경로를 시험 때 임시 파일로 바꾼다. 러너는 이 변수를 컨테이너에 넘기지 않으므로 실제 실행에서는 항상 기본값을 쓴다.
+# One function per checklist item. Sourced by install_test.sh.
+# Each function calls result <item> <pass|fail|NA> <reason> exactly once.
+# Globals used: PKG_FILE, INSTALL_DIR, RESULT_DIR, SCRIPT_DIR, OS_FAMILY, ST[]
+# PROFILE_D_FILE: for unit tests only (not an operating option). Replaces the /etc/profile.d/cubrid.sh path that check_env
+#   and check_uninstall look at with a temp file during tests. The runner does not pass it to containers, so real runs always use the default.
 #
 
 DB_NAME=demodb
 CMS_URL=https://localhost:8001/cm_api
 CMS_LOGIN_BODY='{"task":"login","id":"admin","password":"admin","clientver":"8.4"}'
-CMS_WAIT_TRIES=20        # 로그인 재시도 횟수(간격 3초) - cub_manager 기동 대기
-STOP_WAIT_SEC=30         # 종료 후 cub_ 프로세스가 사라질 때까지 대기
+CMS_WAIT_TRIES=20        # login retries (3 seconds apart) - waiting for cub_manager to start
+STOP_WAIT_SEC=30         # wait after stop until cub_ processes are gone
 
 CMS_TOKEN=""
 CMS_LOGIN_TRIED=0
 CMS_LOGIN_ERR=""
 
-# ---------- 공통 도우미 ----------
+# ---------- common helpers ----------
 
 db_registered() {
     local f="${CUBRID_DATABASES:-$CUBRID/databases}/databases.txt"
     [ -f "$f" ] && awk -v db="$1" '$1 == db { f = 1 } END { exit !f }' "$f"
 }
 
-# "key" : "value" 형태에서 첫 번째 value
+# First value in the form "key" : "value"
 json_str() {
     sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p" | head -n 1
 }
 
-# 실행 중인 cub_* 프로세스: "pid 이름" 줄 목록.
-# 프로세스 이름(comm)과 명령줄 첫 토큰의 basename 둘 다 (^|_)cub_ 로 찾는다
-# (CAS는 args가 broker1_cub_cas_N 형태). 검사 스크립트 자신(bash, ps, awk 등)은 제외.
+# Running cub_* processes: list of "pid name" lines.
+# Matches (^|_)cub_ against both the process name (comm) and the basename of the first command line token
+# (CAS args look like broker1_cub_cas_N). The check script itself (bash, ps, awk, etc.) is excluded.
 cub_proc_list() {
     ps -eo pid=,comm=,args= 2>/dev/null | awk '
         {
@@ -44,7 +44,7 @@ cub_proc_list() {
         }'
 }
 
-# "이름(pid) ..."
+# "name(pid) ..."
 cub_procs() {
     cub_proc_list | awk '{ printf "%s(%s) ", $2, $1 }'
 }
@@ -53,12 +53,12 @@ cub_pids() {
     cub_proc_list | awk '{ print $1 }'
 }
 
-# 테스트 컨테이너 안인지(러너가 넘긴 표식 + 컨테이너 환경). source 해서 함수만 부르는 경우의 kill 방지용.
+# Whether we are inside a test container (marker from the runner + container environment). Guards against kill when only sourcing the functions.
 in_test_container() {
     [ -n "${INSTALL_TEST_IN_CONTAINER:-}" ] && { [ -f /.dockerenv ] || [ -f /run/.containerenv ]; }
 }
 
-# master 프로세스가 떠 있는지 (service status 또는 프로세스 기준)
+# Whether the master process is up (by service status or by process)
 master_running() {
     cubrid service status 2>&1 | grep -q 'master is running' && return 0
     cub_proc_list | awk '$2 ~ /(^|_)cub_master$/ { f = 1 } END { exit !f }'
@@ -78,7 +78,7 @@ join_by() {
 }
 
 curl_tls_opts() {
-    # debian/ubuntu: CMS가 TLS 1.3 협상에 실패하므로 1.2로 고정
+    # debian/ubuntu: CMS fails to negotiate TLS 1.3, so pin 1.2
     if [ "$OS_FAMILY" = deb ]; then
         printf '%s\n' --tlsv1.2 --tls-max 1.2
     else
@@ -93,7 +93,7 @@ cms_post() {
         -H 'Accept: text/plain;charset=utf-8' -d "$1"
 }
 
-# 한 번만 로그인하고 토큰을 재사용(broker, manager 항목 공용)
+# Log in once and reuse the token (shared by the broker and manager items)
 cms_login() {
     local i resp=""
     if [ "$CMS_LOGIN_TRIED" -eq 0 ]; then
@@ -112,7 +112,7 @@ cms_login() {
     [ -n "$CMS_TOKEN" ]
 }
 
-# ---------- 1. 패키지 설치 ----------
+# ---------- 1. package install ----------
 check_install() {
     local rc rel expected actual problems=()
     if [ "$(pkg_kind "$PKG_FILE")" = unknown ]; then
@@ -159,14 +159,14 @@ check_install() {
     fi
 }
 
-# ---------- 2. 환경변수 설정 (새 로그인 셸) ----------
+# ---------- 2. environment variables (new login shell) ----------
 check_env() {
     local out cub bin expect f out2 cub2 dbs ldp missing=() reg=0 pd=${PROFILE_D_FILE:-/etc/profile.d/cubrid.sh} hint=""
     for f in "$HOME/.bash_profile" "$HOME/.cubrid.sh"; do
         log "$f (주석 제외):"
         grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$f" 2>&1 | sed 's/^/    /'
     done
-    # 현재 프로세스의 환경을 물려받지 않도록 env -i 로 새 로그인 셸 실행
+    # Start a new login shell with env -i so it does not inherit the current process environment
     out=$(env -i HOME="$HOME" USER="$(id -un)" LOGNAME="$(id -un)" SHELL=/bin/bash TERM=dumb \
         PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
         bash -lc 'echo "ENV_CUBRID=${CUBRID:-}"; echo "ENV_CUBRID_BIN=$(command -v cubrid 2>/dev/null)"' \
@@ -176,14 +176,14 @@ check_env() {
     bin=$(printf '%s\n' "$out" | sed -n 's/^ENV_CUBRID_BIN=//p' | tail -n 1)
     expect=$(readlink -f "$INSTALL_DIR")
 
-    # (a) ~/.bash_profile 이 .cubrid.sh 를 읽도록 등록되어 있어야 한다.
-    #     로그인 셸 검사만으로는 /etc/profile.d/cubrid.sh 가 만든 값과 구분되지 않는다.
+    # (a) ~/.bash_profile must be set to read .cubrid.sh.
+    #     A login shell check alone cannot tell it from values set by /etc/profile.d/cubrid.sh.
     if grep -Eq '^[[:space:]]*(\.|source)[[:space:]].*\.cubrid\.sh' "$HOME/.bash_profile" 2>/dev/null; then
         reg=1
     fi
     log "~/.bash_profile 의 .cubrid.sh 등록: $([ $reg -eq 1 ] && echo 있음 || echo 없음)"
 
-    # (b) .cubrid.sh 만 읽은 최소 환경에서 변수가 채워지는지 (.bash_profile 은 직접 실행하지 않는다. set -u 없음)
+    # (b) Whether the variables are set in a minimal environment that reads only .cubrid.sh (.bash_profile is not run directly; no set -u)
     out2=$(env -i HOME="$HOME" PATH=/usr/bin:/bin bash --noprofile --norc -c \
         '. "$HOME/.cubrid.sh" >/dev/null 2>&1
          echo "E2_CUBRID=${CUBRID:-}"; echo "E2_DBS=${CUBRID_DATABASES:-}"; echo "E2_LD=${LD_LIBRARY_PATH:-}"' \
@@ -200,7 +200,7 @@ check_env() {
     elif [ -z "$bin" ]; then
         result bash_profile fail "PATH에 cubrid 없음"
     elif [ $reg -ne 1 ]; then
-        # /etc/profile.d/cubrid.sh 가 실제로 있을 때만 그것이 환경을 설정했다고 안내한다
+        # Say that /etc/profile.d/cubrid.sh set the environment only when it actually exists
         [ -e "$pd" ] && hint="(/etc/profile.d 로만 설정됨)"
         result bash_profile fail "~/.bash_profile 에 .cubrid.sh 등록 없음$hint"
     elif [ -z "$cub2" ] || [ "$(readlink -f "$cub2")" != "$expect" ]; then
@@ -219,11 +219,11 @@ check_env() {
     fi
 }
 
-# ---------- 3. demodb 생성 ----------
+# ---------- 3. create demodb ----------
 check_createdb() {
     local rc dbdir="${CUBRID_DATABASES:-$CUBRID/databases}/$DB_NAME"
-    # .sh 설치 스크립트와 setup.sh는 설치 중에 demodb를 만든다 -> 있으면 그대로 쓰고, 없을 때만 생성
-    # (기존 수동 절차와 같은 방식)
+    # The .sh installer and setup.sh create demodb during install -> use it if present, create it only when missing
+    # (same as the earlier manual procedure)
     if db_registered "$DB_NAME"; then
         log "설치 과정에서 생성된 $DB_NAME 이 databases.txt에 있어 그대로 사용"
         result createdb pass "설치 시 생성된 $DB_NAME 사용"
@@ -248,11 +248,11 @@ check_createdb() {
     fi
 }
 
-# ---------- 4. 서비스 시작 ----------
+# ---------- 4. service start ----------
 check_service_start() {
     local rc sout out fails errline slog="$RESULT_DIR/service_start.log" problems=()
-    # 주의: cubrid service start 가 띄운 cub_master 데몬은 stdout/stderr 를 닫지 않고 물려받는다.
-    # $(...) 나 파이프(| tee 등)로 받으면 master 가 내려갈 때까지 EOF 가 오지 않아 멈추므로 반드시 파일로 리다이렉트한다.
+    # Note: the cub_master daemon started by cubrid service start inherits stdout/stderr without closing them.
+    # Capturing with $(...) or a pipe (| tee, etc.) hangs because EOF never comes until master exits, so always redirect to a file.
     run cubrid service start > "$slog" 2>&1
     rc=$?
     cat "$slog"
@@ -260,7 +260,7 @@ check_service_start() {
     out=$(cubrid service status 2>&1)
     printf '%s\n' "$out"
     if [ $rc -ne 0 ]; then
-        # 실패한 구성 요소("++ ... start: fail" 줄)와 첫 오류 줄을 사유에 포함
+        # Include the failed components ("++ ... start: fail" lines) and the first error line in the reason
         fails=$(printf '%s\n' "$sout" | sed -n 's/^++ \(.*\): fail.*/\1/p' | sed 's/^cubrid //' | awk '!s[$0]++' | paste -sd, -)
         errline=$(printf '%s\n' "$sout" | grep -v -e '^[[:space:]]*$' -e '^@ ' -e '^++ ' -e '^\[' -e '^This may take' | head -n 1)
         problems+=("cubrid service start 종료 코드 $rc${fails:+; $fails: fail}${errline:+; $(short "$errline" 160)}")
@@ -273,7 +273,7 @@ check_service_start() {
     fi
 }
 
-# ---------- 5. DB 서버 시작 ----------
+# ---------- 5. DB server start ----------
 check_server_start() {
     local rc out problems=()
     require server_start createdb || return
@@ -291,9 +291,9 @@ check_server_start() {
     fi
 }
 
-# ---------- 6. 브로커 (broker status + CMS getbrokerstatus) ----------
-# master가 떠 있지 않으면 broker/CMS를 검사할 수 없으므로 그때만 선행 실패로 처리
-require_master() {   # require_master <항목>
+# ---------- 6. broker (broker status + CMS getbrokerstatus) ----------
+# broker/CMS cannot be checked when master is not up, so only then treat it as a prerequisite failure
+require_master() {   # require_master <item>
     if master_running; then
         return 0
     fi
@@ -301,7 +301,7 @@ require_master() {   # require_master <항목>
     return 1
 }
 
-# CMS 로그인 실패 사유 + 근거 파일(cms_status.txt)
+# CMS login failure reason + evidence file (cms_status.txt)
 cms_fail_reason() {
     cubrid manager status > "$RESULT_DIR/cms_status.txt" 2>&1
     printf 'CMS 로그인 실패(%s)' "${CMS_LOGIN_ERR:-응답 없음}"
@@ -323,7 +323,7 @@ check_broker() {
         resp=$(cms_post "{\"task\":\"getbrokerstatus\",\"token\":\"$CMS_TOKEN\",\"bname\":\"broker1\"}" 2>&1)
         printf '%s\n' "$resp" > "$RESULT_DIR/cms_getbrokerstatus.txt"
         log "CMS getbrokerstatus 응답: $(short "$resp" 300)"
-        # 최상위 status는 success/failure (as 정보의 상태값과 겹치지 않음)
+        # Top-level status is success/failure (does not overlap with the status values in the as info)
         if ! printf '%s\n' "$resp" | grep -Eq '"status"[[:space:]]*:[[:space:]]*"success"' \
             || printf '%s\n' "$resp" | grep -Eq '"status"[[:space:]]*:[[:space:]]*"failure"'; then
             note=$(printf '%s\n' "$resp" | json_str note)
@@ -340,7 +340,7 @@ check_broker() {
     fi
 }
 
-# ---------- 7. CMS 접속 ----------
+# ---------- 7. CMS connection ----------
 check_manager() {
     local why
     require_master manager || return
@@ -348,7 +348,7 @@ check_manager() {
         result manager pass ""
     else
         cubrid manager status > "$RESULT_DIR/cms_status.txt" 2>&1
-        # "@ " 로 시작하는 줄은 정보가 없으므로 뺀다. 오류 내용 줄을 우선, 없으면 "++ " 줄
+        # Lines starting with "@ " carry no information, so drop them. Prefer error lines, otherwise "++ " lines
         why=$(grep -v -e '^[[:space:]]*$' -e '^@ ' -e '^++ ' "$RESULT_DIR/cms_status.txt" | head -n 1)
         [ -n "$why" ] || why=$(grep -e '^++ ' "$RESULT_DIR/cms_status.txt" | head -n 1)
         result manager fail "CMS 로그인 token 없음: ${CMS_LOGIN_ERR:-응답 없음}${why:+ ($(short "$why" 120))}"
@@ -365,7 +365,7 @@ check_sql() {
     log "csql 종료 코드: $rc"
     cat "$RESULT_DIR/test.log"
     [ -s "$RESULT_DIR/csql.err" ] && { log "csql stderr:"; cat "$RESULT_DIR/csql.err"; }
-    # 원본(test.log)은 두고 사본에서 시간 값만 지운 뒤 비교 (기존 수동 절차의 답 비교와 같은 치환)
+    # Keep the original (test.log); remove only the time values in a copy and compare (same substitution as the earlier manual answer comparison)
     sed 's/[0-9]\.[0-9]*[0-9]//g' "$RESULT_DIR/test.log" > "$RESULT_DIR/test.log.cmp"
     diff "$SCRIPT_DIR/sql_test.answer" "$RESULT_DIR/test.log.cmp" > "$RESULT_DIR/sql_test.diff" 2>&1
     drc=$?
@@ -380,16 +380,16 @@ check_sql() {
     fi
 }
 
-# ---------- 9. 서비스 종료 ----------
-# 종료 항목은 자기 명령의 결과(종료 코드, 남은 프로세스)만으로 판정한다.
-# (시작 실패는 service_start/server_start 항목에 이미 기록되며, 리포트의 Service/Server 열이 시작과 종료를 합친다)
+# ---------- 9. service stop ----------
+# The stop item is judged only by its own commands (exit codes, remaining processes).
+# (Start failures are already recorded in service_start/server_start, and the Service/Server columns in the report combine start and stop)
 check_stop() {
     local rc1 rc2 left i srv_up=0 svc_up=0 problems=()
-    # 종료 전 상태 (명령이 실패했을 때 사유를 구체적으로 적기 위함)
+    # State before stopping (to give a specific reason when a command fails)
     cubrid server status 2>&1 | grep -Eq "Server[[:space:]]+$DB_NAME([^[:alnum:]_]|\$)" && srv_up=1
     master_running && svc_up=1
     log "종료 전 상태: master 실행=$svc_up, $DB_NAME 서버 실행=$srv_up"
-    # 정리를 위해 선행 결과와 관계없이 항상 종료 명령을 수행
+    # Always run the stop commands regardless of earlier results, for cleanup
     run cubrid server stop "$DB_NAME"
     rc1=$?
     run cubrid service stop
@@ -417,7 +417,7 @@ check_stop() {
     fi
     if [ -n "$left" ]; then
         problems+=("남은 프로세스: $left")
-        # 다음 항목(deletedb, 제거)을 위해 강제 종료
+        # Force stop for the next items (deletedb, remove)
         if in_test_container; then
             cub_pids | xargs -r kill -9 2>/dev/null
         else
@@ -432,7 +432,7 @@ check_stop() {
     fi
 }
 
-# ---------- 10. demodb 삭제 ----------
+# ---------- 10. delete demodb ----------
 check_deletedb() {
     local rc
     require deletedb createdb || return
@@ -447,7 +447,7 @@ check_deletedb() {
     fi
 }
 
-# ---------- 11. 패키지 제거 (rpm만) ----------
+# ---------- 11. package remove (rpm only) ----------
 check_uninstall() {
     local name rc leftover removed notes=() errline residual=() rf
     if [ "$(pkg_kind "$PKG_FILE")" != rpm ]; then
@@ -466,8 +466,8 @@ check_uninstall() {
     leftover=$(pkg_check_removed)
     removed=$?
     [ -n "$leftover" ] && log "제거 후 남은 항목: $leftover"
-    # 판정은 종료 코드 기준. 제거 스크립트(init 스크립트 등)의 오류성 출력은 Note에만 남긴다.
-    # 제거 후 실행 파일과 환경 스크립트가 남아 있으면 실패로 본다. 데이터베이스/로그/계정이 남는 것은 판정에 넣지 않는다.
+    # Judged by the exit code. Error-like output from remove scripts (init scripts, etc.) goes only to the Note.
+    # Fail if the executable or the env script is left after removal. Leftover databases/logs/accounts are not judged.
     for rf in "$INSTALL_DIR/bin/cubrid" "${PROFILE_D_FILE:-/etc/profile.d/cubrid.sh}"; do
         if [ -e "$rf" ] || [ -L "$rf" ]; then residual+=("$rf"); fi
     done

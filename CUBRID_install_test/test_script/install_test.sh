@@ -1,17 +1,17 @@
 #!/bin/bash
 #
-# CUBRID install test - 컨테이너 내부 진입점 (root로 실행)
+# CUBRID install test - entry point inside the container (run as root)
 #
-#   bash install_test.sh <패키지 파일> [--pkg-key <키>] [--result-dir <디렉터리>]
+#   bash install_test.sh <package file> [--pkg-key <key>] [--result-dir <directory>]
 #
-# 항목마다 "RESULT|<항목>|pass/fail/NA|<사유>" 한 줄을 출력하고, 모두 pass/NA면 종료 코드 0.
-# rpm 패키지는 설치/제거만 root로 하고 2~10번 항목은 cubrid 계정으로 실행한다
-# (스크립트를 cubrid 홈으로 복사 후 su - cubrid -c "... --phase checks").
+# Prints one line "RESULT|<item>|pass/fail/NA|<reason>" per item; exit code 0 when all are pass/NA.
+# For the rpm package, only install/remove run as root; items 2-10 run as the cubrid account
+# (the script is copied to the cubrid home, then su - cubrid -c "... --phase checks").
 #
 set -u
 
-# 안전장치: 이 스크립트는 cub_ 프로세스를 kill -9 하고 패키지를 설치/제거하므로 테스트 컨테이너 안에서만 실행한다.
-# 러너가 docker run/exec 때 INSTALL_TEST_IN_CONTAINER=<실행 ID> 를 넘기고, 컨테이너 안(/.dockerenv 등)이어야 진행한다.
+# Safety guard: this script kills cub_ processes with kill -9 and installs/removes packages, so it runs only inside a test container.
+# The runner passes INSTALL_TEST_IN_CONTAINER=<run ID> on docker run/exec, and it proceeds only inside a container (/.dockerenv, etc.).
 if [ -z "${INSTALL_TEST_IN_CONTAINER:-}" ] || { [ ! -f /.dockerenv ] && [ ! -f /run/.containerenv ]; }; then
     echo "오류: 테스트 컨테이너 밖에서는 실행할 수 없습니다 (run_install_test.sh 가 만든 컨테이너 안에서만 실행: INSTALL_TEST_IN_CONTAINER 표식과 컨테이너 환경 필요)" >&2
     exit 2
@@ -29,8 +29,8 @@ OS_FAMILY=""
 OS_PRETTY=""
 OS_LIBC=""
 INSTALL_NOTE=""
-INSTALL_SCRIPTLET_FAIL=""   # 설치 출력에서 scriptlet 실패가 감지되면 그 첫 줄
-ENV_SH=""        # pkg_plan이 정함: 패키지가 만드는 .cubrid.sh 경로(비어 있으면 $HOME/.cubrid.sh)
+INSTALL_SCRIPTLET_FAIL=""   # first line of a scriptlet failure detected in the install output
+ENV_SH=""        # set by pkg_plan: path of the .cubrid.sh the package creates (empty means $HOME/.cubrid.sh)
 
 ITEMS=(install bash_profile createdb service_start server_start broker manager sql stop deletedb uninstall)
 CHECK_ITEMS=(bash_profile createdb service_start server_start broker manager sql stop deletedb)
@@ -63,13 +63,13 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$PKG_FILE" ] || usage
 
-# ---------- 공통 도우미 ----------
+# ---------- common helpers ----------
 
 log() { printf '[%s] %s\n' "$(date '+%F %T')" "$*"; }
 
 section() { printf '\n==================== %s ====================\n' "$*"; }
 
-# 명령 실행 + 로그. 종료 코드를 그대로 돌려준다.
+# Run a command and log it. Returns its exit code as is.
 run() {
     local rc
     log "\$ $*"
@@ -87,7 +87,7 @@ result() {
     printf 'RESULT|%s|%s|%s\n' "$item" "$status" "$reason" | tee -a "$RESULT_DIR/container_results.txt"
 }
 
-# require <항목> <선행 항목>... : 선행 항목이 pass가 아니면 fail로 기록하고 1 반환
+# require <item> <prerequisite item>... : if a prerequisite is not pass, record fail and return 1
 require() {
     local item=$1 p failed=()
     shift
@@ -104,8 +104,8 @@ cubrid_usable() {
     [ -n "$1" ] && [ -x "$1/bin/cubrid" ] && [ -x "$1/bin/csql" ]
 }
 
-# 패키지가 만든 .cubrid.sh 를 읽고, 없거나 다른 경로면 직접 설정 (이후 항목 수행용)
-# 읽는 파일: ENV_SH(rpm은 cubrid 계정 홈의 /opt/cubrid/.cubrid.sh), 없으면 현재 계정의 $HOME/.cubrid.sh
+# Read the .cubrid.sh the package created; if missing or pointing elsewhere, set the variables directly (for the later items)
+# File read: ENV_SH (for rpm, /opt/cubrid/.cubrid.sh in the cubrid account home), otherwise $HOME/.cubrid.sh of the current account
 load_cubrid_env() {
     local dir=$1 envf=${ENV_SH:-$HOME/.cubrid.sh} exists=없음
     if [ -r "$envf" ]; then
@@ -115,8 +115,8 @@ load_cubrid_env() {
         . "$envf"
         set -u
     fi
-    # 설치기/.cubrid.sh가 채우지 못한 변수는 여기서 직접 채운다. 어떤 변수를 채웠는지 기록한다
-    # (bash_profile 항목의 판정과는 별개이며, 이 기록으로 "환경 파일이 만든 값"과 "시험 스크립트가 채운 값"을 구분한다).
+    # Variables the installer/.cubrid.sh did not set are filled here. Record which ones were filled
+    # (separate from the bash_profile item; this record tells "values set by the env file" from "values filled by the test script").
     if [ "${CUBRID:-}" != "$dir" ]; then
         log "$envf (파일 $exists, 실행 계정 $(id -un))에서 CUBRID=$dir 가 설정되지 않아 직접 설정"
         CUBRID=$dir
@@ -154,7 +154,7 @@ detect_os() {
     fi
 }
 
-# 주요 패키지 버전(glibc/libc6): 이미지 빌드 중 패키지가 올라가므로 OS 이름만으로는 내용을 알 수 없다
+# Main package versions (glibc/libc6): packages are upgraded during the image build, so the OS name alone does not tell the contents
 detect_libc() {
     if [ "$OS_FAMILY" = deb ]; then
         OS_LIBC="libc6 $(dpkg-query -W -f='${Version}' libc6 2>/dev/null)"
@@ -178,7 +178,7 @@ any_fail() {
 # shellcheck source=lib/check.sh
 . "$SCRIPT_DIR/lib/check.sh"
 
-# ---------- 2~10번 항목 ----------
+# ---------- items 2-10 ----------
 
 run_checks() {
     section "2. 환경변수 설정"
@@ -195,7 +195,7 @@ run_checks() {
     section "10. demodb 삭제";     check_deletedb
 }
 
-# rpm: cubrid 계정으로 2~10번 실행. 빠진 항목은 fail로 채운다.
+# rpm: run items 2-10 as the cubrid account. Missing items are filled in as fail.
 run_checks_as() {
     local user=$1 home dst cmd rc item st
     if ! id "$user" > /dev/null 2>&1; then
@@ -211,7 +211,7 @@ run_checks_as() {
     rm -rf "$dst"
     cp -r "$SCRIPT_DIR" "$dst"
     chown -R "$user": "$dst" "$RESULT_DIR"
-    # su - 는 환경을 초기화하므로 컨테이너 시각대(TZ)를 명시적으로 넘긴다
+    # su - resets the environment, so pass the container time zone (TZ) explicitly
     cmd=$(printf '%q ' env "INSTALL_TEST_IN_CONTAINER=$INSTALL_TEST_IN_CONTAINER" ${TZ:+"TZ=$TZ"} bash "$dst/install_test.sh" --phase checks \
         --pkg-file "$PKG_FILE" --pkg-key "$PKG_KEY" --install-dir "$INSTALL_DIR" \
         --result-dir "$RESULT_DIR" --os-family "$OS_FAMILY")

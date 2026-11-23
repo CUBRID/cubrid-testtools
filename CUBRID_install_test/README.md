@@ -193,6 +193,16 @@ CMD ["sleep", "infinity"]
 | `.rpm` (rpm 계열) | `rpm -ivh --nodeps`. 실패하면 `yum install -y`(없으면 dnf, 상한 300초) | cubrid | `/opt/cubrid` | `rpm -ev <패키지>` |
 | `.rpm` (debian, ubuntu) | `rpm -ivh --nodeps --force-debian`. 대체 경로 없음, 실패하면 Install fail | cubrid | `/opt/cubrid` | `rpm -ev [--force-debian] <패키지>` |
 
+- 조합마다 새 컨테이너에서 설치하고 끝나면 컨테이너를 지우므로, 이전 조합의 설치 파일이나 환경변수가 다음 조합에 영향을 주지 않는다.
+- 제거(UnInstall)는 제품에 제거 기능이 있는 rpm만 수행하고 판정한다. `.sh`, `.tar.gz`(debug 포함)는 제거 기능이 없어(디렉터리와 환경 설정을 직접 지우는 것뿐) NA이고, 서비스 종료까지만 한다.
+- rpm 제거 판정: 종료 코드 0, `rpm -qa` 에 cubrid 없음, `$CUBRID/bin/cubrid` 와 `/etc/profile.d/cubrid.sh` 없음.
+  설치 때 만들어지는 cubrid 계정의 `~/.bash_profile`, `~/.cubrid.sh` 는 rpm 소유 파일이 아니어서 제거 후에도 남고, cubrid 계정의 새 로그인 셸에는 `$CUBRID` 가 남는다.
+  이것은 판정에 넣지 않고 `rpm_after_remove.txt` 에 남긴다.
+- rpm 계열에서 `rpm -ivh --nodeps` 를 먼저 쓰는 이유: 테스트 컨테이너가 저장소에 접속하지 못하는 호스트(예: `ip_forward=0`)에서도 설치를 판정하기 위해서다.
+  의존 패키지 충족 여부는 OS 쪽 문제로 보고 판정하지 않는다. 미충족 의존성은 Note와 `rpm_unmet_deps.txt` 에 남긴다.
+- debian, ubuntu의 rpm은 alien으로 변환하지 않고 rpm으로 직접 설치한다. alien 변환 후 dpkg로 설치하면 설정 파일로 등록된
+  심볼릭 링크(`conf/cm_ssl_cert.key`, `cm_ssl_cert.crt`)가 만들어지지 않아 CMS가 시작되지 않았고, 변환에 7~8분이 걸렸다.
+  그래서 패키지는 dpkg에 등록되지 않고, 제거도 `rpm -ev` 다.
 - rpm은 설치 때 cubrid 계정이 생긴다. `/tmp` 를 1777로 연 뒤 테스트 스크립트를 `/opt/cubrid/test_script` 로 복사해 `su - cubrid` 로 2~10번을 수행한다. 1번과 11번은 root.
 - rpm의 환경 파일은 `/opt/cubrid/.cubrid.sh` 다(root의 `~/.cubrid.sh` 아님).
 - Install의 Note(판정은 그대로): yum으로 넘어간 경우, setup.sh 출력의 오류성 줄, `--nodeps` 로 넘어간 미충족 의존성(`미충족 의존성(--nodeps로 설치): a, b`, 패키지 이름만), 그 밖의 `warning:` 첫 줄(서명 키 경고는 로그에만).

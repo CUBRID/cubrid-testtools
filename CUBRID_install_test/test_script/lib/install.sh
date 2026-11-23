@@ -1,15 +1,15 @@
 # shellcheck shell=bash
 #
-# 패키지 종류별 설치/제거. install_test.sh가 source 해서 사용한다.
-# 사용하는 전역: OS_FAMILY(deb|rpm), RESULT_DIR, HOME
-# 설정하는 전역: INSTALL_DIR($CUBRID가 될 경로), RUN_USER(테스트 실행 계정), INSTALL_NOTE(참고 사유)
+# Install/remove per package type. Sourced by install_test.sh.
+# Globals used: OS_FAMILY (deb|rpm), RESULT_DIR, HOME
+# Globals set: INSTALL_DIR (the path that becomes $CUBRID), RUN_USER (account that runs the tests), INSTALL_NOTE (note text)
 #
 
-RPM_FORCE_DEBIAN=0    # deb 계열에서 rpm 설치에 --force-debian 을 썼으면 1 (제거 때도 같이 사용)
-# rpm -ivh --nodeps 가 실패했을 때 대신 시도하는 yum install 의 상한(저장소에 접속하지 못해 멈추는 경우 대비).
+RPM_FORCE_DEBIAN=0    # 1 if --force-debian was used for the rpm install on the deb family (also used on removal)
+# Upper limit of the yum install tried when rpm -ivh --nodeps fails (in case it hangs because it cannot reach the repository).
 YUM_TIMEOUT_SEC=300
 
-# 파일명으로 설치 방식 판별: sh | tar | rpm | unknown
+# Install method from the file name: sh | tar | rpm | unknown
 pkg_kind() {
     case "$1" in
         *.rpm) echo rpm ;;
@@ -31,7 +31,7 @@ pkg_is_debug() {
     esac
 }
 
-# 설치 경로와 실행 계정을 정한다(설치 전에도 호출 가능).
+# Decide the install path and the run account (can be called before installing).
 pkg_plan() {
     case "$(pkg_kind "$1")" in
         sh)  INSTALL_DIR="$HOME/CUBRID"; RUN_USER=root ;;
@@ -39,15 +39,15 @@ pkg_plan() {
         rpm) INSTALL_DIR=/opt/cubrid;    RUN_USER=cubrid ;;
         *)   INSTALL_DIR="";             RUN_USER=root ;;
     esac
-    # 환경 설정 파일: 패키지가 만드는 ~/.cubrid.sh (rpm은 cubrid 계정 홈 = 설치 경로)
+    # Env file: ~/.cubrid.sh created by the package (for rpm, the cubrid account home = install path)
     case "$(pkg_kind "$1")" in
         rpm) ENV_SH="$INSTALL_DIR/.cubrid.sh" ;;
         *)   ENV_SH="$HOME/.cubrid.sh" ;;
     esac
 }
 
-# .sh: 비대화형 응답 - 라이선스 동의(y), 하위 디렉터리 생성 안 함(n), 계속(y)
-#      -> 현재 디렉터리($INSTALL_DIR)에 설치. ~/.cubrid.sh, ~/.bash_profile은 설치 스크립트가 만든다.
+# .sh: non-interactive answers - accept license (y), do not create a subdirectory (n), continue (y)
+#      -> installs into the current directory ($INSTALL_DIR). The installer creates ~/.cubrid.sh and ~/.bash_profile.
 pkg_install_sh() {
     local file=$1
     mkdir -p "$INSTALL_DIR" || return 1
@@ -56,7 +56,7 @@ pkg_install_sh() {
     ( cd "$INSTALL_DIR" && printf 'y\nn\ny\n' | sh "$file" )
 }
 
-# .tar.gz: 압축 해제 후 share/scripts/setup.sh(CBRD-24402)로 환경변수 설정
+# .tar.gz: extract, then set the environment variables with share/scripts/setup.sh (CBRD-24402)
 pkg_install_tar() {
     local file=$1 top setup rc errline
     top=$(tar -tzf "$file" 2>/dev/null | head -n 1 | cut -d/ -f1)
@@ -81,7 +81,7 @@ pkg_install_tar() {
     ( cd "$INSTALL_DIR" && printf 'y\n' | sh "$setup" "$INSTALL_DIR" ) 2>&1 | tee "$RESULT_DIR/setup_sh.log"
     rc=${PIPESTATUS[0]}
     [ $rc -eq 0 ] || INSTALL_NOTE="setup.sh 종료 코드 $rc"
-    # setup.sh는 실패해도 종료 코드가 0일 수 있으므로 출력의 오류성 줄을 Note에 남긴다(판정은 그대로)
+    # setup.sh may exit 0 even when it fails, so error-like output lines go to the Note (the result is not changed)
     errline=$(grep -Ei 'cannot|can.t |fail|error|no such|not found|unable|permission|denied' "$RESULT_DIR/setup_sh.log" | head -n 1)
     if [ -n "$errline" ]; then
         errline=$(printf '%s' "$errline" | tr '\n|' '  ' | cut -c1-120)
@@ -91,7 +91,7 @@ pkg_install_tar() {
     return $rc
 }
 
-# 설치 직후 진단 자료 (rpm 패키지): conf 목록, 끊어진 심볼릭 링크, deb 계열은 rpm DB 기준 파일/설정 파일/검증 + dpkg 미등록 확인
+# Diagnostics right after install (rpm package): conf listing, broken symlinks, files/config files/verify from the rpm DB + dpkg registration check on the deb family
 pkg_diag_after_install() {
     local name unmet n=0 deps=() d
     [ "$(pkg_kind "$PKG_FILE")" = rpm ] || return 0
@@ -102,7 +102,7 @@ pkg_diag_after_install() {
         find "$INSTALL_DIR/conf" -xtype l -exec ls -l {} \; 2>&1
     } > "$RESULT_DIR/conf_listing.txt"
     sed 's/^/    /' "$RESULT_DIR/conf_listing.txt"
-    # rpm DB 기준 파일/설정 파일/검증 (rpm 계열, deb 계열 공통). rpm_files.txt는 제거 후 잔존 파일 판단에도 쓴다.
+    # Files/config files/verify from the rpm DB (rpm and deb families). rpm_files.txt is also used to find files left after removal.
     name=$(pkg_registered_name)
     if [ -n "$name" ]; then
         rpm -ql "$name" > "$RESULT_DIR/rpm_files.txt" 2>&1
@@ -111,7 +111,7 @@ pkg_diag_after_install() {
         log "rpm -ql $name: $(wc -l < "$RESULT_DIR/rpm_files.txt")줄 (rpm_files.txt), rpm -qc: $(wc -l < "$RESULT_DIR/rpm_conffiles.txt")줄 (rpm_conffiles.txt), rpm -V: $(wc -l < "$RESULT_DIR/rpm_verify.txt")줄 (rpm_verify.txt)"
         head -n 20 "$RESULT_DIR/rpm_verify.txt" | sed 's/^/    /'
         if [ "$OS_FAMILY" != deb ]; then
-            # --nodeps로 설치했으므로 충족되지 않은 의존성을 기록한다(판정에는 쓰지 않고 Note에만 남김)
+            # Installed with --nodeps, so record unmet dependencies (only in the Note, not used for the result)
             rpm -V --nofiles "$name" 2>&1 | awk '/^Unsatisfied dependencies/ { f = 1; next } f' > "$RESULT_DIR/rpm_unmet_deps.txt"
             while IFS= read -r d; do
                 d=$(printf '%s' "$d" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; s/ is needed by .*//')
@@ -157,10 +157,10 @@ pkg_diag_after_remove() {
     grep -v '^#' "$RESULT_DIR/rpm_after_remove.txt" | head -n 20 | sed 's/^/    /'
 }
 
-# deb 계열(ubuntu, debian)의 rpm 설치: rpm 명령으로 직접 설치한다(rpm -ivh --nodeps). 대체 경로는 없다.
-#   Debian 계열의 rpm은 --force-debian 이 필요할 수 있다 -> 먼저 붙여 보고, 모르는 옵션이면 빼고 재시도.
-#   rpm DB가 없어 실패하면 rpm --initdb 후 재시도. 끝내 실패하면 Install fail(사유에 rpm 종료 코드와 첫 오류 줄).
-# 설정하는 전역: RPM_FORCE_DEBIAN(--force-debian 을 썼으면 1)
+# rpm install on the deb family (ubuntu, debian): install directly with the rpm command (rpm -ivh --nodeps). No fallback.
+#   rpm on Debian may need --force-debian -> try with it first, and retry without it if the option is unknown.
+#   If it fails because there is no rpm DB, run rpm --initdb and retry. If it still fails, Install fails (reason has the rpm exit code and first error line).
+# Globals set: RPM_FORCE_DEBIAN (1 if --force-debian was used)
 pkg_install_rpm_deb() {
     local file=$1 rc=1 attempt=0 initdb_done=0 out="$RESULT_DIR/rpm_install.log" opts=(--force-debian) first
     RPM_FORCE_DEBIAN=1
@@ -171,7 +171,7 @@ pkg_install_rpm_deb() {
     while [ $attempt -lt 4 ]; do
         attempt=$((attempt + 1))
         log "\$ rpm -ivh --nodeps ${opts[*]:-} $file   (시도 $attempt)"
-        # 출력은 파일로 받은 뒤 보여 준다(설치 스크립트가 남기는 프로세스가 있어도 멈추지 않도록)
+        # Capture output to a file, then show it (so it does not hang on processes the install scripts leave behind)
         rpm -ivh --nodeps ${opts[@]+"${opts[@]}"} "$file" > "$out" 2>&1
         rc=$?
         cat "$out"
@@ -202,9 +202,9 @@ pkg_install_rpm_deb() {
     return $rc
 }
 
-# .rpm: rpm 계열은 rpm -ivh --nodeps(실패 시 yum install), deb 계열은 rpm 직접 설치(대체 경로 없음)
-# 설치 출력 로그 검사: scriptlet 실패는 설치 실패 사유(INSTALL_SCRIPTLET_FAIL), 그 밖의 warning은 Note(INSTALL_NOTE).
-# 서명 키 경고(NOKEY, Header ... Signature)는 로그에만 남긴다.
+# .rpm: rpm family uses rpm -ivh --nodeps (yum install on failure); deb family installs with rpm directly (no fallback)
+# Install output check: a scriptlet failure is an install failure reason (INSTALL_SCRIPTLET_FAIL); other warnings go to the Note (INSTALL_NOTE).
+# Signing key warnings (NOKEY, Header ... Signature) are kept only in the log.
 pkg_scan_install_log() {
     local f=$1 line
     [ -s "$f" ] || return 0
@@ -240,12 +240,12 @@ pkg_install_rpm() {
 pkg_install_rpm_native() {
     local file=$1 rc pm
 
-    # rpm 계열: 먼저 rpm -ivh --nodeps. 실패하면 그때 yum(없으면 dnf) install 로 설치를 시도한다.
-    # 의존 패키지는 OS 쪽 문제로 보고 판정/기록 대상에 넣지 않는다.
+    # rpm family: first rpm -ivh --nodeps. If it fails, try installing with yum (dnf if no yum).
+    # Dependencies are treated as an OS-side issue and are not judged (unmet ones are only noted).
     local rc1 rc2
     local rlog="$RESULT_DIR/rpm_install.log"
     log "\$ rpm -ivh --nodeps $file"
-    # 출력은 파일로 받은 뒤 보여 준다(설치 스크립트가 남기는 프로세스가 있어도 멈추지 않도록, tee 사용 안 함)
+    # Capture output to a file, then show it (so it does not hang on processes the install scripts leave behind; no tee)
     rpm -ivh --nodeps "$file" > "$rlog" 2>&1
     rc1=$?
     cat "$rlog"
@@ -288,14 +288,14 @@ pkg_install() {
     esac
 }
 
-# rpm DB에 설치 상태로 등록된 cubrid 패키지 이름(없으면 빈 문자열)
+# Name of the cubrid package registered as installed in the rpm DB (empty if none)
 pkg_registered_name() {
     rpm -qa --qf '%{NAME}\n' 2>/dev/null \
         | awk 'tolower($0) ~ /cubrid/' \
         | sort | awk 'NR == 1 || $0 == "cubrid" { n = $0 } END { print n }'
 }
 
-# 제거: rpm -ev (deb 계열에서 설치 때 --force-debian 을 썼으면 같이)
+# Remove: rpm -ev (with --force-debian if it was used on install on the deb family)
 pkg_uninstall() {
     local name=$1
     if [ "$OS_FAMILY" = deb ] && [ "${RPM_FORCE_DEBIAN:-0}" = 1 ]; then
@@ -307,7 +307,7 @@ pkg_uninstall() {
     fi
 }
 
-# 제거 확인: rpm -qa 에 cubrid 가 남아 있으면 그 목록을 출력하고 1, 없으면 0.
+# Removal check: if cubrid is still in rpm -qa, print the list and return 1; otherwise 0.
 pkg_check_removed() {
     local listing
     listing=$(rpm -qa 2>/dev/null | grep -i cubrid)
