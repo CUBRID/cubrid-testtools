@@ -223,6 +223,8 @@ function rerun_family_of() {
         cdc_repl) echo cdc_repl ;;
         # the JDBC compat runs (jdbc_sql_<ver>_D / _S64, ...): the category is COMPAT_TEST_CATAGORY
         compat_jdbc_D|compat_jdbc_S64) echo compat_jdbc ;;
+        # the CCI compat runs (cci_shell_<ver>_D64 / _S64)
+        compat_cci_D64|compat_cci_S64) echo compat_cci ;;
         *) echo "" ;;
     esac
 }

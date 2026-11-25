@@ -125,18 +125,25 @@ public class RerunProducer {
 
     private static final Pattern MSG_ID = Pattern.compile("\\d{6}-\\d{6}-\\d{3}-\\d{6}");
     /**
-     * A JDBC compat category, one per version of the other build: jdbc_sql_11.2_D,
-     * jdbc_medium_10.2_S64 (CUBRIDQA-1753). Its run's message is stored under the scenario of its
-     * queue, not under the category: the SERVER_64 queue's compat_jdbc_S64 messages carry the _D
-     * categories and the DRIVER queue's compat_jdbc_D messages the _S64 ones, each naming its
-     * category in COMPAT_TEST_CATAGORY.
+     * A JDBC or CCI compat category, one per version of the other build: jdbc_sql_11.2_D,
+     * jdbc_medium_10.2_S64, cci_shell_11.3_S64 (CUBRIDQA-1753). Its run's message is stored under
+     * the scenario of its queue, not under the category: the SERVER_64 queues' compat_jdbc_S64 /
+     * compat_cci_S64 messages carry the _D / _D64 categories and the DRIVER queues' compat_jdbc_D /
+     * compat_cci_D64 messages the _S64 ones, each naming its category in COMPAT_TEST_CATAGORY.
      */
-    private static final Pattern COMPAT_CATEGORY =
+    private static final Pattern JDBC_COMPAT_CATEGORY =
             Pattern.compile("jdbc_(sql|medium)(_ext)?_[0-9]+(\\.[0-9]+)*_(D|S64)");
 
-    private static final List<String> COMPAT_SCENARIOS =
+    private static final Pattern CCI_COMPAT_CATEGORY =
+            Pattern.compile("cci_shell_[0-9]+(\\.[0-9]+)*_(D64|S64)");
+
+    private static final List<String> JDBC_COMPAT_SCENARIOS =
             java.util.Collections.unmodifiableList(
                     java.util.Arrays.asList("compat_jdbc_D", "compat_jdbc_S64"));
+
+    private static final List<String> CCI_COMPAT_SCENARIOS =
+            java.util.Collections.unmodifiableList(
+                    java.util.Arrays.asList("compat_cci_D64", "compat_cci_S64"));
     private static final Pattern TC_REF = Pattern.compile("refs/pull/[1-9][0-9]*/head");
     private static final Pattern TC_SHA = Pattern.compile("[0-9a-f]{40}");
     // what run_rerun.sh accepts; a consumer drops any other message without telling QAHome
@@ -633,14 +640,20 @@ public class RerunProducer {
     }
 
     static boolean isCompatCategory(String category) {
-        return category != null && COMPAT_CATEGORY.matcher(category).matches();
+        return category != null
+                && (JDBC_COMPAT_CATEGORY.matcher(category).matches()
+                        || CCI_COMPAT_CATEGORY.matcher(category).matches());
     }
 
     /** The msg_sended.build_scenarios values a run of this category can come from. */
     static List<String> messageScenariosOf(String category) {
-        return isCompatCategory(category)
-                ? COMPAT_SCENARIOS
-                : java.util.Collections.singletonList(category);
+        if (category != null && JDBC_COMPAT_CATEGORY.matcher(category).matches()) {
+            return JDBC_COMPAT_SCENARIOS;
+        }
+        if (category != null && CCI_COMPAT_CATEGORY.matcher(category).matches()) {
+            return CCI_COMPAT_SCENARIOS;
+        }
+        return java.util.Collections.singletonList(category);
     }
 
     /**
