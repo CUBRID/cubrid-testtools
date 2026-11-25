@@ -363,6 +363,8 @@ function rerun_shell_case_log() {
     local key=$3 fattr t d=${CTP_HOME}/result/shell/current_runtime_logs
     fattr=$(awk -F'\t' -v k="$key" '$1 == k { f = $2 } END { print f }' "$RERUN_SHELL_FILES")
     [ -z "$fattr" ] && fattr=$RERUN_SHELL_REL/$key
+    # rerun_compat_cci: how the pair ran (unset for the shell family)
+    [ -n "$RERUN_SHELL_HOW_NOTE" ] && echo "$RERUN_SHELL_HOW_NOTE" | rerun_case_log_section "how the case ran"
     rerun_junit_block "$RERUN_SHELL_XML" "$fattr" | rerun_case_log_section "${RERUN_SHELL_XML##*/} (result items; console output on failure)"
     for t in "$d"/test_*.log; do
         [ -f "$t" ] || continue
