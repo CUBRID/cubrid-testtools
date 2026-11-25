@@ -216,7 +216,8 @@ function rerun_family_of() {
     case "$1" in
         sql|sql_debug|medium|medium_debug|sql_ext) echo sql ;;
         sql_by_cci) echo sql_by_cci ;;
-        shell|shell_debug|shell_heavy|shell_long|ha_shell|cci|cci_debug) echo shell ;;
+        shell|shell_debug|shell_heavy|shell_long|ha_shell|cci|cci_debug|shell_perf|shell_perf_debug) echo shell ;;
+        # RQG has no runner on purpose: its queries are random, so a pass on a rerun says nothing about the case
         jdbc) echo jdbc ;;
         isolation|isolation_debug) echo isolation ;;
         ha_repl|ha_repl_debug) echo ha_repl ;;

@@ -9,9 +9,11 @@ testcases, on the newest build of its branch or on the failed build (no auto-ver
 
 Supported categories (Linux): sql, sql_debug, medium, medium_debug, sql_ext, sql_by_cci, shell,
 shell_debug, shell_heavy, shell_long, ha_shell, isolation, isolation_debug, cci, cci_debug, jdbc,
-ha_repl, ha_repl_debug, cdc_repl, and the JDBC compat runs (`jdbc_sql_<version>_D`, `jdbc_sql_<version>_S64`,
-`jdbc_medium_<version>_D`, `jdbc_medium_<version>_S64`) and the CCI compat runs (`cci_shell_<version>_D64`,
-`cci_shell_<version>_S64`; CUBRIDQA-1753).
+ha_repl, ha_repl_debug, cdc_repl, shell_perf, shell_perf_debug (CUBRIDQA-1768: plain shell suites run by `run_shell`;
+the shell runner takes the scenario of the node's template), and the JDBC compat runs (`jdbc_sql_<version>_D`,
+`jdbc_sql_<version>_S64`, `jdbc_medium_<version>_D`, `jdbc_medium_<version>_S64`) and the CCI compat runs
+(`cci_shell_<version>_D64`, `cci_shell_<version>_S64`; CUBRIDQA-1753). RQG is never rerun, by design: its queries are
+random, so a pass on a rerun says nothing about the case.
 
 # 2. How It Works
 ```
