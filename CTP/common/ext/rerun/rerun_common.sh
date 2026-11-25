@@ -742,10 +742,12 @@ function rerun_save_runtime_logs() {
 # (<os>_<category>.xml while the tested build is unknown), test-<category>.xml from a CTP before that name.
 function rerun_junit_xml() {
     local f
-    for f in "$1"/linux_${BUILD_SCENARIOS}_[0-9]*bit_*.xml "$1/linux_${BUILD_SCENARIOS}.xml" "$1/test-${BUILD_SCENARIOS}.xml"; do
+    local cat=${RERUN_CATEGORY:-$BUILD_SCENARIOS}
+    # the harness names it by test_category (a compat run's is COMPAT_TEST_CATAGORY)
+    for f in "$1"/linux_${cat}_[0-9]*bit_*.xml "$1/linux_${cat}.xml" "$1/test-${cat}.xml"; do
         [ -f "$f" ] && { echo "$f"; return; }
     done
-    echo "$1/linux_${BUILD_SCENARIOS}.xml"
+    echo "$1/linux_${cat}.xml"
 }
 
 # rerun_junit_scan <junit xml> [file attribute]: without a file, "file<TAB>PASS|FAIL|SKIP|ERROR" per <testcase>
