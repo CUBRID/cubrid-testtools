@@ -158,7 +158,7 @@ $ sh start_rerun_producer.sh --dry-run --once
 ## 3.2 Consumers
 Nothing to configure: `start_consumer.sh` polls `RERUN_<queue>` for every queue it serves that the producer can
 send reruns for: a queue whose exec is `run_sql`, `run_sql_by_cci`, `run_shell`, `run_jdbc`, `run_isolation`,
-`run_ha_repl`, `run_cdc_repl` or `run_compat_jdbc`, and not a memory-leak, coverage, Windows or AIX queue. Other queues are not
+`run_ha_repl`, `run_cdc_repl`, `run_compat_jdbc` or `run_compat_cci`, and not a memory-leak, coverage, Windows or AIX queue. Other queues are not
 polled, and no `RERUN_` queue is made for them on the broker. To keep a
 node out of reruns, start it with `--without-rerun`:
 ```

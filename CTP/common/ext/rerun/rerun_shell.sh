@@ -278,7 +278,8 @@ EOF
     done
 
     # run once for the batch
-    if [ -f "${CTP_HOME}/conf/shell.act" ]; then
+    # as run_shell.sh; a local install (the compat run) has run its own action before installing
+    if [ -f "${CTP_HOME}/conf/shell.act" ] && [ "$RERUN_SHELL_LOCAL_INSTALL" != "Y" ]; then
         rerun_run_action shell.act
     fi
     rerun_clean_runtime_logs shell
@@ -342,15 +343,18 @@ EOF
 }
 
 # rerun_shell_excluded <sce>: whether RERUN_SHELL_EXCLUDED holds an entry the case's path plus "/" contains (the
-# harness's Dispatch rule: entries are trimmed, empty, "#" and "--" lines skipped); sets RERUN_SHELL_EXCLUDED_BY.
+# harness's Dispatch rule: entries are trimmed, empty, "#" and "--" lines skipped, and each gets a trailing "/", so
+# it matches whole path parts); sets RERUN_SHELL_EXCLUDED_BY.
 function rerun_shell_excluded() {
-    local e
+    local e m
     RERUN_SHELL_EXCLUDED_BY=""
     [ -n "$RERUN_SHELL_EXCLUDED" ] && [ -s "$RERUN_SHELL_EXCLUDED" ] || return 1
     while IFS= read -r e; do
         e=$(echo "$e" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         case "$e" in "" | \#* | --*) continue ;; esac
-        if [[ "$1/" == *"$e"* ]]; then
+        m=$e
+        [[ "$m" == */ ]] || m="$m/"
+        if [[ "$1/" == *"$m"* ]]; then
             RERUN_SHELL_EXCLUDED_BY=$e
             return 0
         fi
