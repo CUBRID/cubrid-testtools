@@ -13,7 +13,8 @@ ha_repl, ha_repl_debug, cdc_repl, shell_perf, shell_perf_debug (CUBRIDQA-1768: p
 the shell runner takes the scenario of the node's template), and the JDBC compat runs (`jdbc_sql_<version>_D`,
 `jdbc_sql_<version>_S64`, `jdbc_medium_<version>_D`, `jdbc_medium_<version>_S64`) and the CCI compat runs
 (`cci_shell_<version>_D64`, `cci_shell_<version>_S64`; CUBRIDQA-1753). RQG is never rerun, by design: its queries are
-random, so a pass on a rerun says nothing about the case.
+random, so a pass on a rerun says nothing about the case. A shell_perf verdict rests on timings, so it holds only on
+the same kind of host: the shell_perf template names one test env, the perf host itself, as the daily run uses it.
 
 # 2. How It Works
 ```
