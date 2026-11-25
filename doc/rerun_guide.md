@@ -10,7 +10,8 @@ testcases, on the newest build of its branch or on the failed build (no auto-ver
 Supported categories (Linux): sql, sql_debug, medium, medium_debug, sql_ext, sql_by_cci, shell,
 shell_debug, shell_heavy, shell_long, ha_shell, isolation, isolation_debug, cci, cci_debug, jdbc,
 ha_repl, ha_repl_debug, cdc_repl, and the JDBC compat runs (`jdbc_sql_<version>_D`, `jdbc_sql_<version>_S64`,
-`jdbc_medium_<version>_D`, `jdbc_medium_<version>_S64`; CUBRIDQA-1753). Not the CCI compat runs (`cci_shell_*`).
+`jdbc_medium_<version>_D`, `jdbc_medium_<version>_S64`) and the CCI compat runs (`cci_shell_<version>_D64`,
+`cci_shell_<version>_S64`; CUBRIDQA-1753).
 
 # 2. How It Works
 ```
@@ -70,6 +71,17 @@ start_consumer.sh (every consumer of the original queue)
   `run_git_update` resets it; the patch and the list are kept in the batch's `setup/` logs), a case of the
   exclude list is an ERROR with the list's name, and the requested cases run as in the sql family with the compat
   category as `test_category`. A server older than 10.0 ran the legacy harness (cqt) and is not rerun.
+* CCI compat runs (`rerun_compat_cci.sh`): the same pairing with the CCI driver (`_D64` this build's server,
+  `_S64` the other build's server), and the same swap of message scenarios (`compat_cci_S64` carries the `_D64`
+  categories, `compat_cci_D64` the `_S64` ones). The runner does what `run_compat_cci.sh` does on its node: installs
+  the pair there (`run_cubrid_install -s` / `-d`), checks the server build and that `lib/libcascci.so` points at the
+  driver copied under `cci/driver`, takes the category's exclude list from `cubrid-testcases-private/interface/CCI/
+  shell/config/daily_regression_test_exclude_list_compatibility` on this build's branch as of the build, and the
+  testcases of `interface/CCI/shell/_20_cci` on this build's branch as of the build (`_D64`) or on the server's
+  release branch at its head (`_S64`). The requested cases then run through the shell runner on that host
+  (`test_category` = the compat category, `cubrid_download_url` empty since the pair is installed; a template with
+  test envs is refused). A case the exclude list names (by the harness's rule: an entry contained in the case's
+  path) is an ERROR. A server older than 10.0 and a pull request rerun are refused, as for JDBC.
 * Log capture (shell family, for QAHome's AI analysis): each requested case script gets one more command in
   front of its first line in the rerun's checkout (the line count does not change). It sources
   `~/ctp_rerun_work/<batch>/capture.sh` on the test node, which shadows `rm` so that each text file of the
