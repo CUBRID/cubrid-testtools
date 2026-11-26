@@ -358,14 +358,14 @@ function checkEnvironmentVariable()
 
 # Keep only the sources of the latest COVERAGE_SOURCE_KEEP coverage builds (this build included) in build/.
 # The sources of earlier builds are not used again, but kept forever they fill the disk of the test machine.
-# COVERAGE_SOURCE_KEEP unset, empty, 0 or not a number: remove nothing (default).
+# COVERAGE_SOURCE_KEEP unset, empty or not a number: keep 3 (default). 0: remove nothing.
 # The latest builds are the latest installed ones (directory mtime), whatever their build numbers are.
 function removeOldCoverageSources()
 {
     current_src_folder=$1
-    keep=${COVERAGE_SOURCE_KEEP:-0}
+    keep=${COVERAGE_SOURCE_KEEP:-3}
     case "$keep" in
-        ''|*[!0-9]*) return ;;
+        ''|*[!0-9]*) keep=3 ;;
     esac
     if [ "$keep" -le 0 ];then
         return
