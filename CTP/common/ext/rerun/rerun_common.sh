@@ -105,7 +105,7 @@ function rerun_init() {
     (umask 077; : > "$RERUN_SECRETS")
     trap 'rerun_cleanup' EXIT
     rerun_secrets_init
-    rerun_log "category ${BUILD_SCENARIOS}, build ${BUILD_ID}, testcase branch ${RERUN_BRANCH} ($(rerun_tc_source)), $(rerun_case_count) case(s), runner ${RERUN_FAMILY}"
+    rerun_log "category ${RERUN_CATEGORY:-$BUILD_SCENARIOS}, build ${BUILD_ID}, testcase branch ${RERUN_BRANCH} ($(rerun_tc_source)), $(rerun_case_count) case(s), runner ${RERUN_FAMILY}"
 }
 
 # rerun_tc_where: where the testcases come from, in "case not found at ..." messages.
@@ -240,7 +240,7 @@ function rerun_case_log_begin() {
     {
         echo "Rerun case      : $2"
         echo "Verdict         : $3${4:+ ($4)}"
-        echo "Category        : ${BUILD_SCENARIOS}"
+        echo "Category        : ${RERUN_CATEGORY:-$BUILD_SCENARIOS}"
         echo "Build           : ${BUILD_ID}"
         echo "Testcase branch : ${RERUN_BRANCH}"
         echo "Testcase commit : ${RERUN_TC_COMMIT}"
@@ -481,19 +481,21 @@ function rerun_run_action() {
     fi
 }
 
-# rerun_check_installed: after a local install, cubrid_rel must answer with BUILD_ID (same parsing as
-# sql/bin/run.sh init_cubrid_version), so a failed install never reruns cases on the previous build.
+# rerun_check_installed [build id [package]]: after a local install, cubrid_rel must answer with that build (default
+# BUILD_ID, installed from ${url}; a JDBC compat run whose server is the other build passes COMPAT_BUILD_ID and its
+# package), parsed as sql/bin/run.sh init_cubrid_version does, so a failed install never reruns cases on the
+# previous build.
 function rerun_check_installed() {
-    local rel ver
+    local rel ver want=${1:-$BUILD_ID} package=${2:-${url##*/}}
     RERUN_LAST_ERROR=""
     rel=$(rerun_timeout 120 cubrid_rel 2>&1 < /dev/null | grep CUBRID | head -1)
     if [ -z "$rel" ]; then
-        RERUN_LAST_ERROR="build install failed: cubrid_rel does not answer after installing ${url##*/} (see setup/install.log)"
+        RERUN_LAST_ERROR="build install failed: cubrid_rel does not answer after installing ${package} (see setup/install.log)"
         return 1
     fi
     ver=$(echo "$rel" | awk -F'(' '{print $2}' | awk -F')' '{print $1}')
-    if [ -n "$BUILD_ID" -a "$ver" != "$BUILD_ID" ]; then
-        RERUN_LAST_ERROR="build install failed: the installed build is ${ver}, not ${BUILD_ID} (see setup/install.log)"
+    if [ -n "$want" -a "$ver" != "$want" ]; then
+        RERUN_LAST_ERROR="build install failed: the installed build is ${ver}, not ${want} (see setup/install.log)"
         return 1
     fi
     rerun_log "installed build: ${rel}"
@@ -740,10 +742,12 @@ function rerun_save_runtime_logs() {
 # (<os>_<category>.xml while the tested build is unknown), test-<category>.xml from a CTP before that name.
 function rerun_junit_xml() {
     local f
-    for f in "$1"/linux_${BUILD_SCENARIOS}_[0-9]*bit_*.xml "$1/linux_${BUILD_SCENARIOS}.xml" "$1/test-${BUILD_SCENARIOS}.xml"; do
+    local cat=${RERUN_CATEGORY:-$BUILD_SCENARIOS}
+    # the harness names it by test_category (a compat run's is COMPAT_TEST_CATAGORY)
+    for f in "$1"/linux_${cat}_[0-9]*bit_*.xml "$1/linux_${cat}.xml" "$1/test-${cat}.xml"; do
         [ -f "$f" ] && { echo "$f"; return; }
     done
-    echo "$1/linux_${BUILD_SCENARIOS}.xml"
+    echo "$1/linux_${cat}.xml"
 }
 
 # rerun_junit_scan <junit xml> [file attribute]: without a file, "file<TAB>PASS|FAIL|SKIP|ERROR" per <testcase>

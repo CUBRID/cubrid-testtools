@@ -124,6 +124,26 @@ public class RerunProducer {
     private static final Pattern SAFE_VALUE = Pattern.compile("[A-Za-z0-9._:/@%+,=~{}!-]*");
 
     private static final Pattern MSG_ID = Pattern.compile("\\d{6}-\\d{6}-\\d{3}-\\d{6}");
+    /**
+     * A JDBC or CCI compat category, one per version of the other build: jdbc_sql_11.2_D,
+     * jdbc_medium_10.2_S64, cci_shell_11.3_S64 (CUBRIDQA-1753). Its run's message is stored under
+     * the scenario of its queue, not under the category: the SERVER_64 queues' compat_jdbc_S64 /
+     * compat_cci_S64 messages carry the _D / _D64 categories and the DRIVER queues' compat_jdbc_D /
+     * compat_cci_D64 messages the _S64 ones, each naming its category in COMPAT_TEST_CATAGORY.
+     */
+    private static final Pattern JDBC_COMPAT_CATEGORY =
+            Pattern.compile("jdbc_(sql|medium)(_ext)?_[0-9]+(\\.[0-9]+)*_(D|S64)");
+
+    private static final Pattern CCI_COMPAT_CATEGORY =
+            Pattern.compile("cci_shell_[0-9]+(\\.[0-9]+)*_(D64|S64)");
+
+    private static final List<String> JDBC_COMPAT_SCENARIOS =
+            java.util.Collections.unmodifiableList(
+                    java.util.Arrays.asList("compat_jdbc_D", "compat_jdbc_S64"));
+
+    private static final List<String> CCI_COMPAT_SCENARIOS =
+            java.util.Collections.unmodifiableList(
+                    java.util.Arrays.asList("compat_cci_D64", "compat_cci_S64"));
     private static final Pattern TC_REF = Pattern.compile("refs/pull/[1-9][0-9]*/head");
     private static final Pattern TC_SHA = Pattern.compile("[0-9a-f]{40}");
     // what run_rerun.sh accepts; a consumer drops any other message without telling QAHome
@@ -499,14 +519,24 @@ public class RerunProducer {
         }
 
         List<Original> candidates = new ArrayList<Original>();
+        List<String> scenarios = messageScenariosOf(batch.category);
+        StringBuilder in = new StringBuilder();
+        for (int i = 0; i < scenarios.size(); i++) {
+            in.append(i == 0 ? "?" : ", ?");
+        }
         PreparedStatement ps =
                 db.prepareStatement(
                         "SELECT id, msg_id, queue_id, build_type, consume_flag, consume_start_time"
-                                + " FROM msg_sended WHERE build_id = ? AND build_scenarios = ? AND is_filtered_out = 'N' AND build_generate_msg_way <> ?");
+                                + " FROM msg_sended WHERE build_id = ? AND build_scenarios IN ("
+                                + in
+                                + ") AND is_filtered_out = 'N' AND build_generate_msg_way <> ?");
         try {
-            ps.setString(1, batch.buildId);
-            ps.setString(2, batch.category);
-            ps.setString(3, WAY_RERUN);
+            int n = 1;
+            ps.setString(n++, batch.buildId);
+            for (String scenario : scenarios) {
+                ps.setString(n++, scenario);
+            }
+            ps.setString(n, WAY_RERUN);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 String queue = rs.getString(3);
@@ -568,7 +598,10 @@ public class RerunProducer {
                     continue; // read above, and it could not be cloned
                 }
                 if (loadMessage(content, candidate)) {
-                    return candidate;
+                    if (isOfCategory(candidate, batch)) {
+                        return candidate;
+                    }
+                    continue; // another compat category's message of the same build
                 }
                 unusable++; // cut off at the column size, or not a message this producer can clone
                 if (unusable >= MAX_UNUSABLE_CANDIDATES) {
@@ -604,6 +637,33 @@ public class RerunProducer {
             return false;
         }
         return !"coverage".equalsIgnoreCase(buildType) && !isExcludedQueue(queue);
+    }
+
+    static boolean isCompatCategory(String category) {
+        return category != null
+                && (JDBC_COMPAT_CATEGORY.matcher(category).matches()
+                        || CCI_COMPAT_CATEGORY.matcher(category).matches());
+    }
+
+    /** The msg_sended.build_scenarios values a run of this category can come from. */
+    static List<String> messageScenariosOf(String category) {
+        if (category != null && JDBC_COMPAT_CATEGORY.matcher(category).matches()) {
+            return JDBC_COMPAT_SCENARIOS;
+        }
+        if (category != null && CCI_COMPAT_CATEGORY.matcher(category).matches()) {
+            return CCI_COMPAT_SCENARIOS;
+        }
+        return java.util.Collections.singletonList(category);
+    }
+
+    /**
+     * Whether a loaded message is the one of the batch's category: a compat message must name it in
+     * COMPAT_TEST_CATAGORY (one message per category, all under the same two scenarios).
+     */
+    private static boolean isOfCategory(Original candidate, Batch batch) {
+        return !isCompatCategory(batch.category)
+                || batch.category.equals(
+                        candidate.props.getProperty(Constants.MSG_COMPAT_TEST_CATAGORY, "").trim());
     }
 
     /**
@@ -654,7 +714,7 @@ public class RerunProducer {
                 // NULL as well
                 String way = rs.getString(10);
                 if (!batch.buildId.equals(rs.getString(7))
-                        || !batch.category.equals(rs.getString(8))
+                        || !messageScenariosOf(batch.category).contains(rs.getString(8))
                         || !"N".equals(rs.getString(9))
                         || way == null
                         || WAY_RERUN.equals(way)
@@ -678,7 +738,7 @@ public class RerunProducer {
         PreparedStatement content =
                 db.prepareStatement("SELECT msg_cont FROM msg_sended WHERE id = ?");
         try {
-            return loadMessage(content, own) ? own : null;
+            return loadMessage(content, own) && isOfCategory(own, batch) ? own : null;
         } finally {
             content.close();
         }
@@ -802,19 +862,39 @@ public class RerunProducer {
      * with an HTTP HEAD instead.
      */
     private void checkBuildPackage(Properties props) {
-        String url = props.getProperty(Constants.MSG_BUILD_URLS, "");
+        checkPackage(
+                props.getProperty(Constants.MSG_BUILD_URLS, ""),
+                Constants.MSG_BUILD_URLS,
+                props.getProperty(Constants.MSG_BUILD_ABSOLUTE_PATH),
+                props.getProperty(Constants.MSG_BUILD_STORE_ID),
+                props.getProperty(Constants.MSG_BUILD_ID));
+        if (props.getProperty(Constants.MSG_COMPAT_TEST_CATAGORY) != null) {
+            // a compat run installs the other build too (as server or as JDBC driver)
+            String url = props.getProperty(Constants.MSG_COMPAT_BUILD_URLS, "");
+            String buildId = props.getProperty(Constants.MSG_COMPAT_BUILD_ID, "");
+            checkPackage(
+                    url, Constants.MSG_COMPAT_BUILD_URLS, null, storeOf(url, buildId), buildId);
+        }
+    }
+
+    /** The store of a package URL .../<store>/<build>/drop/<file>, or null. */
+    static String storeOf(String url, String buildId) {
+        int at = buildId.length() == 0 ? -1 : url.indexOf("/" + buildId + "/drop/");
+        int from = at <= 0 ? -1 : url.lastIndexOf('/', at - 1);
+        return from < 0 ? null : url.substring(from + 1, at);
+    }
+
+    private void checkPackage(
+            String url, String key, String absolutePath, String store, String buildId) {
         String fileName = url.substring(url.lastIndexOf('/') + 1);
         if (fileName.length() == 0) {
-            throw new IllegalStateException("The original message has no BUILD_URLS.");
+            throw new IllegalStateException("The original message has no " + key + ".");
         }
         List<File> candidates = new ArrayList<File>();
-        String absolutePath = props.getProperty(Constants.MSG_BUILD_ABSOLUTE_PATH);
         if (absolutePath != null && absolutePath.length() > 0) {
             candidates.add(new File(absolutePath, fileName));
         }
         String repoRoot = conf.getRepoRoot();
-        String store = props.getProperty(Constants.MSG_BUILD_STORE_ID);
-        String buildId = props.getProperty(Constants.MSG_BUILD_ID);
         if (repoRoot != null && repoRoot.trim().length() > 0 && store != null && buildId != null) {
             candidates.add(
                     new File(

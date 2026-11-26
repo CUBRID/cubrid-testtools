@@ -62,12 +62,21 @@
 #     [SKIP_BY_BUG] / "Skipped File(Temp)" entries; they are filtered out of the published copies.
 
 function rerun_shell() {
-    local template conf scen_raw map req ncase max envs id c kept="" first_rel="" first_total="" out f
-    local sce under base name log xml vfile raw files key st note fattr blk extra last_err=""
-
     rerun_init shell
     rerun_precheck_message || return 0
+    rerun_shell_run
+}
 
+# rerun_shell_run: the run once rerun_init and the message check passed. rerun_compat_cci reuses it with hooks that
+# are unset for the shell family: RERUN_CATEGORY (test_category and the JUnit XML name), RERUN_SHELL_SCENARIO (the
+# scenario the regular run forces), RERUN_SHELL_EXCLUDED (an exclude list, Dispatch's rule: a case whose path
+# plus "/" contains an entry; such a case is an ERROR) and RERUN_SHELL_LOCAL_INSTALL=Y (the build was installed
+# on this host; cubrid_download_url stays empty, and a template with test envs is refused).
+function rerun_shell_run() {
+    local template conf scen_raw map req ncase max envs id c kept="" first_rel="" first_total="" out f
+    local sce under base name log xml vfile raw files key st note fattr blk extra last_err="" cat dl
+
+    cat=${RERUN_CATEGORY:-$BUILD_SCENARIOS}
     if [ -f "${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf" ]; then
         template=${CTP_HOME}/conf/shell_template_for_${BUILD_SCENARIOS}.conf
     elif [ -f "${CTP_HOME}/conf/shell_template.conf" ]; then
@@ -82,6 +91,14 @@ function rerun_shell() {
     rerun_secrets_from_conf "$conf"
     if ! rerun_conf_role_guard "$conf"; then
         rerun_error_all "$RERUN_LAST_ERROR"
+        return 0
+    fi
+    if [ -n "$RERUN_SHELL_SCENARIO" ]; then
+        rerun_conf_drop_keys "$conf" scenario
+        ini.sh "$conf" scenario "$RERUN_SHELL_SCENARIO"
+    fi
+    if [ "$RERUN_SHELL_LOCAL_INSTALL" == "Y" ] && [ -n "$(rerun_env_ids "$conf")" ]; then
+        rerun_error_all "the template ${template##*/} names test envs, but this run installs its builds on ${USER}@$(hostname) only"
         return 0
     fi
     scen_raw=$(rerun_conf_get "$conf" scenario)
@@ -109,7 +126,11 @@ function rerun_shell() {
         name=$(basename "$(dirname "$(dirname "$sce")")")
         if rerun_bad_path "$sce" || [ "$under" == "$sce" -a -n "$RERUN_SCEN_REL" ] || [[ "$sce" != */cases/*.sh ]] ||
             [ "$(basename "$(dirname "$sce")")" != "cases" ] || [ "$name.sh" != "$base" ]; then
-            rerun_verdict "$id" ERROR "" "'${sce}' is not a ${BUILD_SCENARIOS} case of ${RERUN_REPO_NAME}/${RERUN_SCEN_REL} (<name>/cases/<name>.sh)"
+            rerun_verdict "$id" ERROR "" "'${sce}' is not a ${cat} case of ${RERUN_REPO_NAME}/${RERUN_SCEN_REL} (<name>/cases/<name>.sh)"
+            continue
+        fi
+        if rerun_shell_excluded "$sce"; then
+            rerun_verdict "$id" ERROR "" "the case is excluded from ${cat} runs (${RERUN_SHELL_EXCLUDED_BY} in ${RERUN_SHELL_EXCLUDED_NAME})"
             continue
         fi
         printf '%s\t%s\t%s\n' "$id" "$sce" "$under" >> "$map"
@@ -238,13 +259,15 @@ EOF
     ini.sh "$conf" testcase_update_yn false
     ini.sh "$conf" testcase_exclude_from_file '${HOME}'/${RERUN_NODE_DIR}/${RERUN_TAG}/exclude.txt
     ini.sh "$conf" delete_testcase_after_each_execution_yn false
-    ini.sh "$conf" test_category "$BUILD_SCENARIOS"
+    ini.sh "$conf" test_category "$cat"
     ini.sh "$conf" testcase_git_branch "$RERUN_BRANCH"
-    ini.sh "$conf" cubrid_download_url "$url"
+    dl=$url
+    [ "$RERUN_SHELL_LOCAL_INSTALL" == "Y" ] && dl=""
+    ini.sh "$conf" cubrid_download_url "$dl"
     if ! rerun_conf_silence "$conf" || ! rerun_conf_assert "$conf" testcase_update_yn false ||
         ! rerun_conf_assert "$conf" testcase_exclude_from_file "\${HOME}/${RERUN_NODE_DIR}/${RERUN_TAG}/exclude.txt" ||
         ! rerun_conf_assert "$conf" testcase_workspace_dir "" || ! rerun_conf_assert "$conf" scenario "$scen_raw" ||
-        ! rerun_conf_assert "$conf" cubrid_download_url "$url"; then
+        ! rerun_conf_assert "$conf" cubrid_download_url "$dl"; then
         rerun_error_all "$RERUN_LAST_ERROR"
         return 0
     fi
@@ -255,7 +278,8 @@ EOF
     done
 
     # run once for the batch
-    if [ -f "${CTP_HOME}/conf/shell.act" ]; then
+    # as run_shell.sh; a local install (the compat run) has run its own action before installing
+    if [ -f "${CTP_HOME}/conf/shell.act" ] && [ "$RERUN_SHELL_LOCAL_INSTALL" != "Y" ]; then
         rerun_run_action shell.act
     fi
     rerun_clean_runtime_logs shell
@@ -318,11 +342,33 @@ EOF
     rerun_report_cases "$map" "$vfile" rerun_shell_case_log "no verdict: neither ${xml##*/} nor the harness console has this case"
 }
 
+# rerun_shell_excluded <sce>: whether RERUN_SHELL_EXCLUDED holds an entry the case's path plus "/" contains (the
+# harness's Dispatch rule: entries are trimmed, empty, "#" and "--" lines skipped, and each gets a trailing "/", so
+# it matches whole path parts); sets RERUN_SHELL_EXCLUDED_BY.
+function rerun_shell_excluded() {
+    local e m
+    RERUN_SHELL_EXCLUDED_BY=""
+    [ -n "$RERUN_SHELL_EXCLUDED" ] && [ -s "$RERUN_SHELL_EXCLUDED" ] || return 1
+    while IFS= read -r e; do
+        e=$(echo "$e" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        case "$e" in "" | \#* | --*) continue ;; esac
+        m=$e
+        [[ "$m" == */ ]] || m="$m/"
+        if [[ "$1/" == *"$m"* ]]; then
+            RERUN_SHELL_EXCLUDED_BY=$e
+            return 0
+        fi
+    done < "$RERUN_SHELL_EXCLUDED"
+    return 1
+}
+
 # rerun_shell_case_log <rerunId> <sce> <key> <status> <note>
 function rerun_shell_case_log() {
     local key=$3 fattr t d=${CTP_HOME}/result/shell/current_runtime_logs
     fattr=$(awk -F'\t' -v k="$key" '$1 == k { f = $2 } END { print f }' "$RERUN_SHELL_FILES")
     [ -z "$fattr" ] && fattr=$RERUN_SHELL_REL/$key
+    # rerun_compat_cci: how the pair ran (unset for the shell family)
+    [ -n "$RERUN_SHELL_HOW_NOTE" ] && echo "$RERUN_SHELL_HOW_NOTE" | rerun_case_log_section "how the case ran"
     rerun_junit_block "$RERUN_SHELL_XML" "$fattr" | rerun_case_log_section "${RERUN_SHELL_XML##*/} (result items; console output on failure)"
     for t in "$d"/test_*.log; do
         [ -f "$t" ] || continue
