@@ -24,7 +24,7 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 # Rerun runner of the CTP shell harness: shell, shell_debug, shell_heavy, shell_long, ha_shell, cci, cci_debug
-# (CUBRIDQA-1632).
+# (CUBRIDQA-1632), and shell_perf, shell_perf_debug (CUBRIDQA-1768).
 #
 # How the subset runs (research note rerun-shell-family.md):
 #   1. the template is the one run_shell.sh uses (shell_template_for_<cat>.conf, else shell_template.conf); it is
