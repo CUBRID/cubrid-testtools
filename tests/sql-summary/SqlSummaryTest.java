@@ -106,7 +106,7 @@ public class SqlSummaryTest {
                 TestUtil.makeSummaryInfo(test, test.getCatMap(), null);
                 TestUtil.saveResultSummary(test, test.getCatMap());
             }
-            JunitXmlWriter.write(test, "offline-test");
+            JunitXmlWriter.write(test, "offline-test", 0L, 0L);
         }
 
         Summary owner(String name) {
@@ -189,7 +189,7 @@ public class SqlSummaryTest {
         }
 
         void assertJunit(String... expected) throws Exception {
-            Path file = result.resolve("linux_" + type + "_64bit.xml");
+            Path file = result.resolve("linux_" + type + "_64bit_release.xml");
             check(Files.exists(file), "JUnit exists " + file);
             if (!Files.exists(file)) return;
             Document doc =
@@ -202,12 +202,20 @@ public class SqlSummaryTest {
             for (String name : expected) wanted.add(paths.get(name));
             equal(multiset(wanted), multiset(actual), "JUnit case identities");
             int expectedFailures = 0;
-            for (String name : expected)
-                if (!test.getCaseResultFromMap(paths.get(name)).isSuccessFul()) expectedFailures++;
+            int expectedSkipped = 0;
+            for (String name : expected) {
+                CaseResult item = test.getCaseResultFromMap(paths.get(name));
+                if (!item.isShouldRun()) expectedSkipped++;
+                else if (!item.isSuccessFul()) expectedFailures++;
+            }
             equal(
                     expectedFailures,
                     doc.getElementsByTagName("failure").getLength(),
                     "JUnit failures");
+            equal(
+                    expectedSkipped,
+                    doc.getElementsByTagName("skipped").getLength(),
+                    "JUnit skipped");
             System.out.println(
                     "JUnit expected=" + expected.length + " actual=" + nodes.getLength());
         }
@@ -290,6 +298,7 @@ public class SqlSummaryTest {
                 "parent/cases/a.sql",
                 "parent/cases/a2.sql",
                 "parent/child/cases/b.sql",
+                "parent/child/grand/cases/c.sql",
                 "other/cases/d.sql");
         Summary rootSummary = f.test.getSummary();
         equal(5, rootSummary.getTotalCount(), label + " total");
@@ -327,7 +336,7 @@ public class SqlSummaryTest {
         equal(1, info.getNotRunList().size(), label + " skipped SummaryInfo");
         String first =
                 new String(
-                        Files.readAllBytes(f.result.resolve("linux_sql_64bit.xml")),
+                        Files.readAllBytes(f.result.resolve("linux_sql_64bit_release.xml")),
                         StandardCharsets.UTF_8);
         f.summarize();
         equal(5, f.test.getSummary().getTotalCount(), label + " repeated total");
@@ -347,11 +356,12 @@ public class SqlSummaryTest {
                 "parent/cases/a.sql",
                 "parent/cases/a2.sql",
                 "parent/child/cases/b.sql",
+                "parent/child/grand/cases/c.sql",
                 "other/cases/d.sql");
         equal(
                 first,
                 new String(
-                        Files.readAllBytes(f.result.resolve("linux_sql_64bit.xml")),
+                        Files.readAllBytes(f.result.resolve("linux_sql_64bit_release.xml")),
                         StandardCharsets.UTF_8),
                 label + " repeated JUnit");
     }
@@ -380,7 +390,9 @@ public class SqlSummaryTest {
                 "no-result child link");
         f.summarize();
         equal(2, f.test.getSummary().getTotalCount(), "no-result repeated total");
-        check(!Files.exists(f.result.resolve("linux_sql_64bit.xml")), "no-result emits no JUnit");
+        check(
+                !Files.exists(f.result.resolve("linux_sql_64bit_release.xml")),
+                "no-result emits no JUnit");
     }
 
     private static Summary findCategory(Summary current, String catPath) {

@@ -6,7 +6,7 @@ trap 'rm -rf -- "$tmp"' EXIT
 mkdir -p "$tmp/classes" "$tmp/bin" "$tmp/ctp/sql/configuration"
 printf "scenariontypes=sql(.sql),medium(.sh)\n" > "$tmp/ctp/sql/configuration/local.properties"
 cp "$repo/CTP/sql/configuration/System.xml" "$tmp/ctp/sql/configuration/System.xml"
-printf '#!/bin/sh\nprintf "release\\n"\n' > "$tmp/bin/cubrid_rel"
+printf '#!/bin/sh\necho "CUBRID 11.4 (11.4.0.0001-0000000) (64bit release build for Linux) (Jan 1 2026)"\n' > "$tmp/bin/cubrid_rel"
 chmod +x "$tmp/bin/cubrid_rel"
 export CTP_HOME="$tmp/ctp" PATH="$tmp/bin:$PATH"
 classpath="$repo/CTP/sql/lib/*:$repo/CTP/common/lib/*"
