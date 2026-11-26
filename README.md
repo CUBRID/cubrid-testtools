@@ -29,3 +29,15 @@ See [CTP/README.md](CTP/README.md) for a quick start.
 * [MemoryLeak](./doc/memoryleak_guide.md)
 * [Code Coverage](./doc/code_coverage_guide.md)
 
+## Install Test
+
+[CUBRID_install_test](CUBRID_install_test/) checks that CUBRID packages install and work on several Linux distributions.
+For each OS and package combination in `matrix.conf`, it installs CUBRID in a new Docker container, runs the checks, and removes it.
+Results go to `results/<build version>/` as `report.csv`, `report.md` and `report.xml` (JUnit). It runs on its own, without CTP.
+
+```bash
+cd CUBRID_install_test
+./run_install_test.sh <build URL | package directory>
+```
+
+See [CUBRID_install_test/README.md](CUBRID_install_test/README.md) (in Korean) for requirements, options, and pass criteria.
