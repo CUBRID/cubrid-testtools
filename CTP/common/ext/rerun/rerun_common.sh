@@ -593,10 +593,11 @@ RERUN_EOF
 # (RERUN_FIX_REPO, checked against origin) it checks out RERUN_TC_SHA on RERUN_FIX_BRANCH (on the branch it must
 # be in the updated history; on a pull request the pull request part checked it), writes each file of
 # $W/fix_files.tsv (path, sha256, base64; checked by rerun_fix_check) where no symlink leads, checks its bytes,
-# and commits them with a fixed author, date (RERUN_FIX_EPOCH) and message: every env of the batch makes the
-# same commit, so the env pin keeps working. A fix that changes nothing is an error, not a run of the case as
-# it is. A failure after the checkout puts the checkout back on RERUN_TC_SHA (fix_fail), so no part of the fix
-# stays written; the last line, "Testcases from fix files", is the proof that the commit was made.
+# and commits them with a fixed author, date (RERUN_FIX_EPOCH) and message, and with no hook or commit encoding
+# of the node: every env of the batch makes the same commit, so the env pin keeps working. A fix that changes
+# nothing is an error, not a run of the case as it is. A failure after the checkout puts the checkout back on
+# RERUN_TC_SHA (fix_fail), so no part of the fix stays written, nor a directory made for it; the last line,
+# "Testcases from fix files", is the proof that the commit was made.
 function rerun_tc_fix_script() {
     cat >> "$1" <<RERUN_EOF
 if [ "\$(sha256sum < "\$W/fix_files.tsv" | cut -d' ' -f1)" != "$(sha256sum < "$RERUN_FIX_FILES" | cut -d' ' -f1)" ]; then
@@ -623,6 +624,8 @@ cd "\$top" || exit 0
 fix_fail() {
     [ -n "\$2" ] && ! git cat-file -e "\$sha:\$2" 2>/dev/null && rm -f -- "\$2"
     git reset -q --hard "\$sha" 2>/dev/null
+    # the directories mkdir made for that file (git keeps no empty directory, so none of \$sha's goes)
+    [ -n "\$2" ] && rmdir -p --ignore-fail-on-non-empty -- "\$(dirname "\$2")" 2>/dev/null
     echo "RERUN_ERROR=\$1"; exit 0
 }
 n=0
@@ -642,7 +645,7 @@ if git diff --cached --quiet; then fix_fail "the fix changes nothing on \$sha"; 
 if ! GIT_AUTHOR_NAME="QAHome rerun" GIT_AUTHOR_EMAIL=rerun@qahome.invalid GIT_COMMITTER_NAME="QAHome rerun" \\
         GIT_COMMITTER_EMAIL=rerun@qahome.invalid GIT_AUTHOR_DATE="@${RERUN_FIX_EPOCH} +0000" \\
         GIT_COMMITTER_DATE="@${RERUN_FIX_EPOCH} +0000" git -c commit.gpgsign=false -c core.autocrlf=false \\
-        commit -q --no-verify -m "QAHome rerun batch ${RERUN_BATCH_ID}: fix files" > "\$W/fix_commit.log" 2>&1; then
+        -c core.hooksPath=/dev/null -c i18n.commitEncoding=UTF-8 commit -q --no-verify -m "QAHome rerun batch ${RERUN_BATCH_ID}: fix files" > "\$W/fix_commit.log" 2>&1; then
     fix_fail "cannot commit the fix files: \$(head -1 "\$W/fix_commit.log" | cut -c1-200)"
 fi
 echo "Testcases from fix files (\$n) on \$sha"
@@ -661,12 +664,13 @@ function rerun_fix_path_ok() {
 }
 
 # rerun_fix_in_cases <path>: the path is a case of this batch (RERUN_CASES_FILE: rerunId<TAB>sceId) or lies in
-# the directory of one, the rule QAHome applies to a fix's files. True without a case list (nothing to check).
+# the directory of one, the rule QAHome applies to a fix's files. False without a case list: what cannot be
+# checked is not taken.
 # A ha_repl / cdc_repl sceId is the absolute .test path on the controller: like the repl runner, its part after
 # cubrid-testcases[-private...]/ is the repository path (one that names no such repository matches nothing).
 function rerun_fix_in_cases() {
     local id sce
-    [ -s "$RERUN_CASES_FILE" ] || return 0
+    [ -s "$RERUN_CASES_FILE" ] || return 1
     while IFS='	' read -r id sce; do
         sce=${sce%$'\r'}
         if [[ "$sce" == /* ]]; then
@@ -742,13 +746,13 @@ function rerun_fix_check() {
 }
 
 # rerun_fix_fetch: fetch and check the fix's files of this batch (run_rerun.sh, after rerunCases) into
-# RERUN_FIX_FILES. Status 1 with the reason in RERUN_LAST_ERROR.
+# RERUN_FIX_FILES. Status 1 with the reason in RERUN_LAST_ERROR; 2 when QAHome could not be reached.
 function rerun_fix_fetch() {
     local answer=$RERUN_WORK/fix_answer.txt
     RERUN_FIX_FILES=$RERUN_WORK/fix_files.tsv
     if ! rerun_call rerunFiles > "$answer"; then
         RERUN_LAST_ERROR="QAHome did not hand out the fix's files"
-        return 1
+        return 2
     fi
     rerun_fix_check "$answer" "$RERUN_FIX_FILES" || return 1
     rm -f "$answer"
@@ -775,6 +779,12 @@ function rerun_git_update_local() {
     { echo "W=$RERUN_FAM_WORK"; echo "d=$dir"; echo "rc=$rc"; } > "$f"
     rerun_tc_checkout_script "$f"
     out=$(rerun_timeout -k 60 900 bash "$f" 2>&1 < /dev/null)
+    # what the script printed (git's own errors among it) goes after run_git_update's output in
+    # setup/git_update.log, the log the errors below point at
+    if [ -n "$out" ]; then
+        printf '%s\n' "$out" >> "$RERUN_FAM_WORK/git_update.log"
+        rerun_save_log "$RERUN_FAM_WORK/git_update.log" setup/git_update.log
+    fi
     if echo "$out" | grep -q '^RERUN_ERROR='; then
         RERUN_LAST_ERROR="$(echo "$out" | sed -n 's/^RERUN_ERROR=//p' | head -1) (see setup/git_update.log)"
         return 1

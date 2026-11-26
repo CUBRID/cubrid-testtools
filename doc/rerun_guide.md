@@ -59,7 +59,8 @@ start_consumer.sh (every consumer of the original queue)
   case log names the source (`Testcases from: fix files on develop at <commit>`). Every verdict goes to QAHome
   with the SHA-256 of the file lines the consumer fetched (`fixFiles`): QAHome takes a PASS or FAIL of a fix
   only with the digest of what it handed out, so a consumer with an older CTP cannot report the case as it is
-  (its ERROR, which says nothing about the fix, is taken).
+  (its ERROR, which says nothing about the fix, is taken). A PASS or FAIL that QAHome refuses is reported
+  again as ERROR with QAHome's reason, so the case shows why it has no verdict.
 * sql family: only the requested cases are staged and run, on a new database. The cases that ran before one in
   the daily run do not run, so a failure caused by what they left (tables, users, parameters) may not reproduce;
   each case log says so. A medium file of an order-dependent directory (`_07_mc_dep`, `_08_mc_ind`:
