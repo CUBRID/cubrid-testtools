@@ -356,6 +356,28 @@ function checkEnvironmentVariable()
      cd $curDir
 }
 
+# Keep only the sources of the latest COVERAGE_SOURCE_KEEP coverage builds (this build included) in build/.
+# The sources of earlier builds are not used again, but kept forever they fill the disk of the test machine.
+# COVERAGE_SOURCE_KEEP unset, empty or not a number: keep 3 (default). 0: remove nothing.
+# The latest builds are the latest installed ones (directory mtime), whatever their build numbers are.
+function removeOldCoverageSources()
+{
+    current_src_folder=$1
+    keep=${COVERAGE_SOURCE_KEEP:-3}
+    case "$keep" in
+        ''|*[!0-9]*) keep=3 ;;
+    esac
+    if [ "$keep" -le 0 ];then
+        return
+    fi
+
+    ls -1dt cubrid-*/ 2>/dev/null | sed 's#/*$##' | grep -vxF "$current_src_folder" | tail -n +$keep | while read old_src_folder
+    do
+        echo "remove the source of an earlier coverage build: $old_src_folder (COVERAGE_SOURCE_KEEP=$keep)"
+        rm -rf "$old_src_folder"
+    done
+}
+
 function InstallBuildForCoverage()
 {
     build_url=$1
@@ -392,9 +414,10 @@ function InstallBuildForCoverage()
     tar zvxfm $buildFile
     cd -
     mkdir -p build
-    cd build
+    cd build || exit -1
     cov_source_file_name=${source_url##*/}
     build_src_folder_full_name="${cov_source_file_name%-gcov*}" 
+    removeOldCoverageSources "$build_src_folder_full_name"
 	
     if [ -f "$cov_source_file_name" ];then
 	rm $cov_source_file_name  >/dev/null 2>&1
