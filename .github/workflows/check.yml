@@ -32,3 +32,15 @@ jobs:
         uses: reviewdog/action-suggester@v1
         with:
           tool_name: code-style (indent, astyle, google-java-format)
+  sql-summary:
+    name: sql-summary
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+      - name: Run the SQL summary regression test
+        run: bash tests/sql-summary/run.sh
