@@ -94,6 +94,14 @@ public class RerunProducer {
      * The commit QAHome knows on that ref; the consumer refuses a ref that no longer contains it.
      */
     static final String KEY_TC_SHA = "MKEY_RERUN_TC_SHA";
+    /**
+     * Set (Y) for a fix rerun: the consumer fetches the fix's files from QAHome (rerunFiles) and
+     * writes them over the testcases at KEY_TC_SHA (on KEY_TC_REF when the fix was made on a pull
+     * request) before it runs the cases.
+     */
+    static final String KEY_FIX = "MKEY_RERUN_FIX";
+    /** verify_rerun_batch.scope of a fix rerun (QAHome's AI fix page). */
+    static final String SCOPE_FIX = "FIX";
 
     private static final int MAX_MSG_CONT = 4096;
     /**
@@ -276,7 +284,12 @@ public class RerunProducer {
             throw new IllegalStateException(
                     "A pull request rerun needs the commit QAHome knows on " + batch.tcRef + ".");
         }
-        if (batch.tcSha != null && batch.tcRef == null) {
+        boolean fix = SCOPE_FIX.equals(batch.scope);
+        if (fix && (batch.tcSha == null || !TC_SHA.matcher(batch.tcSha).matches())) {
+            throw new IllegalStateException(
+                    "Rerunning a fix needs the testcase commit QAHome pinned.");
+        }
+        if (!fix && batch.tcSha != null && batch.tcRef == null) {
             throw new IllegalStateException("A testcase commit without a pull request ref.");
         }
         checkConsumerValues(batch);
@@ -287,9 +300,11 @@ public class RerunProducer {
         Message message =
                 new Message(
                         queue,
-                        (batch.tcRef == null
-                                        ? "Rerun of failed "
-                                        : "Rerun with " + batch.tcRef + " of ")
+                        (fix
+                                        ? "Rerun with fix files of "
+                                        : batch.tcRef == null
+                                                ? "Rerun of failed "
+                                                : "Rerun with " + batch.tcRef + " of ")
                                 + batch.category
                                 + " cases of build "
                                 + batch.buildId
@@ -306,9 +321,12 @@ public class RerunProducer {
         message.setProperty(KEY_CASE_COUNT, String.valueOf(batch.caseCount));
         if (batch.tcRef != null) {
             message.setProperty(KEY_TC_REF, batch.tcRef);
-            if (batch.tcSha != null) {
-                message.setProperty(KEY_TC_SHA, batch.tcSha);
-            }
+        }
+        if (batch.tcSha != null) {
+            message.setProperty(KEY_TC_SHA, batch.tcSha);
+        }
+        if (fix) {
+            message.setProperty(KEY_FIX, "Y");
         }
         message.setPriority(4);
         for (Object key : message.getPropertyKeys()) {
@@ -435,7 +453,8 @@ public class RerunProducer {
         PreparedStatement ps =
                 db.prepareStatement(
                         "SELECT b.id, b.build_id, b.sce_cat, b.env_os, b.verify_main_id, b.feedback_url, b.log_dir,"
-                                + " (SELECT count(*) FROM verify_rerun r WHERE r.batch_id = b.id), b.src_tb, b.src_id, b.tc_ref, b.tc_sha"
+                                + " (SELECT count(*) FROM verify_rerun r WHERE r.batch_id = b.id), b.src_tb, b.src_id, b.tc_ref, b.tc_sha,"
+                                + " b.scope"
                                 + " FROM verify_rerun_batch b WHERE b.status = 'REQUESTED'");
         try {
             ResultSet rs = ps.executeQuery();
@@ -453,6 +472,7 @@ public class RerunProducer {
                 batch.srcId = rs.getInt(10);
                 batch.tcRef = emptyToNull(rs.getString(11));
                 batch.tcSha = emptyToNull(rs.getString(12));
+                batch.scope = rs.getString(13);
                 batches.add(batch);
             }
             rs.close();
@@ -1200,6 +1220,10 @@ public class RerunProducer {
         String tcRef;
 
         String tcSha;
+        /**
+         * ONE, ALL, SELECTED, PR or FIX (a fix rerun: the fix's files over the testcases at tcSha).
+         */
+        String scope;
     }
 
     static class Original {

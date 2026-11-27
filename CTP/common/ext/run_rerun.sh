@@ -78,25 +78,36 @@ export -f rerun_result
 
 # rerun_call <method> [curl --data-urlencode args...]: the QAHome answer on stdout, status 1 when QAHome could
 # not be reached. Transport failures (no connection, timeout, HTTP error, empty or unexpected answer) are
-# retried with a backoff, so a QAHome restart does not lose a rerun. The token goes on stdin, not on the
-# command line where ps would show it; tracing is off.
+# retried with a backoff, so a QAHome restart does not lose a rerun. An answer curl did not receive whole (it
+# exits non-zero: a timeout or a connection closed mid-body) is a failure too, even when it starts with OK: curl's
+# errors are kept apart from the answer. The token goes on stdin, not on the command line where ps would show
+# it; tracing is off.
 function rerun_call() {
-    local method=$1 answer attempt delay=10
+    local method=$1 answer attempt delay=10 rc err reason
     shift
     { set +x; } 2>/dev/null
+    err=$(mktemp 2>/dev/null) || err=""
     for attempt in 1 2 3 4 5 6; do
         answer=$(printf '%s' "$RERUN_TOKEN" | curl -s -S -f --connect-timeout 20 --max-time 120 -X POST "$RERUN_FEEDBACK_URL" \
-            --data-urlencode "m=$method" --data-urlencode "batchId=$RERUN_BATCH_ID" --data-urlencode "token@-" "$@" 2>&1)
-        case "$answer" in
-            OK*|ERROR*|CANCEL*)
-                printf '%s\n' "$answer"
-                return 0
-                ;;
-        esac
-        echo "[RERUN] $method: QAHome did not answer (attempt $attempt): $(echo "$answer" | head -1 | cut -c1-200)" >&2
+            --data-urlencode "m=$method" --data-urlencode "batchId=$RERUN_BATCH_ID" --data-urlencode "token@-" "$@" 2> "${err:-/dev/null}")
+        rc=$?
+        if [ $rc -eq 0 ]; then
+            case "$answer" in
+                OK*|ERROR*|CANCEL*)
+                    [ -n "$err" ] && rm -f "$err"
+                    printf '%s\n' "$answer"
+                    return 0
+                    ;;
+            esac
+            reason=$answer
+        else
+            reason="$([ -n "$err" ] && head -1 "$err") (curl exit $rc)"
+        fi
+        echo "[RERUN] $method: QAHome did not answer (attempt $attempt): $(echo "$reason" | head -1 | cut -c1-200)" >&2
         [ $attempt -lt 6 ] && sleep $delay
         delay=$((delay * 2))
     done
+    [ -n "$err" ] && rm -f "$err"
     return 1
 }
 
@@ -264,6 +275,22 @@ runner=${CTP_HOME}/common/ext/rerun/rerun_${family}.sh
 if [ -n "$family" -a -f "$runner" ]; then
     # for rerun_scrub_stream (runner.log) and the shared helpers
     source ${CTP_HOME}/common/ext/rerun/rerun_common.sh
+    # A fix's rerun: the fix's files come from QAHome before anything runs. Their digest (RERUN_FIX_DIGEST) goes
+    # with every verdict below: QAHome takes a PASS or FAIL of the fix only from a consumer that names the files.
+    if [ "$MKEY_RERUN_FIX" == "Y" ]; then
+        rerun_fix_fetch
+        fetch_rc=$?
+        if [ $fetch_rc -eq 2 ]; then
+            # as for rerunCases above: QAHome is unreachable, so the batch times out in QAHome
+            echo "[RERUN] QAHome is unreachable; batch ${RERUN_BATCH_ID} is not run"
+            RERUN_FINISHED=1
+            exit 0
+        elif [ $fetch_rc -ne 0 ]; then
+            echo "[RERUN] batch ${RERUN_BATCH_ID}: ${RERUN_LAST_ERROR}"
+            rerun_finish "$RERUN_LAST_ERROR"
+            exit 0
+        fi
+    fi
     # A subshell, so a runner that exits early cannot skip the reporting below; in its own process group
     # (set -m), so a cancel from QAHome can stop the whole harness under it.
     set -m
@@ -344,13 +371,26 @@ while IFS= read -r line; do
     # without the upload the link would point at nothing
     [ $logs_uploaded -eq 1 ] || log_file=""
     if ! answer=$(rerun_call rerunReport --data-urlencode "rerunId=$rerun_id" --data-urlencode "result=$result" \
-        --data-urlencode "logFile=$log_file" --data-urlencode "message=$message" --data-urlencode "tcCommit=$tc_commit"); then
+        --data-urlencode "logFile=$log_file" --data-urlencode "message=$message" --data-urlencode "tcCommit=$tc_commit" \
+        --data-urlencode "fixFiles=$RERUN_FIX_DIGEST"); then
         # QAHome is unreachable: the remaining verdicts stay in results.tsv; QAHome times the batch out.
         echo "[RERUN] QAHome is unreachable; stopped reporting at case ${rerun_id} (verdicts kept in ${RERUN_RESULTS_FILE})"
         RERUN_FINISHED=1
         exit 0
     fi
     echo "[RERUN] case ${rerun_id}: ${result} -> ${answer}"
+    # A PASS or FAIL that QAHome refused (a fix rerun's verdict without the files QAHome handed out): the case is
+    # reported again as ERROR with QAHome's reason, which QAHome always takes, so the reason reaches the case.
+    if [ "$result" != "ERROR" ]; then
+        case "$answer" in
+            ERROR*)
+                answer=$(rerun_call rerunReport --data-urlencode "rerunId=$rerun_id" --data-urlencode "result=ERROR" \
+                    --data-urlencode "logFile=$log_file" --data-urlencode "message=QAHome refused the ${result}: ${answer#ERROR }" \
+                    --data-urlencode "tcCommit=$tc_commit" --data-urlencode "fixFiles=$RERUN_FIX_DIGEST")
+                echo "[RERUN] case ${rerun_id}: ERROR -> ${answer}"
+                ;;
+        esac
+    fi
 done < "$RERUN_RESULTS_FILE"
 
 rerun_finish ""
